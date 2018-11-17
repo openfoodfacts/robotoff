@@ -1,0 +1,4 @@
+requests
+peewee
+Flask
+psycopg2-binary
