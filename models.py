@@ -10,12 +10,12 @@ class CategorizationTask(peewee.Model):
     product_id = peewee.CharField(max_length=100, null=False)
     predicted_category = peewee.TextField(null=False)
     confidence = peewee.FloatField(null=False)
-    last_updated_at = peewee.DateTimeField(null=False)
-    attributed_at = peewee.DateTimeField()
-    attributed_to_session_id = peewee.CharField(max_length=100)
-    completed_at = peewee.DateTimeField()
-    completed_by_session_id = peewee.CharField(max_length=100)
-    annotation = peewee.IntegerField()
+    last_updated_at = peewee.TextField(null=False)
+    attributed_at = peewee.DateTimeField(null=True)
+    attributed_to_session_id = peewee.CharField(null=True, max_length=100)
+    completed_at = peewee.DateTimeField(null=True)
+    completed_by_session_id = peewee.CharField(null=True, max_length=100)
+    annotation = peewee.IntegerField(null=True)
     outdated = peewee.BooleanField(default=False)
 
     class Meta:
