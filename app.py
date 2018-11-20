@@ -97,7 +97,11 @@ def save_categories(product_id, categories):
     r = http_session.get(POST_URL, params=params)
     r.raise_for_status()
     json = r.json()
-    print(json['status_verbose'])
+
+    status = json.get('status_verbose')
+
+    if status != "fields saved":
+        app.logger.warn("Unexpected status during category update: {}".format(status))
 
 
 @app.route('/')
