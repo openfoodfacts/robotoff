@@ -110,8 +110,18 @@ def categorize():
     set_session_id()
     task_id = request.form['task_id']
     annotation = int(request.form['annotation'])
+    session_id = get_session_id()
 
-    task = CategorizationTask.get_by_id(task_id)
+    try:
+        task = CategorizationTask.get_by_id(task_id)
+    except CategorizationTask.DoesNotExist:
+        task = None
+
+    if (not task or
+            task.attributed_to_session_id != session_id or
+            task.annotation is not None):
+        return render_next_product()
+
     task.annotation = annotation
     task.save()
 
@@ -120,5 +130,5 @@ def categorize():
         current_categories.append(task.predicted_category)
         save_categories(task.product_id, current_categories)
 
-    task.set_completion(session_id=get_session_id())
+    task.set_completion(session_id=session_id)
     return render_next_product()
