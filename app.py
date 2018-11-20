@@ -68,7 +68,8 @@ def render_next_product():
         random_task = random_task_list[0]
         product = get_product(random_task.product_id)
 
-        if random_task.last_updated_at == str(product['last_modified_t']):
+        # Product may be None if not found
+        if product and random_task.last_updated_at == str(product['last_modified_t']):
             break
         else:
             random_task.outdated = True
