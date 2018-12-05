@@ -1,11 +1,12 @@
 import uuid
 
+import peewee
 from flask import Flask, request, render_template, session
 import requests
 
 from robotoff import settings
 from robotoff.app.models import CategorizationTask
-from ml.categories import parse_category_json
+from robotoff.categories import parse_category_json
 
 
 category_json = parse_category_json(settings.DATA_DIR / 'categories.min.json')
@@ -75,12 +76,19 @@ def parse_product_json(data):
     }
 
 
-def render_next_product():
+def render_next_product(campaign: str=None):
     while True:
-        random_task_list = list(CategorizationTask.select()
-                                                  .where(CategorizationTask.attributed_at.is_null())
-                                                  .order_by(CategorizationTask.category_depth.desc())
-                                                  .limit(1))
+        query = (CategorizationTask.select()
+                                   .where(CategorizationTask.attributed_at
+                                          .is_null()))
+
+        if campaign is not None:
+            query = query.where(CategorizationTask.campaign ==
+                                campaign).order_by(peewee.fn.Random())
+        else:
+            query = query.order_by(CategorizationTask.category_depth.desc())
+
+        random_task_list = list(query.limit(1))
 
         if not random_task_list:
             return render_template("index.html", no_product=True)
@@ -94,7 +102,8 @@ def render_next_product():
         else:
             random_task.outdated = True
             random_task.save()
-            app.logger.info("Product modified since prediction, fetching a new product from DB...")
+            app.logger.info("Product modified since prediction, fetching a "
+                            "new product from DB...")
 
     random_task.set_attribution(session_id=get_session_id())
     context = parse_product_json(product)
@@ -133,8 +142,15 @@ def main():
     return render_next_product()
 
 
+@app.route('/campaign/<campaign>')
+def main(campaign):
+    set_session_id()
+    return render_next_product(campaign)
+
+
 @app.route('/', methods=['POST'])
-def categorize():
+@app.route('/campaign/<campaign>', method=['POST'])
+def categorize(campaign=None):
     set_session_id()
     task_id = request.form['task_id']
     annotation = int(request.form['annotation'])
@@ -148,7 +164,7 @@ def categorize():
     if (not task or
             task.attributed_to_session_id != session_id or
             task.annotation is not None):
-        return render_next_product()
+        return render_next_product(campaign)
 
     task.annotation = annotation
     task.save()
@@ -159,4 +175,4 @@ def categorize():
         save_categories(task.product_id, current_categories)
 
     task.set_completion(session_id=session_id)
-    return render_next_product()
+    return render_next_product(campaign)

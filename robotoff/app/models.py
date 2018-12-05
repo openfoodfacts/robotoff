@@ -18,6 +18,7 @@ class CategorizationTask(peewee.Model):
     annotation = peewee.IntegerField(null=True)
     outdated = peewee.BooleanField(default=False)
     category_depth = peewee.IntegerField(null=True, index=True)
+    campaign = peewee.TextField(null=True, index=True)
 
     class Meta:
         database = db
