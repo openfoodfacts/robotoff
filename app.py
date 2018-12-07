@@ -80,7 +80,7 @@ def render_next_product():
     while True:
         random_task_list = list(CategorizationTask.select()
                                                   .where(CategorizationTask.attributed_at.is_null())
-                                                  .order_by(peewee.fn.Random())
+                                                  .order_by(CategorizationTask.category_depth.desc())
                                                   .limit(1))
 
         if not random_task_list:
