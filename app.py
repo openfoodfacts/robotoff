@@ -54,7 +54,7 @@ def get_category_name(identifier, best_language):
         return identifier
 
     category = category_json[identifier]
-    category_names = category['names']
+    category_names = category['name']
 
     if 'fr' in category_names and best_language in ('fr', 'fr:FR'):
         return category_names['fr']
