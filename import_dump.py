@@ -19,7 +19,7 @@ def import_dump(jsonl_path):
             'id': str(uuid.uuid4()),
             'product_id': item['code'],
             'predicted_category': item['predicted_category_tag'],
-            'confidence': item.get('predicted_categories_prob'),
+            'confidence': item.get('predicted_category_prob'),
             'last_updated_at': str(item['last_modified_t']),
         }
         inserts.append(insert)
