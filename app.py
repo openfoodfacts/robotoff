@@ -3,8 +3,13 @@ import uuid
 from flask import Flask, request, render_template, session
 import requests
 import peewee
-from models import CategorizationTask
 
+import settings
+from models import CategorizationTask
+from ml.categories import parse_category_json
+
+
+category_json = parse_category_json(settings.DATA_DIR / 'categories.min.json')
 
 app = Flask(__name__)
 http_session = requests.Session()
@@ -44,6 +49,22 @@ def get_product(product_id, **kwargs):
     return data['product']
 
 
+def get_category_name(identifier, best_language):
+    if identifier not in category_json:
+        return identifier
+
+    category = category_json[identifier]
+    category_names = category['names']
+
+    if 'fr' in category_names and best_language in ('fr', 'fr:FR'):
+        return category_names['fr']
+
+    if 'en' in category_names:
+        return category_names['en']
+
+    return identifier
+
+
 def parse_product_json(data):
     return {
         'image_url': data.get('image_front_url'),
@@ -80,6 +101,9 @@ def render_next_product():
     context = parse_product_json(product)
     context['task_id'] = str(random_task.id)
     context['confidence'] = random_task.confidence
+    predicted_category_name = get_category_name(random_task.predicted_category,
+                                                request.accept_languages.best)
+    context['predicted_category_name'] = predicted_category_name
     context['predicted_category'] = random_task.predicted_category
     return render_template("index.html", **context)
 
