@@ -9,7 +9,7 @@ class CategorizationTask(peewee.Model):
     id = peewee.UUIDField(primary_key=True)
     product_id = peewee.CharField(max_length=100, null=False)
     predicted_category = peewee.TextField(null=False)
-    confidence = peewee.FloatField(null=False)
+    confidence = peewee.FloatField(null=True)
     last_updated_at = peewee.TextField(null=False)
     attributed_at = peewee.DateTimeField(null=True)
     attributed_to_session_id = peewee.CharField(null=True, max_length=100)
