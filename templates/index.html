@@ -52,7 +52,7 @@
             <div class="column">
                 <h1 class="title">Category</h1>
                 <p>{% for tag in categories_tags %}<span class="tag is-large">{{ tag }}</span>{% endfor %}<span class="tag is-success is-large">{{ predicted_category }}</span></p>
-                {% if confidence is defined %}
+                {% if confidence is not none %}
                 <div style="margin-top: 3rem; text-align: center">
                     <p class="title is-5">Confidence: {{ confidence }}</p>
                 </div>
