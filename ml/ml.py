@@ -16,9 +16,10 @@ import Stemmer
 
 fr_stemmer = Stemmer.Stemmer('fr')
 
+
 class PipelineStore:
     nlp = None
-git
+
     @classmethod
     def get(cls):
         if cls.nlp is None:
@@ -37,24 +38,35 @@ def tokenize(string, stem=False):
 
     return tokens
 
-def create_classifier(preprocessing_func=None, custom_tokenizer=False):
-    preprocessing_func = preprocessing_func or preprocess
 
+def create_classifier(preprocessing_func=None, custom_tokenizer=False):
     if custom_tokenizer:
         kwargs = {"tokenizer": functools.partial(tokenize, stem=True)}
     else:
         kwargs = {}
 
-    column_trans = ColumnTransformer([
-        ('ingredients_vectorizer', CountVectorizer(min_df=5, preprocessor=preprocessing_func, **kwargs), 'ingredients_text'),
-        ('product_name_vectorizer', CountVectorizer(min_df=5, preprocessor=preprocessing_func, **kwargs), 'product_name'),
-    ])
+    column_trans = create_transformer(preprocessing_func, **kwargs)
 
     classifier = Pipeline([
         ('column_transformer', column_trans),
         ('tfidf', TfidfTransformer()),
         ('clf', OneVsRestClassifier(LogisticRegression()))])
     return classifier
+
+
+def create_base_classifier():
+    return Pipeline([
+        ('tfidf', TfidfTransformer()),
+        ('clf', LogisticRegression())])
+
+
+def create_transformer(preprocessing_func=None, **kwargs):
+    preprocessing_func = preprocessing_func or preprocess
+
+    return ColumnTransformer([
+        ('ingredients_vectorizer', CountVectorizer(min_df=5, preprocessor=preprocessing_func, **kwargs), 'ingredients_text'),
+        ('product_name_vectorizer', CountVectorizer(min_df=5, preprocessor=preprocessing_func, **kwargs), 'product_name'),
+    ])
 
 
 def import_data(path):

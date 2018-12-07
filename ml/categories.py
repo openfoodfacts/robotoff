@@ -1,4 +1,6 @@
+import collections
 import json
+from typing import Dict, List
 
 
 class Category:
@@ -41,11 +43,12 @@ class Category:
         return categories_map
 
     @staticmethod
-    def find_deepest_item(items, data):
+    def find_deepest_item(items: List[str], data: 'CategoryTaxonomy'):
         excluded = set()
 
-        if not any(True if i in data else False for i in items):
-            return items[0]
+        if not any(True if item in data.keys() else False for item in items):
+            # The key is not present in the taxonomy
+            raise ValueError("Could not find any item of {} in taxonomy".format(items))
 
         items = [i for i in items if i in data]
 
@@ -71,10 +74,35 @@ class Category:
         return [i for i in items if i not in excluded][0]
 
 
-def generate_category_taxonomy(data_path):
+CategoryTaxonomy = Dict[str, Category]
+
+
+def parse_category_json(data_path):
     with open(str(data_path), 'r') as f:
-        taxonomy_json = json.load(f)
+        return json.load(f)
 
-    categories_map = Category.from_data(taxonomy_json)
-    return categories_map
 
+def generate_category_hierarchy(data, category_to_index, root):
+    categories_hierarchy = collections.defaultdict(set)
+
+    for category, category_data in data.items():
+        category_index = category_to_index[category]
+
+        if not category_data.get('parents', []):
+            categories_hierarchy[root].add(category_index)
+
+        children = category_data.get('children', [])
+
+        children_indexes = set([category_to_index[c]
+                                for c in children
+                                if c in category_to_index])
+
+        categories_hierarchy[category_index] = \
+            categories_hierarchy[category_index].union(children_indexes)
+
+    categories_hierarchy_list = {}
+    for category in categories_hierarchy.keys():
+        categories_hierarchy_list[category] = \
+            list(categories_hierarchy[category])
+
+    return categories_hierarchy_list
