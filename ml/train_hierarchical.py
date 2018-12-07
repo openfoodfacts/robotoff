@@ -94,13 +94,11 @@ else:
 
 print("Performing prediction on products without categories")
 no_cat_df = fr_df[pd.isnull(fr_df['categories_tags'])]
-no_cat_df = no_cat_df.sample(10000)
 
 X_infer = transformer.transform(no_cat_df)
 no_cat_y_pred = classifier.predict(X_infer)
 
 no_cat_df['predicted_category_tag'] = [CATEGORIES[i] for i in no_cat_y_pred]
-no_cat_df['predicted_category_prob'] = [0.9 for _ in range(len(no_cat_y_pred))]
 
 print("Exporting to JSON")
 export_df = no_cat_df.drop(['url', 'generic_name', 'brands_tags',
