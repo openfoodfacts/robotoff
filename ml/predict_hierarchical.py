@@ -1,7 +1,7 @@
 import pandas as pd
 
 from sklearn.externals import joblib
-
+import networkx as nx
 from sklearn_hierarchical_classification.constants import ROOT
 
 from categories import Category, parse_category_json, generate_category_hierarchy
@@ -40,6 +40,13 @@ X_infer = transformer.transform(no_cat_df)
 no_cat_y_pred = classifier.predict(X_infer)
 
 no_cat_df['predicted_category_tag'] = [CATEGORIES[i] for i in no_cat_y_pred]
+
+graph = classifier.graph_
+no_cat_df['category_depth'] = [
+    len(nx.shortest_path(classifier.graph_, ROOT, i)) - 2
+    for i in no_cat_y_pred
+]
+
 
 print("Exporting to JSON")
 export_df = no_cat_df.drop(['url', 'generic_name', 'brands_tags',

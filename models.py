@@ -17,6 +17,7 @@ class CategorizationTask(peewee.Model):
     completed_by_session_id = peewee.CharField(null=True, max_length=100)
     annotation = peewee.IntegerField(null=True)
     outdated = peewee.BooleanField(default=False)
+    category_depth = peewee.IntegerField(null=True, index=True)
 
     class Meta:
         database = db

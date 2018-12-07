@@ -22,6 +22,10 @@ def import_dump(jsonl_path):
             'confidence': item.get('predicted_category_prob'),
             'last_updated_at': str(item['last_modified_t']),
         }
+
+        if 'category_depth' in item:
+            insert['category_depth'] = item['category_depth']
+
         inserts.append(insert)
         rows += 1
 
