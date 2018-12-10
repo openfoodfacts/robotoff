@@ -95,7 +95,9 @@ def render_next_product(campaign: str=None):
             query = query.where(CategorizationTask.campaign ==
                                 campaign).order_by(peewee.fn.Random())
         else:
-            query = query.order_by(CategorizationTask.category_depth.desc())
+            query = query.where(CategorizationTask.campaign.is_null()
+                                ).order_by(CategorizationTask
+                                           .category_depth.desc())
 
         random_task_list = list(query.limit(1))
 
@@ -158,8 +160,7 @@ def categorize_get(campaign):
 
 
 @app.route('/', methods=['POST'])
-@app.route('/campaign/<campaign>', methods=['POST'])
-def categorize_post(campaign=None):
+def categorize_post():
     set_session_id()
     task_id = request.form['task_id']
     annotation = int(request.form['annotation'])
@@ -173,7 +174,7 @@ def categorize_post(campaign=None):
     if (not task or
             task.attributed_to_session_id != session_id or
             task.annotation is not None):
-        return render_next_product(campaign)
+        return render_next_product(task.campaign)
 
     task.annotation = annotation
     task.save()
@@ -184,7 +185,7 @@ def categorize_post(campaign=None):
         save_categories(task.product_id, current_categories)
 
     task.set_completion(session_id=session_id)
-    return render_next_product(campaign)
+    return render_next_product(task.campaign)
 
 
 if __name__ != '__main__':
