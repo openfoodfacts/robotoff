@@ -4,7 +4,7 @@ from sklearn.externals import joblib
 import networkx as nx
 from sklearn_hierarchical_classification.constants import ROOT
 
-from categories import Category, parse_category_json, generate_category_hierarchy
+from robotoff.categories import Category, parse_category_json, generate_category_hierarchy
 from ml import import_data
 
 TRAIN = False

@@ -11,7 +11,7 @@ from sklearn_hierarchical_classification.metrics import (h_precision_score,
                                                          h_recall_score,
                                                          h_fbeta_score)
 
-from categories import Category, parse_category_json, generate_category_hierarchy
+from robotoff.categories import Category, parse_category_json, generate_category_hierarchy
 from ml import import_data, create_base_classifier, create_transformer
 
 TRAIN = False
