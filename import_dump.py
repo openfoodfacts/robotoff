@@ -37,7 +37,8 @@ def import_dump(jsonl_path, campaign=None):
             CategorizationTask.insert_many(inserts).execute()
             inserts = []
 
-    CategorizationTask.insert_many(inserts).execute()
+    if inserts:
+        CategorizationTask.insert_many(inserts).execute()
 
 
 def parse_args():
