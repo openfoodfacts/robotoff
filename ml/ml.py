@@ -1,6 +1,6 @@
 import functools
 import numpy as np
-from preprocessing import preprocess
+from ml.preprocessing import preprocess
 
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model import LogisticRegression

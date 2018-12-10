@@ -1,11 +1,21 @@
 import json
 import argparse
+from typing import Union, Dict, Tuple
 
 from es.utils import get_es_client, ELASTIC_SEARCH_INDEX, ELASTIC_SEARCH_TYPE
 
 
-def match(query: str):
-    client = get_es_client()
+def predict_category(client, name: str) -> Union[None, Tuple[str, float]]:
+    results = match(client, name)
+
+    hits = results['hits']['hits']
+
+    if hits:
+        hit = hits[0]
+        return hit['_source']['id'], hit['_score']
+
+
+def match(client, query: str):
     body = generate_request(query)
     return client.search(index=ELASTIC_SEARCH_INDEX,
                          doc_type=ELASTIC_SEARCH_TYPE,
@@ -31,5 +41,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    results = match(args.query)
+    es_client = get_es_client()
+    results = match(es_client, args.query)
     print(json.dumps(results['hits'], indent=4))
