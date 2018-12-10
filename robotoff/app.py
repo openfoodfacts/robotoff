@@ -2,10 +2,9 @@ import uuid
 
 from flask import Flask, request, render_template, session
 import requests
-import peewee
 
-import settings
-from models import CategorizationTask
+from robotoff import settings
+from robotoff.models import CategorizationTask
 from ml.categories import parse_category_json
 
 
