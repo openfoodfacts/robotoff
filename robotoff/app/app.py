@@ -51,6 +51,9 @@ def get_product(product_id, **kwargs):
 
 
 def normalize_lang(lang):
+    if lang is None:
+        return
+
     if '-' in lang:
         return lang.split('-')[0]
 
