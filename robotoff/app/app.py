@@ -78,6 +78,8 @@ def parse_product_json(data):
 
 
 def render_next_product(campaign: str=None):
+    app.logger.info("Campaign: {}".format(campaign))
+
     attempts = 0
     while True:
         attempts += 1
