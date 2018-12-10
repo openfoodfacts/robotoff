@@ -143,14 +143,14 @@ def main():
 
 
 @app.route('/campaign/<campaign>')
-def main(campaign):
+def categorize_get(campaign):
     set_session_id()
     return render_next_product(campaign)
 
 
 @app.route('/', methods=['POST'])
 @app.route('/campaign/<campaign>', method=['POST'])
-def categorize(campaign=None):
+def categorize_post(campaign=None):
     set_session_id()
     task_id = request.form['task_id']
     annotation = int(request.form['annotation'])
