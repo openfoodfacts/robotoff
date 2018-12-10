@@ -61,18 +61,18 @@
         </div>
         <div class="container" style="margin-top: 2rem">
             <div class="buttons is-centered">
-                <form action="/" method="post">
+                <form action="{{ post_endpoint }}" method="post">
                     <input type="hidden" name="task_id" value="{{ task_id }}"/>
                     <input type="hidden" name="annotation" value=1 />
                     <input type="hidden" name="current_categories" value="{{ categories_tags|join(',') }}" />
                     <button class="button is-large is-primary"><i class="fas fa-check"></i></button>
                 </form>
-                <form action="/" method="post">
+                <form action="{{ post_endpoint }}" method="post">
                     <input type="hidden" name="task_id" value="{{ task_id }}"/>
                     <input type="hidden" name="annotation" value=0 />
                     <button class="button is-large is-danger"><i class="fas fa-times"></i></button>
                 </form>
-                <form action="/" method="post">
+                <form action="{{ post_endpoint }}" method="post">
                     <input type="hidden" name="task_id" value="{{ task_id }}"/>
                     <input type="hidden" name="annotation" value="-1" />
                         <button style="background-color: #8b8888" class="button is-large is-dark"><i class="fas fa-ban"></i></button>

@@ -124,6 +124,12 @@ def render_next_product(campaign: str=None):
                                                 request.accept_languages.best)
     context['predicted_category_name'] = predicted_category_name
     context['predicted_category'] = random_task.predicted_category
+
+    if campaign is not None:
+        context['post_endpoint'] = '/campaign/{}'.format(campaign)
+    else:
+        context['post_endpoint'] = '/'
+
     return render_template("index.html", **context)
 
 
@@ -160,7 +166,8 @@ def categorize_get(campaign):
 
 
 @app.route('/', methods=['POST'])
-def categorize_post():
+@app.route('/campaigns/<campaign>', methods=['POST'])
+def categorize_post(campaign=None):
     set_session_id()
     task_id = request.form['task_id']
     annotation = int(request.form['annotation'])
@@ -174,7 +181,7 @@ def categorize_post():
     if (not task or
             task.attributed_to_session_id != session_id or
             task.annotation is not None):
-        return render_next_product(task.campaign)
+        return render_next_product(campaign)
 
     task.annotation = annotation
     task.save()
@@ -185,7 +192,7 @@ def categorize_post():
         save_categories(task.product_id, current_categories)
 
     task.set_completion(session_id=session_id)
-    return render_next_product(task.campaign)
+    return render_next_product(campaign)
 
 
 if __name__ != '__main__':
