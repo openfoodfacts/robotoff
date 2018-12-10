@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, session
 import requests
 
 from robotoff import settings
-from robotoff.models import CategorizationTask
+from robotoff.app.models import CategorizationTask
 from ml.categories import parse_category_json
 
 
