@@ -1,3 +1,4 @@
+import argparse
 import json
 import uuid
 
@@ -10,7 +11,7 @@ def iter_jsonl(jsonl_path):
             yield json.loads(line)
 
 
-def import_dump(jsonl_path):
+def import_dump(jsonl_path, campaign=None):
     inserts = []
 
     rows = 0
@@ -26,6 +27,9 @@ def import_dump(jsonl_path):
         if 'category_depth' in item:
             insert['category_depth'] = item['category_depth']
 
+        if campaign is not None:
+            insert['campaign'] = campaign
+
         inserts.append(insert)
         rows += 1
 
@@ -36,5 +40,13 @@ def import_dump(jsonl_path):
     CategorizationTask.insert_many(inserts).execute()
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input", help="path of dump JSONL file")
+    parser.add_argument("--campaign", help="name of the campaign")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    import_dump("predicted_categories.json")
+    args = parse_args()
+    import_dump(args.input, args.campaign)
