@@ -78,7 +78,13 @@ def parse_product_json(data):
 
 
 def render_next_product(campaign: str=None):
+    attempts = 0
     while True:
+        attempts += 1
+
+        if attempts > 4:
+            render_template("index.html", no_product=True)
+
         query = (CategorizationTask.select()
                                    .where(CategorizationTask.attributed_at
                                           .is_null()))
