@@ -50,6 +50,13 @@ def get_product(product_id, **kwargs):
     return data['product']
 
 
+def normalize_lang(lang):
+    if '-' in lang:
+        return lang.split('-')[0]
+
+    return lang
+
+
 def get_category_name(identifier, best_language):
     if identifier not in category_json:
         return identifier
@@ -57,7 +64,7 @@ def get_category_name(identifier, best_language):
     category = category_json[identifier]
     category_names = category['name']
 
-    if 'fr' in category_names and best_language in ('fr', 'fr-FR'):
+    if 'fr' in category_names and best_language == 'fr':
         return category_names['fr']
 
     if 'en' in category_names:
@@ -66,15 +73,23 @@ def get_category_name(identifier, best_language):
     return identifier
 
 
-def parse_product_json(data):
-    return {
+def parse_product_json(data, lang=None):
+    product = {
         'image_url': data.get('image_front_url'),
         'ingredients_texts': data.get('ingredients_text'),
         'product_name': data.get('product_name'),
         'brands': data.get('brands'),
         'categories_tags': list(set(data.get('categories_tags', []))),
-        'product_link': "https://world.openfoodfacts.org/product/{}".format(data.get('code')),
     }
+
+    if lang is None:
+        domain = "https://world.openfoodfacts.org"
+    else:
+        domain = "https://{}.openfoodfacts.org".format(lang)
+
+    product['product_link'] = "{}/product/{}".format(domain, data.get('code'))
+
+    return product
 
 
 def render_next_product(campaign: str=None):
@@ -116,12 +131,13 @@ def render_next_product(campaign: str=None):
             app.logger.info("Product modified since prediction, fetching a "
                             "new product from DB...")
 
+    language = normalize_lang(request.accept_languages.best)
     random_task.set_attribution(session_id=get_session_id())
-    context = parse_product_json(product)
+    context = parse_product_json(product, language)
     context['task_id'] = str(random_task.id)
     context['confidence'] = random_task.confidence
     predicted_category_name = get_category_name(random_task.predicted_category,
-                                                request.accept_languages.best)
+                                                language)
     context['predicted_category_name'] = predicted_category_name
     context['predicted_category'] = random_task.predicted_category
 
