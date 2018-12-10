@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 import peewee
@@ -176,3 +177,9 @@ def categorize_post(campaign=None):
 
     task.set_completion(session_id=session_id)
     return render_next_product(campaign)
+
+
+if __name__ != '__main__':
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
