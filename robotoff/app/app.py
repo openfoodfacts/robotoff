@@ -149,7 +149,7 @@ def categorize_get(campaign):
 
 
 @app.route('/', methods=['POST'])
-@app.route('/campaign/<campaign>', method=['POST'])
+@app.route('/campaign/<campaign>', methods=['POST'])
 def categorize_post(campaign=None):
     set_session_id()
     task_id = request.form['task_id']
