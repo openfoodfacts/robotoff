@@ -2,13 +2,13 @@ import logging
 import uuid
 
 import peewee
-from flask import Flask, request, render_template, session
+from flask import Flask, request, render_template, session, jsonify
+
 import requests
 
 from robotoff import settings
 from robotoff.app.models import CategorizationTask
 from robotoff.categories import parse_category_json
-
 
 category_json = parse_category_json(settings.DATA_DIR / 'categories.min.json')
 
@@ -26,9 +26,13 @@ AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
 app.secret_key = b'k@\xcf\xb0\xfb\x94\xb2=3cJ7Q\xf1F\xd5'
 
 
+def generate_session_id():
+    return str(uuid.uuid4())
+
+
 def set_session_id():
     if 'session_id' not in session:
-        session['session_id'] = str(uuid.uuid4())
+        session['session_id'] = generate_session_id()
 
 
 def get_session_id():
@@ -60,14 +64,14 @@ def normalize_lang(lang):
     return lang
 
 
-def get_category_name(identifier, best_language):
+def get_category_name(identifier, lang):
     if identifier not in category_json:
         return identifier
 
     category = category_json[identifier]
     category_names = category['name']
 
-    if 'fr' in category_names and best_language == 'fr':
+    if 'fr' in category_names and lang == 'fr':
         return category_names['fr']
 
     if 'en' in category_names:
@@ -186,14 +190,7 @@ def categorize_get(campaign=None):
     return render_next_product(campaign)
 
 
-@app.route('/', methods=['POST'])
-@app.route('/campaign/<campaign>', methods=['POST'])
-def categorize_post(campaign=None):
-    set_session_id()
-    task_id = request.form['task_id']
-    annotation = int(request.form['annotation'])
-    session_id = get_session_id()
-
+def save_annotation(task_id: str, annotation: int, session_id: str):
     try:
         task = CategorizationTask.get_by_id(task_id)
     except CategorizationTask.DoesNotExist:
@@ -202,7 +199,7 @@ def categorize_post(campaign=None):
     if (not task or
             task.attributed_to_session_id != session_id or
             task.annotation is not None):
-        return render_next_product(campaign)
+        return
 
     task.annotation = annotation
     task.save()
@@ -213,7 +210,84 @@ def categorize_post(campaign=None):
         save_categories(task.product_id, current_categories)
 
     task.set_completion(session_id=session_id)
+
+
+@app.route('/', methods=['POST'])
+@app.route('/campaign/<campaign>', methods=['POST'])
+def categorize_post(campaign=None):
+    set_session_id()
+    task_id = request.form['task_id']
+    annotation = int(request.form['annotation'])
+    session_id = get_session_id()
+    save_annotation(task_id, annotation, session_id)
     return render_next_product(campaign)
+
+
+@app.route('/api/v1/categories/predictions', methods=['GET'])
+def api_get_categories_prediction():
+    session_id = request.args.get('session_id')
+
+    response = {}
+
+    if session_id is None:
+        session_id = generate_session_id()
+        response['session_id'] = session_id
+
+    campaign = request.args.get('campaign')
+    lang = normalize_lang(request.args.get('lang'))
+
+    result = get_next_product(campaign)
+
+    if result is None:
+        response['status'] = "no_prediction_left"
+        return jsonify(response)
+
+    task, product = result
+    task.set_attribution(session_id=session_id)
+    response['product'] = parse_product_json(product, lang)
+    response['task_id'] = str(task.id)
+
+    predicted_category_name = get_category_name(task.predicted_category,
+                                                lang)
+    response['prediction'] = {
+        'confidence': task.confidence,
+        'id': task.predicted_category,
+        'name': predicted_category_name,
+    }
+
+    return jsonify(response)
+
+
+@app.route('/api/v1/categories/annotate', methods=['POST'])
+def api_submit_categories_annotation():
+    session_id = request.args.get('session_id')
+
+    response = {}
+
+    if session_id is None:
+        session_id = generate_session_id()
+        response['session_id'] = session_id
+
+    task_id = request.args.get('task_id')
+
+    if task_id is None:
+        response['error'] = "invalid_task_id"
+        response['error_description'] = "The task_id parameter is required"
+        r = jsonify(response)
+        r.status_code = 404
+        return r
+
+    try:
+        annotation = int(request.args.get('annotation'))
+    except TypeError:
+        response['error'] = "invalid_annotation"
+        response['error_description'] = "The annotation parameter (in -1, 0, 1) is required"
+        r = jsonify(response)
+        r.status_code = 404
+        return r
+
+    save_annotation(task_id, annotation, session_id)
+    return jsonify(response)
 
 
 if __name__ != '__main__':
