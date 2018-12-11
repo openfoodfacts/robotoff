@@ -71,8 +71,8 @@ def get_category_name(identifier, lang):
     category = category_json[identifier]
     category_names = category['name']
 
-    if 'fr' in category_names and lang == 'fr':
-        return category_names['fr']
+    if lang in category_names:
+        return category_names[lang]
 
     if 'en' in category_names:
         return category_names['en']
