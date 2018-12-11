@@ -126,13 +126,12 @@ def get_next_product(campaign: str=None):
         product = get_product(random_task.product_id)
 
         # Product may be None if not found
-        if product and random_task.last_updated_at == str(product['last_modified_t']):
+        if product:
             return random_task, product
         else:
             random_task.outdated = True
             random_task.save()
-            app.logger.info("Product modified since prediction, fetching a "
-                            "new product from DB...")
+            app.logger.info("Product not found")
 
 
 def render_next_product(campaign: str=None):
