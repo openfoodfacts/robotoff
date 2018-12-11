@@ -39,11 +39,8 @@
                         <div class="media">
                             <div class="media-content">
                                 <p class="title is-4">{{ product_name }}</p>
-                                <p class="subtitle is-6">{{ brands }}</p>
+                                <p class="subtitle is-6">{% if brands is none %}Unknown brand{% else %}{{ brands }}{% endif %}</p>
                             </div>
-                        </div>
-                        <div class="content">
-                            <strong>Ingrédients :</strong> {{ ingredients_texts }}
                         </div>
                         <p><a href="{{ product_link }}">Product page</a></p>
                     </div>
