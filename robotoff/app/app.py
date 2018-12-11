@@ -95,7 +95,7 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def render_next_product(campaign: str=None):
+def get_next_product(campaign: str=None):
     app.logger.info("Campaign: {}".format(campaign))
 
     attempts = 0
@@ -103,7 +103,7 @@ def render_next_product(campaign: str=None):
         attempts += 1
 
         if attempts > 4:
-            render_template("index.html", no_product=True)
+            return
 
         query = (CategorizationTask.select()
                                    .where(CategorizationTask.attributed_at
@@ -120,29 +120,37 @@ def render_next_product(campaign: str=None):
         random_task_list = list(query.limit(1))
 
         if not random_task_list:
-            return render_template("index.html", no_product=True)
+            return
 
         random_task = random_task_list[0]
         product = get_product(random_task.product_id)
 
         # Product may be None if not found
         if product and random_task.last_updated_at == str(product['last_modified_t']):
-            break
+            return random_task, product
         else:
             random_task.outdated = True
             random_task.save()
             app.logger.info("Product modified since prediction, fetching a "
                             "new product from DB...")
 
+
+def render_next_product(campaign: str=None):
+    result = get_next_product(campaign)
+
+    if result is None:
+        return render_template('index.html', no_product=True)
+
+    task, product = result
+    task.set_attribution(session_id=get_session_id())
     language = normalize_lang(request.accept_languages.best)
-    random_task.set_attribution(session_id=get_session_id())
     context = parse_product_json(product, language)
-    context['task_id'] = str(random_task.id)
-    context['confidence'] = random_task.confidence
-    predicted_category_name = get_category_name(random_task.predicted_category,
+    context['task_id'] = str(task.id)
+    context['confidence'] = task.confidence
+    predicted_category_name = get_category_name(task.predicted_category,
                                                 language)
     context['predicted_category_name'] = predicted_category_name
-    context['predicted_category'] = random_task.predicted_category
+    context['predicted_category'] = task.predicted_category
 
     if campaign is not None:
         context['post_endpoint'] = '/campaign/{}'.format(campaign)
