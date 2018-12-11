@@ -287,6 +287,7 @@ def api_submit_categories_annotation():
         return r
 
     save_annotation(task_id, annotation, session_id)
+    response['status'] = 'saved'
     return jsonify(response)
 
 
