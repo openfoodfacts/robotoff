@@ -173,13 +173,8 @@ def save_categories(product_id, categories):
 
 
 @app.route('/')
-def main():
-    set_session_id()
-    return render_next_product()
-
-
 @app.route('/campaign/<campaign>')
-def categorize_get(campaign):
+def categorize_get(campaign=None):
     set_session_id()
     return render_next_product(campaign)
 
