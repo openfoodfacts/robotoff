@@ -260,7 +260,7 @@ def api_get_categories_prediction():
 
 @app.route('/api/v1/categories/annotate', methods=['POST'])
 def api_submit_categories_annotation():
-    session_id = request.args.get('session_id')
+    session_id = request.form.get('session_id')
 
     response = {}
 
@@ -268,7 +268,7 @@ def api_submit_categories_annotation():
         session_id = generate_session_id()
         response['session_id'] = session_id
 
-    task_id = request.args.get('task_id')
+    task_id = request.form.get('task_id')
 
     if task_id is None:
         response['error'] = "invalid_task_id"
@@ -278,7 +278,7 @@ def api_submit_categories_annotation():
         return r
 
     try:
-        annotation = int(request.args.get('annotation'))
+        annotation = int(request.form.get('annotation'))
     except TypeError:
         response['error'] = "invalid_annotation"
         response['error_description'] = "The annotation parameter (in -1, 0, 1) is required"
