@@ -80,6 +80,7 @@ def parse_product_json(data, lang=None):
         domain = "https://{}.openfoodfacts.org".format(lang)
 
     product['product_link'] = "{}/product/{}".format(domain, data.get('code'))
+    product['edit_product_link'] = "{}/cgi/product.pl?type=edit&code={}".format(domain, data.get('code'))
 
     return product
 
