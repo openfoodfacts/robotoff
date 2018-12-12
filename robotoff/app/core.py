@@ -1,5 +1,4 @@
 import uuid
-from typing import List
 
 from robotoff.app.models import CategorizationTask
 from robotoff.categories import parse_category_json
@@ -142,21 +141,19 @@ def save_category(product_id: str, category: str):
         logger.warn("Unexpected status during category update: {}".format(status))
 
 
-def save_annotation(task_id: str, annotation: int, session_id: str):
+def save_annotation(task_id: str, annotation: int, save: bool=True):
     try:
         task = CategorizationTask.get_by_id(task_id)
     except CategorizationTask.DoesNotExist:
         task = None
 
-    if (not task or
-            task.attributed_to_session_id != session_id or
-            task.annotation is not None):
+    if not task or task.annotation is not None:
         return
 
     task.annotation = annotation
     task.save()
 
-    if annotation == 1:
+    if annotation == 1 and save:
         save_category(task.product_id, task.predicted_category)
 
-    task.set_completion(session_id=session_id)
+    task.set_completion(session_id=task.attributed_to_session_id)

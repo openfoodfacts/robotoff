@@ -63,8 +63,7 @@ def categorize_post(campaign=None):
     set_session_id()
     task_id = request.form['task_id']
     annotation = int(request.form['annotation'])
-    session_id = get_session_id()
-    save_annotation(task_id, annotation, session_id)
+    save_annotation(task_id, annotation)
     return render_next_product(campaign)
 
 
@@ -107,14 +106,7 @@ def api_get_categories_prediction():
 
 @app.route('/api/v1/categories/annotate', methods=['POST'])
 def api_submit_categories_annotation():
-    session_id = request.form.get('session_id')
-
     response = {}
-
-    if session_id is None:
-        session_id = generate_session_id()
-        response['session_id'] = session_id
-
     task_id = request.form.get('task_id')
 
     if task_id is None:
@@ -133,7 +125,21 @@ def api_submit_categories_annotation():
         r.status_code = 404
         return r
 
-    save_annotation(task_id, annotation, session_id)
+    save = request.form.get('save')
+    try:
+        if save is not None:
+            save = int(save)
+    except TypeError:
+        response['error'] = "invalid_save"
+        response['error_description'] = "The save parameter must be 1 or 0"
+        r = jsonify(response)
+        r.status_code = 404
+        return r
+
+    if save is None:
+        save = True
+
+    save_annotation(task_id, annotation, save=save)
     response['status'] = 'saved'
     return jsonify(response)
 
