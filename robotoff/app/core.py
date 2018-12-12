@@ -70,7 +70,6 @@ def get_category_name(identifier, lang):
 def parse_product_json(data, lang=None):
     product = {
         'image_url': data.get('image_front_url'),
-        'ingredients_texts': data.get('ingredients_text'),
         'product_name': data.get('product_name'),
         'brands': data.get('brands'),
         'categories_tags': list(set(data.get('categories_tags', []))),
