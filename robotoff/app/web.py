@@ -1,6 +1,7 @@
 import logging
 
 from flask import Flask, request, render_template, session, jsonify
+from flask_cors import CORS
 
 from robotoff.app.core import (generate_session_id,
                                get_next_product,
@@ -10,6 +11,7 @@ from robotoff.app.core import (generate_session_id,
                                save_annotation)
 
 app = Flask(__name__)
+CORS(app)
 
 app.secret_key = b'k@\xcf\xb0\xfb\x94\xb2=3cJ7Q\xf1F\xd5'
 

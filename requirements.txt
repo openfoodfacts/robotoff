@@ -3,3 +3,4 @@ peewee
 Flask
 psycopg2-binary
 gunicorn
+flask-cors
