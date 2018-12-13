@@ -1,6 +1,6 @@
 import json
 import argparse
-from typing import Union, Dict, Tuple
+from typing import Union, Tuple
 
 from es.utils import get_es_client, ELASTIC_SEARCH_INDEX, ELASTIC_SEARCH_TYPE
 
@@ -26,8 +26,26 @@ def match(client, query: str):
 def generate_request(query: str):
     return {
         "query": {
-            "match_phrase": {
-                "fr:name": query
+            "bool": {
+                "should": [
+                    {
+                        "match_phrase": {
+                            "fr:name": query
+                        }
+                    },
+                    {
+                        "match_phrase": {
+                            "fr:name.stemmed": query
+                        }
+                    }
+                ],
+                "filter": [
+                    {
+                        "match_phrase": {
+                            "fr:name.stemmed": query
+                        }
+                    }
+                ]
             }
         }
     }

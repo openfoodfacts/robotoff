@@ -53,5 +53,5 @@ export_df = no_cat_df.drop(['url', 'generic_name', 'brands_tags',
                             'categories_tags', 'countries_tags',
                             'product_name', 'ingredients_text',
                             'main_category_en'], axis=1)
-export_df.to_json('predicted_categories_test.json', orient='records',
+export_df.to_json('predicted_categories_matcher.json', orient='records',
                   lines=True)
