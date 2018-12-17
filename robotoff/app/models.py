@@ -1,8 +1,12 @@
 import datetime
 import peewee
+from playhouse.postgres_ext import (PostgresqlExtDatabase,
+                                    BinaryJSONField)
 
-db = peewee.PostgresqlDatabase('postgres', user='postgres', password='postgres',
-                               host='localhost', port=5432)
+db = PostgresqlExtDatabase('postgres',
+                           user='postgres',
+                           password='postgres',
+                           host='localhost', port=5432)
 
 
 class CategorizationTask(peewee.Model):
@@ -19,6 +23,7 @@ class CategorizationTask(peewee.Model):
     outdated = peewee.BooleanField(default=False)
     category_depth = peewee.IntegerField(null=True, index=True)
     campaign = peewee.TextField(null=True, index=True)
+    countries = BinaryJSONField(null=True, index=True)
 
     class Meta:
         database = db
