@@ -85,7 +85,9 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_next_product(campaign: str=None, country: str=None):
+def get_next_product(campaign: str=None,
+                     country: str=None,
+                     category: str=None):
     logger.info("Campaign: {}".format(campaign))
 
     attempts = 0
@@ -113,6 +115,10 @@ def get_next_product(campaign: str=None, country: str=None):
         if country is not None:
             where_clauses.append(CategorizationTask.countries.contains(
                 country))
+
+        if category is not None:
+            where_clauses.append(CategorizationTask.predicted_category ==
+                                 category)
 
         query = query.where(*where_clauses).order_by(order_by)
 

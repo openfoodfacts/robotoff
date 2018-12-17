@@ -21,9 +21,10 @@ class CategoryPredictionResource:
 
         campaign = req.get_param('campaign')
         country = req.get_param('country')
+        category = req.get_param('category')
         lang = normalize_lang(req.get_param('lang'))
 
-        result = get_next_product(campaign, country)
+        result = get_next_product(campaign, country, category)
 
         if result is None:
             response['status'] = "no_prediction_left"
