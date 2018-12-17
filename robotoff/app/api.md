@@ -22,6 +22,8 @@ Fetch a new category prediction.
       Use `matcher` to get the string matching predictions.
     + lang (str, optional) - Language in which the results must be returned, currently only the category name is
       affected.
+    + country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
+    + category (str, optional) - Only return predictions with a specific category (ex: `en:hams`)
 
 + Response 200 (application/json)
 
