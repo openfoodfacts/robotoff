@@ -3,4 +3,5 @@ peewee
 Flask
 psycopg2-binary
 gunicorn
-flask-cors
+falcon==1.4.1
+falcon-cors==1.1.7
