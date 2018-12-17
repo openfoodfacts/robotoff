@@ -85,7 +85,7 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_next_product(campaign: str=None):
+def get_next_product(campaign: str=None, country: str=None):
     logger.info("Campaign: {}".format(campaign))
 
     attempts = 0
@@ -99,13 +99,22 @@ def get_next_product(campaign: str=None):
                                    .where(CategorizationTask.attributed_at
                                           .is_null()))
 
+        where_clauses = []
+        order_by = None
+
         if campaign is not None:
-            query = query.where(CategorizationTask.campaign ==
-                                campaign).order_by(peewee.fn.Random())
+            where_clauses.append(CategorizationTask.campaign ==
+                                 campaign)
+            order_by = peewee.fn.Random()
         else:
-            query = query.where(CategorizationTask.campaign.is_null()
-                                ).order_by(CategorizationTask
-                                           .category_depth.desc())
+            where_clauses.append(CategorizationTask.campaign.is_null())
+            order_by = CategorizationTask.category_depth.desc()
+
+        if country is not None:
+            where_clauses.append(CategorizationTask.countries.contains(
+                country))
+
+        query = query.where(*where_clauses).order_by(order_by)
 
         random_task_list = list(query.limit(1))
 
