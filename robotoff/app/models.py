@@ -3,10 +3,12 @@ import peewee
 from playhouse.postgres_ext import (PostgresqlExtDatabase,
                                     BinaryJSONField)
 
-db = PostgresqlExtDatabase('postgres',
-                           user='postgres',
-                           password='postgres',
-                           host='localhost', port=5432)
+from robotoff import settings
+
+db = PostgresqlExtDatabase(settings.DB_NAME,
+                           user=settings.DB_USER,
+                           password=settings.DB_PASSWORD,
+                           host=settings.DB_HOST, port=5432)
 
 
 class CategorizationTask(peewee.Model):
@@ -38,3 +40,6 @@ class CategorizationTask(peewee.Model):
         self.completed_at = datetime.datetime.utcnow()
         self.completed_by_session_id = session_id
         self.save()
+
+
+MODELS = [CategorizationTask]

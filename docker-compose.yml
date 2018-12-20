@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  api:
+    #image: openfoodfacts/robotoff
+    build:
+      context: .
+    ports:
+      - "5500:5500"
+    environment:
+      DB_HOST: "postgres"
+
+  postgres:
+    image: postgres:11
+    ports:
+      - "5432:5432"
+
