@@ -1,6 +1,5 @@
 requests
 peewee
-Flask
 psycopg2-binary
 gunicorn
 falcon==1.4.1
