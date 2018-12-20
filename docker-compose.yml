@@ -2,9 +2,7 @@ version: '3'
 
 services:
   api:
-    #image: openfoodfacts/robotoff
-    build:
-      context: .
+    image: openfoodfacts/robotoff
     ports:
       - "5500:5500"
     environment:
