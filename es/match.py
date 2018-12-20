@@ -15,34 +15,34 @@ def predict_category(client, name: str) -> Union[None, Tuple[str, float]]:
         return hit['_source']['id'], hit['_score']
 
 
-def match(client, query: str):
-    body = generate_request(query)
+def match(client, query: str, lang: str):
+    body = generate_request(query, lang)
     return client.search(index=ELASTIC_SEARCH_INDEX,
                          doc_type=ELASTIC_SEARCH_TYPE,
                          body=body,
                          _source=True)
 
 
-def generate_request(query: str):
+def generate_request(query: str, lang: str):
     return {
         "query": {
             "bool": {
                 "should": [
                     {
                         "match_phrase": {
-                            "fr:name": query
+                            f"{lang}:name": query
                         }
                     },
                     {
                         "match_phrase": {
-                            "fr:name.stemmed": query
+                            f"{lang}:name.stemmed": query
                         }
                     }
                 ],
                 "filter": [
                     {
                         "match_phrase": {
-                            "fr:name.stemmed": query
+                            f"{lang}:name.stemmed": query
                         }
                     }
                 ]
@@ -54,11 +54,12 @@ def generate_request(query: str):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("query", help="query to search")
+    parser.add_argument("--lang", help="language of the query", default='fr')
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
     es_client = get_es_client()
-    results = match(es_client, args.query)
+    results = match(es_client, args.query, args.lang)
     print(json.dumps(results['hits'], indent=4))
