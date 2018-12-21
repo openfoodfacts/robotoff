@@ -44,3 +44,9 @@ def jsonl_iter_fp(fp):
         line = line.strip('\n')
         if line:
             yield json.loads(line)
+
+
+def dump_jsonl(filepath, json_iter):
+    with open(str(filepath), 'w') as f:
+        for item in json_iter:
+            f.write(json.dumps(item) + "\n")

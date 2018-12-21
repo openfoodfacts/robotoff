@@ -20,10 +20,23 @@ class ProductStream:
                     if (product.get(field) or "") != "")
         return ProductStream(filtered)
 
+    def filter_empty_text_field(self, field: str) -> 'ProductStream':
+        filtered = (product for product in self.iterator
+                    if not (product.get(field) or "") != "")
+        return ProductStream(filtered)
+
     def filter_nonempty_tag_field(self, field: str) -> 'ProductStream':
         filtered = (product for product in self.iterator
                     if (product.get(field) or []))
         return ProductStream(filtered)
+
+    def filter_empty_tag_field(self, field: str) -> 'ProductStream':
+        filtered = (product for product in self.iterator
+                    if not (product.get(field) or []))
+        return ProductStream(filtered)
+
+    def iter(self):
+        return iter(self)
 
     def collect(self) -> List[dict]:
         return list(self)
