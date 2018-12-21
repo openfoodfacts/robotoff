@@ -10,6 +10,14 @@ from robotoff import utils
 logger = utils.get_logger()
 
 
+SUPPORTED_LANG = {
+    'fr',
+    'en',
+    'es',
+    'de',
+}
+
+
 def category_export(file_path):
     logger.info("Starting category export to Elasticsearch...")
     client = get_es_client()
@@ -30,10 +38,15 @@ def perform_category_export(client,
     for category_id, category_data in categories.items():
         category_names = category_data['name']
 
-        if 'fr' not in category_names:
-            continue
+        supported_langs = [lang for lang in category_names
+                           if lang in SUPPORTED_LANG]
 
-        fr_category_name = category_names['fr']
+        data = {
+            f"{lang}:name": category_names[lang]
+            for lang in supported_langs
+        }
+        data['id'] = category_id
+
         id_ = hashlib.sha256(category_id.encode('utf-8')).hexdigest()
 
         batch.append(
@@ -43,10 +56,7 @@ def perform_category_export(client,
                         '_id': id_
                     }
                 },
-                {
-                    'fr:name': fr_category_name,
-                    'id': category_id,
-                }
+                data
             )
         )
 

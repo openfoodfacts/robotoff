@@ -5,8 +5,19 @@ from typing import Union, Tuple
 from es.utils import get_es_client, ELASTIC_SEARCH_INDEX, ELASTIC_SEARCH_TYPE
 
 
-def predict_category(client, name: str) -> Union[None, Tuple[str, float]]:
-    results = match(client, name)
+SUPPORTED_LANG = {
+    'fr',
+    'en',
+    'es',
+    'de',
+}
+
+
+def predict_category(client, name: str, lang: str) -> Union[None, Tuple[str, float]]:
+    if lang not in SUPPORTED_LANG:
+        return
+
+    results = match(client, name, lang)
 
     hits = results['hits']['hits']
 

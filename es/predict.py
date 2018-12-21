@@ -1,57 +1,62 @@
-import pandas as pd
-import numpy as np
+import operator
+from typing import Iterable
 
-from robotoff.categories import Category, parse_category_json
+from robotoff.products import ProductDataset
 from robotoff import settings
-from ml.ml import import_data
+from robotoff.utils import dump_jsonl
 
 from es.utils import get_es_client
 from es.match import predict_category
 
-df = import_data(settings.DATASET_PATH)
 
-category_json = parse_category_json(settings.CATEGORIES_PATH)
-category_taxonomy = Category.from_data(category_json)
+def generate_dataset(client, products: Iterable[dict]) -> Iterable[dict]:
+    for product in products:
+        predictions = []
 
-CATEGORIES_SET = set(category_taxonomy.keys())
-CATEGORIES = sorted(CATEGORIES_SET)
-CATEGORIES_TO_INDEX = {cat: i for (i, cat) in enumerate(CATEGORIES)}
+        for lang in product['languages_codes']:
+            product_name = product.get(f"product_name_{lang}")
 
-print("Number of categories: {}".format(len(CATEGORIES)))
+            if not product_name:
+                continue
 
-fr_df = df[df.countries_tags == 'en:france']
+            prediction = predict_category(client, product_name, lang)
+
+            if prediction is None:
+                continue
+
+            category, score = prediction
+            predictions.append((lang, category, score))
+            continue
+
+        if predictions:
+            # Sort by descending score
+            sorted_predictions = sorted(predictions,
+                                        key=operator.itemgetter(2),
+                                        reverse=True)
+
+            prediction = sorted_predictions[0]
+            lang, category, score = prediction
+
+            yield {
+                'predicted_category_tag': category,
+                'predicted_category_lang': lang,
+                'code': product['code'],
+                'last_modified_t': product['last_modified_t'],
+                'countries_tags': product['countries_tags'],
+            }
+
+
+dataset = ProductDataset(settings.JSONL_DATASET_PATH)
+
+product_iter = (dataset.stream()
+                       .filter_nonempty_text_field('product_name')
+                       .filter_empty_tag_field('categories_tags')
+                       .filter_nonempty_tag_field('countries_tags')
+                       .filter_nonempty_tag_field('languages_codes')
+                       .iter())
 
 print("Performing prediction on products without categories")
-no_cat_df = fr_df[np.logical_and(pd.isnull(fr_df.categories_tags),
-                                 pd.notnull(fr_df.product_name))]
-print("%d products without categories" % len(no_cat_df))
 
-client = get_es_client()
-
-no_cat_y_pred = []
-scores = []
-
-for product_name in no_cat_df.product_name:
-    prediction = predict_category(client, product_name)
-
-    if prediction is not None:
-        no_cat_y_pred.append(prediction[0])
-        scores.append(prediction[1])
-    else:
-        no_cat_y_pred.append(None)
-        scores.append(None)
-
-no_cat_df['predicted_category_tag'] = no_cat_y_pred
-no_cat_df['predicted_category_score'] = scores
-
-no_cat_df = no_cat_df[pd.notnull(no_cat_df.predicted_category_tag)]
-
-print("Categories predicted for %d products" % len(no_cat_df))
-
-print("Exporting to JSON")
-export_df = no_cat_df.drop(['url', 'generic_name', 'brands_tags',
-                            'categories_tags', 'countries_tags',
-                            'product_name', 'ingredients_text',
-                            'main_category_en'], axis=1)
-export_df.to_json('predicted_categories_matcher.json', orient='records',
-                  lines=True)
+es_client = get_es_client()
+prediction_dataset = generate_dataset(es_client, product_iter)
+dump_jsonl('predicted_categories_matcher.json', prediction_dataset)
