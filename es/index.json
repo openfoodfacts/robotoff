@@ -24,6 +24,65 @@
             "fr_elision",
             "fr_stopword"
           ]
+        },
+        "en_stem_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "en_stopword",
+            "en_stemmer"
+          ]
+        },
+        "en_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "en_stopword"
+          ]
+        }
+      },
+        "de_stem_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "de_stopword",
+            "de_stemmer"
+          ]
+        },
+        "de_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "de_stopword"
+          ]
+        }
+      },
+        "es_stem_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "es_stopword",
+            "es_stemmer"
+          ]
+        },
+        "es_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "es_stopword"
+          ]
         }
       },
       "filter": {
@@ -47,6 +106,30 @@
         "fr_stemmer": {
           "type": "stemmer",
           "name": "light_french"
+        },
+        "en_stopword": {
+          "type": "custom_stop",
+          "stopwords": "_english_"
+        },
+        "en_stemmer": {
+          "type": "stemmer",
+          "name": "light_english"
+        },
+        "de_stopword": {
+          "type": "custom_stop",
+          "stopwords": "_german_"
+        },
+        "de_stemmer": {
+          "type": "stemmer",
+          "name": "light_german"
+        },
+        "es_stopword": {
+          "type": "custom_stop",
+          "stopwords": "_spanish_"
+        },
+        "es_stemmer": {
+          "type": "stemmer",
+          "name": "light_spanish"
         }
       }
     }
@@ -61,6 +144,36 @@
             "stemmed": {
               "type": "text",
               "analyzer": "fr_stem_analyzer"
+            }
+          }
+        },
+        "en:name": {
+          "type": "text",
+          "analyzer": "en_analyzer",
+          "fields": {
+            "stemmed": {
+              "type": "text",
+              "analyzer": "en_stem_analyzer"
+            }
+          }
+        },
+        "de:name": {
+          "type": "text",
+          "analyzer": "de_analyzer",
+          "fields": {
+            "stemmed": {
+              "type": "text",
+              "analyzer": "de_stem_analyzer"
+            }
+          }
+        },
+        "es:name": {
+          "type": "text",
+          "analyzer": "es_analyzer",
+          "fields": {
+            "stemmed": {
+              "type": "text",
+              "analyzer": "es_stem_analyzer"
             }
           }
         },
