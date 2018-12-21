@@ -1,3 +1,5 @@
+import gzip
+import json
 import logging
 import os
 import sys
@@ -25,3 +27,20 @@ def get_logger(name=None, level="INFO"):
         logger.addHandler(handler)
 
     return logger
+
+
+def jsonl_iter(jsonl_path):
+    with open(str(jsonl_path), 'r') as f:
+        yield from jsonl_iter_fp(f)
+
+
+def gzip_jsonl_iter(jsonl_path):
+    with gzip.open(str(jsonl_path), 'rt') as f:
+        yield from jsonl_iter_fp(f)
+
+
+def jsonl_iter_fp(fp):
+    for line in fp:
+        line = line.strip('\n')
+        if line:
+            yield json.loads(line)
