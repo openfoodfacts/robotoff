@@ -1,0 +1,73 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "fr_stem_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "fr_elision",
+            "fr_stopword",
+            "fr_stemmer"
+          ]
+        },
+        "fr_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "asciifolding",
+            "lowercase",
+            "fr_elision",
+            "fr_stopword"
+          ]
+        }
+      },
+      "filter": {
+        "fr_elision": {
+          "type": "elision",
+          "articles": [
+            "l",
+            "m",
+            "t",
+            "qu",
+            "n",
+            "s",
+            "j",
+            "d"
+          ]
+        },
+        "fr_stopword": {
+          "type": "custom_stop",
+          "stopwords": "_french_"
+        },
+        "fr_stemmer": {
+          "type": "stemmer",
+          "name": "light_french"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "document": {
+      "properties": {
+        "fr:name": {
+          "type": "text",
+          "analyzer": "fr_analyzer",
+          "fields": {
+            "stemmed": {
+              "type": "text",
+              "analyzer": "fr_stem_analyzer"
+            }
+          }
+        },
+        "id": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
