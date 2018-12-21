@@ -43,8 +43,7 @@
             "lowercase",
             "en_stopword"
           ]
-        }
-      },
+        },
         "de_stem_analyzer": {
           "type": "custom",
           "tokenizer": "standard",
@@ -63,8 +62,7 @@
             "lowercase",
             "de_stopword"
           ]
-        }
-      },
+        },
         "es_stem_analyzer": {
           "type": "custom",
           "tokenizer": "standard",
