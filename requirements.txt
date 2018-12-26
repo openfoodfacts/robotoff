@@ -4,3 +4,4 @@ psycopg2-binary
 gunicorn
 falcon==1.4.1
 falcon-cors==1.1.7
+elasticsearch==6.3.1
