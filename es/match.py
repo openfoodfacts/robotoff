@@ -46,7 +46,10 @@ def generate_request(query: str, lang: str):
                     },
                     {
                         "match_phrase": {
-                            f"{lang}:name.stemmed": query
+                            f"{lang}:name.stemmed": {
+                                "query": query,
+                                "boost": 10,
+                            }
                         }
                     }
                 ],
