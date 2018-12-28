@@ -11,23 +11,15 @@ def iter_jsonl(jsonl_path):
             yield json.loads(line)
 
 
-def import_text_dataset(filepath):
-    data = []
-
-    with open(filepath, 'r') as f:
-        for line in f:
-            line = line.strip('\n')
-
-            if line:
-                data.append(line)
-
-    return data
-
-
-def import_dump(jsonl_path, campaign=None, exclude_ids=None):
+def import_dump(jsonl_path, campaign=None):
     inserts = []
+    print("Deleting old predictions")
+    CategorizationTask.delete().where(CategorizationTask.annotation.is_null()).execute()
 
-    exclude_ids = exclude_ids or set()
+    print("Fetching already labeled product IDs")
+    exclude_ids = set(CategorizationTask.select(CategorizationTask.product_id)
+                      .where(CategorizationTask.annotation.is_null(False)).iterator())
+    print("Inserting new prediction in DB")
 
     rows = 0
     for item in iter_jsonl(jsonl_path):
@@ -65,16 +57,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("input", help="path of dump JSONL file")
     parser.add_argument("--campaign", help="name of the campaign")
-    parser.add_argument("--exclude-ids", help="filepath of IDs to exclude")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-
-    exclude_ids = None
-
-    if args.exclude_ids:
-        exclude_ids = set(import_text_dataset(args.exclude_ids))
-
-    import_dump(args.input, args.campaign, exclude_ids)
+    import_dump(args.input, args.campaign)
