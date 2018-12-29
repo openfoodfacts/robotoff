@@ -15,6 +15,11 @@ class ProductStream:
                     if country_tag in (product.get('countries_tags') or []))
         return ProductStream(filtered)
 
+    def filter_by_state_tag(self, state_tag: str) -> 'ProductStream':
+        filtered = (product for product in self.iterator
+                    if state_tag in (product.get('states_tags') or []))
+        return ProductStream(filtered)
+
     def filter_nonempty_text_field(self, field: str) -> 'ProductStream':
         filtered = (product for product in self.iterator
                     if (product.get(field) or "") != "")
