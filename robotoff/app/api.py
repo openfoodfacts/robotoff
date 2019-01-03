@@ -1,8 +1,7 @@
 import falcon
 from falcon_cors import CORS
 
-from robotoff.app.core import (generate_session_id,
-                               normalize_lang,
+from robotoff.app.core import (normalize_lang,
                                get_next_product,
                                parse_product_json,
                                get_category_name,
@@ -11,13 +10,7 @@ from robotoff.app.core import (generate_session_id,
 
 class CategoryPredictionResource:
     def on_get(self, req, resp):
-        session_id = req.get_param('session_id')
-
         response = {}
-
-        if session_id is None:
-            session_id = generate_session_id()
-            response['session_id'] = session_id
 
         campaign = req.get_param('campaign')
         country = req.get_param('country')
@@ -31,7 +24,6 @@ class CategoryPredictionResource:
 
         else:
             task, product = result
-            task.set_attribution(session_id=session_id)
             response['product'] = parse_product_json(product, lang)
             response['task_id'] = str(task.id)
 

@@ -16,8 +16,6 @@ Category-related predictions and annotation management.
 Fetch a new category prediction.
 
 + Parameters
-    + session_id (str, optional) - Session ID. If not provided, a new session ID is generated and returned in
-      the response. Subsequent calls must provide the `session_id`.
     + campaign (str, optional) - Annotation campaign. If not provided, the default campaign will be used.
       Use `matcher` to get the string matching predictions.
     + lang (str, optional) - Language in which the results must be returned, currently only the category name is

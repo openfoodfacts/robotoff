@@ -1,4 +1,4 @@
-import uuid
+import datetime
 
 from robotoff.app.models import CategorizationTask
 from robotoff.categories import parse_category_json
@@ -19,10 +19,6 @@ POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
 AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
 
 logger = get_logger(__name__)
-
-
-def generate_session_id():
-    return str(uuid.uuid4())
 
 
 def get_product(product_id, **kwargs):
@@ -98,7 +94,7 @@ def get_next_product(campaign: str=None,
             return
 
         query = (CategorizationTask.select()
-                                   .where(CategorizationTask.attributed_at
+                                   .where(CategorizationTask.annotation
                                           .is_null()))
 
         where_clauses = []
@@ -167,9 +163,8 @@ def save_annotation(task_id: str, annotation: int, save: bool=True):
         return
 
     task.annotation = annotation
+    task.completed_at = datetime.datetime.utcnow()
     task.save()
 
     if annotation == 1 and save:
         save_category(task.product_id, task.predicted_category)
-
-    task.set_completion(session_id=task.attributed_to_session_id)
