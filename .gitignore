@@ -1,4 +1,3 @@
-*.json
 __pycache__
 .idea
 ml/data/*
