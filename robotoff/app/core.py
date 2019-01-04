@@ -1,4 +1,5 @@
 import datetime
+from typing import Iterable
 
 from robotoff.app.models import CategorizationTask
 from robotoff.categories import parse_category_json
@@ -81,9 +82,9 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_next_product(campaign: str=None,
-                     country: str=None,
-                     category: str=None):
+def get_random_prediction(campaign: str=None,
+                          country: str=None,
+                          category: str=None):
     logger.info("Campaign: {}".format(campaign))
 
     attempts = 0
@@ -133,6 +134,39 @@ def get_next_product(campaign: str=None,
             random_task.outdated = True
             random_task.save()
             logger.info("Product not found")
+
+
+def sort_tasks(tasks: Iterable[CategorizationTask]):
+    priority = {
+        'matcher': 2,
+    }
+    return sorted(tasks,
+                  key=lambda x: priority.get(x.campaign, 0),
+                  reverse=True)
+
+
+def get_prediction(product_id: str):
+    query = (CategorizationTask.select()
+                               .where(CategorizationTask.annotation
+                                      .is_null(),
+                                      CategorizationTask.product_id ==
+                                      product_id))
+
+    task_list = list(query)
+
+    if not task_list:
+        return
+
+    task = sort_tasks(task_list)[0]
+    product = get_product(task.product_id)
+
+    # Product may be None if not found
+    if product:
+        return task, product
+    else:
+        task.outdated = True
+        task.save()
+        logger.info("Product not found")
 
 
 def save_category(product_id: str, category: str):

@@ -2,10 +2,11 @@ import falcon
 from falcon_cors import CORS
 
 from robotoff.app.core import (normalize_lang,
-                               get_next_product,
+                               get_random_prediction,
                                parse_product_json,
                                get_category_name,
-                               save_annotation)
+                               save_annotation,
+                               get_prediction)
 
 
 class CategoryPredictionResource:
@@ -17,7 +18,34 @@ class CategoryPredictionResource:
         category = req.get_param('category')
         lang = normalize_lang(req.get_param('lang'))
 
-        result = get_next_product(campaign, country, category)
+        result = get_random_prediction(campaign, country, category)
+
+        if result is None:
+            response['status'] = "no_prediction_left"
+
+        else:
+            task, product = result
+            response['product'] = parse_product_json(product, lang)
+            response['task_id'] = str(task.id)
+
+            predicted_category_name = get_category_name(task.predicted_category,
+                                                        lang)
+            response['prediction'] = {
+                'confidence': task.confidence,
+                'id': task.predicted_category,
+                'name': predicted_category_name,
+            }
+
+        resp.media = response
+
+
+class CategoryPredictionByProductResource:
+    def on_get(self, req, resp, barcode):
+        response = {}
+
+        lang = normalize_lang(req.get_param('lang'))
+
+        result = get_prediction(barcode)
 
         if result is None:
             response['status'] = "no_prediction_left"
@@ -63,4 +91,6 @@ api = falcon.API(middleware=[cors.middleware])
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
 api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
+api.add_route('/api/v1/categories/predictions/{barcode}',
+              CategoryPredictionByProductResource())
 api.add_route('/api/v1/categories/annotate', CategoryAnnotateResource())

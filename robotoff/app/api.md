@@ -42,6 +42,39 @@ Fetch a new category prediction.
             }
 
 
+## Product categories prediction [/categories/predictions/{barcode}]
+
++ Parameters
+    + barcode: Product barcode
+
+
+### Get a category prediction for the product [GET]
+
+Fetch a new category prediction for the given product.
+
++ Parameters
+    + lang (str, optional) - Language in which the results must be returned, currently only the category name is
+      affected.
+
++ Response 200 (application/json)
+
+            {
+                "prediction": {
+                    "confidence": null,
+                    "id": "en:potatoes",
+                    "name": "Pommes de terre"
+                },
+                "product": {
+                    "brands": "Fleurs des Champs ",
+                    "categories_tags": [],
+                    "image_url": "https://static.openfoodfacts.org/images/products/26062136/front_fr.8.400.jpg",
+                    "product_link": "https://fr.openfoodfacts.org/product/26062136",
+                    "product_name": "Pommes de Terre"
+                },
+                "task_id": "aea5127e-5dc4-4db3-8b2b-7174834a54d0"
+            }
+
+
 ## Categories annotations [/categories/annotate]
 
 ### Submit an annotation [POST]
