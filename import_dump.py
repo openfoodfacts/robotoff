@@ -22,10 +22,13 @@ def import_dump(jsonl_path, campaign=None):
     print("Inserting new prediction in DB")
 
     rows = 0
+    excluded = 0
+
     for item in iter_jsonl(jsonl_path):
         product_id = item['code']
 
         if product_id in exclude_ids:
+            excluded += 1
             continue
 
         insert = {
@@ -51,6 +54,9 @@ def import_dump(jsonl_path, campaign=None):
         if rows % 100 == 0:
             CategorizationTask.insert_many(inserts).execute()
             inserts = []
+
+        print("Insertion finished, %d items inserted, "
+              "%d excluded" % (rows, excluded))
 
     if inserts:
         CategorizationTask.insert_many(inserts).execute()
