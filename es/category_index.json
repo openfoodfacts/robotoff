@@ -98,7 +98,7 @@
           ]
         },
         "fr_stopword": {
-          "type": "custom_stop",
+          "type": "gapless_stop",
           "stopwords": "_french_"
         },
         "fr_stemmer": {
@@ -106,7 +106,7 @@
           "name": "light_french"
         },
         "en_stopword": {
-          "type": "custom_stop",
+          "type": "gapless_stop",
           "stopwords": "_english_"
         },
         "en_stemmer": {
@@ -114,7 +114,7 @@
           "name": "light_english"
         },
         "de_stopword": {
-          "type": "custom_stop",
+          "type": "gapless_stop",
           "stopwords": "_german_"
         },
         "de_stemmer": {
@@ -122,7 +122,7 @@
           "name": "light_german"
         },
         "es_stopword": {
-          "type": "custom_stop",
+          "type": "gapless_stop",
           "stopwords": "_spanish_"
         },
         "es_stemmer": {
