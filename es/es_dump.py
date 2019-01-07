@@ -4,10 +4,12 @@ from typing import Dict, Iterable, Tuple
 
 import argparse
 
-from es.utils import get_es_client, ELASTIC_SEARCH_INDEX, ELASTIC_SEARCH_TYPE
+from es.utils import get_es_client, ELASTIC_SEARCH_TYPE
 from robotoff import utils
 
 logger = utils.get_logger()
+
+CATEGORY_INDEX = "category"
 
 
 SUPPORTED_LANG = {
@@ -79,7 +81,7 @@ def insert_batch(client, batch: Iterable[Tuple[dict, dict]]):
                                   json.dumps(source))
 
     client.bulk(body=body,
-                index=ELASTIC_SEARCH_INDEX,
+                index=CATEGORY_INDEX,
                 doc_type=ELASTIC_SEARCH_TYPE)
 
 

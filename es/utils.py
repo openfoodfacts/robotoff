@@ -4,7 +4,6 @@ from typing import Iterable, Dict, Tuple
 import elasticsearch
 
 ELASTIC_SEARCH_HOST = "localhost:9200"
-ELASTIC_SEARCH_INDEX = "off"
 ELASTIC_SEARCH_TYPE = "document"
 
 
