@@ -42,6 +42,9 @@ def import_dump(jsonl_path, campaign=None):
         if campaign is not None:
             insert['campaign'] = campaign
 
+        if 'countries_tags' in item:
+            insert['countries'] = item['countries_tags']
+
         inserts.append(insert)
         rows += 1
 
