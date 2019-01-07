@@ -18,7 +18,7 @@ def import_dump(jsonl_path, campaign=None):
 
     print("Fetching already labeled product IDs")
     exclude_ids = set(CategorizationTask.select(CategorizationTask.product_id)
-                      .where(CategorizationTask.annotation.is_null(False)).iterator())
+                      .where(CategorizationTask.annotation.is_null(False)).scalar())
     print("Inserting new prediction in DB")
 
     rows = 0
