@@ -6,7 +6,7 @@ from robotoff.app.core import (normalize_lang,
                                parse_product_json,
                                get_category_name,
                                save_annotation,
-                               get_prediction)
+                               get_prediction, get_insights)
 
 
 class CategoryPredictionResource:
@@ -35,6 +35,20 @@ class CategoryPredictionResource:
                 'id': task.predicted_category,
                 'name': predicted_category_name,
             }
+
+        resp.media = response
+
+
+class ProductInsightResource:
+    def on_get(self, req, resp, barcode):
+        response = {}
+        insights = get_insights(barcode)
+
+        if not insights:
+            response['status'] = "no_insights"
+        else:
+            response['insights'] = insights
+            response['status'] = "found"
 
         resp.media = response
 
@@ -90,6 +104,7 @@ cors = CORS(allow_all_origins=True,
 api = falcon.API(middleware=[cors.middleware])
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
+api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
 api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
 api.add_route('/api/v1/categories/predictions/{barcode}',
               CategoryPredictionByProductResource())

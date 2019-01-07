@@ -1,4 +1,3 @@
-import datetime
 import peewee
 from playhouse.postgres_ext import (PostgresqlExtDatabase,
                                     BinaryJSONField)
@@ -29,4 +28,20 @@ class CategorizationTask(peewee.Model):
         table_name = "categorization_task"
 
 
-MODELS = [CategorizationTask]
+class ProductInsight(peewee.Model):
+    id = peewee.UUIDField(primary_key=True)
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    type = peewee.CharField(max_length=256)
+    data = BinaryJSONField(index=True)
+    timestamp = peewee.DateTimeField(null=True)
+    completed_at = peewee.DateTimeField(null=True)
+    annotation = peewee.IntegerField(null=True)
+    outdated = peewee.BooleanField(default=False)
+    countries = BinaryJSONField(null=True, index=True)
+
+    class Meta:
+        database = db
+        table_name = "product_insight"
+
+
+MODELS = [CategorizationTask, ProductInsight]

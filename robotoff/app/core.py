@@ -1,7 +1,7 @@
 import datetime
 from typing import Iterable
 
-from robotoff.app.models import CategorizationTask
+from robotoff.app.models import CategorizationTask, ProductInsight
 from robotoff.categories import parse_category_json
 from robotoff.utils import get_logger
 from robotoff import settings
@@ -20,6 +20,15 @@ POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
 AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
 
 logger = get_logger(__name__)
+
+
+PRODUCT_FIELDS = [
+    'image_front_url',
+    'product_name',
+    'brands',
+    'categories_tags',
+    'code',
+]
 
 
 def get_product(product_id, **kwargs):
@@ -167,6 +176,25 @@ def get_prediction(product_id: str):
         task.outdated = True
         task.save()
         logger.info("Product not found")
+
+
+def get_insights(barcode: str, limit=25):
+    query = (ProductInsight.select()
+                           .where(ProductInsight.annotation
+                                  .is_null(),
+                                  ProductInsight.barcode ==
+                                  barcode)
+                           .limit(limit))
+
+    insights = []
+
+    for insight in query.iterator():
+        insights.append({
+            'type': insight.type,
+            **insight.data
+        })
+
+    return insights
 
 
 def save_category(product_id: str, category: str):
