@@ -11,3 +11,9 @@ DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
+
+ELASTICSEARCH_HOSTS = ["localhost:9200"]
+ELASTICSEARCH_TYPE = "document"
+
+ELASTICSEARCH_CATEGORY_INDEX = 'category'
+ELASTICSEARCH_PRODUCT_INDEX = 'product'

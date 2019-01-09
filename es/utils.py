@@ -1,14 +1,7 @@
 import json
-from typing import Iterable, Dict, Tuple
+from typing import Iterable, Dict, Tuple, List
 
-import elasticsearch
-
-ELASTIC_SEARCH_HOST = "localhost:9200"
-ELASTIC_SEARCH_TYPE = "document"
-
-
-def get_es_client():
-    return elasticsearch.Elasticsearch(ELASTIC_SEARCH_HOST)
+from robotoff import settings
 
 
 def perform_export(client,
@@ -50,4 +43,4 @@ def insert_batch(client, batch: Iterable[Tuple[Dict, Dict]], index: str):
 
     client.bulk(body=body,
                 index=index,
-                doc_type=ELASTIC_SEARCH_TYPE)
+                doc_type=settings.ELASTICSEARCH_TYPE)

@@ -2,8 +2,8 @@ import json
 import argparse
 from typing import Union, Tuple
 
-from es.utils import get_es_client, ELASTIC_SEARCH_INDEX, ELASTIC_SEARCH_TYPE
-
+from robotoff.utils import get_es_client
+from robotoff import settings
 
 SUPPORTED_LANG = {
     'fr',
@@ -28,8 +28,8 @@ def predict_category(client, name: str, lang: str) -> Union[None, Tuple[str, flo
 
 def match(client, query: str, lang: str):
     body = generate_request(query, lang)
-    return client.search(index=ELASTIC_SEARCH_INDEX,
-                         doc_type=ELASTIC_SEARCH_TYPE,
+    return client.search(index=settings.ELASTICSEARCH_CATEGORY_INDEX,
+                         doc_type=settings.ELASTICSEARCH_TYPE,
                          body=body,
                          _source=True)
 

@@ -4,8 +4,8 @@ from typing import Dict, Iterable, Tuple
 
 import argparse
 
-from es.utils import get_es_client, ELASTIC_SEARCH_TYPE
-from robotoff import utils
+from robotoff.utils import get_es_client
+from robotoff import utils, settings
 
 logger = utils.get_logger()
 
@@ -82,7 +82,7 @@ def insert_batch(client, batch: Iterable[Tuple[dict, dict]]):
 
     client.bulk(body=body,
                 index=CATEGORY_INDEX,
-                doc_type=ELASTIC_SEARCH_TYPE)
+                doc_type=settings.ELASTICSEARCH_TYPE)
 
 
 def parse_args():
