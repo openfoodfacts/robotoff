@@ -44,3 +44,13 @@ def insert_batch(client, batch: Iterable[Tuple[Dict, Dict]], index: str):
     client.bulk(body=body,
                 index=index,
                 doc_type=settings.ELASTICSEARCH_TYPE)
+
+
+def generate_msearch_body(index: str, queries: Iterable[Dict]):
+    lines = []
+
+    for query in queries:
+        lines.append(json.dumps({'index': index}))
+        lines.append(json.dumps(query))
+
+    return '\n'.join(lines)
