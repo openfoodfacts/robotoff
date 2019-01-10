@@ -12,7 +12,7 @@ DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 
-ELASTICSEARCH_HOSTS = ["localhost:9200"]
+ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
 
 ELASTICSEARCH_CATEGORY_INDEX = 'category'
