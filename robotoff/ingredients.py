@@ -40,7 +40,8 @@ class Ingredients:
 class TermCorrection:
     original: str
     correction: str
-    offsets: OffsetType
+    start_offset: int
+    end_offset: int
 
 
 @dataclass
@@ -97,6 +98,7 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
 
     for idx, suggestions in enumerate(_suggest_batch(client, normalized_ingredients, **kwargs)):
         ingredient = ingredients.get_ingredient(idx)
+        offsets = ingredients.offsets[idx]
         print(ingredient)
         normalized_ingredient = ingredients.get_normalized_ingredient(idx)
         options = suggestions['options']
@@ -108,7 +110,9 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
         original_tokens = analyze(client, normalized_ingredient)
         suggestion_tokens = analyze(client, option['text'])
         try:
-            term_corrections = format_corrections(original_tokens, suggestion_tokens)
+            term_corrections = format_corrections(original_tokens,
+                                                  suggestion_tokens,
+                                                  offsets[0])
             corrections.append(Correction(term_corrections, option['score']))
         except ValueError:
             print("Mismatch")
@@ -118,7 +122,9 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
     return corrections
 
 
-def format_corrections(original_tokens: List[Dict], suggestion_tokens: List[Dict]):
+def format_corrections(original_tokens: List[Dict],
+                       suggestion_tokens: List[Dict],
+                       offset: int=0):
     corrections = []
 
     if len(original_tokens) != len(suggestion_tokens):
@@ -140,7 +146,8 @@ def format_corrections(original_tokens: List[Dict], suggestion_tokens: List[Dict
             token_end = original_token['end_offset']
             corrections.append(TermCorrection(original=original_token_str,
                                               correction=token_str,
-                                              offsets=(token_start, token_end)))
+                                              start_offset=offset+token_start,
+                                              end_offset=offset+token_end))
 
     return corrections
 
