@@ -3,7 +3,7 @@ FROM python:3.7-slim
 WORKDIR /opt/robotoff
 
 COPY robotoff /opt/robotoff/robotoff/
-COPY data /opt/robotoff/data/
+COPY data/categories.json /opt/robotoff/data/categories.json
 COPY requirements.txt /opt/robotoff/
 COPY gunicorn.conf /opt/robotoff/
 

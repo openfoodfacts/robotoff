@@ -3,7 +3,7 @@ import os
 
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / 'data'
-CATEGORIES_PATH = DATA_DIR / 'categories.min.json'
+CATEGORIES_PATH = DATA_DIR / 'categories.json'
 DATASET_PATH = DATA_DIR / 'en.openfoodfacts.org.products.csv'
 JSONL_DATASET_PATH = DATA_DIR / 'products.jsonl.gz'
 

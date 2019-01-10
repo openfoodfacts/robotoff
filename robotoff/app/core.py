@@ -10,7 +10,7 @@ import peewee
 import requests
 
 
-category_json = parse_category_json(settings.DATA_DIR / 'categories.min.json')
+category_json = parse_category_json(settings.CATEGORIES_PATH)
 
 http_session = requests.Session()
 API_URL = "https://world.openfoodfacts.org/api/v0"
