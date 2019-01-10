@@ -2,7 +2,7 @@ import json
 import argparse
 from typing import Union, Tuple
 
-from robotoff.utils import get_es_client
+from robotoff.utils.es import get_es_client
 from robotoff import settings
 
 SUPPORTED_LANG = {

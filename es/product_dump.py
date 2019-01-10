@@ -3,10 +3,9 @@ import re
 from typing import List, Union
 
 from robotoff.products import ProductDataset
-from robotoff.utils import get_es_client
 from robotoff import settings
 
-from es.utils import perform_export
+from robotoff.utils.es import get_es_client, perform_export
 
 
 PUNCTUATION_RE = re.compile(r"[()_,.:;\[\]|`\\{}]")

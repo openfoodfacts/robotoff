@@ -5,7 +5,7 @@ from robotoff.products import ProductDataset
 from robotoff import settings
 from robotoff.utils import dump_jsonl
 
-from robotoff.utils import get_es_client
+from robotoff.utils.es import get_es_client
 from es.match import predict_category
 
 

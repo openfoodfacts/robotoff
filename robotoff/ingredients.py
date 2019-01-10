@@ -2,9 +2,8 @@ import re
 from dataclasses import dataclass, field
 from typing import List, Tuple, Iterable, Dict
 
-from es.utils import generate_msearch_body
 from robotoff import settings
-from robotoff.utils import get_es_client
+from robotoff.utils.es import get_es_client, generate_msearch_body
 
 SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 
