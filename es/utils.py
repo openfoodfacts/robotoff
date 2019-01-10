@@ -1,5 +1,5 @@
 import json
-from typing import Iterable, Dict, Tuple, List
+from typing import Iterable, Dict, Tuple
 
 from robotoff import settings
 
