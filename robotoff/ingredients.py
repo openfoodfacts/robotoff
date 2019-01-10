@@ -38,10 +38,16 @@ class Ingredients:
 
 
 @dataclass
-class Correction:
+class TermCorrection:
     original: str
     correction: str
     offsets: OffsetType
+
+
+@dataclass
+class Correction:
+    term_corrections: List[TermCorrection]
+    score: int
 
 
 def normalize_ingredients(ingredient_text: str):
@@ -94,9 +100,6 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
         ingredient = ingredients.get_ingredient(idx)
         print(ingredient)
         normalized_ingredient = ingredients.get_normalized_ingredient(idx)
-        offsets = ingredients.offsets[idx]
-        # print(ingredient)
-        # print(suggestions)
         options = suggestions['options']
 
         if not options:
@@ -106,21 +109,18 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
         original_tokens = analyze(client, normalized_ingredient)
         suggestion_tokens = analyze(client, option['text'])
         try:
-            output = format_suggestion(ingredient, original_tokens, suggestion_tokens)
+            term_corrections = format_corrections(original_tokens, suggestion_tokens)
+            corrections.append(Correction(term_corrections, option['score']))
         except ValueError:
             print("Mismatch")
             # Length mismatch exception
             continue
 
-        correction = Correction(ingredient, output, offsets)
-        corrections.append(correction)
-        print("Original: {}\nOutput:   {}\n".format(ingredient, output))
-
     return corrections
 
 
-def format_suggestion(original, original_tokens, suggestion_tokens):
-    output = original
+def format_corrections(original_tokens: List[Dict], suggestion_tokens: List[Dict]):
+    corrections = []
 
     if len(original_tokens) != len(suggestion_tokens):
         raise ValueError("The original text and the suggestions must have the same number of tokens")
@@ -139,9 +139,11 @@ def format_suggestion(original, original_tokens, suggestion_tokens):
 
             token_start = original_token['start_offset']
             token_end = original_token['end_offset']
-            output = output[:token_start] + token_str + output[token_end:]
+            corrections.append(TermCorrection(original=original_token_str,
+                                              correction=token_str,
+                                              offsets=(token_start, token_end)))
 
-    return output
+    return corrections
 
 
 def _suggest(client, text):
