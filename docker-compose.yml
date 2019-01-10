@@ -13,3 +13,8 @@ services:
     ports:
       - "5432:5432"
 
+  elasticsearch:
+    image: raphael0202/elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
