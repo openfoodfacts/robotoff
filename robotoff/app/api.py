@@ -1,3 +1,5 @@
+import dataclasses
+
 import falcon
 from falcon_cors import CORS
 
@@ -7,6 +9,10 @@ from robotoff.app.core import (normalize_lang,
                                get_category_name,
                                save_annotation,
                                get_prediction, get_insights)
+from robotoff.ingredients import generate_corrections
+from robotoff.utils.es import get_es_client
+
+es_client = get_es_client()
 
 
 class CategoryPredictionResource:
@@ -97,6 +103,17 @@ class CategoryAnnotateResource:
         }
 
 
+class IngredientSpellcheckResource:
+    def on_post(self, req, resp):
+        text = req.get_param('text', required=True)
+
+        corrections = generate_corrections(es_client, text, confidence=1)
+
+        resp.media = {
+            'corrections': [dataclasses.asdict(c) for c in corrections],
+        }
+
+
 cors = CORS(allow_all_origins=True,
             allow_all_headers=True,
             allow_all_methods=True)
@@ -109,3 +126,4 @@ api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
 api.add_route('/api/v1/categories/predictions/{barcode}',
               CategoryPredictionByProductResource())
 api.add_route('/api/v1/categories/annotate', CategoryAnnotateResource())
+api.add_route('/api/v1/predict/ingredients/spellcheck', IngredientSpellcheckResource())
