@@ -1,3 +1,5 @@
+import itertools
+
 import dataclasses
 
 import falcon
@@ -9,7 +11,7 @@ from robotoff.app.core import (normalize_lang,
                                get_category_name,
                                save_annotation,
                                get_prediction, get_insights)
-from robotoff.ingredients import generate_corrections
+from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.utils.es import get_es_client
 
 es_client = get_es_client()
@@ -108,9 +110,14 @@ class IngredientSpellcheckResource:
         text = req.get_param('text', required=True)
 
         corrections = generate_corrections(es_client, text, confidence=1)
+        term_corrections = list(itertools.chain
+                                .from_iterable((c.term_corrections
+                                                for c in corrections)))
 
         resp.media = {
             'corrections': [dataclasses.asdict(c) for c in corrections],
+            'text': text,
+            'corrected': generate_corrected_text(term_corrections, text),
         }
 
 

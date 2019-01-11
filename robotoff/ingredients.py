@@ -1,3 +1,4 @@
+import operator
 import re
 from dataclasses import dataclass, field
 from typing import List, Tuple, Iterable, Dict
@@ -120,6 +121,28 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
             continue
 
     return corrections
+
+
+def generate_corrected_text(corrections: List[TermCorrection], text: str):
+    sorted_corrections = sorted(corrections,
+                                key=operator.attrgetter('start_offset'))
+    corrected_fragments = []
+
+    last_correction = None
+    for correction in sorted_corrections:
+        if last_correction is None:
+            corrected_fragments.append(text[:correction.start_offset])
+        else:
+            corrected_fragments.append(
+                text[last_correction.end_offset:correction.start_offset])
+
+        corrected_fragments.append(correction.correction)
+        last_correction = correction
+
+    if last_correction is not None:
+        corrected_fragments.append(text[last_correction.end_offset:])
+
+    return ''.join(corrected_fragments)
 
 
 def format_corrections(original_tokens: List[Dict],
