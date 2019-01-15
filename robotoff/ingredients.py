@@ -100,7 +100,6 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
     for idx, suggestions in enumerate(_suggest_batch(client, normalized_ingredients, **kwargs)):
         ingredient = ingredients.get_ingredient(idx)
         offsets = ingredients.offsets[idx]
-        print(ingredient)
         normalized_ingredient = ingredients.get_normalized_ingredient(idx)
         options = suggestions['options']
 
@@ -201,7 +200,21 @@ def _suggest_batch(client, texts: Iterable[str], **kwargs) -> List[Dict]:
     body = generate_msearch_body(settings.ELASTICSEARCH_PRODUCT_INDEX, queries)
     response = client.msearch(body=body,
                               doc_type=settings.ELASTICSEARCH_TYPE)
-    return [r['suggest'][suggester_name][0] for r in response['responses']]
+
+    suggestions = []
+
+    for r in response['responses']:
+        if r['status'] != 200:
+            root_cause = response['error']['root_cause'][0]
+            error_type = root_cause['type']
+            error_reason = root_cause['reason']
+            print("Elasticsearch error: {} [{}]"
+                  "".format(error_reason, error_type))
+            continue
+
+        suggestions.append(r['suggest'][suggester_name][0])
+
+    return suggestions
 
 
 def generate_suggest_query(text,
