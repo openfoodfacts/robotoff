@@ -189,12 +189,48 @@ def get_insights(barcode: str, limit=25):
     insights = []
 
     for insight in query.iterator():
-        insights.append({
-            'type': insight.type,
-            **insight.data
-        })
+        insights.append(insight.serialize())
 
     return insights
+
+
+def get_random_insight(insight_type: str = None,
+                       country: str = None):
+    attempts = 0
+    while True:
+        attempts += 1
+
+        if attempts > 4:
+            return
+
+        query = ProductInsight.select()
+        where_clauses = [ProductInsight.annotation.is_null()]
+
+        if country is not None:
+            where_clauses.append(ProductInsight.countries.contains(
+                country))
+
+        if insight_type is not None:
+            where_clauses.append(ProductInsight.type ==
+                                 insight_type)
+
+        query = query.where(*where_clauses).order_by(peewee.fn.Random())
+
+        insight_list = list(query.limit(1))
+
+        if not insight_list:
+            return
+
+        insight = insight_list[0]
+        product = get_product(insight.barcode)
+
+        # Product may be None if not found
+        if product:
+            return insight
+        else:
+            insight.outdated = True
+            insight.save()
+            logger.info("Product not found")
 
 
 def save_category(product_id: str, category: str):

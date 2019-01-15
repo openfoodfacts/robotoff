@@ -10,7 +10,9 @@ from robotoff.app.core import (normalize_lang,
                                parse_product_json,
                                get_category_name,
                                save_annotation,
-                               get_prediction, get_insights)
+                               get_prediction,
+                               get_insights,
+                               get_random_insight)
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.utils.es import get_es_client
 
@@ -56,6 +58,23 @@ class ProductInsightResource:
             response['status'] = "no_insights"
         else:
             response['insights'] = insights
+            response['status'] = "found"
+
+        resp.media = response
+
+
+class RandomInsightResource:
+    def on_get(self, req, resp):
+        insight_type = req.get_param('type') or None
+        country = req.get_param('country') or None
+        response = {}
+
+        insight = get_random_insight(insight_type, country)
+
+        if not insight:
+            response['status'] = "no_insights"
+        else:
+            response['insight'] = insight.serialize()
             response['status'] = "found"
 
         resp.media = response
@@ -129,6 +148,7 @@ api = falcon.API(middleware=[cors.middleware])
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
 api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
+api.add_route('/api/v1/insights/random', RandomInsightResource())
 api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
 api.add_route('/api/v1/categories/predictions/{barcode}',
               CategoryPredictionByProductResource())

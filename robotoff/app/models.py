@@ -43,5 +43,13 @@ class ProductInsight(peewee.Model):
         database = db
         table_name = "product_insight"
 
+    def serialize(self):
+        return {
+            'type': self.type,
+            'barcode': self.barcode,
+            'countries': self.countries,
+            **self.data,
+        }
+
 
 MODELS = [CategorizationTask, ProductInsight]
