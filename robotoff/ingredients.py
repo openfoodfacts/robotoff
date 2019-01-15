@@ -238,7 +238,12 @@ def generate_suggest_query(text,
                             "suggest_mode": suggest_mode,
                             "min_word_length": min_word_length
                         }
-                    ]
+                    ],
+                    "smoothing": {
+                        "laplace": {
+                            "alpha": 0.5
+                        }
+                    }
                 }
             }
         }
