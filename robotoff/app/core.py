@@ -266,3 +266,24 @@ def save_annotation(task_id: str, annotation: int, save: bool=True):
 
     if annotation == 1 and save:
         save_category(task.product_id, task.predicted_category)
+
+
+def save_insight(insight_id: str, annotation: int, save: bool=True):
+    try:
+        insight = ProductInsight.get_by_id(insight_id)
+    except ProductInsight.DoesNotExist:
+        insight = None
+
+    if not insight or insight.annotation is not None:
+        return
+
+    insight.annotation = annotation
+    insight.completed_at = datetime.datetime.utcnow()
+    insight.save()
+
+    if annotation == 1 and save:
+        apply_insight(insight)
+
+
+def apply_insight(insight: ProductInsight):
+    pass

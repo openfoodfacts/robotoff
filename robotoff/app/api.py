@@ -12,7 +12,8 @@ from robotoff.app.core import (normalize_lang,
                                save_annotation,
                                get_prediction,
                                get_insights,
-                               get_random_insight)
+                               get_random_insight,
+                               save_insight)
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.utils.es import get_es_client
 
@@ -78,6 +79,23 @@ class RandomInsightResource:
             response['status'] = "found"
 
         resp.media = response
+
+
+class AnnotateInsightResource:
+    def on_post(self, req, resp):
+        insight_id = req.get_param('insight_id', required=True)
+        annotation = req.get_param_as_int('annotation', required=True,
+                                          min=-1, max=1)
+
+        save = req.get_param_as_bool('save')
+
+        if save is None:
+            save = True
+
+        save_insight(insight_id, annotation, save=save)
+        resp.media = {
+            'status': 'saved',
+        }
 
 
 class CategoryPredictionByProductResource:
@@ -149,6 +167,7 @@ api = falcon.API(middleware=[cors.middleware])
 api.req_options.auto_parse_form_urlencoded = True
 api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
 api.add_route('/api/v1/insights/random', RandomInsightResource())
+api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
 api.add_route('/api/v1/categories/predictions/{barcode}',
               CategoryPredictionByProductResource())
