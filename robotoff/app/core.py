@@ -1,6 +1,7 @@
 import datetime
 from typing import Iterable
 
+from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.models import CategorizationTask, ProductInsight
 from robotoff.categories import parse_category_json
 from robotoff.utils import get_logger
@@ -280,7 +281,7 @@ def save_category_annotation(task_id: str, annotation: int, save: bool=True):
 
 def save_insight(insight_id: str, annotation: int, save: bool=True):
     try:
-        insight = ProductInsight.get_by_id(insight_id)
+        insight: ProductInsight = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
         insight = None
 
@@ -292,8 +293,5 @@ def save_insight(insight_id: str, annotation: int, save: bool=True):
     insight.save()
 
     if annotation == 1 and save:
-        apply_insight(insight)
-
-
-def apply_insight(insight: ProductInsight):
-    pass
+        annotator = InsightAnnotatorFactory.create(insight.type)
+        annotator.annotate(insight)

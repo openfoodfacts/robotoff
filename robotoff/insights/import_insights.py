@@ -5,7 +5,7 @@ import uuid
 from robotoff.models import batch_insert, ProductInsight
 
 KEEP_TYPE = {
-    'packager_codes'
+    'packager_code'
 }
 
 
