@@ -6,11 +6,11 @@ import falcon
 from falcon_cors import CORS
 
 from robotoff.app.core import (normalize_lang,
-                               get_random_prediction,
+                               get_random_category_prediction,
                                parse_product_json,
                                get_category_name,
-                               save_annotation,
-                               get_prediction,
+                               save_category_annotation,
+                               get_category_prediction,
                                get_insights,
                                get_random_insight,
                                save_insight)
@@ -29,7 +29,7 @@ class CategoryPredictionResource:
         category = req.get_param('category')
         lang = normalize_lang(req.get_param('lang'))
 
-        result = get_random_prediction(campaign, country, category)
+        result = get_random_category_prediction(campaign, country, category)
 
         if result is None:
             response['status'] = "no_prediction_left"
@@ -104,7 +104,7 @@ class CategoryPredictionByProductResource:
 
         lang = normalize_lang(req.get_param('lang'))
 
-        result = get_prediction(barcode)
+        result = get_category_prediction(barcode)
 
         if result is None:
             response['status'] = "no_prediction_left"
@@ -136,7 +136,7 @@ class CategoryAnnotateResource:
         if save is None:
             save = True
 
-        save_annotation(task_id, annotation, save=save)
+        save_category_annotation(task_id, annotation, save=save)
         resp.media = {
             'status': 'saved',
         }

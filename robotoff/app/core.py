@@ -22,7 +22,7 @@ AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
 logger = get_logger(__name__)
 
 
-PRODUCT_FIELDS = [
+CATEGORY_PRODUCT_FIELDS = [
     'image_front_url',
     'product_name',
     'brands',
@@ -31,9 +31,17 @@ PRODUCT_FIELDS = [
 ]
 
 
-def get_product(product_id, **kwargs):
+def get_product(product_id, fields=None):
+    fields = fields or []
     url = PRODUCT_URL + "/{}.json".format(product_id)
-    r = http_session.get(url, params=kwargs)
+
+    if fields:
+        # requests escape comma in URLs, as expected, but openfoodfacts server
+        # does not recognize escaped commas.
+        # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
+        url += '?fields={}'.format(','.join(fields))
+
+    r = http_session.get(url)
 
     if r.status_code != 200:
         return
@@ -91,9 +99,9 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_random_prediction(campaign: str=None,
-                          country: str=None,
-                          category: str=None):
+def get_random_category_prediction(campaign: str=None,
+                                   country: str=None,
+                                   category: str=None):
     logger.info("Campaign: {}".format(campaign))
 
     attempts = 0
@@ -134,7 +142,7 @@ def get_random_prediction(campaign: str=None,
             return
 
         random_task = random_task_list[0]
-        product = get_product(random_task.product_id)
+        product = get_product(random_task.product_id, CATEGORY_PRODUCT_FIELDS)
 
         # Product may be None if not found
         if product:
@@ -154,7 +162,7 @@ def sort_tasks(tasks: Iterable[CategorizationTask]):
                   reverse=True)
 
 
-def get_prediction(product_id: str):
+def get_category_prediction(product_id: str):
     query = (CategorizationTask.select()
                                .where(CategorizationTask.annotation
                                       .is_null(),
@@ -167,7 +175,7 @@ def get_prediction(product_id: str):
         return
 
     task = sort_tasks(task_list)[0]
-    product = get_product(task.product_id)
+    product = get_product(task.product_id, CATEGORY_PRODUCT_FIELDS)
 
     # Product may be None if not found
     if product:
@@ -222,7 +230,9 @@ def get_random_insight(insight_type: str = None,
             return
 
         insight = insight_list[0]
-        product = get_product(insight.barcode)
+        # We only need to know if the product exists, so fetching barcode
+        # is enough
+        product = get_product(insight.barcode, ['code'])
 
         # Product may be None if not found
         if product:
@@ -251,7 +261,7 @@ def save_category(product_id: str, category: str):
         logger.warn("Unexpected status during category update: {}".format(status))
 
 
-def save_annotation(task_id: str, annotation: int, save: bool=True):
+def save_category_annotation(task_id: str, annotation: int, save: bool=True):
     try:
         task = CategorizationTask.get_by_id(task_id)
     except CategorizationTask.DoesNotExist:
