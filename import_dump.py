@@ -2,7 +2,7 @@ import argparse
 import json
 import uuid
 
-from robotoff.app.models import CategorizationTask
+from robotoff.models import CategorizationTask
 
 
 def iter_jsonl(jsonl_path):

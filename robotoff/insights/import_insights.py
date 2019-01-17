@@ -2,7 +2,7 @@ import datetime
 import json
 import uuid
 
-from robotoff.app.models import batch_insert, ProductInsight
+from robotoff.models import batch_insert, ProductInsight
 
 KEEP_TYPE = {
     'packager_codes'

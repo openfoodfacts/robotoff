@@ -1,7 +1,7 @@
 import datetime
 from typing import Iterable
 
-from robotoff.app.models import CategorizationTask, ProductInsight
+from robotoff.models import CategorizationTask, ProductInsight
 from robotoff.categories import parse_category_json
 from robotoff.utils import get_logger
 from robotoff import settings
