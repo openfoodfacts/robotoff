@@ -30,7 +30,13 @@ def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
     return rows
 
 
-class CategorizationTask(peewee.Model):
+class BaseModel:
+    class Meta:
+        database = db
+        legacy_table_names = False
+
+
+class CategorizationTask(BaseModel):
     id = peewee.UUIDField(primary_key=True)
     product_id = peewee.CharField(max_length=100, null=False)
     predicted_category = peewee.TextField(null=False)
@@ -43,12 +49,8 @@ class CategorizationTask(peewee.Model):
     campaign = peewee.TextField(null=True, index=True)
     countries = BinaryJSONField(null=True, index=True)
 
-    class Meta:
-        database = db
-        table_name = "categorization_task"
 
-
-class ProductInsight(peewee.Model):
+class ProductInsight(BaseModel):
     id = peewee.UUIDField(primary_key=True)
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256)
@@ -58,10 +60,6 @@ class ProductInsight(peewee.Model):
     annotation = peewee.IntegerField(null=True)
     outdated = peewee.BooleanField(default=False)
     countries = BinaryJSONField(null=True, index=True)
-
-    class Meta:
-        database = db
-        table_name = "product_insight"
 
     def serialize(self):
         return {
@@ -73,4 +71,20 @@ class ProductInsight(peewee.Model):
         }
 
 
-MODELS = [CategorizationTask, ProductInsight]
+class IngredientSpellcheck(BaseModel):
+    id = peewee.UUIDField(primary_key=True)
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    timestamp = peewee.DateTimeField(null=True)
+    completed_at = peewee.DateTimeField(null=True)
+    annotation = peewee.IntegerField(null=True)
+    outdated = peewee.BooleanField(default=False)
+    language = peewee.CharField(max_length=10, null=False)
+    countries = BinaryJSONField(null=True, index=True)
+
+
+class ProductIngredient(BaseModel):
+    id = peewee.UUIDField(primary_key=True)
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+
+
+MODELS = [CategorizationTask, ProductInsight, IngredientSpellcheck]
