@@ -30,7 +30,7 @@ def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
     return rows
 
 
-class BaseModel:
+class BaseModel(peewee.Model):
     class Meta:
         database = db
         legacy_table_names = False
