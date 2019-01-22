@@ -1,7 +1,7 @@
 import abc
 
 import requests
-from robotoff.models import ProductInsight
+from robotoff.models import ProductInsight, db
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -44,9 +44,30 @@ class PackagerCodeAnnotator(InsightAnnotator):
                     status))
 
 
+class IngredientSpellcheckAnnotator(InsightAnnotator):
+    def annotate(self, insight: ProductInsight):
+        barcode = insight.barcode
+        diff_len = (len(insight.data['correction']) -
+                    len(insight.data['original']))
+
+        if diff_len == 0:
+            return
+
+        with db.atomic():
+            for other in (ProductInsight.select()
+                          .where(ProductInsight.barcode == barcode,
+                                 ProductInsight.id != insight.id,
+                                 ProductInsight.type ==
+                                 'ingredient_spellcheck')):
+                other.data['start_offset'] += diff_len
+                other.data['end_offset'] += diff_len
+                other.save()
+
+
 class InsightAnnotatorFactory:
     mapping = {
         'packager_code': PackagerCodeAnnotator,
+        'ingredient_spellcheck': IngredientSpellcheckAnnotator,
     }
 
     @classmethod

@@ -71,20 +71,9 @@ class ProductInsight(BaseModel):
         }
 
 
-class IngredientSpellcheck(BaseModel):
-    id = peewee.UUIDField(primary_key=True)
-    barcode = peewee.CharField(max_length=100, null=False, index=True)
-    timestamp = peewee.DateTimeField(null=True)
-    completed_at = peewee.DateTimeField(null=True)
-    annotation = peewee.IntegerField(null=True)
-    outdated = peewee.BooleanField(default=False)
-    language = peewee.CharField(max_length=10, null=False)
-    countries = BinaryJSONField(null=True, index=True)
-
-
 class ProductIngredient(BaseModel):
-    id = peewee.UUIDField(primary_key=True)
     barcode = peewee.CharField(max_length=100, null=False, index=True)
+    ingredients = peewee.TextField(null=False)
 
 
-MODELS = [CategorizationTask, ProductInsight, IngredientSpellcheck]
+MODELS = [CategorizationTask, ProductInsight, ProductIngredient]
