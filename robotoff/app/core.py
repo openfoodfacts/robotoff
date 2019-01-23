@@ -1,7 +1,11 @@
 import datetime
 from typing import Iterable
 
-from robotoff.insights.annotate import InsightAnnotatorFactory
+from robotoff.insights.annotate import (InsightAnnotatorFactory,
+                                        AnnotationResult,
+                                        SAVED_ANNOTATION_RESULT,
+                                        ALREADY_ANNOTATED_RESULT,
+                                        UNKNOWN_INSIGHT_RESULT)
 from robotoff.models import CategorizationTask, ProductInsight
 from robotoff.categories import parse_category_json
 from robotoff.off import get_product, save_category
@@ -231,19 +235,25 @@ def save_category_annotation(task_id: str, annotation: int, save: bool=True):
         save_category(task.product_id, task.predicted_category)
 
 
-def save_insight(insight_id: str, annotation: int, save: bool=True):
+def save_insight(insight_id: str, annotation: int, save: bool=True) -> AnnotationResult:
     try:
         insight: ProductInsight = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
         insight = None
 
-    if not insight or insight.annotation is not None:
-        return
+    if not insight:
+        return UNKNOWN_INSIGHT_RESULT
+
+    if insight.annotation is not None:
+        return ALREADY_ANNOTATED_RESULT
 
     insight.annotation = annotation
     insight.completed_at = datetime.datetime.utcnow()
     insight.save()
 
-    if annotation == 1 and save:
+    if save:
         annotator = InsightAnnotatorFactory.create(insight.type)
-        annotator.annotate(insight)
+        return annotator.annotate(insight, annotation)
+
+    else:
+        return SAVED_ANNOTATION_RESULT

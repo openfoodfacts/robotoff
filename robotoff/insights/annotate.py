@@ -1,4 +1,6 @@
 import abc
+from dataclasses import dataclass
+from enum import Enum
 
 from robotoff.insights.enum import InsightType
 from robotoff.models import ProductInsight, db, ProductIngredient
@@ -8,20 +10,55 @@ from robotoff.utils import get_logger
 logger = get_logger(__name__)
 
 
+@dataclass
+class AnnotationResult:
+    status: str
+    description: str = None
+
+
+class AnnotationStatus(Enum):
+    saved = 1
+    updated = 2
+    error_missing_product = 3
+    error_updated_product = 4
+    error_already_annotated = 5
+    error_unknown_insight = 6
+
+
+SAVED_ANNOTATION_RESULT = AnnotationResult(status=AnnotationStatus.saved.name,
+                                           description="the annotation was saved")
+UPDATED_ANNOTATION_RESULT = AnnotationResult(status=AnnotationStatus.updated.name,
+                                             description="the annotation was saved and sent to OFF")
+MISSING_PRODUCT_RESULT = AnnotationResult(status=AnnotationStatus.error_missing_product.name,
+                                          description="the product could not be found on OFF")
+ALREADY_ANNOTATED_RESULT = AnnotationResult(status=AnnotationStatus.error_already_annotated.name,
+                                            description="the insight has already been annotated")
+UNKNOWN_INSIGHT_RESULT = AnnotationResult(status=AnnotationStatus.error_unknown_insight.name,
+                                          description="unknown insight ID")
+
+
 class InsightAnnotator(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def annotate(self, insight: ProductInsight):
+    def annotate(self, insight: ProductInsight, annotation: int) -> AnnotationResult:
         pass
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
-    def annotate(self, insight: ProductInsight):
+    def annotate(self, insight: ProductInsight, annotation: int) -> AnnotationResult:
+        if annotation != 1:
+            return SAVED_ANNOTATION_RESULT
+
         emb_code = insight.data['text']
         add_emb_code(insight.barcode, emb_code)
 
+        return UPDATED_ANNOTATION_RESULT
+
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
-    def annotate(self, insight: ProductInsight):
+    def annotate(self, insight: ProductInsight, annotation: int) -> AnnotationResult:
+        if annotation != 1:
+            return SAVED_ANNOTATION_RESULT
+
         barcode = insight.barcode
 
         try:
@@ -29,21 +66,23 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
                                   .where(ProductIngredient.barcode == barcode).get())
         except ProductIngredient.DoesNotExist:
             logger.warning("Missing product ingredient for product {}".format(barcode))
-            return
+            return AnnotationResult(status="error_no_matching_ingredient",
+                                    description="no ingredient is associated with insight (internal error)")
 
         ingredient_str = product_ingredient.ingredients
         product = get_product(barcode, fields=["ingredients_text"])
 
         if product is None:
             logger.warning("Missing product: {}".format(barcode))
-            return
+            return MISSING_PRODUCT_RESULT
 
         expected_ingredients = product.get("ingredients_text")
 
         if expected_ingredients != ingredient_str:
             logger.warning("ingredients have changed since spellcheck insight creation "
                            "(product {})".format(barcode))
-            return
+            return AnnotationResult(status=AnnotationStatus.error_updated_product.name,
+                                    description="the ingredient list has been updated since spellcheck")
 
         full_correction = self.generate_full_correction(ingredient_str,
                                                         insight.data['start_offset'],
@@ -54,6 +93,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
         product_ingredient.ingredients = full_correction
         product_ingredient.save()
+        return UPDATED_ANNOTATION_RESULT
 
     @staticmethod
     def generate_full_correction(ingredient_str: str,

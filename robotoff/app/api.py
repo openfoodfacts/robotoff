@@ -92,9 +92,11 @@ class AnnotateInsightResource:
         if save is None:
             save = True
 
-        save_insight(insight_id, annotation, save=save)
+        annotation_result = save_insight(insight_id, annotation, save=save)
+
         resp.media = {
-            'status': 'saved',
+            'status': annotation_result.status,
+            'description': annotation_result.description,
         }
 
 
