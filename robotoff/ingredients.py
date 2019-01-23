@@ -14,7 +14,7 @@ from robotoff.utils.es import get_es_client, generate_msearch_body
 SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})")
+BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})|(?:[_])")
 
 
 OffsetType = Tuple[int, int]
@@ -103,7 +103,6 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
     normalized_ingredients = ingredients.iter_normalized_ingredients()
 
     for idx, suggestions in enumerate(_suggest_batch(client, normalized_ingredients, **kwargs)):
-        ingredient = ingredients.get_ingredient(idx)
         offsets = ingredients.offsets[idx]
         normalized_ingredient = ingredients.get_normalized_ingredient(idx)
         options = suggestions['options']

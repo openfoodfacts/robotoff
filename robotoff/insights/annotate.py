@@ -1,15 +1,11 @@
 import abc
 
-import requests
-from robotoff.models import ProductInsight, db
+from robotoff.insights.enum import InsightType
+from robotoff.models import ProductInsight, db, ProductIngredient
+from robotoff.off import get_product, save_ingredients, add_emb_code
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
-
-
-AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
-POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
-http_session = requests.Session()
 
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
@@ -21,32 +17,65 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 class PackagerCodeAnnotator(InsightAnnotator):
     def annotate(self, insight: ProductInsight):
         emb_code = insight.data['text']
-        self.send_request(insight.barcode, emb_code)
-
-    @staticmethod
-    def send_request(barcode: str, emb_code: str):
-        params = {
-            'code': barcode,
-            'add_emb_codes': emb_code,
-            'user_id': AUTH[0],
-            'password': AUTH[1],
-        }
-
-        r = http_session.get(POST_URL, params=params)
-        r.raise_for_status()
-        json = r.json()
-
-        status = json.get('status_verbose')
-
-        if status != "fields saved":
-            logger.warn(
-                "Unexpected status during product update: {}".format(
-                    status))
+        add_emb_code(insight.barcode, emb_code)
 
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     def annotate(self, insight: ProductInsight):
         barcode = insight.barcode
+
+        try:
+            product_ingredient: ProductIngredient = (ProductIngredient.select()
+                                  .where(ProductIngredient.barcode == barcode).get())
+        except ProductIngredient.DoesNotExist:
+            logger.warning("Missing product ingredient for product {}".format(barcode))
+            return
+
+        ingredient_str = product_ingredient.ingredients
+        product = get_product(barcode, fields=["ingredients_text"])
+
+        if product is None:
+            logger.warning("Missing product: {}".format(barcode))
+            return
+
+        expected_ingredients = product.get("ingredients_text")
+
+        if expected_ingredients != ingredient_str:
+            logger.warning("ingredients have changed since spellcheck insight creation "
+                           "(product {})".format(barcode))
+            return
+
+        full_correction = self.generate_full_correction(ingredient_str,
+                                                        insight.data['start_offset'],
+                                                        insight.data['end_offset'],
+                                                        insight.data['correction'])
+        save_ingredients(barcode, full_correction)
+        self.update_related_insights(insight)
+
+        product_ingredient.ingredients = full_correction
+        product_ingredient.save()
+
+    @staticmethod
+    def generate_full_correction(ingredient_str: str,
+                                 start_offset: int,
+                                 end_offset: int,
+                                 correction: str):
+        return "{}{}{}".format(ingredient_str[:start_offset],
+                               correction,
+                               ingredient_str[end_offset:])
+
+    @staticmethod
+    def generate_snippet(ingredient_str: str,
+                         start_offset: int,
+                         end_offset: int,
+                         correction: str) -> str:
+        context_len = 15
+        return "{}{}{}".format(ingredient_str[start_offset-context_len:start_offset],
+                               correction,
+                               ingredient_str[end_offset:end_offset+context_len])
+
+    @staticmethod
+    def update_related_insights(insight: ProductInsight):
         diff_len = (len(insight.data['correction']) -
                     len(insight.data['original']))
 
@@ -55,19 +84,20 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
         with db.atomic():
             for other in (ProductInsight.select()
-                          .where(ProductInsight.barcode == barcode,
+                          .where(ProductInsight.barcode == insight.barcode,
                                  ProductInsight.id != insight.id,
                                  ProductInsight.type ==
-                                 'ingredient_spellcheck')):
-                other.data['start_offset'] += diff_len
-                other.data['end_offset'] += diff_len
-                other.save()
+                                 InsightType.ingredient_spellcheck.name)):
+                if insight.data['start_offset'] <= other.data['start_offset']:
+                    other.data['start_offset'] += diff_len
+                    other.data['end_offset'] += diff_len
+                    other.save()
 
 
 class InsightAnnotatorFactory:
     mapping = {
-        'packager_code': PackagerCodeAnnotator,
-        'ingredient_spellcheck': IngredientSpellcheckAnnotator,
+        InsightType.packager_code.name: PackagerCodeAnnotator,
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     }
 
     @classmethod

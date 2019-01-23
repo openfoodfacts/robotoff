@@ -1,10 +1,14 @@
+import pytest
+
 from robotoff.ingredients import process_ingredients, normalize_ingredients, Ingredients
 
 
-def test_normalize_ingredients():
-    text = "farine de blé 10,5%, huile de colza 8%, soja 0,15%"
-    normalized = normalize_ingredients(text)
-    assert normalized == "farine de blé      , huile de colza   , soja      "
+@pytest.mark.parametrize('text,normalized', [
+    ("farine de blé 10,5%, huile de colza 8%, soja 0,15%", "farine de blé      , huile de colza   , soja      "),
+    ("Eau, céréales 15,2 % (épeautre 7 %, riz 6 %, °avoine_), pâte", "Eau, céréales        (épeautre    , riz    , °avoine ), pâte"),
+])
+def test_normalize_ingredients(text, normalized):
+    assert normalized == normalize_ingredients(text)
 
 
 def test_process_ingredients():

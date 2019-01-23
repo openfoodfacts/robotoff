@@ -4,21 +4,14 @@ from typing import Iterable
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.models import CategorizationTask, ProductInsight
 from robotoff.categories import parse_category_json
+from robotoff.off import get_product, save_category
 from robotoff.utils import get_logger
 from robotoff import settings
 
 import peewee
-import requests
 
 
 category_json = parse_category_json(settings.CATEGORIES_PATH)
-
-http_session = requests.Session()
-API_URL = "https://world.openfoodfacts.org/api/v0"
-PRODUCT_URL = API_URL + "/product"
-
-POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
-AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
 
 logger = get_logger(__name__)
 
@@ -30,29 +23,6 @@ CATEGORY_PRODUCT_FIELDS = [
     'categories_tags',
     'code',
 ]
-
-
-def get_product(product_id, fields=None):
-    fields = fields or []
-    url = PRODUCT_URL + "/{}.json".format(product_id)
-
-    if fields:
-        # requests escape comma in URLs, as expected, but openfoodfacts server
-        # does not recognize escaped commas.
-        # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
-        url += '?fields={}'.format(','.join(fields))
-
-    r = http_session.get(url)
-
-    if r.status_code != 200:
-        return
-
-    data = r.json()
-
-    if data['status_verbose'] != 'product found':
-        return
-
-    return data['product']
 
 
 def normalize_lang(lang):
@@ -242,24 +212,6 @@ def get_random_insight(insight_type: str = None,
             insight.outdated = True
             insight.save()
             logger.info("Product not found")
-
-
-def save_category(product_id: str, category: str):
-    params = {
-        'code': product_id,
-        'add_categories': category,
-        'user_id': AUTH[0],
-        'password': AUTH[1],
-    }
-
-    r = http_session.get(POST_URL, params=params)
-    r.raise_for_status()
-    json = r.json()
-
-    status = json.get('status_verbose')
-
-    if status != "fields saved":
-        logger.warn("Unexpected status during category update: {}".format(status))
 
 
 def save_category_annotation(task_id: str, annotation: int, save: bool=True):
