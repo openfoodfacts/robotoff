@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable
+from typing import Iterable, Union
 
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
                                         AnnotationResult,
@@ -237,7 +237,8 @@ def save_category_annotation(task_id: str, annotation: int, save: bool=True):
 
 def save_insight(insight_id: str, annotation: int, save: bool=True) -> AnnotationResult:
     try:
-        insight: ProductInsight = ProductInsight.get_by_id(insight_id)
+        insight: Union[ProductInsight, None] \
+            = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
         insight = None
 
