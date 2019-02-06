@@ -14,6 +14,7 @@ from robotoff.app.core import (normalize_lang,
                                get_insights,
                                get_random_insight,
                                save_insight)
+from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.utils.es import get_es_client
 
@@ -164,7 +165,8 @@ cors = CORS(allow_all_origins=True,
             allow_all_headers=True,
             allow_all_methods=True)
 
-api = falcon.API(middleware=[cors.middleware])
+api = falcon.API(middleware=[cors.middleware,
+                             DBConnectionMiddleware()])
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
 api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
@@ -174,4 +176,5 @@ api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
 api.add_route('/api/v1/categories/predictions/{barcode}',
               CategoryPredictionByProductResource())
 api.add_route('/api/v1/categories/annotate', CategoryAnnotateResource())
-api.add_route('/api/v1/predict/ingredients/spellcheck', IngredientSpellcheckResource())
+api.add_route('/api/v1/predict/ingredients/spellcheck',
+              IngredientSpellcheckResource())
