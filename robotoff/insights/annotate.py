@@ -38,16 +38,20 @@ UNKNOWN_INSIGHT_RESULT = AnnotationResult(status=AnnotationStatus.error_unknown_
 
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
+    def annotate(self, insight: ProductInsight, annotation: int) \
+            -> AnnotationResult:
+        if annotation != 1:
+            return SAVED_ANNOTATION_RESULT
+
+        return self.save_annotation(insight)
+
     @abc.abstractmethod
-    def annotate(self, insight: ProductInsight, annotation: int) -> AnnotationResult:
+    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
         pass
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
-    def annotate(self, insight: ProductInsight, annotation: int) -> AnnotationResult:
-        if annotation != 1:
-            return SAVED_ANNOTATION_RESULT
-
+    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
         emb_code = insight.data['text']
         add_emb_code(insight.barcode, emb_code)
 
@@ -55,19 +59,20 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
-    def annotate(self, insight: ProductInsight, annotation: int) -> AnnotationResult:
-        if annotation != 1:
-            return SAVED_ANNOTATION_RESULT
-
+    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
         barcode = insight.barcode
 
         try:
-            product_ingredient: ProductIngredient = (ProductIngredient.select()
-                                  .where(ProductIngredient.barcode == barcode).get())
+            product_ingredient: ProductIngredient = (
+                ProductIngredient.select()
+                                 .where(ProductIngredient.barcode == barcode)
+                                 .get())
         except ProductIngredient.DoesNotExist:
-            logger.warning("Missing product ingredient for product {}".format(barcode))
+            logger.warning("Missing product ingredient for product "
+                           "{}".format(barcode))
             return AnnotationResult(status="error_no_matching_ingredient",
-                                    description="no ingredient is associated with insight (internal error)")
+                                    description="no ingredient is associated "
+                                                "with insight (internal error)")
 
         ingredient_str = product_ingredient.ingredients
         product = get_product(barcode, fields=["ingredients_text"])
@@ -79,15 +84,18 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         expected_ingredients = product.get("ingredients_text")
 
         if expected_ingredients != ingredient_str:
-            logger.warning("ingredients have changed since spellcheck insight creation "
-                           "(product {})".format(barcode))
-            return AnnotationResult(status=AnnotationStatus.error_updated_product.name,
-                                    description="the ingredient list has been updated since spellcheck")
+            logger.warning("ingredients have changed since spellcheck insight "
+                           "creation (product {})".format(barcode))
+            return AnnotationResult(status=AnnotationStatus
+                                    .error_updated_product.name,
+                                    description="the ingredient list has been "
+                                                "updated since spellcheck")
 
-        full_correction = self.generate_full_correction(ingredient_str,
-                                                        insight.data['start_offset'],
-                                                        insight.data['end_offset'],
-                                                        insight.data['correction'])
+        full_correction = self.generate_full_correction(
+            ingredient_str,
+            insight.data['start_offset'],
+            insight.data['end_offset'],
+            insight.data['correction'])
         save_ingredients(barcode, full_correction)
         self.update_related_insights(insight)
 
@@ -110,9 +118,11 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
                          end_offset: int,
                          correction: str) -> str:
         context_len = 15
-        return "{}{}{}".format(ingredient_str[start_offset-context_len:start_offset],
+        return "{}{}{}".format(ingredient_str[start_offset-context_len:
+                                              start_offset],
                                correction,
-                               ingredient_str[end_offset:end_offset+context_len])
+                               ingredient_str[end_offset:
+                                              end_offset+context_len])
 
     @staticmethod
     def update_related_insights(insight: ProductInsight):
