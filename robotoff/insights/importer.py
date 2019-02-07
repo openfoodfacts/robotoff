@@ -4,6 +4,7 @@ from typing import Dict, Iterable, List, Optional, Any, Callable
 
 from robotoff.insights.enum import InsightType
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
+from robotoff.products import ProductStore
 from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
@@ -88,14 +89,32 @@ class IngredientSpellcheckImporter(InsightImporter):
                                ingredient_str[end_offset:end_offset+context_len])
 
 
-def process_packaging_code_insight(insight: Dict[str, Any]) \
+def get_emb_code_tag(emb_code: str) -> str:
+    return (emb_code.lower()
+                    .replace(' ', '-')
+                    .replace('.', '-'))
+
+
+def process_packager_code_insight(insight: Dict[str, Any], product_store: Optional[ProductStore]=None) \
         -> Optional[Dict[str, Any]]:
+    barcode = insight['barcode']
     content = insight['content']
+
+    if product_store:
+        product = product_store[barcode]
+
+        if not product:
+            return
+
+        emb_code_tag = get_emb_code_tag(content['text'])
+
+        if emb_code_tag in product.emb_codes_tags:
+            return
 
     return {
         'id': str(uuid.uuid4()),
         'type': insight['type'],
-        'barcode': insight['barcode'],
+        'barcode': barcode,
         'data': {
             'source': insight['source'],
             'matcher_type': content['type'],
@@ -107,7 +126,7 @@ def process_packaging_code_insight(insight: Dict[str, Any]) \
 
 class OCRInsightProcessorFactory:
     processor_func = {
-        InsightType.packager_code.name: process_packaging_code_insight,
+        InsightType.packager_code.name: process_packager_code_insight,
     }
 
     @classmethod
@@ -124,8 +143,11 @@ class OCRInsightImporter(InsightImporter):
     }
 
     INSIGHT_PROCESSOR = {
-        InsightType.packager_code.name: process_packaging_code_insight,
+        InsightType.packager_code.name: process_packager_code_insight,
     }
+
+    def __init__(self, product_store: Optional[ProductStore]=None):
+        self.product_store: ProductStore = product_store
 
     def import_insights(self, data: Iterable[Dict]):
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
@@ -141,7 +163,7 @@ class OCRInsightImporter(InsightImporter):
                     continue
 
                 for insight in insight_list:
-                    processed_insight = processor_func(insight)
+                    processed_insight = processor_func(insight, self.product_store)
 
                     if processed_insight:
                         inserts.append(processed_insight)
@@ -187,3 +209,12 @@ class InsightImporterFactory:
             raise ValueError("unknown annotator: {}".format(identifier))
 
         return cls.mapping[identifier]()
+
+
+if __name__ == "__main__":
+    from robotoff import settings
+
+    product_store = ProductStore()
+    product_store.load(settings.JSONL_DATASET_PATH)
+    importer = OCRInsightImporter(product_store)
+    importer.from_jsonl('insights.jsonl')
