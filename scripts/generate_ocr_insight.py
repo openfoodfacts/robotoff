@@ -47,7 +47,7 @@ PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\
 PACKAGER_CODE = {
     "fr_emb": (re.compile(r"(EMB) ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
                process_fr_emb_match),
-    "eu_fr": (re.compile("(FR) (\d{1,3})[\-\s.]?(\d{1,3})[\-\s.]?(\d{1,3})[\-\s.]? (CE|EC)"),
+    "eu_fr": (re.compile("(FR) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (CE|EC)"),
               process_fr_packaging_match),
 }
 
