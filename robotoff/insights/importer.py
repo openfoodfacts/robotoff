@@ -90,13 +90,17 @@ class IngredientSpellcheckImporter(InsightImporter):
 
 def process_packaging_code_insight(insight: Dict[str, Any]) \
         -> Optional[Dict[str, Any]]:
+    content = insight['content']
+
     return {
         'id': str(uuid.uuid4()),
         'type': insight['type'],
         'barcode': insight['barcode'],
         'data': {
             'source': insight['source'],
-            **insight['content'],
+            'matcher_type': content['type'],
+            'raw': content['raw'],
+            'text': content['text'],
         }
     }
 
