@@ -6,7 +6,7 @@ import json
 import sys
 
 import pathlib as pathlib
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import requests
 
@@ -74,7 +74,7 @@ BEST_BEFORE_DATE_REGEX = {
 }
 
 
-def get_barcode_from_path(path):
+def get_barcode_from_path(path: str):
     path = pathlib.Path(path)
 
     barcode = ''
@@ -93,14 +93,14 @@ def split_barcode(barcode: str):
     return barcode[0:3], barcode[3:6], barcode[6:9], barcode[9:13]
 
 
-def fetch_images_for_ean(ean):
+def fetch_images_for_ean(ean: str):
     url = "https://world.openfoodfacts.org/api/v0/product/" \
           "{}.json?fields=images".format(ean)
     images = requests.get(url).json()
     return images
 
 
-def get_json_for_image(barcode, image_name):
+def get_json_for_image(barcode: str, image_name: str):
     splitted_barcode = split_barcode(barcode)
     url = "https://static.openfoodfacts.org/images/products/{}/{}/{}/{}/" \
           "{}.json".format(splitted_barcode[0], splitted_barcode[1],
@@ -114,7 +114,7 @@ def get_json_for_image(barcode, image_name):
     return r.json()
 
 
-def get_raw_text(data):
+def get_raw_text(data: Dict[str, Any]):
     responses = data.get('responses', [])
 
     if not responses:
@@ -134,7 +134,7 @@ def get_raw_text(data):
     return text
 
 
-def find_emails(text):
+def find_emails(text: str) -> List[Dict]:
     results = []
 
     for match in EMAIL_REGEX.finditer(text):
@@ -145,7 +145,7 @@ def find_emails(text):
     return results
 
 
-def find_urls(text):
+def find_urls(text: str) -> List[Dict]:
     results = []
     for match in URL_REGEX.finditer(text):
         results.append({
@@ -155,7 +155,7 @@ def find_urls(text):
     return results
 
 
-def find_packager_codes(text):
+def find_packager_codes(text: str) -> List[Dict]:
     results = []
 
     for regex_code, (regex, processing_func) in PACKAGER_CODE.items():
@@ -208,7 +208,7 @@ STORAGE_INSTRUCTIONS_REGEX = {
 }
 
 
-def extract_temperature_information(temperature):
+def extract_temperature_information(temperature: str) -> Dict:
     match = TEMPERATURE_REGEX.match(temperature)
 
     if match:
@@ -225,7 +225,7 @@ def extract_temperature_information(temperature):
         return result
 
 
-def find_storage_instructions(text):
+def find_storage_instructions(text: str) -> List[Dict]:
     text = text.lower()
 
     results = []
@@ -253,7 +253,7 @@ def find_storage_instructions(text):
     return results
 
 
-def find_nutriscore(text):
+def find_nutriscore(text: str) -> List[Dict]:
     results = []
     for match in NUTRISCORE_REGEX.finditer(text):
         results.append({
@@ -263,7 +263,7 @@ def find_nutriscore(text):
     return results
 
 
-def find_phone_numbers(text):
+def find_phone_numbers(text) -> List[Dict]:
     results = []
 
     for match in PHONE_REGEX.finditer(text):
@@ -274,7 +274,7 @@ def find_phone_numbers(text):
     return results
 
 
-def find_recycling_instructions(text):
+def find_recycling_instructions(text) -> List[Dict]:
     results = []
 
     for instruction_type, regex_list in RECYCLING_REGEX.items():
@@ -288,7 +288,7 @@ def find_recycling_instructions(text):
     return results
 
 
-def find_labels(text):
+def find_labels(text: str) -> List[Dict]:
     text = text.lower()
 
     results = []
@@ -304,7 +304,7 @@ def find_labels(text):
     return results
 
 
-def find_best_before_date(text):
+def find_best_before_date(text: str) -> List[Dict]:
     # Parse best_before_date
     #        "À consommer de préférence avant",
     results = []
@@ -319,7 +319,7 @@ def find_best_before_date(text):
     return results
 
 
-def extract_insights(data):
+def extract_insights(data: Dict[str, Any]):
     text = get_raw_text(data)
 
     if text is None:
@@ -360,7 +360,7 @@ def extract_insights(data):
     return insights
 
 
-def ocr_iter(input_str):
+def ocr_iter(input_str: str):
     if len(input_str) == 13 and input_str.isdigit():
         image_data = fetch_images_for_ean(input_str)['product']['images']
 
