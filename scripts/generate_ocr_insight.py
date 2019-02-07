@@ -389,12 +389,7 @@ def ocr_iter(input_str):
                 yield input_path, json.load(f)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input')
-    parser.add_argument('--output', '-o')
-    args = parser.parse_args()
-
+def run(args: argparse.Namespace):
     input_ = args.input
 
     if args.output is not None:
@@ -418,3 +413,11 @@ if __name__ == '__main__':
                     'barcode': barcode,
                 }
                 output.write(json.dumps(item) + '\n')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input')
+    parser.add_argument('--output', '-o')
+    arguments = parser.parse_args()
+    run(arguments)
