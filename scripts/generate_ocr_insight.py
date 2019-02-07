@@ -343,15 +343,15 @@ def extract_insights(data):
     best_before_date = find_best_before_date(text)
 
     for key, value in (
-            ('weight_values', weight_values),
-            ('weight_mentions', weight_mentions),
-            ('packager_codes', packager_codes),
+            ('weight_value', weight_values),
+            ('weight_mention', weight_mentions),
+            ('packager_code', packager_codes),
             ('nutriscore', nutriscore),
-            ('urls', urls),
-            ('emails', emails),
-            ('recycling_instructions', recycling_instructions),
-            ('labels', labels),
-            ('storage_instructions', storage_instructions),
+            ('url', urls),
+            ('email', emails),
+            ('recycling_instruction', recycling_instructions),
+            ('label', labels),
+            ('storage_instruction', storage_instructions),
             ('best_before_date', best_before_date),
     ):
         if value:
