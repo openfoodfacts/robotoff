@@ -1,6 +1,6 @@
 import abc
 import uuid
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List, Optional, Any, Callable
 
 from robotoff.insights.enum import InsightType
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
@@ -88,9 +88,93 @@ class IngredientSpellcheckImporter(InsightImporter):
                                ingredient_str[end_offset:end_offset+context_len])
 
 
+def process_packaging_code_insight(insight: Dict[str, Any]) \
+        -> Optional[Dict[str, Any]]:
+    return {
+        'id': str(uuid.uuid4()),
+        'type': insight['type'],
+        'barcode': insight['barcode'],
+        'data': {
+            'source': insight['source'],
+            **insight['content'],
+        }
+    }
+
+
+class OCRInsightProcessorFactory:
+    processor_func = {
+        InsightType.packager_code.name: process_packaging_code_insight,
+    }
+
+    @classmethod
+    def create(cls, key: str) -> Optional[Callable]:
+        return cls.processor_func.get(key)
+
+
+GroupedByOCRInsights = Dict[str, Dict[str, List]]
+
+
+class OCRInsightImporter(InsightImporter):
+    KEEP_TYPE = {
+        InsightType.packager_code.name,
+    }
+
+    INSIGHT_PROCESSOR = {
+        InsightType.packager_code.name: process_packaging_code_insight,
+    }
+
+    def import_insights(self, data: Iterable[Dict]):
+        grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
+        print(grouped_by)
+
+        inserts = []
+
+        for barcode, insights in grouped_by.items():
+            for insight_type, insight_list in insights.items():
+                processor_func = OCRInsightProcessorFactory.create(insight_type)
+
+                if processor_func is None:
+                    continue
+
+                for insight in insight_list:
+                    processed_insight = processor_func(insight)
+
+                    if processed_insight:
+                        inserts.append(processed_insight)
+
+        batch_insert(ProductInsight, inserts, 50)
+
+    def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
+        grouped_by: GroupedByOCRInsights = {}
+
+        for item in data:
+            barcode = item['barcode']
+            source = item['source']
+
+            if not item['insights']:
+                continue
+
+            for insight_type, insights in item['insights'].items():
+                if insight_type not in self.KEEP_TYPE:
+                    continue
+
+                grouped_by.setdefault(barcode, {})
+                barcode_insights = grouped_by[barcode]
+                barcode_insights.setdefault(insight_type, [])
+                barcode_insights[insight_type] += [{
+                    'source': source,
+                    'barcode': barcode,
+                    'type': insight_type,
+                    'content': i,
+                } for i in insights]
+
+        return grouped_by
+
+
 class InsightImporterFactory:
     mapping = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
+        InsightType.packager_code.name: OCRInsightImporter,
     }
 
     @classmethod
