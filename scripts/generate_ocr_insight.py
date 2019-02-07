@@ -8,6 +8,19 @@ import sys
 import pathlib as pathlib
 import requests
 
+
+def process_fr_packaging_match(match) -> str:
+    country_code, *approval_numbers, ec = match.group(1, 2, 3, 4, 5)
+    return "{} {}.{}.{} {}".format(country_code, *approval_numbers, ec)
+
+
+def process_fr_emb_match(match) -> str:
+    emb_str, city_code, company_code = match.group(1, 2, 3)
+    city_code = city_code.replace(' ', '')
+    company_code = company_code or ''
+    return "{} {}{}".format(emb_str, city_code, company_code)
+
+
 NUTRISCORE_REGEX = re.compile(r"nutri[-\s]?score", re.IGNORECASE)
 WEIGHT_MENTIONS = (
     "poids net:",
@@ -30,8 +43,10 @@ EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
 PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
 
 PACKAGER_CODE = {
-    "fr_emb": re.compile(r"EMB ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
-    "fr": re.compile("FR (\d{1,3})[\-\s.]?(\d{1,3})[\-\s.]?(\d{1,3})[\-\s.]? (?:CE|EC)"),
+    "fr_emb": (re.compile(r"(EMB) ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
+               process_fr_emb_match),
+    "eu_fr": (re.compile("(FR) (\d{1,3})[\-\s.]?(\d{1,3})[\-\s.]?(\d{1,3})[\-\s.]? (CE|EC)"),
+              process_fr_packaging_match),
 }
 
 RECYCLING_REGEX = {
@@ -72,7 +87,7 @@ def get_barcode_from_path(path):
     return barcode
 
 
-def split_barcode(barcode):
+def split_barcode(barcode: str):
     return barcode[0:3], barcode[3:6], barcode[6:9], barcode[9:13]
 
 
@@ -141,10 +156,12 @@ def find_urls(text):
 def find_packager_codes(text):
     results = []
 
-    for regex_code, regex in PACKAGER_CODE.items():
+    for regex_code, (regex, processing_func) in PACKAGER_CODE.items():
         for match in regex.finditer(text):
+            value = processing_func(match)
             results.append({
-                "text": match.group(),
+                "raw": match.group(0),
+                "text": value,
                 "type": regex_code,
             })
 
