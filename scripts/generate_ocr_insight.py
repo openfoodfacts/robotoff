@@ -6,6 +6,8 @@ import json
 import sys
 
 import pathlib as pathlib
+from typing import List, Dict
+
 import requests
 
 
@@ -168,15 +170,7 @@ def find_packager_codes(text):
     return results
 
 
-def find_weights(text):
-    weight_mentions = []
-
-    for match in WEIGHT_MENTIONS_RE.finditer(text):
-        result = {
-            'text': match.group(),
-        }
-        weight_mentions.append(result)
-
+def find_weight_values(text: str) -> List[Dict]:
     weight_values = []
 
     for match in WEIGHT_VALUES_REGEX.finditer(text):
@@ -187,16 +181,19 @@ def find_weights(text):
         }
         weight_values.append(result)
 
-    result = {}
+    return weight_values
 
-    if weight_values:
-        result['values'] = weight_values
 
-    if weight_mentions:
-        result['mentions'] = weight_mentions
+def find_weight_mentions(text: str) -> List[Dict]:
+    weight_mentions = []
 
-    if result:
-        return result
+    for match in WEIGHT_MENTIONS_RE.finditer(text):
+        result = {
+            'text': match.group(),
+        }
+        weight_mentions.append(result)
+
+    return weight_mentions
 
 
 TEMPERATURE_REGEX_STR = r"[+-]?\s*\d+\s*°?C"
@@ -333,7 +330,8 @@ def extract_insights(data):
 
     insights = {}
 
-    weights = find_weights(text)
+    weight_values = find_weight_values(text)
+    weight_mentions = find_weight_mentions(text)
     packager_codes = find_packager_codes(contiguous_text)
     nutriscore = find_nutriscore(text)
     recycling_instructions = find_recycling_instructions(contiguous_text)
@@ -345,7 +343,8 @@ def extract_insights(data):
     best_before_date = find_best_before_date(text)
 
     for key, value in (
-            ('weights', weights),
+            ('weight_values', weight_values),
+            ('weight_mentions', weight_mentions),
             ('packager_codes', packager_codes),
             ('nutriscore', nutriscore),
             ('urls', urls),
