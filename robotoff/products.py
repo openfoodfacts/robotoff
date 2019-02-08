@@ -4,9 +4,6 @@ import os
 import pathlib
 import shutil
 import tempfile
-import threading
-from queue import Queue, Empty
-from threading import Thread
 from typing import List, Iterable, Dict, Optional
 
 import requests
@@ -58,8 +55,8 @@ def fetch_dataset():
         minify_product_dataset(output_path, minify_path)
 
         logger.info("Moving files to dataset directory")
-        output_path.rename(settings.JSONL_DATASET_PATH)
-        minify_path.rename(settings.JSONL_MIN_DATASET_PATH)
+        shutil.move(output_path, settings.JSONL_DATASET_PATH)
+        shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
 
@@ -202,43 +199,3 @@ class ProductStore:
 
     def __getitem__(self, item):
         return self.store.get(item)
-
-
-class ThreadEvent:
-    def __init__(self, event_type: str, meta: Dict = None):
-        self.event_type = event_type
-        self.meta = meta
-
-
-class ProductStoreThread(Thread):
-    def __init__(self, event_q):
-        super().__init__(name="product-store-thread")
-        self.event_q: Queue[ThreadEvent] = event_q
-        self.stop_flag: threading.Event = threading.Event()
-        self.lock = threading.Lock()
-
-    def run(self):
-        while not self.stop_flag.isSet():
-            try:
-                event = self.event_q.get(True, 0.05)
-                with self.lock:
-                    self.process_event(event)
-            except Empty:
-                continue
-
-    def process_event(self, event: ThreadEvent):
-        print("test")
-        if event.event_type == 'download':
-            logger.info("download thread event received")
-            self.download()
-        else:
-            logger.warning("unknown event type: {}".format(event.event_type))
-
-    @staticmethod
-    def download():
-        if has_dataset_changed():
-            fetch_dataset()
-
-    def join(self, timeout=None):
-        self.stop_flag.set()
-        super(ProductStoreThread, self).join(timeout)

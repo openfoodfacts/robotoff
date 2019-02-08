@@ -19,19 +19,16 @@ from robotoff.app.core import (normalize_lang,
                                save_insight)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
-from robotoff.insights.importer import OCRInsightImporter
-from robotoff.models import db
-from robotoff.products import (ThreadEvent,
-                               get_product_dataset_etag, ProductStoreThread,
-                               ProductStore)
+from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
+from robotoff.worker_thread import WorkerThread, ThreadEvent
 
 logger = get_logger()
 es_client = get_es_client()
 
 thread_queue = Queue()
-worker_thread: ProductStoreThread = ProductStoreThread(thread_queue)
+worker_thread: WorkerThread = WorkerThread(thread_queue)
 worker_thread.start()
 
 
@@ -198,27 +195,13 @@ class InsightImporterResource:
 
         logger.info("Importer type: '{}'".format(importer_type))
 
-        if importer_type == 'ocr':
-            product_store = ProductStore()
-            product_store.load_min_dataset()
-            importer = OCRInsightImporter(product_store)
+        lines = [l for l in io.TextIOWrapper(content.file)]
+        thread_queue.put(ThreadEvent('import', {'items': lines, 'importer_type': importer_type}))
 
-        elif importer_type == 'ingredient_spellcheck':
-            importer = IngredientSpellcheckResource()
-
-        else:
-            raise falcon.HTTPBadRequest(description="unknown importer type: "
-                                                    "{}".format(importer_type))
-
-        logger.info("Starting import...")
-
-        with db.atomic():
-            importer.from_jsonl_fp(io.TextIOWrapper(content.file))
-
-        logger.info("Import finished")
+        logger.info("Import scheduled")
 
         resp.media = {
-            'status': 'imported',
+            'status': 'scheduled',
         }
 
 
