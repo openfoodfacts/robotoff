@@ -68,3 +68,4 @@ def import_items(importer_type: str, items: List[str]):
 
     with db.atomic():
         importer.import_insights((json.loads(l) for l in items))
+        logger.info("Import finished")
