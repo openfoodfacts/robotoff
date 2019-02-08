@@ -196,7 +196,7 @@ class InsightImporterResource:
         importer_type = req.get_param('type', required=True)
         content = req.get_param('file', required=True)
 
-        logger.info("Importer type: 'ingredient_spellcheck'")
+        logger.info("Importer type: '{}'".format(importer_type))
 
         if importer_type == 'ocr':
             product_store = ProductStore()
