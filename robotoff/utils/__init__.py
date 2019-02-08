@@ -2,7 +2,9 @@ import gzip
 import json
 import logging
 import os
+import pathlib
 import sys
+from typing import Union, Iterable, Dict
 
 
 def get_logger(name=None, level="INFO"):
@@ -29,24 +31,25 @@ def get_logger(name=None, level="INFO"):
     return logger
 
 
-def jsonl_iter(jsonl_path):
-    with open(str(jsonl_path), 'r') as f:
+def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
+    with open(jsonl_path, 'r') as f:
         yield from jsonl_iter_fp(f)
 
 
-def gzip_jsonl_iter(jsonl_path):
-    with gzip.open(str(jsonl_path), 'rt') as f:
+def gzip_jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
+    with gzip.open(jsonl_path, 'rt') as f:
         yield from jsonl_iter_fp(f)
 
 
-def jsonl_iter_fp(fp):
+def jsonl_iter_fp(fp) -> Iterable[Dict]:
     for line in fp:
         line = line.strip('\n')
         if line:
             yield json.loads(line)
 
 
-def dump_jsonl(filepath, json_iter):
+def dump_jsonl(filepath: Union[str, pathlib.Path],
+               json_iter: Iterable[Dict]):
     with open(str(filepath), 'w') as f:
         for item in json_iter:
             f.write(json.dumps(item) + "\n")

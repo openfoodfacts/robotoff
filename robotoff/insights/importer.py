@@ -151,8 +151,6 @@ class OCRInsightImporter(InsightImporter):
 
     def import_insights(self, data: Iterable[Dict]):
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
-        print(grouped_by)
-
         inserts = []
 
         for barcode, insights in grouped_by.items():
@@ -215,6 +213,6 @@ if __name__ == "__main__":
     from robotoff import settings
 
     product_store = ProductStore()
-    product_store.load(settings.JSONL_DATASET_PATH)
+    product_store.load(settings.JSONL_MIN_DATASET_PATH)
     importer = OCRInsightImporter(product_store)
     importer.from_jsonl('insights.jsonl')

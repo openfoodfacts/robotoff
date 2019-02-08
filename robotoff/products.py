@@ -1,11 +1,61 @@
+import gzip
+import json
+import os
+import pathlib
+import shutil
+import tempfile
 import threading
 from queue import Queue, Empty
 from threading import Thread
 from typing import List, Iterable, Dict
 
+import requests
+
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
+from robotoff import settings
 
 logger = get_logger(__name__)
+
+
+def minify_product_dataset(dataset_path: pathlib.Path,
+                           output_path: pathlib.Path):
+    if dataset_path.suffix == '.gz':
+        jsonl_iter_func = gzip_jsonl_iter
+    else:
+        jsonl_iter_func = jsonl_iter
+
+    with gzip.open(output_path, 'wt') as output_:
+        for item in jsonl_iter_func(dataset_path):
+            available_fields = Product.get_fields()
+
+            minified_item = dict(((field, value)
+                                  for (field, value) in item.items()
+                                  if field in available_fields))
+            output_.write(json.dumps(minified_item) + '\n')
+
+
+def fetch_dataset():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        logger.debug("Saving temporary file in {}".format(tmp_dir))
+        output_dir = pathlib.Path(tmp_dir)
+        output_path = output_dir / 'products.jsonl.gz'
+        download_dataset(output_path)
+        minify_path = output_dir / 'products-min.jsonl.gz'
+
+        logger.info("Minifying product JSONL")
+        minify_product_dataset(output_path, minify_path)
+
+        logger.info("Moving files to dataset directory")
+        output_path.rename(settings.JSONL_DATASET_PATH)
+        minify_path.rename(settings.JSONL_MIN_DATASET_PATH)
+        logger.info("Dataset fetched")
+
+
+def download_dataset(output_path: os.PathLike) -> None:
+    r = requests.get(settings.JSONL_DATASET_URL, stream=True)
+
+    with open(output_path, 'wb') as f:
+        shutil.copyfileobj(r.raw, f)
 
 
 class ProductStream:
@@ -81,6 +131,15 @@ class Product:
         self.categories_tags = product.get('categories_tags') or []
         self.emb_codes_tags = product.get('emb_codes_tags') or []
 
+    @staticmethod
+    def get_fields():
+        return {
+            'code',
+            'countries_tags',
+            'categories_tags',
+            'emb_codes_tags',
+        }
+
 
 class ProductStore:
     def __init__(self):
@@ -145,6 +204,5 @@ class ProductStoreThread(Thread):
 
 
 if __name__ == "__main__":
-    from robotoff import settings
     store = ProductStore()
     store.load(settings.JSONL_DATASET_PATH)
