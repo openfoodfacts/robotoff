@@ -159,6 +159,9 @@ class OCRInsightImporter(InsightImporter):
 
         for barcode, insights in grouped_by.items():
             for insight_type, insight_list in insights.items():
+                ProductInsight.delete().where(ProductInsight.type == insight_type,
+                                              ProductInsight.annotation.is_null()).execute()
+
                 processor_func = OCRInsightProcessorFactory.create(insight_type)
 
                 if processor_func is None:
