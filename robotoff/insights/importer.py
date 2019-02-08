@@ -119,6 +119,7 @@ def process_packager_code_insight(insight: Dict[str, Any], product_store: Option
         'id': str(uuid.uuid4()),
         'type': insight['type'],
         'barcode': barcode,
+        'countries': product.countries_tags,
         'data': {
             'source': insight['source'],
             'matcher_type': content['type'],
