@@ -7,7 +7,7 @@ import tempfile
 import threading
 from queue import Queue, Empty
 from threading import Thread
-from typing import List, Iterable, Dict
+from typing import List, Iterable, Dict, Optional
 
 import requests
 
@@ -34,12 +34,24 @@ def minify_product_dataset(dataset_path: pathlib.Path,
             output_.write(json.dumps(minified_item) + '\n')
 
 
+def get_product_dataset_etag() -> Optional[str]:
+    if not settings.JSONL_DATASET_ETAG_PATH.is_file():
+        return None
+
+    with open(settings.JSONL_DATASET_ETAG_PATH, 'r') as f:
+        return f.readline()
+
+
+def save_product_dataset_etag(etag: str):
+    with open(settings.JSONL_DATASET_ETAG_PATH, 'w') as f:
+        return f.write(etag)
+
+
 def fetch_dataset():
     with tempfile.TemporaryDirectory() as tmp_dir:
-        logger.debug("Saving temporary file in {}".format(tmp_dir))
         output_dir = pathlib.Path(tmp_dir)
         output_path = output_dir / 'products.jsonl.gz'
-        download_dataset(output_path)
+        etag = download_dataset(output_path)
         minify_path = output_dir / 'products-min.jsonl.gz'
 
         logger.info("Minifying product JSONL")
@@ -48,14 +60,37 @@ def fetch_dataset():
         logger.info("Moving files to dataset directory")
         output_path.rename(settings.JSONL_DATASET_PATH)
         minify_path.rename(settings.JSONL_MIN_DATASET_PATH)
+        save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
 
 
-def download_dataset(output_path: os.PathLike) -> None:
-    r = requests.get(settings.JSONL_DATASET_URL, stream=True)
+def has_dataset_changed() -> bool:
+    etag = get_product_dataset_etag()
+
+    if etag is not None:
+        r = requests.head(settings.JSONL_DATASET_URL)
+
+        current_etag = r.headers.get('ETag', '').strip("'\"")
+
+        if current_etag == etag:
+            logger.info("Dataset ETag has not changed")
+            return False
+
+    return True
+
+
+def download_dataset(output_path: os.PathLike) -> str:
+    r = requests.get(settings.JSONL_DATASET_URL,
+                     stream=True)
+    current_etag = r.headers.get('ETag', '').strip("'\"")
+
+    logger.info("Dataset has changed, downloading file")
+    logger.debug("Saving temporary file in {}".format(output_path))
 
     with open(output_path, 'wb') as f:
         shutil.copyfileobj(r.raw, f)
+
+    return current_etag
 
 
 class ProductStream:
@@ -167,7 +202,7 @@ class ProductStore:
 
 
 class ThreadEvent:
-    def __init__(self, event_type: str, meta: Dict):
+    def __init__(self, event_type: str, meta: Dict = None):
         self.event_type = event_type
         self.meta = meta
 
@@ -177,32 +212,30 @@ class ProductStoreThread(Thread):
         super().__init__(name="product-store-thread")
         self.event_q: Queue[ThreadEvent] = event_q
         self.stop_flag: threading.Event = threading.Event()
-        self.product_store = ProductStore()
+        self.lock = threading.Lock()
 
     def run(self):
         while not self.stop_flag.isSet():
             try:
                 event = self.event_q.get(True, 0.05)
-                self.process_event(event)
+                with self.lock:
+                    self.process_event(event)
             except Empty:
                 continue
 
     def process_event(self, event: ThreadEvent):
-        if event.event_type == 'load':
-            self.load(**event.meta)
+        print("test")
+        if event.event_type == 'download':
+            logger.info("download thread event received")
+            self.download()
         else:
             logger.warning("unknown event type: {}".format(event.event_type))
 
-    def load(self, path: str, reset: bool=True):
-        logger.info("Loading product store from path {}".format(path))
-        self.product_store.load(path, reset)
-        logger.info("Product store loaded")
+    @staticmethod
+    def download():
+        if has_dataset_changed():
+            fetch_dataset()
 
     def join(self, timeout=None):
         self.stop_flag.set()
         super(ProductStoreThread, self).join(timeout)
-
-
-if __name__ == "__main__":
-    store = ProductStore()
-    store.load(settings.JSONL_DATASET_PATH)

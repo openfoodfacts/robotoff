@@ -28,7 +28,7 @@ def get_logger(name=None, level="INFO"):
 
         logger.setLevel(log_level)
         handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s :: '
+        formatter = logging.Formatter('%(asctime)s :: %(threadName)s :: '
                                       '%(levelname)s :: %(message)s')
         handler.setFormatter(formatter)
         handler.setLevel(log_level)

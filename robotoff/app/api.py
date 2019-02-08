@@ -1,4 +1,5 @@
 import itertools
+from queue import Queue
 
 import dataclasses
 
@@ -16,9 +17,17 @@ from robotoff.app.core import (normalize_lang,
                                save_insight)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
+from robotoff.products import (ThreadEvent,
+                               get_product_dataset_etag, ProductStoreThread)
+from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
 
+logger = get_logger()
 es_client = get_es_client()
+
+thread_queue = Queue()
+worker_thread: ProductStoreThread = ProductStoreThread(thread_queue)
+worker_thread.start()
 
 
 class CategoryPredictionResource:
@@ -161,6 +170,22 @@ class IngredientSpellcheckResource:
         }
 
 
+class UpdateDatasetResource:
+    def on_post(self, req, resp):
+        logger.info("New update dataset request")
+        event = ThreadEvent("download")
+        thread_queue.put(event)
+
+        resp.media = {
+            'status': 'scheduled',
+        }
+
+    def on_get(self, req, resp):
+        resp.media = {
+            'etag': get_product_dataset_etag(),
+        }
+
+
 cors = CORS(allow_all_origins=True,
             allow_all_headers=True,
             allow_all_methods=True)
@@ -178,3 +203,5 @@ api.add_route('/api/v1/categories/predictions/{barcode}',
 api.add_route('/api/v1/categories/annotate', CategoryAnnotateResource())
 api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
+api.add_route('/api/v1/products/dataset',
+              UpdateDatasetResource())
