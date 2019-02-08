@@ -4,10 +4,11 @@ from typing import Dict, Iterable, Tuple
 
 import argparse
 
+from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
-from robotoff import utils, settings
+from robotoff import settings
 
-logger = utils.get_logger()
+logger = get_logger()
 
 CATEGORY_INDEX = "category"
 
