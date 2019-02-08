@@ -2,7 +2,7 @@ import abc
 import uuid
 from typing import Dict, Iterable, List, Optional, Any, Callable
 
-from robotoff.insights.enum import InsightType
+from robotoff.insights._enum import InsightType
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore
 from robotoff.utils import get_logger, jsonl_iter
