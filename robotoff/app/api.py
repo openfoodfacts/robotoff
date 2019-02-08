@@ -20,6 +20,7 @@ from robotoff.app.core import (normalize_lang,
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights.importer import OCRInsightImporter
+from robotoff.models import db
 from robotoff.products import (ThreadEvent,
                                get_product_dataset_etag, ProductStoreThread,
                                ProductStore)
@@ -210,7 +211,10 @@ class InsightImporterResource:
                                                     "{}".format(importer_type))
 
         logger.info("Starting import...")
-        importer.from_jsonl_fp(io.TextIOWrapper(content.file))
+
+        with db.atomic():
+            importer.from_jsonl_fp(io.TextIOWrapper(content.file))
+
         logger.info("Import finished")
 
         resp.media = {
