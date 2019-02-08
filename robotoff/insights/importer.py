@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Optional, Any, Callable
 from robotoff.insights._enum import InsightType
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore
-from robotoff.utils import get_logger, jsonl_iter
+from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 
 logger = get_logger(__name__)
 
@@ -17,6 +17,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     def from_jsonl(self, file_path):
         items = jsonl_iter(file_path)
+        self.import_insights(items)
+
+    def from_jsonl_fp(self, fp):
+        items = jsonl_iter_fp(fp)
         self.import_insights(items)
 
 
@@ -193,26 +197,3 @@ class OCRInsightImporter(InsightImporter):
                 } for i in insights]
 
         return grouped_by
-
-
-class InsightImporterFactory:
-    mapping = {
-        InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
-        InsightType.packager_code.name: OCRInsightImporter,
-    }
-
-    @classmethod
-    def create(cls, identifier: str) -> InsightImporter:
-        if identifier not in cls.mapping:
-            raise ValueError("unknown annotator: {}".format(identifier))
-
-        return cls.mapping[identifier]()
-
-
-if __name__ == "__main__":
-    from robotoff import settings
-
-    product_store = ProductStore()
-    product_store.load(settings.JSONL_MIN_DATASET_PATH)
-    importer = OCRInsightImporter(product_store)
-    importer.from_jsonl('insights.jsonl')

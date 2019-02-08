@@ -197,6 +197,9 @@ class ProductStore:
 
         logger.info("product store loaded ({} items added)".format(len(seen)))
 
+    def load_min_dataset(self, reset: bool = True):
+        self.load(settings.JSONL_MIN_DATASET_PATH, reset)
+
     def __getitem__(self, item):
         return self.store.get(item)
 
