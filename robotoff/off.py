@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 import requests
 
@@ -48,15 +48,7 @@ def save_category(product_id: str, category: str):
         'add_categories': category,
         **AUTH_DICT
     }
-
-    r = http_session.get(POST_URL, params=params)
-    r.raise_for_status()
-    json = r.json()
-
-    status = json.get('status_verbose')
-
-    if status != "fields saved":
-        logger.warn("Unexpected status during category update: {}".format(status))
+    update_product(params)
 
 
 def save_ingredients(barcode: str, ingredient_text: str, lang: str=None):
@@ -66,7 +58,20 @@ def save_ingredients(barcode: str, ingredient_text: str, lang: str=None):
         ingredient_key: ingredient_text,
         **AUTH_DICT,
     }
+    update_product(params)
 
+
+def add_emb_code(barcode: str, emb_code: str):
+        params = {
+            'code': barcode,
+            'add_emb_codes': emb_code,
+            'comment': "Adding packager code (automated edit)",
+            **AUTH_DICT,
+        }
+        update_product(params)
+
+
+def update_product(params: Dict):
     r = http_session.get(POST_URL, params=params)
     r.raise_for_status()
     json = r.json()
@@ -74,23 +79,6 @@ def save_ingredients(barcode: str, ingredient_text: str, lang: str=None):
     status = json.get('status_verbose')
 
     if status != "fields saved":
-        logger.warn("Unexpected status during update: {}".format(status))
-
-
-def add_emb_code(barcode: str, emb_code: str):
-        params = {
-            'code': barcode,
-            'add_emb_codes': emb_code,
-            **AUTH_DICT,
-        }
-
-        r = http_session.get(POST_URL, params=params)
-        r.raise_for_status()
-        json = r.json()
-
-        status = json.get('status_verbose')
-
-        if status != "fields saved":
-            logger.warn(
-                "Unexpected status during product update: {}".format(
-                    status))
+        logger.warn(
+            "Unexpected status during product update: {}".format(
+                status))
