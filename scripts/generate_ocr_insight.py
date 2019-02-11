@@ -428,10 +428,6 @@ def ocr_iter(input_str: str):
 
                         if 'content' in json_data:
                             source = json_data['source'].replace('//', '/')
-
-                            if not pathlib.Path(source).stem.isdigit():
-                                continue
-
                             yield source, json_data['content']
 
 
