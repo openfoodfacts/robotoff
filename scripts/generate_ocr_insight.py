@@ -65,6 +65,7 @@ LABELS_REGEX = {
     'en:organic': [
         re.compile(r"ingr[ée]dients?\sbiologiques?", re.IGNORECASE),
         re.compile(r"agriculture ue/non ue biologique", re.IGNORECASE),
+        re.compile(r"FR[\-\s.]BIO[\-\s.]\d{2,3}"),
     ],
 }
 
@@ -300,11 +301,11 @@ def find_labels(text: str) -> List[Dict]:
 
     results = []
 
-    for label_type, regex_list in LABELS_REGEX.items():
+    for label_tag, regex_list in LABELS_REGEX.items():
         for regex in regex_list:
             for match in regex.finditer(text):
                 results.append({
-                    'type': label_type,
+                    'label_tag': label_tag,
                     'text': match.group(),
                 })
 

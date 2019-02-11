@@ -155,13 +155,15 @@ class ProductDataset:
 
 class Product:
     """Product class."""
-    __slots__ = ('barcode', 'countries_tags', 'categories_tags', 'emb_codes_tags')
+    __slots__ = ('barcode', 'countries_tags', 'categories_tags',
+                 'emb_codes_tags', 'labels_tags')
 
     def __init__(self, product: Dict):
         self.barcode = product.get('code')
         self.countries_tags = product.get('countries_tags') or []
         self.categories_tags = product.get('categories_tags') or []
         self.emb_codes_tags = product.get('emb_codes_tags') or []
+        self.labels_tags = product.get('labels_tags') or []
 
     @staticmethod
     def get_fields():
@@ -170,6 +172,7 @@ class Product:
             'countries_tags',
             'categories_tags',
             'emb_codes_tags',
+            'labels_tags',
         }
 
 

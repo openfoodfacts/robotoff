@@ -221,10 +221,54 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                 .replace('.', '-'))
 
 
+class LabelInsightImporter(OCRInsightImporter):
+    def get_type(self) -> str:
+        return InsightType.label.name
+
+    def process_product_insights(self, insights: List[Dict[str, Any]]) \
+            -> List[Dict[str, Any]]:
+        processed: List[Dict[str, Any]] = []
+        label_seen = set()
+
+        for insight in insights:
+            barcode = insight['barcode']
+            content = insight['content']
+            label_tag = content['label_tag']
+
+            if self.product_store:
+                product = self.product_store[barcode]
+
+                if not product:
+                    continue
+
+                if label_tag in product.labels_tags:
+                    continue
+
+            if label_tag in label_seen:
+                continue
+
+            processed.append({
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': product.countries_tags,
+                'data': {
+                    'source': insight['source'],
+                    'raw': content['raw'],
+                    'text': content['text'],
+                    'label_tag': label_tag,
+                }
+            })
+            label_seen.add(label_tag)
+
+        return processed
+
+
 class InsightImporterFactory:
     importers: Dict[str, Any] = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
+        InsightType.label.name: LabelInsightImporter,
     }
 
     @classmethod
