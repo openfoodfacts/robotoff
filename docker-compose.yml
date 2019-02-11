@@ -6,7 +6,7 @@ services:
     ports:
       - "5500:5500"
     volumes:
-    - api-dataset:/opt/rbt/datasets
+    - api-dataset:/opt/robotoff/datasets
     environment:
       DB_HOST: "postgres"
       ELASTICSEARCH_HOSTS: "elasticsearch"
