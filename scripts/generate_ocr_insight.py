@@ -6,7 +6,7 @@ import json
 import sys
 
 import pathlib as pathlib
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Iterable
 
 import requests
 
@@ -114,24 +114,29 @@ def get_json_for_image(barcode: str, image_name: str):
     return r.json()
 
 
-def get_raw_text(data: Dict[str, Any]):
+def ocr_text_iter(data: Dict[str, Any]) -> Iterable[str]:
     responses = data.get('responses', [])
 
     if not responses:
         return
 
     response = responses[0]
-    text_annotation = response.get('fullTextAnnotation')
+    full_text_annotation = response.get('fullTextAnnotation')
 
-    if not text_annotation:
-        return
+    if full_text_annotation:
+        text = full_text_annotation.get('text')
 
-    text = text_annotation.get('text')
+        if text is not None:
+            yield text
 
-    if text is None:
-        return
+    else:
+        text_annotations = response.get('textAnnotations', [])
 
-    return text
+        for text_annotation in text_annotations:
+            text = text_annotation.get('description')
+
+            if text is not None:
+                yield text
 
 
 def find_emails(text: str) -> List[Dict]:
@@ -319,43 +324,39 @@ def find_best_before_date(text: str) -> List[Dict]:
     return results
 
 
-def extract_insights(data: Dict[str, Any]):
-    text = get_raw_text(data)
-
-    if text is None:
-        print("Could not extract OCR text content")
-        return
-
-    contiguous_text = text.replace('\n', ' ')
-
+def extract_insights(data: Dict[str, Any]) -> Dict[str, List[Dict]]:
     insights = {}
 
-    weight_values = find_weight_values(text)
-    weight_mentions = find_weight_mentions(text)
-    packager_codes = find_packager_codes(contiguous_text)
-    nutriscore = find_nutriscore(text)
-    recycling_instructions = find_recycling_instructions(contiguous_text)
+    for text in ocr_text_iter(data):
+        contiguous_text = text.replace('\n', ' ')
 
-    emails = find_emails(text)
-    urls = find_urls(text)
-    labels = find_labels(contiguous_text)
-    storage_instructions = find_storage_instructions(contiguous_text)
-    best_before_date = find_best_before_date(text)
+        weight_values = find_weight_values(text)
+        weight_mentions = find_weight_mentions(text)
+        packager_codes = find_packager_codes(contiguous_text)
+        nutriscore = find_nutriscore(text)
+        recycling_instructions = find_recycling_instructions(contiguous_text)
 
-    for key, value in (
-            ('weight_value', weight_values),
-            ('weight_mention', weight_mentions),
-            ('packager_code', packager_codes),
-            ('nutriscore', nutriscore),
-            ('url', urls),
-            ('email', emails),
-            ('recycling_instruction', recycling_instructions),
-            ('label', labels),
-            ('storage_instruction', storage_instructions),
-            ('best_before_date', best_before_date),
-    ):
-        if value:
-            insights[key] = value
+        emails = find_emails(text)
+        urls = find_urls(text)
+        labels = find_labels(contiguous_text)
+        storage_instructions = find_storage_instructions(contiguous_text)
+        best_before_date = find_best_before_date(text)
+
+        for key, value in (
+                ('weight_value', weight_values),
+                ('weight_mention', weight_mentions),
+                ('packager_code', packager_codes),
+                ('nutriscore', nutriscore),
+                ('url', urls),
+                ('email', emails),
+                ('recycling_instruction', recycling_instructions),
+                ('label', labels),
+                ('storage_instruction', storage_instructions),
+                ('best_before_date', best_before_date),
+        ):
+            if value:
+                insights.setdefault(key, [])
+                insights[key] += value
 
     return insights
 
