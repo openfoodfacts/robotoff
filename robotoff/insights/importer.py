@@ -254,7 +254,6 @@ class LabelInsightImporter(OCRInsightImporter):
                 'countries': product.countries_tags,
                 'data': {
                     'source': insight['source'],
-                    'raw': content['raw'],
                     'text': content['text'],
                     'label_tag': label_tag,
                 }
