@@ -99,39 +99,54 @@ def get_emb_code_tag(emb_code: str) -> str:
                     .replace('.', '-'))
 
 
-def process_packager_code_insight(insight: Dict[str, Any], product_store: Optional[ProductStore]=None) \
-        -> Optional[Dict[str, Any]]:
-    barcode = insight['barcode']
-    content = insight['content']
+def process_packager_code_insights(insights: List[Dict[str, Any]],
+                                   product_store: Optional[ProductStore]=None) \
+        -> List[Dict[str, Any]]:
+    processed: List[Dict[str, Any]] = []
+    code_seen = set()
 
-    if product_store:
-        product = product_store[barcode]
+    for insight in insights:
+        barcode = insight['barcode']
+        content = insight['content']
+        emb_code = content['text']
 
-        if not product:
-            return
+        if product_store:
+            product = product_store[barcode]
 
-        emb_code_tag = get_emb_code_tag(content['text'])
+            if not product:
+                continue
 
-        if emb_code_tag in product.emb_codes_tags:
-            return
+            emb_code_tag = get_emb_code_tag(emb_code)
 
-    return {
-        'id': str(uuid.uuid4()),
-        'type': insight['type'],
-        'barcode': barcode,
-        'countries': product.countries_tags,
-        'data': {
-            'source': insight['source'],
-            'matcher_type': content['type'],
-            'raw': content['raw'],
-            'text': content['text'],
-        }
-    }
+            if (emb_code_tag in product.emb_codes_tags or
+                    (emb_code_tag.endswith('ce') and
+                     emb_code_tag.replace('ce', 'ec')
+                     in product.emb_codes_tags)):
+                continue
+
+        if emb_code in code_seen:
+            continue
+
+        processed.append({
+            'id': str(uuid.uuid4()),
+            'type': insight['type'],
+            'barcode': barcode,
+            'countries': product.countries_tags,
+            'data': {
+                'source': insight['source'],
+                'matcher_type': content['type'],
+                'raw': content['raw'],
+                'text': emb_code,
+            }
+        })
+        code_seen.add(emb_code)
+
+    return processed
 
 
 class OCRInsightProcessorFactory:
     processor_func = {
-        InsightType.packager_code.name: process_packager_code_insight,
+        InsightType.packager_code.name: process_packager_code_insights,
     }
 
     @classmethod
@@ -148,7 +163,7 @@ class OCRInsightImporter(InsightImporter):
     }
 
     INSIGHT_PROCESSOR = {
-        InsightType.packager_code.name: process_packager_code_insight,
+        InsightType.packager_code.name: process_packager_code_insights,
     }
 
     def __init__(self, product_store: Optional[ProductStore]=None):
@@ -168,11 +183,8 @@ class OCRInsightImporter(InsightImporter):
                 if processor_func is None:
                     continue
 
-                for insight in insight_list:
-                    processed_insight = processor_func(insight, self.product_store)
-
-                    if processed_insight:
-                        inserts.append(processed_insight)
+                inserts += processor_func(insights,
+                                          self.product_store)
 
         batch_insert(ProductInsight, inserts, 50)
 
