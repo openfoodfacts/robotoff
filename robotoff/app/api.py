@@ -19,6 +19,7 @@ from robotoff.app.core import (normalize_lang,
                                save_insight)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
+from robotoff.insights._enum import InsightType
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
@@ -189,14 +190,20 @@ class UpdateDatasetResource:
 
 class InsightImporterResource:
     def on_post(self, req, resp):
-        logger.info("New insight importer request")
-        importer_type = req.get_param('type', required=True)
+        logger.info("New insight import request")
+        insight_type = req.get_param('type', required=True)
+
+        if insight_type not in (t.name for t in InsightType):
+            raise falcon.HTTPBadRequest(description="unknown insight type: "
+                                                    "'{}'".format(insight_type))
+
         content = req.get_param('file', required=True)
 
-        logger.info("Importer type: '{}'".format(importer_type))
+        logger.info("Insight type: '{}'".format(insight_type))
 
         lines = [l for l in io.TextIOWrapper(content.file)]
-        thread_queue.put(ThreadEvent('import', {'items': lines, 'importer_type': importer_type}))
+        thread_queue.put(ThreadEvent('import', {'items': lines,
+                                                'insight_type': insight_type}))
 
         logger.info("Import scheduled")
 

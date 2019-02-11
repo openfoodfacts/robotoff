@@ -4,7 +4,7 @@ from queue import Queue, Empty
 from threading import Thread
 from typing import Dict, List
 
-from robotoff.insights.importer import IngredientSpellcheckImporter, OCRInsightImporter
+from robotoff.insights.importer import InsightImporterFactory
 from robotoff.models import db
 from robotoff.products import ProductStore, fetch_dataset, has_dataset_changed
 from robotoff.utils import get_logger
@@ -54,17 +54,15 @@ class WorkerThread(Thread):
         super(WorkerThread, self).join(timeout)
 
 
-def import_items(importer_type: str, items: List[str]):
-    if importer_type == 'ocr':
+def import_items(insight_type: str, items: List[str]):
+    importer_cls = InsightImporterFactory.create(insight_type)
+
+    if importer_cls.need_product_store():
         product_store = ProductStore()
         product_store.load_min_dataset()
-        importer = OCRInsightImporter(product_store)
-
-    elif importer_type == 'ingredient_spellcheck':
-        importer = IngredientSpellcheckImporter()
-
+        importer = importer_cls(product_store)
     else:
-        raise ValueError("unknown importer type: {}".format(importer_type))
+        importer = importer_cls()
 
     with db.atomic():
         importer.import_insights((json.loads(l) for l in items))

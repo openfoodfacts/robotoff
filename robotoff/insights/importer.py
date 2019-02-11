@@ -1,6 +1,6 @@
 import abc
 import uuid
-from typing import Dict, Iterable, List, Optional, Any, Callable
+from typing import Dict, Iterable, List, Any
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
@@ -15,6 +15,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def import_insights(self, data: Iterable[Dict]):
         pass
 
+    @abc.abstractmethod
+    def get_type(self) -> str:
+        pass
+
+    @abc.abstractmethod
+    def need_product_store(self) -> bool:
+        pass
+
     def from_jsonl(self, file_path):
         items = jsonl_iter(file_path)
         self.import_insights(items)
@@ -25,6 +33,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
 
 class IngredientSpellcheckImporter(InsightImporter):
+    def get_type(self) -> str:
+        return InsightType.ingredient_spellcheck.name
+
+    @classmethod
+    def need_product_store(cls) -> bool:
+        return False
+
     def import_insights(self, data: Iterable[Dict]):
         ProductInsight.delete().where(ProductInsight.type ==
                                       InsightType.ingredient_spellcheck.name).execute()
@@ -93,123 +108,128 @@ class IngredientSpellcheckImporter(InsightImporter):
                                ingredient_str[end_offset:end_offset+context_len])
 
 
-def get_emb_code_tag(emb_code: str) -> str:
-    return (emb_code.lower()
-                    .replace(' ', '-')
-                    .replace('.', '-'))
+GroupedByOCRInsights = Dict[str, List]
 
 
-def process_packager_code_insights(insights: List[Dict[str, Any]],
-                                   product_store: Optional[ProductStore]=None) \
-        -> List[Dict[str, Any]]:
-    processed: List[Dict[str, Any]] = []
-    code_seen = set()
-
-    for insight in insights:
-        barcode = insight['barcode']
-        content = insight['content']
-        emb_code = content['text']
-
-        if product_store:
-            product = product_store[barcode]
-
-            if not product:
-                continue
-
-            emb_code_tag = get_emb_code_tag(emb_code)
-
-            if (emb_code_tag in product.emb_codes_tags or
-                    (emb_code_tag.endswith('ce') and
-                     emb_code_tag.replace('ce', 'ec')
-                     in product.emb_codes_tags)):
-                continue
-
-        if emb_code in code_seen:
-            continue
-
-        processed.append({
-            'id': str(uuid.uuid4()),
-            'type': insight['type'],
-            'barcode': barcode,
-            'countries': product.countries_tags,
-            'data': {
-                'source': insight['source'],
-                'matcher_type': content['type'],
-                'raw': content['raw'],
-                'text': emb_code,
-            }
-        })
-        code_seen.add(emb_code)
-
-    return processed
-
-
-class OCRInsightProcessorFactory:
-    processor_func = {
-        InsightType.packager_code.name: process_packager_code_insights,
-    }
-
-    @classmethod
-    def create(cls, key: str) -> Optional[Callable]:
-        return cls.processor_func.get(key)
-
-
-GroupedByOCRInsights = Dict[str, Dict[str, List]]
-
-
-class OCRInsightImporter(InsightImporter):
+class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
     KEEP_TYPE = {
         InsightType.packager_code.name,
     }
 
-    INSIGHT_PROCESSOR = {
-        InsightType.packager_code.name: process_packager_code_insights,
-    }
-
-    def __init__(self, product_store: Optional[ProductStore]=None):
+    def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
+
+    @classmethod
+    def need_product_store(cls) -> bool:
+        return True
 
     def import_insights(self, data: Iterable[Dict]):
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
         inserts = []
 
+        ProductInsight.delete().where(ProductInsight.type == self.get_type(),
+                                      ProductInsight.annotation.is_null()).execute()
+
         for barcode, insights in grouped_by.items():
-            for insight_type, insight_list in insights.items():
-                ProductInsight.delete().where(ProductInsight.type == insight_type,
-                                              ProductInsight.annotation.is_null()).execute()
-
-                processor_func = OCRInsightProcessorFactory.create(insight_type)
-
-                if processor_func is None:
-                    continue
-
-                inserts += processor_func(insights,
-                                          self.product_store)
+            inserts += self.process_product_insights(insights)
 
         batch_insert(ProductInsight, inserts, 50)
 
     def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
         grouped_by: GroupedByOCRInsights = {}
+        insight_type = self.get_type()
 
         for item in data:
             barcode = item['barcode']
             source = item['source']
 
-            if not item['insights']:
+            if item['type'] != insight_type:
+                raise ValueError("unexpected insight type: "
+                                 "'{}'".format(insight_type))
+
+            insights = item['insights']
+
+            if not insights:
                 continue
 
-            for insight_type, insights in item['insights'].items():
-                if insight_type not in self.KEEP_TYPE:
-                    continue
-
-                grouped_by.setdefault(barcode, {})
-                barcode_insights = grouped_by[barcode]
-                barcode_insights.setdefault(insight_type, [])
-                barcode_insights[insight_type] += [{
-                    'source': source,
-                    'barcode': barcode,
-                    'type': insight_type,
-                    'content': i,
-                } for i in insights]
+            grouped_by.setdefault(barcode, [])
+            grouped_by[barcode] += [{
+                'source': source,
+                'barcode': barcode,
+                'type': insight_type,
+                'content': i,
+            } for i in insights]
 
         return grouped_by
+
+    @abc.abstractmethod
+    def process_product_insights(self, insights: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        pass
+
+
+class PackagerCodeInsightImporter(OCRInsightImporter):
+    def get_type(self) -> str:
+        return InsightType.packager_code.name
+
+    def process_product_insights(self, insights: List[Dict[str, Any]]) \
+            -> List[Dict[str, Any]]:
+        processed: List[Dict[str, Any]] = []
+        code_seen = set()
+
+        for insight in insights:
+            barcode = insight['barcode']
+            content = insight['content']
+            emb_code = content['text']
+
+            if self.product_store:
+                product = self.product_store[barcode]
+
+                if not product:
+                    continue
+
+                emb_code_tag = self.get_emb_code_tag(emb_code)
+
+                if (emb_code_tag in product.emb_codes_tags or
+                        (emb_code_tag.endswith('ce') and
+                         emb_code_tag.replace('ce', 'ec')
+                         in product.emb_codes_tags)):
+                    continue
+
+            if emb_code in code_seen:
+                continue
+
+            processed.append({
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': product.countries_tags,
+                'data': {
+                    'source': insight['source'],
+                    'matcher_type': content['type'],
+                    'raw': content['raw'],
+                    'text': emb_code,
+                }
+            })
+            code_seen.add(emb_code)
+
+        return processed
+
+    @staticmethod
+    def get_emb_code_tag(emb_code: str) -> str:
+        return (emb_code.lower()
+                .replace(' ', '-')
+                .replace('.', '-'))
+
+
+class InsightImporterFactory:
+    importers: Dict[str, Any] = {
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
+        InsightType.packager_code.name: PackagerCodeInsightImporter,
+    }
+
+    @classmethod
+    def create(cls, insight_type: str):
+        if insight_type in cls.importers:
+            return cls.importers[insight_type]
+        else:
+            raise ValueError("unknown insight type: {}".format(insight_type))

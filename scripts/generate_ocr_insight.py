@@ -326,41 +326,46 @@ def find_best_before_date(text: str) -> List[Dict]:
     return results
 
 
-def extract_insights(data: Dict[str, Any]) -> Dict[str, List[Dict]]:
-    insights = {}
+def extract_insights(data: Dict[str, Any],
+                     insight_type: str) -> List[Dict]:
+    extracted = []
 
     for text in ocr_text_iter(data):
         contiguous_text = text.replace('\n', ' ')
 
-        # weight_values = find_weight_values(text)
-        # weight_mentions = find_weight_mentions(text)
-        packager_codes = find_packager_codes(contiguous_text)
-        # nutriscore = find_nutriscore(text)
-        # recycling_instructions = find_recycling_instructions(contiguous_text)
+        if insight_type == 'weight_value':
+            extracted += find_weight_values(text)
 
-        # emails = find_emails(text)
-        # urls = find_urls(text)
-        # labels = find_labels(contiguous_text)
-        # storage_instructions = find_storage_instructions(contiguous_text)
-        # best_before_date = find_best_before_date(text)
+        elif insight_type == 'weight_mention':
+            extracted += find_weight_mentions(text)
 
-        for key, value in (
-                # ('weight_value', weight_values),
-                # ('weight_mention', weight_mentions),
-                ('packager_code', packager_codes),
-                # ('nutriscore', nutriscore),
-                # ('url', urls),
-                # ('email', emails),
-                # ('recycling_instruction', recycling_instructions),
-                # ('label', labels),
-                # ('storage_instruction', storage_instructions),
-                # ('best_before_date', best_before_date),
-        ):
-            if value:
-                insights.setdefault(key, [])
-                insights[key] += value
+        elif insight_type == 'packager_code':
+            extracted += find_packager_codes(contiguous_text)
 
-    return insights
+        elif insight_type == 'nutriscore':
+            extracted += find_nutriscore(text)
+
+        elif insight_type == 'recycling_instruction':
+            extracted += find_recycling_instructions(contiguous_text)
+
+        elif insight_type == 'email':
+            extracted += find_emails(text)
+
+        elif insight_type == 'url':
+            extracted += find_urls(text)
+
+        elif insight_type == 'label':
+            extracted += find_labels(contiguous_text)
+
+        elif insight_type == 'storage_instruction':
+            extracted += find_storage_instructions(contiguous_text)
+
+        elif insight_type == 'best_before_date':
+            extracted += find_best_before_date(text)
+        else:
+            raise ValueError("unknown insight type: {}".format(insight_type))
+
+    return extracted
 
 
 def is_barcode(text: str):
@@ -445,12 +450,13 @@ def run(args: argparse.Namespace):
 
     with contextlib.closing(output):
         for source, ocr_json in ocr_iter(input_):
-            insights = extract_insights(ocr_json)
+            insights = extract_insights(ocr_json, args.insight_type)
 
             if insights:
                 item = {
                     'insights': insights,
                     'barcode': get_barcode_from_path(source),
+                    'type': args.insight_type,
                 }
 
                 if source:
@@ -462,6 +468,7 @@ def run(args: argparse.Namespace):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input')
+    parser.add_argument('--insight-type', required=True)
     parser.add_argument('--output', '-o')
     arguments = parser.parse_args()
     run(arguments)
