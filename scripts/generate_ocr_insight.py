@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import contextlib
+import gzip
 import re
 import argparse
 import json
 import sys
 
 import pathlib as pathlib
-from typing import List, Dict, Any, Iterable
+from typing import List, Dict, Any, Iterable, Optional
 
 import requests
 
@@ -100,7 +101,8 @@ def fetch_images_for_ean(ean: str):
     return images
 
 
-def get_json_for_image(barcode: str, image_name: str):
+def get_json_for_image(barcode: str, image_name: str) -> \
+        Optional[Dict[str, Any]]:
     splitted_barcode = split_barcode(barcode)
     url = "https://static.openfoodfacts.org/images/products/{}/{}/{}/{}/" \
           "{}.json".format(splitted_barcode[0], splitted_barcode[1],
@@ -330,29 +332,29 @@ def extract_insights(data: Dict[str, Any]) -> Dict[str, List[Dict]]:
     for text in ocr_text_iter(data):
         contiguous_text = text.replace('\n', ' ')
 
-        weight_values = find_weight_values(text)
-        weight_mentions = find_weight_mentions(text)
+        # weight_values = find_weight_values(text)
+        # weight_mentions = find_weight_mentions(text)
         packager_codes = find_packager_codes(contiguous_text)
-        nutriscore = find_nutriscore(text)
-        recycling_instructions = find_recycling_instructions(contiguous_text)
+        # nutriscore = find_nutriscore(text)
+        # recycling_instructions = find_recycling_instructions(contiguous_text)
 
-        emails = find_emails(text)
-        urls = find_urls(text)
-        labels = find_labels(contiguous_text)
-        storage_instructions = find_storage_instructions(contiguous_text)
-        best_before_date = find_best_before_date(text)
+        # emails = find_emails(text)
+        # urls = find_urls(text)
+        # labels = find_labels(contiguous_text)
+        # storage_instructions = find_storage_instructions(contiguous_text)
+        # best_before_date = find_best_before_date(text)
 
         for key, value in (
-                ('weight_value', weight_values),
-                ('weight_mention', weight_mentions),
+                # ('weight_value', weight_values),
+                # ('weight_mention', weight_mentions),
                 ('packager_code', packager_codes),
-                ('nutriscore', nutriscore),
-                ('url', urls),
-                ('email', emails),
-                ('recycling_instruction', recycling_instructions),
-                ('label', labels),
-                ('storage_instruction', storage_instructions),
-                ('best_before_date', best_before_date),
+                # ('nutriscore', nutriscore),
+                # ('url', urls),
+                # ('email', emails),
+                # ('recycling_instruction', recycling_instructions),
+                # ('label', labels),
+                # ('storage_instruction', storage_instructions),
+                # ('best_before_date', best_before_date),
         ):
             if value:
                 insights.setdefault(key, [])
@@ -361,17 +363,30 @@ def extract_insights(data: Dict[str, Any]) -> Dict[str, List[Dict]]:
     return insights
 
 
+def is_barcode(text: str):
+    return len(text) == 13 and text.isdigit()
+
+
+def get_source(image_name: str, json_path: str = None, barcode: str = None):
+    if not barcode:
+        barcode = get_barcode_from_path(str(json_path))
+
+    return "/{}/{}.jpg" \
+           "".format('/'.join(split_barcode(barcode)),
+                     image_name)
+
+
 def ocr_iter(input_str: str):
-    if len(input_str) == 13 and input_str.isdigit():
+    if is_barcode(input_str):
         image_data = fetch_images_for_ean(input_str)['product']['images']
 
         for image_name in image_data.keys():
             if image_name.isdigit():
                 print("Getting OCR for image {}".format(image_name))
                 data = get_json_for_image(input_str, image_name)
-
+                source = get_source(image_name, barcode=input_str)
                 if data:
-                    yield None, data
+                    yield source, data
 
     else:
         input_path = pathlib.Path(input_str)
@@ -383,10 +398,41 @@ def ocr_iter(input_str: str):
         if input_path.is_dir():
             for json_path in input_path.glob("**/*.json"):
                 with open(str(json_path), 'r') as f:
-                    yield json_path, json.load(f)
+                    source = get_source(json_path.stem,
+                                        json_path=str(json_path))
+                    yield source, json.load(f)
         else:
-            with open(str(input_path), 'r') as f:
-                yield input_path, json.load(f)
+            if '.json' in input_path.suffixes:
+                with open(str(input_path), 'r') as f:
+                    yield None, json.load(f)
+
+            elif '.jsonl' in input_path.suffixes:
+                if input_path.suffix == '.gz':
+                    open_func = gzip.open
+                else:
+                    open_func = open
+
+                with open_func(input_path, mode='rt') as f:
+                    for line in f:
+                        json_data = json.loads(line)
+
+                        if 'content' in json_data:
+                            source = json_data['source'].replace('//', '/')
+
+                            if not pathlib.Path(source).stem.isdigit():
+                                continue
+
+                            yield source, json_data['content']
+
+
+def get_ocr_from_barcode(barcode: str):
+    image_data = fetch_images_for_ean(barcode)['product']['images']
+
+    for image_name in image_data.keys():
+        if image_name.isdigit():
+            print("Getting OCR for image {}".format(image_name))
+            data = get_json_for_image(barcode, image_name)
+            return data
 
 
 def run(args: argparse.Namespace):
@@ -398,20 +444,18 @@ def run(args: argparse.Namespace):
         output = sys.stdout
 
     with contextlib.closing(output):
-        for file_path, ocr_json in ocr_iter(input_):
+        for source, ocr_json in ocr_iter(input_):
             insights = extract_insights(ocr_json)
 
             if insights:
-                barcode = get_barcode_from_path(file_path)
-                relative_path = "/{}/{}.jpg" \
-                                "".format('/'.join(split_barcode(barcode)),
-                                          file_path.stem)
-
                 item = {
                     'insights': insights,
-                    'source': relative_path,
-                    'barcode': barcode,
+                    'barcode': get_barcode_from_path(source),
                 }
+
+                if source:
+                    item['source'] = source
+
                 output.write(json.dumps(item) + '\n')
 
 
