@@ -4,3 +4,5 @@ ml/data/*
 *.joblib
 *.gz
 .ipynb_checkpoints
+.mypy_cache
+.pytest_cache
