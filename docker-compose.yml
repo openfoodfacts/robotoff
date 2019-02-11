@@ -5,6 +5,8 @@ services:
     image: openfoodfacts/robotoff
     ports:
       - "5500:5500"
+    volumes:
+    - api-dataset:/opt/rbt/datasets
     environment:
       DB_HOST: "postgres"
       ELASTICSEARCH_HOSTS: "elasticsearch"
@@ -19,3 +21,7 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+
+volumes:
+  api-dataset:
+    external: true
