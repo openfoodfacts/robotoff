@@ -5,7 +5,14 @@ import requests
 
 
 http_session = requests.Session()
-BASE_URL = "https://robotoff.openfoodfacts.org/api/v1"
+
+LOCAL = True
+
+if LOCAL:
+    BASE_URL = "http://localhost:5500/api/v1"
+else:
+    BASE_URL = "https://robotoff.openfoodfacts.org/api/v1"
+
 RANDOM_INSIGHT_URL = BASE_URL + "/insights/random"
 ANNOTATE_INSIGHT_URL = BASE_URL + "/insights/annotate"
 STATIC_IMAGE_DIR_URL = "https://static.openfoodfacts.org/images/products"
@@ -18,18 +25,16 @@ class NoInsightException(Exception):
 @click.command()
 @click.option('--insight-type')
 @click.option('--country')
-@click.option('--save', is_flag=True, default=True, type=bool)
-def run(insight_type: Optional[str], country: Optional[str], save: bool):
+def run(insight_type: Optional[str], country: Optional[str]):
     while True:
         try:
-            run_loop(insight_type, country, save)
+            run_loop(insight_type, country)
         except NoInsightException:
             click.echo("No insight left")
 
 
 def run_loop(insight_type: Optional[str],
-             country: Optional[str],
-             save: bool) -> None:
+             country: Optional[str]) -> None:
     insight = get_random_insight(insight_type, country)
     print_insight(insight)
 
@@ -42,7 +47,7 @@ def run_loop(insight_type: Optional[str],
             click.echo("Invalid value: 0, 1 or -1 expected", err=True)
             annotation = None
 
-    response = save_insight(insight['id'], annotation=annotation, save=save)
+    response = save_insight(insight['id'], annotation=annotation)
     click.echo(json.dumps(response, indent=4) + "\n")
 
 
@@ -65,17 +70,16 @@ def get_random_insight(insight_type: Optional[str] = None,
     return data['insight']
 
 
-def save_insight(insight_id: str, annotation: int, save: bool = True):
+def save_insight(insight_id: str, annotation: int):
     params = {
         'insight_id': insight_id,
         'annotation': annotation,
-        'save': save,
     }
 
     r = http_session.post(ANNOTATE_INSIGHT_URL, data=params)
     data = r.json()
 
-    return data['status']
+    return data
 
 
 def print_insight(insight: Dict[str, Any]) -> None:
