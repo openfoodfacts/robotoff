@@ -69,8 +69,8 @@ LABELS_REGEX = {
         re.compile(r"agriculture bio(?:logique)?[\s.,)]", re.IGNORECASE),
         re.compile(r"production bio(?:logique)?[\s.,)]", re.IGNORECASE),
     ],
-    'fr-bio-x': [
-        re.compile(r"FR[\-\s.]BIO[\-\s.](\d{2,3})")
+    'xx-bio-xx': [
+        re.compile(r"([A-Z]{2})[\-\s.](BIO|ÖKO)[\-\s.](\d{2,3})", re.IGNORECASE),
     ],
     'fr:ab-agriculture-biologique': [
         re.compile(r"certifie ab[\s.,)]", re.IGNORECASE),
@@ -312,8 +312,10 @@ def find_labels(text: str) -> List[Dict]:
     for label_tag, regex_list in LABELS_REGEX.items():
         for regex in regex_list:
             for match in regex.finditer(text):
-                if label_tag == 'fr-bio-x':
-                    label_value = "fr-bio-{}".format(match.group(1))
+                if label_tag == 'xx-bio-xx':
+                    label_value = "{}-{}-{}".format(match.group(1),
+                                                    match.group(2),
+                                                    match.group(3))
                 else:
                     label_value = label_tag
 
