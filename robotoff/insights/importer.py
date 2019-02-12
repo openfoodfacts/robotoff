@@ -174,7 +174,14 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
     def process_product_insights(self, insights: List[Dict[str, Any]]) \
             -> List[Dict[str, Any]]:
         processed: List[Dict[str, Any]] = []
-        code_seen = set()
+
+        code_seen = set(t.text for t in
+                        ProductInsight.select(ProductInsight.data['text']
+                                              .as_json().alias('text'))
+                                      .where(
+                            ProductInsight.annotation.is_null(False),
+                            ProductInsight.type ==
+                            self.get_type()))
 
         for insight in insights:
             barcode = insight['barcode']
