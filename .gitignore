@@ -1,6 +1,7 @@
 __pycache__
 .idea
 ml/data/*
+datasets
 *.joblib
 *.gz
 .ipynb_checkpoints
