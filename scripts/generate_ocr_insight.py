@@ -64,7 +64,11 @@ RECYCLING_REGEX = {
 LABELS_REGEX = {
     'en:organic': [
         re.compile(r"ingr[ée]dients?\sbiologiques?", re.IGNORECASE),
+        re.compile(r"ingr[ée]dients?\sbio[\s.,)]", re.IGNORECASE),
         re.compile(r"agriculture ue/non ue biologique", re.IGNORECASE),
+        re.compile(r"agriculture bio(?:logique)?[\s.,)]", re.IGNORECASE),
+        re.compile(r"production bio(?:logique)?[\s.,)]", re.IGNORECASE),
+        re.compile(r"certifie ab[\s.,)]", re.IGNORECASE),
         re.compile(r"FR[\-\s.]BIO[\-\s.]\d{2,3}"),
     ],
 }
