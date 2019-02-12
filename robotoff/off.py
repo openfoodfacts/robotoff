@@ -74,6 +74,16 @@ def add_emb_code(barcode: str, emb_code: str, dry=False):
         update_product(params, dry=dry)
 
 
+def add_label_tag(barcode: str, label_tag: str, dry=False):
+    params = {
+        'code': barcode,
+        'add_labels': label_tag,
+        'comment': "Adding label tag (automated edit)",
+        **AUTH_DICT,
+    }
+    update_product(params, dry=dry)
+
+
 def update_product(params: Dict, dry=False):
     if dry:
         params.pop('password')

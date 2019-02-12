@@ -68,9 +68,13 @@ LABELS_REGEX = {
         re.compile(r"agriculture ue/non ue biologique", re.IGNORECASE),
         re.compile(r"agriculture bio(?:logique)?[\s.,)]", re.IGNORECASE),
         re.compile(r"production bio(?:logique)?[\s.,)]", re.IGNORECASE),
-        re.compile(r"certifie ab[\s.,)]", re.IGNORECASE),
-        re.compile(r"FR[\-\s.]BIO[\-\s.]\d{2,3}"),
     ],
+    'fr-bio-x': [
+        re.compile(r"FR[\-\s.]BIO[\-\s.](\d{2,3})")
+    ],
+    'fr:ab-agriculture-biologique': [
+        re.compile(r"certifie ab[\s.,)]", re.IGNORECASE),
+    ]
 }
 
 BEST_BEFORE_DATE_REGEX = {
@@ -308,8 +312,13 @@ def find_labels(text: str) -> List[Dict]:
     for label_tag, regex_list in LABELS_REGEX.items():
         for regex in regex_list:
             for match in regex.finditer(text):
+                if label_tag == 'fr-bio-x':
+                    label_value = "fr-bio-{}".format(match.group(1))
+                else:
+                    label_value = label_tag
+
                 results.append({
-                    'label_tag': label_tag,
+                    'label_tag': label_value,
                     'text': match.group(),
                 })
 
