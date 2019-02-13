@@ -1,4 +1,5 @@
 import json
+from difflib import SequenceMatcher
 from typing import Optional, Dict, Any
 import click
 import requests
@@ -6,7 +7,7 @@ import requests
 
 http_session = requests.Session()
 
-LOCAL = True
+LOCAL = False
 
 if LOCAL:
     BASE_URL = "http://localhost:5500/api/v1"
@@ -83,6 +84,16 @@ def save_insight(insight_id: str, annotation: int):
 
 
 def print_insight(insight: Dict[str, Any]) -> None:
+    insight_type: str = insight.get('type')
+
+    if insight_type == 'ingredient_spellcheck':
+        print_ingredient_spellcheck_insight(insight)
+
+    else:
+        print_generic_insight(insight)
+
+
+def print_generic_insight(insight: Dict[str, Any]) -> None:
     for key, value in insight.items():
         click.echo('{}: {}'.format(key, str(value)))
 
@@ -93,6 +104,38 @@ def print_insight(insight: Dict[str, Any]) -> None:
         click.echo("image: {}{}".format(STATIC_IMAGE_DIR_URL,
                                         insight['source']))
     click.echo("")
+
+
+def print_ingredient_spellcheck_insight(insight: Dict[str, Any]) -> None:
+    for key in ('id', 'type', 'barcode', 'countries'):
+        value = insight.get(key)
+        click.echo('{}: {}'.format(key, str(value)))
+
+    click.echo("url: {}".format("https://fr.openfoodfacts.org/produit/"
+                                "{}".format(insight['barcode'])))
+
+    original_snippet = insight['original_snippet']
+    corrected_snippet = insight['corrected_snippet']
+    click.echo(generate_colored_diff(original_snippet, corrected_snippet))
+    click.echo("")
+
+
+def generate_colored_diff(original: str, correction: str) -> str:
+    matcher = SequenceMatcher(None, original, correction)
+
+    diff = ""
+    for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
+        if opcode == 'equal':
+            diff += original[i1:i2]
+        elif opcode == 'insert':
+            diff += click.style(correction[j1:j2], fg='black', bg='green')
+        elif opcode == 'delete':
+            diff += click.style(original[i1:i2], fg='black', bg='red')
+        elif opcode == 'replace':
+            diff += click.style(original[i1:i2], fg='black', bg='red')
+            diff += click.style(correction[j1:j2], fg='black', bg='green')
+
+    return diff
 
 
 if __name__ == "__main__":
