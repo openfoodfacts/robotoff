@@ -294,7 +294,7 @@ def get_json_for_image(barcode: str, image_name: str) -> \
     return r.json()
 
 
-def get_ocr_response(data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def get_ocr_result(data: Dict[str, Any]) -> Optional[OCRResult]:
     responses = data.get('responses', [])
 
     if not responses:
@@ -305,7 +305,7 @@ def get_ocr_response(data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if 'error' in response:
         return
 
-    return response
+    return OCRResult(response)
 
 
 def find_emails(text: str) -> List[Dict]:
@@ -623,12 +623,11 @@ def run(args: argparse.Namespace):
 
     with contextlib.closing(output):
         for source, ocr_json in ocr_iter(input_):
-            ocr_response = get_ocr_response(ocr_json)
+            ocr_result: OCRResult = get_ocr_result(ocr_json)
 
-            if not ocr_response:
+            if ocr_result is None:
                 continue
 
-            ocr_result: OCRResult = OCRResult(ocr_response)
             insights = extract_insights(ocr_result, args.insight_type)
 
             if insights:
