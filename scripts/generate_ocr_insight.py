@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import contextlib
+import datetime
 import enum
+import functools
 import gzip
 import re
 import argparse
@@ -29,6 +31,25 @@ def process_eu_bio_label_code(match) -> str:
     return "{}-{}-{}".format(match.group(1),
                              match.group(2),
                              match.group(3))
+
+
+def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
+    day, month, year = match.group(1, 2, 3)
+
+    if short:
+        format_str: str = "%d/%m/%y"
+    else:
+        format_str: str = "%d/%m/%Y"
+
+    try:
+        dt = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str)
+    except ValueError:
+        return
+
+    if dt.year > 2050 or dt.year < 2000:
+        return
+
+    return dt.strftime("%d/%m/%Y")
 
 
 class OCRField(enum.Enum):
@@ -122,10 +143,23 @@ LABELS_REGEX = {
     ]
 }
 
-BEST_BEFORE_DATE_REGEX = {
-    'en': re.compile(r'\d\d\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(?:\s\d{4})?', re.IGNORECASE),
-    'fr': re.compile(r'\d\d\s(?:Jan|Fev|Mar|Avr|Mai|Juin|Juil|Aou|Sep|Oct|Nov|Dec)(?:\s\d{4})?', re.IGNORECASE),
-    'full_digits': re.compile(r'\d{2}[./]\d{2}[./](?:\d{2}){1,2}'),
+BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
+    'en': OCRRegex(re.compile(r'\d\d\s(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s\d{4})?'),
+                   field=OCRField.text_annotations,
+                   lowercase=True),
+    'fr': OCRRegex(re.compile(r'\d\d\s(?:jan|fev|mar|avr|mai|juin|juil|aou|sep|oct|nov|dec)(?:\s\d{4})?'),
+                   field=OCRField.text_annotations,
+                   lowercase=True),
+    'full_digits_short': OCRRegex(re.compile(r'(\d{2})[./](\d{2})[./](\d{2})'),
+                                  field=OCRField.text_annotations,
+                                  lowercase=False,
+                                  processing_func=functools.partial(process_full_digits_best_before_date,
+                                                                    short=True)),
+    'full_digits_long': OCRRegex(re.compile(r'(\d{2})[./](\d{2})[./](\d{4})'),
+                                 field=OCRField.text_annotations,
+                                 lowercase=False,
+                                 processing_func=functools.partial(process_full_digits_best_before_date,
+                                                                   short=False)),
 }
 
 
@@ -449,17 +483,29 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
-def find_best_before_date(text: str) -> List[Dict]:
+def find_best_before_date(ocr_result: OCRResult) -> List[Dict]:
     # Parse best_before_date
     #        "À consommer de préférence avant",
     results = []
 
-    for type_, regex in BEST_BEFORE_DATE_REGEX.items():
-        for match in regex.finditer(text):
-            results.append({
-                "text": match.group(),
-                "type": type_,
-            })
+    for type_, ocr_regex in BEST_BEFORE_DATE_REGEX.items():
+        for text in ocr_result.get_text(ocr_regex):
+            for match in ocr_regex.regex.finditer(text):
+                raw = match.group(0)
+
+                if ocr_regex.processing_func:
+                    value = ocr_regex.processing_func(match)
+
+                    if value is None:
+                        continue
+                else:
+                    value = raw
+
+                results.append({
+                    "raw": raw,
+                    "value": value,
+                    "type": type_,
+                })
 
     return results
 
@@ -493,8 +539,8 @@ def extract_insights(ocr_result: OCRResult,
     # elif insight_type == 'storage_instruction':
     #     return find_storage_instructions(contiguous_text)
 
-    # elif insight_type == 'best_before_date':
-    #     return find_best_before_date(text)
+    elif insight_type == 'best_before_date':
+        return find_best_before_date(ocr_result)
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
 
