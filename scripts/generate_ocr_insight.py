@@ -99,8 +99,19 @@ def get_barcode_from_path(path: str):
     return barcode
 
 
-def split_barcode(barcode: str):
-    return barcode[0:3], barcode[3:6], barcode[6:9], barcode[9:13]
+def split_barcode(barcode: str) -> List[str]:
+    if len(barcode) == 13:
+        return [barcode[0:3], barcode[3:6], barcode[6:9], barcode[9:13]]
+    elif len(barcode) == 8:
+        return [barcode]
+
+    raise ValueError("unknown barcode format: {}".format(barcode))
+
+
+def generate_image_url(barcode: str, image_name: str) -> str:
+    splitted_barcode = split_barcode(barcode)
+    path = "/{}/{}.json".format('/'.join(splitted_barcode), image_name)
+    return "https://static.openfoodfacts.org/images/products" + path
 
 
 def fetch_images_for_ean(ean: str):
@@ -112,11 +123,7 @@ def fetch_images_for_ean(ean: str):
 
 def get_json_for_image(barcode: str, image_name: str) -> \
         Optional[Dict[str, Any]]:
-    splitted_barcode = split_barcode(barcode)
-    url = "https://static.openfoodfacts.org/images/products/{}/{}/{}/{}/" \
-          "{}.json".format(splitted_barcode[0], splitted_barcode[1],
-                           splitted_barcode[2], splitted_barcode[3],
-                           image_name)
+    url = generate_image_url(barcode, image_name)
     r = requests.get(url)
 
     if r.status_code == 404:
