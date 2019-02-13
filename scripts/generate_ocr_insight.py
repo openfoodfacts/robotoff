@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import contextlib
+import enum
 import gzip
 import re
 import argparse
@@ -7,7 +8,7 @@ import json
 import sys
 
 import pathlib as pathlib
-from typing import List, Dict, Any, Iterable, Optional
+from typing import List, Dict, Any, Iterable, Optional, Tuple, Callable
 
 import requests
 
@@ -22,6 +23,31 @@ def process_fr_emb_match(match) -> str:
     city_code = city_code.replace(' ', '')
     company_code = company_code or ''
     return "{} {}{}".format(emb_str, city_code, company_code)
+
+
+def process_eu_bio_label_code(match) -> str:
+    return "{}-{}-{}".format(match.group(1),
+                             match.group(2),
+                             match.group(3))
+
+
+class OCRField(enum.Enum):
+    full_text = 1
+    full_text_contiguous = 2
+    text_annotations = 3
+
+
+class OCRRegex:
+    __slots__ = ('regex', 'field', 'lowercase', 'processing_func')
+
+    def __init__(self, regex,
+                 field: OCRField,
+                 lowercase: bool=False,
+                 processing_func: Optional[Callable] = None):
+        self.regex = regex
+        self.field: OCRField = field
+        self.lowercase: bool = lowercase
+        self.processing_func = processing_func
 
 
 NUTRISCORE_REGEX = re.compile(r"nutri[-\s]?score", re.IGNORECASE)
@@ -45,11 +71,15 @@ URL_REGEX = re.compile(r'^(http://www\.|https://www\.|http://|https://)?[a-z0-9]
 EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
 PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
 
-PACKAGER_CODE = {
-    "fr_emb": (re.compile(r"(EMB) ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
-               process_fr_emb_match),
-    "eu_fr": (re.compile("(FR) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (CE|EC)"),
-              process_fr_packaging_match),
+PACKAGER_CODE: Dict[str, OCRRegex] = {
+    "fr_emb": OCRRegex(re.compile(r"(EMB) ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
+                       field=OCRField.text_annotations,
+                       lowercase=True,
+                       processing_func=process_fr_emb_match),
+    "eu_fr": OCRRegex(re.compile("(FR) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (CE|EC)"),
+                      field=OCRField.full_text_contiguous,
+                      lowercase=True,
+                      processing_func=process_fr_packaging_match),
 }
 
 RECYCLING_REGEX = {
@@ -63,17 +93,32 @@ RECYCLING_REGEX = {
 
 LABELS_REGEX = {
     'en:organic': [
-        re.compile(r"ingr[ée]dients?\sbiologiques?", re.IGNORECASE),
-        re.compile(r"ingr[ée]dients?\sbio[\s.,)]", re.IGNORECASE),
-        re.compile(r"agriculture ue/non ue biologique", re.IGNORECASE),
-        re.compile(r"agriculture bio(?:logique)?[\s.,)]", re.IGNORECASE),
-        re.compile(r"production bio(?:logique)?[\s.,)]", re.IGNORECASE),
+        OCRRegex(re.compile(r"ingr[ée]dients?\sbiologiques?", re.IGNORECASE),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+        OCRRegex(re.compile(r"ingr[ée]dients?\sbio[\s.,)]"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+        OCRRegex(re.compile(r"agriculture ue/non ue biologique"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+        OCRRegex(re.compile(r"agriculture bio(?:logique)?[\s.,)]"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+        OCRRegex(re.compile(r"production bio(?:logique)?[\s.,)]"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
     ],
     'xx-bio-xx': [
-        re.compile(r"([A-Z]{2})[\-\s.](BIO|ÖKO)[\-\s.](\d{2,3})", re.IGNORECASE),
+        OCRRegex(re.compile(r"([A-Z]{2})[\-\s.](BIO|ÖKO)[\-\s.](\d{2,3})"),
+                 field=OCRField.text_annotations,
+                 lowercase=False,
+                 processing_func=process_eu_bio_label_code),
     ],
     'fr:ab-agriculture-biologique': [
-        re.compile(r"certifie ab[\s.,)]", re.IGNORECASE),
+        OCRRegex(re.compile(r"certifi[ée] ab[\s.,)]"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
     ]
 }
 
@@ -82,6 +127,89 @@ BEST_BEFORE_DATE_REGEX = {
     'fr': re.compile(r'\d\d\s(?:Jan|Fev|Mar|Avr|Mai|Juin|Juil|Aou|Sep|Oct|Nov|Dec)(?:\s\d{4})?', re.IGNORECASE),
     'full_digits': re.compile(r'\d{2}[./]\d{2}[./](?:\d{2}){1,2}'),
 }
+
+
+class OCRResult:
+    __slots__ = ('text_annotations', 'full_text_annotation')
+
+    def __init__(self, data: Dict[str, Any]):
+        self.text_annotations: List[OCRTextAnnotation] = []
+        self.full_text_annotation: OCRFullTextAnnotation = None
+
+        for text_annotation_data in data.get('textAnnotations', []):
+            text_annotation = OCRTextAnnotation(text_annotation_data)
+            self.text_annotations.append(text_annotation)
+
+        full_text_annotation_data = data.get('fullTextAnnotation')
+
+        if full_text_annotation_data:
+            self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
+
+    def get_full_text(self, lowercase: bool = False) -> Optional[str]:
+        if self.full_text_annotation is not None:
+            if lowercase:
+                return self.full_text_annotation.text.lower()
+
+            return self.full_text_annotation.text
+
+        return
+
+    def get_full_text_contiguous(self, lowercase: bool = False) -> Optional[str]:
+        if self.full_text_annotation is not None:
+            if lowercase:
+                return self.full_text_annotation.contiguous_text.lower()
+
+            return self.full_text_annotation.contiguous_text
+
+        return
+
+    def iter_text_annotations(self, lowercase: bool = False) -> Iterable[str]:
+        for text_annotation in self.text_annotations:
+            if lowercase:
+                yield text_annotation.text.lower()
+
+            yield text_annotation.text
+
+    def get_text(self, ocr_regex: OCRRegex) -> Iterable[str]:
+        field = ocr_regex.field
+
+        if field == OCRField.full_text:
+            text = self.get_full_text(ocr_regex.lowercase)
+
+            if text:
+                return [text]
+
+        elif field == OCRField.full_text_contiguous:
+            text = self.get_full_text_contiguous(ocr_regex.lowercase)
+
+            if text:
+                return [text]
+
+        elif field == OCRField.text_annotations:
+            return list(self.iter_text_annotations(ocr_regex.lowercase))
+
+        else:
+            raise ValueError("invalid field: {}".format(field))
+
+        return []
+
+
+class OCRFullTextAnnotation:
+    __slots__ = ('text', 'pages', 'contiguous_text')
+
+    def __init__(self, data: Dict[str, Any]):
+        self.text = data['text']
+        self.contiguous_text = self.text.replace('\n', ' ')
+        self.pages = []
+
+
+class OCRTextAnnotation:
+    __slots__ = ('locale', 'text', 'bounding_poly')
+
+    def __init__(self, data: Dict[str, Any]):
+        self.locale = data.get('locale')
+        self.text = data['description']
+        self.bounding_poly = [(point.get('x', 0), point.get('y', 0)) for point in data['boundingPoly']['vertices']]
 
 
 def get_barcode_from_path(path: str):
@@ -132,29 +260,18 @@ def get_json_for_image(barcode: str, image_name: str) -> \
     return r.json()
 
 
-def ocr_text_iter(data: Dict[str, Any]) -> Iterable[str]:
+def get_ocr_response(data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     responses = data.get('responses', [])
 
     if not responses:
         return
 
     response = responses[0]
-    full_text_annotation = response.get('fullTextAnnotation')
 
-    if full_text_annotation:
-        text = full_text_annotation.get('text')
+    if 'error' in response:
+        return
 
-        if text is not None:
-            yield text
-
-    else:
-        text_annotations = response.get('textAnnotations', [])
-
-        for text_annotation in text_annotations:
-            text = text_annotation.get('description')
-
-            if text is not None:
-                yield text
+    return response
 
 
 def find_emails(text: str) -> List[Dict]:
@@ -178,17 +295,18 @@ def find_urls(text: str) -> List[Dict]:
     return results
 
 
-def find_packager_codes(text: str) -> List[Dict]:
+def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
-    for regex_code, (regex, processing_func) in PACKAGER_CODE.items():
-        for match in regex.finditer(text):
-            value = processing_func(match)
-            results.append({
-                "raw": match.group(0),
-                "text": value,
-                "type": regex_code,
-            })
+    for regex_code, ocr_regex in PACKAGER_CODE.items():
+        for text in ocr_result.get_text(ocr_regex):
+            for match in ocr_regex.regex.finditer(text):
+                value = ocr_regex.processing_func(match)
+                results.append({
+                    "raw": match.group(0),
+                    "text": value,
+                    "type": regex_code,
+                })
 
     return results
 
@@ -311,25 +429,22 @@ def find_recycling_instructions(text) -> List[Dict]:
     return results
 
 
-def find_labels(text: str) -> List[Dict]:
-    text = text.lower()
-
+def find_labels(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for label_tag, regex_list in LABELS_REGEX.items():
-        for regex in regex_list:
-            for match in regex.finditer(text):
-                if label_tag == 'xx-bio-xx':
-                    label_value = "{}-{}-{}".format(match.group(1),
-                                                    match.group(2),
-                                                    match.group(3))
-                else:
-                    label_value = label_tag
+        for ocr_regex in regex_list:
+            for text in ocr_result.get_text(ocr_regex):
+                for match in ocr_regex.regex.finditer(text):
+                    if ocr_regex.processing_func:
+                        label_value = ocr_regex.processing_func(match)
+                    else:
+                        label_value = label_tag
 
-                results.append({
-                    'label_tag': label_value,
-                    'text': match.group(),
-                })
+                    results.append({
+                        'label_tag': label_value,
+                        'text': match.group(),
+                    })
 
     return results
 
@@ -349,46 +464,39 @@ def find_best_before_date(text: str) -> List[Dict]:
     return results
 
 
-def extract_insights(data: Dict[str, Any],
+def extract_insights(ocr_result: OCRResult,
                      insight_type: str) -> List[Dict]:
-    extracted = []
+    # if insight_type == 'weight_value':
+    #     return find_weight_values(text)
 
-    for text in ocr_text_iter(data):
-        contiguous_text = text.replace('\n', ' ')
+    # elif insight_type == 'weight_mention':
+    #     return find_weight_mentions(text)
 
-        if insight_type == 'weight_value':
-            extracted += find_weight_values(text)
+    if insight_type == 'packager_code':
+        return find_packager_codes(ocr_result)
 
-        elif insight_type == 'weight_mention':
-            extracted += find_weight_mentions(text)
+    # elif insight_type == 'nutriscore':
+    #     return find_nutriscore(text)
 
-        elif insight_type == 'packager_code':
-            extracted += find_packager_codes(contiguous_text)
+    # elif insight_type == 'recycling_instruction':
+    #     return find_recycling_instructions(contiguous_text)
 
-        elif insight_type == 'nutriscore':
-            extracted += find_nutriscore(text)
+    # elif insight_type == 'email':
+    #     return find_emails(text)
 
-        elif insight_type == 'recycling_instruction':
-            extracted += find_recycling_instructions(contiguous_text)
+    # elif insight_type == 'url':
+    #     return find_urls(text)
 
-        elif insight_type == 'email':
-            extracted += find_emails(text)
+    elif insight_type == 'label':
+        return find_labels(ocr_result)
 
-        elif insight_type == 'url':
-            extracted += find_urls(text)
+    # elif insight_type == 'storage_instruction':
+    #     return find_storage_instructions(contiguous_text)
 
-        elif insight_type == 'label':
-            extracted += find_labels(contiguous_text)
-
-        elif insight_type == 'storage_instruction':
-            extracted += find_storage_instructions(contiguous_text)
-
-        elif insight_type == 'best_before_date':
-            extracted += find_best_before_date(text)
-        else:
-            raise ValueError("unknown insight type: {}".format(insight_type))
-
-    return extracted
+    # elif insight_type == 'best_before_date':
+    #     return find_best_before_date(text)
+    else:
+        raise ValueError("unknown insight type: {}".format(insight_type))
 
 
 def is_barcode(text: str):
@@ -404,7 +512,7 @@ def get_source(image_name: str, json_path: str = None, barcode: str = None):
                      image_name)
 
 
-def ocr_iter(input_str: str):
+def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
     if is_barcode(input_str):
         image_data = fetch_images_for_ean(input_str)['product']['images']
 
@@ -469,7 +577,13 @@ def run(args: argparse.Namespace):
 
     with contextlib.closing(output):
         for source, ocr_json in ocr_iter(input_):
-            insights = extract_insights(ocr_json, args.insight_type)
+            ocr_response = get_ocr_response(ocr_json)
+
+            if not ocr_response:
+                continue
+
+            ocr_result: OCRResult = OCRResult(ocr_response)
+            insights = extract_insights(ocr_result, args.insight_type)
 
             if insights:
                 item = {
