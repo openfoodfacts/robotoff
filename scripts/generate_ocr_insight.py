@@ -131,7 +131,7 @@ LABELS_REGEX = {
                  lowercase=True),
     ],
     'xx-bio-xx': [
-        OCRRegex(re.compile(r"([A-Z]{2})[\-\s.](BIO|ÖKO)[\-\s.](\d{2,3})"),
+        OCRRegex(re.compile(r"([A-Z]{2})[\-\s.](BIO|ÖKO|EKO|ØKO|ORG|ECO|Bio)[\-\s.](\d{2,3})"),
                  field=OCRField.text_annotations,
                  lowercase=False,
                  processing_func=process_eu_bio_label_code),
@@ -140,7 +140,7 @@ LABELS_REGEX = {
         OCRRegex(re.compile(r"certifi[ée] ab[\s.,)]"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
-    ]
+    ],
 }
 
 BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
