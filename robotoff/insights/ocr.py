@@ -8,8 +8,11 @@ import json
 
 import pathlib as pathlib
 from typing import List, Dict, Any, Iterable, Optional, Tuple, Callable
+from urllib.parse import urlparse
 
 import requests
+
+from robotoff.insights._enum import InsightType
 
 
 def process_fr_packaging_match(match) -> str:
@@ -509,32 +512,11 @@ def find_best_before_date(ocr_result: OCRResult) -> List[Dict]:
 
 def extract_insights(ocr_result: OCRResult,
                      insight_type: str) -> List[Dict]:
-    # if insight_type == 'weight_value':
-    #     return find_weight_values(text)
-
-    # elif insight_type == 'weight_mention':
-    #     return find_weight_mentions(text)
-
     if insight_type == 'packager_code':
         return find_packager_codes(ocr_result)
 
-    # elif insight_type == 'nutriscore':
-    #     return find_nutriscore(text)
-
-    # elif insight_type == 'recycling_instruction':
-    #     return find_recycling_instructions(contiguous_text)
-
-    # elif insight_type == 'email':
-    #     return find_emails(text)
-
-    # elif insight_type == 'url':
-    #     return find_urls(text)
-
     elif insight_type == 'label':
         return find_labels(ocr_result)
-
-    # elif insight_type == 'storage_instruction':
-    #     return find_storage_instructions(contiguous_text)
 
     elif insight_type == 'best_before_date':
         return find_best_before_date(ocr_result)
@@ -608,3 +590,34 @@ def get_ocr_from_barcode(barcode: str):
             print("Getting OCR for image {}".format(image_name))
             data = get_json_for_image(barcode, image_name)
             return data
+
+
+def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) -> Optional[Dict]:
+    r = requests.get(ocr_url)
+
+    if r.status_code == 404:
+        return
+
+    r.raise_for_status()
+
+    ocr_data: Dict = requests.get(ocr_url).json()
+    ocr_result = get_ocr_result(ocr_data)
+    image_url_path = urlparse(image_url).path
+
+    if image_url_path.startswith('/images/products'):
+        image_url_path = image_url_path[len("/images/products"):]
+
+    results = {}
+
+    for insight_type in (InsightType.label.name,
+                         InsightType.packager_code.name):
+        insights = extract_insights(ocr_result, insight_type)
+
+        results[insight_type] = {
+            'insights': insights,
+            'barcode': barcode,
+            'type': insight_type,
+            'source': image_url_path,
+        }
+
+    return results

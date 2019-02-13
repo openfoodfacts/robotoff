@@ -16,6 +16,10 @@ DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 
+IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode('utf-8')
+IPC_ADDRESS = ("localhost", 6650)
+WORKER_COUNT = os.environ.get("WORKER_COUNT", 4)
+
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
 

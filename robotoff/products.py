@@ -1,3 +1,4 @@
+import datetime
 import gzip
 import json
 import os
@@ -197,8 +198,28 @@ class ProductStore:
 
         logger.info("product store loaded ({} items added)".format(len(seen)))
 
-    def load_min_dataset(self, reset: bool = True):
-        self.load(settings.JSONL_MIN_DATASET_PATH, reset)
+    @classmethod
+    def load_min_dataset(cls):
+        product_store = ProductStore()
+        product_store.load(settings.JSONL_MIN_DATASET_PATH, False)
+        return product_store
 
     def __getitem__(self, item):
         return self.store.get(item)
+
+
+class CachedProductStore:
+    store = None
+    expires_after = None
+    expiration_timedelta = datetime.timedelta(minutes=30)
+
+    @classmethod
+    def get(cls) -> ProductStore:
+        if cls.store is None or datetime.datetime.utcnow() >= cls.expires_after:
+            if cls.store is not None:
+                logger.info("ProductStore expired, reloading...")
+
+            cls.expires_after = datetime.datetime.utcnow() + cls.expiration_timedelta
+            cls.store = ProductStore.load_min_dataset()
+
+        return cls.store

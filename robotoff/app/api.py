@@ -1,6 +1,5 @@
 import io
 import itertools
-from queue import Queue
 
 import dataclasses
 
@@ -23,14 +22,10 @@ from robotoff.insights._enum import InsightType
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
-from robotoff.worker_thread import WorkerThread, ThreadEvent
+from robotoff.workers.client import send_ipc_event
 
 logger = get_logger()
 es_client = get_es_client()
-
-thread_queue = Queue()
-worker_thread: WorkerThread = WorkerThread(thread_queue)
-worker_thread.start()
 
 
 class CategoryPredictionResource:
@@ -175,8 +170,7 @@ class IngredientSpellcheckResource:
 
 class UpdateDatasetResource:
     def on_post(self, req, resp):
-        event = ThreadEvent("download")
-        thread_queue.put(event)
+        send_ipc_event('download_dataset')
 
         resp.media = {
             'status': 'scheduled',
@@ -202,8 +196,11 @@ class InsightImporterResource:
         logger.info("Insight type: '{}'".format(insight_type))
 
         lines = [l for l in io.TextIOWrapper(content.file)]
-        thread_queue.put(ThreadEvent('import', {'items': lines,
-                                                'insight_type': insight_type}))
+
+        send_ipc_event('import_insights', {
+            'insight_type': insight_type,
+            'items': lines,
+        })
 
         logger.info("Import scheduled")
 
@@ -217,6 +214,12 @@ class ImageImporterResource:
         barcode = req.get_param('barcode', required=True)
         image_url = req.get_param('image_url', required=True)
         ocr_url = req.get_param('ocr_url', required=True)
+
+        send_ipc_event('import_image', {
+            'barcode': barcode,
+            'image_url': image_url,
+            'ocr_url': ocr_url,
+        })
 
         resp.media = {
             'status': 'scheduled',
