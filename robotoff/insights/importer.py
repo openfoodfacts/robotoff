@@ -3,6 +3,7 @@ import uuid
 from typing import Dict, Iterable, List, Any
 
 from robotoff.insights._enum import InsightType
+from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
@@ -30,6 +31,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def from_jsonl_fp(self, fp):
         items = jsonl_iter_fp(fp)
         self.import_insights(items)
+
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        return True
 
 
 class IngredientSpellcheckImporter(InsightImporter):
@@ -112,10 +117,6 @@ GroupedByOCRInsights = Dict[str, List]
 
 
 class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
-    KEEP_TYPE = {
-        InsightType.packager_code.name,
-    }
-
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
@@ -268,6 +269,15 @@ class LabelInsightImporter(OCRInsightImporter):
             label_seen.add(label_tag)
 
         return processed
+
+    def need_validation(self, insight: ProductInsight):
+        if insight.type != self.get_type():
+            raise ValueError("insight must be of type {}".format(self.get_type()))
+
+        if insight.data['label_tag'] in AUTHORIZED_LABELS:
+            return False
+
+        return True
 
 
 class InsightImporterFactory:
