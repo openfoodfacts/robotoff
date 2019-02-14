@@ -1,14 +1,14 @@
 import datetime
-from typing import Iterable, Union
+from typing import Union, Optional
 
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
                                         AnnotationResult,
                                         SAVED_ANNOTATION_RESULT,
                                         ALREADY_ANNOTATED_RESULT,
                                         UNKNOWN_INSIGHT_RESULT)
-from robotoff.models import CategorizationTask, ProductInsight
+from robotoff.models import ProductInsight
 from robotoff.categories import parse_category_json
-from robotoff.off import get_product, save_category
+from robotoff.off import get_product
 from robotoff.utils import get_logger
 from robotoff import settings
 
@@ -74,93 +74,6 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_random_category_prediction(campaign: str=None,
-                                   country: str=None,
-                                   category: str=None):
-    logger.info("Campaign: {}".format(campaign))
-
-    attempts = 0
-    while True:
-        attempts += 1
-
-        if attempts > 4:
-            return
-
-        query = (CategorizationTask.select()
-                                   .where(CategorizationTask.annotation
-                                          .is_null()))
-
-        where_clauses = []
-        order_by = None
-
-        if campaign is not None:
-            where_clauses.append(CategorizationTask.campaign ==
-                                 campaign)
-            order_by = peewee.fn.Random()
-        else:
-            where_clauses.append(CategorizationTask.campaign.is_null())
-            order_by = CategorizationTask.category_depth.desc()
-
-        if country is not None:
-            where_clauses.append(CategorizationTask.countries.contains(
-                country))
-
-        if category is not None:
-            where_clauses.append(CategorizationTask.predicted_category ==
-                                 category)
-
-        query = query.where(*where_clauses).order_by(order_by)
-
-        random_task_list = list(query.limit(1))
-
-        if not random_task_list:
-            return
-
-        random_task = random_task_list[0]
-        product = get_product(random_task.product_id, CATEGORY_PRODUCT_FIELDS)
-
-        # Product may be None if not found
-        if product:
-            return random_task, product
-        else:
-            random_task.outdated = True
-            random_task.save()
-            logger.info("Product not found")
-
-
-def sort_tasks(tasks: Iterable[CategorizationTask]):
-    priority = {
-        'matcher': 2,
-    }
-    return sorted(tasks,
-                  key=lambda x: priority.get(x.campaign, 0),
-                  reverse=True)
-
-
-def get_category_prediction(product_id: str):
-    query = (CategorizationTask.select()
-                               .where(CategorizationTask.annotation
-                                      .is_null(),
-                                      CategorizationTask.product_id ==
-                                      product_id))
-
-    task_list = list(query)
-
-    if not task_list:
-        return
-
-    task = sort_tasks(task_list)[0]
-    product = get_product(task.product_id, CATEGORY_PRODUCT_FIELDS)
-
-    # Product may be None if not found
-    if product:
-        return task, product
-    else:
-        task.outdated = True
-        task.save()
-        logger.info("Product not found")
-
-
 def get_insights(barcode: str, limit=25):
     query = (ProductInsight.select()
                            .where(ProductInsight.annotation
@@ -178,7 +91,7 @@ def get_insights(barcode: str, limit=25):
 
 
 def get_random_insight(insight_type: str = None,
-                       country: str = None):
+                       country: str = None) -> Optional[ProductInsight]:
     attempts = 0
     while True:
         attempts += 1
@@ -216,23 +129,6 @@ def get_random_insight(insight_type: str = None,
             insight.outdated = True
             insight.save()
             logger.info("Product not found")
-
-
-def save_category_annotation(task_id: str, annotation: int, save: bool=True):
-    try:
-        task = CategorizationTask.get_by_id(task_id)
-    except CategorizationTask.DoesNotExist:
-        task = None
-
-    if not task or task.annotation is not None:
-        return
-
-    task.annotation = annotation
-    task.completed_at = datetime.datetime.utcnow()
-    task.save()
-
-    if annotation == 1 and save:
-        save_category(task.product_id, task.predicted_category)
 
 
 def save_insight(insight_id: str, annotation: int, save: bool=True) -> AnnotationResult:

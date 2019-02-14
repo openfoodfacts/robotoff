@@ -43,9 +43,9 @@ def get_product(product_id: str, fields: List[str]=None):
     return data['product']
 
 
-def save_category(product_id: str, category: str, dry=False):
+def add_category(barcode: str, category: str, dry=False):
     params = {
-        'code': product_id,
+        'code': barcode,
         'add_categories': category,
         **AUTH_DICT
     }

@@ -8,17 +8,15 @@ from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
 from robotoff.app.core import (normalize_lang,
-                               get_random_category_prediction,
                                parse_product_json,
                                get_category_name,
-                               save_category_annotation,
-                               get_category_prediction,
                                get_insights,
                                get_random_insight,
-                               save_insight)
+                               save_insight, CATEGORY_PRODUCT_FIELDS)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
+from robotoff.off import get_product
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
@@ -32,26 +30,26 @@ class CategoryPredictionResource:
     def on_get(self, req, resp):
         response = {}
 
-        campaign = req.get_param('campaign')
         country = req.get_param('country')
-        category = req.get_param('category')
         lang = normalize_lang(req.get_param('lang'))
 
-        result = get_random_category_prediction(campaign, country, category)
+        insight = get_random_insight(InsightType.category.name, country)
 
-        if result is None:
+        if not insight:
             response['status'] = "no_prediction_left"
 
         else:
-            task, product = result
+            product = get_product(insight.barcode,
+                                  CATEGORY_PRODUCT_FIELDS)
             response['product'] = parse_product_json(product, lang)
-            response['task_id'] = str(task.id)
+            response['task_id'] = str(insight.id)
 
-            predicted_category_name = get_category_name(task.predicted_category,
+            category_tag = insight.data['category']
+            predicted_category_name = get_category_name(category_tag,
                                                         lang)
             response['prediction'] = {
-                'confidence': task.confidence,
-                'id': task.predicted_category,
+                'confidence': insight.data['confidence'],
+                'id': category_tag,
                 'name': predicted_category_name,
             }
 
@@ -108,33 +106,6 @@ class AnnotateInsightResource:
         }
 
 
-class CategoryPredictionByProductResource:
-    def on_get(self, req, resp, barcode):
-        response = {}
-
-        lang = normalize_lang(req.get_param('lang'))
-
-        result = get_category_prediction(barcode)
-
-        if result is None:
-            response['status'] = "no_prediction_left"
-
-        else:
-            task, product = result
-            response['product'] = parse_product_json(product, lang)
-            response['task_id'] = str(task.id)
-
-            predicted_category_name = get_category_name(task.predicted_category,
-                                                        lang)
-            response['prediction'] = {
-                'confidence': task.confidence,
-                'id': task.predicted_category,
-                'name': predicted_category_name,
-            }
-
-        resp.media = response
-
-
 class CategoryAnnotateResource:
     def on_post(self, req, resp):
         task_id = req.get_param('task_id', required=True)
@@ -146,7 +117,7 @@ class CategoryAnnotateResource:
         if save is None:
             save = True
 
-        save_category_annotation(task_id, annotation, save=save)
+        save_insight(task_id, annotation, save=save)
         resp.media = {
             'status': 'saved',
         }
@@ -240,8 +211,6 @@ api.add_route('/api/v1/insights/random', RandomInsightResource())
 api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/insights/import', InsightImporterResource())
 api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
-api.add_route('/api/v1/categories/predictions/{barcode}',
-              CategoryPredictionByProductResource())
 api.add_route('/api/v1/categories/annotate', CategoryAnnotateResource())
 api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())

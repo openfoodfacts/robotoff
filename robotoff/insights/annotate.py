@@ -4,7 +4,8 @@ from enum import Enum
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight, db, ProductIngredient
-from robotoff.off import get_product, save_ingredients, add_emb_code, add_label_tag
+from robotoff.off import get_product, save_ingredients, add_emb_code, \
+    add_label_tag, add_category
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -152,11 +153,20 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
                     other.save()
 
 
+class CategoryAnnotator(InsightAnnotator):
+    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
+        category_tag = insight.data['category']
+        add_category(insight.barcode, category_tag)
+
+        return UPDATED_ANNOTATION_RESULT
+
+
 class InsightAnnotatorFactory:
     mapping = {
         InsightType.packager_code.name: PackagerCodeAnnotator,
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
         InsightType.label.name: LabelAnnotator,
+        InsightType.category.name: CategoryAnnotator,
     }
 
     @classmethod
