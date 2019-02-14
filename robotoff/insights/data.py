@@ -1,11 +1,3 @@
-from robotoff.insights.annotate import InsightAnnotatorFactory
-from robotoff.models import ProductInsight
-
-
-insight_type = 'label'
-annotator = InsightAnnotatorFactory.create(insight_type)
-
-
 AUTHORIZED_LABELS = {
     "AT-BIO-301",
     "AT-BIO-402",
@@ -63,19 +55,3 @@ AUTHORIZED_LABELS = {
     "PT-BIO-04",
     "VN-BIO-154",
 }
-
-i = 0
-for insight in ProductInsight.select().where(ProductInsight.type == insight_type,
-                                             ProductInsight.annotation.is_null()):
-    i += 1
-    print("Insight %d" % i)
-
-    if insight.data['label_tag'] not in AUTHORIZED_LABELS:
-        continue
-
-    print("Add label {} to https://fr.openfoodfacts.org/produit/{}".format(insight.data['label_tag'],
-                                                                           insight.barcode))
-    print(insight.data)
-    annotator.save_annotation(insight)
-    insight.annotation = 1
-    insight.save()
