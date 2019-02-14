@@ -15,5 +15,12 @@ def run(service: str):
 
         listener.run()
 
+    elif service == 'scheduler':
+        from robotoff import scheduler
+        from robotoff.utils import get_logger
+        # Defining a root logger
+        get_logger()
+        scheduler.run()
+
     else:
         click.echo("invalid service: '{}'".format(service), err=True)
