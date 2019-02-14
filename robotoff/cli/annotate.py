@@ -23,9 +23,6 @@ class NoInsightException(Exception):
     pass
 
 
-@click.command()
-@click.option('--insight-type')
-@click.option('--country')
 def run(insight_type: Optional[str], country: Optional[str]):
     while True:
         try:
@@ -136,7 +133,3 @@ def generate_colored_diff(original: str, correction: str) -> str:
             diff += click.style(correction[j1:j2], fg='black', bg='green')
 
     return diff
-
-
-if __name__ == "__main__":
-    run()
