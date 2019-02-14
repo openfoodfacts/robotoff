@@ -169,15 +169,15 @@ class CategoryAnnotator(InsightAnnotator):
 
 class InsightAnnotatorFactory:
     mapping = {
-        InsightType.packager_code.name: PackagerCodeAnnotator,
-        InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
-        InsightType.label.name: LabelAnnotator,
-        InsightType.category.name: CategoryAnnotator,
+        InsightType.packager_code.name: PackagerCodeAnnotator(),
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator(),
+        InsightType.label.name: LabelAnnotator(),
+        InsightType.category.name: CategoryAnnotator(),
     }
 
     @classmethod
-    def create(cls, identifier: str) -> InsightAnnotator:
+    def get(cls, identifier: str) -> InsightAnnotator:
         if identifier not in cls.mapping:
             raise ValueError("unknown annotator: {}".format(identifier))
 
-        return cls.mapping[identifier]()
+        return cls.mapping[identifier]

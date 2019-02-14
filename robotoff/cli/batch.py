@@ -21,7 +21,7 @@ def run(insight_type: str,
 def batch_annotate(insight_type: str,
                    dry: bool = True,
                    json_contains: Optional[Dict] = None):
-    annotator = InsightAnnotatorFactory.create(insight_type)
+    annotator = InsightAnnotatorFactory.get(insight_type)
 
     i = 0
 
