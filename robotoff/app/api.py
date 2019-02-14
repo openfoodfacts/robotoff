@@ -93,12 +93,12 @@ class AnnotateInsightResource:
         annotation = req.get_param_as_int('annotation', required=True,
                                           min=-1, max=1)
 
-        save = req.get_param_as_bool('save')
+        update = req.get_param_as_bool('update')
 
-        if save is None:
-            save = True
+        if update is None:
+            update = True
 
-        annotation_result = save_insight(insight_id, annotation, save=save)
+        annotation_result = save_insight(insight_id, annotation, update=update)
 
         resp.media = {
             'status': annotation_result.status,
@@ -112,12 +112,12 @@ class CategoryAnnotateResource:
         annotation = req.get_param_as_int('annotation', required=True,
                                           min=-1, max=1)
 
-        save = req.get_param_as_bool('save')
+        update = req.get_param_as_bool('save')
 
-        if save is None:
-            save = True
+        if update is None:
+            update = True
 
-        save_insight(task_id, annotation, save=save)
+        save_insight(task_id, annotation, update=update)
         resp.media = {
             'status': 'saved',
         }

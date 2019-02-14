@@ -131,7 +131,7 @@ def get_random_insight(insight_type: str = None,
             logger.info("Product not found")
 
 
-def save_insight(insight_id: str, annotation: int, save: bool=True) -> AnnotationResult:
+def save_insight(insight_id: str, annotation: int, update: bool=True) -> AnnotationResult:
     try:
         insight: Union[ProductInsight, None] \
             = ProductInsight.get_by_id(insight_id)
@@ -144,13 +144,5 @@ def save_insight(insight_id: str, annotation: int, save: bool=True) -> Annotatio
     if insight.annotation is not None:
         return ALREADY_ANNOTATED_RESULT
 
-    insight.annotation = annotation
-    insight.completed_at = datetime.datetime.utcnow()
-    insight.save()
-
-    if save:
-        annotator = InsightAnnotatorFactory.create(insight.type)
-        return annotator.annotate(insight, annotation)
-
-    else:
-        return SAVED_ANNOTATION_RESULT
+    annotator = InsightAnnotatorFactory.create(insight.type)
+    return annotator.annotate(insight, annotation, update)

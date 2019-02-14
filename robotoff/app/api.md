@@ -51,7 +51,7 @@ Submit an annotation, given the `insight_id`. The request type must be `applicat
 + insight_id (str, required) - ID of the insight
 + annotation (int, required) - Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 
   for "unknown".
-+ save (int, optional) - Send the update to Openfoodfacts if `save=1`, don't send the update otherwise. This 
++ update (int, optional) - Send the update to Openfoodfacts if `update=1`, don't send the update otherwise. This 
   parameter is useful if the update is performed client-side.
 
 + Response 200 (application/json)

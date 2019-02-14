@@ -60,6 +60,7 @@ class ProductInsight(BaseModel):
     annotation = peewee.IntegerField(null=True)
     outdated = peewee.BooleanField(default=False)
     countries = BinaryJSONField(null=True, index=True)
+    process_after = peewee.DateTimeField(null=True)
 
     def serialize(self):
         return {

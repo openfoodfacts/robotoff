@@ -1,4 +1,5 @@
 import abc
+import datetime
 from dataclasses import dataclass
 from enum import Enum
 
@@ -39,20 +40,25 @@ UNKNOWN_INSIGHT_RESULT = AnnotationResult(status=AnnotationStatus.error_unknown_
 
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
-    def annotate(self, insight: ProductInsight, annotation: int) \
+    def annotate(self, insight: ProductInsight, annotation: int, update=True) \
             -> AnnotationResult:
+        insight.annotation = annotation
+        insight.completed_at = datetime.datetime.utcnow()
+        insight.save()
+
         if annotation != 1:
             return SAVED_ANNOTATION_RESULT
 
-        return self.save_annotation(insight)
+        if update:
+            return self.update_product(insight)
 
     @abc.abstractmethod
-    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
         pass
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
-    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
         emb_code = insight.data['text']
         add_emb_code(insight.barcode, emb_code)
 
@@ -60,7 +66,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 
 class LabelAnnotator(InsightAnnotator):
-    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
         label_tag = insight.data['label_tag']
         add_label_tag(insight.barcode, label_tag)
 
@@ -68,7 +74,7 @@ class LabelAnnotator(InsightAnnotator):
 
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
-    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
         barcode = insight.barcode
 
         try:
@@ -154,7 +160,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 
 class CategoryAnnotator(InsightAnnotator):
-    def save_annotation(self, insight: ProductInsight) -> AnnotationResult:
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
         category_tag = insight.data['category']
         add_category(insight.barcode, category_tag)
 

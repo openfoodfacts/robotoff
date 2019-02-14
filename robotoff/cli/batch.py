@@ -52,6 +52,4 @@ def batch_annotate(insight_type: str,
                             insight.barcode))
             print(insight.data)
 
-            annotator.save_annotation(insight)
-            insight.annotation = 1
-            insight.save()
+            annotator.annotate(insight, 1, update=True)
