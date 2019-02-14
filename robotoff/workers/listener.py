@@ -12,9 +12,13 @@ logger = get_logger()
 def run():
     pool: Pool = Pool(settings.WORKER_COUNT)
 
+    logger.info("Starting listener server on {}:{}"
+                "".format(*settings.IPC_ADDRESS))
     logger.info("Starting listener server")
 
-    with Listener(settings.IPC_ADDRESS, authkey=settings.IPC_AUTHKEY) as listener:
+    with Listener(settings.IPC_ADDRESS,
+                  authkey=settings.IPC_AUTHKEY,
+                  family='AF_INET') as listener:
         while True:
             logger.info("Waiting for a connection...")
 

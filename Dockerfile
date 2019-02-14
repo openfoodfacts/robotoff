@@ -2,6 +2,7 @@ FROM python:3.7-slim
 
 WORKDIR /opt/robotoff
 
+COPY robotoff.py /opt/robotoff/robotoff.py
 COPY robotoff /opt/robotoff/robotoff/
 COPY data/categories.json /opt/robotoff/data/categories.json
 COPY requirements.txt /opt/robotoff/

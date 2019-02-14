@@ -10,7 +10,11 @@ logger = get_logger(__name__)
 def send_ipc_event(event_type: str, meta: Dict = None):
     meta = meta or {}
 
-    with Client(settings.IPC_ADDRESS, authkey=settings.IPC_AUTHKEY) as conn:
+    logger.info("Connecting listener server on {}:{}"
+                "".format(*settings.IPC_ADDRESS))
+    with Client(settings.IPC_ADDRESS,
+                authkey=settings.IPC_AUTHKEY,
+                family='AF_INET') as conn:
         logger.info("Sending event through IPC")
         conn.send({
             'type': event_type,

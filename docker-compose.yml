@@ -2,25 +2,37 @@ version: '3'
 
 services:
   api:
-    image: openfoodfacts/robotoff
-    ports:
-      - "5500:5500"
+    build:
+      context: .
+    network_mode: "host"
     volumes:
     - api-dataset:/opt/robotoff/datasets
     environment:
-      DB_HOST: "postgres"
+      DB_HOST: "localhost"
       ELASTICSEARCH_HOSTS: "elasticsearch"
+      IPC_HOST: "localhost"
+
+  workers:
+    build:
+      context: .
+    volumes:
+      - api-dataset:/opt/robotoff/datasets
+    network_mode: "host"
+    environment:
+      DB_HOST: "localhost"
+      ELASTICSEARCH_HOSTS: "elasticsearch"
+    entrypoint: "python3 robotoff.py run workers"
 
   postgres:
     image: postgres:11
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
   elasticsearch:
     image: raphael0202/elasticsearch
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9300:9300"
 
 volumes:
   api-dataset:
