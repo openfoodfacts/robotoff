@@ -1,9 +1,7 @@
-import datetime
 from typing import Union, Optional
 
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
                                         AnnotationResult,
-                                        SAVED_ANNOTATION_RESULT,
                                         ALREADY_ANNOTATED_RESULT,
                                         UNKNOWN_INSIGHT_RESULT)
 from robotoff.models import ProductInsight
