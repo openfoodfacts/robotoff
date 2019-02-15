@@ -39,15 +39,15 @@ def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
     if short:
         format_str: str = "%d/%m/%y"
     else:
-        format_str: str = "%d/%m/%Y"
+        format_str = "%d/%m/%Y"
 
     try:
         dt = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str)
     except ValueError:
-        return
+        return None
 
     if dt.year > 2050 or dt.year < 2000:
-        return
+        return None
 
     return dt.strftime("%d/%m/%Y")
 
@@ -68,7 +68,7 @@ class OCRRegex:
         self.regex = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
-        self.processing_func = processing_func
+        self.processing_func: Optional[Callable] = processing_func
 
 
 NUTRISCORE_REGEX = re.compile(r"nutri[-\s]?score", re.IGNORECASE)
@@ -168,7 +168,7 @@ class OCRResult:
 
     def __init__(self, data: Dict[str, Any]):
         self.text_annotations: List[OCRTextAnnotation] = []
-        self.full_text_annotation: OCRFullTextAnnotation = None
+        self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
 
         for text_annotation_data in data.get('textAnnotations', []):
             text_annotation = OCRTextAnnotation(text_annotation_data)
@@ -186,7 +186,7 @@ class OCRResult:
 
             return self.full_text_annotation.text
 
-        return
+        return None
 
     def get_full_text_contiguous(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
@@ -195,7 +195,7 @@ class OCRResult:
 
             return self.full_text_annotation.contiguous_text
 
-        return
+        return None
 
     def iter_text_annotations(self, lowercase: bool = False) -> Iterable[str]:
         for text_annotation in self.text_annotations:
@@ -234,7 +234,7 @@ class OCRFullTextAnnotation:
     def __init__(self, data: Dict[str, Any]):
         self.text = data['text']
         self.contiguous_text = self.text.replace('\n', ' ')
-        self.pages = []
+        self.pages: List = []
 
 
 class OCRTextAnnotation:
@@ -246,19 +246,16 @@ class OCRTextAnnotation:
         self.bounding_poly = [(point.get('x', 0), point.get('y', 0)) for point in data['boundingPoly']['vertices']]
 
 
-def get_barcode_from_path(path: str):
-    path = pathlib.Path(path)
-
+def get_barcode_from_path(path: str) -> Optional[str]:
     barcode = ''
 
-    for parent in path.parents:
+    for parent in pathlib.Path(path).parents:
         if parent.name.isdigit():
             barcode = parent.name + barcode
         else:
             break
 
-    barcode = barcode or None
-    return barcode
+    return barcode or None
 
 
 def split_barcode(barcode: str) -> List[str]:
@@ -289,7 +286,7 @@ def get_json_for_image(barcode: str, image_name: str) -> \
     r = requests.get(url)
 
     if r.status_code == 404:
-        return
+        return None
 
     return r.json()
 
@@ -298,12 +295,12 @@ def get_ocr_result(data: Dict[str, Any]) -> Optional[OCRResult]:
     responses = data.get('responses', [])
 
     if not responses:
-        return
+        return None
 
     response = responses[0]
 
     if 'error' in response:
-        return
+        return None
 
     return OCRResult(response)
 
@@ -335,12 +332,13 @@ def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     for regex_code, ocr_regex in PACKAGER_CODE.items():
         for text in ocr_result.get_text(ocr_regex):
             for match in ocr_regex.regex.finditer(text):
-                value = ocr_regex.processing_func(match)
-                results.append({
-                    "raw": match.group(0),
-                    "text": value,
-                    "type": regex_code,
-                })
+                if ocr_regex.processing_func is not None:
+                    value = ocr_regex.processing_func(match)
+                    results.append({
+                        "raw": match.group(0),
+                        "text": value,
+                        "type": regex_code,
+                    })
 
     return results
 
@@ -383,7 +381,7 @@ STORAGE_INSTRUCTIONS_REGEX = {
 }
 
 
-def extract_temperature_information(temperature: str) -> Dict:
+def extract_temperature_information(temperature: str) -> Optional[Dict]:
     match = TEMPERATURE_REGEX.match(temperature)
 
     if match:
@@ -399,11 +397,13 @@ def extract_temperature_information(temperature: str) -> Dict:
 
         return result
 
+    return None
+
 
 def find_storage_instructions(text: str) -> List[Dict]:
     text = text.lower()
 
-    results = []
+    results: List[Dict] = []
 
     for instruction_type, regex in STORAGE_INSTRUCTIONS_REGEX.items():
         for match in regex.finditer(text):
@@ -592,16 +592,21 @@ def get_ocr_from_barcode(barcode: str):
             return data
 
 
-def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) -> Optional[Dict]:
+def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
+        -> Optional[Dict]:
     r = requests.get(ocr_url)
 
     if r.status_code == 404:
-        return
+        return None
 
     r.raise_for_status()
 
     ocr_data: Dict = requests.get(ocr_url).json()
     ocr_result = get_ocr_result(ocr_data)
+    
+    if ocr_result is None:
+        return None
+    
     image_url_path = urlparse(image_url).path
 
     if image_url_path.startswith('/images/products'):

@@ -1,6 +1,6 @@
 import json
 import argparse
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 from robotoff.utils.es import get_es_client
 from robotoff import settings
@@ -13,9 +13,9 @@ SUPPORTED_LANG = {
 }
 
 
-def predict_category(client, name: str, lang: str) -> Union[None, Tuple[str, float]]:
+def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]]:
     if lang not in SUPPORTED_LANG:
-        return
+        return None
 
     results = match(client, name, lang)
 
@@ -24,6 +24,8 @@ def predict_category(client, name: str, lang: str) -> Union[None, Tuple[str, flo
     if hits:
         hit = hits[0]
         return hit['_source']['id'], hit['_score']
+    
+    return None
 
 
 def match(client, query: str, lang: str):

@@ -95,7 +95,7 @@ def get_random_insight(insight_type: str = None,
         attempts += 1
 
         if attempts > 4:
-            return
+            return None
 
         query = ProductInsight.select()
         where_clauses = [ProductInsight.annotation.is_null()]
@@ -113,7 +113,7 @@ def get_random_insight(insight_type: str = None,
         insight_list = list(query.limit(1))
 
         if not insight_list:
-            return
+            return None
 
         insight = insight_list[0]
         # We only need to know if the product exists, so fetching barcode

@@ -1,5 +1,7 @@
 import abc
 import datetime
+from typing import Optional
+
 from dataclasses import dataclass
 from enum import Enum
 
@@ -15,7 +17,7 @@ logger = get_logger(__name__)
 @dataclass
 class AnnotationResult:
     status: str
-    description: str = None
+    description: Optional[str] = None
 
 
 class AnnotationStatus(Enum):
@@ -46,11 +48,10 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.completed_at = datetime.datetime.utcnow()
         insight.save()
 
-        if annotation != 1:
-            return SAVED_ANNOTATION_RESULT
-
-        if update:
+        if annotation == 1 and update:
             return self.update_product(insight)
+        
+        return SAVED_ANNOTATION_RESULT
 
     @abc.abstractmethod
     def update_product(self, insight: ProductInsight) -> AnnotationResult:

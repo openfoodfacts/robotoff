@@ -71,7 +71,7 @@ def get_random_insight(insight_type: Optional[str] = None,
 def save_insight(insight_id: str, annotation: int):
     params = {
         'insight_id': insight_id,
-        'annotation': annotation,
+        'annotation': str(annotation),
     }
 
     r = http_session.post(ANNOTATE_INSIGHT_URL, data=params)
@@ -80,8 +80,8 @@ def save_insight(insight_id: str, annotation: int):
     return data
 
 
-def print_insight(insight: Dict[str, Any]) -> None:
-    insight_type: str = insight.get('type')
+def print_insight(insight: Dict) -> None:
+    insight_type = insight.get('type')
 
     if insight_type == 'ingredient_spellcheck':
         print_ingredient_spellcheck_insight(insight)

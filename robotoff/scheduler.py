@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict
+from typing import Dict, Set
 
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
@@ -13,7 +13,7 @@ from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
 
-NEED_VALIDATION_INSIGHTS = set()
+NEED_VALIDATION_INSIGHTS: Set[str] = set()
 
 
 def process_insights():

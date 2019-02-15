@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict
+from typing import List, Dict, Callable
 
 from robotoff.insights.importer import InsightImporterFactory
 from robotoff.insights.ocr import get_insights_from_image
@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 def run_task(event_type: str, event_kwargs: Dict) -> None:
     if event_type == 'import_insights':
-        func = import_insights
+        func: Callable = import_insights
 
     elif event_type == 'import_image':
         func = import_image

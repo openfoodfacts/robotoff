@@ -1,6 +1,6 @@
 import abc
 import uuid
-from typing import Dict, Iterable, List, Any
+from typing import Dict, Iterable, List, Any, Set
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
@@ -32,8 +32,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         items = jsonl_iter_fp(fp)
         self.import_insights(items)
 
-    @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
+    def need_validation(self, insight: ProductInsight) -> bool:
         return True
 
 
@@ -50,8 +49,8 @@ class IngredientSpellcheckImporter(InsightImporter):
                                       InsightType.ingredient_spellcheck.name).execute()
         ProductIngredient.delete().execute()
 
-        barcode_seen = set()
-        insight_seen = set()
+        barcode_seen: Set[str] = set()
+        insight_seen: Set = set()
         insights = []
         product_ingredients = []
 
@@ -126,7 +125,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
     def import_insights(self, data: Iterable[Dict]):
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
-        inserts = []
+        inserts: List[Dict] = []
 
         ProductInsight.delete().where(ProductInsight.type == self.get_type(),
                                       ProductInsight.annotation.is_null()).execute()
@@ -236,7 +235,7 @@ class LabelInsightImporter(OCRInsightImporter):
     def process_product_insights(self, insights: List[Dict[str, Any]]) \
             -> List[Dict[str, Any]]:
         processed: List[Dict[str, Any]] = []
-        label_seen = set()
+        label_seen: Set[str] = set()
 
         for insight in insights:
             barcode = insight['barcode']
@@ -270,7 +269,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
         return processed
 
-    def need_validation(self, insight: ProductInsight):
+    def need_validation(self, insight: ProductInsight) -> bool:
         if insight.type != self.get_type():
             raise ValueError("insight must be of type {}".format(self.get_type()))
 

@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from typing import Tuple
 
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / 'data'
@@ -18,8 +19,8 @@ DB_HOST = os.environ.get("DB_HOST", "localhost")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode('utf-8')
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
-IPC_PORT = os.environ.get("IPC_PORT", 6650)
-IPC_ADDRESS = (IPC_HOST, IPC_PORT)
+IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
+IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = os.environ.get("WORKER_COUNT", 4)
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
