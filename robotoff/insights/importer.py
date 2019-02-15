@@ -7,6 +7,7 @@ from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -163,7 +164,8 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         return grouped_by
 
     @abc.abstractmethod
-    def process_product_insights(self, insights: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def process_product_insights(self, insights: List[JSONType]) \
+            -> List[JSONType]:
         pass
 
 
@@ -171,9 +173,9 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
     def get_type(self) -> str:
         return InsightType.packager_code.name
 
-    def process_product_insights(self, insights: List[Dict[str, Any]]) \
-            -> List[Dict[str, Any]]:
-        processed: List[Dict[str, Any]] = []
+    def process_product_insights(self, insights: List[JSONType]) \
+            -> List[JSONType]:
+        processed: List[JSONType] = []
 
         code_seen = set(t.text for t in
                         ProductInsight.select(ProductInsight.data['text']
@@ -232,9 +234,9 @@ class LabelInsightImporter(OCRInsightImporter):
     def get_type(self) -> str:
         return InsightType.label.name
 
-    def process_product_insights(self, insights: List[Dict[str, Any]]) \
-            -> List[Dict[str, Any]]:
-        processed: List[Dict[str, Any]] = []
+    def process_product_insights(self, insights: List[JSONType]) \
+            -> List[JSONType]:
+        processed: List[JSONType] = []
         label_seen: Set[str] = set()
 
         for insight in insights:
@@ -280,7 +282,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
 
 class InsightImporterFactory:
-    importers: Dict[str, Any] = {
+    importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
         InsightType.label.name: LabelInsightImporter,

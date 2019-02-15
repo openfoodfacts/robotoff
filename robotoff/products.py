@@ -11,6 +11,7 @@ import requests
 
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -159,7 +160,7 @@ class Product:
     __slots__ = ('barcode', 'countries_tags', 'categories_tags',
                  'emb_codes_tags', 'labels_tags')
 
-    def __init__(self, product: Dict):
+    def __init__(self, product: JSONType):
         self.barcode = product.get('code')
         self.countries_tags = product.get('countries_tags') or []
         self.categories_tags = product.get('categories_tags') or []

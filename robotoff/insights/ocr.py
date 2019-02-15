@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 import requests
 
 from robotoff.insights._enum import InsightType
+from robotoff.utils.types import JSONType
 
 
 def process_fr_packaging_match(match) -> str:
@@ -166,7 +167,7 @@ BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
 class OCRResult:
     __slots__ = ('text_annotations', 'full_text_annotation')
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: JSONType):
         self.text_annotations: List[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
 
@@ -231,7 +232,7 @@ class OCRResult:
 class OCRFullTextAnnotation:
     __slots__ = ('text', 'pages', 'contiguous_text')
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: JSONType):
         self.text = data['text']
         self.contiguous_text = self.text.replace('\n', ' ')
         self.pages: List = []
@@ -240,7 +241,7 @@ class OCRFullTextAnnotation:
 class OCRTextAnnotation:
     __slots__ = ('locale', 'text', 'bounding_poly')
 
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: JSONType):
         self.locale = data.get('locale')
         self.text = data['description']
         self.bounding_poly = [(point.get('x', 0), point.get('y', 0)) for point in data['boundingPoly']['vertices']]
@@ -281,7 +282,7 @@ def fetch_images_for_ean(ean: str):
 
 
 def get_json_for_image(barcode: str, image_name: str) -> \
-        Optional[Dict[str, Any]]:
+        Optional[JSONType]:
     url = generate_image_url(barcode, image_name)
     r = requests.get(url)
 
@@ -291,7 +292,7 @@ def get_json_for_image(barcode: str, image_name: str) -> \
     return r.json()
 
 
-def get_ocr_result(data: Dict[str, Any]) -> Optional[OCRResult]:
+def get_ocr_result(data: JSONType) -> Optional[OCRResult]:
     responses = data.get('responses', [])
 
     if not responses:

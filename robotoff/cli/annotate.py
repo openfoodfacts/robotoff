@@ -1,9 +1,10 @@
 import json
 from difflib import SequenceMatcher
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 import click
 import requests
 
+from robotoff.utils.types import JSONType
 
 http_session = requests.Session()
 
@@ -50,7 +51,7 @@ def run_loop(insight_type: Optional[str],
 
 
 def get_random_insight(insight_type: Optional[str] = None,
-                       country: Optional[str] = None) -> Dict[str, Any]:
+                       country: Optional[str] = None) -> JSONType:
     params = {}
 
     if insight_type:
@@ -90,7 +91,7 @@ def print_insight(insight: Dict) -> None:
         print_generic_insight(insight)
 
 
-def print_generic_insight(insight: Dict[str, Any]) -> None:
+def print_generic_insight(insight: JSONType) -> None:
     for key, value in insight.items():
         click.echo('{}: {}'.format(key, str(value)))
 
@@ -103,7 +104,7 @@ def print_generic_insight(insight: Dict[str, Any]) -> None:
     click.echo("")
 
 
-def print_ingredient_spellcheck_insight(insight: Dict[str, Any]) -> None:
+def print_ingredient_spellcheck_insight(insight: JSONType) -> None:
     for key in ('id', 'type', 'barcode', 'countries'):
         value = insight.get(key)
         click.echo('{}: {}'.format(key, str(value)))
