@@ -17,6 +17,7 @@ Add a fact about a product, by accepting (1) or rejecting (0) the insight.
 For instance:
 
 - add a new label (`en:organic`)
+- add a new packager code (`EMB 52052B`)
 - Add a new category (`en:pastas`)
 
 #### Format
@@ -53,3 +54,39 @@ For instance:
 The `image_url` can be used to display an image in the `question` interface, such as labels (IGP, organic,...).
 
 The client returns the insight ID and the annotation (0, -1 or 1).
+
+
+### Spellcheck (`spellcheck`)
+
+Spellchecking on text fields, including the ingredient list. A specific interface is used to show the correction.
+
+#### Format
+
++ type (str, required) - The question type (`spellcheck`)
++ original_snippet (str, required) - a snippet of the text field
++ value (str, optional) - The suggested value for the field
++ image_url (str, optional) - An image to display
++ insight_id (str, required) - ID of the insight
+
+`value` or `image_url` cannot be both missing.
+
+#### Examples
+
+```json
+{
+  "type": "add-binary",
+  "question": "Does this product belong to this category ?",
+  "value": "Pastas",
+  "insight_id": "{INSIGHT_ID}"
+}
+```
+
+```json
+{
+  "type": "add-binary",
+  "question": "Does this product have this label?",
+  "value": "EU Organic",
+  "image_url": "https://static.openfoodfacts.org/images/lang/fr/labels/bio-europeen.135x90.png",
+  "insight_id": "{INSIGHT_ID}"
+}
+```
