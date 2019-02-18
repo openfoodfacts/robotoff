@@ -30,6 +30,7 @@ class AddBinaryQuestion(Question):
         self.value: str = value
         self.insight_id: str = str(insight.id)
         self.insight_type: str = str(insight.type)
+        self.barcode: str = insight.barcode
         self.image_url: Optional[str] = image_url
 
     def get_type(self):
@@ -37,6 +38,7 @@ class AddBinaryQuestion(Question):
 
     def serialize(self) -> JSONType:
         serial = {
+            'barcode': self.barcode,
             'type': self.get_type(),
             'value': self.value,
             'question': self.question,
