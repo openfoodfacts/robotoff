@@ -15,7 +15,7 @@ Robotoff provides an API to:
 Once generated, the insights can be applied automatically, or after a manual validation if needs be.
 A scheduler takes care of regularly marking insights for automatic annotation and for sending the update to Openfoodfacts.
 
-The [API documentation](https://github.com/openfoodfacts/robotoff/blob/master/robotoff/app/api.md) describes the API endpoints.
+The [API documentation](https://github.com/openfoodfacts/robotoff/blob/master/robotoff/doc/api.md) describes the API endpoints.
 
 ## Installation
 
