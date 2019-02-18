@@ -12,7 +12,7 @@ from sklearn_hierarchical_classification.metrics import (h_precision_score,
                                                          h_fbeta_score)
 
 from robotoff.categories import Category, parse_category_json, generate_category_hierarchy
-from ml import import_data, create_base_classifier, create_transformer
+from .ml import import_data, create_base_classifier, create_transformer
 
 TRAIN = False
 TRANSFORMER_PATH = 'transformer.joblib'
