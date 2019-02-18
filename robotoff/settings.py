@@ -5,12 +5,18 @@ from typing import Tuple
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / 'data'
 DATASET_DIR = PROJECT_DIR / 'datasets'
-CATEGORIES_PATH = DATA_DIR / 'categories.json'
+I18N_DIR = PROJECT_DIR / 'i18n'
 DATASET_PATH = DATASET_DIR / 'en.openfoodfacts.org.products.csv'
 JSONL_DATASET_PATH = DATASET_DIR / 'products.jsonl.gz'
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / 'products-etag.txt'
 JSONL_MIN_DATASET_PATH = DATASET_DIR / 'products-min.jsonl.gz'
 JSONL_DATASET_URL = "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz"
+
+TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.json"
+TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.json"
+
+TAXONOMY_CATEGORY_PATH = DATA_DIR / 'categories.json'
+TAXONOMY_INGREDIENT_PATH = DATA_DIR / 'ingredients.json'
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")

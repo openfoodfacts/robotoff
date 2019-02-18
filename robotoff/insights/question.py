@@ -3,7 +3,9 @@ from typing import Dict, List
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
+from robotoff.taxonomy import TaxonomyType, TAXONOMY_STORES, Taxonomy
 from robotoff.utils import get_logger
+from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -40,17 +42,24 @@ class AddBinaryQuestion(Question):
 
 
 class QuestionFormatter(metaclass=abc.ABCMeta):
+    def __init__(self, translation_store: TranslationStore):
+        self.translation_store: TranslationStore = translation_store
+
     @abc.abstractmethod
-    def format_question(self, insight: ProductInsight) -> Question:
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
         pass
 
 
 class CategoryQuestionFormatter(QuestionFormatter):
-    question = "category-question"
+    question = "Does this product belong to this category?"
 
-    def format_question(self, insight: ProductInsight) -> Question:
-        return AddBinaryQuestion(question=self.question,
-                                 value=insight.data['category'],
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        value: str = insight.data['category']
+        taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
+        localized_value: str = taxonomy.get_localized_name(value, lang)
+        localized_question = self.translation_store.gettext(lang, self.question)
+        return AddBinaryQuestion(question=localized_question,
+                                 value=localized_value,
                                  insight=insight)
 
 

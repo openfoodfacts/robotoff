@@ -17,7 +17,7 @@ class CachedStore(metaclass=abc.ABCMeta):
         self.expiration_timedelta = (expiration_timedelta or
                                      datetime.timedelta(minutes=30))
 
-    def get(self):
+    def get(self, **kwargs):
         if (self.store is None or
                 datetime.datetime.utcnow() >= self.expires_after):
             if self.store is not None:
@@ -25,6 +25,6 @@ class CachedStore(metaclass=abc.ABCMeta):
 
             self.expires_after = (datetime.datetime.utcnow() +
                                   self.expiration_timedelta)
-            self.store = self.fetch_func()
+            self.store = self.fetch_func(**kwargs)
 
         return self.store

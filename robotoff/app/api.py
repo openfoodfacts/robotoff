@@ -10,7 +10,6 @@ from falcon_multipart.middleware import MultipartMiddleware
 
 from robotoff.app.core import (normalize_lang,
                                parse_product_json,
-                               get_category_name,
                                get_insights,
                                get_random_insight,
                                save_insight, CATEGORY_PRODUCT_FIELDS)
@@ -21,13 +20,19 @@ from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.off import get_product
 from robotoff.products import get_product_dataset_etag
+from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
+from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
 
 logger = get_logger()
 es_client = get_es_client()
+
+CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
+TRANSLATION_STORE = TranslationStore()
+TRANSLATION_STORE.load()
 
 
 class CategoryPredictionResource:
@@ -49,8 +54,8 @@ class CategoryPredictionResource:
             response['task_id'] = str(insight.id)
 
             category_tag = insight.data['category']
-            predicted_category_name = get_category_name(category_tag,
-                                                        lang)
+            predicted_category_name = CATEGORY_TAXONOMY.get_localized_name(
+                category_tag, lang)
             response['prediction'] = {
                 'confidence': insight.data['confidence'],
                 'id': category_tag,
@@ -217,8 +222,8 @@ class ProductQuestionsResource:
 
             for insight in insights:
                 formatter_cls = QuestionFormatterFactory.get(insight.type)
-                formatter: QuestionFormatter = formatter_cls()
-                question = formatter.format_question(insight)
+                formatter: QuestionFormatter = formatter_cls(TRANSLATION_STORE)
+                question = formatter.format_question(insight, lang)
                 questions.append(question.serialize())
 
             response['questions'] = questions

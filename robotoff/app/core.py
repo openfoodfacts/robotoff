@@ -1,19 +1,15 @@
-from typing import Union, Optional
+from typing import Union, Optional, List, Iterable
 
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
                                         AnnotationResult,
                                         ALREADY_ANNOTATED_RESULT,
                                         UNKNOWN_INSIGHT_RESULT)
 from robotoff.models import ProductInsight
-from robotoff.categories import parse_category_json
 from robotoff.off import get_product
 from robotoff.utils import get_logger
-from robotoff import settings
 
 import peewee
 
-
-category_json = parse_category_json(settings.CATEGORIES_PATH)
 
 logger = get_logger(__name__)
 
@@ -35,22 +31,6 @@ def normalize_lang(lang):
         return lang.split('-')[0]
 
     return lang
-
-
-def get_category_name(identifier, lang):
-    if identifier not in category_json:
-        return identifier
-
-    category = category_json[identifier]
-    category_names = category['name']
-
-    if lang in category_names:
-        return category_names[lang]
-
-    if 'en' in category_names:
-        return category_names['en']
-
-    return identifier
 
 
 def parse_product_json(data, lang=None):
