@@ -1,5 +1,6 @@
 import io
 import itertools
+from typing import List
 
 import dataclasses
 
@@ -16,10 +17,13 @@ from robotoff.app.core import (normalize_lang,
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
+from robotoff.insights.question import QuestionFormatterFactory, \
+    QuestionFormatter
 from robotoff.off import get_product
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
+from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
 
 logger = get_logger()
@@ -59,7 +63,7 @@ class CategoryPredictionResource:
 class ProductInsightResource:
     def on_get(self, req, resp, barcode):
         response = {}
-        insights = get_insights(barcode)
+        insights = [i.serialize() for i in get_insights(barcode)]
 
         if not insights:
             response['status'] = "no_insights"
@@ -197,6 +201,32 @@ class ImageImporterResource:
         }
 
 
+class ProductQuestionsResource:
+    def on_get(self, req, resp, barcode):
+        response = {}
+        count: int = req.get_param_as_int('count', min=1) or 1
+        lang: str = req.get_param('lang', default='en')
+
+        keep_types = QuestionFormatterFactory.get_available_types()
+        insights = list(get_insights(barcode, keep_types, count))
+
+        if not insights:
+            response['status'] = "no_questions"
+        else:
+            questions: List[JSONType] = []
+
+            for insight in insights:
+                formatter_cls = QuestionFormatterFactory.get(insight.type)
+                formatter: QuestionFormatter = formatter_cls()
+                question = formatter.format_question(insight)
+                questions.append(question.serialize())
+
+            response['questions'] = questions
+            response['status'] = "found"
+
+        resp.media = response
+
+
 cors = CORS(allow_all_origins=True,
             allow_all_headers=True,
             allow_all_methods=True)
@@ -217,3 +247,4 @@ api.add_route('/api/v1/predict/ingredients/spellcheck',
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
+api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())

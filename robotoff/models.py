@@ -5,6 +5,7 @@ from playhouse.postgres_ext import (PostgresqlExtDatabase,
                                     BinaryJSONField)
 
 from robotoff import settings
+from robotoff.utils.types import JSONType
 
 db = PostgresqlExtDatabase(settings.DB_NAME,
                            user=settings.DB_USER,
@@ -62,7 +63,7 @@ class ProductInsight(BaseModel):
     countries = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)
 
-    def serialize(self):
+    def serialize(self) -> JSONType:
         return {
             'id': str(self.id),
             'type': self.type,

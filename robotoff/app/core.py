@@ -72,20 +72,21 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_insights(barcode: str, limit=25):
+def get_insights(barcode: str,
+                 keep_types: List[str] = None,
+                 count=25) -> Iterable[ProductInsight]:
+    where_clauses = [
+        ProductInsight.annotation.is_null(),
+        ProductInsight.barcode == barcode
+    ]
+
+    if keep_types:
+        where_clauses.append(ProductInsight.type.in_(keep_types))
+
     query = (ProductInsight.select()
-                           .where(ProductInsight.annotation
-                                  .is_null(),
-                                  ProductInsight.barcode ==
-                                  barcode)
-                           .limit(limit))
-
-    insights = []
-
-    for insight in query.iterator():
-        insights.append(insight.serialize())
-
-    return insights
+                           .where(*where_clauses)
+                           .limit(count))
+    return query.iterator()
 
 
 def get_random_insight(insight_type: str = None,
