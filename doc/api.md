@@ -23,9 +23,8 @@ Current insight types:
 
 Fetch a random insight.
 
-+ Parameters
-    + type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.
-    + country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
++ type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.
++ country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
 
 + Response 200 (application/json)
 
@@ -53,5 +52,28 @@ Submit an annotation, given the `insight_id`. The request type must be `applicat
   for "unknown".
 + update (int, optional) - Send the update to Openfoodfacts if `update=1`, don't send the update otherwise. This 
   parameter is useful if the update is performed client-side.
+
++ Response 200 (application/json)
+
+
+
+# Group Questions
+
+See [here](https://github.com/openfoodfacts/robotoff/blob/master/robotoff/doc/questions.md) for more information about 
+questions.
+
+Current question types:
+
+- `add-binary`
+
+## Product questions [/questions/{barcode}]
+
+### Get questions for a given product [GET]
+
++ Parameters
+    + barcode: Product barcode
+   
++ lang (str, optional) - the language of the question/value. 'en' by default.
++ count (int, optional) - Number of questions to return. Default to 1.
 
 + Response 200 (application/json)
