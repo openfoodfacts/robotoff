@@ -12,5 +12,8 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Does this product belong to this category?"
+msgid "Does the product belong to this category?"
+msgstr ""
+
+msgid "Does the product have this label?"
 msgstr ""

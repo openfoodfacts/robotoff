@@ -13,6 +13,7 @@ from robotoff.utils.types import JSONType
 class TaxonomyType(Enum):
     category = 1
     ingredient = 2
+    label = 3
 
 
 class TaxonomyNode:
@@ -126,5 +127,10 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
         CachedStore(functools.partial(fetch_taxonomy,
                                       url=settings.TAXONOMY_INGREDIENT_URL,
                                       fallback_path=
-                                      settings.TAXONOMY_INGREDIENT_PATH))
+                                      settings.TAXONOMY_INGREDIENT_PATH)),
+    TaxonomyType.label.name:
+        CachedStore(functools.partial(fetch_taxonomy,
+                                      url=settings.TAXONOMY_LABEL_URL,
+                                      fallback_path=
+                                      settings.TAXONOMY_LABEL_PATH))
 }

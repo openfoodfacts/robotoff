@@ -35,7 +35,7 @@ For instance:
 ```json
 {
   "type": "add-binary",
-  "question": "Does this product belong to this category ?",
+  "question": "Does the product belong to this category ?",
   "value": "Pastas",
   "insight_id": "{INSIGHT_ID}",
   "insight_type": "category"
@@ -45,7 +45,7 @@ For instance:
 ```json
 {
   "type": "add-binary",
-  "question": "Does this product have this label?",
+  "question": "Does the product have this label?",
   "value": "EU Organic",
   "image_url": "https://static.openfoodfacts.org/images/lang/fr/labels/bio-europeen.135x90.png",
   "insight_id": "{INSIGHT_ID}",

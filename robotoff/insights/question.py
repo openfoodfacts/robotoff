@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
@@ -22,23 +22,32 @@ class Question(metaclass=abc.ABCMeta):
 
 
 class AddBinaryQuestion(Question):
-    def __init__(self, question: str, value: str, insight: ProductInsight):
+    def __init__(self, question: str,
+                 value: str,
+                 insight: ProductInsight,
+                 image_url: Optional[str] = None):
         self.question: str = question
         self.value: str = value
         self.insight_id: str = str(insight.id)
         self.insight_type: str = str(insight.type)
+        self.image_url: Optional[str] = image_url
 
     def get_type(self):
         return 'add-binary'
 
     def serialize(self) -> JSONType:
-        return {
+        serial = {
             'type': self.get_type(),
             'value': self.value,
             'question': self.question,
             'insight_id': self.insight_id,
             'insight_type': self.insight_type,
         }
+
+        if self.image_url:
+            serial['image_url'] = self.image_url
+
+        return serial
 
 
 class QuestionFormatter(metaclass=abc.ABCMeta):
@@ -51,7 +60,7 @@ class QuestionFormatter(metaclass=abc.ABCMeta):
 
 
 class CategoryQuestionFormatter(QuestionFormatter):
-    question = "Does this product belong to this category?"
+    question = "Does the product belong to this category?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
         value: str = insight.data['category']
@@ -63,9 +72,23 @@ class CategoryQuestionFormatter(QuestionFormatter):
                                  insight=insight)
 
 
+class LabelQuestionFormatter(QuestionFormatter):
+    question = "Does the product have this label?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        value: str = insight.data['label_tag']
+        taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.label.name].get()
+        localized_value: str = taxonomy.get_localized_name(value, lang)
+        localized_question = self.translation_store.gettext(lang, self.question)
+        return AddBinaryQuestion(question=localized_question,
+                                 value=localized_value,
+                                 insight=insight)
+
+
 class QuestionFormatterFactory:
     formatters: Dict[str, type] = {
         InsightType.category.name: CategoryQuestionFormatter,
+        InsightType.label.name: LabelQuestionFormatter,
     }
 
     @classmethod
