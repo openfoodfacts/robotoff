@@ -4,7 +4,8 @@ from typing import List, Dict, Callable
 from robotoff.insights.importer import InsightImporterFactory
 from robotoff.insights.ocr import get_insights_from_image
 from robotoff.models import db
-from robotoff.products import has_dataset_changed, fetch_dataset, CachedProductStore
+from robotoff.products import (has_dataset_changed, fetch_dataset,
+                               CACHED_PRODUCT_STORE)
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -39,7 +40,7 @@ def import_insights(insight_type: str,
     importer_cls = InsightImporterFactory.create(insight_type)
 
     if importer_cls.need_product_store():
-        product_store = CachedProductStore.get()
+        product_store = CACHED_PRODUCT_STORE.get()
         importer = importer_cls(product_store)
     else:
         importer = importer_cls()
@@ -50,7 +51,7 @@ def import_insights(insight_type: str,
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str):
-    product_store = CachedProductStore.get()
+    product_store = CACHED_PRODUCT_STORE.get()
     insights_all = get_insights_from_image(barcode, image_url, ocr_url)
 
     if insights_all is None:

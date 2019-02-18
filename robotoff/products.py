@@ -1,4 +1,3 @@
-import datetime
 import gzip
 import json
 import os
@@ -11,6 +10,7 @@ import requests
 
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
+from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -209,18 +209,4 @@ class ProductStore:
         return self.store.get(item)
 
 
-class CachedProductStore:
-    store = None
-    expires_after = None
-    expiration_timedelta = datetime.timedelta(minutes=30)
-
-    @classmethod
-    def get(cls) -> ProductStore:
-        if cls.store is None or datetime.datetime.utcnow() >= cls.expires_after:
-            if cls.store is not None:
-                logger.info("ProductStore expired, reloading...")
-
-            cls.expires_after = datetime.datetime.utcnow() + cls.expiration_timedelta
-            cls.store = ProductStore.load_min_dataset()
-
-        return cls.store
+CACHED_PRODUCT_STORE = CachedStore(lambda: ProductStore.load_min_dataset())
