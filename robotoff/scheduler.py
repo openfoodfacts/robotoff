@@ -9,6 +9,7 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.models import ProductInsight, db
+from robotoff.products import has_dataset_changed, fetch_dataset
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -69,10 +70,18 @@ def mark_insights():
     logger.info("{} insights marked".format(marked))
 
 
+def download_product_dataset():
+    logger.info("Downloading new version of product dataset")
+
+    if has_dataset_changed():
+        fetch_dataset()
+
+
 def run():
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
     scheduler.add_job(process_insights, 'interval', minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(mark_insights, 'interval', minutes=2, max_instances=1, jitter=20)
+    scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3', max_instances=1)
     scheduler.start()
