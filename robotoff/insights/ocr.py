@@ -71,6 +71,7 @@ class OCRRegex:
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
 
+BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 NUTRISCORE_REGEX = re.compile(r"nutri[-\s]?score", re.IGNORECASE)
 WEIGHT_MENTIONS = (
@@ -260,12 +261,15 @@ def get_barcode_from_path(path: str) -> Optional[str]:
 
 
 def split_barcode(barcode: str) -> List[str]:
-    if len(barcode) == 13:
-        return [barcode[0:3], barcode[3:6], barcode[6:9], barcode[9:13]]
-    elif len(barcode) == 8:
-        return [barcode]
+    if not barcode.isdigit():
+        raise ValueError("unknown barcode format: {}".format(barcode))
 
-    raise ValueError("unknown barcode format: {}".format(barcode))
+    match = BARCODE_PATH_REGEX.fullmatch(barcode)
+
+    if match:
+        return [x for x in match.groups() if x]
+
+    return [barcode]
 
 
 def generate_image_url(barcode: str, image_name: str) -> str:
