@@ -1,15 +1,15 @@
 import operator
-from typing import Iterable
+from typing import Iterable, Dict
 
-from robotoff.products import ProductDataset
+from robotoff.products import ProductDataset, Product
 from robotoff import settings
 from robotoff.utils import dump_jsonl
 
 from robotoff.utils.es import get_es_client
-from es.match import predict_category
+from es.match import predict_category as matcher_predict_category
 
 
-def generate_dataset(client, products: Iterable[dict]) -> Iterable[dict]:
+def generate_dataset(client, products: Iterable[Dict]) -> Iterable[Dict]:
     for product in products:
         predictions = []
 
@@ -41,9 +41,41 @@ def generate_dataset(client, products: Iterable[dict]) -> Iterable[dict]:
                 'predicted_category_tag': category,
                 'predicted_category_lang': lang,
                 'code': product['code'],
-                'last_modified_t': product['last_modified_t'],
                 'countries_tags': product['countries_tags'],
             }
+
+
+def predict_category(client, product: Product):
+    predictions = []
+
+    for lang in product.languages_codes:
+        product_name = product.get(f"product_name_{lang}")
+
+        if not product_name:
+            continue
+
+        prediction = matcher_predict_category(client, product_name, lang)
+
+        if prediction is None:
+            continue
+
+        category, score = prediction
+        predictions.append((lang, category, score))
+        continue
+
+    if predictions:
+        # Sort by descending score
+        sorted_predictions = sorted(predictions,
+                                    key=operator.itemgetter(2),
+                                    reverse=True)
+
+        prediction = sorted_predictions[0]
+        lang, category, score = prediction
+
+        yield {
+            'category': category,
+            'category_matcher_lang': lang,
+        }
 
 
 dataset = ProductDataset(settings.JSONL_DATASET_PATH)

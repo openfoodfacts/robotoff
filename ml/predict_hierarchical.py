@@ -4,28 +4,27 @@ from sklearn.externals import joblib
 import networkx as nx
 from sklearn_hierarchical_classification.constants import ROOT
 
-from robotoff.categories import Category, parse_category_json, generate_category_hierarchy
-from ml import import_data
+from robotoff.products import ProductDataset
+from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
+
+taxonomy_store = TAXONOMY_STORES[TaxonomyType.category.name].get()
 
 TRAIN = False
 TRANSFORMER_PATH = 'transformer.joblib'
 CLASSIFIER_PATH = 'clf.joblib'
 
-df = import_data("data/en.openfoodfacts.org.products.csv")
-
-category_json = parse_category_json('data/categories.json')
-category_taxonomy = Category.from_data(category_json)
+dataset: ProductDataset = ProductDataset.load()
+category_taxonomy: Taxonomy = taxonomy_store.get()
 
 CATEGORIES_SET = set(category_taxonomy.keys())
 CATEGORIES = sorted(CATEGORIES_SET)
 CATEGORIES_TO_INDEX = {cat: i for (i, cat) in enumerate(CATEGORIES)}
 
-category_hierarchy = generate_category_hierarchy(
-    category_json, CATEGORIES_TO_INDEX, ROOT)
-
 print("Number of categories: {}".format(len(CATEGORIES)))
 
-fr_df = df[df.countries_tags == 'en:france']
+predict_dataset_iter = (dataset.stream()
+                               .filter_by_country_tag('en:france')
+                               .filter_empty_tag_field('categories_tags'))
 
 print("Loading model...")
 transformer = joblib.load(TRANSFORMER_PATH)

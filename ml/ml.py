@@ -1,4 +1,6 @@
 import functools
+from typing import List
+
 import numpy as np
 from ml.preprocessing import preprocess
 
@@ -60,12 +62,24 @@ def create_base_classifier():
         ('clf', LogisticRegression())])
 
 
+def ingredient_preprocess(ingredients_tags: List[str]) -> str:
+    return ' '.join(ingredients_tags)
+
+
 def create_transformer(preprocessing_func=None, **kwargs):
     preprocessing_func = preprocessing_func or preprocess
 
     return ColumnTransformer([
-        ('ingredients_vectorizer', CountVectorizer(min_df=5, preprocessor=preprocessing_func, **kwargs), 'ingredients_text'),
-        ('product_name_vectorizer', CountVectorizer(min_df=5, preprocessor=preprocessing_func, **kwargs), 'product_name'),
+        ('ingredients_vectorizer',
+         CountVectorizer(min_df=5,
+                         preprocessor=ingredient_preprocess,
+                         analyzer='word',
+                         token_pattern=r"[a-zA-Z-:]+",
+                         **kwargs), 'ingredients_tags'),
+        ('product_name_vectorizer',
+         CountVectorizer(min_df=5,
+                         preprocessor=preprocessing_func,
+                         **kwargs), 'product_name'),
     ])
 
 

@@ -1,6 +1,6 @@
 import abc
 import uuid
-from typing import Dict, Iterable, List, Any, Set
+from typing import Dict, Iterable, List, Set, Optional
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
@@ -281,11 +281,52 @@ class LabelInsightImporter(OCRInsightImporter):
         return True
 
 
+class CategoryImporter(InsightImporter):
+    def get_type(self) -> str:
+        return InsightType.category.name
+
+    def need_product_store(self) -> bool:
+        return True
+
+    def import_insights(self, data: Iterable[Dict]):
+        ProductInsight.delete().where(ProductInsight.type == self.get_type(),
+                                      ProductInsight.annotation.is_null()
+                                      ).execute()
+
+        exclude_set: Set[str] = set(ProductInsight.select(ProductInsight.barcode)
+                                                  .scalar())
+
+        inserts = (self.process_product_insight(insight)
+                   for insight in data
+                   if insight is not None and insight not in exclude_set)
+        batch_insert(ProductInsight, inserts)
+
+    def process_product_insight(self, insight: JSONType) \
+            -> Optional[JSONType]:
+        insert = {
+            'id': str(uuid.uuid4()),
+            'barcode': insight['barcode'],
+            'data': {
+                'category': insight['category'],
+                'confidence': insight.get('predicted_category_prob'),
+            }
+        }
+
+        if 'category_depth' in insight:
+            insert['category_depth'] = insight['category_depth']
+
+        if 'model' is not None:
+            insert['model'] = insight['model']
+
+        yield insert
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
         InsightType.label.name: LabelInsightImporter,
+        InsightType.category.name: CategoryImporter,
     }
 
     @classmethod

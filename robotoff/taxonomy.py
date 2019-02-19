@@ -1,7 +1,8 @@
+import collections
 import functools
 import json
 from enum import Enum
-from typing import List, Dict, Iterable, Optional
+from typing import List, Dict, Iterable, Optional, Set
 
 import requests
 
@@ -17,29 +18,17 @@ class TaxonomyType(Enum):
 
 
 class TaxonomyNode:
-    __slots__ = ('id', 'names', 'parents')
+    __slots__ = ('id', 'names', 'parents', 'children')
 
     def __init__(self, identifier: str,
-                 names: List[Dict[str, str]],
-                 parents: List['TaxonomyNode'] = None):
+                 names: List[Dict[str, str]]):
         self.id: str = identifier
         self.names: Dict[str, str] = names
-        self.parents: List['TaxonomyNode'] = parents or []
+        self.parents: List['TaxonomyNode'] = []
+        self.children: List['TaxonomyNode'] = []
 
-    def is_child_of(self, item):
-        if not self.parents:
-            return False
-
-        if item in self.parents:
-            return True
-
-        for parent in self.parents:
-            is_parent = parent.is_child_of(item)
-
-            if is_parent:
-                return True
-
-        return False
+    def is_child_of(self, item: 'TaxonomyNode'):
+        return item in self.children
 
     def get_localized_name(self, lang: str) -> str:
         if lang in self.names:
@@ -51,6 +40,7 @@ class TaxonomyNode:
         for parent in parents:
             if parent not in self.parents:
                 self.parents.append(parent)
+                parent.children.append(self)
 
     def __repr__(self):
         return "<TaxonomyNode %s>" % self.id
@@ -68,6 +58,37 @@ class Taxonomy:
 
     def __getitem__(self, item: str):
         return self.nodes.get(item)
+
+    def iter_nodes(self) -> Iterable[TaxonomyNode]:
+        return iter(self.nodes.values())
+
+    def keys(self):
+        return self.nodes.keys()
+
+    def find_deepest_item(self, keys: List[str]) -> Optional[str]:
+        keys = list(set(keys))
+        excluded: Set[str] = set()
+
+        if not any(True if key in self.keys() else False for key in keys):
+            return None
+
+        keys = [key for key in keys if key in self.keys()]
+
+        if len(keys) == 0:
+            return None
+
+        elif len(keys) == 1:
+            return keys[0]
+
+        for key in keys:
+            for second_item in (i for i in keys if i not in excluded):
+                if key == second_item:
+                    continue
+
+                if self[key].is_child_of(self[second_item]):
+                    excluded.add(second_item)
+
+        return [key for key in keys if key not in excluded][0]
 
     def get_localized_name(self, key: str, lang: str) -> str:
         if key not in self.nodes:
@@ -98,6 +119,32 @@ class Taxonomy:
         with open(file_path, 'r') as f:
             data = json.load(f)
             return cls.from_data(data)
+
+
+def generate_category_hierarchy(taxonomy: Taxonomy,
+                                category_to_index: Dict[str, int],
+                                root: int):
+    categories_hierarchy = collections.defaultdict(set)
+
+    for node in taxonomy.iter_nodes():
+        category_index = category_to_index[node.id]
+
+        if not node.parents:
+            categories_hierarchy[root].add(category_index)
+
+        children_indexes = set([category_to_index[c.id]
+                                for c in node.children
+                                if c.id in category_to_index])
+
+        categories_hierarchy[category_index] = \
+            categories_hierarchy[category_index].union(children_indexes)
+
+    categories_hierarchy_list = {}
+    for category in categories_hierarchy.keys():
+        categories_hierarchy_list[category] = \
+            list(categories_hierarchy[category])
+
+    return categories_hierarchy_list
 
 
 def fetch_taxonomy(url: str, fallback_path: str, offline=False) \

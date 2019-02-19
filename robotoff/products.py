@@ -154,6 +154,10 @@ class ProductDataset:
 
         return ProductStream(iterator)
 
+    @classmethod
+    def load(cls):
+        return cls(settings.JSONL_DATASET_PATH)
+
 
 class Product:
     """Product class."""
@@ -200,7 +204,7 @@ class ProductStore:
         logger.info("product store loaded ({} items added)".format(len(seen)))
 
     @classmethod
-    def load_min_dataset(cls):
+    def load_from_min_dataset(cls):
         product_store = ProductStore()
         product_store.load(settings.JSONL_MIN_DATASET_PATH, False)
         return product_store
@@ -208,5 +212,8 @@ class ProductStore:
     def __getitem__(self, item):
         return self.store.get(item)
 
+    def __iter__(self):
+        return iter(self.store.values())
 
-CACHED_PRODUCT_STORE = CachedStore(lambda: ProductStore.load_min_dataset())
+
+CACHED_PRODUCT_STORE = CachedStore(lambda: ProductStore.load_from_min_dataset())

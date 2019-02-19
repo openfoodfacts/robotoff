@@ -5,6 +5,7 @@ PUNCTUATION_REGEX = re.compile(r"""[:,;.&~"'|`_\\={}%()\[\]]+""")
 DIGIT_REGEX = re.compile(r"[0-9]+")
 MULTIPLE_SPACES_REGEX = re.compile(r" +")
 
+
 def preprocess(text):
     text = strip_accents_ascii(text)
     text = text.lower()
