@@ -11,6 +11,16 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
+LABEL_IMG_BASE_URL = "https://static.openfoodfacts.org/images/lang"
+
+LABEL_IMAGES = {
+    "en:eu-organic": LABEL_IMG_BASE_URL + "en/labels/eu-organic.135x90.svg",
+    "fr:ab-agriculture-biologique": LABEL_IMG_BASE_URL + "/fr/labels/ab-agriculture-biologique.74x90.svg",
+    "en:european-vegetarian-union": LABEL_IMG_BASE_URL + "/en/labels/european-vegetarian-union.90x90.svg",
+    "en:pgi": LABEL_IMG_BASE_URL + "/en/labels/pgi.90x90.png",
+}
+
+
 class Question(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def serialize(self) -> JSONType:
@@ -79,12 +89,19 @@ class LabelQuestionFormatter(QuestionFormatter):
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
         value: str = insight.data['label_tag']
+
+        image_url = None
+
+        if value in LABEL_IMAGES:
+            image_url = LABEL_IMAGES[value]
+
         taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.label.name].get()
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
         return AddBinaryQuestion(question=localized_question,
                                  value=localized_value,
-                                 insight=insight)
+                                 insight=insight,
+                                 image_url=image_url)
 
 
 class QuestionFormatterFactory:
