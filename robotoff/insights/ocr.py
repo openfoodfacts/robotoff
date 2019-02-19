@@ -7,7 +7,7 @@ import re
 import json
 
 import pathlib as pathlib
-from typing import List, Dict, Any, Iterable, Optional, Tuple, Callable
+from typing import List, Dict, Iterable, Optional, Tuple, Callable
 from urllib.parse import urlparse
 
 import requests
@@ -133,7 +133,9 @@ LABELS_REGEX = {
                  lowercase=True),
     ],
     'xx-bio-xx': [
-        OCRRegex(re.compile(r"([A-Z]{2})[\-\s.](BIO|ÖKO|EKO|ØKO|ORG|ECO|Bio)[\-\s.](\d{2,3})"),
+        # The negative lookbehind (?<![a-zA-Z]) is useful to avoid to match
+        # strings if additional chars are before the label
+        OCRRegex(re.compile(r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|ECO|Bio)[\-\s.](\d{2,3})"),
                  field=OCRField.text_annotations,
                  lowercase=False,
                  processing_func=process_eu_bio_label_code),
