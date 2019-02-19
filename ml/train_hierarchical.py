@@ -20,6 +20,7 @@ from ml.ml import create_base_classifier, create_transformer
 TRAIN = False
 TRANSFORMER_PATH = 'transformer.joblib'
 CLASSIFIER_PATH = 'clf.joblib'
+CATEGORY_LABELS_PATH = 'category_labels.txt'
 
 category_taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 CATEGORIES_SET = set(category_taxonomy.keys())
@@ -83,37 +84,26 @@ X_train = transformer.fit_transform(train_df)
 classifier.fit(X_train, y_train)
 joblib.dump(transformer, TRANSFORMER_PATH)
 joblib.dump(classifier, CLASSIFIER_PATH)
+
+with open(CATEGORY_LABELS_PATH, 'w') as f:
+    for category in CATEGORIES:
+        f.write('{}\n'.format(category))
+
 print("End of training")
 
 y_pred = classifier.predict(transformer.transform(test_df))
-report = classification_report(y_test, y_pred,
-                               output_dict=True)
+report = classification_report(y_test, y_pred)
 
-# category_graph = classifier.graph_
-# y_test_matrix = np.zeros((y_test.shape[0], len(CATEGORIES_SET)))
-# y_test_matrix[np.arange(y_test.shape[0]), y_test] = 1
-#
-# y_pred_matrix = np.zeros((y_pred.shape[0], len(CATEGORIES_SET)))
-# y_pred_matrix[np.arange(y_pred.shape[0]), y_pred] = 1
-#
-#
-# print("Hierachical precision: {},\n"
-#       "Hierarchical recall: {}\n"
-#       "Hierarchical f-beta: {}".format(h_precision_score(y_test, y_pred, category_graph),
-#                                        h_recall_score(y_test, y_pred, category_graph),
-#                                        h_fbeta_score(y_test, y_pred, category_graph)))
+category_graph = classifier.graph_
+y_test_matrix = np.zeros((y_test.shape[0], len(CATEGORIES_SET)))
+y_test_matrix[np.arange(y_test.shape[0]), y_test] = 1
 
-# print("Performing prediction on products without categories")
-# no_cat_df = fr_df[pd.isnull(fr_df['categories_tags'])]
-#
-# X_infer = transformer.transform(no_cat_df)
-# no_cat_y_pred = classifier.predict(X_infer)
-#
-# no_cat_df['predicted_category_tag'] = [CATEGORIES[i] for i in no_cat_y_pred]
-#
-# print("Exporting to JSON")
-# export_df = no_cat_df.drop(['url', 'generic_name', 'brands_tags',
-#                             'categories_tags', 'countries_tags',
-#                             'product_name', 'ingredients_text',
-#                             'main_category_en'], axis=1)
-# export_df.to_json('predicted_categories.json', orient='records', lines=True)
+y_pred_matrix = np.zeros((y_pred.shape[0], len(CATEGORIES_SET)))
+y_pred_matrix[np.arange(y_pred.shape[0]), y_pred] = 1
+
+
+print("Hierachical precision: {},\n"
+      "Hierarchical recall: {}\n"
+      "Hierarchical f-beta: {}".format(h_precision_score(y_test, y_pred, category_graph),
+                                       h_recall_score(y_test, y_pred, category_graph),
+                                       h_fbeta_score(y_test, y_pred, category_graph)))

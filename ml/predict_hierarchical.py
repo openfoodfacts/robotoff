@@ -7,15 +7,12 @@ from sklearn_hierarchical_classification.constants import ROOT
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 
-taxonomy_store = TAXONOMY_STORES[TaxonomyType.category.name].get()
+category_taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 
-TRAIN = False
 TRANSFORMER_PATH = 'transformer.joblib'
 CLASSIFIER_PATH = 'clf.joblib'
 
 dataset: ProductDataset = ProductDataset.load()
-category_taxonomy: Taxonomy = taxonomy_store.get()
-
 CATEGORIES_SET = set(category_taxonomy.keys())
 CATEGORIES = sorted(CATEGORIES_SET)
 CATEGORIES_TO_INDEX = {cat: i for (i, cat) in enumerate(CATEGORIES)}
