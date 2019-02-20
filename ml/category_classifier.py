@@ -42,7 +42,8 @@ class CategoryClassifier:
         self.category_taxonomy: Taxonomy = category_taxonomy
         self.categories_set: Set[str] = set(category_taxonomy.keys())
         self.categories: List[str] = sorted(self.categories_set)
-        self.categories_to_index: Dict[str, int] = {cat: i for (i, cat) in enumerate(self.categories)}
+        self.categories_to_index: Dict[str, int] = {cat: i for (i, cat) in
+                                                    enumerate(self.categories)}
         self.transformer = None
         self.classifier = None
 
@@ -134,7 +135,8 @@ class CategoryClassifier:
         model_dir_path = pathlib.Path(model_dir)
         transformer = joblib.load(str(model_dir_path / cls.TRANSFORMER_PATH))
         classifier = joblib.load(str(model_dir_path / cls.CLASSIFIER_PATH))
-        category_taxonomy = joblib.load(str(model_dir_path / cls.CATEGORY_TAXONOMY_PATH))
+        category_taxonomy = joblib.load(str(model_dir_path /
+                                            cls.CATEGORY_TAXONOMY_PATH))
         instance = cls(category_taxonomy)
         instance.transformer = transformer
         instance.classifier = classifier
@@ -142,7 +144,8 @@ class CategoryClassifier:
 
     @classmethod
     def create_classifier(cls, category_hierarchy):
-        return HierarchicalClassifier(base_estimator=cls.create_base_classifier(),
+        return HierarchicalClassifier(base_estimator=cls
+                                      .create_base_classifier(),
                                       class_hierarchy=category_hierarchy,
                                       prediction_depth='nmlnp',
                                       algorithm='lcpn',
@@ -161,10 +164,12 @@ class CategoryClassifier:
              CountVectorizer(min_df=5,
                              preprocessor=ingredient_preprocess,
                              analyzer='word',
-                             token_pattern=r"[a-zA-Z-:]+"), 'ingredients_tags'),
+                             token_pattern=r"[a-zA-Z-:]+"),
+             'ingredients_tags'),
             ('product_name_vectorizer',
              CountVectorizer(min_df=5,
-                             preprocessor=preprocess_product_name), 'product_name'),
+                             preprocessor=preprocess_product_name),
+             'product_name'),
         ])
 
     def evaluate(self, test_df: pd.DataFrame):
