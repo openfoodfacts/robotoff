@@ -110,11 +110,15 @@ class CategoryClassifier:
         y_pred = self.classifier.predict(self.transformer.transform(df))[0]
         return self.categories[y_pred]
 
-    def dump(self, output_dir: str) -> None:
+    def save(self, output_dir: str) -> None:
         output_dir_path = pathlib.Path(output_dir)
-        joblib.dump(self.transformer, str(output_dir_path / self.TRANSFORMER_PATH))
-        joblib.dump(self.classifier, str(output_dir_path / self.CLASSIFIER_PATH))
-        joblib.dump(self.category_taxonomy, str(output_dir_path / self.CATEGORY_TAXONOMY_PATH))
+        joblib.dump(self.transformer,
+                    str(output_dir_path / self.TRANSFORMER_PATH))
+        joblib.dump(self.classifier,
+                    str(output_dir_path / self.CLASSIFIER_PATH))
+
+        with open(str(output_dir_path / self.CATEGORY_TAXONOMY_PATH), 'w') as f:
+            json.dump(self.category_taxonomy.to_dict(), f)
 
     @classmethod
     def load(cls, model_dir: str) -> 'CategoryClassifier':

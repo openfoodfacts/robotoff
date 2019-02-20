@@ -42,6 +42,12 @@ class TaxonomyNode:
                 self.parents.append(parent)
                 parent.children.append(self)
 
+    def to_dict(self) -> JSONType:
+        return {
+            'name': self.names,
+            'parents': [p.id for p in self.parents]
+        }
+
     def __repr__(self):
         return "<TaxonomyNode %s>" % self.id
 
@@ -96,8 +102,16 @@ class Taxonomy:
 
         return self.nodes[key].get_localized_name(lang)
 
+    def to_dict(self) -> JSONType:
+        export = {}
+
+        for key, node in self.nodes.items():
+            export[key] = node.to_dict()
+
+        return export
+
     @classmethod
-    def from_data(cls, data: JSONType) -> 'Taxonomy':
+    def from_dict(cls, data: JSONType) -> 'Taxonomy':
         taxonomy = Taxonomy()
 
         for key, key_data in data.items():
@@ -118,7 +132,7 @@ class Taxonomy:
     def from_json(cls, file_path: str):
         with open(file_path, 'r') as f:
             data = json.load(f)
-            return cls.from_data(data)
+            return cls.from_dict(data)
 
 
 def generate_category_hierarchy(taxonomy: Taxonomy,
@@ -161,7 +175,7 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) \
         else:
             return None
 
-    return Taxonomy.from_data(data)
+    return Taxonomy.from_dict(data)
 
 
 TAXONOMY_STORES: Dict[str, CachedStore] = {
