@@ -45,8 +45,8 @@ class CategoryClassifier:
         self.categories: List[str] = sorted(self.categories_set)
         self.categories_to_index: Dict[str, int] = {cat: i for (i, cat) in
                                                     enumerate(self.categories)}
-        self.transformer = None
-        self.classifier = None
+        self.transformer: Optional[ColumnTransformer] = None
+        self.classifier: Optional[HierarchicalClassifier] = None
 
     def generate_df(self,
                     dataset: ProductDataset) -> pd.DataFrame:
@@ -200,9 +200,9 @@ class CategoryClassifier:
         print("Hierachical precision: {},\n"
               "Hierarchical recall: {}\n"
               "Hierarchical f-beta: {}".format(
-            h_precision_score(y_test, y_pred, category_graph),
-            h_recall_score(y_test, y_pred, category_graph),
-            h_fbeta_score(y_test, y_pred, category_graph)))
+            h_precision_score(y_test_matrix, y_pred_matrix, category_graph),
+            h_recall_score(y_test_matrix, y_pred_matrix, category_graph),
+            h_fbeta_score(y_test_matrix, y_pred_matrix, category_graph)))
 
 
 def ingredient_preprocess(ingredients_tags: List[str]) -> str:
