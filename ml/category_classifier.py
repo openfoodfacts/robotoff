@@ -46,7 +46,6 @@ class CategoryClassifier:
         training_dataset_iter = (dataset.stream()
                                  .filter_by_country_tag('en:france')
                                  .filter_nonempty_text_field('product_name')
-                                 .filter_nonempty_tag_field('ingredients_tags')
                                  .filter_nonempty_tag_field('categories_tags'))
 
         training_dataset = []
@@ -60,7 +59,9 @@ class CategoryClassifier:
                 training_dataset.append(transformed_product)
 
         logger.info("{} training samples discarded (category not in "
-                    "taxonomy)".format(processed - len(training_dataset)))
+                    "taxonomy), {} remaining"
+                    "".format(processed - len(training_dataset),
+                              len(training_dataset)))
         return pd.DataFrame(training_dataset)
 
     def transform_product(self, product: Dict) -> Optional[Dict]:
@@ -69,13 +70,13 @@ class CategoryClassifier:
             categories_tags)
 
         if deepest_category is None:
-            return
+            return None
 
         return {
             'barcode': product['code'],
             'deepest_category': deepest_category,
             'deepest_category_int': self.categories_to_index[deepest_category],
-            'ingredients_tags': product['ingredients_tags'],
+            'ingredients_tags': product.get('ingredients_tags', []),
             'product_name': product['product_name'],
         }
 
