@@ -36,7 +36,7 @@ MULTIPLE_SPACES_REGEX = re.compile(r" +")
 class CategoryClassifier:
     TRANSFORMER_PATH = 'transformer.joblib'
     CLASSIFIER_PATH = 'clf.joblib'
-    CATEGORY_TAXONOMY_PATH = 'category_taxonomy.joblib'
+    CATEGORY_TAXONOMY_PATH = 'category_taxonomy.json'
 
     def __init__(self, category_taxonomy: Taxonomy):
         self.category_taxonomy: Taxonomy = category_taxonomy
@@ -135,8 +135,11 @@ class CategoryClassifier:
         model_dir_path = pathlib.Path(model_dir)
         transformer = joblib.load(str(model_dir_path / cls.TRANSFORMER_PATH))
         classifier = joblib.load(str(model_dir_path / cls.CLASSIFIER_PATH))
-        category_taxonomy = joblib.load(str(model_dir_path /
-                                            cls.CATEGORY_TAXONOMY_PATH))
+
+        with open(str(model_dir_path /
+                      cls.CATEGORY_TAXONOMY_PATH), 'r') as f:
+            category_taxonomy = joblib.load(f)
+
         instance = cls(category_taxonomy)
         instance.transformer = transformer
         instance.classifier = classifier
