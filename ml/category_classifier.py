@@ -182,7 +182,7 @@ class CategoryClassifier:
 
         y_test = test_df.deepest_category_int.values
         y_pred = self.classifier.predict(self.transformer.transform(test_df))
-        self._evaluate(self.classifier._graph,
+        self._evaluate(self.classifier.graph_,
                        y_test, y_pred, len(self.categories))
 
     @staticmethod

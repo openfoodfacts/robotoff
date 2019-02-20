@@ -10,7 +10,7 @@ from robotoff.insights.ocr import (ocr_iter, OCRResult,
                                    get_barcode_from_path)
 
 
-def run(input_: str, insight_type: str, output: Optional[str]):
+def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
     if output is not None:
         output_f = open(output, 'w')
     else:

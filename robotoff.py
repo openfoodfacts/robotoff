@@ -19,9 +19,9 @@ def run(service: str):
 @click.argument('input_')
 @click.option('--insight-type', required=True)
 @click.option('--output', '-o')
-def generate_insights(input_: str, insight_type: str, output: str):
+def generate_ocr_insights(input_: str, insight_type: str, output: str):
     from robotoff.cli import insights
-    insights.run(input_, insight_type, output)
+    insights.run_from_ocr_archive(input_, insight_type, output)
 
 
 @click.command()
@@ -42,7 +42,7 @@ def batch_annotate(insight_type: str, dry: bool, filter_clause: str):
 
 
 cli.add_command(run)
-cli.add_command(generate_insights)
+cli.add_command(generate_ocr_insights)
 cli.add_command(annotate)
 cli.add_command(batch_annotate)
 
