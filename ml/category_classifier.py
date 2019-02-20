@@ -1,7 +1,10 @@
+import json
 import pathlib
 import re
 from typing import List, Optional, Dict, Set
 
+import networkx
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer, strip_accents_ascii
@@ -14,6 +17,8 @@ from sklearn.pipeline import Pipeline
 
 from sklearn_hierarchical_classification.classifier import HierarchicalClassifier
 from sklearn_hierarchical_classification.constants import ROOT
+from sklearn_hierarchical_classification.metrics import h_precision_score, \
+    h_recall_score, h_fbeta_score
 
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES, TaxonomyType, \
@@ -102,6 +107,10 @@ class CategoryClassifier:
         return train_df, test_df
 
     def predict(self, product: Dict):
+        if self.classifier is None or self.transformer is None:
+            raise RuntimeError("The model must be loaded or trained "
+                               "before prediction")
+
         transformed = {
             'product_name': product.get('product_name', ''),
             'ingredients_tags': product.get('ingredients_tags', []),
@@ -157,6 +166,34 @@ class CategoryClassifier:
              CountVectorizer(min_df=5,
                              preprocessor=preprocess_product_name), 'product_name'),
         ])
+
+    def evaluate(self, test_df: pd.DataFrame):
+        if self.classifier is None or self.transformer is None:
+            raise RuntimeError("The model must be loaded or trained "
+                               "before prediction")
+
+        y_test = test_df.deepest_category_int.values
+        y_pred = self.classifier.predict(self.transformer.transform(test_df))
+        self._evaluate(self.classifier._graph,
+                       y_test, y_pred, len(self.categories))
+
+    @staticmethod
+    def _evaluate(category_graph: networkx.DiGraph,
+                  y_test: np.ndarray,
+                  y_pred: np.ndarray,
+                  category_count: int):
+        y_test_matrix = np.zeros((y_test.shape[0], category_count))
+        y_test_matrix[np.arange(y_test.shape[0]), y_test] = 1
+
+        y_pred_matrix = np.zeros((y_pred.shape[0], category_count))
+        y_pred_matrix[np.arange(y_pred.shape[0]), y_pred] = 1
+
+        print("Hierachical precision: {},\n"
+              "Hierarchical recall: {}\n"
+              "Hierarchical f-beta: {}".format(
+            h_precision_score(y_test, y_pred, category_graph),
+            h_recall_score(y_test, y_pred, category_graph),
+            h_fbeta_score(y_test, y_pred, category_graph)))
 
 
 def ingredient_preprocess(ingredients_tags: List[str]) -> str:
