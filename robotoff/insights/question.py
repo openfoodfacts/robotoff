@@ -1,6 +1,7 @@
 import abc
 from typing import Dict, List, Optional
 
+from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.taxonomy import TaxonomyType, TAXONOMY_STORES, Taxonomy
@@ -35,13 +36,15 @@ class AddBinaryQuestion(Question):
     def __init__(self, question: str,
                  value: str,
                  insight: ProductInsight,
-                 image_url: Optional[str] = None):
+                 image_url: Optional[str] = None,
+                 source_image_url: Optional[str] = None):
         self.question: str = question
         self.value: str = value
         self.insight_id: str = str(insight.id)
         self.insight_type: str = str(insight.type)
         self.barcode: str = insight.barcode
         self.image_url: Optional[str] = image_url
+        self.source_image_url: Optional[str] = source_image_url
 
     def get_type(self):
         return 'add-binary'
@@ -58,6 +61,9 @@ class AddBinaryQuestion(Question):
 
         if self.image_url:
             serial['image_url'] = self.image_url
+
+        if self.source_image_url:
+            serial['source_image_url'] = self.source_image_url
 
         return serial
 
@@ -98,10 +104,20 @@ class LabelQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.label.name].get()
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_path = insight.data.get('source')
+
+        if source_image_path:
+            source_image_url: Optional[str] = (settings.OFF_IMAGE_BASE_URL +
+                                               source_image_path)
+        else:
+            source_image_url = None
+
         return AddBinaryQuestion(question=localized_question,
                                  value=localized_value,
                                  insight=insight,
-                                 image_url=image_url)
+                                 image_url=image_url,
+                                 source_image_url=source_image_url)
 
 
 class QuestionFormatterFactory:

@@ -49,6 +49,7 @@ For instance:
   "question": "Does the product have this label?",
   "value": "EU Organic",
   "image_url": "https://static.openfoodfacts.org/images/lang/fr/labels/bio-europeen.135x90.png",
+  "source_image_url": "https://static.openfoodfacts.org/images/products/542/503/557/7122/1.jpg",
   "insight_id": "{INSIGHT_ID}",
   "insight_type": "label",
   "barcode": "{BARCODE}"
@@ -56,5 +57,6 @@ For instance:
 ```
 
 The `image_url` can be used to display an image in the `question` interface, such as labels (IGP, organic,...).
+The `source_image_url` is the URL of the image from which the insight was extracted, if any.
 
 The client returns the insight ID and the annotation (0, -1 or 1).

@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import requests
 
+from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.utils.types import JSONType
 
@@ -70,6 +71,7 @@ class OCRRegex:
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
+
 
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
@@ -277,7 +279,7 @@ def split_barcode(barcode: str) -> List[str]:
 def generate_image_url(barcode: str, image_name: str) -> str:
     splitted_barcode = split_barcode(barcode)
     path = "/{}/{}.json".format('/'.join(splitted_barcode), image_name)
-    return "https://static.openfoodfacts.org/images/products" + path
+    return settings.OFF_IMAGE_BASE_URL + path
 
 
 def fetch_images_for_ean(ean: str):

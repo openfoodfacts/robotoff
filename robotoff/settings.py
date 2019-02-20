@@ -15,6 +15,7 @@ JSONL_DATASET_URL = "https://static.openfoodfacts.org/data/openfoodfacts-product
 TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.json"
 TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.json"
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.json"
+OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 
 TAXONOMY_DIR = DATA_DIR / 'taxonomies'
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
