@@ -147,6 +147,12 @@ LABELS_REGEX = {
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
     ],
+    'en:pgi': [
+        OCRRegex(re.compile(
+            r"(?:indication g[ée]ographique prot[eé]g[eé]e)|(?:Indicazione geografica protetta)"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+    ]
 }
 
 BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
