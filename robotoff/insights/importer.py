@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 class InsightImporter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def import_insights(self, data: Iterable[Dict]):
+    def import_insights(self, data: Iterable[Dict], purge: bool = False):
         pass
 
     @abc.abstractmethod
@@ -45,10 +45,12 @@ class IngredientSpellcheckImporter(InsightImporter):
     def need_product_store(cls) -> bool:
         return False
 
-    def import_insights(self, data: Iterable[Dict]):
-        ProductInsight.delete().where(ProductInsight.type ==
-                                      InsightType.ingredient_spellcheck.name).execute()
-        ProductIngredient.delete().execute()
+    def import_insights(self, data: Iterable[Dict], purge: bool = False):
+        if purge:
+            ProductInsight.delete().where(ProductInsight.type ==
+                                          InsightType.
+                                          ingredient_spellcheck.name).execute()
+            ProductIngredient.delete().execute()
 
         barcode_seen: Set[str] = set()
         insight_seen: Set = set()
@@ -124,12 +126,15 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
     def need_product_store(cls) -> bool:
         return True
 
-    def import_insights(self, data: Iterable[Dict]):
+    def import_insights(self, data: Iterable[Dict], purge: bool = False):
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
         inserts: List[Dict] = []
 
-        ProductInsight.delete().where(ProductInsight.type == self.get_type(),
-                                      ProductInsight.annotation.is_null()).execute()
+        if purge:
+            ProductInsight.delete().where(ProductInsight.type ==
+                                          self.get_type(),
+                                          ProductInsight.annotation.is_null()
+                                          ).execute()
 
         for barcode, insights in grouped_by.items():
             inserts += self.process_product_insights(insights)
@@ -288,13 +293,16 @@ class CategoryImporter(InsightImporter):
     def need_product_store(self) -> bool:
         return True
 
-    def import_insights(self, data: Iterable[Dict]):
-        ProductInsight.delete().where(ProductInsight.type == self.get_type(),
-                                      ProductInsight.annotation.is_null()
-                                      ).execute()
+    def import_insights(self, data: Iterable[Dict], purge: bool = False):
+        if purge:
+            ProductInsight.delete().where(ProductInsight.type ==
+                                          self.get_type(),
+                                          ProductInsight.annotation.is_null()
+                                          ).execute()
 
-        exclude_set: Set[str] = set(ProductInsight.select(ProductInsight.barcode)
-                                                  .scalar())
+        exclude_set: Set[str] = set(
+            ProductInsight.select(ProductInsight.barcode)
+                          .scalar())
 
         inserts = (self.process_product_insight(insight)
                    for insight in data
