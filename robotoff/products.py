@@ -209,10 +209,10 @@ class ProductStore:
         product_store.load(settings.JSONL_MIN_DATASET_PATH, False)
         return product_store
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> Optional[Product]:
         return self.store.get(item)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Product]:
         return iter(self.store.values())
 
 
