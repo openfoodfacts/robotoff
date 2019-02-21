@@ -324,15 +324,14 @@ class CategoryImporter(InsightImporter):
         for t in (ProductInsight.select(ProductInsight.data['category']
                                         .as_json().alias('category'),
                                         ProductInsight.barcode)
-                .where(ProductInsight.type ==
-                       self.get_type())).iterator():
+                                .where(ProductInsight.type ==
+                                       self.get_type())).iterator():
             category_seen.setdefault(t.barcode, set())
             category_seen[t.barcode].add(t.category)
 
         for insight in insights:
             barcode = insight['barcode']
-            content = insight['content']
-            category = content['category']
+            category = insight['category']
 
             if not self.is_valid(barcode, category, category_seen):
                 continue
@@ -346,15 +345,15 @@ class CategoryImporter(InsightImporter):
                 'countries': countries_tags,
                 'data': {
                     'category': category,
-                    'confidence': content['confidence'],
+                    'confidence': insight['confidence'],
                 }
             }
 
-            if 'category_depth' in content:
-                insert['data']['category_depth'] = content['category_depth']
+            if 'category_depth' in insight:
+                insert['data']['category_depth'] = insight['category_depth']
 
-            if 'model' in content:
-                insert['data']['model'] = content['model']
+            if 'model' in insight:
+                insert['data']['model'] = insight['model']
 
             yield insert
             category_seen.setdefault(barcode, set())

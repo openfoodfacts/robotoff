@@ -1,7 +1,9 @@
+import datetime
 import json
+import os
 import pathlib
 import re
-from typing import List, Optional, Dict, Set
+from typing import List, Optional, Dict, Set, Iterable
 
 import networkx
 import numpy as np
@@ -21,10 +23,12 @@ from sklearn_hierarchical_classification.constants import ROOT
 from sklearn_hierarchical_classification.metrics import h_precision_score, \
     h_recall_score, h_fbeta_score
 
+from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES, TaxonomyType, \
     generate_category_hierarchy
 from robotoff.utils import get_logger
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -48,8 +52,8 @@ class CategoryClassifier:
         self.transformer: Optional[ColumnTransformer] = None
         self.classifier: Optional[HierarchicalClassifier] = None
 
-    def generate_df(self,
-                    dataset: ProductDataset) -> pd.DataFrame:
+    def generate_training_df(self,
+                             dataset: ProductDataset) -> pd.DataFrame:
         training_dataset_iter = (dataset.stream()
                                  .filter_by_country_tag('en:france')
                                  .filter_nonempty_text_field('product_name')
@@ -60,9 +64,10 @@ class CategoryClassifier:
         processed = 0
         for product in training_dataset_iter:
             processed += 1
-            transformed_product = self.transform_product(product)
+            transformed_product = self.transform_product(product,
+                                                         add_category=True)
 
-            if transformed_product:
+            if 'deepest_category' in transformed_product:
                 training_dataset.append(transformed_product)
 
         logger.info("{} training samples discarded (category not in "
@@ -71,21 +76,33 @@ class CategoryClassifier:
                               len(training_dataset)))
         return pd.DataFrame(training_dataset)
 
-    def transform_product(self, product: Dict) -> Optional[Dict]:
-        categories_tags: List[str] = product['categories_tags']
-        deepest_category: Optional[str] = self.category_taxonomy.find_deepest_item(
-            categories_tags)
+    def generate_prediction_df(self,
+                               dataset: ProductDataset) -> pd.DataFrame:
+        dataset_iter = (dataset.stream()
+                               .filter_by_country_tag('en:france')
+                               .filter_nonempty_text_field('product_name'))
+        return pd.DataFrame((self.transform_product(p) for p in dataset_iter))
 
-        if deepest_category is None:
-            return None
-
-        return {
+    def transform_product(self, product: Dict,
+                          add_category: bool = False) -> Dict:
+        item = {
             'barcode': product['code'],
-            'deepest_category': deepest_category,
-            'deepest_category_int': self.categories_to_index[deepest_category],
             'ingredients_tags': product.get('ingredients_tags', []),
-            'product_name': product['product_name'],
+            'product_name': product.get('product_name', ''),
         }
+
+        if add_category:
+            categories_tags: List[str] = product['categories_tags']
+
+            deepest_category: Optional[str] = (
+                self.category_taxonomy.find_deepest_item(categories_tags))
+
+            if deepest_category is not None:
+                item['deepest_category'] = deepest_category
+                item['deepest_category_int'] = self.categories_to_index[
+                    deepest_category]
+
+        return item
 
     def train(self, dataset: ProductDataset):
         category_hierarchy = generate_category_hierarchy(self.category_taxonomy,
@@ -94,7 +111,7 @@ class CategoryClassifier:
 
         logger.info("Number of categories: {}".format(len(self.categories)))
 
-        df = self.generate_df(dataset)
+        df = self.generate_training_df(dataset)
         train_df, test_df = train_test_split(df, random_state=42)
         y_train = train_df.deepest_category_int.values
 
@@ -108,10 +125,32 @@ class CategoryClassifier:
 
         return train_df, test_df
 
-    def predict(self, product: Dict):
+    def generate_insights(self, dataset: ProductDataset) -> Iterable[JSONType]:
+        self.raise_if_not_loaded()
+        df = self.generate_prediction_df(dataset)
+        y_pred_prob = self.classifier.predict_proba(
+            self.transformer.transform(df))
+        y_pred = np.argmax(y_pred_prob, axis=-1)
+
+        for i, row in enumerate(df.itertuples()):
+            category_int = y_pred[i]
+            probability = y_pred_prob[i, category_int]
+            category = self.categories[category_int]
+
+            yield {
+                'barcode': row.barcode,
+                'category': category,
+                'model': 'hierarchical_classifier',
+                'probability': probability,
+            }
+
+    def raise_if_not_loaded(self):
         if self.classifier is None or self.transformer is None:
             raise RuntimeError("The model must be loaded or trained "
                                "before prediction")
+
+    def predict(self, product: Dict):
+        self.raise_if_not_loaded()
 
         transformed = {
             'product_name': product.get('product_name', ''),
@@ -176,33 +215,29 @@ class CategoryClassifier:
              'product_name'),
         ])
 
-    def evaluate(self, test_df: pd.DataFrame):
-        if self.classifier is None or self.transformer is None:
-            raise RuntimeError("The model must be loaded or trained "
-                               "before prediction")
-
+    def evaluate(self, test_df: pd.DataFrame) -> JSONType:
+        self.raise_if_not_loaded()
         y_test = test_df.deepest_category_int.values
         y_pred = self.classifier.predict(self.transformer.transform(test_df))
-        self._evaluate(self.classifier.graph_,
-                       y_test, y_pred, len(self.categories))
+        return self._evaluate(self.classifier.graph_,
+                              y_test, y_pred, len(self.categories))
 
     @staticmethod
     def _evaluate(category_graph: networkx.DiGraph,
-                  y_test: np.ndarray,
+                  y_true: np.ndarray,
                   y_pred: np.ndarray,
-                  category_count: int):
-        y_test_matrix = np.zeros((y_test.shape[0], category_count))
-        y_test_matrix[np.arange(y_test.shape[0]), y_test] = 1
+                  category_count: int) -> JSONType:
+        y_true_matrix = np.zeros((y_true.shape[0], category_count))
+        y_true_matrix[np.arange(y_true.shape[0]), y_true] = 1
 
         y_pred_matrix = np.zeros((y_pred.shape[0], category_count))
         y_pred_matrix[np.arange(y_pred.shape[0]), y_pred] = 1
 
-        print("Hierachical precision: {},\n"
-              "Hierarchical recall: {}\n"
-              "Hierarchical f-beta: {}".format(
-            h_precision_score(y_test_matrix, y_pred_matrix, category_graph),
-            h_recall_score(y_test_matrix, y_pred_matrix, category_graph),
-            h_fbeta_score(y_test_matrix, y_pred_matrix, category_graph)))
+        return {
+            'h_precision': h_precision_score(y_true_matrix, y_pred_matrix, category_graph),
+            'h_recall': h_recall_score(y_true_matrix, y_pred_matrix, category_graph),
+            'h_fbeta': h_fbeta_score(y_true_matrix, y_pred_matrix, category_graph),
+        }
 
 
 def ingredient_preprocess(ingredients_tags: List[str]) -> str:
@@ -217,7 +252,30 @@ def preprocess_product_name(text):
     return MULTIPLE_SPACES_REGEX.sub(' ', text)
 
 
-category_taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
-category_classifier = CategoryClassifier(category_taxonomy)
-dataset: ProductDataset = ProductDataset.load()
-train_df, test_df = category_classifier.train(dataset)
+def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
+    category_taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
+    category_classifier = CategoryClassifier(category_taxonomy)
+    dataset: ProductDataset = ProductDataset.load()
+    train_df, test_df = category_classifier.train(dataset)
+
+    category_classifier.save(str(model_output_dir))
+    test_metrics = category_classifier.evaluate(test_df)
+    train_metrics = category_classifier.evaluate(train_df)
+
+    dataset_timestamp = datetime.datetime.fromtimestamp(os.path.getmtime(settings.JSONL_DATASET_PATH))
+
+    meta = {
+        'metrics': {
+            'test': test_metrics,
+            'train': train_metrics,
+        },
+        'dataset_id': dataset_timestamp.isoformat(),
+        'training_set_count': len(train_df),
+        'test_set_count': len(test_df),
+    }
+
+    if comment:
+        meta['comment'] = comment
+
+    with open(str(model_output_dir), 'w') as f:
+        json.dump(meta, f)

@@ -22,6 +22,8 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.json'
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.json'
 
+MODELS_DIR = PROJECT_DIR / 'models'
+
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
