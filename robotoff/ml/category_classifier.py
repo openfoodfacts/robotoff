@@ -125,24 +125,27 @@ class CategoryClassifier:
 
         return train_df, test_df
 
-    def generate_insights(self, dataset: ProductDataset) -> Iterable[JSONType]:
+    def generate_insights(self, dataset: ProductDataset) -> List[JSONType]:
         self.raise_if_not_loaded()
         df = self.generate_prediction_df(dataset)
         y_pred_prob = self.classifier.predict_proba(
             self.transformer.transform(df))
         y_pred = np.argmax(y_pred_prob, axis=-1)
 
+        insights = []
         for i, row in enumerate(df.itertuples()):
             category_int = y_pred[i]
             probability = y_pred_prob[i, category_int]
             category = self.categories[category_int]
 
-            yield {
+            insights.append({
                 'barcode': row.barcode,
                 'category': category,
                 'model': 'hierarchical_classifier',
                 'probability': probability,
-            }
+            })
+
+        return insights
 
     def raise_if_not_loaded(self):
         if self.classifier is None or self.transformer is None:
@@ -178,7 +181,7 @@ class CategoryClassifier:
 
         with open(str(model_dir_path /
                       cls.CATEGORY_TAXONOMY_PATH), 'r') as f:
-            category_taxonomy = joblib.load(f)
+            category_taxonomy = json.load(f)
 
         instance = cls(category_taxonomy)
         instance.transformer = transformer
@@ -260,16 +263,13 @@ def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
 
     category_classifier.save(str(model_output_dir))
     test_metrics = category_classifier.evaluate(test_df)
-    train_metrics = category_classifier.evaluate(train_df)
-
     dataset_timestamp = datetime.datetime.fromtimestamp(os.path.getmtime(settings.JSONL_DATASET_PATH))
 
     meta = {
         'metrics': {
             'test': test_metrics,
-            'train': train_metrics,
         },
-        'dataset_id': dataset_timestamp.isoformat(),
+        'dataset_id': dataset_timestamp.date().isoformat(),
         'training_set_count': len(train_df),
         'test_set_count': len(test_df),
     }
