@@ -3,7 +3,7 @@ import json
 import os
 import pathlib
 import re
-from typing import List, Optional, Dict, Set, Iterable
+from typing import List, Optional, Dict, Set
 
 import networkx
 import numpy as np
@@ -128,21 +128,16 @@ class CategoryClassifier:
     def generate_insights(self, dataset: ProductDataset) -> List[JSONType]:
         self.raise_if_not_loaded()
         df = self.generate_prediction_df(dataset)
-        y_pred_prob = self.classifier.predict_proba(
-            self.transformer.transform(df))
-        y_pred = np.argmax(y_pred_prob, axis=-1)
+        y_pred = self.classifier.predict(self.transformer.transform(df))
 
         insights = []
         for i, row in enumerate(df.itertuples()):
-            category_int = y_pred[i]
-            probability = y_pred_prob[i, category_int]
-            category = self.categories[category_int]
+            category = self.categories[y_pred]
 
             insights.append({
                 'barcode': row.barcode,
                 'category': category,
                 'model': 'hierarchical_classifier',
-                'probability': probability,
             })
 
         return insights
