@@ -167,7 +167,7 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) \
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=5)
         data = r.json()
     except Exception:
         if fallback_path:
