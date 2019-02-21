@@ -28,7 +28,19 @@ class TaxonomyNode:
         self.children: List['TaxonomyNode'] = []
 
     def is_child_of(self, item: 'TaxonomyNode'):
-        return item in self.parents
+        if not self.parents:
+            return False
+
+        if item in self.parents:
+            return True
+
+        for parent in self.parents:
+            is_parent = parent.is_child_of(item)
+
+            if is_parent:
+                return True
+
+        return False
 
     def get_localized_name(self, lang: str) -> str:
         if lang in self.names:
