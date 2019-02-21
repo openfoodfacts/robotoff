@@ -86,7 +86,6 @@ def add_label_tag(barcode: str, label_tag: str, dry=False):
 
 def update_product(params: Dict, dry=False):
     if dry:
-        params.pop('password')
         r = http_session.get(DRY_POST_URL, params=params,
                              auth=('off', 'off'))
     else:
