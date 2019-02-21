@@ -129,6 +129,13 @@ class ProductStream:
                     if not (product.get(field) or []))
         return ProductStream(filtered)
 
+    def take(self, count: int):
+        for i, item in enumerate(self):
+            if i >= count:
+                break
+
+            yield item
+
     def iter(self) -> Iterable[Dict]:
         return iter(self)
 
