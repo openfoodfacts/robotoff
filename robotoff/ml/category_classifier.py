@@ -176,8 +176,9 @@ class CategoryClassifier:
 
         with open(str(model_dir_path /
                       cls.CATEGORY_TAXONOMY_PATH), 'r') as f:
-            category_taxonomy = json.load(f)
+            category_taxonomy_data = json.load(f)
 
+        category_taxonomy = Taxonomy.from_dict(category_taxonomy_data)
         instance = cls(category_taxonomy)
         instance.transformer = transformer
         instance.classifier = classifier
@@ -272,5 +273,5 @@ def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
     if comment:
         meta['comment'] = comment
 
-    with open(str(model_output_dir), 'w') as f:
+    with open(str(model_output_dir / 'meta.json'), 'w') as f:
         json.dump(meta, f)
