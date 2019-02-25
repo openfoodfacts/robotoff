@@ -1,4 +1,5 @@
 import abc
+import datetime
 import uuid
 from typing import Dict, Iterable, List, Set, Optional
 
@@ -59,6 +60,7 @@ class IngredientSpellcheckImporter(InsightImporter):
         if purge:
             self.purge_insights()
 
+        timestamp = datetime.datetime.utcnow()
         barcode_seen: Set[str] = set()
         insight_seen: Set = set()
         insights = []
@@ -93,6 +95,7 @@ class IngredientSpellcheckImporter(InsightImporter):
                         'id': str(uuid.uuid4()),
                         'type': InsightType.ingredient_spellcheck.name,
                         'barcode': barcode,
+                        'timestamp': timestamp,
                         'data': {
                             **correction,
                             'original_snippet': original_snippet,
@@ -135,8 +138,10 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         if purge:
             self.purge_insights()
 
+        timestamp = datetime.datetime.utcnow()
+
         for barcode, insights in grouped_by.items():
-            inserts += list(self.process_product_insights(insights))
+            inserts += list(self.process_product_insights(insights, timestamp))
 
         return batch_insert(ProductInsight, inserts, 50)
 
@@ -168,7 +173,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         return grouped_by
 
     @abc.abstractmethod
-    def process_product_insights(self, insights: Iterable[JSONType]) \
+    def process_product_insights(self, insights: Iterable[JSONType], timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
         pass
 
@@ -200,7 +205,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         
         return True
     
-    def process_product_insights(self, insights: Iterable[JSONType]) \
+    def process_product_insights(self, insights: Iterable[JSONType], timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
         code_seen: Dict[str, Set[str]] = {}
         for t in (ProductInsight.select(ProductInsight.data['text']
@@ -226,6 +231,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
+                'timestamp': timestamp,
                 'data': {
                     'source': insight['source'],
                     'matcher_type': content['type'],
@@ -281,7 +287,7 @@ class LabelInsightImporter(OCRInsightImporter):
         
         return True
     
-    def process_product_insights(self, insights: Iterable[JSONType]) \
+    def process_product_insights(self, insights: Iterable[JSONType], timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
         label_seen: Dict[str, Set[str]] = {}
         for t in (ProductInsight.select(ProductInsight.data['label_tag']
@@ -307,6 +313,7 @@ class LabelInsightImporter(OCRInsightImporter):
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
+                'timestamp': timestamp,
                 'data': {
                     'source': insight['source'],
                     'text': content['text'],
@@ -349,6 +356,7 @@ class CategoryImporter(InsightImporter):
             category_seen.setdefault(t.barcode, set())
             category_seen[t.barcode].add(t.category)
 
+        timestamp = datetime.datetime.utcnow()
         for insight in insights:
             barcode = insight['barcode']
             category = insight['category']
@@ -363,6 +371,7 @@ class CategoryImporter(InsightImporter):
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
+                'timestamp': timestamp,
                 'data': {
                     'category': category,
                 }
