@@ -260,6 +260,24 @@ class LabelInsightImporter(OCRInsightImporter):
 
         if label_tag in label_seen.get(barcode, set()):
             return False
+
+        # Check that the predicted label is not a parent of a
+        # current/already predicted label
+        label_taxonomy: Taxonomy = TAXONOMY_STORES[
+            InsightType.label.name].get()
+
+        if label_tag in label_taxonomy:
+            label_node: TaxonomyNode = label_taxonomy[label_tag]
+
+            to_check_labels = (set(product.labels_tags)
+                               .union(label_seen.get(barcode,
+                                                     set())))
+            for other_label_node in (label_taxonomy[to_check_label]
+                                     for to_check_label
+                                     in to_check_labels):
+                if (other_label_node is not None and
+                        other_label_node.is_child_of(label_node)):
+                    return False
         
         return True
     
