@@ -18,7 +18,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         self.product_store: ProductStore = product_store
 
     @abc.abstractmethod
-    def import_insights(self, data: Iterable[Dict], purge: bool = False):
+    def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
         pass
 
     @abc.abstractmethod
@@ -55,7 +55,7 @@ class IngredientSpellcheckImporter(InsightImporter):
                                       ).execute()
         ProductIngredient.delete().execute()
     
-    def import_insights(self, data: Iterable[Dict], purge: bool = True):
+    def import_insights(self, data: Iterable[Dict], purge: bool = True) -> int:
         if purge:
             self.purge_insights()
 
@@ -63,6 +63,7 @@ class IngredientSpellcheckImporter(InsightImporter):
         insight_seen: Set = set()
         insights = []
         product_ingredients = []
+        inserted = 0
 
         for item in data:
             barcode = item['barcode']
@@ -105,11 +106,12 @@ class IngredientSpellcheckImporter(InsightImporter):
                 product_ingredients = []
 
             if len(insights) >= 50:
-                batch_insert(ProductInsight, insights, 50)
+                inserted += batch_insert(ProductInsight, insights, 50)
                 insights = []
 
         batch_insert(ProductIngredient, product_ingredients, 50)
-        batch_insert(ProductInsight, insights, 50)
+        inserted += batch_insert(ProductInsight, insights, 50)
+        return inserted
 
     @staticmethod
     def generate_snippet(ingredient_str: str,
@@ -126,7 +128,7 @@ GroupedByOCRInsights = Dict[str, List]
 
 
 class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
-    def import_insights(self, data: Iterable[Dict], purge: bool = False):
+    def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
         inserts: List[Dict] = []
 
@@ -136,7 +138,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         for barcode, insights in grouped_by.items():
             inserts += list(self.process_product_insights(insights))
 
-        batch_insert(ProductInsight, inserts, 50)
+        return batch_insert(ProductInsight, inserts, 50)
 
     def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
         grouped_by: GroupedByOCRInsights = {}
@@ -311,12 +313,12 @@ class CategoryImporter(InsightImporter):
     def get_type(self) -> str:
         return InsightType.category.name
 
-    def import_insights(self, data: Iterable[Dict], purge: bool = False):
+    def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
         if purge:
             self.purge_insights()
 
         inserts = self.process_product_insights(data)
-        batch_insert(ProductInsight, inserts, 50)
+        return batch_insert(ProductInsight, inserts, 50)
 
     def process_product_insights(self, insights: Iterable[JSONType]) \
             -> Iterable[JSONType]:

@@ -1,7 +1,7 @@
 import json
 from typing import List, Dict, Callable
 
-from robotoff.insights.importer import InsightImporterFactory
+from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.ocr import get_insights_from_image
 from robotoff.models import db
 from robotoff.products import (has_dataset_changed, fetch_dataset,
@@ -39,11 +39,11 @@ def import_insights(insight_type: str,
                     items: List[str]):
     importer_cls = InsightImporterFactory.create(insight_type)
     product_store = CACHED_PRODUCT_STORE.get()
-    importer = importer_cls(product_store)
+    importer: InsightImporter = importer_cls(product_store)
 
     with db.atomic():
-        importer.import_insights((json.loads(l) for l in items))
-        logger.info("Import finished")
+        imported = importer.import_insights((json.loads(l) for l in items))
+        logger.info("Import finished, {} insights imported".format(imported))
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str):
@@ -57,9 +57,8 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
     for insight_type, insights in insights_all.items():
         logger.info("Extracting {}".format(insight_type))
         importer_cls = InsightImporterFactory.create(insight_type)
-        importer = importer_cls(product_store)
+        importer: InsightImporter = importer_cls(product_store)
 
         with db.atomic():
-            importer.import_insights([insights])
-
-    logger.info("Extraction finished")
+            imported = importer.import_insights([insights])
+            logger.info("Import finished, {} insights imported".format(imported))

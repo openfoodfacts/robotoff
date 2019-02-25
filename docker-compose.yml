@@ -20,8 +20,18 @@ services:
     network_mode: "host"
     environment:
       DB_HOST: "localhost"
-      ELASTICSEARCH_HOSTS: "elasticsearch"
+      ELASTICSEARCH_HOSTS: "localhost"
     entrypoint: "python3 robotoff.py run workers"
+
+  scheduler:
+    build:
+      context: .
+    volumes:
+      - api-dataset:/opt/robotoff/datasets
+    environment:
+      DB_HOST: "postgres"
+      ELASTICSEARCH_HOSTS: "elasticsearch"
+    entrypoint: "python3 robotoff.py run scheduler"
 
   postgres:
     image: postgres:11
