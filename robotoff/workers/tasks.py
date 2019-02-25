@@ -47,6 +47,7 @@ def import_insights(insight_type: str,
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str):
+    logger.info("Detect insights for product {}".format(barcode))
     product_store = CACHED_PRODUCT_STORE.get()
     insights_all = get_insights_from_image(barcode, image_url, ocr_url)
 
