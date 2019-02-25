@@ -347,7 +347,6 @@ class CategoryImporter(InsightImporter):
                 'countries': countries_tags,
                 'data': {
                     'category': category,
-                    'confidence': insight['confidence'],
                 }
             }
 
@@ -356,6 +355,9 @@ class CategoryImporter(InsightImporter):
 
             if 'model' in insight:
                 insert['data']['model'] = insight['model']
+
+            if 'confidence' in insight:
+                insert['data']['confidence'] = insight['confidence']
 
             yield insert
             category_seen.setdefault(barcode, set())
@@ -367,12 +369,18 @@ class CategoryImporter(InsightImporter):
         product = self.product_store[barcode]
 
         if not product:
+            logger.debug("Product is not in product store, considering "
+                         "the insight as valid")
             return True
 
         if category in product.categories_tags:
+            logger.debug("The product already belongs to this category, "
+                         "considering the insight as invalid")
             return False
 
         if category in category_seen.get(barcode, set()):
+            logger.debug("An insight already exists for this product and "
+                         "category, considering the insight as invalid")
             return False
 
         # Check that the predicted category is not a parent of a
@@ -391,6 +399,10 @@ class CategoryImporter(InsightImporter):
                                         in to_check_categories):
                 if (other_category_node is not None and
                         other_category_node.is_child_of(category_node)):
+                    logger.debug(
+                        "The predicted category is a child of the product "
+                        "category or of the predicted category of an insight, "
+                        "considering the insight as invalid")
                     return False
 
         return True
