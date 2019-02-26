@@ -427,7 +427,7 @@ class CategoryImporter(InsightImporter):
                 if (other_category_node is not None and
                         other_category_node.is_child_of(category_node)):
                     logger.debug(
-                        "The predicted category is a child of the product "
+                        "The predicted category is a parent of the product "
                         "category or of the predicted category of an insight, "
                         "considering the insight as invalid")
                     return False

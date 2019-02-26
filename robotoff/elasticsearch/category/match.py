@@ -1,6 +1,6 @@
 import json
 import argparse
-from typing import Union, Tuple, Optional
+from typing import Tuple, Optional
 
 from robotoff.utils.es import get_es_client
 from robotoff import settings
