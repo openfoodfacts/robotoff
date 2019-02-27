@@ -152,8 +152,12 @@ LABELS_REGEX = {
             r"(?:indication g[ée]ographique prot[eé]g[eé]e)|(?:Indicazione geografica protetta)"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
-    ]
-}
+    ],
+    'en:nutriscore': [
+        OCRRegex(re.compile(r"NUTRI-SCORE"),
+                 field=OCRField.full_text,
+                 lowercase=False),
+    ]}
 
 BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
     'en': OCRRegex(re.compile(r'\d\d\s(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s\d{4})?'),
