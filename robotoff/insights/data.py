@@ -55,4 +55,5 @@ AUTHORIZED_LABELS = {
     "en:pt-bio-04",
     "en:vn-bio-154",
     "en:nutriscore",
+    "en:eu-non-eu-agriculture",
 }

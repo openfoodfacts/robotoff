@@ -73,6 +73,7 @@ class OCRRegex:
         self.processing_func: Optional[Callable] = processing_func
 
 
+MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 NUTRISCORE_REGEX = re.compile(r"nutri[-\s]?score", re.IGNORECASE)
@@ -157,7 +158,24 @@ LABELS_REGEX = {
         OCRRegex(re.compile(r"NUTRI-SCORE"),
                  field=OCRField.full_text,
                  lowercase=False),
-    ]}
+    ],
+    'en:eu-non-eu-agriculture': [
+        OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?-\s?ue|eu\s?/\s?non\s?-\s?eu agriculture"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+    ],
+    'en:eu-agriculture': [
+        # The negative lookafter/lookbehind forbid matching "agriculture ue/non ue"
+        OCRRegex(re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+    ],
+    'en:non-eu-agriculture': [
+        OCRRegex(re.compile(r"agriculture non\s?-\s?ue|non\s?-\s?eu agriculture"),
+                 field=OCRField.full_text_contiguous,
+                 lowercase=True),
+    ]
+}
 
 BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
     'en': OCRRegex(re.compile(r'\d\d\s(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s\d{4})?'),
@@ -248,8 +266,9 @@ class OCRFullTextAnnotation:
     __slots__ = ('text', 'pages', 'contiguous_text')
 
     def __init__(self, data: JSONType):
-        self.text = data['text']
+        self.text = MULTIPLE_SPACES_REGEX.sub(' ', data['text'])
         self.contiguous_text = self.text.replace('\n', ' ')
+        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ', self.contiguous_text)
         self.pages: List = []
 
 
