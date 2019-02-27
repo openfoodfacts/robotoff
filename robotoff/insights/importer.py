@@ -1,7 +1,8 @@
 import abc
 import datetime
+import operator
 import uuid
-from typing import Dict, Iterable, List, Set, Optional
+from typing import Dict, Iterable, List, Set, Optional, Callable
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
@@ -42,6 +43,18 @@ class InsightImporter(metaclass=abc.ABCMeta):
                                       self.get_type(),
                                       ProductInsight.annotation.is_null()
                                       ).execute()
+
+    @staticmethod
+    def _deduplicate_insights(data: Iterable[Dict],
+                              key_func: Callable) -> Iterable[Dict]:
+        seen: Set = set()
+        for item in data:
+            value = key_func(item)
+            if value in seen:
+                continue
+
+            seen.add(value)
+            yield item
 
 
 class IngredientSpellcheckImporter(InsightImporter):
@@ -141,6 +154,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         timestamp = datetime.datetime.utcnow()
 
         for barcode, insights in grouped_by.items():
+            insights = list(self.deduplicate_insights(insights))
             inserts += list(self.process_product_insights(insights, timestamp))
 
         return batch_insert(ProductInsight, inserts, 50)
@@ -173,12 +187,23 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         return grouped_by
 
     @abc.abstractmethod
-    def process_product_insights(self, insights: Iterable[JSONType], timestamp: datetime.datetime) \
+    def process_product_insights(self, insights: Iterable[JSONType],
+                                 timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
+        pass
+
+    @abc.abstractmethod
+    def deduplicate_insights(self, data: Iterable[JSONType]) -> \
+            Iterable[JSONType]:
         pass
 
 
 class PackagerCodeInsightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(data,
+                                              lambda x: x['content']['text'])
+
     def get_type(self) -> str:
         return InsightType.packager_code.name
 
@@ -205,7 +230,8 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         
         return True
     
-    def process_product_insights(self, insights: Iterable[JSONType], timestamp: datetime.datetime) \
+    def process_product_insights(self, insights: Iterable[JSONType],
+                                 timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
         code_seen: Dict[str, Set[str]] = {}
         for t in (ProductInsight.select(ProductInsight.data['text']
@@ -250,6 +276,11 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
 
 class LabelInsightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['label_tag'])
+
     def get_type(self) -> str:
         return InsightType.label.name
 
@@ -335,6 +366,11 @@ class LabelInsightImporter(OCRInsightImporter):
 
 
 class CategoryImporter(InsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        key_func = operator.itemgetter('category')
+        yield from self._deduplicate_insights(data, key_func)
+
     def get_type(self) -> str:
         return InsightType.category.name
 
@@ -342,6 +378,7 @@ class CategoryImporter(InsightImporter):
         if purge:
             self.purge_insights()
 
+        data = self.deduplicate_insights(data)
         inserts = self.process_product_insights(data)
         return batch_insert(ProductInsight, inserts, 50)
 
