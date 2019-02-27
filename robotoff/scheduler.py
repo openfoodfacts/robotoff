@@ -22,8 +22,9 @@ def process_insights():
     with db:
         with db.atomic():
             for insight in (ProductInsight.select()
-                                          .where(ProductInsight.process_after.is_null(False),
-                                                 ProductInsight.process_after >= datetime.datetime.utcnow())
+                                          .where(ProductInsight.annotation.is_null(),
+                                                 ProductInsight.process_after.is_null(False),
+                                                 ProductInsight.process_after <= datetime.datetime.utcnow())
                                           .iterator()):
                 insight.annotation = 1
                 insight.completed_at = datetime.datetime.utcnow()
@@ -39,9 +40,10 @@ def process_insights():
 
 def mark_insights():
     importers: Dict[str, InsightImporter] = {
-        insight_type: InsightImporterFactory.create(insight_type.name)
+        insight_type.name: InsightImporterFactory.create(insight_type.name,
+                                                         None)
         for insight_type in InsightType
-        if insight_type in InsightImporterFactory.importers
+        if insight_type.name in InsightImporterFactory.importers
     }
 
     marked = 0

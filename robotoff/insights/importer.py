@@ -23,8 +23,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
         pass
 
+    @staticmethod
     @abc.abstractmethod
-    def get_type(self) -> str:
+    def get_type() -> str:
         pass
 
     def from_jsonl(self, file_path):
@@ -35,7 +36,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
         items = jsonl_iter_fp(fp)
         self.import_insights(items)
 
-    def need_validation(self, insight: ProductInsight) -> bool:
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
         return True
     
     def purge_insights(self):
@@ -58,7 +60,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
 
 class IngredientSpellcheckImporter(InsightImporter):
-    def get_type(self) -> str:
+    @staticmethod
+    def get_type() -> str:
         return InsightType.ingredient_spellcheck.name
 
     def purge_insights(self):
@@ -204,7 +207,8 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         yield from self._deduplicate_insights(data,
                                               lambda x: x['content']['text'])
 
-    def get_type(self) -> str:
+    @staticmethod
+    def get_type() -> str:
         return InsightType.packager_code.name
 
     def is_valid(self, barcode: str,
@@ -281,7 +285,8 @@ class LabelInsightImporter(OCRInsightImporter):
         yield from self._deduplicate_insights(
             data, lambda x: x['content']['label_tag'])
 
-    def get_type(self) -> str:
+    @staticmethod
+    def get_type() -> str:
         return InsightType.label.name
 
     def is_valid(self, barcode: str,
@@ -354,10 +359,11 @@ class LabelInsightImporter(OCRInsightImporter):
             label_seen.setdefault(barcode, set())
             label_seen[barcode].add(label_tag)
 
-    def need_validation(self, insight: ProductInsight) -> bool:
-        if insight.type != self.get_type():
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        if insight.type != LabelInsightImporter.get_type():
             raise ValueError("insight must be of type "
-                             "{}".format(self.get_type()))
+                             "{}".format(LabelInsightImporter.get_type()))
 
         if insight.data['label_tag'] in AUTHORIZED_LABELS:
             return False
@@ -371,7 +377,8 @@ class CategoryImporter(InsightImporter):
         key_func = operator.itemgetter('category')
         yield from self._deduplicate_insights(data, key_func)
 
-    def get_type(self) -> str:
+    @staticmethod
+    def get_type() -> str:
         return InsightType.category.name
 
     def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
@@ -481,8 +488,9 @@ class InsightImporterFactory:
     }
 
     @classmethod
-    def create(cls, insight_type: str):
+    def create(cls, insight_type: str,
+               product_store: Optional[ProductStore]) -> InsightImporter:
         if insight_type in cls.importers:
-            return cls.importers[insight_type]
+            return cls.importers[insight_type](product_store)
         else:
             raise ValueError("unknown insight type: {}".format(insight_type))

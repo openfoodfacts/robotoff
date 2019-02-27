@@ -43,9 +43,9 @@ def download_product_dataset():
 
 def import_insights(insight_type: str,
                     items: List[str]):
-    importer_cls = InsightImporterFactory.create(insight_type)
     product_store = CACHED_PRODUCT_STORE.get()
-    importer: InsightImporter = importer_cls(product_store)
+    importer: InsightImporter = InsightImporterFactory.create(insight_type,
+                                                              product_store)
 
     with db.atomic():
         imported = importer.import_insights((json.loads(l) for l in items))
@@ -64,8 +64,8 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
 
     for insight_type, insights in insights_all.items():
         logger.info("Extracting {}".format(insight_type))
-        importer_cls = InsightImporterFactory.create(insight_type)
-        importer: InsightImporter = importer_cls(product_store)
+        importer: InsightImporter = InsightImporterFactory.create(insight_type,
+                                                                  product_store)
 
         with db.atomic():
             imported = importer.import_insights([insights])
