@@ -350,6 +350,7 @@ class LabelInsightImporter(OCRInsightImporter):
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'value_tag': label_tag,
                 'data': {
                     'source': insight['source'],
                     'text': content['text'],
@@ -416,6 +417,7 @@ class CategoryImporter(InsightImporter):
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'value_tag': category,
                 'data': {
                     'category': category,
                 }
