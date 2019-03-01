@@ -5,6 +5,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+from robotoff import slack
 from robotoff.insights._enum import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
@@ -34,6 +35,12 @@ def process_insights():
                 logger.info("Annotating insight {} (product: {})".format(insight.id, insight.barcode))
                 annotator.annotate(insight, 1, update=True)
                 processed += 1
+
+                if processed < 10:
+                    slack.notify_automatic_processing(insight)
+
+    if processed > 10:
+        slack.notify_batch_processing(processed - 10)
 
     logger.info("{} insights processed".format(processed))
 

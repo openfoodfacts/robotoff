@@ -16,6 +16,7 @@ TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/catego
 TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.json"
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
+OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
 
 TAXONOMY_DIR = DATA_DIR / 'taxonomies'
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
@@ -40,3 +41,7 @@ ELASTICSEARCH_TYPE = "document"
 
 ELASTICSEARCH_CATEGORY_INDEX = 'category'
 ELASTICSEARCH_PRODUCT_INDEX = 'product'
+
+SLACK_TOKEN = os.environ.get('SLACK_TOKEN', "")
+SLACK_OFF_TEST_CHANNEL = "CGLCKGVHS"
+SLACK_OFF_ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
