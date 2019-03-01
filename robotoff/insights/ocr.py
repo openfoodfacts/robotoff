@@ -116,21 +116,18 @@ RECYCLING_REGEX = {
     ]
 }
 
+EN_ORGANIC_REGEX_STR = [
+    r'ingr[ée]dients?\sbiologiques?',
+    r'ingr[ée]dients?\sbio[\s.,)]',
+    r'agriculture ue/non ue biologique',
+    r'agriculture bio(?:logique)?[\s.,)]',
+    r'production bio(?:logique)?[\s.,)]',
+]
+
 LABELS_REGEX = {
     'en:organic': [
-        OCRRegex(re.compile(r"ingr[ée]dients?\sbiologiques?", re.IGNORECASE),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-        OCRRegex(re.compile(r"ingr[ée]dients?\sbio[\s.,)]"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-        OCRRegex(re.compile(r"agriculture ue/non ue biologique"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-        OCRRegex(re.compile(r"agriculture bio(?:logique)?[\s.,)]"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-        OCRRegex(re.compile(r"production bio(?:logique)?[\s.,)]"),
+        OCRRegex(re.compile(r"|".join([r"(?:{})".format(x)
+                                       for x in EN_ORGANIC_REGEX_STR])),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
     ],
