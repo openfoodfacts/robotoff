@@ -76,7 +76,6 @@ class OCRRegex:
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
-NUTRISCORE_REGEX = re.compile(r"nutri[-\s]?score", re.IGNORECASE)
 WEIGHT_MENTIONS = (
     "poids net:",
     "poids net égoutté:",
@@ -462,16 +461,6 @@ def find_storage_instructions(text: str) -> List[Dict]:
                     }
 
                 results.append(result)
-
-    return results
-
-
-def find_nutriscore(text: str) -> List[Dict]:
-    results = []
-    for match in NUTRISCORE_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
 
     return results
 
