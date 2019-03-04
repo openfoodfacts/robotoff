@@ -21,6 +21,18 @@ class SlackException(Exception):
     pass
 
 
+def notify_image_flag(insights: List[JSONType], source: str):
+    for insight in insights:
+        flag_type = insight['type']
+        likelihood = insight['likelihood']
+        url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
+                             source)
+        text = ("Image flagged as {} (likelihood: {}): {}".format(
+            flag_type, likelihood, url
+        ))
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_IMAGE_ALERT_CHANNEL)
+
+
 def notify_automatic_processing(insight: ProductInsight):
     if insight.type == InsightType.label.name:
         text = ("The `{}` label was automatically added to product {}/product"

@@ -194,11 +194,14 @@ BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
 
 
 class OCRResult:
-    __slots__ = ('text_annotations', 'full_text_annotation')
+    __slots__ = ('text_annotations', 'full_text_annotation',
+                 'logo_annotations', 'safe_search_annotation')
 
     def __init__(self, data: JSONType):
         self.text_annotations: List[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
+        self.logo_annotations: List[LogoAnnotation] = []
+        self.safe_search_annotation: Optional[SafeSearchAnnotation] = None
 
         for text_annotation_data in data.get('textAnnotations', []):
             text_annotation = OCRTextAnnotation(text_annotation_data)
@@ -208,6 +211,14 @@ class OCRResult:
 
         if full_text_annotation_data:
             self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
+
+        for logo_annotation_data in data.get('logoAnnotations', []):
+            logo_annotation = LogoAnnotation(logo_annotation_data)
+            self.logo_annotations.append(logo_annotation)
+
+        if 'safeSearchAnnotation' in data:
+            self.safe_search_annotation = SafeSearchAnnotation(
+                data['safeSearchAnnotation'])
 
     def get_full_text(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
@@ -257,6 +268,12 @@ class OCRResult:
 
         return []
 
+    def get_logo_annotations(self) -> List['LogoAnnotation']:
+        return self.logo_annotations
+
+    def get_safe_search_annotation(self):
+        return self.safe_search_annotation
+
 
 class OCRFullTextAnnotation:
     __slots__ = ('text', 'pages', 'contiguous_text')
@@ -264,7 +281,8 @@ class OCRFullTextAnnotation:
     def __init__(self, data: JSONType):
         self.text = MULTIPLE_SPACES_REGEX.sub(' ', data['text'])
         self.contiguous_text = self.text.replace('\n', ' ')
-        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ', self.contiguous_text)
+        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ',
+                                                         self.contiguous_text)
         self.pages: List = []
 
 
@@ -274,7 +292,45 @@ class OCRTextAnnotation:
     def __init__(self, data: JSONType):
         self.locale = data.get('locale')
         self.text = data['description']
-        self.bounding_poly = [(point.get('x', 0), point.get('y', 0)) for point in data['boundingPoly']['vertices']]
+        self.bounding_poly = [(point.get('x', 0), point.get('y', 0))
+                              for point in data['boundingPoly']['vertices']]
+
+
+class LogoAnnotation:
+    __slots__ = ('id', 'description', 'score', 'bounding_poly')
+
+    def __init__(self, data: JSONType):
+        self.id = data.get('mid') or None
+        self.score = data['score']
+        self.description = data['description']
+        self.bounding_poly = [(point.get('x', 0), point.get('y', 0))
+                              for point in
+                              data['boundingPoly']['normalizedVertices']]
+
+
+class SafeSearchAnnotation:
+    __slots__ = ('adult', 'spoof', 'medical', 'violence', 'racy')
+
+    def __init__(self, data: JSONType):
+        self.adult: SafeSearchAnnotationLikelihood = \
+            SafeSearchAnnotationLikelihood[data['adult']]
+        self.spoof: SafeSearchAnnotationLikelihood = \
+            SafeSearchAnnotationLikelihood[data['spoof']]
+        self.medical: SafeSearchAnnotationLikelihood = \
+            SafeSearchAnnotationLikelihood[data['medical']]
+        self.violence: SafeSearchAnnotationLikelihood = \
+            SafeSearchAnnotationLikelihood[data['violence']]
+        self.racy: SafeSearchAnnotationLikelihood = \
+            SafeSearchAnnotationLikelihood[data['racy']]
+
+
+class SafeSearchAnnotationLikelihood(enum.IntEnum):
+    UNKNOWN = 1
+    VERY_UNLIKELY = 2
+    UNLIKELY = 3
+    POSSIBLE = 4
+    LIKELY = 5
+    VERY_LIKELY = 6
 
 
 def get_barcode_from_path(path: str) -> Optional[str]:
@@ -534,6 +590,23 @@ def find_best_before_date(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
+def flag_image(ocr_result: OCRResult) -> List[Dict]:
+    safe_search_annotation = ocr_result.get_safe_search_annotation()
+    insights: List[Dict] = []
+
+    if safe_search_annotation:
+        for key in ('adult', 'spoof', 'medical', 'violence', 'racy'):
+            value: SafeSearchAnnotationLikelihood = \
+                getattr(safe_search_annotation, key)
+            if value >= SafeSearchAnnotationLikelihood.POSSIBLE:
+                insights.append({
+                    'type': key,
+                    'likelihood': value.name,
+                })
+
+    return insights
+
+
 def extract_insights(ocr_result: OCRResult,
                      insight_type: str) -> List[Dict]:
     if insight_type == 'packager_code':
@@ -544,6 +617,10 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == 'best_before_date':
         return find_best_before_date(ocr_result)
+
+    elif insight_type == 'image_flag':
+        return flag_image(ocr_result)
+
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
 
@@ -639,14 +716,16 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
     results = {}
 
     for insight_type in (InsightType.label.name,
-                         InsightType.packager_code.name):
+                         InsightType.packager_code.name,
+                         InsightType.image_flag.name):
         insights = extract_insights(ocr_result, insight_type)
 
-        results[insight_type] = {
-            'insights': insights,
-            'barcode': barcode,
-            'type': insight_type,
-            'source': image_url_path,
-        }
+        if insights:
+            results[insight_type] = {
+                'insights': insights,
+                'barcode': barcode,
+                'type': insight_type,
+                'source': image_url_path,
+            }
 
     return results

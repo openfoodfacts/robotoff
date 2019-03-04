@@ -3,11 +3,13 @@ import logging
 import multiprocessing
 from typing import List, Dict, Callable
 
+from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.ocr import get_insights_from_image
 from robotoff.models import db
 from robotoff.products import (has_dataset_changed, fetch_dataset,
                                CACHED_PRODUCT_STORE)
+from robotoff.slack import notify_image_flag
 from robotoff.utils import get_logger, configure_root_logger
 
 logger = get_logger(__name__)
@@ -63,6 +65,10 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
         return
 
     for insight_type, insights in insights_all.items():
+        if insight_type == InsightType.image_flag.name:
+            notify_image_flag(insights['insights'], insights['source'])
+            continue
+
         logger.info("Extracting {}".format(insight_type))
         importer: InsightImporter = InsightImporterFactory.create(insight_type,
                                                                   product_store)

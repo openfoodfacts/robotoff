@@ -6,4 +6,4 @@ class InsightType(Enum):
     packager_code = 2
     label = 3
     category = 4
-
+    image_flag = 5
