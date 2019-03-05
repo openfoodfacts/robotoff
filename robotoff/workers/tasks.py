@@ -66,7 +66,9 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
 
     for insight_type, insights in insights_all.items():
         if insight_type == InsightType.image_flag.name:
-            notify_image_flag(insights['insights'], insights['source'])
+            notify_image_flag(insights['insights'],
+                              insights['source'],
+                              insights['barcode'])
             continue
 
         logger.info("Extracting {}".format(insight_type))

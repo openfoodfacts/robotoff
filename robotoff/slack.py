@@ -21,16 +21,16 @@ class SlackException(Exception):
     pass
 
 
-def notify_image_flag(insights: List[JSONType], source: str):
-    for insight in insights:
-        flag_type = insight['type']
-        likelihood = insight['likelihood']
-        url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
-                             source)
-        text = ("Image flagged as {} (likelihood: {}): {}".format(
-            flag_type, likelihood, url
-        ))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_IMAGE_ALERT_CHANNEL)
+def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
+    flags = ", ".join(["{} ({})".format(i['type'], i['likelihood'])
+                       for i in insights])
+    url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
+                         source)
+    edit_url = "{}/cgi/product.pl?type=edit&code={}" \
+               "".format(settings.OFF_BASE_WEBSITE_URL, barcode)
+    text = ("Image flagged as {}: {}\nedit: {}".format(
+        flags, url, edit_url))
+    post_message(text, settings.SLACK_OFF_ROBOTOFF_IMAGE_ALERT_CHANNEL)
 
 
 def notify_automatic_processing(insight: ProductInsight):
