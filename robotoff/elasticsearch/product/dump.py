@@ -1,7 +1,6 @@
-import hashlib
 import re
-from typing import List, Union
 
+from robotoff.ingredients import process_ingredients
 from robotoff.products import ProductDataset
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -12,9 +11,7 @@ from robotoff.utils.es import get_es_client, perform_export
 logger = get_logger(__name__)
 
 
-PUNCTUATION_RE = re.compile(r"[()_,.:;\[\]|`\\{}]")
 MULTIPLE_SPACES_RE = re.compile(r"\s{2,}")
-BLACKLIST_INGREDIENT_RE = re.compile(r"[-•]|\d{1,2}(?:,\d+)?\s*%")
 
 
 def product_export():
@@ -23,11 +20,14 @@ def product_export():
     product_iter = (dataset.stream()
                     .filter_by_country_tag('en:france')
                     .filter_nonempty_text_field('ingredients_text_fr')
-                    .filter_nonempty_tag_field('ingredients_debug')
                     .filter_by_state_tag('en:complete')
                     .iter())
-    data = ((hashlib.sha256(product['code'].encode('utf-8')).hexdigest(),
-             {'ingredients_text_fr': normalize_ingredient_list(product['ingredients_debug'])})
+    product_iter = (p for p in product_iter
+                    if 'ingredients-unknown-score-above-0'
+                    not in p.get('quality_tags', []))
+
+    data = ((product['code'],
+             {'ingredients_text_fr': normalize_ingredient_list(product['ingredients_text_fr'])})
             for product in product_iter)
 
     logger.info("Importing products")
@@ -36,27 +36,21 @@ def product_export():
     perform_export(es_client, data, settings.ELASTICSEARCH_PRODUCT_INDEX)
 
 
-def normalize_ingredient(ingredient: str):
-    ingredient = PUNCTUATION_RE.sub(' ', ingredient)
-    ingredient = MULTIPLE_SPACES_RE.sub(' ', ingredient)
-    ingredient = ingredient.strip()
-
-    if BLACKLIST_INGREDIENT_RE.match(ingredient):
-        return None
-
-    return ingredient
+def empty_ingredient(ingredient: str) -> bool:
+    return not bool(ingredient.strip(' /-.%0123456789'))
 
 
-def normalize_ingredient_list(ingredients: List[Union[str, None]]):
+def normalize_ingredient_list(ingredient_text: str):
+    ingredients = process_ingredients(ingredient_text)
+
     normalized = []
 
-    for ingredient in ingredients:
-        if ingredient is None:
+    for ingredient in ingredients.iter_normalized_ingredients():
+        if empty_ingredient(ingredient):
             continue
 
-        normalized_ingredient = normalize_ingredient(ingredient)
-
-        if normalized_ingredient:
-            normalized.append(normalized_ingredient)
+        ingredient = MULTIPLE_SPACES_RE.sub(' ', ingredient)
+        ingredient = ingredient.strip(' .')
+        normalized.append(ingredient)
 
     return normalized

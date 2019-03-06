@@ -14,8 +14,7 @@ from robotoff.utils.es import get_es_client, generate_msearch_body
 SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})|(?:[_])")
-
+BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})|(?:[_•])")
 
 OffsetType = Tuple[int, int]
 
@@ -26,19 +25,19 @@ class Ingredients:
     normalized: str
     offsets: List[OffsetType] = field(default_factory=list)
 
-    def iter_normalized_ingredients(self):
+    def iter_normalized_ingredients(self) -> Iterable[str]:
         for start, end in self.offsets:
             yield self.normalized[start:end]
 
-    def get_ingredient(self, index):
+    def get_ingredient(self, index) -> str:
         start, end = self.offsets[index]
         return self.text[start:end]
 
-    def get_normalized_ingredient(self, index):
+    def get_normalized_ingredient(self, index) -> str:
         start, end = self.offsets[index]
         return self.normalized[start:end]
 
-    def ingredient_count(self):
+    def ingredient_count(self) -> int:
         return len(self.offsets)
 
 
@@ -75,7 +74,7 @@ def normalize_ingredients(ingredient_text: str):
     return normalized
 
 
-def process_ingredients(ingredient_text: str):
+def process_ingredients(ingredient_text: str) -> Ingredients:
     offsets = []
     chars = []
 
@@ -99,8 +98,8 @@ def process_ingredients(ingredient_text: str):
 
 def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correction]:
     corrections = []
-    ingredients = process_ingredients(ingredients_text)
-    normalized_ingredients = ingredients.iter_normalized_ingredients()
+    ingredients: Ingredients = process_ingredients(ingredients_text)
+    normalized_ingredients: Iterable[str] = ingredients.iter_normalized_ingredients()
 
     for idx, suggestions in enumerate(_suggest_batch(client, normalized_ingredients, **kwargs)):
         offsets = ingredients.offsets[idx]
