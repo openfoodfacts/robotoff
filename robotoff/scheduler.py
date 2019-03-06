@@ -70,7 +70,7 @@ def mark_insights():
                 if not importer.need_validation(insight):
                     logger.info("Marking insight {} as processable automatically "
                                 "(product: {})".format(insight.id, insight.barcode))
-                    insight.process_after = datetime.datetime.utcnow()
+                    insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
                     insight.save()
                     marked += 1
                 else:
