@@ -44,6 +44,16 @@ def notify_automatic_processing(insight: ProductInsight):
         except Exception as e:
             logger.error("An exception occurred when sending a Slack "
                          "notification", exc_info=e)
+    elif insight.type == InsightType.product_weight.name:
+        text = ("The weight `{}` was automatically added to product {}/product"
+                "/{}".format(insight.data['text'],
+                             settings.OFF_BASE_WEBSITE_URL,
+                             insight.barcode))
+        try:
+                post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+        except Exception as e:
+            logger.error("An exception occurred when sending a Slack "
+                         "notification", exc_info=e)
     else:
         return
 

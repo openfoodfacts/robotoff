@@ -52,6 +52,15 @@ def add_category(barcode: str, category: str, dry=False):
     update_product(params, dry=dry)
 
 
+def update_quantity(barcode: str, quantity: str, dry=False):
+    params = {
+        'code': barcode,
+        'quantity': quantity,
+        **AUTH_DICT
+    }
+    update_product(params, dry=dry)
+
+
 def save_ingredients(barcode: str, ingredient_text: str,
                      lang: str = None, dry=False):
     ingredient_key = ('ingredients_text' if lang is None

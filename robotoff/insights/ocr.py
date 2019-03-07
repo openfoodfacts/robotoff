@@ -174,7 +174,7 @@ LABELS_REGEX = {
 }
 
 PRODUCT_WEIGHT_REGEX = OCRRegex(
-    re.compile(r"(poids net|poids net égoutté|net weight|peso neto|peso liquido|netto gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
+    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
     field=OCRField.full_text_contiguous,
     lowercase=True)
 
@@ -737,6 +737,7 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
 
     for insight_type in (InsightType.label.name,
                          InsightType.packager_code.name,
+                         InsightType.product_weight.name,
                          InsightType.image_flag.name):
         insights = extract_insights(ocr_result, insight_type)
 

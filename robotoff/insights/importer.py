@@ -543,6 +543,10 @@ class ProductWeightImporter(OCRInsightImporter):
             }
             weight_seen.add(barcode)
 
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        return False
+
 
 class InsightImporterFactory:
     importers: JSONType = {
