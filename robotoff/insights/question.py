@@ -90,6 +90,22 @@ class CategoryQuestionFormatter(QuestionFormatter):
                                  insight=insight)
 
 
+class ProductWeightQuestionFormatter(QuestionFormatter):
+    question = "Does this weight match the weight displayed on the product?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        value: str = insight.data['text']
+        localized_question = self.translation_store.gettext(lang, self.question)
+        source_image_path = insight.data['source']
+        source_image_url: Optional[str] = (settings.OFF_IMAGE_BASE_URL +
+                                           source_image_path)
+
+        return AddBinaryQuestion(question=localized_question,
+                                 value=value,
+                                 insight=insight,
+                                 source_image_url=source_image_url)
+
+
 class LabelQuestionFormatter(QuestionFormatter):
     question = "Does the product have this label?"
 
@@ -124,6 +140,7 @@ class QuestionFormatterFactory:
     formatters: Dict[str, type] = {
         InsightType.category.name: CategoryQuestionFormatter,
         InsightType.label.name: LabelQuestionFormatter,
+        InsightType.product_weight.name: ProductWeightQuestionFormatter,
     }
 
     @classmethod

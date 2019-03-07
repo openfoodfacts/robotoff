@@ -7,3 +7,4 @@ class InsightType(Enum):
     label = 3
     category = 4
     image_flag = 5
+    product_weight = 6

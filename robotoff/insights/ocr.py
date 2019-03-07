@@ -173,6 +173,12 @@ LABELS_REGEX = {
     ]
 }
 
+PRODUCT_WEIGHT_REGEX = OCRRegex(
+    re.compile(r"(poids net|poids net égoutté|net weight|peso neto|peso liquido|netto gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
+    field=OCRField.full_text_contiguous,
+    lowercase=True)
+
+
 BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
     'en': OCRRegex(re.compile(r'\d\d\s(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s\d{4})?'),
                    field=OCRField.text_annotations,
@@ -297,15 +303,12 @@ class OCRTextAnnotation:
 
 
 class LogoAnnotation:
-    __slots__ = ('id', 'description', 'score', 'bounding_poly')
+    __slots__ = ('id', 'description', 'score')
 
     def __init__(self, data: JSONType):
         self.id = data.get('mid') or None
         self.score = data['score']
         self.description = data['description']
-        self.bounding_poly = [(point.get('x', 0), point.get('y', 0))
-                              for point in
-                              data['boundingPoly']['normalizedVertices']]
 
 
 class SafeSearchAnnotation:
@@ -433,18 +436,32 @@ def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
-def find_weight_values(text: str) -> List[Dict]:
-    weight_values = []
+def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
+    results = []
 
-    for match in WEIGHT_VALUES_REGEX.finditer(text):
-        result = {
-            'text': match.group(),
-            'value': match.group(1),
-            'unit': match.group(2),
-        }
-        weight_values.append(result)
+    for text in ocr_result.get_text(PRODUCT_WEIGHT_REGEX):
+        for match in PRODUCT_WEIGHT_REGEX.regex.finditer(text):
+            raw = match.group()
+            prompt = match.group(1)
+            value = match.group(2)
+            unit = match.group(3)
 
-    return weight_values
+            if unit in ('dle', 'cle', 'mge', 'mle', 'ge', 'kge', 'le'):
+                # When the e letter often comes after the weight unit, the
+                # space is often not detected
+                unit = unit[:-1]
+
+            text = "{} {}".format(value, unit)
+            result = {
+                'text': text,
+                'raw': raw,
+                'prompt': prompt,
+                'value': value,
+                'unit': unit,
+            }
+            results.append(result)
+
+    return results
 
 
 def find_weight_mentions(text: str) -> List[Dict]:
@@ -620,6 +637,9 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == 'image_flag':
         return flag_image(ocr_result)
+
+    elif insight_type == 'product_weight':
+        return find_product_weight(ocr_result)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))

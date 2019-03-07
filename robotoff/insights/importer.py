@@ -481,12 +481,78 @@ class CategoryImporter(InsightImporter):
         return True
 
 
+class ProductWeightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['text'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.product_weight.name
+
+    def is_valid(self, barcode: str,
+                 weight: str,
+                 weight_seen: Dict[str, str]) -> bool:
+        product = self.product_store[barcode]
+
+        if not product:
+            return True
+
+        if product.quantity is not None:
+            logger.debug("Product quantity field is not null, returning "
+                         "non valid")
+            return False
+
+        if weight == weight_seen.get(barcode):
+            logger.debug("Weight already seen, returning "
+                         "non valid")
+            return False
+
+        return True
+
+    def process_product_insights(self, insights: Iterable[JSONType],
+                                 timestamp: datetime.datetime) \
+            -> Iterable[JSONType]:
+        weight_seen: Dict[str, str] = {}
+        for t in (ProductInsight.select(ProductInsight.data['text']
+                                        .as_json().alias('text'),
+                                        ProductInsight.barcode)
+                                .where(ProductInsight.type ==
+                                       self.get_type())).iterator():
+            weight_seen[t.barcode] = t.text
+
+        for insight in insights:
+            barcode = insight['barcode']
+            content = insight['content']
+            weight = content['text']
+
+            if not self.is_valid(barcode, weight, weight_seen):
+                continue
+
+            countries_tags = getattr(self.product_store[barcode],
+                                     'countries_tags', [])
+            yield {
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': countries_tags,
+                'timestamp': timestamp,
+                'data': {
+                    'source': insight['source'],
+                    **content
+                }
+            }
+            weight_seen[barcode] = weight
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
         InsightType.label.name: LabelInsightImporter,
         InsightType.category.name: CategoryImporter,
+        InsightType.product_weight.name: ProductWeightImporter,
     }
 
     @classmethod
