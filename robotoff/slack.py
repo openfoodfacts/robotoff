@@ -39,21 +39,17 @@ def notify_automatic_processing(insight: ProductInsight):
                 "/{}".format(insight.value_tag,
                              settings.OFF_BASE_WEBSITE_URL,
                              insight.barcode))
-        try:
-            post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
-        except Exception as e:
-            logger.error("An exception occurred when sending a Slack "
-                         "notification", exc_info=e)
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+
+        if insight.value_tag == 'en:nutriscore':
+            post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL)
+
     elif insight.type == InsightType.product_weight.name:
         text = ("The weight `{}` was automatically added to product {}/product"
                 "/{}".format(insight.data['text'],
                              settings.OFF_BASE_WEBSITE_URL,
                              insight.barcode))
-        try:
-                post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
-        except Exception as e:
-            logger.error("An exception occurred when sending a Slack "
-                         "notification", exc_info=e)
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
     else:
         return
 
@@ -61,11 +57,7 @@ def notify_automatic_processing(insight: ProductInsight):
 def notify_batch_processing(batch_size: int):
         text = "{} additional insights were automatically " \
                "applied".format(batch_size)
-        try:
-            post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
-        except Exception as e:
-            logger.error("An exception occurred when sending a Slack "
-                         "notification", exc_info=e)
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
 
 
 def get_base_params() -> JSONType:
@@ -86,6 +78,16 @@ def raise_if_slack_token_undefined():
 def post_message(text: str,
                  channel: str,
                  attachments: Optional[List[JSONType]] = None):
+    try:
+        _post_message(text, channel, attachments)
+    except Exception as e:
+        logger.error("An exception occurred when sending a Slack "
+                     "notification", exc_info=e)
+
+
+def _post_message(text: str,
+                  channel: str,
+                  attachments: Optional[List[JSONType]] = None):
     raise_if_slack_token_undefined()
     params: JSONType = {
         **get_base_params(),
