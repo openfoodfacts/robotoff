@@ -12,6 +12,8 @@ from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy, TaxonomyNode
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
+from peewee import fn
+
 logger = get_logger(__name__)
 
 
@@ -492,8 +494,7 @@ class ProductWeightImporter(OCRInsightImporter):
         return InsightType.product_weight.name
 
     def is_valid(self, barcode: str,
-                 weight: str,
-                 weight_seen: Dict[str, str]) -> bool:
+                 weight_seen: Set[str]) -> bool:
         product = self.product_store[barcode]
 
         if not product:
@@ -504,9 +505,9 @@ class ProductWeightImporter(OCRInsightImporter):
                          "non valid")
             return False
 
-        if weight == weight_seen.get(barcode):
-            logger.debug("Weight already seen, returning "
-                         "non valid")
+        if barcode in weight_seen:
+            logger.debug("An product_weight insight already exists for this "
+                         "product, returning non valid")
             return False
 
         return True
@@ -514,20 +515,17 @@ class ProductWeightImporter(OCRInsightImporter):
     def process_product_insights(self, insights: Iterable[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
-        weight_seen: Dict[str, str] = {}
-        for t in (ProductInsight.select(ProductInsight.data['text']
-                                        .as_json().alias('text'),
-                                        ProductInsight.barcode)
+        weight_seen: Set[str] = set()
+        for t in (ProductInsight.select(fn.Distinct(ProductInsight.barcode))
                                 .where(ProductInsight.type ==
                                        self.get_type())).iterator():
-            weight_seen[t.barcode] = t.text
+            weight_seen.add(t.barcode)
 
         for insight in insights:
             barcode = insight['barcode']
             content = insight['content']
-            weight = content['text']
 
-            if not self.is_valid(barcode, weight, weight_seen):
+            if not self.is_valid(barcode, weight_seen):
                 continue
 
             countries_tags = getattr(self.product_store[barcode],
@@ -543,7 +541,7 @@ class ProductWeightImporter(OCRInsightImporter):
                     **content
                 }
             }
-            weight_seen[barcode] = weight
+            weight_seen.add(barcode)
 
 
 class InsightImporterFactory:
