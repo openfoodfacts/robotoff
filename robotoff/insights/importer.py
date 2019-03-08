@@ -12,8 +12,6 @@ from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy, TaxonomyNode
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
-from peewee import fn
-
 logger = get_logger(__name__)
 
 
@@ -160,7 +158,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
         for barcode, insights in grouped_by.items():
             insights = list(self.deduplicate_insights(insights))
-            inserts += list(self.process_product_insights(insights, timestamp))
+            inserts += list(self.process_product_insights(barcode, insights, timestamp))
 
         return batch_insert(ProductInsight, inserts, 50)
 
@@ -192,7 +190,8 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         return grouped_by
 
     @abc.abstractmethod
-    def process_product_insights(self, insights: Iterable[JSONType],
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
         pass
@@ -215,7 +214,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
     def is_valid(self, barcode: str,
                  emb_code: str,
-                 code_seen: Dict[str, Set[str]]) -> bool:
+                 code_seen: Set[str]) -> bool:
         product: Optional[Product] = self.product_store[barcode]
 
         if not product:
@@ -231,25 +230,26 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                  in product.emb_codes_tags)):
             return False
 
-        if emb_code in code_seen.get(barcode, set()):
+        if emb_code in code_seen:
             return False
         
         return True
     
-    def process_product_insights(self, insights: Iterable[JSONType],
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
-        code_seen: Dict[str, Set[str]] = {}
+        code_seen: Set[str] = set()
+
         for t in (ProductInsight.select(ProductInsight.data['text']
-                                        .as_json().alias('text'),
-                                        ProductInsight.barcode)
+                                        .as_json().alias('text'))
                                 .where(ProductInsight.type ==
-                                       self.get_type())).iterator():
-            code_seen.setdefault(t.barcode, set())
-            code_seen[t.barcode].add(t.text)
+                                       self.get_type(),
+                                       ProductInsight.barcode ==
+                                       barcode)).iterator():
+            code_seen.add(t.text)
 
         for insight in insights:
-            barcode = insight['barcode']
             content = insight['content']
             emb_code = content['text']
             
@@ -271,8 +271,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                     'text': emb_code,
                 }
             }
-            code_seen.setdefault(barcode, set())
-            code_seen[barcode].add(emb_code)
+            code_seen.add(emb_code)
 
     @staticmethod
     def get_emb_code_tag(emb_code: str) -> str:
@@ -293,7 +292,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
     def is_valid(self, barcode: str,
                  label_tag: str,
-                 label_seen: Dict[str, Set[str]]) -> bool:
+                 label_seen: Set[str]) -> bool:
         product = self.product_store[barcode]
 
         if not product:
@@ -302,7 +301,7 @@ class LabelInsightImporter(OCRInsightImporter):
         if label_tag in product.labels_tags:
             return False
 
-        if label_tag in label_seen.get(barcode, set()):
+        if label_tag in label_seen:
             return False
 
         # Check that the predicted label is not a parent of a
@@ -314,8 +313,7 @@ class LabelInsightImporter(OCRInsightImporter):
             label_node: TaxonomyNode = label_taxonomy[label_tag]
 
             to_check_labels = (set(product.labels_tags)
-                               .union(label_seen.get(barcode,
-                                                     set())))
+                               .union(label_seen))
             for other_label_node in (label_taxonomy[to_check_label]
                                      for to_check_label
                                      in to_check_labels):
@@ -325,16 +323,18 @@ class LabelInsightImporter(OCRInsightImporter):
         
         return True
     
-    def process_product_insights(self, insights: Iterable[JSONType], timestamp: datetime.datetime) \
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
+                                 timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
-        label_seen: Dict[str, Set[str]] = {}
-        for t in (ProductInsight.select(ProductInsight.data['label_tag']
-                                        .as_json().alias('label_tag'),
-                                        ProductInsight.barcode)
+        label_seen: Set[str] = set()
+
+        for t in (ProductInsight.select(ProductInsight.value_tag)
                                 .where(ProductInsight.type ==
-                                       self.get_type())).iterator():
-            label_seen.setdefault(t.barcode, set())
-            label_seen[t.barcode].add(t.label_tag)
+                                       self.get_type(),
+                                       ProductInsight.barcode ==
+                                       barcode)).iterator():
+            label_seen.add(t.value_tag)
 
         for insight in insights:
             barcode = insight['barcode']
@@ -359,8 +359,7 @@ class LabelInsightImporter(OCRInsightImporter):
                     'label_tag': label_tag,
                 }
             }
-            label_seen.setdefault(barcode, set())
-            label_seen[barcode].add(label_tag)
+            label_seen.add(label_tag)
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
@@ -493,8 +492,7 @@ class ProductWeightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.product_weight.name
 
-    def is_valid(self, barcode: str,
-                 weight_seen: Set[str]) -> bool:
+    def is_valid(self, barcode: str) -> bool:
         product = self.product_store[barcode]
 
         if not product:
@@ -505,29 +503,23 @@ class ProductWeightImporter(OCRInsightImporter):
                          "non valid")
             return False
 
-        if barcode in weight_seen:
-            logger.debug("An product_weight insight already exists for this "
-                         "product, returning non valid")
-            return False
-
         return True
 
-    def process_product_insights(self, insights: Iterable[JSONType],
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
-        weight_seen: Set[str] = set()
-        for t in (ProductInsight.select(fn.Distinct(ProductInsight.barcode))
-                                .where(ProductInsight.type ==
-                                       self.get_type())).iterator():
-            weight_seen.add(t.barcode)
+        if ProductInsight.select().where(ProductInsight.type ==
+                                         self.get_type(),
+                                         ProductInsight.barcode ==
+                                         barcode).count():
+            return
+
+        if not self.is_valid(barcode):
+            return
 
         for insight in insights:
-            barcode = insight['barcode']
             content = insight['content']
-
-            if not self.is_valid(barcode, weight_seen):
-                continue
-
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
             yield {
@@ -541,7 +533,7 @@ class ProductWeightImporter(OCRInsightImporter):
                     **content
                 }
             }
-            weight_seen.add(barcode)
+            break
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
