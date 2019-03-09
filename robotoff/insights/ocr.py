@@ -174,7 +174,7 @@ LABELS_REGEX = {
 }
 
 PRODUCT_WEIGHT_REGEX = OCRRegex(
-    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
+    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
     field=OCRField.full_text_contiguous,
     lowercase=True)
 
@@ -612,7 +612,7 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
     insights: List[Dict] = []
 
     if safe_search_annotation:
-        for key in ('adult', 'medical', 'violence', 'racy'):
+        for key in ('adult', 'medical', 'violence'):
             value: SafeSearchAnnotationLikelihood = \
                 getattr(safe_search_annotation, key)
             if value >= SafeSearchAnnotationLikelihood.LIKELY:
