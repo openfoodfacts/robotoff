@@ -321,6 +321,33 @@ LABELS_REGEX = {
     ],
 }
 
+
+def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
+    nutrient_names_str = '|'.join(nutrient_names)
+    units_str = '|'.join(units)
+    return re.compile(r"({}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({})".format(nutrient_names_str,
+                                                                           units_str))
+
+
+NUTRIENT_VALUES_REGEX = {
+    'energy': OCRRegex(
+        generate_nutrient_regex(["[ée]nergie", "energy"], ["kj", "kcal"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'fat': OCRRegex(
+        generate_nutrient_regex(["mati[èe]res? grasses?"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'glucid': OCRRegex(
+        generate_nutrient_regex(["glucides?", "glucids?"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'carbohydrate': OCRRegex(
+        generate_nutrient_regex(["sucres?", "carbohydrates?"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+}
+
 PRODUCT_WEIGHT_REGEX = OCRRegex(
     re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
     field=OCRField.full_text_contiguous,
@@ -339,6 +366,11 @@ EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
                                  processing_func=functools.partial(process_full_digits_expiration_date,
                                                                    short=False)),
 }
+
+TRACES_REGEX = OCRRegex(
+    re.compile(r"(?:possibilit[ée] de traces|peut contenir(?: des traces)?|traces? [ée]ventuelles? de)"),
+    field=OCRField.full_text_contiguous,
+    lowercase=True)
 
 
 class OCRResult:
@@ -578,6 +610,24 @@ def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
+def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
+    results = []
+
+    for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
+        for text in ocr_result.get_text(ocr_regex):
+            for match in ocr_regex.regex.finditer(text):
+                value = match.group(2).replace(',', '.')
+                unit = match.group(3)
+                results.append({
+                    "raw": match.group(0),
+                    "nutrient": regex_code,
+                    'value': value,
+                    'unit': unit,
+                })
+
+    return results
+
+
 def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
@@ -600,6 +650,24 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
                 'prompt': prompt,
                 'value': value,
                 'unit': unit,
+            }
+            results.append(result)
+
+    return results
+
+
+def find_traces(ocr_result: OCRResult) -> List[Dict]:
+    results = []
+
+    for text in ocr_result.get_text(TRACES_REGEX):
+        for match in TRACES_REGEX.regex.finditer(text):
+            raw = match.group()
+            end_idx = match.end()
+            captured = text[end_idx:end_idx+100]
+
+            result = {
+                'raw': raw,
+                'text': captured
             }
             results.append(result)
 
@@ -775,6 +843,12 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == 'product_weight':
         return find_product_weight(ocr_result)
+
+    elif insight_type == 'trace':
+        return find_traces(ocr_result)
+
+    elif insight_type == 'nutrient':
+        return find_nutrient_values(ocr_result)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
