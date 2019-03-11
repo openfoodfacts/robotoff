@@ -52,6 +52,15 @@ def notify_automatic_processing(insight: ProductInsight):
                           settings.OFF_BASE_WEBSITE_URL,
                           insight.barcode))
         post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+
+    elif insight.type == InsightType.packager_code.name:
+        text = ("The `{}` packager code was automatically added to "
+                "product {}/product/{}"
+                "".format(insight.data['text'],
+                          settings.OFF_BASE_WEBSITE_URL,
+                          insight.barcode))
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+
     else:
         return
 
