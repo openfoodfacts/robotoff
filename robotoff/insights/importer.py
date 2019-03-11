@@ -492,7 +492,7 @@ class ProductWeightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.product_weight.name
 
-    def is_valid(self, barcode: str) -> bool:
+    def is_valid(self, barcode: str, weight_value_str: str) -> bool:
         product = self.product_store[barcode]
 
         if not product:
@@ -501,6 +501,17 @@ class ProductWeightImporter(OCRInsightImporter):
         if product.quantity is not None:
             logger.debug("Product quantity field is not null, returning "
                          "non valid")
+            return False
+
+        try:
+            weight_value = float(weight_value_str)
+        except ValueError:
+            logger.warn("Weight value is not a float: {}"
+                        "".format(weight_value_str))
+            return False
+
+        if weight_value <= 0:
+            logger.debug("Weight value is <= 0")
             return False
 
         return True
@@ -515,11 +526,12 @@ class ProductWeightImporter(OCRInsightImporter):
                                          barcode).count():
             return
 
-        if not self.is_valid(barcode):
-            return
-
         for insight in insights:
             content = insight['content']
+
+            if not self.is_valid(barcode, content['value']):
+                continue
+
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
             yield {
