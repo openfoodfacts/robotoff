@@ -143,7 +143,7 @@ LABELS_REGEX = {
                  lowercase=False),
     ],
     'en:eu-non-eu-agriculture': [
-        OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?-\s?ue|eu\s?/\s?non\s?-\s?eu agriculture"),
+        OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
     ],
@@ -154,7 +154,7 @@ LABELS_REGEX = {
                  lowercase=True),
     ],
     'en:non-eu-agriculture': [
-        OCRRegex(re.compile(r"agriculture non\s?-\s?ue|non\s?-\s?eu agriculture"),
+        OCRRegex(re.compile(r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
     ],
