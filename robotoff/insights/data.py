@@ -67,4 +67,5 @@ AUTHORIZED_LABELS = {
     "en:no-lactose",
     "en:palm-oil-free",
     "en:max-havelaar",
+    "en:organic",
 }
