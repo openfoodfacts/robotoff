@@ -189,6 +189,27 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'en:no-flavors': [
+        OCRRegex(
+            re.compile(
+                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|sans ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-artificial-flavors': [
+        OCRRegex(
+            re.compile(
+                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|sans ar[ôo]mes? artificiels?|no artificial flavors?"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:vegan': [
+        OCRRegex(
+            re.compile(
+                r"(?<!\w)(?:vegan|v[ée]g[ée]talien|vegano|veganistisch)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
     'en:no-colorings': [
         OCRRegex(
             re.compile(

@@ -68,4 +68,7 @@ AUTHORIZED_LABELS = {
     "en:palm-oil-free",
     "en:max-havelaar",
     "en:organic",
+    "en:no-flavors",
+    "en:no-artificial-flavors",
+    "en:vegan",
 }
