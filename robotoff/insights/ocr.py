@@ -164,6 +164,12 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'en:made-in-spain': [
+        OCRRegex(
+            re.compile(r"made in spain|hecho en espa[ñn]a|geproduceerd in spanje|fabriqu[ée] en espagne|hergestellt in spanien"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
     'en:gluten-free': [
         OCRRegex(
             re.compile(r"sans gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
@@ -176,12 +182,24 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'en:palm-oil-free': [
+        OCRRegex(
+            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil free"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:max-havelaar': [
+        OCRRegex(
+            re.compile(r"max havelaar"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
     'fr:viande-bovine-francaise': [
         OCRRegex(
             re.compile(r"viande bovine fran[çc]aise"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
-    ]
+    ],
 }
 
 PRODUCT_WEIGHT_REGEX = OCRRegex(

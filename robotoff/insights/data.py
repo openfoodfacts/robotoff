@@ -57,7 +57,10 @@ AUTHORIZED_LABELS = {
     "en:nutriscore",
     "en:eu-non-eu-agriculture",
     "en:made-in-france",
+    "en:made-in-spain",
     "en:gluten-free",
     "fr:viande-bovine-francaise",
     "en:no-preservatives",
+    "en:palm-oil-free",
+    "en:max-havelaar",
 }
