@@ -47,6 +47,7 @@ def add_category(barcode: str, category: str, dry=False):
     params = {
         'code': barcode,
         'add_categories': category,
+        'comment': "Adding category (automated edit)",
         **AUTH_DICT
     }
     update_product(params, dry=dry)
@@ -56,7 +57,8 @@ def update_quantity(barcode: str, quantity: str, dry=False):
     params = {
         'code': barcode,
         'quantity': quantity,
-        **AUTH_DICT
+        'comment': "Updating quantity (automated edit)",
+        **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
@@ -67,6 +69,7 @@ def save_ingredients(barcode: str, ingredient_text: str,
                       else f'ingredients_{lang}_text')
     params = {
         'code': barcode,
+        'comment': "Ingredient spellcheck correction (automated edit)",
         ingredient_key: ingredient_text,
         **AUTH_DICT,
     }
