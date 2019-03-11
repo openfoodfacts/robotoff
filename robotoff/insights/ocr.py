@@ -19,14 +19,18 @@ from robotoff.utils.types import JSONType
 
 def process_fr_packaging_match(match) -> str:
     country_code, *approval_numbers, ec = match.group(1, 2, 3, 4, 5)
-    return "{} {}.{}.{} {}".format(country_code, *approval_numbers, ec)
+    return "{} {}.{}.{} {}".format(country_code.upper(),
+                                   *approval_numbers,
+                                   ec.upper())
 
 
 def process_fr_emb_match(match) -> str:
     emb_str, city_code, company_code = match.group(1, 2, 3)
     city_code = city_code.replace(' ', '')
     company_code = company_code or ''
-    return "{} {}{}".format(emb_str, city_code, company_code)
+    return "{} {}{}".format(emb_str.upper(),
+                            city_code,
+                            company_code.upper())
 
 
 def process_eu_bio_label_code(match) -> str:
@@ -87,11 +91,11 @@ EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
 PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
 
 PACKAGER_CODE: Dict[str, OCRRegex] = {
-    "fr_emb": OCRRegex(re.compile(r"(EMB) ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
+    "fr_emb": OCRRegex(re.compile(r"(emb) ?(\d ?\d ?\d ?\d ?\d)([a-z])?(?![a-z0-9])"),
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
-    "eu_fr": OCRRegex(re.compile("(FR) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (CE|EC)"),
+    "eu_fr": OCRRegex(re.compile("(fr) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (ce|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_fr_packaging_match),
