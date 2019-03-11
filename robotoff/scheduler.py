@@ -38,7 +38,7 @@ def process_insights():
                 annotator.annotate(insight, 1, update=True)
                 processed += 1
 
-                if processed < 10:
+                if processed < 20:
                     slack.notify_automatic_processing(insight)
 
     if processed > 10:
