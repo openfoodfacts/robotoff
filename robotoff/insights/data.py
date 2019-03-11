@@ -56,4 +56,8 @@ AUTHORIZED_LABELS = {
     "en:vn-bio-154",
     "en:nutriscore",
     "en:eu-non-eu-agriculture",
+    "en:made-in-france",
+    "en:gluten-free",
+    "fr:viande-bovine-francaise",
+    "en:no-preservatives",
 }

@@ -65,7 +65,7 @@ class OCRRegex:
 
     def __init__(self, regex,
                  field: OCRField,
-                 lowercase: bool=False,
+                 lowercase: bool = False,
                  processing_func: Optional[Callable] = None):
         self.regex = regex
         self.field: OCRField = field
@@ -157,6 +157,30 @@ LABELS_REGEX = {
         OCRRegex(re.compile(r"agriculture non\s?-\s?ue|non\s?-\s?eu agriculture"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
+    ],
+    'en:made-in-france': [
+        OCRRegex(
+            re.compile(r"fabriqu[ée] en france|made in france"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:gluten-free': [
+        OCRRegex(
+            re.compile(r"sans gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-preservatives': [
+        OCRRegex(
+            re.compile(r"senza conservanti|без консервантов|conserveermiddelvrij|sans conservateurs?|fără conservanți|no preservatives|sin conservantes|ohne konservierungsstoffe"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'fr:viande-bovine-francaise': [
+        OCRRegex(
+            re.compile(r"viande bovine fran[çc]aise"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
     ]
 }
 
@@ -590,7 +614,7 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
         for key in ('adult', 'violence'):
             value: SafeSearchAnnotationLikelihood = \
                 getattr(safe_search_annotation, key)
-            if value >= SafeSearchAnnotationLikelihood.LIKELY:
+            if value >= SafeSearchAnnotationLikelihood.VERY_LIKELY:
                 insights.append({
                     'type': key,
                     'likelihood': value.name,
