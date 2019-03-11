@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from robotoff.insights._enum import InsightType
+from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db, ProductIngredient
 from robotoff.off import get_product, save_ingredients, update_emb_codes, \
     add_label_tag, add_category, update_quantity
@@ -76,31 +77,15 @@ class PackagerCodeAnnotator(InsightAnnotator):
     @staticmethod
     def already_exists(new_emb_code: str,
                        emb_codes: List[str]) -> bool:
-        emb_codes = [PackagerCodeAnnotator.normalize_emb_code(emb_code)
+        emb_codes = [normalize_emb_code(emb_code)
                      for emb_code in emb_codes]
 
-        normalized_emb_code = PackagerCodeAnnotator.normalize_emb_code(
-            new_emb_code)
+        normalized_emb_code = normalize_emb_code(new_emb_code)
 
         if normalized_emb_code in emb_codes:
             return True
 
         return False
-
-    @staticmethod
-    def normalize_emb_code(emb_code: str):
-        emb_code = (emb_code.strip()
-                            .lower()
-                            .replace(' ', '')
-                            .replace('-', '')
-                            .replace('.', ''))
-
-        emb_code = strip_accents_ascii(emb_code)
-
-        if emb_code.endswith('ce'):
-            emb_code = emb_code[:-2] + 'ec'
-
-        return emb_code
 
 
 class LabelAnnotator(InsightAnnotator):

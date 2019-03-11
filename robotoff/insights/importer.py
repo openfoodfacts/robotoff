@@ -6,6 +6,7 @@ from typing import Dict, Iterable, List, Set, Optional, Callable
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
+from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore, Product
 from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy, TaxonomyNode
@@ -222,12 +223,11 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             # since insights generation. By default, include it.
             return True
 
-        emb_code_tag = self.get_emb_code_tag(emb_code)
+        normalized_emb_code = normalize_emb_code(emb_code)
+        normalized_emb_codes = [normalize_emb_code(c)
+                                for c in product.emb_codes_tags]
 
-        if (emb_code_tag in product.emb_codes_tags or
-                (emb_code_tag.endswith('ce') and
-                 emb_code_tag.replace('ce', 'ec')
-                 in product.emb_codes_tags)):
+        if normalized_emb_code in normalized_emb_codes:
             return False
 
         if emb_code in code_seen:
