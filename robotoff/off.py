@@ -20,7 +20,7 @@ PRODUCT_URL = API_URL + "/product"
 logger = get_logger(__name__)
 
 
-def get_product(product_id: str, fields: List[str]=None):
+def get_product(product_id: str, fields: List[str] = None):
     fields = fields or []
     url = PRODUCT_URL + "/{}.json".format(product_id)
 
@@ -76,14 +76,16 @@ def save_ingredients(barcode: str, ingredient_text: str,
     update_product(params, dry=dry)
 
 
-def add_emb_code(barcode: str, emb_code: str, dry=False):
-        params = {
-            'code': barcode,
-            'add_emb_codes': emb_code,
-            'comment': "Adding packager code (automated edit)",
-            **AUTH_DICT,
-        }
-        update_product(params, dry=dry)
+def update_emb_codes(barcode: str, emb_codes: List[str], dry=False):
+    emb_codes_str = ','.join(emb_codes)
+
+    params = {
+        'code': barcode,
+        'emb_codes': emb_codes_str,
+        'comment': "Adding packager code (automated edit)",
+        **AUTH_DICT,
+    }
+    update_product(params, dry=dry)
 
 
 def add_label_tag(barcode: str, label_tag: str, dry=False):
