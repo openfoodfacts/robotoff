@@ -95,7 +95,7 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
-    "eu_fr": OCRRegex(re.compile("(fr) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (ce|ec)(?![a-z0-9])"),
+    "eu_fr": OCRRegex(re.compile("(fr) (\d{2,3})[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_fr_packaging_match),
