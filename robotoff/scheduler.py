@@ -1,16 +1,18 @@
 import datetime
+import os
 from typing import Dict, Set
 
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from robotoff import slack
+from robotoff import slack, settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.models import ProductInsight, db
-from robotoff.products import has_dataset_changed, fetch_dataset
+from robotoff.products import has_dataset_changed, fetch_dataset, \
+    CACHED_PRODUCT_STORE
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -43,6 +45,36 @@ def process_insights():
         slack.notify_batch_processing(processed - 10)
 
     logger.info("{} insights processed".format(processed))
+
+
+def remove_invalid_insights():
+    deleted = 0
+    product_store = CACHED_PRODUCT_STORE.get()
+
+    datetime_threshold = datetime.datetime.utcnow().replace(
+        hour=0, minute=0, second=0, microsecond=0)
+    dataset_datetime = datetime.datetime.fromtimestamp(
+        os.path.getmtime(settings.JSONL_MIN_DATASET_PATH))
+
+    if dataset_datetime.date() != datetime_threshold.date():
+        logger.warn("Dataset version is not up to date, aborting insight "
+                    "removal job")
+        return
+
+    with db:
+        with db.atomic():
+            for insight in (ProductInsight.select()
+                    .where(ProductInsight.annotation.is_null(),
+                           ProductInsight.timestamp <= datetime_threshold)
+                    .iterator()):
+                if product_store[insight.barcode] is None:
+                    # Product has been deleted from OFF
+                    print("Product with barcode {} deleted"
+                          "".format(insight.barcode))
+                    deleted += 1
+                    insight.delete_instance()
+
+    logger.info("{} insights deleted".format(deleted))
 
 
 def mark_insights():
@@ -93,4 +125,5 @@ def run():
     scheduler.add_job(process_insights, 'interval', minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(mark_insights, 'interval', minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3', max_instances=1)
+    scheduler.add_job(remove_invalid_insights, 'cron', day='*', hour='4', max_instances=1)
     scheduler.start()
