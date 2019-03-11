@@ -612,7 +612,7 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
     insights: List[Dict] = []
 
     if safe_search_annotation:
-        for key in ('adult', 'medical', 'violence'):
+        for key in ('adult', 'violence'):
             value: SafeSearchAnnotationLikelihood = \
                 getattr(safe_search_annotation, key)
             if value >= SafeSearchAnnotationLikelihood.LIKELY:
