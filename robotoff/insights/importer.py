@@ -275,7 +275,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
-        if insight.type != LabelInsightImporter.get_type():
+        if insight.type != PackagerCodeInsightImporter.get_type():
             raise ValueError("insight must be of type "
                              "{}".format(PackagerCodeInsightImporter
                                          .get_type()))
