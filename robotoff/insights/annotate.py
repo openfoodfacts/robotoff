@@ -68,8 +68,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 class LabelAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        label_tag = insight.data['label_tag']
-        add_label_tag(insight.barcode, label_tag)
+        add_label_tag(insight.barcode, insight.value_tag)
 
         return UPDATED_ANNOTATION_RESULT
 
