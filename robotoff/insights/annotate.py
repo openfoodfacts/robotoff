@@ -65,7 +65,11 @@ class PackagerCodeAnnotator(InsightAnnotator):
         emb_code: str = insight.data['text']
 
         product: Dict = get_product(insight.barcode, ['emb_codes'])
-        emb_codes: List[str] = product.get('emb_codes', '').split(',')
+        emb_codes_str: str = product.get('emb_codes', '')
+
+        emb_codes: List[str] = []
+        if emb_codes_str:
+            emb_codes = emb_codes_str.split(',')
 
         if self.already_exists(emb_code, emb_codes):
             return ALREADY_ANNOTATED_RESULT
