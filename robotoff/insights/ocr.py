@@ -91,7 +91,7 @@ EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
 PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
 
 PACKAGER_CODE: Dict[str, OCRRegex] = {
-    "fr_emb": OCRRegex(re.compile(r"(emb) ?(\d ?\d ?\d ?\d ?\d)([a-z])?(?![a-z0-9])"),
+    "fr_emb": OCRRegex(re.compile(r"(emb) ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
