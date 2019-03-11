@@ -274,10 +274,16 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             code_seen.add(emb_code)
 
     @staticmethod
-    def get_emb_code_tag(emb_code: str) -> str:
-        return (emb_code.lower()
-                .replace(' ', '-')
-                .replace('.', '-'))
+    def need_validation(insight: ProductInsight) -> bool:
+        if insight.type != LabelInsightImporter.get_type():
+            raise ValueError("insight must be of type "
+                             "{}".format(PackagerCodeInsightImporter
+                                         .get_type()))
+
+        if insight.data['matcher_type'] in ('eu_fr', ):
+            return False
+
+        return True
 
 
 class LabelInsightImporter(OCRInsightImporter):
