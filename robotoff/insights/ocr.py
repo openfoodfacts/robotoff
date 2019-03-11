@@ -76,19 +76,6 @@ class OCRRegex:
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
-WEIGHT_MENTIONS = (
-    "poids net:",
-    "poids net égoutté:",
-    "net weight:",
-    "peso neto:",
-    "peso liquido:",
-    "netto gewicht:",
-)
-
-WEIGHT_MENTIONS_RE = re.compile('|'.join((re.escape(x)
-                                          for x in WEIGHT_MENTIONS)),
-                                re.IGNORECASE)
-
 WEIGHT_VALUES_REGEX = re.compile(
     r"([0-9]+[,.]?[0-9]*)\s*(fl oz|dl|cl|mg|mL|lbs|oz|g|kg|L)(?![^\s])")
 
@@ -462,18 +449,6 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
             results.append(result)
 
     return results
-
-
-def find_weight_mentions(text: str) -> List[Dict]:
-    weight_mentions = []
-
-    for match in WEIGHT_MENTIONS_RE.finditer(text):
-        result = {
-            'text': match.group(),
-        }
-        weight_mentions.append(result)
-
-    return weight_mentions
 
 
 TEMPERATURE_REGEX_STR = r"[+-]?\s*\d+\s*°?C"
