@@ -30,9 +30,12 @@ def process_fr_emb_match(match) -> str:
 
 
 def process_eu_bio_label_code(match) -> str:
-    return "en:{}-{}-{}".format(match.group(1),
-                                match.group(2),
-                                match.group(3)).lower()
+    return ("en:{}-{}-{}".format(match.group(1),
+                                 match.group(2),
+                                 match.group(3))
+            .lower()
+            .replace('ö', 'o')
+            .replace('ø', 'o'))
 
 
 def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
