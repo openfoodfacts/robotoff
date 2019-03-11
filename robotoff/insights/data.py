@@ -61,6 +61,10 @@ AUTHORIZED_LABELS = {
     "en:gluten-free",
     "fr:viande-bovine-francaise",
     "en:no-preservatives",
+    "en:no-colorings",
+    "en:no-additives",
+    "en:no-added-sugar",
+    "en:no-lactose",
     "en:palm-oil-free",
     "en:max-havelaar",
 }
