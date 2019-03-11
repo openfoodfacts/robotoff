@@ -698,7 +698,7 @@ def extract_insights(ocr_result: OCRResult,
 
 
 def is_barcode(text: str):
-    return len(text) == 13 and text.isdigit()
+    return text.isdigit()
 
 
 def get_source(image_name: str, json_path: str = None, barcode: str = None):
