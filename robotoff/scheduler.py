@@ -89,7 +89,8 @@ def mark_insights():
     with db:
         with db.atomic():
             for insight in (ProductInsight.select()
-                                          .where(ProductInsight.process_after.is_null())
+                                          .where(ProductInsight.process_after.is_null(),
+                                                 ProductInsight.annotation.is_null())
                                           .iterator()):
                 if insight.id in NEED_VALIDATION_INSIGHTS:
                     continue
