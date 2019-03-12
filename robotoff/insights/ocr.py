@@ -18,10 +18,15 @@ from robotoff.utils.types import JSONType
 
 
 def process_fr_packaging_match(match) -> str:
-    country_code, *approval_numbers, ec = match.group(1, 2, 3, 4, 5)
-    return "{} {}.{}.{} {}".format(country_code,
-                                   *approval_numbers,
-                                   ec).upper()
+    approval_numbers = match.group(1, 2, 3)
+    return "FR {}.{}.{} EC".format(*approval_numbers).upper()
+
+
+def process_de_packaging_match(match) -> str:
+    federal_state_tag, company_tag = match.group(1, 2)
+
+    return "DE {}-{} EC".format(federal_state_tag,
+                                company_tag).upper()
 
 
 def process_fr_emb_match(match) -> str:
@@ -92,10 +97,14 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
-    "eu_fr": OCRRegex(re.compile("(fr) (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
+    "eu_fr": OCRRegex(re.compile("fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_fr_packaging_match),
+    "eu_de": OCRRegex(re.compile("de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"),
+                      field=OCRField.full_text_contiguous,
+                      lowercase=True,
+                      processing_func=process_de_packaging_match),
 }
 
 RECYCLING_REGEX = {

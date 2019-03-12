@@ -282,7 +282,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                              "{}".format(PackagerCodeInsightImporter
                                          .get_type()))
 
-        if insight.data['matcher_type'] in ('eu_fr', 'fr_emb'):
+        if insight.data['matcher_type'] in ('eu_fr', 'eu_de', 'fr_emb'):
             return False
 
         return True
