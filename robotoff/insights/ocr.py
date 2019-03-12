@@ -177,6 +177,48 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'en:made-in-italy': [
+        OCRRegex(
+            re.compile(
+                r"fatto in italia|made in italy|hergestellt in italien|fabriqu[ée] en italie|geproduceerd in itali[ëe]|fabricado en italia"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-belgium': [
+        OCRRegex(
+            re.compile(
+                r"made in belgium|geproduceerd in belgi[ëe]|hecho en b[ée]lgica|fabriqu[ée] en belgique|hergestellt in belgien"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-germany': [
+        OCRRegex(
+            re.compile(
+                r"hergestellt in deutschland|fabriqu[ée] en allemagne|geproduceerd in duitsland|hecho en alemania|made in germany"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-swiss': [
+        OCRRegex(
+            re.compile(
+                r"made in swiss|geproduceerd in zwitserland|fabriqu[ée] en suisse|hecho en suiza|hergestellt in der schweiz"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-the-eu': [
+        OCRRegex(
+            re.compile(
+                r"hergestellt in der eu|geproduceerd in de eu|fabriqu[ée] dans l'ue|hecho en la ue|made in the eu"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:australian-made': [
+        OCRRegex(
+            re.compile(
+                r"australian made|fabriqu[ée] en australie|geproduceerd in australi[ëe]|fabricado en australia"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
     'en:gluten-free': [
         OCRRegex(
             re.compile(r"sans gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
