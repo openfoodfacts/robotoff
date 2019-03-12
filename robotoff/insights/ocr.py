@@ -227,7 +227,7 @@ LABELS_REGEX = {
     ],
     'en:no-preservatives': [
         OCRRegex(
-            re.compile(r"senza conservanti|без консервантов|conserveermiddelvrij|sans conservateurs?|fără conservanți|no preservatives|sin conservantes|ohne konservierungsstoffe"),
+            re.compile(r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|sans conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
@@ -262,7 +262,7 @@ LABELS_REGEX = {
     'en:no-additives': [
         OCRRegex(
             re.compile(
-                r"zonder toevoegingen|sin aditivos|sans additifs?|ohne zusätze|no additives?"),
+                r"zonder toevoegingen|sin aditivos(?! arti)|sans additif(?!s? arti)|ohne zusätze|no additives?"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
