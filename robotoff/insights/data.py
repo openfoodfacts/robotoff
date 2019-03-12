@@ -74,6 +74,7 @@ AUTHORIZED_LABELS = {
     "en:palm-oil-free",
     "en:max-havelaar",
     "en:organic",
+    "fr:ab-agriculture-biologique",
     "en:no-flavors",
     "en:no-artificial-flavors",
     "en:vegan",
