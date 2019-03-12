@@ -140,9 +140,33 @@ LABELS_REGEX = {
     ],
     'en:pgi': [
         OCRRegex(re.compile(
-            r"(?:indication g[ée]ographique prot[eé]g[eé]e)|(?:Indicazione geografica protetta)"),
+            r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
+        OCRRegex(re.compile(
+            r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+    ],
+    'en:pdo': [
+        OCRRegex(re.compile(
+            r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+        OCRRegex(re.compile(
+            r"appellation d'origine prot[eé]g[eé]e"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'fr:aoc': [
+        OCRRegex(re.compile(
+            r"(?<!\w)(?:AOC)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+        OCRRegex(re.compile(
+            r"appellation d'origine contr[ôo]l[eé]e"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
     ],
     'en:nutriscore': [
         OCRRegex(re.compile(r"NUTRI-SCORE"),
