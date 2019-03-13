@@ -206,9 +206,18 @@ class ImageImporterResource:
         }
 
 
-class ProductImporterResource:
+class WebhookProductResource:
     def on_post(self, req, resp):
         barcode = req.get_param('barcode', required=True)
+        action = req.get_param('action', required=True)
+
+        if action not in ('created', 'updated', 'deleted'):
+            raise falcon.HTTPBadRequest(title="invalid_action",
+                                        description="action must be one of "
+                                                    "`created`, `deleted`, `updated`")
+
+        if action == 'updated':
+            updated_fields = req.get_param_as_list('updated_fields', required=True)
 
         resp.media = {
             'status': 'scheduled',
@@ -260,7 +269,7 @@ api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
-api.add_route('/api/v1/products/import',
-              ProductImporterResource())
+api.add_route('/api/v1/webhook/product',
+              WebhookProductResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
