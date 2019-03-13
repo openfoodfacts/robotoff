@@ -526,6 +526,12 @@ class ProductWeightImporter(OCRInsightImporter):
                                  insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
+        if len(insights) > 1:
+            logger.info("{} distinct product weights found for product "
+                        "{}, aborting import".format(len(insights),
+                                                     barcode))
+            return
+
         if ProductInsight.select().where(ProductInsight.type ==
                                          self.get_type(),
                                          ProductInsight.barcode ==
