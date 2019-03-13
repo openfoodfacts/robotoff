@@ -61,6 +61,15 @@ def notify_automatic_processing(insight: ProductInsight):
                           insight.barcode))
         post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
 
+    elif insight.type == InsightType.expiration_date.name:
+        text = ("The expiration date `{}` (match: `{}`) was automatically added to "
+                "product {}/product/{}"
+                "".format(insight.data['text'],
+                          insight.data['raw'],
+                          settings.OFF_BASE_WEBSITE_URL,
+                          insight.barcode))
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+
     else:
         return
 
