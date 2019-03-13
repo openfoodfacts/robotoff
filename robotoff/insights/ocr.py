@@ -363,12 +363,12 @@ PRODUCT_WEIGHT_REGEX = OCRRegex(
 
 
 EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
-    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{2})(?!\d)'),
+    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)'),
                                   field=OCRField.full_text,
                                   lowercase=False,
                                   processing_func=functools.partial(process_full_digits_expiration_date,
                                                                     short=True)),
-    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{4})(?!\d)'),
+    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)'),
                                  field=OCRField.full_text,
                                  lowercase=False,
                                  processing_func=functools.partial(process_full_digits_expiration_date,
