@@ -564,6 +564,71 @@ class ProductWeightImporter(OCRInsightImporter):
         return False
 
 
+class ExpirationDateImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['text'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.expiration_date.name
+
+    def is_valid(self, barcode: str) -> bool:
+        product = self.product_store[barcode]
+
+        if not product:
+            return True
+
+        if product.expiration_date:
+            logger.debug("Product expiration date field is not null, returning "
+                         "non valid")
+            return False
+
+        return True
+
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
+                                 timestamp: datetime.datetime) \
+            -> Iterable[JSONType]:
+        if len(insights) > 1:
+            logger.info("{} distinct expiration dates found for product "
+                        "{}, aborting import".format(len(insights),
+                                                     barcode))
+            return
+
+        if ProductInsight.select().where(ProductInsight.type ==
+                                         self.get_type(),
+                                         ProductInsight.barcode ==
+                                         barcode).count():
+            return
+
+        for insight in insights:
+            content = insight['content']
+
+            if not self.is_valid(barcode):
+                continue
+
+            countries_tags = getattr(self.product_store[barcode],
+                                     'countries_tags', [])
+            yield {
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': countries_tags,
+                'timestamp': timestamp,
+                'data': {
+                    'source': insight['source'],
+                    **content
+                }
+            }
+            break
+
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        return False
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
@@ -571,6 +636,7 @@ class InsightImporterFactory:
         InsightType.label.name: LabelInsightImporter,
         InsightType.category.name: CategoryImporter,
         InsightType.product_weight.name: ProductWeightImporter,
+        InsightType.expiration_date.name: ExpirationDateImporter,
     }
 
     @classmethod

@@ -42,7 +42,7 @@ def process_eu_bio_label_code(match) -> str:
             .replace('ø', 'o'))
 
 
-def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
+def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
     day, month, year = match.group(1, 2, 3)
 
     if short:
@@ -51,14 +51,11 @@ def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
         format_str = "%d/%m/%Y"
 
     try:
-        dt = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str)
+        date = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str).date()
     except ValueError:
         return None
 
-    if dt.year > 2050 or dt.year < 2000:
-        return None
-
-    return dt.strftime("%d/%m/%Y")
+    return date
 
 
 class OCRField(enum.Enum):
@@ -330,22 +327,16 @@ PRODUCT_WEIGHT_REGEX = OCRRegex(
     lowercase=True)
 
 
-BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
-    'en': OCRRegex(re.compile(r'\d\d\s(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s\d{4})?'),
-                   field=OCRField.text_annotations,
-                   lowercase=True),
-    'fr': OCRRegex(re.compile(r'\d\d\s(?:jan|fev|mar|avr|mai|juin|juil|aou|sep|oct|nov|dec)(?:\s\d{4})?'),
-                   field=OCRField.text_annotations,
-                   lowercase=True),
-    'full_digits_short': OCRRegex(re.compile(r'(\d{2})[./](\d{2})[./](\d{2})'),
-                                  field=OCRField.text_annotations,
+EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
+    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{2})(?!\d)'),
+                                  field=OCRField.full_text,
                                   lowercase=False,
-                                  processing_func=functools.partial(process_full_digits_best_before_date,
+                                  processing_func=functools.partial(process_full_digits_expiration_date,
                                                                     short=True)),
-    'full_digits_long': OCRRegex(re.compile(r'(\d{2})[./](\d{2})[./](\d{4})'),
-                                 field=OCRField.text_annotations,
+    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{4})(?!\d)'),
+                                 field=OCRField.full_text,
                                  lowercase=False,
-                                 processing_func=functools.partial(process_full_digits_best_before_date,
+                                 processing_func=functools.partial(process_full_digits_expiration_date,
                                                                    short=False)),
 }
 
@@ -719,27 +710,32 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
-def find_best_before_date(ocr_result: OCRResult) -> List[Dict]:
-    # Parse best_before_date
+def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
+    # Parse expiration date
     #        "À consommer de préférence avant",
     results = []
 
-    for type_, ocr_regex in BEST_BEFORE_DATE_REGEX.items():
+    for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
         for text in ocr_result.get_text(ocr_regex):
             for match in ocr_regex.regex.finditer(text):
                 raw = match.group(0)
 
-                if ocr_regex.processing_func:
-                    value = ocr_regex.processing_func(match)
+                if not ocr_regex.processing_func:
+                    continue
 
-                    if value is None:
-                        continue
-                else:
-                    value = raw
+                date = ocr_regex.processing_func(match)
+
+                if date is None:
+                    continue
+
+                if date.year > 2025 or date.year < 2015:
+                    continue
+
+                value = date.strftime("%d/%m/%Y")
 
                 results.append({
                     "raw": raw,
-                    "value": value,
+                    "text": value,
                     "type": type_,
                 })
 
@@ -771,8 +767,8 @@ def extract_insights(ocr_result: OCRResult,
     elif insight_type == 'label':
         return find_labels(ocr_result)
 
-    elif insight_type == 'best_before_date':
-        return find_best_before_date(ocr_result)
+    elif insight_type == 'expiration_date':
+        return find_expiration_date(ocr_result)
 
     elif insight_type == 'image_flag':
         return flag_image(ocr_result)
@@ -877,7 +873,8 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
     for insight_type in (InsightType.label.name,
                          InsightType.packager_code.name,
                          InsightType.product_weight.name,
-                         InsightType.image_flag.name):
+                         InsightType.image_flag.name,
+                         InsightType.expiration_date.name):
         insights = extract_insights(ocr_result, insight_type)
 
         if insights:

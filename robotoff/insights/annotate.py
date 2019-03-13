@@ -9,7 +9,7 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db, ProductIngredient
 from robotoff.off import get_product, save_ingredients, update_emb_codes, \
-    add_label_tag, add_category, update_quantity
+    add_label_tag, add_category, update_quantity, update_expiration_date
 from robotoff.utils import get_logger
 from robotoff.utils.text import strip_accents_ascii
 
@@ -201,6 +201,24 @@ class ProductWeightAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class ExpirationDateAnnotator(InsightAnnotator):
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        expiration_date: str = insight.data['text']
+
+        product: Dict = get_product(insight.barcode, ['expiration_date'])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        current_expiration_date = product.get('expiration_date') or None
+
+        if current_expiration_date:
+            return ALREADY_ANNOTATED_RESULT
+
+        update_expiration_date(insight.barcode, expiration_date)
+        return UPDATED_ANNOTATION_RESULT
+
+
 class InsightAnnotatorFactory:
     mapping = {
         InsightType.packager_code.name: PackagerCodeAnnotator(),
@@ -208,6 +226,7 @@ class InsightAnnotatorFactory:
         InsightType.label.name: LabelAnnotator(),
         InsightType.category.name: CategoryAnnotator(),
         InsightType.product_weight.name: ProductWeightAnnotator(),
+        InsightType.expiration_date.name: ExpirationDateAnnotator(),
     }
 
     @classmethod
