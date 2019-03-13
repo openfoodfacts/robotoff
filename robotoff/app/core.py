@@ -124,6 +124,8 @@ def save_insight(insight_id: str, annotation: int, update: bool=True) -> Annotat
     if insight.annotation is not None:
         return ALREADY_ANNOTATED_RESULT
 
-    notify_manual_processing(insight, annotation)
+    if update:
+        notify_manual_processing(insight, annotation)
+
     annotator = InsightAnnotatorFactory.get(insight.type)
     return annotator.annotate(insight, annotation, update)
