@@ -19,23 +19,30 @@ from robotoff.utils.types import JSONType
 
 def process_fr_packaging_match(match) -> str:
     country_code, *approval_numbers, ec = match.group(1, 2, 3, 4, 5)
-    return "{} {}.{}.{} {}".format(country_code, *approval_numbers, ec)
+    return "{} {}.{}.{} {}".format(country_code,
+                                   *approval_numbers,
+                                   ec).upper()
 
 
 def process_fr_emb_match(match) -> str:
     emb_str, city_code, company_code = match.group(1, 2, 3)
     city_code = city_code.replace(' ', '')
     company_code = company_code or ''
-    return "{} {}{}".format(emb_str, city_code, company_code)
+    return "{} {}{}".format(emb_str.upper(),
+                            city_code,
+                            company_code.upper())
 
 
 def process_eu_bio_label_code(match) -> str:
-    return "en:{}-{}-{}".format(match.group(1),
-                                match.group(2),
-                                match.group(3)).lower()
+    return ("en:{}-{}-{}".format(match.group(1),
+                                 match.group(2),
+                                 match.group(3))
+            .lower()
+            .replace('ö', 'o')
+            .replace('ø', 'o'))
 
 
-def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
+def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
     day, month, year = match.group(1, 2, 3)
 
     if short:
@@ -44,14 +51,11 @@ def process_full_digits_best_before_date(match, short: bool) -> Optional[str]:
         format_str = "%d/%m/%Y"
 
     try:
-        dt = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str)
+        date = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str).date()
     except ValueError:
         return None
 
-    if dt.year > 2050 or dt.year < 2000:
-        return None
-
-    return dt.strftime("%d/%m/%Y")
+    return date
 
 
 class OCRField(enum.Enum):
@@ -65,7 +69,7 @@ class OCRRegex:
 
     def __init__(self, regex,
                  field: OCRField,
-                 lowercase: bool=False,
+                 lowercase: bool = False,
                  processing_func: Optional[Callable] = None):
         self.regex = regex
         self.field: OCRField = field
@@ -76,19 +80,6 @@ class OCRRegex:
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
-WEIGHT_MENTIONS = (
-    "poids net:",
-    "poids net égoutté:",
-    "net weight:",
-    "peso neto:",
-    "peso liquido:",
-    "netto gewicht:",
-)
-
-WEIGHT_MENTIONS_RE = re.compile('|'.join((re.escape(x)
-                                          for x in WEIGHT_MENTIONS)),
-                                re.IGNORECASE)
-
 WEIGHT_VALUES_REGEX = re.compile(
     r"([0-9]+[,.]?[0-9]*)\s*(fl oz|dl|cl|mg|mL|lbs|oz|g|kg|L)(?![^\s])")
 
@@ -97,11 +88,11 @@ EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
 PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
 
 PACKAGER_CODE: Dict[str, OCRRegex] = {
-    "fr_emb": OCRRegex(re.compile(r"(EMB) ?(\d ?\d ?\d ?\d ?\d)([a-zA-Z]{1,2})?"),
+    "fr_emb": OCRRegex(re.compile(r"(emb) ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
-    "eu_fr": OCRRegex(re.compile("(FR) (\d{1,3})[\-\s.](\d{1,3})[\-\s.](\d{1,3}) (CE|EC)"),
+    "eu_fr": OCRRegex(re.compile("(fr) (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_fr_packaging_match),
@@ -146,9 +137,33 @@ LABELS_REGEX = {
     ],
     'en:pgi': [
         OCRRegex(re.compile(
-            r"(?:indication g[ée]ographique prot[eé]g[eé]e)|(?:Indicazione geografica protetta)"),
+            r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
+        OCRRegex(re.compile(
+            r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+    ],
+    'en:pdo': [
+        OCRRegex(re.compile(
+            r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+        OCRRegex(re.compile(
+            r"appellation d'origine prot[eé]g[eé]e"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'fr:aoc': [
+        OCRRegex(re.compile(
+            r"(?<!\w)(?:AOC)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+        OCRRegex(re.compile(
+            r"appellation d'origine contr[ôo]l[eé]e"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
     ],
     'en:nutriscore': [
         OCRRegex(re.compile(r"NUTRI-SCORE"),
@@ -156,7 +171,7 @@ LABELS_REGEX = {
                  lowercase=False),
     ],
     'en:eu-non-eu-agriculture': [
-        OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?-\s?ue|eu\s?/\s?non\s?-\s?eu agriculture"),
+        OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
     ],
@@ -167,34 +182,161 @@ LABELS_REGEX = {
                  lowercase=True),
     ],
     'en:non-eu-agriculture': [
-        OCRRegex(re.compile(r"agriculture non\s?-\s?ue|non\s?-\s?eu agriculture"),
+        OCRRegex(re.compile(r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture"),
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
-    ]
+    ],
+    'en:made-in-france': [
+        OCRRegex(
+            re.compile(r"fabriqu[ée] en france|made in france"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-spain': [
+        OCRRegex(
+            re.compile(r"made in spain|hecho en espa[ñn]a|geproduceerd in spanje|fabriqu[ée] en espagne|hergestellt in spanien"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-italy': [
+        OCRRegex(
+            re.compile(
+                r"fatto in italia|made in italy|hergestellt in italien|fabriqu[ée] en italie|geproduceerd in itali[ëe]|fabricado en italia"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-belgium': [
+        OCRRegex(
+            re.compile(
+                r"made in belgium|geproduceerd in belgi[ëe]|hecho en b[ée]lgica|fabriqu[ée] en belgique|hergestellt in belgien"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-germany': [
+        OCRRegex(
+            re.compile(
+                r"hergestellt in deutschland|fabriqu[ée] en allemagne|geproduceerd in duitsland|hecho en alemania|made in germany"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-switzerland': [
+        OCRRegex(
+            re.compile(
+                r"made in switzerland|geproduceerd in zwitserland|fabriqu[ée] en suisse|hecho en suiza|hergestellt in der schweiz"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:made-in-the-eu': [
+        OCRRegex(
+            re.compile(
+                r"hergestellt in der eu|geproduceerd in de eu|fabriqu[ée] dans l'ue|hecho en la ue|made in the eu"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:australian-made': [
+        OCRRegex(
+            re.compile(
+                r"australian made|made in australia|fabriqu[ée] en australie|geproduceerd in australi[ëe]|fabricado en australia"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:gluten-free': [
+        OCRRegex(
+            re.compile(r"sans gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-preservatives': [
+        OCRRegex(
+            re.compile(r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|sans conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-flavors': [
+        OCRRegex(
+            re.compile(
+                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|sans ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-artificial-flavors': [
+        OCRRegex(
+            re.compile(
+                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|sans ar[ôo]mes? artificiels?|no artificial flavors?"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:vegan': [
+        OCRRegex(
+            re.compile(
+                r"(?<!\w)(?:vegan|v[ée]g[ée]talien|vegano|veganistisch)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-colorings': [
+        OCRRegex(
+            re.compile(
+                r"no colorings?|no colourants?|ohne farbstoffzusatz|sans colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-additives': [
+        OCRRegex(
+            re.compile(
+                r"zonder toevoegingen|sin aditivos(?! arti)|sans additif(?!s? arti)|ohne zusätze|no additives?"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-added-sugar': [
+        OCRRegex(
+            re.compile(
+                r"senza zuccheri aggiunti|zonder toegevoegde suikers|sans sucres? ajout[ée]s?|sin azúcares añadidos|ohne zuckerzusatz|sem açúcares adicionados|no added sugar"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:no-lactose': [
+        OCRRegex(
+            re.compile(
+                r"senza lattosio|без лактозы|bez laktozy|sans lactose|lactosevrij|no lactose|laktózmentes|lactosefrei|sin lactosa"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:palm-oil-free': [
+        OCRRegex(
+            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil free"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:max-havelaar': [
+        OCRRegex(
+            re.compile(r"max havelaar"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'fr:viande-bovine-francaise': [
+        OCRRegex(
+            re.compile(r"viande bovine fran[çc]aise"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
 }
 
 PRODUCT_WEIGHT_REGEX = OCRRegex(
-    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
+    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
     field=OCRField.full_text_contiguous,
     lowercase=True)
 
 
-BEST_BEFORE_DATE_REGEX: Dict[str, OCRRegex] = {
-    'en': OCRRegex(re.compile(r'\d\d\s(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(?:\s\d{4})?'),
-                   field=OCRField.text_annotations,
-                   lowercase=True),
-    'fr': OCRRegex(re.compile(r'\d\d\s(?:jan|fev|mar|avr|mai|juin|juil|aou|sep|oct|nov|dec)(?:\s\d{4})?'),
-                   field=OCRField.text_annotations,
-                   lowercase=True),
-    'full_digits_short': OCRRegex(re.compile(r'(\d{2})[./](\d{2})[./](\d{2})'),
-                                  field=OCRField.text_annotations,
+EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
+    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{2})(?!\d)'),
+                                  field=OCRField.full_text,
                                   lowercase=False,
-                                  processing_func=functools.partial(process_full_digits_best_before_date,
+                                  processing_func=functools.partial(process_full_digits_expiration_date,
                                                                     short=True)),
-    'full_digits_long': OCRRegex(re.compile(r'(\d{2})[./](\d{2})[./](\d{4})'),
-                                 field=OCRField.text_annotations,
+    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{4})(?!\d)'),
+                                 field=OCRField.full_text,
                                  lowercase=False,
-                                 processing_func=functools.partial(process_full_digits_best_before_date,
+                                 processing_func=functools.partial(process_full_digits_expiration_date,
                                                                    short=False)),
 }
 
@@ -464,18 +606,6 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
-def find_weight_mentions(text: str) -> List[Dict]:
-    weight_mentions = []
-
-    for match in WEIGHT_MENTIONS_RE.finditer(text):
-        result = {
-            'text': match.group(),
-        }
-        weight_mentions.append(result)
-
-    return weight_mentions
-
-
 TEMPERATURE_REGEX_STR = r"[+-]?\s*\d+\s*°?C"
 TEMPERATURE_REGEX = re.compile(r"(?P<value>[+-]?\s*\d+)\s*°?(?P<unit>C)",
                                re.IGNORECASE)
@@ -580,27 +710,32 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
-def find_best_before_date(ocr_result: OCRResult) -> List[Dict]:
-    # Parse best_before_date
+def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
+    # Parse expiration date
     #        "À consommer de préférence avant",
     results = []
 
-    for type_, ocr_regex in BEST_BEFORE_DATE_REGEX.items():
+    for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
         for text in ocr_result.get_text(ocr_regex):
             for match in ocr_regex.regex.finditer(text):
                 raw = match.group(0)
 
-                if ocr_regex.processing_func:
-                    value = ocr_regex.processing_func(match)
+                if not ocr_regex.processing_func:
+                    continue
 
-                    if value is None:
-                        continue
-                else:
-                    value = raw
+                date = ocr_regex.processing_func(match)
+
+                if date is None:
+                    continue
+
+                if date.year > 2025 or date.year < 2015:
+                    continue
+
+                value = date.strftime("%d/%m/%Y")
 
                 results.append({
                     "raw": raw,
-                    "value": value,
+                    "text": value,
                     "type": type_,
                 })
 
@@ -612,10 +747,10 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
     insights: List[Dict] = []
 
     if safe_search_annotation:
-        for key in ('adult', 'medical', 'violence', 'racy'):
+        for key in ('adult', 'violence'):
             value: SafeSearchAnnotationLikelihood = \
                 getattr(safe_search_annotation, key)
-            if value >= SafeSearchAnnotationLikelihood.LIKELY:
+            if value >= SafeSearchAnnotationLikelihood.VERY_LIKELY:
                 insights.append({
                     'type': key,
                     'likelihood': value.name,
@@ -632,8 +767,8 @@ def extract_insights(ocr_result: OCRResult,
     elif insight_type == 'label':
         return find_labels(ocr_result)
 
-    elif insight_type == 'best_before_date':
-        return find_best_before_date(ocr_result)
+    elif insight_type == 'expiration_date':
+        return find_expiration_date(ocr_result)
 
     elif insight_type == 'image_flag':
         return flag_image(ocr_result)
@@ -646,7 +781,7 @@ def extract_insights(ocr_result: OCRResult,
 
 
 def is_barcode(text: str):
-    return len(text) == 13 and text.isdigit()
+    return text.isdigit()
 
 
 def get_source(image_name: str, json_path: str = None, barcode: str = None):
@@ -738,7 +873,8 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
     for insight_type in (InsightType.label.name,
                          InsightType.packager_code.name,
                          InsightType.product_weight.name,
-                         InsightType.image_flag.name):
+                         InsightType.image_flag.name,
+                         InsightType.expiration_date.name):
         insights = extract_insights(ocr_result, insight_type)
 
         if insights:

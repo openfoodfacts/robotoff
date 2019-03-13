@@ -34,22 +34,90 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
 
 
 def notify_automatic_processing(insight: ProductInsight):
+    product_url = "{}/product/{}".format(settings.OFF_BASE_WEBSITE_URL,
+                                         insight.barcode)
+    source_image = insight.data.get('source')
+
+    if source_image:
+        image_url = "https://static.openfoodfacts.org/images/products" + source_image
+        metadata_text = "(<{}|product>, <{}|source image>)".format(product_url, image_url)
+    else:
+        metadata_text = "(<{}|product>)".format(product_url)
+
     if insight.type == InsightType.label.name:
-        text = ("The `{}` label was automatically added to product {}/product"
+        text = ("The `{}` label was automatically added to product {}"
+                "".format(insight.value_tag,
+                          insight.barcode))
+
+    elif insight.type == InsightType.product_weight.name:
+        text = ("The weight `{}` (match: `{}`) was automatically added to "
+                "product {}"
+                "".format(insight.data['text'],
+                          insight.data['raw'],
+                          insight.barcode))
+
+    elif insight.type == InsightType.packager_code.name:
+        text = ("The `{}` packager code was automatically added to "
+                "product {}".format(insight.data['text'],
+                                    insight.barcode))
+
+    elif insight.type == InsightType.expiration_date.name:
+        text = ("The expiration date `{}` (match: `{}`) was automatically added to "
+                "product {}".format(insight.data['text'],
+                                    insight.data['raw'],
+                                    insight.barcode))
+    else:
+        return
+
+    text += " " + metadata_text
+    slack_kwargs = {
+        'unfurl_links': False,
+        'unfurl_media': False,
+    }
+    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL, **slack_kwargs)
+
+    if insight.value_tag == 'en:nutriscore':
+        post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
+
+
+def notify_manual_processing(insight: ProductInsight, annotation: int):
+    annotation_text = " (annotation: {})".format(annotation)
+
+    if insight.type == InsightType.label.name:
+        text = ("The `{}` label insight was manually annotated, product {}/product"
                 "/{}".format(insight.value_tag,
                              settings.OFF_BASE_WEBSITE_URL,
-                             insight.barcode))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+                             insight.barcode)) + annotation_text
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
 
         if insight.value_tag == 'en:nutriscore':
             post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL)
 
     elif insight.type == InsightType.product_weight.name:
-        text = ("The weight `{}` was automatically added to product {}/product"
-                "/{}".format(insight.data['text'],
-                             settings.OFF_BASE_WEBSITE_URL,
-                             insight.barcode))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+        text = ("The weight `{}` (match: `{}`) insight was manually annotated, "
+                "product {}/product/{}"
+                "".format(insight.data['text'],
+                          insight.data['raw'],
+                          settings.OFF_BASE_WEBSITE_URL,
+                          insight.barcode)) + annotation_text
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
+
+    elif insight.type == InsightType.packager_code.name:
+        text = ("The `{}` packager code insight was manually annotated, "
+                "product {}/product/{}"
+                "".format(insight.data['text'],
+                          settings.OFF_BASE_WEBSITE_URL,
+                          insight.barcode)) + annotation_text
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
+
+    elif insight.type == InsightType.category.name:
+        text = ("The `{}` category insight was manually annotated, "
+                "product {}/product/{}"
+                "".format(insight.value_tag,
+                          settings.OFF_BASE_WEBSITE_URL,
+                          insight.barcode)) + annotation_text
+        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
+
     else:
         return
 
@@ -77,9 +145,10 @@ def raise_if_slack_token_undefined():
 
 def post_message(text: str,
                  channel: str,
-                 attachments: Optional[List[JSONType]] = None):
+                 attachments: Optional[List[JSONType]] = None,
+                 **kwargs):
     try:
-        _post_message(text, channel, attachments)
+        _post_message(text, channel, attachments, **kwargs)
     except Exception as e:
         logger.error("An exception occurred when sending a Slack "
                      "notification", exc_info=e)
@@ -87,12 +156,14 @@ def post_message(text: str,
 
 def _post_message(text: str,
                   channel: str,
-                  attachments: Optional[List[JSONType]] = None):
+                  attachments: Optional[List[JSONType]] = None,
+                  **kwargs):
     raise_if_slack_token_undefined()
     params: JSONType = {
         **get_base_params(),
         'channel': channel,
         'text': text,
+        **kwargs
     }
 
     if attachments:

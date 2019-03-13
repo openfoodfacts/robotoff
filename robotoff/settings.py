@@ -17,6 +17,7 @@ TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingr
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
+OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
 
 TAXONOMY_DIR = DATA_DIR / 'taxonomies'
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
@@ -45,5 +46,6 @@ ELASTICSEARCH_PRODUCT_INDEX = 'product'
 SLACK_TOKEN = os.environ.get('SLACK_TOKEN', "")
 SLACK_OFF_TEST_CHANNEL = "CGLCKGVHS"
 SLACK_OFF_ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
+SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL = "CGWSXDGSF"
 SLACK_OFF_ROBOTOFF_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"
 SLACK_OFF_NUTRISCORE_ALERT_CHANNEL = "CDX0VQ0TS"

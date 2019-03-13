@@ -17,7 +17,7 @@ def run(service: str):
 
 @click.command()
 @click.argument('input_')
-@click.option('--insight-type', required=True)
+@click.option('--insight-type', '-t', required=True)
 @click.option('--output', '-o')
 def generate_ocr_insights(input_: str, insight_type: str, output: str):
     from robotoff.cli import insights

@@ -169,7 +169,7 @@ class ProductDataset:
 class Product:
     """Product class."""
     __slots__ = ('barcode', 'countries_tags', 'categories_tags',
-                 'emb_codes_tags', 'labels_tags', 'quantity')
+                 'emb_codes_tags', 'labels_tags', 'quantity', 'expiration_date')
 
     def __init__(self, product: JSONType):
         self.barcode = product.get('code')
@@ -178,6 +178,7 @@ class Product:
         self.emb_codes_tags = product.get('emb_codes_tags') or []
         self.labels_tags = product.get('labels_tags') or []
         self.quantity = product.get('quantity') or None
+        self.expiration_date = product.get('expiration_date') or None
 
     @staticmethod
     def get_fields():
@@ -188,6 +189,7 @@ class Product:
             'emb_codes_tags',
             'labels_tags',
             'quantity',
+            'expiration_date',
         }
 
 

@@ -6,6 +6,7 @@ from typing import Dict, Iterable, List, Set, Optional, Callable
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
+from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore, Product
 from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy, TaxonomyNode
@@ -222,12 +223,11 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             # since insights generation. By default, include it.
             return True
 
-        emb_code_tag = self.get_emb_code_tag(emb_code)
+        normalized_emb_code = normalize_emb_code(emb_code)
+        normalized_emb_codes = [normalize_emb_code(c)
+                                for c in product.emb_codes_tags]
 
-        if (emb_code_tag in product.emb_codes_tags or
-                (emb_code_tag.endswith('ce') and
-                 emb_code_tag.replace('ce', 'ec')
-                 in product.emb_codes_tags)):
+        if normalized_emb_code in normalized_emb_codes:
             return False
 
         if emb_code in code_seen:
@@ -274,10 +274,16 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             code_seen.add(emb_code)
 
     @staticmethod
-    def get_emb_code_tag(emb_code: str) -> str:
-        return (emb_code.lower()
-                .replace(' ', '-')
-                .replace('.', '-'))
+    def need_validation(insight: ProductInsight) -> bool:
+        if insight.type != PackagerCodeInsightImporter.get_type():
+            raise ValueError("insight must be of type "
+                             "{}".format(PackagerCodeInsightImporter
+                                         .get_type()))
+
+        if insight.data['matcher_type'] in ('eu_fr', 'fr_emb'):
+            return False
+
+        return True
 
 
 class LabelInsightImporter(OCRInsightImporter):
@@ -492,7 +498,7 @@ class ProductWeightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.product_weight.name
 
-    def is_valid(self, barcode: str) -> bool:
+    def is_valid(self, barcode: str, weight_value_str: str) -> bool:
         product = self.product_store[barcode]
 
         if not product:
@@ -503,23 +509,106 @@ class ProductWeightImporter(OCRInsightImporter):
                          "non valid")
             return False
 
+        try:
+            weight_value = float(weight_value_str)
+        except ValueError:
+            logger.warn("Weight value is not a float: {}"
+                        "".format(weight_value_str))
+            return False
+
+        if weight_value <= 0:
+            logger.debug("Weight value is <= 0")
+            return False
+
         return True
 
     def process_product_insights(self, barcode: str,
                                  insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
+        if len(insights) > 1:
+            logger.info("{} distinct product weights found for product "
+                        "{}, aborting import".format(len(insights),
+                                                     barcode))
+            return
+
         if ProductInsight.select().where(ProductInsight.type ==
                                          self.get_type(),
                                          ProductInsight.barcode ==
                                          barcode).count():
             return
 
-        if not self.is_valid(barcode):
+        for insight in insights:
+            content = insight['content']
+
+            if not self.is_valid(barcode, content['value']):
+                continue
+
+            countries_tags = getattr(self.product_store[barcode],
+                                     'countries_tags', [])
+            yield {
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': countries_tags,
+                'timestamp': timestamp,
+                'data': {
+                    'source': insight['source'],
+                    **content
+                }
+            }
+            break
+
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        return False
+
+
+class ExpirationDateImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['text'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.expiration_date.name
+
+    def is_valid(self, barcode: str) -> bool:
+        product = self.product_store[barcode]
+
+        if not product:
+            return True
+
+        if product.expiration_date:
+            logger.debug("Product expiration date field is not null, returning "
+                         "non valid")
+            return False
+
+        return True
+
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
+                                 timestamp: datetime.datetime) \
+            -> Iterable[JSONType]:
+        if len(insights) > 1:
+            logger.info("{} distinct expiration dates found for product "
+                        "{}, aborting import".format(len(insights),
+                                                     barcode))
+            return
+
+        if ProductInsight.select().where(ProductInsight.type ==
+                                         self.get_type(),
+                                         ProductInsight.barcode ==
+                                         barcode).count():
             return
 
         for insight in insights:
             content = insight['content']
+
+            if not self.is_valid(barcode):
+                continue
+
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
             yield {
@@ -547,6 +636,7 @@ class InsightImporterFactory:
         InsightType.label.name: LabelInsightImporter,
         InsightType.category.name: CategoryImporter,
         InsightType.product_weight.name: ProductWeightImporter,
+        InsightType.expiration_date.name: ExpirationDateImporter,
     }
 
     @classmethod

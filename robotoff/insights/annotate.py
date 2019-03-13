@@ -1,15 +1,17 @@
 import abc
 import datetime
-from typing import Optional
+from typing import Optional, List, Dict
 
 from dataclasses import dataclass
 from enum import Enum
 
 from robotoff.insights._enum import InsightType
+from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db, ProductIngredient
-from robotoff.off import get_product, save_ingredients, add_emb_code, \
-    add_label_tag, add_category, update_quantity
+from robotoff.off import get_product, save_ingredients, update_emb_codes, \
+    add_label_tag, add_category, update_quantity, update_expiration_date
 from robotoff.utils import get_logger
+from robotoff.utils.text import strip_accents_ascii
 
 logger = get_logger(__name__)
 
@@ -60,16 +62,39 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 
 class PackagerCodeAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        emb_code = insight.data['text']
-        add_emb_code(insight.barcode, emb_code)
+        emb_code: str = insight.data['text']
 
+        product: Dict = get_product(insight.barcode, ['emb_codes'])
+        emb_codes_str: str = product.get('emb_codes', '')
+
+        emb_codes: List[str] = []
+        if emb_codes_str:
+            emb_codes = emb_codes_str.split(',')
+
+        if self.already_exists(emb_code, emb_codes):
+            return ALREADY_ANNOTATED_RESULT
+
+        emb_codes.append(emb_code)
+        update_emb_codes(insight.barcode, emb_codes)
         return UPDATED_ANNOTATION_RESULT
+
+    @staticmethod
+    def already_exists(new_emb_code: str,
+                       emb_codes: List[str]) -> bool:
+        emb_codes = [normalize_emb_code(emb_code)
+                     for emb_code in emb_codes]
+
+        normalized_emb_code = normalize_emb_code(new_emb_code)
+
+        if normalized_emb_code in emb_codes:
+            return True
+
+        return False
 
 
 class LabelAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        label_tag = insight.data['label_tag']
-        add_label_tag(insight.barcode, label_tag)
+        add_label_tag(insight.barcode, insight.value_tag)
 
         return UPDATED_ANNOTATION_RESULT
 
@@ -176,6 +201,24 @@ class ProductWeightAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class ExpirationDateAnnotator(InsightAnnotator):
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        expiration_date: str = insight.data['text']
+
+        product: Dict = get_product(insight.barcode, ['expiration_date'])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        current_expiration_date = product.get('expiration_date') or None
+
+        if current_expiration_date:
+            return ALREADY_ANNOTATED_RESULT
+
+        update_expiration_date(insight.barcode, expiration_date)
+        return UPDATED_ANNOTATION_RESULT
+
+
 class InsightAnnotatorFactory:
     mapping = {
         InsightType.packager_code.name: PackagerCodeAnnotator(),
@@ -183,6 +226,7 @@ class InsightAnnotatorFactory:
         InsightType.label.name: LabelAnnotator(),
         InsightType.category.name: CategoryAnnotator(),
         InsightType.product_weight.name: ProductWeightAnnotator(),
+        InsightType.expiration_date.name: ExpirationDateAnnotator(),
     }
 
     @classmethod
