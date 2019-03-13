@@ -216,8 +216,23 @@ class WebhookProductResource:
                                         description="action must be one of "
                                                     "`created`, `deleted`, `updated`")
 
-        if action == 'updated':
+        if action == 'created':
+            send_ipc_event('product_created', {
+                'barcode': barcode,
+            })
+
+        elif action == 'updated':
             updated_fields = req.get_param_as_list('updated_fields', required=True)
+
+            send_ipc_event('product_updated', {
+                'barcode': barcode,
+                'updated_fields': updated_fields,
+            })
+
+        elif action == 'deleted':
+            send_ipc_event('product_deleted', {
+                'barcode': barcode,
+            })
 
         resp.media = {
             'status': 'scheduled',
