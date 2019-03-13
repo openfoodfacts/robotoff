@@ -63,6 +63,7 @@ class ProductInsight(BaseModel):
     countries = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)
     value_tag = peewee.TextField(null=True, index=True)
+    source_image = peewee.TextField(null=True, index=True)
 
     def serialize(self) -> JSONType:
         return {

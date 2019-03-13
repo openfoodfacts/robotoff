@@ -258,14 +258,16 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     'matcher_type': content['type'],
                     'raw': content['raw'],
                     'text': emb_code,
@@ -352,6 +354,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
@@ -359,8 +362,9 @@ class LabelInsightImporter(OCRInsightImporter):
                 'countries': countries_tags,
                 'timestamp': timestamp,
                 'value_tag': label_tag,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     'text': content['text'],
                     'label_tag': label_tag,
                 }
@@ -546,14 +550,16 @@ class ProductWeightImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     **content
                 }
             }
@@ -611,14 +617,16 @@ class ExpirationDateImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     **content
                 }
             }
