@@ -8,7 +8,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 from robotoff import slack, settings
 from robotoff.insights._enum import InsightType
-from robotoff.insights.annotate import InsightAnnotatorFactory
+from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
@@ -35,10 +35,10 @@ def process_insights():
 
                 annotator = InsightAnnotatorFactory.get(insight.type)
                 logger.info("Annotating insight {} (product: {})".format(insight.id, insight.barcode))
-                annotator.annotate(insight, 1, update=True)
+                annotation_result = annotator.annotate(insight, 1, update=True)
                 processed += 1
 
-                if processed < 20:
+                if processed < 20 and annotation_result == UPDATED_ANNOTATION_RESULT:
                     slack.notify_automatic_processing(insight)
 
     if processed > 10:
