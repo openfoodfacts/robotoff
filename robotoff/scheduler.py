@@ -41,8 +41,8 @@ def process_insights():
                 if processed < 20 and annotation_result == UPDATED_ANNOTATION_RESULT:
                     slack.notify_automatic_processing(insight)
 
-    if processed > 10:
-        slack.notify_batch_processing(processed - 10)
+    if processed > 20:
+        slack.notify_batch_processing(processed - 20)
 
     logger.info("{} insights processed".format(processed))
 
