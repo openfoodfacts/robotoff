@@ -34,44 +34,46 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
 
 
 def notify_automatic_processing(insight: ProductInsight):
-    if insight.type == InsightType.label.name:
-        text = ("The `{}` label was automatically added to product {}/product"
-                "/{}".format(insight.value_tag,
-                             settings.OFF_BASE_WEBSITE_URL,
-                             insight.barcode))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+    product_url = "{}/product/{}".format(settings.OFF_BASE_WEBSITE_URL,
+                                         insight.barcode)
+    source_image = insight.data.get('source')
 
-        if insight.value_tag == 'en:nutriscore':
-            post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL)
+    if source_image:
+        image_url = "https://static.openfoodfacts.org/images/products" + source_image
+        metadata_text = "(<{}|product>, <{}|source image>)".format(product_url, image_url)
+    else:
+        metadata_text = "(<{}|product>)".format(product_url)
+
+    if insight.type == InsightType.label.name:
+        text = ("The `{}` label was automatically added to product {}"
+                "".format(insight.value_tag,
+                          insight.barcode))
 
     elif insight.type == InsightType.product_weight.name:
         text = ("The weight `{}` (match: `{}`) was automatically added to "
-                "product {}/product/{}"
+                "product {}"
                 "".format(insight.data['text'],
                           insight.data['raw'],
-                          settings.OFF_BASE_WEBSITE_URL,
                           insight.barcode))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
 
     elif insight.type == InsightType.packager_code.name:
         text = ("The `{}` packager code was automatically added to "
-                "product {}/product/{}"
-                "".format(insight.data['text'],
-                          settings.OFF_BASE_WEBSITE_URL,
-                          insight.barcode))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+                "product {}".format(insight.data['text'],
+                                    insight.barcode))
 
     elif insight.type == InsightType.expiration_date.name:
         text = ("The expiration date `{}` (match: `{}`) was automatically added to "
-                "product {}/product/{}"
-                "".format(insight.data['text'],
-                          insight.data['raw'],
-                          settings.OFF_BASE_WEBSITE_URL,
-                          insight.barcode))
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
-
+                "product {}".format(insight.data['text'],
+                                    insight.data['raw'],
+                                    insight.barcode))
     else:
         return
+
+    text += " " + metadata_text
+    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+
+    if insight.value_tag == 'en:nutriscore':
+        post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL)
 
 
 def notify_manual_processing(insight: ProductInsight, annotation: int):
