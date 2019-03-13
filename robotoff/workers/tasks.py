@@ -20,17 +20,10 @@ if root_logger.level == logging.NOTSET:
 
 
 def run_task(event_type: str, event_kwargs: Dict) -> None:
-    if event_type == 'import_insights':
-        func: Callable = import_insights
-
-    elif event_type == 'import_image':
-        func = import_image
-
-    elif event_type == 'download_dataset':
-        func = download_product_dataset
-
-    else:
+    if event_type not in EVENT_MAPPING:
         raise ValueError("unknown event type: '{}".format(event_type))
+
+    func = EVENT_MAPPING[event_type]
 
     try:
         func(**event_kwargs)
@@ -78,3 +71,10 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
         with db.atomic():
             imported = importer.import_insights([insights])
             logger.info("Import finished, {} insights imported".format(imported))
+
+
+EVENT_MAPPING: Dict[str, Callable] = {
+    'import_insights': import_insights,
+    'import_image': import_image,
+    'download_dataset': download_product_dataset,
+}
