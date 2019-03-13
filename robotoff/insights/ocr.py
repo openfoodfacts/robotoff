@@ -236,7 +236,7 @@ LABELS_REGEX = {
     'en:australian-made': [
         OCRRegex(
             re.compile(
-                r"australian made|fabriqu[ée] en australie|geproduceerd in australi[ëe]|fabricado en australia"),
+                r"australian made|made in australia|fabriqu[ée] en australie|geproduceerd in australi[ëe]|fabricado en australia"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
