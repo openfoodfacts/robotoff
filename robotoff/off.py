@@ -2,13 +2,14 @@ from typing import List, Dict
 
 import requests
 
+from robotoff import settings
 from robotoff.utils import get_logger
 
 http_session = requests.Session()
 
 POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
 DRY_POST_URL = "https://world.openfoodfacts.net/cgi/product_jqm2.pl"
-AUTH = ("roboto-app", "4mbN9wJp8LBShcH")
+AUTH = ("roboto-app", settings.OFF_PASSWORD)
 AUTH_DICT = {
     'user_id': AUTH[0],
     'password': AUTH[1],

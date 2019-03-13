@@ -17,6 +17,7 @@ TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingr
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
+OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
 
 TAXONOMY_DIR = DATA_DIR / 'taxonomies'
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
