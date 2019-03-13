@@ -305,13 +305,13 @@ LABELS_REGEX = {
     'en:no-lactose': [
         OCRRegex(
             re.compile(
-                r"senza lattosio|без лактозы|bez laktozy|sans lactose|lactosevrij|no lactose|laktózmentes|lactosefrei|sin lactosa"),
+                r"senza lattosio|без лактозы|bez laktozy|sans lactose|lactosevrij|no lactose|lactose[ -]free|laktózmentes|lactosefrei|sin lactosa"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:palm-oil-free': [
         OCRRegex(
-            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil free"),
+            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil[ -]free"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
