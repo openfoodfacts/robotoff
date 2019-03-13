@@ -219,10 +219,10 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
-    'en:made-in-swiss': [
+    'en:made-in-switzerland': [
         OCRRegex(
             re.compile(
-                r"made in swiss|geproduceerd in zwitserland|fabriqu[ée] en suisse|hecho en suiza|hergestellt in der schweiz"),
+                r"made in switzerland|geproduceerd in zwitserland|fabriqu[ée] en suisse|hecho en suiza|hergestellt in der schweiz"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
