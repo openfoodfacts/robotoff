@@ -206,6 +206,15 @@ class ImageImporterResource:
         }
 
 
+class ProductImporterResource:
+    def on_post(self, req, resp):
+        barcode = req.get_param('barcode', required=True)
+
+        resp.media = {
+            'status': 'scheduled',
+        }
+
+
 class ProductQuestionsResource:
     def on_get(self, req, resp, barcode):
         response = {}
@@ -251,5 +260,7 @@ api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
+api.add_route('/api/v1/products/import',
+              ProductImporterResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
