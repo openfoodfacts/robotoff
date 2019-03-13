@@ -30,12 +30,11 @@ def process_de_packaging_match(match) -> str:
 
 
 def process_fr_emb_match(match) -> str:
-    emb_str, city_code, company_code = match.group(1, 2, 3)
+    city_code, company_code = match.group(1, 2)
     city_code = city_code.replace(' ', '')
     company_code = company_code or ''
-    return "{} {}{}".format(emb_str.upper(),
-                            city_code,
-                            company_code.upper())
+    return "EMB {}{}".format(city_code,
+                             company_code).upper()
 
 
 def process_eu_bio_label_code(match) -> str:
@@ -93,7 +92,7 @@ EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
 PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
 
 PACKAGER_CODE: Dict[str, OCRRegex] = {
-    "fr_emb": OCRRegex(re.compile(r"(emb) ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
+    "fr_emb": OCRRegex(re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
