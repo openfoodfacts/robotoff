@@ -322,7 +322,7 @@ LABELS_REGEX = {
 }
 
 PRODUCT_WEIGHT_REGEX = OCRRegex(
-    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![^\s])"),
+    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
     field=OCRField.full_text_contiguous,
     lowercase=True)
 
