@@ -383,12 +383,14 @@ TRACES_REGEX = OCRRegex(
 
 class OCRResult:
     __slots__ = ('text_annotations', 'full_text_annotation',
-                 'logo_annotations', 'safe_search_annotation')
+                 'logo_annotations', 'safe_search_annotation',
+                 'label_annotations')
 
     def __init__(self, data: JSONType):
         self.text_annotations: List[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
         self.logo_annotations: List[LogoAnnotation] = []
+        self.label_annotations: List[LabelAnnotation] = []
         self.safe_search_annotation: Optional[SafeSearchAnnotation] = None
 
         for text_annotation_data in data.get('textAnnotations', []):
@@ -403,6 +405,10 @@ class OCRResult:
         for logo_annotation_data in data.get('logoAnnotations', []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
             self.logo_annotations.append(logo_annotation)
+
+        for label_annotation_data in data.get('labelAnnotations', []):
+            label_annotation = LabelAnnotation(label_annotation_data)
+            self.label_annotations.append(label_annotation)
 
         if 'safeSearchAnnotation' in data:
             self.safe_search_annotation = SafeSearchAnnotation(
@@ -459,6 +465,9 @@ class OCRResult:
     def get_logo_annotations(self) -> List['LogoAnnotation']:
         return self.logo_annotations
 
+    def get_label_annotations(self) -> List['LabelAnnotation']:
+        return self.label_annotations
+
     def get_safe_search_annotation(self):
         return self.safe_search_annotation
 
@@ -485,6 +494,15 @@ class OCRTextAnnotation:
 
 
 class LogoAnnotation:
+    __slots__ = ('id', 'description', 'score')
+
+    def __init__(self, data: JSONType):
+        self.id = data.get('mid') or None
+        self.score = data['score']
+        self.description = data['description']
+
+
+class LabelAnnotation:
     __slots__ = ('id', 'description', 'score')
 
     def __init__(self, data: JSONType):
@@ -820,6 +838,7 @@ def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
 
 def flag_image(ocr_result: OCRResult) -> List[Dict]:
     safe_search_annotation = ocr_result.get_safe_search_annotation()
+    label_annotations = ocr_result.get_label_annotations()
     insights: List[Dict] = []
 
     if safe_search_annotation:
@@ -831,6 +850,15 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
                     'type': key,
                     'likelihood': value.name,
                 })
+
+    for label_annotation in label_annotations:
+        if (label_annotation.description in ('Face', 'Head', 'Selfie') and
+                label_annotation.score >= 0.8):
+            insights.append({
+                'type': label_annotation.description.lower(),
+                'likelihood': label_annotation.score
+            })
+            break
 
     return insights
 

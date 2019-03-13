@@ -22,7 +22,7 @@ class SlackException(Exception):
 
 
 def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
-    flags = ", ".join(["{} ({})".format(i['type'], i['likelihood'])
+    flags = ", ".join(["{} (score: {})".format(i['type'], i['likelihood'])
                        for i in insights])
     url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
                          source)
