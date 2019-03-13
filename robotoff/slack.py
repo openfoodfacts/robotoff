@@ -70,10 +70,14 @@ def notify_automatic_processing(insight: ProductInsight):
         return
 
     text += " " + metadata_text
-    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+    slack_kwargs = {
+        'unfurl_links': False,
+        'unfurl_media': False,
+    }
+    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL, **slack_kwargs)
 
     if insight.value_tag == 'en:nutriscore':
-        post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL)
+        post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
 
 
 def notify_manual_processing(insight: ProductInsight, annotation: int):
@@ -141,9 +145,10 @@ def raise_if_slack_token_undefined():
 
 def post_message(text: str,
                  channel: str,
-                 attachments: Optional[List[JSONType]] = None):
+                 attachments: Optional[List[JSONType]] = None,
+                 **kwargs):
     try:
-        _post_message(text, channel, attachments)
+        _post_message(text, channel, attachments, **kwargs)
     except Exception as e:
         logger.error("An exception occurred when sending a Slack "
                      "notification", exc_info=e)
@@ -151,12 +156,14 @@ def post_message(text: str,
 
 def _post_message(text: str,
                   channel: str,
-                  attachments: Optional[List[JSONType]] = None):
+                  attachments: Optional[List[JSONType]] = None,
+                  **kwargs):
     raise_if_slack_token_undefined()
     params: JSONType = {
         **get_base_params(),
         'channel': channel,
         'text': text,
+        **kwargs
     }
 
     if attachments:
