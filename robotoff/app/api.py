@@ -1,6 +1,6 @@
 import io
 import itertools
-from typing import List
+from typing import List, Optional
 
 import dataclasses
 
@@ -81,7 +81,7 @@ class CategoryPredictionResource:
 class ProductInsightResource:
     def on_get(self, req, resp, barcode):
         response = {}
-        insights = [i.serialize() for i in get_insights(barcode)]
+        insights = [i.serialize() for i in get_insights(barcode=barcode)]
 
         if not insights:
             response['status'] = "no_insights"
@@ -259,7 +259,9 @@ class ProductQuestionsResource:
         lang: str = req.get_param('lang', default='en')
 
         keep_types = QuestionFormatterFactory.get_available_types()
-        insights = list(get_insights(barcode, keep_types, count))
+        insights = list(get_insights(barcode=barcode,
+                                     keep_types=keep_types,
+                                     count=count))
 
         if not insights:
             response['status'] = "no_questions"
@@ -268,6 +270,46 @@ class ProductQuestionsResource:
 
             for insight in insights:
                 formatter_cls = QuestionFormatterFactory.get(insight.type)
+                formatter: QuestionFormatter = formatter_cls(TRANSLATION_STORE)
+                question = formatter.format_question(insight, lang)
+                questions.append(question.serialize())
+
+            response['questions'] = questions
+            response['status'] = "found"
+
+        resp.media = response
+
+
+class RandomQuestionsResource:
+    def on_get(self, req, resp):
+        response = {}
+        count: int = req.get_param_as_int('count', min=1) or 1
+        lang: str = req.get_param('lang', default='en')
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            'insight_types', required=False)
+        country: Optional[str] = req.get_param('country') or None
+
+        if keep_types is None:
+            keep_types = QuestionFormatterFactory.get_available_types()
+        else:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        insights = list(get_insights(keep_types=keep_types,
+                                     count=count,
+                                     country=country))
+
+        if not insights:
+            response['status'] = "no_questions"
+        else:
+            questions: List[JSONType] = []
+
+            for insight in insights:
+                formatter_cls = QuestionFormatterFactory.get(insight.type)
+
+                if formatter_cls is None:
+                    continue
+
                 formatter: QuestionFormatter = formatter_cls(TRANSLATION_STORE)
                 question = formatter.format_question(insight, lang)
                 questions.append(question.serialize())
@@ -301,5 +343,6 @@ api.add_route('/api/v1/webhook/product',
               WebhookProductResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
+api.add_route('/api/v1/questions/random', RandomQuestionsResource())
 
 api = init_sentry(api)
