@@ -547,9 +547,16 @@ class ProductWeightImporter(OCRInsightImporter):
                                  insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
+        if not insights:
+            return
+
         insights_by_subtype = self.group_by_subtype(insights)
 
-        if len(insights_by_subtype) == 1 and len(insights) > 1:
+        insight = insights[0]
+        insight_subtype = insight['content']['matcher_type']
+
+        if (insight_subtype == 'without_mention' and
+                len(insights_by_subtype[insight_subtype]) > 1):
             logger.info("{} distinct product weights found for product "
                         "{}, aborting import".format(len(insights),
                                                      barcode))
@@ -561,28 +568,26 @@ class ProductWeightImporter(OCRInsightImporter):
                                          barcode).count():
             return
 
-        for insight in insights:
-            content = insight['content']
+        content = insight['content']
 
-            if not self.is_valid(barcode, content['value']):
-                continue
+        if not self.is_valid(barcode, content['value']):
+            return
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
-            source = insight['source']
-            yield {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
-                'barcode': barcode,
-                'countries': countries_tags,
-                'timestamp': timestamp,
-                'source_image': source,
-                'data': {
-                    'source': source,
-                    **content
-                }
+        countries_tags = getattr(self.product_store[barcode],
+                                 'countries_tags', [])
+        source = insight['source']
+        yield {
+            'id': str(uuid.uuid4()),
+            'type': self.get_type(),
+            'barcode': barcode,
+            'countries': countries_tags,
+            'timestamp': timestamp,
+            'source_image': source,
+            'data': {
+                'source': source,
+                **content
             }
-            break
+        }
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
