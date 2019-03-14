@@ -45,6 +45,8 @@ def init_sentry(app):
             dsn=settings.SENTRY_DSN)
         return SentryWsgiMiddleware(app)
 
+    return app
+
 
 class CategoryPredictionResource:
     def on_get(self, req, resp):
