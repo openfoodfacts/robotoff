@@ -9,3 +9,4 @@ elasticsearch==6.3.1
 Click==7.0
 apscheduler==3.5.3
 pint==0.9
+sentry-sdk==0.7.6

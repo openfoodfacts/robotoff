@@ -8,6 +8,7 @@ import falcon
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
+from robotoff import settings
 from robotoff.app.core import (normalize_lang,
                                parse_product_json,
                                get_insights,
@@ -27,12 +28,22 @@ from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
 
+import sentry_sdk
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+
 logger = get_logger()
 es_client = get_es_client()
 
 CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
+
+
+def init_sentry(app):
+    if settings.SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN)
+        return SentryWsgiMiddleware(app)
 
 
 class CategoryPredictionResource:
@@ -288,3 +299,5 @@ api.add_route('/api/v1/webhook/product',
               WebhookProductResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
+
+api = init_sentry(api)
