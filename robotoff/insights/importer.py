@@ -537,7 +537,7 @@ class ProductWeightImporter(OCRInsightImporter):
         insights_by_subtype: Dict[str, List[JSONType]] = {}
 
         for insight in insights:
-            matcher_type = insight['matcher_type']
+            matcher_type = insight['content']['matcher_type']
             insights_by_subtype.setdefault(matcher_type, [])
             insights_by_subtype[matcher_type].append(insight)
 
