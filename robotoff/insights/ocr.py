@@ -117,13 +117,6 @@ class OCRRegex:
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
-WEIGHT_VALUES_REGEX = re.compile(
-    r"([0-9]+[,.]?[0-9]*)\s*(fl oz|dl|cl|mg|mL|lbs|oz|g|kg|L)(?![^\s])")
-
-URL_REGEX = re.compile(r'^(http://www\.|https://www\.|http://|https://)?[a-z0-9]+([\-.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(/.*)?$')
-EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
-PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
-
 PACKAGER_CODE: Dict[str, OCRRegex] = {
     "fr_emb": OCRRegex(re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
                        field=OCRField.text_annotations,
@@ -641,27 +634,6 @@ def get_ocr_result(data: JSONType) -> Optional[OCRResult]:
     return OCRResult(response)
 
 
-def find_emails(text: str) -> List[Dict]:
-    results = []
-
-    for match in EMAIL_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
-
-    return results
-
-
-def find_urls(text: str) -> List[Dict]:
-    results = []
-    for match in URL_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
-
-    return results
-
-
 def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
@@ -787,17 +759,6 @@ def find_storage_instructions(text: str) -> List[Dict]:
                     }
 
                 results.append(result)
-
-    return results
-
-
-def find_phone_numbers(text) -> List[Dict]:
-    results = []
-
-    for match in PHONE_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
 
     return results
 
