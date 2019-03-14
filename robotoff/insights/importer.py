@@ -555,7 +555,7 @@ class ProductWeightImporter(OCRInsightImporter):
         insight = insights[0]
         insight_subtype = insight['content']['matcher_type']
 
-        if (insight_subtype == 'without_mention' and
+        if (insight_subtype != 'with_mention' and
                 len(insights_by_subtype[insight_subtype]) > 1):
             logger.info("{} distinct product weights found for product "
                         "{}, aborting import".format(len(insights),
