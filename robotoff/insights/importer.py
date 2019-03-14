@@ -159,6 +159,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
         for barcode, insights in grouped_by.items():
             insights = list(self.deduplicate_insights(insights))
+            insights = self.sort_by_priority(insights)
             inserts += list(self.process_product_insights(barcode, insights, timestamp))
 
         return batch_insert(ProductInsight, inserts, 50)
@@ -189,6 +190,11 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             } for i in insights]
 
         return grouped_by
+
+    @staticmethod
+    def sort_by_priority(insights: List[JSONType]) -> List[JSONType]:
+        return sorted(insights,
+                      key=lambda insight: insight.get('priority', 1))
 
     @abc.abstractmethod
     def process_product_insights(self, barcode: str,
@@ -526,11 +532,24 @@ class ProductWeightImporter(OCRInsightImporter):
 
         return True
 
+    @staticmethod
+    def group_by_subtype(insights: List[JSONType]) -> Dict[str, List[JSONType]]:
+        insights_by_subtype: Dict[str, List[JSONType]] = {}
+
+        for insight in insights:
+            matcher_type = insight['matcher_type']
+            insights_by_subtype.setdefault(matcher_type, [])
+            insights_by_subtype[matcher_type].append(insight)
+
+        return insights_by_subtype
+
     def process_product_insights(self, barcode: str,
                                  insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
-        if len(insights) > 1:
+        insights_by_subtype = self.group_by_subtype(insights)
+
+        if len(insights_by_subtype) == 1 and len(insights) > 1:
             logger.info("{} distinct product weights found for product "
                         "{}, aborting import".format(len(insights),
                                                      barcode))

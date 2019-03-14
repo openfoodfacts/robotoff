@@ -62,6 +62,37 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
     return date
 
 
+def process_product_weight(match, prompt: bool) -> Dict:
+    raw = match.group()
+
+    if prompt:
+        prompt_str = match.group(1)
+        value = match.group(2)
+        unit = match.group(3)
+    else:
+        prompt_str = None
+        value = match.group(1)
+        unit = match.group(2)
+
+    if unit in ('dle', 'cle', 'mge', 'mle', 'ge', 'kge', 'le'):
+        # When the e letter often comes after the weight unit, the
+        # space is often not detected
+        unit = unit[:-1]
+
+    text = "{} {}".format(value, unit)
+    result = {
+        'text': text,
+        'raw': raw,
+        'value': value,
+        'unit': unit,
+    }
+
+    if prompt_str is not None:
+        result['prompt'] = prompt_str
+
+    return result
+
+
 class OCRField(enum.Enum):
     full_text = 1
     full_text_contiguous = 2
@@ -69,16 +100,18 @@ class OCRField(enum.Enum):
 
 
 class OCRRegex:
-    __slots__ = ('regex', 'field', 'lowercase', 'processing_func')
+    __slots__ = ('regex', 'field', 'lowercase', 'processing_func', 'priority')
 
     def __init__(self, regex,
                  field: OCRField,
                  lowercase: bool = False,
-                 processing_func: Optional[Callable] = None):
+                 processing_func: Optional[Callable] = None,
+                 priority: Optional[int] = None):
         self.regex = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
+        self.priority = priority
 
 
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
@@ -356,10 +389,20 @@ NUTRIENT_VALUES_REGEX = {
         lowercase=True),
 }
 
-PRODUCT_WEIGHT_REGEX = OCRRegex(
-    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
-    field=OCRField.full_text_contiguous,
-    lowercase=True)
+PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
+    'with_mention': OCRRegex(
+        re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
+        field=OCRField.full_text_contiguous,
+        lowercase=True,
+        processing_func=functools.partial(process_product_weight, prompt=True),
+        priority=1),
+    'without_mention': OCRRegex(
+        re.compile(r"([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge|le)(?![a-z])"),
+        field=OCRField.full_text_contiguous,
+        lowercase=True,
+        processing_func=functools.partial(process_product_weight, prompt=False),
+        priority=2)
+}
 
 
 EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
@@ -657,27 +700,16 @@ def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
 def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
-    for text in ocr_result.get_text(PRODUCT_WEIGHT_REGEX):
-        for match in PRODUCT_WEIGHT_REGEX.regex.finditer(text):
-            raw = match.group()
-            prompt = match.group(1)
-            value = match.group(2)
-            unit = match.group(3)
+    for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
+        for text in ocr_result.get_text(ocr_regex):
+            for match in ocr_regex.regex.finditer(text):
+                if ocr_regex.processing_func is None:
+                    continue
 
-            if unit in ('dle', 'cle', 'mge', 'mle', 'ge', 'kge', 'le'):
-                # When the e letter often comes after the weight unit, the
-                # space is often not detected
-                unit = unit[:-1]
-
-            text = "{} {}".format(value, unit)
-            result = {
-                'text': text,
-                'raw': raw,
-                'prompt': prompt,
-                'value': value,
-                'unit': unit,
-            }
-            results.append(result)
+                result = ocr_regex.processing_func(match)
+                result['matcher_type'] = type_
+                result['priority'] = ocr_regex.priority
+                results.append(result)
 
     return results
 
