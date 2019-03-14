@@ -37,20 +37,6 @@ class BaseModel(peewee.Model):
         legacy_table_names = False
 
 
-class CategorizationTask(BaseModel):
-    id = peewee.UUIDField(primary_key=True)
-    product_id = peewee.CharField(max_length=100, null=False)
-    predicted_category = peewee.TextField(null=False)
-    confidence = peewee.FloatField(null=True)
-    last_updated_at = peewee.TextField(null=False)
-    completed_at = peewee.DateTimeField(null=True)
-    annotation = peewee.IntegerField(null=True)
-    outdated = peewee.BooleanField(default=False)
-    category_depth = peewee.IntegerField(null=True, index=True)
-    campaign = peewee.TextField(null=True, index=True)
-    countries = BinaryJSONField(null=True, index=True)
-
-
 class ProductInsight(BaseModel):
     id = peewee.UUIDField(primary_key=True)
     barcode = peewee.CharField(max_length=100, null=False, index=True)
@@ -59,7 +45,6 @@ class ProductInsight(BaseModel):
     timestamp = peewee.DateTimeField(null=True)
     completed_at = peewee.DateTimeField(null=True)
     annotation = peewee.IntegerField(null=True)
-    outdated = peewee.BooleanField(default=False)
     countries = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)
     value_tag = peewee.TextField(null=True, index=True)
@@ -80,4 +65,4 @@ class ProductIngredient(BaseModel):
     ingredients = peewee.TextField(null=False)
 
 
-MODELS = [CategorizationTask, ProductInsight, ProductIngredient]
+MODELS = [ProductInsight, ProductIngredient]

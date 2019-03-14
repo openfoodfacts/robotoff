@@ -106,9 +106,8 @@ def get_random_insight(insight_type: str = None,
         if product:
             return insight
         else:
-            insight.outdated = True
-            insight.save()
-            logger.info("Product not found")
+            insight.delete_instance()
+            logger.info("Product not found, insight deleted")
 
 
 def save_insight(insight_id: str, annotation: int, update: bool=True) -> AnnotationResult:
