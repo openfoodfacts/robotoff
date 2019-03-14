@@ -34,6 +34,7 @@ def process_insights():
         with db.atomic():
             for insight in (ProductInsight.select()
                                           .where(ProductInsight.annotation.is_null(),
+                                                 ProductInsight.outdated == False,
                                                  ProductInsight.process_after.is_null(False),
                                                  ProductInsight.process_after <= datetime.datetime.utcnow())
                                           .iterator()):
@@ -98,7 +99,8 @@ def mark_insights():
         with db.atomic():
             for insight in (ProductInsight.select()
                                           .where(ProductInsight.process_after.is_null(),
-                                                 ProductInsight.annotation.is_null())
+                                                 ProductInsight.annotation.is_null(),
+                                                 ProductInsight.outdated == False)
                                           .iterator()):
                 if insight.id in NEED_VALIDATION_INSIGHTS:
                     continue
