@@ -401,13 +401,6 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
         lowercase=True,
         processing_func=functools.partial(process_product_weight, prompt=False),
         priority=2),
-    'no_mention_no_estimate': OCRRegex(
-        re.compile(
-            r"([0-9]+[,.]?[0-9]*)\s?(dl|cl|ml)(?![a-z])"),
-        field=OCRField.full_text_contiguous,
-        lowercase=True,
-        processing_func=functools.partial(process_product_weight, prompt=False),
-        priority=3)
 }
 
 
