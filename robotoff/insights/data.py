@@ -66,6 +66,7 @@ AUTHORIZED_LABELS = {
     "en:australian-made",
     "en:gluten-free",
     "fr:viande-bovine-francaise",
+    "fr:viande-porcine-francaise",
     "en:no-preservatives",
     "en:no-colorings",
     "en:no-additives",

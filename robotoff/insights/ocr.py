@@ -353,6 +353,12 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'fr:viande-porcine-francaise': [
+        OCRRegex(
+            re.compile(r"le po?rc fran[çc]ais"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
 }
 
 
