@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
+from robotoff.off import get_product
 from robotoff.taxonomy import TaxonomyType, TAXONOMY_STORES, Taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
@@ -85,9 +86,37 @@ class CategoryQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
+        source_image_url = self.get_source_image_url(insight.barcode)
         return AddBinaryQuestion(question=localized_question,
                                  value=localized_value,
-                                 insight=insight)
+                                 insight=insight,
+                                 source_image_url=source_image_url)
+
+    @staticmethod
+    def get_source_image_url(barcode: str) -> Optional[str]:
+        product: Optional[JSONType] = get_product(barcode,
+                                                  fields=['selected_images'])
+
+        if product is None:
+            return None
+
+        if 'selected_images' not in product:
+            return None
+
+        selected_images = product['selected_images']
+
+        if 'front' not in selected_images:
+            return None
+
+        front_images = selected_images['front']
+
+        if 'display' in front_images:
+            display_images = list(front_images['display'].values())
+
+            if display_images:
+                return display_images[0]
+
+        return None
 
 
 class ProductWeightQuestionFormatter(QuestionFormatter):
