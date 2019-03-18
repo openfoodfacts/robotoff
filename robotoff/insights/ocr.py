@@ -365,6 +365,12 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=False),
     ],
+    'en:halal': [
+        OCRRegex(
+            re.compile(r"(?<!\w)halal(?!\w)"),
+            field=OCRField.text_annotations,
+            lowercase=True),
+    ],
 }
 
 

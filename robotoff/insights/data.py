@@ -80,4 +80,5 @@ AUTHORIZED_LABELS = {
     "en:no-artificial-flavors",
     "en:vegan",
     "en:sustainable-seafood-msc",
+    "en:halal",
 }
