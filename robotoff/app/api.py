@@ -70,7 +70,7 @@ class CategoryPredictionResource:
             predicted_category_name = CATEGORY_TAXONOMY.get_localized_name(
                 category_tag, lang)
             response['prediction'] = {
-                'confidence': insight.data['confidence'],
+                'confidence': insight.data.get('confidence'),
                 'id': category_tag,
                 'name': predicted_category_name,
             }
