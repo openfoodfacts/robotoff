@@ -359,6 +359,12 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'en:sustainable-seafood-msc': [
+        OCRRegex(
+            re.compile(r"www\.msc\.org"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+    ],
 }
 
 

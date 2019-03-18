@@ -79,4 +79,5 @@ AUTHORIZED_LABELS = {
     "en:no-flavors",
     "en:no-artificial-flavors",
     "en:vegan",
+    "en:sustainable-seafood-msc",
 }
