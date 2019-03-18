@@ -430,7 +430,9 @@ TRACES_REGEX = OCRRegex(
 
 
 class OCRResult:
-    __slots__ = ('text_annotations', 'full_text_annotation',
+    __slots__ = ('text_annotations', 'text_annotations_str',
+                 'text_annotations_str_lower',
+                 'full_text_annotation',
                  'logo_annotations', 'safe_search_annotation',
                  'label_annotations')
 
@@ -445,10 +447,16 @@ class OCRResult:
             text_annotation = OCRTextAnnotation(text_annotation_data)
             self.text_annotations.append(text_annotation)
 
+        self.text_annotations_str = '||'.join(t.text
+                                              for t in self.text_annotations)
+        self.text_annotations_str_lower = (self.text_annotations_str
+                                           .lower())
+
         full_text_annotation_data = data.get('fullTextAnnotation')
 
         if full_text_annotation_data:
-            self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
+            self.full_text_annotation = OCRFullTextAnnotation(
+                full_text_annotation_data)
 
         for logo_annotation_data in data.get('logoAnnotations', []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
@@ -465,7 +473,7 @@ class OCRResult:
     def get_full_text(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
             if lowercase:
-                return self.full_text_annotation.text.lower()
+                return self.full_text_annotation.text_lower
 
             return self.full_text_annotation.text
 
@@ -474,41 +482,31 @@ class OCRResult:
     def get_full_text_contiguous(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
             if lowercase:
-                return self.full_text_annotation.contiguous_text.lower()
+                return self.full_text_annotation.contiguous_text_lower
 
             return self.full_text_annotation.contiguous_text
 
         return None
 
-    def iter_text_annotations(self, lowercase: bool = False) -> Iterable[str]:
-        for text_annotation in self.text_annotations:
-            if lowercase:
-                yield text_annotation.text.lower()
-
-            yield text_annotation.text
-
-    def get_text(self, ocr_regex: OCRRegex) -> Iterable[str]:
+    def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
         field = ocr_regex.field
 
         if field == OCRField.full_text:
-            text = self.get_full_text(ocr_regex.lowercase)
-
-            if text:
-                return [text]
+            return self.get_full_text(ocr_regex.lowercase)
 
         elif field == OCRField.full_text_contiguous:
-            text = self.get_full_text_contiguous(ocr_regex.lowercase)
-
-            if text:
-                return [text]
+            return self.get_full_text_contiguous(ocr_regex.lowercase)
 
         elif field == OCRField.text_annotations:
-            return list(self.iter_text_annotations(ocr_regex.lowercase))
+            if ocr_regex.lowercase:
+                return self.text_annotations_str_lower
+            else:
+                return self.text_annotations_str
 
         else:
             raise ValueError("invalid field: {}".format(field))
 
-        return []
+        return None
 
     def get_logo_annotations(self) -> List['LogoAnnotation']:
         return self.logo_annotations
@@ -521,13 +519,16 @@ class OCRResult:
 
 
 class OCRFullTextAnnotation:
-    __slots__ = ('text', 'pages', 'contiguous_text')
+    __slots__ = ('text', 'text_lower',
+                 'pages', 'contiguous_text', 'contiguous_text_lower')
 
     def __init__(self, data: JSONType):
         self.text = MULTIPLE_SPACES_REGEX.sub(' ', data['text'])
+        self.text_lower = self.text.lower()
         self.contiguous_text = self.text.replace('\n', ' ')
         self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ',
                                                          self.contiguous_text)
+        self.contiguous_text_lower = self.contiguous_text.lower()
         self.pages: List = []
 
 
@@ -650,15 +651,19 @@ def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for regex_code, ocr_regex in PACKAGER_CODE.items():
-        for text in ocr_result.get_text(ocr_regex):
-            for match in ocr_regex.regex.finditer(text):
-                if ocr_regex.processing_func is not None:
-                    value = ocr_regex.processing_func(match)
-                    results.append({
-                        "raw": match.group(0),
-                        "text": value,
-                        "type": regex_code,
-                    })
+        text = ocr_result.get_text(ocr_regex)
+
+        if not text:
+            continue
+
+        for match in ocr_regex.regex.finditer(text):
+            if ocr_regex.processing_func is not None:
+                value = ocr_regex.processing_func(match)
+                results.append({
+                    "raw": match.group(0),
+                    "text": value,
+                    "type": regex_code,
+                })
 
     return results
 
@@ -667,16 +672,20 @@ def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
-        for text in ocr_result.get_text(ocr_regex):
-            for match in ocr_regex.regex.finditer(text):
-                value = match.group(2).replace(',', '.')
-                unit = match.group(3)
-                results.append({
-                    "raw": match.group(0),
-                    "nutrient": regex_code,
-                    'value': value,
-                    'unit': unit,
-                })
+        text = ocr_result.get_text(ocr_regex)
+
+        if not text:
+            continue
+
+        for match in ocr_regex.regex.finditer(text):
+            value = match.group(2).replace(',', '.')
+            unit = match.group(3)
+            results.append({
+                "raw": match.group(0),
+                "nutrient": regex_code,
+                'value': value,
+                'unit': unit,
+            })
 
     return results
 
@@ -685,15 +694,19 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
-        for text in ocr_result.get_text(ocr_regex):
-            for match in ocr_regex.regex.finditer(text):
-                if ocr_regex.processing_func is None:
-                    continue
+        text = ocr_result.get_text(ocr_regex)
 
-                result = ocr_regex.processing_func(match)
-                result['matcher_type'] = type_
-                result['priority'] = ocr_regex.priority
-                results.append(result)
+        if not text:
+            continue
+
+        for match in ocr_regex.regex.finditer(text):
+            if ocr_regex.processing_func is None:
+                continue
+
+            result = ocr_regex.processing_func(match)
+            result['matcher_type'] = type_
+            result['priority'] = ocr_regex.priority
+            results.append(result)
 
     return results
 
@@ -701,17 +714,21 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
 def find_traces(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
-    for text in ocr_result.get_text(TRACES_REGEX):
-        for match in TRACES_REGEX.regex.finditer(text):
-            raw = match.group()
-            end_idx = match.end()
-            captured = text[end_idx:end_idx+100]
+    text = ocr_result.get_text(TRACES_REGEX)
 
-            result = {
-                'raw': raw,
-                'text': captured
-            }
-            results.append(result)
+    if not text:
+        return []
+
+    for match in TRACES_REGEX.regex.finditer(text):
+        raw = match.group()
+        end_idx = match.end()
+        captured = text[end_idx:end_idx+100]
+
+        result = {
+            'raw': raw,
+            'text': captured
+        }
+        results.append(result)
 
     return results
 
@@ -794,17 +811,21 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
 
     for label_tag, regex_list in LABELS_REGEX.items():
         for ocr_regex in regex_list:
-            for text in ocr_result.get_text(ocr_regex):
-                for match in ocr_regex.regex.finditer(text):
-                    if ocr_regex.processing_func:
-                        label_value = ocr_regex.processing_func(match)
-                    else:
-                        label_value = label_tag
+            text = ocr_result.get_text(ocr_regex)
 
-                    results.append({
-                        'label_tag': label_value,
-                        'text': match.group(),
-                    })
+            if not text:
+                continue
+
+            for match in ocr_regex.regex.finditer(text):
+                if ocr_regex.processing_func:
+                    label_value = ocr_regex.processing_func(match)
+                else:
+                    label_value = label_tag
+
+                results.append({
+                    'label_tag': label_value,
+                    'text': match.group(),
+                })
 
     return results
 
@@ -815,28 +836,32 @@ def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
-        for text in ocr_result.get_text(ocr_regex):
-            for match in ocr_regex.regex.finditer(text):
-                raw = match.group(0)
+        text = ocr_result.get_text(ocr_regex)
 
-                if not ocr_regex.processing_func:
-                    continue
+        if not text:
+            continue
 
-                date = ocr_regex.processing_func(match)
+        for match in ocr_regex.regex.finditer(text):
+            raw = match.group(0)
 
-                if date is None:
-                    continue
+            if not ocr_regex.processing_func:
+                continue
 
-                if date.year > 2025 or date.year < 2015:
-                    continue
+            date = ocr_regex.processing_func(match)
 
-                value = date.strftime("%d/%m/%Y")
+            if date is None:
+                continue
 
-                results.append({
-                    "raw": raw,
-                    "text": value,
-                    "type": type_,
-                })
+            if date.year > 2025 or date.year < 2015:
+                continue
+
+            value = date.strftime("%d/%m/%Y")
+
+            results.append({
+                "raw": raw,
+                "text": value,
+                "type": type_,
+            })
 
     return results
 
