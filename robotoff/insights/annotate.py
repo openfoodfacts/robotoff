@@ -11,7 +11,6 @@ from robotoff.models import ProductInsight, db, ProductIngredient
 from robotoff.off import get_product, save_ingredients, update_emb_codes, \
     add_label_tag, add_category, update_quantity, update_expiration_date, add_brand
 from robotoff.utils import get_logger
-from robotoff.utils.text import strip_accents_ascii
 
 logger = get_logger(__name__)
 
@@ -221,7 +220,6 @@ class ExpirationDateAnnotator(InsightAnnotator):
 
 class BrandAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        brand_tag: str = insight.value_tag
         brand: str = insight.data['brand']
 
         product: Dict = get_product(insight.barcode, ['brands_tags'])
