@@ -679,7 +679,8 @@ class BrandInsightImporter(OCRInsightImporter):
         if not product:
             return True
 
-        if brand_tag in product.brands_tags:
+        if product.brands_tags:
+            # For now, don't annotate if a brand has already been provided
             return False
 
         if brand_tag in brand_seen:

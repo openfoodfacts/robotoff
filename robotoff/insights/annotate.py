@@ -231,7 +231,8 @@ class BrandAnnotator(InsightAnnotator):
 
         brand_tags: str = product.get('brand_tags') or []
 
-        if brand_tag in brand_tags:
+        if brand_tags:
+            # For now, don't annotate if a brand has already been provided
             return ALREADY_ANNOTATED_RESULT
 
         add_brand(insight.barcode, brand)
