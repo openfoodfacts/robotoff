@@ -66,6 +66,12 @@ def notify_automatic_processing(insight: ProductInsight):
                 "product {}".format(insight.data['text'],
                                     insight.data['raw'],
                                     insight.barcode))
+
+    elif insight.type == InsightType.brand.name:
+        text = ("The `{}` brand was automatically added to "
+                "product {}".format(insight.data['brand'],
+                                    insight.barcode))
+
     else:
         return
 
