@@ -385,9 +385,8 @@ BRANDS_DATA: Dict[str, str] = {
 }
 
 
-BRAND_REGEX_STR = "|".join("(?P<{}>{})".format(brand, pattern)
+BRAND_REGEX_STR = "|".join("(?P<{}>(?<!\w){}(?!\w))".format(brand, pattern)
                            for brand, pattern in BRANDS_DATA.items())
-BRAND_REGEX_STR = "(?<!\w){}(?!\w)".format(BRAND_REGEX_STR)
 BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
                        field=OCRField.full_text_contiguous,
                        lowercase=True)
