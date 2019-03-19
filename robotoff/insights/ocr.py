@@ -380,6 +380,7 @@ BRANDS_DATA: Dict[str, str] = {
     'Colruyt': r"colruyt",
     'Delhaize': r"delhaize",
     'Monoprix': r"monoprix",
+    'Boni': r"boni",
 }
 
 
