@@ -374,6 +374,27 @@ LABELS_REGEX = {
 }
 
 
+BRANDS_DATA: Dict[str, str] = {
+    'Auchan': r"auchan",
+    'Carrefour': r"carrefour",
+    'Colruyt': r"colruyt",
+    'Delhaize': r"delhaize",
+    'Monoprix': r"monoprix",
+}
+
+
+BRAND_REGEX_STR = "|".join("(?P<{}>{})".format(brand, pattern)
+                           for brand, pattern in BRANDS_DATA.items())
+BRAND_REGEX_STR = "(?<!\w){}(?!\w)".format(BRAND_REGEX_STR)
+BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
+                       field=OCRField.full_text_contiguous,
+                       lowercase=True)
+
+
+def get_brand_tag(brand: str) -> str:
+    return brand.lower().replace(' ', '-')
+
+
 def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
     nutrient_names_str = '|'.join(nutrient_names)
     units_str = '|'.join(units)
@@ -511,8 +532,6 @@ class OCRResult:
 
         else:
             raise ValueError("invalid field: {}".format(field))
-
-        return None
 
     def get_logo_annotations(self) -> List['LogoAnnotation']:
         return self.logo_annotations
@@ -836,6 +855,26 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
     return results
 
 
+def find_brands(ocr_result: OCRResult) -> List[Dict]:
+    results = []
+
+    text = ocr_result.get_text(BRAND_REGEX)
+
+    if not text:
+        return []
+
+    for match in BRAND_REGEX.regex.finditer(text):
+        for brand, match_str in match.groupdict().items():
+            if match_str is not None:
+                results.append({
+                    'brand': brand,
+                    'brand_tag': get_brand_tag(brand),
+                    'text': match_str,
+                })
+
+    return results
+
+
 def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
     # Parse expiration date
     #        "À consommer de préférence avant",
@@ -921,6 +960,9 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == 'nutrient':
         return find_nutrient_values(ocr_result)
+
+    elif insight_type == 'brand':
+        return find_brands(ocr_result)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
@@ -1020,7 +1062,8 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
                          InsightType.packager_code.name,
                          InsightType.product_weight.name,
                          InsightType.image_flag.name,
-                         InsightType.expiration_date.name):
+                         InsightType.expiration_date.name,
+                         InsightType.brand.name):
         insights = extract_insights(ocr_result, insight_type)
 
         if insights:

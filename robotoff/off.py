@@ -112,6 +112,16 @@ def add_label_tag(barcode: str, label_tag: str, dry=False):
     update_product(params, dry=dry)
 
 
+def add_brand(barcode: str, brand: str, dry=False):
+    params = {
+        'code': barcode,
+        'add_brands': brand,
+        'comment': "Adding brand '{}' (automated edit)".format(brand),
+        **AUTH_DICT,
+    }
+    update_product(params, dry=dry)
+
+
 def update_product(params: Dict, dry=False):
     if dry:
         r = http_session.get(DRY_POST_URL, params=params,

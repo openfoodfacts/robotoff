@@ -661,6 +661,78 @@ class ExpirationDateImporter(OCRInsightImporter):
         return False
 
 
+class BrandInsightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['brand_tag'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.brand.name
+
+    def is_valid(self, barcode: str,
+                 brand_tag: str,
+                 brand_seen: Set[str]) -> bool:
+        product = self.product_store[barcode]
+
+        if not product:
+            return True
+
+        if brand_tag in product.brands_tags:
+            return False
+
+        if brand_tag in brand_seen:
+            return False
+
+        return True
+
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
+                                 timestamp: datetime.datetime) \
+            -> Iterable[JSONType]:
+        brand_seen: Set[str] = set()
+
+        for t in (ProductInsight.select(ProductInsight.value_tag)
+                .where(ProductInsight.type ==
+                       self.get_type(),
+                       ProductInsight.barcode ==
+                       barcode)).iterator():
+            brand_seen.add(t.value_tag)
+
+        for insight in insights:
+            barcode = insight['barcode']
+            content = insight['content']
+            brand_tag = content['brand_tag']
+
+            if not self.is_valid(barcode, brand_tag, brand_seen):
+                continue
+
+            countries_tags = getattr(self.product_store[barcode],
+                                     'countries_tags', [])
+            source = insight['source']
+            yield {
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': countries_tags,
+                'timestamp': timestamp,
+                'value_tag': brand_tag,
+                'source_image': source,
+                'data': {
+                    'source': source,
+                    'brand_tag': brand_tag,
+                    'text': content['text'],
+                    'brand': content['brand']
+                }
+            }
+            brand_seen.add(brand_tag)
+
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        return False
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
@@ -669,6 +741,7 @@ class InsightImporterFactory:
         InsightType.category.name: CategoryImporter,
         InsightType.product_weight.name: ProductWeightImporter,
         InsightType.expiration_date.name: ExpirationDateImporter,
+        InsightType.brand.name: BrandInsightImporter,
     }
 
     @classmethod
