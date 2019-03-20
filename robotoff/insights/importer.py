@@ -5,7 +5,7 @@ import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable
 
 from robotoff.insights._enum import InsightType
-from robotoff.insights.data import AUTHORIZED_LABELS
+from robotoff.insights.data import AUTHORIZED_LABELS, BRANDS_BARCODE_RANGE
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore, Product
@@ -686,6 +686,11 @@ class BrandInsightImporter(OCRInsightImporter):
         if brand_tag in brand_seen:
             return False
 
+        if not self.in_barcode_range(brand_tag, barcode):
+            logger.warn("Barcode {} of brand {} not in barcode "
+                        "range".format(barcode, brand_tag))
+            return False
+
         return True
 
     def process_product_insights(self, barcode: str,
@@ -731,6 +736,29 @@ class BrandInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
+        return False
+
+    @staticmethod
+    def in_barcode_range(brand_tag: str, barcode: str) -> bool:
+        """Check that the insight barcode is in the range of the detected
+        brand barcode range.
+        Return True if the check passes, False otherwise
+        """
+        if brand_tag not in BRANDS_BARCODE_RANGE:
+            return True
+
+        barcode_range = BRANDS_BARCODE_RANGE[brand_tag]
+
+        if len(barcode_range) != len(barcode):
+            logger.debug("Barcode range and barcode do not have the same length")
+            return True
+
+        barcode_range = barcode_range.replace('x', '')
+
+        if barcode.startswith(barcode_range):
+            return True
+
+        logger.debug("Barcode {} not in range {}".format(barcode, barcode_range))
         return False
 
 

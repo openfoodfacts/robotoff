@@ -376,17 +376,18 @@ LABELS_REGEX = {
 
 BRANDS_DATA: Dict[str, str] = {
     'Auchan': r"auchan",
+    'Boni': r"boni",
     'Carrefour': r"carrefour",
     'Carrefour Baby': r"carrefour [bg]aby",
     'Carrefour Bio': r"carrefour bio",
     'Carrefour Discount': r"carrefour discount",
     'Colruyt': r"colruyt",
     'Delhaize': r"delhaize",
+    'Everyday': r"everyday",
     'Monoprix': r"monoprix",
     'Monoprix Bio': r"monoprix gourmet",
     'Monoprix Gourmet': r"monoprix gourmet",
     "Monoprix P'tit Prix": r"monoprix p'?tit prix",
-    'Boni': r"boni",
     'Yoplait': r"yoplait",
 }
 

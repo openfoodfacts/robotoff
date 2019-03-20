@@ -1,3 +1,5 @@
+from typing import Dict
+
 AUTHORIZED_LABELS = {
     "en:at-bio-301",
     "en:at-bio-402",
@@ -81,4 +83,9 @@ AUTHORIZED_LABELS = {
     "en:vegan",
     "en:sustainable-seafood-msc",
     "en:halal",
+}
+
+BRANDS_BARCODE_RANGE: Dict[str, str] = {
+    'boni': "5400141xxxxxx",
+    'everyday': "5400141xxxxxx",
 }
