@@ -495,10 +495,14 @@ class OCRResult:
             text_annotation = OCRTextAnnotation(text_annotation_data)
             self.text_annotations.append(text_annotation)
 
-        self.text_annotations_str = '||'.join(t.text
-                                              for t in self.text_annotations)
-        self.text_annotations_str_lower = (self.text_annotations_str
-                                           .lower())
+        self.text_annotations_str: Optional[str] = None
+        self.text_annotations_str_lower: Optional[str] = None
+
+        if self.text_annotations:
+            self.text_annotations_str = '||'.join(t.text
+                                                  for t in self.text_annotations)
+            self.text_annotations_str_lower = (self.text_annotations_str
+                                               .lower())
 
         full_text_annotation_data = data.get('fullTextAnnotation')
 
@@ -536,20 +540,32 @@ class OCRResult:
 
         return None
 
+    def get_text_annotations(self, lowercase: bool = False) -> Optional[str]:
+        if self.text_annotations_str is not None:
+            if lowercase:
+                return self.text_annotations_str_lower
+            else:
+                return self.text_annotations_str
+
     def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
         field = ocr_regex.field
 
         if field == OCRField.full_text:
-            return self.get_full_text(ocr_regex.lowercase)
+            text = self.get_full_text(ocr_regex.lowercase)
+
+            if text is None:
+                # If there is no full text, get text annotations as fallback
+                return self.get_text_annotations(ocr_regex.lowercase)
 
         elif field == OCRField.full_text_contiguous:
-            return self.get_full_text_contiguous(ocr_regex.lowercase)
+            text = self.get_full_text_contiguous(ocr_regex.lowercase)
+
+            if text is None:
+                # If there is no full text, get text annotations as fallback
+                return self.get_text_annotations(ocr_regex.lowercase)
 
         elif field == OCRField.text_annotations:
-            if ocr_regex.lowercase:
-                return self.text_annotations_str_lower
-            else:
-                return self.text_annotations_str
+            return self.get_text_annotations(ocr_regex.lowercase)
 
         else:
             raise ValueError("invalid field: {}".format(field))
