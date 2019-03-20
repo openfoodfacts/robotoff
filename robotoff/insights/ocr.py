@@ -377,23 +377,43 @@ LABELS_REGEX = {
 BRANDS_DATA: Dict[str, str] = {
     'Auchan': r"auchan",
     'Carrefour': r"carrefour",
+    'Carrefour Baby': r"carrefour [bg]aby",
+    'Carrefour Bio': r"carrefour bio",
+    'Carrefour Discount': r"carrefour discount",
     'Colruyt': r"colruyt",
     'Delhaize': r"delhaize",
     'Monoprix': r"monoprix",
+    'Monoprix Bio': r"monoprix gourmet",
+    'Monoprix Gourmet': r"monoprix gourmet",
+    "Monoprix P'tit Prix": r"monoprix p'?tit prix",
     'Boni': r"boni",
     'Yoplait': r"yoplait",
 }
 
 
-BRAND_REGEX_STR = "|".join("(?P<{}>(?<!\w){}(?!\w))".format(brand, pattern)
-                           for brand, pattern in BRANDS_DATA.items())
+def get_brand_tag(brand: str) -> str:
+    return (brand.lower()
+                 .replace(' ', '-')
+                 .replace("'", '-'))
+
+
+def brand_sort_key(item):
+    """Sorting function for BRAND_DATA items.
+    For the regex to work correctly, we want the longest brand names to
+    appear first.
+    """
+    brand, _ = item
+
+    return -len(brand), brand
+
+
+SORTED_BRANDS = sorted(BRANDS_DATA.items(), key=brand_sort_key)
+
+BRAND_REGEX_STR = "|".join("((?<!\w){}(?!\w))".format(pattern)
+                           for _, pattern in SORTED_BRANDS)
 BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
                        field=OCRField.full_text_contiguous,
                        lowercase=True)
-
-
-def get_brand_tag(brand: str) -> str:
-    return brand.lower().replace(' ', '-')
 
 
 def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
@@ -865,13 +885,17 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
         return []
 
     for match in BRAND_REGEX.regex.finditer(text):
-        for brand, match_str in match.groupdict().items():
+        groups = match.groups()
+
+        for idx, match_str in enumerate(groups):
             if match_str is not None:
+                brand, _ = SORTED_BRANDS[idx]
                 results.append({
                     'brand': brand,
                     'brand_tag': get_brand_tag(brand),
                     'text': match_str,
                 })
+                break
 
     return results
 
