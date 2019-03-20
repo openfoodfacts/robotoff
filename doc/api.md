@@ -89,3 +89,33 @@ Current question types:
 + country (str, optional) - filter by country tag.
 
 + Response 200 (application/json)
+
+
+# Group Predict
+
+## Ingredient spellcheck [/predict/ingredients/spellcheck]
+
+### Get spelling corrections [POST]
+
++ text (str, required) - the ingredient text to spellcheck
+
+
++ Response 200 (application/json)
+
+        {
+            "corrected": "farine de blé",
+            "corrections": [
+                {
+                    "score": 0.0009564351,
+                    "term_corrections": [
+                        {
+                            "correction": "farine",
+                            "end_offset": 6,
+                            "original": "fqrine",
+                            "start_offset": 0
+                        }
+                    ]
+                }
+            ],
+            "text": "fqrine de blé"
+        }
