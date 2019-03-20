@@ -9,3 +9,4 @@ class InsightType(Enum):
     image_flag = 5
     product_weight = 6
     expiration_date = 7
+    brand = 8

@@ -5,7 +5,7 @@ import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable
 
 from robotoff.insights._enum import InsightType
-from robotoff.insights.data import AUTHORIZED_LABELS
+from robotoff.insights.data import AUTHORIZED_LABELS, BRANDS_BARCODE_RANGE
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore, Product
@@ -159,6 +159,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
         for barcode, insights in grouped_by.items():
             insights = list(self.deduplicate_insights(insights))
+            insights = self.sort_by_priority(insights)
             inserts += list(self.process_product_insights(barcode, insights, timestamp))
 
         return batch_insert(ProductInsight, inserts, 50)
@@ -189,6 +190,11 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             } for i in insights]
 
         return grouped_by
+
+    @staticmethod
+    def sort_by_priority(insights: List[JSONType]) -> List[JSONType]:
+        return sorted(insights,
+                      key=lambda insight: insight.get('priority', 1))
 
     @abc.abstractmethod
     def process_product_insights(self, barcode: str,
@@ -258,14 +264,16 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     'matcher_type': content['type'],
                     'raw': content['raw'],
                     'text': emb_code,
@@ -280,7 +288,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                              "{}".format(PackagerCodeInsightImporter
                                          .get_type()))
 
-        if insight.data['matcher_type'] in ('eu_fr', 'fr_emb'):
+        if insight.data['matcher_type'] in ('eu_fr', 'eu_de', 'fr_emb'):
             return False
 
         return True
@@ -352,6 +360,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
@@ -359,8 +368,9 @@ class LabelInsightImporter(OCRInsightImporter):
                 'countries': countries_tags,
                 'timestamp': timestamp,
                 'value_tag': label_tag,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     'text': content['text'],
                     'label_tag': label_tag,
                 }
@@ -522,11 +532,31 @@ class ProductWeightImporter(OCRInsightImporter):
 
         return True
 
+    @staticmethod
+    def group_by_subtype(insights: List[JSONType]) -> Dict[str, List[JSONType]]:
+        insights_by_subtype: Dict[str, List[JSONType]] = {}
+
+        for insight in insights:
+            matcher_type = insight['content']['matcher_type']
+            insights_by_subtype.setdefault(matcher_type, [])
+            insights_by_subtype[matcher_type].append(insight)
+
+        return insights_by_subtype
+
     def process_product_insights(self, barcode: str,
                                  insights: List[JSONType],
                                  timestamp: datetime.datetime) \
             -> Iterable[JSONType]:
-        if len(insights) > 1:
+        if not insights:
+            return
+
+        insights_by_subtype = self.group_by_subtype(insights)
+
+        insight = insights[0]
+        insight_subtype = insight['content']['matcher_type']
+
+        if (insight_subtype != 'with_mention' and
+                len(insights_by_subtype[insight_subtype]) > 1):
             logger.info("{} distinct product weights found for product "
                         "{}, aborting import".format(len(insights),
                                                      barcode))
@@ -538,26 +568,26 @@ class ProductWeightImporter(OCRInsightImporter):
                                          barcode).count():
             return
 
-        for insight in insights:
-            content = insight['content']
+        content = insight['content']
 
-            if not self.is_valid(barcode, content['value']):
-                continue
+        if not self.is_valid(barcode, content['value']):
+            return
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
-            yield {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
-                'barcode': barcode,
-                'countries': countries_tags,
-                'timestamp': timestamp,
-                'data': {
-                    'source': insight['source'],
-                    **content
-                }
+        countries_tags = getattr(self.product_store[barcode],
+                                 'countries_tags', [])
+        source = insight['source']
+        yield {
+            'id': str(uuid.uuid4()),
+            'type': self.get_type(),
+            'barcode': barcode,
+            'countries': countries_tags,
+            'timestamp': timestamp,
+            'source_image': source,
+            'data': {
+                'source': source,
+                **content
             }
-            break
+        }
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
@@ -611,14 +641,16 @@ class ExpirationDateImporter(OCRInsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            source = insight['source']
             yield {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
                 'timestamp': timestamp,
+                'source_image': source,
                 'data': {
-                    'source': insight['source'],
+                    'source': source,
                     **content
                 }
             }
@@ -626,6 +658,107 @@ class ExpirationDateImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
+        return False
+
+
+class BrandInsightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['brand_tag'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.brand.name
+
+    def is_valid(self, barcode: str,
+                 brand_tag: str,
+                 brand_seen: Set[str]) -> bool:
+        product = self.product_store[barcode]
+
+        if not product:
+            return True
+
+        if product.brands_tags:
+            # For now, don't annotate if a brand has already been provided
+            return False
+
+        if brand_tag in brand_seen:
+            return False
+
+        if not self.in_barcode_range(brand_tag, barcode):
+            logger.warn("Barcode {} of brand {} not in barcode "
+                        "range".format(barcode, brand_tag))
+            return False
+
+        return True
+
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
+                                 timestamp: datetime.datetime) \
+            -> Iterable[JSONType]:
+        brand_seen: Set[str] = set()
+
+        for t in (ProductInsight.select(ProductInsight.value_tag)
+                .where(ProductInsight.type ==
+                       self.get_type(),
+                       ProductInsight.barcode ==
+                       barcode)).iterator():
+            brand_seen.add(t.value_tag)
+
+        for insight in insights:
+            barcode = insight['barcode']
+            content = insight['content']
+            brand_tag = content['brand_tag']
+
+            if not self.is_valid(barcode, brand_tag, brand_seen):
+                continue
+
+            countries_tags = getattr(self.product_store[barcode],
+                                     'countries_tags', [])
+            source = insight['source']
+            yield {
+                'id': str(uuid.uuid4()),
+                'type': self.get_type(),
+                'barcode': barcode,
+                'countries': countries_tags,
+                'timestamp': timestamp,
+                'value_tag': brand_tag,
+                'source_image': source,
+                'data': {
+                    'source': source,
+                    'brand_tag': brand_tag,
+                    'text': content['text'],
+                    'brand': content['brand']
+                }
+            }
+            brand_seen.add(brand_tag)
+
+    @staticmethod
+    def need_validation(insight: ProductInsight) -> bool:
+        return False
+
+    @staticmethod
+    def in_barcode_range(brand_tag: str, barcode: str) -> bool:
+        """Check that the insight barcode is in the range of the detected
+        brand barcode range.
+        Return True if the check passes, False otherwise
+        """
+        if brand_tag not in BRANDS_BARCODE_RANGE:
+            return True
+
+        barcode_range = BRANDS_BARCODE_RANGE[brand_tag]
+
+        if len(barcode_range) != len(barcode):
+            logger.debug("Barcode range and barcode do not have the same length")
+            return True
+
+        barcode_range = barcode_range.replace('x', '')
+
+        if barcode.startswith(barcode_range):
+            return True
+
+        logger.debug("Barcode {} not in range {}".format(barcode, barcode_range))
         return False
 
 
@@ -637,6 +770,7 @@ class InsightImporterFactory:
         InsightType.category.name: CategoryImporter,
         InsightType.product_weight.name: ProductWeightImporter,
         InsightType.expiration_date.name: ExpirationDateImporter,
+        InsightType.brand.name: BrandInsightImporter,
     }
 
     @classmethod

@@ -53,20 +53,28 @@ def parse_product_json(data, lang=None):
     return product
 
 
-def get_insights(barcode: str,
+def get_insights(barcode: Optional[str] = None,
                  keep_types: List[str] = None,
+                 country: str = None,
                  count=25) -> Iterable[ProductInsight]:
     where_clauses = [
         ProductInsight.annotation.is_null(),
-        ProductInsight.barcode == barcode
     ]
+
+    if barcode:
+        where_clauses.append(ProductInsight.barcode == barcode)
 
     if keep_types:
         where_clauses.append(ProductInsight.type.in_(keep_types))
 
+    if country is not None:
+        where_clauses.append(ProductInsight.countries.contains(
+            country))
+
     query = (ProductInsight.select()
                            .where(*where_clauses)
-                           .limit(count))
+                           .limit(count)
+                           .order_by(peewee.fn.Random()))
     return query.iterator()
 
 
@@ -106,9 +114,8 @@ def get_random_insight(insight_type: str = None,
         if product:
             return insight
         else:
-            insight.outdated = True
-            insight.save()
-            logger.info("Product not found")
+            insight.delete_instance()
+            logger.info("Product not found, insight deleted")
 
 
 def save_insight(insight_id: str, annotation: int, update: bool=True) -> AnnotationResult:

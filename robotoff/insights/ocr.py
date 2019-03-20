@@ -18,19 +18,23 @@ from robotoff.utils.types import JSONType
 
 
 def process_fr_packaging_match(match) -> str:
-    country_code, *approval_numbers, ec = match.group(1, 2, 3, 4, 5)
-    return "{} {}.{}.{} {}".format(country_code,
-                                   *approval_numbers,
-                                   ec).upper()
+    approval_numbers = match.group(1, 2, 3)
+    return "FR {}.{}.{} EC".format(*approval_numbers).upper()
+
+
+def process_de_packaging_match(match) -> str:
+    federal_state_tag, company_tag = match.group(1, 2)
+
+    return "DE {}-{} EC".format(federal_state_tag,
+                                company_tag).upper()
 
 
 def process_fr_emb_match(match) -> str:
-    emb_str, city_code, company_code = match.group(1, 2, 3)
+    city_code, company_code = match.group(1, 2)
     city_code = city_code.replace(' ', '')
     company_code = company_code or ''
-    return "{} {}{}".format(emb_str.upper(),
-                            city_code,
-                            company_code.upper())
+    return "EMB {}{}".format(city_code,
+                             company_code).upper()
 
 
 def process_eu_bio_label_code(match) -> str:
@@ -58,6 +62,37 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
     return date
 
 
+def process_product_weight(match, prompt: bool) -> Dict:
+    raw = match.group()
+
+    if prompt:
+        prompt_str = match.group(1)
+        value = match.group(2)
+        unit = match.group(3)
+    else:
+        prompt_str = None
+        value = match.group(1)
+        unit = match.group(2)
+
+    if unit in ('dle', 'cle', 'mge', 'mle', 'ge', 'kge', 'le'):
+        # When the e letter often comes after the weight unit, the
+        # space is often not detected
+        unit = unit[:-1]
+
+    text = "{} {}".format(value, unit)
+    result = {
+        'text': text,
+        'raw': raw,
+        'value': value,
+        'unit': unit,
+    }
+
+    if prompt_str is not None:
+        result['prompt'] = prompt_str
+
+    return result
+
+
 class OCRField(enum.Enum):
     full_text = 1
     full_text_contiguous = 2
@@ -65,37 +100,36 @@ class OCRField(enum.Enum):
 
 
 class OCRRegex:
-    __slots__ = ('regex', 'field', 'lowercase', 'processing_func')
+    __slots__ = ('regex', 'field', 'lowercase', 'processing_func', 'priority')
 
     def __init__(self, regex,
                  field: OCRField,
                  lowercase: bool = False,
-                 processing_func: Optional[Callable] = None):
+                 processing_func: Optional[Callable] = None,
+                 priority: Optional[int] = None):
         self.regex = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
+        self.priority = priority
 
 
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
-WEIGHT_VALUES_REGEX = re.compile(
-    r"([0-9]+[,.]?[0-9]*)\s*(fl oz|dl|cl|mg|mL|lbs|oz|g|kg|L)(?![^\s])")
-
-URL_REGEX = re.compile(r'^(http://www\.|https://www\.|http://|https://)?[a-z0-9]+([\-.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(/.*)?$')
-EMAIL_REGEX = re.compile(r'[\w.-]+@[\w.-]+')
-PHONE_REGEX = re.compile(r'\d{3}[-.\s]??\d{3}[-.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-.\s]??\d{4}|\d{3}[-.\s]??\d{4}')
-
 PACKAGER_CODE: Dict[str, OCRRegex] = {
-    "fr_emb": OCRRegex(re.compile(r"(emb) ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
+    "fr_emb": OCRRegex(re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
-    "eu_fr": OCRRegex(re.compile("(fr) (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
+    "eu_fr": OCRRegex(re.compile("fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_fr_packaging_match),
+    "eu_de": OCRRegex(re.compile("de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"),
+                      field=OCRField.full_text_contiguous,
+                      lowercase=True,
+                      processing_func=process_de_packaging_match),
 }
 
 RECYCLING_REGEX = {
@@ -297,13 +331,13 @@ LABELS_REGEX = {
     'en:no-lactose': [
         OCRRegex(
             re.compile(
-                r"senza lattosio|без лактозы|bez laktozy|sans lactose|lactosevrij|no lactose|laktózmentes|lactosefrei|sin lactosa"),
+                r"senza lattosio|без лактозы|bez laktozy|sans lactose|lactosevrij|no lactose|lactose[ -]free|laktózmentes|lactosefrei|sin lactosa"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:palm-oil-free': [
         OCRRegex(
-            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil free"),
+            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil[ -]free"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
@@ -319,50 +353,171 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
+    'fr:viande-porcine-francaise': [
+        OCRRegex(
+            re.compile(r"le po?rc fran[çc]ais"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True),
+    ],
+    'en:sustainable-seafood-msc': [
+        OCRRegex(
+            re.compile(r"www\.msc\.org"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False),
+    ],
+    'en:halal': [
+        OCRRegex(
+            re.compile(r"(?<!\w)halal(?!\w)"),
+            field=OCRField.text_annotations,
+            lowercase=True),
+    ],
 }
 
-PRODUCT_WEIGHT_REGEX = OCRRegex(
-    re.compile(r"(poids net|poids net égoutté|volume net total|net weight|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
-    field=OCRField.full_text_contiguous,
-    lowercase=True)
+
+BRANDS_DATA: Dict[str, str] = {
+    'Auchan': r"auchan",
+    'Boni': r"boni",
+    'Carrefour': r"carrefour",
+    'Carrefour Baby': r"carrefour [bg]aby",
+    'Carrefour Bio': r"carrefour bio",
+    'Carrefour Discount': r"carrefour discount",
+    'Colruyt': r"colruyt",
+    'Delhaize': r"delhaize",
+    'Everyday': r"everyday",
+    'Monoprix': r"monoprix",
+    'Monoprix Bio': r"monoprix gourmet",
+    'Monoprix Gourmet': r"monoprix gourmet",
+    "Monoprix P'tit Prix": r"monoprix p'?tit prix",
+    'Yoplait': r"yoplait",
+}
+
+
+def get_brand_tag(brand: str) -> str:
+    return (brand.lower()
+                 .replace(' ', '-')
+                 .replace("'", '-'))
+
+
+def brand_sort_key(item):
+    """Sorting function for BRAND_DATA items.
+    For the regex to work correctly, we want the longest brand names to
+    appear first.
+    """
+    brand, _ = item
+
+    return -len(brand), brand
+
+
+SORTED_BRANDS = sorted(BRANDS_DATA.items(), key=brand_sort_key)
+
+BRAND_REGEX_STR = "|".join("((?<!\w){}(?!\w))".format(pattern)
+                           for _, pattern in SORTED_BRANDS)
+BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
+                       field=OCRField.full_text_contiguous,
+                       lowercase=True)
+
+
+def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
+    nutrient_names_str = '|'.join(nutrient_names)
+    units_str = '|'.join(units)
+    return re.compile(r"({}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({})".format(nutrient_names_str,
+                                                                           units_str))
+
+
+NUTRIENT_VALUES_REGEX = {
+    'energy': OCRRegex(
+        generate_nutrient_regex(["[ée]nergie", "energy"], ["kj", "kcal"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'fat': OCRRegex(
+        generate_nutrient_regex(["mati[èe]res? grasses?"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'glucid': OCRRegex(
+        generate_nutrient_regex(["glucides?", "glucids?"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'carbohydrate': OCRRegex(
+        generate_nutrient_regex(["sucres?", "carbohydrates?"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+}
+
+PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
+    'with_mention': OCRRegex(
+        re.compile(r"(poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
+        field=OCRField.full_text_contiguous,
+        lowercase=True,
+        processing_func=functools.partial(process_product_weight, prompt=True),
+        priority=1),
+    'no_mention': OCRRegex(
+        re.compile(r"([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])"),
+        field=OCRField.full_text_contiguous,
+        lowercase=True,
+        processing_func=functools.partial(process_product_weight, prompt=False),
+        priority=2),
+}
 
 
 EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
-    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{2})(?!\d)'),
+    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)'),
                                   field=OCRField.full_text,
                                   lowercase=False,
                                   processing_func=functools.partial(process_full_digits_expiration_date,
                                                                     short=True)),
-    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[./](\d{2})[./](\d{4})(?!\d)'),
+    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)'),
                                  field=OCRField.full_text,
                                  lowercase=False,
                                  processing_func=functools.partial(process_full_digits_expiration_date,
                                                                    short=False)),
 }
 
+TRACES_REGEX = OCRRegex(
+    re.compile(r"(?:possibilit[ée] de traces|peut contenir(?: des traces)?|traces? [ée]ventuelles? de)"),
+    field=OCRField.full_text_contiguous,
+    lowercase=True)
+
 
 class OCRResult:
-    __slots__ = ('text_annotations', 'full_text_annotation',
-                 'logo_annotations', 'safe_search_annotation')
+    __slots__ = ('text_annotations', 'text_annotations_str',
+                 'text_annotations_str_lower',
+                 'full_text_annotation',
+                 'logo_annotations', 'safe_search_annotation',
+                 'label_annotations')
 
     def __init__(self, data: JSONType):
         self.text_annotations: List[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
         self.logo_annotations: List[LogoAnnotation] = []
+        self.label_annotations: List[LabelAnnotation] = []
         self.safe_search_annotation: Optional[SafeSearchAnnotation] = None
 
         for text_annotation_data in data.get('textAnnotations', []):
             text_annotation = OCRTextAnnotation(text_annotation_data)
             self.text_annotations.append(text_annotation)
 
+        self.text_annotations_str: Optional[str] = None
+        self.text_annotations_str_lower: Optional[str] = None
+
+        if self.text_annotations:
+            self.text_annotations_str = '||'.join(t.text
+                                                  for t in self.text_annotations)
+            self.text_annotations_str_lower = (self.text_annotations_str
+                                               .lower())
+
         full_text_annotation_data = data.get('fullTextAnnotation')
 
         if full_text_annotation_data:
-            self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
+            self.full_text_annotation = OCRFullTextAnnotation(
+                full_text_annotation_data)
 
         for logo_annotation_data in data.get('logoAnnotations', []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
             self.logo_annotations.append(logo_annotation)
+
+        for label_annotation_data in data.get('labelAnnotations', []):
+            label_annotation = LabelAnnotation(label_annotation_data)
+            self.label_annotations.append(label_annotation)
 
         if 'safeSearchAnnotation' in data:
             self.safe_search_annotation = SafeSearchAnnotation(
@@ -371,7 +526,7 @@ class OCRResult:
     def get_full_text(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
             if lowercase:
-                return self.full_text_annotation.text.lower()
+                return self.full_text_annotation.text_lower
 
             return self.full_text_annotation.text
 
@@ -380,57 +535,67 @@ class OCRResult:
     def get_full_text_contiguous(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
             if lowercase:
-                return self.full_text_annotation.contiguous_text.lower()
+                return self.full_text_annotation.contiguous_text_lower
 
             return self.full_text_annotation.contiguous_text
 
         return None
 
-    def iter_text_annotations(self, lowercase: bool = False) -> Iterable[str]:
-        for text_annotation in self.text_annotations:
+    def get_text_annotations(self, lowercase: bool = False) -> Optional[str]:
+        if self.text_annotations_str is not None:
             if lowercase:
-                yield text_annotation.text.lower()
+                return self.text_annotations_str_lower
+            else:
+                return self.text_annotations_str
 
-            yield text_annotation.text
-
-    def get_text(self, ocr_regex: OCRRegex) -> Iterable[str]:
+    def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
         field = ocr_regex.field
 
         if field == OCRField.full_text:
             text = self.get_full_text(ocr_regex.lowercase)
 
-            if text:
-                return [text]
+            if text is None:
+                # If there is no full text, get text annotations as fallback
+                return self.get_text_annotations(ocr_regex.lowercase)
+            else:
+                return text
 
         elif field == OCRField.full_text_contiguous:
             text = self.get_full_text_contiguous(ocr_regex.lowercase)
 
-            if text:
-                return [text]
+            if text is None:
+                # If there is no full text, get text annotations as fallback
+                return self.get_text_annotations(ocr_regex.lowercase)
+            else:
+                return text
 
         elif field == OCRField.text_annotations:
-            return list(self.iter_text_annotations(ocr_regex.lowercase))
+            return self.get_text_annotations(ocr_regex.lowercase)
 
         else:
             raise ValueError("invalid field: {}".format(field))
 
-        return []
-
     def get_logo_annotations(self) -> List['LogoAnnotation']:
         return self.logo_annotations
+
+    def get_label_annotations(self) -> List['LabelAnnotation']:
+        return self.label_annotations
 
     def get_safe_search_annotation(self):
         return self.safe_search_annotation
 
 
 class OCRFullTextAnnotation:
-    __slots__ = ('text', 'pages', 'contiguous_text')
+    __slots__ = ('text', 'text_lower',
+                 'pages', 'contiguous_text', 'contiguous_text_lower')
 
     def __init__(self, data: JSONType):
         self.text = MULTIPLE_SPACES_REGEX.sub(' ', data['text'])
+        self.text_lower = self.text.lower()
         self.contiguous_text = self.text.replace('\n', ' ')
         self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ',
                                                          self.contiguous_text)
+        self.contiguous_text_lower = self.contiguous_text.lower()
         self.pages: List = []
 
 
@@ -445,6 +610,15 @@ class OCRTextAnnotation:
 
 
 class LogoAnnotation:
+    __slots__ = ('id', 'description', 'score')
+
+    def __init__(self, data: JSONType):
+        self.id = data.get('mid') or None
+        self.score = data['score']
+        self.description = data['description']
+
+
+class LabelAnnotation:
     __slots__ = ('id', 'description', 'score')
 
     def __init__(self, data: JSONType):
@@ -540,40 +714,45 @@ def get_ocr_result(data: JSONType) -> Optional[OCRResult]:
     return OCRResult(response)
 
 
-def find_emails(text: str) -> List[Dict]:
-    results = []
-
-    for match in EMAIL_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
-
-    return results
-
-
-def find_urls(text: str) -> List[Dict]:
-    results = []
-    for match in URL_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
-
-    return results
-
-
 def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for regex_code, ocr_regex in PACKAGER_CODE.items():
-        for text in ocr_result.get_text(ocr_regex):
-            for match in ocr_regex.regex.finditer(text):
-                if ocr_regex.processing_func is not None:
-                    value = ocr_regex.processing_func(match)
-                    results.append({
-                        "raw": match.group(0),
-                        "text": value,
-                        "type": regex_code,
-                    })
+        text = ocr_result.get_text(ocr_regex)
+
+        if not text:
+            continue
+
+        for match in ocr_regex.regex.finditer(text):
+            if ocr_regex.processing_func is not None:
+                value = ocr_regex.processing_func(match)
+                results.append({
+                    "raw": match.group(0),
+                    "text": value,
+                    "type": regex_code,
+                })
+
+    return results
+
+
+def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
+    results = []
+
+    for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
+        text = ocr_result.get_text(ocr_regex)
+
+        if not text:
+            continue
+
+        for match in ocr_regex.regex.finditer(text):
+            value = match.group(2).replace(',', '.')
+            unit = match.group(3)
+            results.append({
+                "raw": match.group(0),
+                "nutrient": regex_code,
+                'value': value,
+                'unit': unit,
+            })
 
     return results
 
@@ -581,27 +760,42 @@ def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
 def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
-    for text in ocr_result.get_text(PRODUCT_WEIGHT_REGEX):
-        for match in PRODUCT_WEIGHT_REGEX.regex.finditer(text):
-            raw = match.group()
-            prompt = match.group(1)
-            value = match.group(2)
-            unit = match.group(3)
+    for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
+        text = ocr_result.get_text(ocr_regex)
 
-            if unit in ('dle', 'cle', 'mge', 'mle', 'ge', 'kge', 'le'):
-                # When the e letter often comes after the weight unit, the
-                # space is often not detected
-                unit = unit[:-1]
+        if not text:
+            continue
 
-            text = "{} {}".format(value, unit)
-            result = {
-                'text': text,
-                'raw': raw,
-                'prompt': prompt,
-                'value': value,
-                'unit': unit,
-            }
+        for match in ocr_regex.regex.finditer(text):
+            if ocr_regex.processing_func is None:
+                continue
+
+            result = ocr_regex.processing_func(match)
+            result['matcher_type'] = type_
+            result['priority'] = ocr_regex.priority
             results.append(result)
+
+    return results
+
+
+def find_traces(ocr_result: OCRResult) -> List[Dict]:
+    results = []
+
+    text = ocr_result.get_text(TRACES_REGEX)
+
+    if not text:
+        return []
+
+    for match in TRACES_REGEX.regex.finditer(text):
+        raw = match.group()
+        end_idx = match.end()
+        captured = text[end_idx:end_idx+100]
+
+        result = {
+            'raw': raw,
+            'text': captured
+        }
+        results.append(result)
 
     return results
 
@@ -665,17 +859,6 @@ def find_storage_instructions(text: str) -> List[Dict]:
     return results
 
 
-def find_phone_numbers(text) -> List[Dict]:
-    results = []
-
-    for match in PHONE_REGEX.finditer(text):
-        results.append({
-            "text": match.group(),
-        })
-
-    return results
-
-
 def find_recycling_instructions(text) -> List[Dict]:
     results = []
 
@@ -695,17 +878,45 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
 
     for label_tag, regex_list in LABELS_REGEX.items():
         for ocr_regex in regex_list:
-            for text in ocr_result.get_text(ocr_regex):
-                for match in ocr_regex.regex.finditer(text):
-                    if ocr_regex.processing_func:
-                        label_value = ocr_regex.processing_func(match)
-                    else:
-                        label_value = label_tag
+            text = ocr_result.get_text(ocr_regex)
 
-                    results.append({
-                        'label_tag': label_value,
-                        'text': match.group(),
-                    })
+            if not text:
+                continue
+
+            for match in ocr_regex.regex.finditer(text):
+                if ocr_regex.processing_func:
+                    label_value = ocr_regex.processing_func(match)
+                else:
+                    label_value = label_tag
+
+                results.append({
+                    'label_tag': label_value,
+                    'text': match.group(),
+                })
+
+    return results
+
+
+def find_brands(ocr_result: OCRResult) -> List[Dict]:
+    results = []
+
+    text = ocr_result.get_text(BRAND_REGEX)
+
+    if not text:
+        return []
+
+    for match in BRAND_REGEX.regex.finditer(text):
+        groups = match.groups()
+
+        for idx, match_str in enumerate(groups):
+            if match_str is not None:
+                brand, _ = SORTED_BRANDS[idx]
+                results.append({
+                    'brand': brand,
+                    'brand_tag': get_brand_tag(brand),
+                    'text': match_str,
+                })
+                break
 
     return results
 
@@ -716,34 +927,39 @@ def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
-        for text in ocr_result.get_text(ocr_regex):
-            for match in ocr_regex.regex.finditer(text):
-                raw = match.group(0)
+        text = ocr_result.get_text(ocr_regex)
 
-                if not ocr_regex.processing_func:
-                    continue
+        if not text:
+            continue
 
-                date = ocr_regex.processing_func(match)
+        for match in ocr_regex.regex.finditer(text):
+            raw = match.group(0)
 
-                if date is None:
-                    continue
+            if not ocr_regex.processing_func:
+                continue
 
-                if date.year > 2025 or date.year < 2015:
-                    continue
+            date = ocr_regex.processing_func(match)
 
-                value = date.strftime("%d/%m/%Y")
+            if date is None:
+                continue
 
-                results.append({
-                    "raw": raw,
-                    "text": value,
-                    "type": type_,
-                })
+            if date.year > 2025 or date.year < 2015:
+                continue
+
+            value = date.strftime("%d/%m/%Y")
+
+            results.append({
+                "raw": raw,
+                "text": value,
+                "type": type_,
+            })
 
     return results
 
 
 def flag_image(ocr_result: OCRResult) -> List[Dict]:
     safe_search_annotation = ocr_result.get_safe_search_annotation()
+    label_annotations = ocr_result.get_label_annotations()
     insights: List[Dict] = []
 
     if safe_search_annotation:
@@ -755,6 +971,15 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
                     'type': key,
                     'likelihood': value.name,
                 })
+
+    for label_annotation in label_annotations:
+        if (label_annotation.description in ('Face', 'Head', 'Selfie') and
+                label_annotation.score >= 0.8):
+            insights.append({
+                'type': label_annotation.description.lower(),
+                'likelihood': label_annotation.score
+            })
+            break
 
     return insights
 
@@ -775,6 +1000,15 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == 'product_weight':
         return find_product_weight(ocr_result)
+
+    elif insight_type == 'trace':
+        return find_traces(ocr_result)
+
+    elif insight_type == 'nutrient':
+        return find_nutrient_values(ocr_result)
+
+    elif insight_type == 'brand':
+        return find_brands(ocr_result)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
@@ -874,7 +1108,8 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
                          InsightType.packager_code.name,
                          InsightType.product_weight.name,
                          InsightType.image_flag.name,
-                         InsightType.expiration_date.name):
+                         InsightType.expiration_date.name,
+                         InsightType.brand.name):
         insights = extract_insights(ocr_result, insight_type)
 
         if insights:

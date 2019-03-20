@@ -2,6 +2,7 @@ import datetime
 import os
 from typing import Dict, Set
 
+from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -14,6 +15,13 @@ from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
     CACHED_PRODUCT_STORE
 from robotoff.utils import get_logger
+
+import sentry_sdk
+from sentry_sdk import capture_exception
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(settings.SENTRY_DSN)
+
 
 logger = get_logger(__name__)
 
@@ -119,6 +127,11 @@ def download_product_dataset():
         fetch_dataset()
 
 
+def exception_listener(event):
+    if event.exception:
+        capture_exception(event.exception)
+
+
 def run():
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
@@ -127,4 +140,5 @@ def run():
     scheduler.add_job(mark_insights, 'interval', minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3', max_instances=1)
     scheduler.add_job(remove_invalid_insights, 'cron', day='*', hour='4', max_instances=1)
+    scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()

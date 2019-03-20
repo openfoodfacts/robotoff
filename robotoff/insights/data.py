@@ -1,3 +1,5 @@
+from typing import Dict
+
 AUTHORIZED_LABELS = {
     "en:at-bio-301",
     "en:at-bio-402",
@@ -66,6 +68,7 @@ AUTHORIZED_LABELS = {
     "en:australian-made",
     "en:gluten-free",
     "fr:viande-bovine-francaise",
+    "fr:viande-porcine-francaise",
     "en:no-preservatives",
     "en:no-colorings",
     "en:no-additives",
@@ -78,4 +81,11 @@ AUTHORIZED_LABELS = {
     "en:no-flavors",
     "en:no-artificial-flavors",
     "en:vegan",
+    "en:sustainable-seafood-msc",
+    "en:halal",
+}
+
+BRANDS_BARCODE_RANGE: Dict[str, str] = {
+    'boni': "5400141xxxxxx",
+    'everyday': "5400141xxxxxx",
 }

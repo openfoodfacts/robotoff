@@ -48,7 +48,8 @@ def add_category(barcode: str, category: str, dry=False):
     params = {
         'code': barcode,
         'add_categories': category,
-        'comment': "Adding category (automated edit)",
+        'comment': "Adding category '{}' "
+                   "(automated edit)".format(category),
         **AUTH_DICT
     }
     update_product(params, dry=dry)
@@ -58,7 +59,8 @@ def update_quantity(barcode: str, quantity: str, dry=False):
     params = {
         'code': barcode,
         'quantity': quantity,
-        'comment': "Updating quantity (automated edit)",
+        'comment': "Updating quantity to '{}' "
+                   "(automated edit)".format(quantity),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -93,7 +95,8 @@ def update_expiration_date(barcode: str, expiration_date: str, dry=False):
     params = {
         'code': barcode,
         'expiration_date': expiration_date,
-        'comment': "Adding expiration date (automated edit)",
+        'comment': "Adding expiration date '{}' "
+                   "(automated edit)".format(expiration_date),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -103,7 +106,17 @@ def add_label_tag(barcode: str, label_tag: str, dry=False):
     params = {
         'code': barcode,
         'add_labels': label_tag,
-        'comment': "Adding label tag (automated edit)",
+        'comment': "Adding label tag '{}' (automated edit)".format(label_tag),
+        **AUTH_DICT,
+    }
+    update_product(params, dry=dry)
+
+
+def add_brand(barcode: str, brand: str, dry=False):
+    params = {
+        'code': barcode,
+        'add_brands': brand,
+        'comment': "Adding brand '{}' (automated edit)".format(brand),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)

@@ -1,6 +1,6 @@
 import io
 import itertools
-from typing import List
+from typing import List, Optional
 
 import dataclasses
 
@@ -8,6 +8,7 @@ import falcon
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
+from robotoff import settings
 from robotoff.app.core import (normalize_lang,
                                parse_product_json,
                                get_insights,
@@ -27,12 +28,24 @@ from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
 
+import sentry_sdk
+from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+
 logger = get_logger()
 es_client = get_es_client()
 
 CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
+
+
+def init_sentry(app):
+    if settings.SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN)
+        return SentryWsgiMiddleware(app)
+
+    return app
 
 
 class CategoryPredictionResource:
@@ -57,7 +70,7 @@ class CategoryPredictionResource:
             predicted_category_name = CATEGORY_TAXONOMY.get_localized_name(
                 category_tag, lang)
             response['prediction'] = {
-                'confidence': insight.data['confidence'],
+                'confidence': insight.data.get('confidence'),
                 'id': category_tag,
                 'name': predicted_category_name,
             }
@@ -68,7 +81,7 @@ class CategoryPredictionResource:
 class ProductInsightResource:
     def on_get(self, req, resp, barcode):
         response = {}
-        insights = [i.serialize() for i in get_insights(barcode)]
+        insights = [i.serialize() for i in get_insights(barcode=barcode)]
 
         if not insights:
             response['status'] = "no_insights"
@@ -206,9 +219,33 @@ class ImageImporterResource:
         }
 
 
-class ProductImporterResource:
+class WebhookProductResource:
     def on_post(self, req, resp):
         barcode = req.get_param('barcode', required=True)
+        action = req.get_param('action', required=True)
+
+        if action not in ('created', 'updated', 'deleted'):
+            raise falcon.HTTPBadRequest(title="invalid_action",
+                                        description="action must be one of "
+                                                    "`created`, `deleted`, `updated`")
+
+        if action == 'created':
+            send_ipc_event('product_created', {
+                'barcode': barcode,
+            })
+
+        elif action == 'updated':
+            updated_fields = req.get_param_as_list('updated_fields', required=True)
+
+            send_ipc_event('product_updated', {
+                'barcode': barcode,
+                'updated_fields': updated_fields,
+            })
+
+        elif action == 'deleted':
+            send_ipc_event('product_deleted', {
+                'barcode': barcode,
+            })
 
         resp.media = {
             'status': 'scheduled',
@@ -222,7 +259,9 @@ class ProductQuestionsResource:
         lang: str = req.get_param('lang', default='en')
 
         keep_types = QuestionFormatterFactory.get_available_types()
-        insights = list(get_insights(barcode, keep_types, count))
+        insights = list(get_insights(barcode=barcode,
+                                     keep_types=keep_types,
+                                     count=count))
 
         if not insights:
             response['status'] = "no_questions"
@@ -231,6 +270,46 @@ class ProductQuestionsResource:
 
             for insight in insights:
                 formatter_cls = QuestionFormatterFactory.get(insight.type)
+                formatter: QuestionFormatter = formatter_cls(TRANSLATION_STORE)
+                question = formatter.format_question(insight, lang)
+                questions.append(question.serialize())
+
+            response['questions'] = questions
+            response['status'] = "found"
+
+        resp.media = response
+
+
+class RandomQuestionsResource:
+    def on_get(self, req, resp):
+        response = {}
+        count: int = req.get_param_as_int('count', min=1) or 1
+        lang: str = req.get_param('lang', default='en')
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            'insight_types', required=False)
+        country: Optional[str] = req.get_param('country') or None
+
+        if keep_types is None:
+            keep_types = QuestionFormatterFactory.get_available_types()
+        else:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        insights = list(get_insights(keep_types=keep_types,
+                                     count=count,
+                                     country=country))
+
+        if not insights:
+            response['status'] = "no_questions"
+        else:
+            questions: List[JSONType] = []
+
+            for insight in insights:
+                formatter_cls = QuestionFormatterFactory.get(insight.type)
+
+                if formatter_cls is None:
+                    continue
+
                 formatter: QuestionFormatter = formatter_cls(TRANSLATION_STORE)
                 question = formatter.format_question(insight, lang)
                 questions.append(question.serialize())
@@ -260,7 +339,10 @@ api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
-api.add_route('/api/v1/products/import',
-              ProductImporterResource())
+api.add_route('/api/v1/webhook/product',
+              WebhookProductResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
+api.add_route('/api/v1/questions/random', RandomQuestionsResource())
+
+api = init_sentry(api)

@@ -22,7 +22,7 @@ class SlackException(Exception):
 
 
 def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
-    flags = ", ".join(["{} ({})".format(i['type'], i['likelihood'])
+    flags = ", ".join(["{} (score: {})".format(i['type'], i['likelihood'])
                        for i in insights])
     url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
                          source)
@@ -36,7 +36,7 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
 def notify_automatic_processing(insight: ProductInsight):
     product_url = "{}/product/{}".format(settings.OFF_BASE_WEBSITE_URL,
                                          insight.barcode)
-    source_image = insight.data.get('source')
+    source_image = insight.source_image
 
     if source_image:
         image_url = "https://static.openfoodfacts.org/images/products" + source_image
@@ -66,6 +66,12 @@ def notify_automatic_processing(insight: ProductInsight):
                 "product {}".format(insight.data['text'],
                                     insight.data['raw'],
                                     insight.barcode))
+
+    elif insight.type == InsightType.brand.name:
+        text = ("The `{}` brand was automatically added to "
+                "product {}".format(insight.data['brand'],
+                                    insight.barcode))
+
     else:
         return
 

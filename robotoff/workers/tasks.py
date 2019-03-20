@@ -6,7 +6,7 @@ from typing import List, Dict, Callable
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.ocr import get_insights_from_image
-from robotoff.models import db
+from robotoff.models import db, ProductInsight
 from robotoff.products import (has_dataset_changed, fetch_dataset,
                                CACHED_PRODUCT_STORE)
 from robotoff.slack import notify_image_flag
@@ -20,17 +20,10 @@ if root_logger.level == logging.NOTSET:
 
 
 def run_task(event_type: str, event_kwargs: Dict) -> None:
-    if event_type == 'import_insights':
-        func: Callable = import_insights
-
-    elif event_type == 'import_image':
-        func = import_image
-
-    elif event_type == 'download_dataset':
-        func = download_product_dataset
-
-    else:
+    if event_type not in EVENT_MAPPING:
         raise ValueError("unknown event type: '{}".format(event_type))
+
+    func = EVENT_MAPPING[event_type]
 
     try:
         func(**event_kwargs)
@@ -78,3 +71,31 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
         with db.atomic():
             imported = importer.import_insights([insights])
             logger.info("Import finished, {} insights imported".format(imported))
+
+
+def delete_product_insights(barcode: str):
+    logger.info("Product {} deleted, deleting associated "
+                "insights...".format(barcode))
+    with db.atomic():
+        deleted = (ProductInsight.delete()
+                   .where(ProductInsight.barcode == barcode).execute())
+
+    logger.info("{} insights deleted".format(deleted))
+
+
+def created_product_generate_insights(barcode: str):
+    pass
+
+
+def updated_product_update_insights(barcode: str, updated_fields: List[str]):
+    pass
+
+
+EVENT_MAPPING: Dict[str, Callable] = {
+    'import_insights': import_insights,
+    'import_image': import_image,
+    'download_dataset': download_product_dataset,
+    'product_deleted': delete_product_insights,
+    'product_created': created_product_generate_insights,
+    'product_updated': updated_product_update_insights,
+}
