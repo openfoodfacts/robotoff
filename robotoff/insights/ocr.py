@@ -557,6 +557,8 @@ class OCRResult:
             if text is None:
                 # If there is no full text, get text annotations as fallback
                 return self.get_text_annotations(ocr_regex.lowercase)
+            else:
+                return text
 
         elif field == OCRField.full_text_contiguous:
             text = self.get_full_text_contiguous(ocr_regex.lowercase)
@@ -564,6 +566,8 @@ class OCRResult:
             if text is None:
                 # If there is no full text, get text annotations as fallback
                 return self.get_text_annotations(ocr_regex.lowercase)
+            else:
+                return text
 
         elif field == OCRField.text_annotations:
             return self.get_text_annotations(ocr_regex.lowercase)
