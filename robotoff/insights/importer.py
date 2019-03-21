@@ -160,9 +160,25 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         for barcode, insights in grouped_by.items():
             insights = list(self.deduplicate_insights(insights))
             insights = self.sort_by_priority(insights)
-            inserts += list(self.process_product_insights(barcode, insights, timestamp))
+            inserts += list(self._process_product_insights(barcode, insights,
+                                                           timestamp))
 
         return batch_insert(ProductInsight, inserts, 50)
+
+    def _process_product_insights(self, barcode: str,
+                                  insights: List[JSONType],
+                                  timestamp: datetime.datetime) -> \
+            Iterable[JSONType]:
+        countries_tags = getattr(self.product_store[barcode],
+                                 'countries_tags', [])
+
+        for insight in self.process_product_insights(barcode, insights):
+            insight['id'] = str(uuid.uuid4())
+            insight['barcode'] = barcode
+            insight['timestamp'] = timestamp
+            insight['type'] = self.get_type()
+            insight['countries'] = countries_tags
+            yield insight
 
     def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
         grouped_by: GroupedByOCRInsights = {}
@@ -198,8 +214,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType],
-                                 timestamp: datetime.datetime) \
+                                 insights: List[JSONType]) \
             -> Iterable[JSONType]:
         pass
 
@@ -242,8 +257,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         return True
     
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType],
-                                 timestamp: datetime.datetime) \
+                                 insights: List[JSONType]) \
             -> Iterable[JSONType]:
         code_seen: Set[str] = set()
 
@@ -262,15 +276,8 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             if not self.is_valid(barcode, emb_code, code_seen):
                 continue
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
             source = insight['source']
             yield {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
-                'barcode': barcode,
-                'countries': countries_tags,
-                'timestamp': timestamp,
                 'source_image': source,
                 'data': {
                     'source': source,
@@ -338,8 +345,7 @@ class LabelInsightImporter(OCRInsightImporter):
         return True
     
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType],
-                                 timestamp: datetime.datetime) \
+                                 insights: List[JSONType]) \
             -> Iterable[JSONType]:
         label_seen: Set[str] = set()
 
@@ -358,15 +364,8 @@ class LabelInsightImporter(OCRInsightImporter):
             if not self.is_valid(barcode, label_tag, label_seen):
                 continue
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
             source = insight['source']
             yield {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
-                'barcode': barcode,
-                'countries': countries_tags,
-                'timestamp': timestamp,
                 'value_tag': label_tag,
                 'source_image': source,
                 'data': {
@@ -544,8 +543,7 @@ class ProductWeightImporter(OCRInsightImporter):
         return insights_by_subtype
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType],
-                                 timestamp: datetime.datetime) \
+                                 insights: List[JSONType]) \
             -> Iterable[JSONType]:
         if not insights:
             return
@@ -573,15 +571,8 @@ class ProductWeightImporter(OCRInsightImporter):
         if not self.is_valid(barcode, content['value']):
             return
 
-        countries_tags = getattr(self.product_store[barcode],
-                                 'countries_tags', [])
         source = insight['source']
         yield {
-            'id': str(uuid.uuid4()),
-            'type': self.get_type(),
-            'barcode': barcode,
-            'countries': countries_tags,
-            'timestamp': timestamp,
             'source_image': source,
             'data': {
                 'source': source,
@@ -618,8 +609,7 @@ class ExpirationDateImporter(OCRInsightImporter):
         return True
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType],
-                                 timestamp: datetime.datetime) \
+                                 insights: List[JSONType]) \
             -> Iterable[JSONType]:
         if len(insights) > 1:
             logger.info("{} distinct expiration dates found for product "
@@ -639,15 +629,8 @@ class ExpirationDateImporter(OCRInsightImporter):
             if not self.is_valid(barcode):
                 continue
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
             source = insight['source']
             yield {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
-                'barcode': barcode,
-                'countries': countries_tags,
-                'timestamp': timestamp,
                 'source_image': source,
                 'data': {
                     'source': source,
@@ -694,8 +677,7 @@ class BrandInsightImporter(OCRInsightImporter):
         return True
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType],
-                                 timestamp: datetime.datetime) \
+                                 insights: List[JSONType]) \
             -> Iterable[JSONType]:
         brand_seen: Set[str] = set()
 
@@ -714,15 +696,8 @@ class BrandInsightImporter(OCRInsightImporter):
             if not self.is_valid(barcode, brand_tag, brand_seen):
                 continue
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
             source = insight['source']
             yield {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
-                'barcode': barcode,
-                'countries': countries_tags,
-                'timestamp': timestamp,
                 'value_tag': brand_tag,
                 'source_image': source,
                 'data': {
