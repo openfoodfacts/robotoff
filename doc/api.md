@@ -87,6 +87,7 @@ Current question types:
 + count (int, optional) - Number of questions to return. Default to 1.
 + insight_types (list, optional) - comma-separated list, filter by insight types.
 + country (str, optional) - filter by country tag.
++ brands (str, optional) - filter by brands, comma-separated list of brand tags.
 
 + Response 200 (application/json)
 

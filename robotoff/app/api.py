@@ -288,6 +288,7 @@ class RandomQuestionsResource:
         keep_types: Optional[List[str]] = req.get_param_as_list(
             'insight_types', required=False)
         country: Optional[str] = req.get_param('country') or None
+        brands = req.get_param_as_list('brands') or None
 
         if keep_types is None:
             keep_types = QuestionFormatterFactory.get_available_types()
@@ -295,9 +296,14 @@ class RandomQuestionsResource:
             # Limit the number of types to prevent slow SQL queries
             keep_types = keep_types[:10]
 
+        if brands is not None:
+            # Limit the number of brands to prevent slow SQL queries
+            brands = brands[:10]
+
         insights = list(get_insights(keep_types=keep_types,
                                      count=count,
-                                     country=country))
+                                     country=country,
+                                     brands=brands))
 
         if not insights:
             response['status'] = "no_questions"

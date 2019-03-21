@@ -56,6 +56,7 @@ def parse_product_json(data, lang=None):
 def get_insights(barcode: Optional[str] = None,
                  keep_types: List[str] = None,
                  country: str = None,
+                 brands: List[str] = None,
                  count=25) -> Iterable[ProductInsight]:
     where_clauses = [
         ProductInsight.annotation.is_null(),
@@ -70,6 +71,10 @@ def get_insights(barcode: Optional[str] = None,
     if country is not None:
         where_clauses.append(ProductInsight.countries.contains(
             country))
+
+    if brands:
+        where_clauses.append(ProductInsight.brands.contains_any(
+            brands))
 
     query = (ProductInsight.select()
                            .where(*where_clauses)
@@ -118,7 +123,8 @@ def get_random_insight(insight_type: str = None,
             logger.info("Product not found, insight deleted")
 
 
-def save_insight(insight_id: str, annotation: int, update: bool=True) -> AnnotationResult:
+def save_insight(insight_id: str, annotation: int, update: bool = True) \
+        -> AnnotationResult:
     try:
         insight: Union[ProductInsight, None] \
             = ProductInsight.get_by_id(insight_id)
