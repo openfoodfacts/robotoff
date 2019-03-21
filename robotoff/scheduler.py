@@ -13,7 +13,7 @@ from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATI
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
-    CACHED_PRODUCT_STORE
+    CACHED_PRODUCT_STORE, Product
 from robotoff.utils import get_logger
 
 import sentry_sdk
@@ -55,8 +55,9 @@ def process_insights():
     logger.info("{} insights processed".format(processed))
 
 
-def remove_invalid_insights():
+def refresh_insights():
     deleted = 0
+    updated = 0
     product_store = CACHED_PRODUCT_STORE.get()
 
     datetime_threshold = datetime.datetime.utcnow().replace(
@@ -75,14 +76,36 @@ def remove_invalid_insights():
                     .where(ProductInsight.annotation.is_null(),
                            ProductInsight.timestamp <= datetime_threshold)
                     .iterator()):
-                if product_store[insight.barcode] is None:
+                product: Product = product_store[insight.barcode]
+
+                if product is None:
                     # Product has been deleted from OFF
-                    print("Product with barcode {} deleted"
-                          "".format(insight.barcode))
+                    logger.info("Product with barcode {} deleted"
+                                "".format(insight.barcode))
                     deleted += 1
                     insight.delete_instance()
+                else:
+                    to_update = False
+                    if insight.brands != product.brands_tags:
+                        logger.info("Updating brand {} -> {} ({})".format(
+                            insight.brands, product.brands_tags,
+                            product.barcode))
+                        to_update = True
+                        insight.brands = product.brands_tags
+
+                    if insight.countries != product.countries_tags:
+                        logger.info("Updating countries {} -> {} ({})".format(
+                            insight.countries, product.countries_tags,
+                            product.barcode))
+                        to_update = True
+                        insight.countries = product.countries_tags
+
+                    if to_update:
+                        updated += 1
+                        insight.save()
 
     logger.info("{} insights deleted".format(deleted))
+    logger.info("{} insights updated".format(updated))
 
 
 def mark_insights():
@@ -139,6 +162,6 @@ def run():
     scheduler.add_job(process_insights, 'interval', minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(mark_insights, 'interval', minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3', max_instances=1)
-    scheduler.add_job(remove_invalid_insights, 'cron', day='*', hour='4', max_instances=1)
+    scheduler.add_job(refresh_insights, 'cron', day='*', hour='4', max_instances=1)
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()
