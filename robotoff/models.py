@@ -46,6 +46,7 @@ class ProductInsight(BaseModel):
     completed_at = peewee.DateTimeField(null=True)
     annotation = peewee.IntegerField(null=True)
     countries = BinaryJSONField(null=True, index=True)
+    brands = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)
     value_tag = peewee.TextField(null=True, index=True)
     source_image = peewee.TextField(null=True, index=True)

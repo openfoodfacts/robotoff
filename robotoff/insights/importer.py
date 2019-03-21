@@ -171,6 +171,8 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             Iterable[JSONType]:
         countries_tags = getattr(self.product_store[barcode],
                                  'countries_tags', [])
+        brands_tags = getattr(self.product_store[barcode],
+                              'brands_tags', [])
 
         for insight in self.process_product_insights(barcode, insights):
             insight['id'] = str(uuid.uuid4())
@@ -178,6 +180,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             insight['timestamp'] = timestamp
             insight['type'] = self.get_type()
             insight['countries'] = countries_tags
+            insight['brands'] = brands_tags
             yield insight
 
     def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
@@ -427,11 +430,15 @@ class CategoryImporter(InsightImporter):
 
             countries_tags = getattr(self.product_store[barcode],
                                      'countries_tags', [])
+            brands_tags = getattr(self.product_store[barcode],
+                                  'brands_tags', [])
+
             insert = {
                 'id': str(uuid.uuid4()),
                 'type': self.get_type(),
                 'barcode': barcode,
                 'countries': countries_tags,
+                'brands': brands_tags,
                 'timestamp': timestamp,
                 'value_tag': category,
                 'data': {
