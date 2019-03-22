@@ -128,12 +128,6 @@ def notify_manual_processing(insight: ProductInsight, annotation: int):
         return
 
 
-def notify_batch_processing(batch_size: int):
-        text = "{} additional insights were automatically " \
-               "applied".format(batch_size)
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
-
-
 def get_base_params() -> JSONType:
     return {
         'username': "robotoff-bot",

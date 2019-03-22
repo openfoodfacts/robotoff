@@ -100,18 +100,21 @@ class OCRField(enum.Enum):
 
 
 class OCRRegex:
-    __slots__ = ('regex', 'field', 'lowercase', 'processing_func', 'priority')
+    __slots__ = ('regex', 'field', 'lowercase', 'processing_func',
+                 'priority', 'notify')
 
     def __init__(self, regex,
                  field: OCRField,
                  lowercase: bool = False,
                  processing_func: Optional[Callable] = None,
-                 priority: Optional[int] = None):
+                 priority: Optional[int] = None,
+                 notify: bool = False):
         self.regex = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
         self.priority = priority
+        self.notify = notify
 
 
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
@@ -202,7 +205,8 @@ LABELS_REGEX = {
     'en:nutriscore': [
         OCRRegex(re.compile(r"NUTRI-SCORE"),
                  field=OCRField.full_text,
-                 lowercase=False),
+                 lowercase=False,
+                 notify=True),
     ],
     'en:eu-non-eu-agriculture': [
         OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture"),
@@ -730,6 +734,7 @@ def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
                     "raw": match.group(0),
                     "text": value,
                     "type": regex_code,
+                    "notify": ocr_regex.notify,
                 })
 
     return results
@@ -752,6 +757,7 @@ def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
                 "nutrient": regex_code,
                 'value': value,
                 'unit': unit,
+                'notify': ocr_regex.notify,
             })
 
     return results
@@ -773,6 +779,7 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
             result = ocr_regex.processing_func(match)
             result['matcher_type'] = type_
             result['priority'] = ocr_regex.priority
+            result['notify'] = ocr_regex.notify
             results.append(result)
 
     return results
@@ -793,7 +800,8 @@ def find_traces(ocr_result: OCRResult) -> List[Dict]:
 
         result = {
             'raw': raw,
-            'text': captured
+            'text': captured,
+            'notify': TRACES_REGEX.notify,
         }
         results.append(result)
 
@@ -892,6 +900,7 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                 results.append({
                     'label_tag': label_value,
                     'text': match.group(),
+                    'notify': ocr_regex.notify,
                 })
 
     return results
@@ -915,6 +924,7 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
                     'brand': brand,
                     'brand_tag': get_brand_tag(brand),
                     'text': match_str,
+                    'notify': BRAND_REGEX.notify,
                 })
                 break
 
@@ -952,6 +962,7 @@ def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
                 "raw": raw,
                 "text": value,
                 "type": type_,
+                "notify": ocr_regex.notify,
             })
 
     return results
