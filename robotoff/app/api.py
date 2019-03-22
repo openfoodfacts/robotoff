@@ -264,6 +264,7 @@ class ProductQuestionsResource:
                                      count=count))
 
         if not insights:
+            response['questions'] = []
             response['status'] = "no_questions"
         else:
             questions: List[JSONType] = []
@@ -306,6 +307,7 @@ class RandomQuestionsResource:
                                      brands=brands))
 
         if not insights:
+            response['questions'] = []
             response['status'] = "no_questions"
         else:
             questions: List[JSONType] = []
