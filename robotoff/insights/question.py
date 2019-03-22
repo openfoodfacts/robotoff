@@ -1,4 +1,5 @@
 import abc
+import pathlib
 from typing import Dict, List, Optional
 
 from robotoff import settings
@@ -125,7 +126,8 @@ class ProductWeightQuestionFormatter(QuestionFormatter):
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
         value: str = insight.data['text']
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + insight.source_image
+        source_image_url = (settings.OFF_IMAGE_BASE_URL +
+                            get_display_image(insight.source_image))
 
         return AddBinaryQuestion(question=localized_question,
                                  value=value,
@@ -147,13 +149,24 @@ class LabelQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.label.name].get()
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + insight.source_image
+        source_image_url = (settings.OFF_IMAGE_BASE_URL +
+                            get_display_image(insight.source_image))
 
         return AddBinaryQuestion(question=localized_question,
                                  value=localized_value,
                                  insight=insight,
                                  image_url=image_url,
                                  source_image_url=source_image_url)
+
+
+def get_display_image(source_image: str) -> str:
+    image_path = pathlib.Path(source_image)
+
+    if not image_path.stem.isdigit():
+        return source_image
+
+    display_name = "{}.400.jpg".format(image_path.name.split('.')[0])
+    return str(image_path.parent / display_name)
 
 
 class QuestionFormatterFactory:
