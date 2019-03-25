@@ -125,11 +125,11 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
                        field=OCRField.text_annotations,
                        lowercase=True,
                        processing_func=process_fr_emb_match),
-    "eu_fr": OCRRegex(re.compile("fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
+    "eu_fr": OCRRegex(re.compile(r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_fr_packaging_match),
-    "eu_de": OCRRegex(re.compile("de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"),
+    "eu_de": OCRRegex(re.compile(r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"),
                       field=OCRField.full_text_contiguous,
                       lowercase=True,
                       processing_func=process_de_packaging_match),
@@ -414,7 +414,7 @@ def brand_sort_key(item):
 
 SORTED_BRANDS = sorted(BRANDS_DATA.items(), key=brand_sort_key)
 
-BRAND_REGEX_STR = "|".join("((?<!\w){}(?!\w))".format(pattern)
+BRAND_REGEX_STR = "|".join(r"((?<!\w){}(?!\w))".format(pattern)
                            for _, pattern in SORTED_BRANDS)
 BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
                        field=OCRField.full_text_contiguous,
