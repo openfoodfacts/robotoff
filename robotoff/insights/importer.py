@@ -287,6 +287,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                     'matcher_type': content['type'],
                     'raw': content['raw'],
                     'text': emb_code,
+                    'notify': content['notify'],
                 }
             }
             code_seen.add(emb_code)
@@ -375,6 +376,7 @@ class LabelInsightImporter(OCRInsightImporter):
                     'source': source,
                     'text': content['text'],
                     'label_tag': label_tag,
+                    'notify': content['notify'],
                 }
             }
             label_seen.add(label_tag)
@@ -583,6 +585,7 @@ class ProductWeightImporter(OCRInsightImporter):
             'source_image': source,
             'data': {
                 'source': source,
+                'notify': content['notify'],
                 **content
             }
         }
@@ -641,6 +644,7 @@ class ExpirationDateImporter(OCRInsightImporter):
                 'source_image': source,
                 'data': {
                     'source': source,
+                    'notify': content['notify'],
                     **content
                 }
             }
@@ -711,7 +715,8 @@ class BrandInsightImporter(OCRInsightImporter):
                     'source': source,
                     'brand_tag': brand_tag,
                     'text': content['text'],
-                    'brand': content['brand']
+                    'brand': content['brand'],
+                    'notify': content['notify'],
                 }
             }
             brand_seen.add(brand_tag)
