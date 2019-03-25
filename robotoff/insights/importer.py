@@ -738,7 +738,7 @@ class BrandInsightImporter(OCRInsightImporter):
 
         if len(barcode_range) != len(barcode):
             logger.debug("Barcode range and barcode do not have the same length")
-            return True
+            return False
 
         barcode_range = barcode_range.replace('x', '')
 
