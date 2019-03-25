@@ -241,15 +241,11 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                  emb_code: str,
                  code_seen: Set[str]) -> bool:
         product: Optional[Product] = self.product_store[barcode]
-
-        if not product:
-            # Product is not yet part of the dump, or has been deleted
-            # since insights generation. By default, include it.
-            return True
+        product_emb_codes_tags = getattr(product, 'emb_codes_tags', [])
 
         normalized_emb_code = normalize_emb_code(emb_code)
         normalized_emb_codes = [normalize_emb_code(c)
-                                for c in product.emb_codes_tags]
+                                for c in product_emb_codes_tags]
 
         if normalized_emb_code in normalized_emb_codes:
             return False
@@ -319,11 +315,9 @@ class LabelInsightImporter(OCRInsightImporter):
                  label_tag: str,
                  label_seen: Set[str]) -> bool:
         product = self.product_store[barcode]
+        product_labels_tags = getattr(product, 'labels_tags', [])
 
-        if not product:
-            return True
-
-        if label_tag in product.labels_tags:
+        if label_tag in product_labels_tags:
             return False
 
         if label_tag in label_seen:
@@ -337,7 +331,7 @@ class LabelInsightImporter(OCRInsightImporter):
         if label_tag in label_taxonomy:
             label_node: TaxonomyNode = label_taxonomy[label_tag]
 
-            to_check_labels = (set(product.labels_tags)
+            to_check_labels = (set(product_labels_tags)
                                .union(label_seen))
             for other_label_node in (label_taxonomy[to_check_label]
                                      for to_check_label
@@ -465,13 +459,9 @@ class CategoryImporter(InsightImporter):
                  category: str,
                  category_seen: Dict[str, Set[str]]):
         product = self.product_store[barcode]
+        product_categories_tags = getattr(product, 'categories_tags', [])
 
-        if not product:
-            logger.debug("Product is not in product store, considering "
-                         "the insight as valid")
-            return True
-
-        if category in product.categories_tags:
+        if category in product_categories_tags:
             logger.debug("The product already belongs to this category, "
                          "considering the insight as invalid")
             return False
@@ -489,7 +479,7 @@ class CategoryImporter(InsightImporter):
         if category in category_taxonomy:
             category_node: TaxonomyNode = category_taxonomy[category]
 
-            to_check_categories = (set(product.categories_tags)
+            to_check_categories = (set(product_categories_tags)
                                    .union(category_seen.get(barcode,
                                                             set())))
             for other_category_node in (category_taxonomy[to_check_category]
@@ -517,16 +507,6 @@ class ProductWeightImporter(OCRInsightImporter):
         return InsightType.product_weight.name
 
     def is_valid(self, barcode: str, weight_value_str: str) -> bool:
-        product = self.product_store[barcode]
-
-        if not product:
-            return True
-
-        if product.quantity is not None:
-            logger.debug("Product quantity field is not null, returning "
-                         "non valid")
-            return False
-
         try:
             weight_value = float(weight_value_str)
         except ValueError:
@@ -536,6 +516,16 @@ class ProductWeightImporter(OCRInsightImporter):
 
         if weight_value <= 0:
             logger.debug("Weight value is <= 0")
+            return False
+
+        product = self.product_store[barcode]
+
+        if not product:
+            return True
+
+        if product.quantity is not None:
+            logger.debug("Product quantity field is not null, returning "
+                         "non valid")
             return False
 
         return True
@@ -668,6 +658,14 @@ class BrandInsightImporter(OCRInsightImporter):
     def is_valid(self, barcode: str,
                  brand_tag: str,
                  brand_seen: Set[str]) -> bool:
+        if brand_tag in brand_seen:
+            return False
+
+        if not self.in_barcode_range(brand_tag, barcode):
+            logger.warn("Barcode {} of brand {} not in barcode "
+                        "range".format(barcode, brand_tag))
+            return False
+
         product = self.product_store[barcode]
 
         if not product:
@@ -675,14 +673,6 @@ class BrandInsightImporter(OCRInsightImporter):
 
         if product.brands_tags:
             # For now, don't annotate if a brand has already been provided
-            return False
-
-        if brand_tag in brand_seen:
-            return False
-
-        if not self.in_barcode_range(brand_tag, barcode):
-            logger.warn("Barcode {} of brand {} not in barcode "
-                        "range".format(barcode, brand_tag))
             return False
 
         return True
