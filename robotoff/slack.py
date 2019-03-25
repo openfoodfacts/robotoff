@@ -86,48 +86,6 @@ def notify_automatic_processing(insight: ProductInsight):
         post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
 
 
-def notify_manual_processing(insight: ProductInsight, annotation: int):
-    annotation_text = " (annotation: {})".format(annotation)
-
-    if insight.type == InsightType.label.name:
-        text = ("The `{}` label insight was manually annotated, product {}/product"
-                "/{}".format(insight.value_tag,
-                             settings.OFF_BASE_WEBSITE_URL,
-                             insight.barcode)) + annotation_text
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
-
-        if insight.value_tag == 'en:nutriscore':
-            post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL)
-
-    elif insight.type == InsightType.product_weight.name:
-        text = ("The weight `{}` (match: `{}`) insight was manually annotated, "
-                "product {}/product/{}"
-                "".format(insight.data['text'],
-                          insight.data['raw'],
-                          settings.OFF_BASE_WEBSITE_URL,
-                          insight.barcode)) + annotation_text
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
-
-    elif insight.type == InsightType.packager_code.name:
-        text = ("The `{}` packager code insight was manually annotated, "
-                "product {}/product/{}"
-                "".format(insight.data['text'],
-                          settings.OFF_BASE_WEBSITE_URL,
-                          insight.barcode)) + annotation_text
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
-
-    elif insight.type == InsightType.category.name:
-        text = ("The `{}` category insight was manually annotated, "
-                "product {}/product/{}"
-                "".format(insight.value_tag,
-                          settings.OFF_BASE_WEBSITE_URL,
-                          insight.barcode)) + annotation_text
-        post_message(text, settings.SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL)
-
-    else:
-        return
-
-
 def get_base_params() -> JSONType:
     return {
         'username': "robotoff-bot",
