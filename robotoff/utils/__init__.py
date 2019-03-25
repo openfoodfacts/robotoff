@@ -58,3 +58,12 @@ def dump_jsonl(filepath: Union[str, pathlib.Path],
     with open(str(filepath), 'w') as f:
         for item in json_iter:
             f.write(json.dumps(item) + "\n")
+
+
+def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
+    with open(str(filepath), 'r') as f:
+        for item in f:
+            item = item.strip('\n')
+
+            if item:
+                yield item

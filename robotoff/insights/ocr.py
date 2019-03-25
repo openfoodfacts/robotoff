@@ -7,13 +7,14 @@ import re
 import json
 
 import pathlib as pathlib
-from typing import List, Dict, Iterable, Optional, Tuple, Callable
+from typing import List, Dict, Iterable, Optional, Tuple, Callable, Set
 from urllib.parse import urlparse
 
 import requests
 
 from robotoff import settings
 from robotoff.insights._enum import InsightType
+from robotoff.utils import text_file_iter
 from robotoff.utils.types import JSONType
 
 
@@ -378,24 +379,6 @@ LABELS_REGEX = {
 }
 
 
-BRANDS_DATA: Dict[str, str] = {
-    'Auchan': r"auchan",
-    'Boni': r"boni",
-    'Carrefour': r"carrefour",
-    'Carrefour Baby': r"carrefour [bg]aby",
-    'Carrefour Bio': r"carrefour bio",
-    'Carrefour Discount': r"carrefour discount",
-    'Colruyt': r"colruyt",
-    'Delhaize': r"delhaize",
-    'Everyday': r"everyday",
-    'Monoprix': r"monoprix",
-    'Monoprix Bio': r"monoprix gourmet",
-    'Monoprix Gourmet': r"monoprix gourmet",
-    "Monoprix P'tit Prix": r"monoprix p'?tit prix",
-    'Yoplait': r"yoplait",
-}
-
-
 def get_brand_tag(brand: str) -> str:
     return (brand.lower()
                  .replace(' ', '-')
@@ -412,10 +395,26 @@ def brand_sort_key(item):
     return -len(brand), brand
 
 
-SORTED_BRANDS = sorted(BRANDS_DATA.items(), key=brand_sort_key)
+def get_sorted_brands() -> List[Tuple[str, str]]:
+    sorted_brands: Dict[str, str] = {}
 
+    for item in text_file_iter(settings.OCR_BRANDS_DATA_PATH):
+        if '||' in item:
+            brand, regex_str = item.split('||')
+        else:
+            brand = item
+            regex_str = re.escape(item.lower())
+
+        sorted_brands[brand] = regex_str
+
+    return sorted(sorted_brands.items(), key=brand_sort_key)
+
+
+SORTED_BRANDS = get_sorted_brands()
 BRAND_REGEX_STR = "|".join(r"((?<!\w){}(?!\w))".format(pattern)
                            for _, pattern in SORTED_BRANDS)
+NOTIFY_BRANDS_WHITELIST: Set[str] = set(
+    text_file_iter(settings.OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH))
 BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
                        field=OCRField.full_text_contiguous,
                        lowercase=True)
@@ -924,7 +923,7 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
                     'brand': brand,
                     'brand_tag': get_brand_tag(brand),
                     'text': match_str,
-                    'notify': BRAND_REGEX.notify,
+                    'notify': brand not in NOTIFY_BRANDS_WHITELIST,
                 })
                 break
 
