@@ -83,27 +83,37 @@ def refresh_insights():
                     deleted += 1
                     insight.delete_instance()
                 else:
-                    to_update = False
-                    if insight.brands != product.brands_tags:
-                        logger.info("Updating brand {} -> {} ({})".format(
-                            insight.brands, product.brands_tags,
-                            product.barcode))
-                        to_update = True
-                        insight.brands = product.brands_tags
+                    insight_updated = update_insight_attributes(product,
+                                                                insight)
 
-                    if insight.countries != product.countries_tags:
-                        logger.info("Updating countries {} -> {} ({})".format(
-                            insight.countries, product.countries_tags,
-                            product.barcode))
-                        to_update = True
-                        insight.countries = product.countries_tags
-
-                    if to_update:
+                    if insight_updated:
                         updated += 1
-                        insight.save()
 
     logger.info("{} insights deleted".format(deleted))
     logger.info("{} insights updated".format(updated))
+
+
+def update_insight_attributes(product: Product, insight: ProductInsight) \
+        -> bool:
+    to_update = False
+    if insight.brands != product.brands_tags:
+        logger.info("Updating brand {} -> {} ({})".format(
+            insight.brands, product.brands_tags,
+            product.barcode))
+        to_update = True
+        insight.brands = product.brands_tags
+
+    if insight.countries != product.countries_tags:
+        logger.info("Updating countries {} -> {} ({})".format(
+            insight.countries, product.countries_tags,
+            product.barcode))
+        to_update = True
+        insight.countries = product.countries_tags
+
+    if to_update:
+        insight.save()
+
+    return to_update
 
 
 def mark_insights():
