@@ -1,6 +1,6 @@
 import datetime
 import os
-from typing import Dict, Set
+from typing import Dict, Set, Optional
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -11,6 +11,8 @@ from robotoff import slack, settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
+from robotoff.insights.validator import InsightValidator, \
+    InsightValidatorFactory
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
     CACHED_PRODUCT_STORE, Product
@@ -68,6 +70,8 @@ def refresh_insights():
                     "removal job")
         return
 
+    validators: Dict[str, InsightValidator] = {}
+
     with db:
         with db.atomic():
             for insight in (ProductInsight.select()
@@ -83,6 +87,19 @@ def refresh_insights():
                     deleted += 1
                     insight.delete_instance()
                 else:
+                    if insight.type not in validators:
+                        validators[insight.type] = InsightValidatorFactory.create(
+                            insight.type, product_store)
+
+                    validator = validators[insight.type]
+                    insight_deleted = delete_invalid_insight(insight, validator)
+
+                    if insight_deleted:
+                        deleted += 1
+                        logger.info("invalid insight {} (type: {}), deleting..."
+                                    "".format(insight.id, insight.type))
+                        continue
+
                     insight_updated = update_insight_attributes(product,
                                                                 insight)
 
@@ -114,6 +131,18 @@ def update_insight_attributes(product: Product, insight: ProductInsight) \
         insight.save()
 
     return to_update
+
+
+def delete_invalid_insight(insight: ProductInsight,
+                           validator: Optional[InsightValidator]) -> bool:
+    if validator is None:
+        return False
+
+    if not validator.is_valid(insight):
+        insight.delete_instance()
+        return True
+
+    return False
 
 
 def mark_insights():

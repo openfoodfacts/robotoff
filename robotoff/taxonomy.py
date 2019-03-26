@@ -2,7 +2,7 @@ import collections
 import functools
 import json
 from enum import Enum
-from typing import List, Dict, Iterable, Optional, Set
+from typing import List, Dict, Iterable, Optional, Set, Union
 
 import requests
 
@@ -107,6 +107,28 @@ class Taxonomy:
                     excluded.add(second_item)
 
         return [key for key in keys if key not in excluded][0]
+
+    def is_parent_of_any(self,
+                         item: str,
+                         candidates: Iterable[str]) -> bool:
+        node: TaxonomyNode = self[item]
+
+        if node is None:
+            raise ValueError("unknown id in taxonomy: {}".format(node))
+
+        to_check_nodes: Set[TaxonomyNode] = set()
+
+        for candidate in candidates:
+            candidate_node = self[candidate]
+
+            if candidate_node is not None:
+                to_check_nodes.add(candidate_node)
+
+        for other_node in to_check_nodes:
+            if other_node.is_child_of(node):
+                return True
+
+        return False
 
     def get_localized_name(self, key: str, lang: str) -> str:
         if key not in self.nodes:
