@@ -3,10 +3,12 @@ import datetime
 import enum
 import functools
 import gzip
+import operator
 import re
 import json
 
 import pathlib as pathlib
+from collections import Counter
 from typing import List, Dict, Iterable, Optional, Tuple, Callable, Set
 from urllib.parse import urlparse
 
@@ -14,8 +16,11 @@ import requests
 
 from robotoff import settings
 from robotoff.insights._enum import InsightType
-from robotoff.utils import text_file_iter
+from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.types import JSONType
+
+
+logger = get_logger(__name__)
 
 
 def process_fr_packaging_match(match) -> str:
@@ -481,6 +486,36 @@ TRACES_REGEX = OCRRegex(
     lowercase=True)
 
 
+class ImageOrientation(enum.Enum):
+    up = 1  # intended orientation
+    down = 2  # 180° rotation
+    left = 3  # 90° counterclockwise rotation
+    right = 4  # 90° clockwise rotation
+    unknown = 5
+
+
+class OrientationResult:
+    __slots__ = ('count', 'orientation')
+
+    def __init__(self, count: Counter):
+        most_common_list = count.most_common(1)
+        self.orientation: ImageOrientation
+
+        if most_common_list:
+            self.orientation = most_common_list[0][0]
+        else:
+            self.orientation = ImageOrientation.unknown
+
+        self.count: Dict[str, int] = {key.name: value
+                                      for key, value in count.items()}
+
+    def to_json(self) -> JSONType:
+        return {
+            'count': self.count,
+            'orientation': self.orientation.name,
+        }
+
+
 class OCRResult:
     __slots__ = ('text_annotations', 'text_annotations_str',
                  'text_annotations_str_lower',
@@ -587,6 +622,12 @@ class OCRResult:
     def get_safe_search_annotation(self):
         return self.safe_search_annotation
 
+    def get_orientation(self) -> Optional[OrientationResult]:
+        if self.full_text_annotation:
+            return self.full_text_annotation.detect_orientation()
+        else:
+            return None
+
 
 class OCRFullTextAnnotation:
     __slots__ = ('text', 'text_lower',
@@ -599,7 +640,153 @@ class OCRFullTextAnnotation:
         self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ',
                                                          self.contiguous_text)
         self.contiguous_text_lower = self.contiguous_text.lower()
-        self.pages: List = []
+        self.pages: List[TextAnnotationPage] = [TextAnnotationPage(page)
+                                                for page in data['pages']]
+
+    def detect_orientation(self) -> OrientationResult:
+        word_orientations: List[ImageOrientation] = []
+
+        for page in self.pages:
+            word_orientations += page.detect_words_orientation()
+
+        count = Counter(word_orientations)
+        return OrientationResult(count)
+
+
+class TextAnnotationPage:
+    def __init__(self, data: JSONType):
+        self.width = data['width']
+        self.height = data['height']
+        self.blocks = [Block(d) for d in data['blocks']]
+
+    def detect_words_orientation(self) -> List[ImageOrientation]:
+        word_orientations: List[ImageOrientation] = []
+
+        for block in self.blocks:
+            word_orientations += block.detect_words_orientation()
+
+        return word_orientations
+
+
+class Block:
+    def __init__(self, data: JSONType):
+        self.type = data['blockType']
+        self.paragraphs = [Paragraph(paragraph)
+                           for paragraph in data['paragraphs']]
+        self.bounding_poly = BoundingPoly(data['boundingBox'])
+
+    def detect_orientation(self) -> ImageOrientation:
+        return self.bounding_poly.detect_orientation()
+
+    def detect_words_orientation(self) -> List[ImageOrientation]:
+        word_orientations: List[ImageOrientation] = []
+
+        for paragraph in self.paragraphs:
+            word_orientations += paragraph.detect_words_orientation()
+
+        return word_orientations
+
+
+class Paragraph:
+    def __init__(self, data: JSONType):
+        self.words = [Word(word) for word in data['words']]
+        self.bounding_poly = BoundingPoly(data['boundingBox'])
+
+    def detect_orientation(self) -> ImageOrientation:
+        return self.bounding_poly.detect_orientation()
+
+    def detect_words_orientation(self) -> List[ImageOrientation]:
+        return [word.detect_orientation() for word in self.words]
+
+
+class Word:
+    __slots__ = ('bounding_poly', 'symbols', 'text')
+
+    def __init__(self, data: JSONType):
+        self.bounding_poly = BoundingPoly(data['boundingBox'])
+        self.symbols: List[Symbol] = [Symbol(s) for s in data['symbols']]
+        self.text = ''.join(s.text for s in self.symbols)
+
+    def detect_orientation(self) -> ImageOrientation:
+        return self.bounding_poly.detect_orientation()
+
+
+class Symbol:
+    __slots__ = ('bounding_poly', 'text', 'confidence')
+
+    def __init__(self, data: JSONType):
+        self.bounding_poly = BoundingPoly(data['boundingBox'])
+        self.text = data['text']
+        self.confidence = data.get('confidence', None)
+
+    def detect_orientation(self) -> ImageOrientation:
+        return self.bounding_poly.detect_orientation()
+
+
+class BoundingPoly:
+    __slots__ = ('vertices', )
+
+    def __init__(self, data: JSONType):
+        self.vertices = [(point.get('x', 0), point.get('y', 0))
+                         for point in data['vertices']]
+
+    def detect_orientation(self) -> ImageOrientation:
+        """Detect bounding poly orientation (up, down, left, or right).
+
+        Google Vision vertices origin is at the top-left corner of the image.
+        The order of each vertex gives the orientation of the text. For
+        instance, horizontal text looks like this:
+            0----1
+            |    |
+            3----2
+        And left-rotated text looks like this:
+            1----2
+            |    |
+            0----3
+
+        See https://cloud.google.com/vision/docs/reference/rest/v1/images/annotate#Block
+        for more details.
+
+        We first select the two higher vertices of the image (lower y-values),
+        and order the vertices by ascending x-value.
+
+        This way, the index of these two vertices indicates the text
+        orientation:
+        - (0, 1) for horizontal (up, standard)
+        - (1, 2) for 90° counterclockwise rotation (left)
+        - (2, 3) for 180° rotation (down)
+        - (3, 0) for 90° clockwise rotation (right)
+        It is u
+        """
+        indexed_vertices = [(x[0], x[1], i)
+                            for i, x in enumerate(self.vertices)]
+        # Sort first
+        indexed_vertices = sorted(indexed_vertices,
+                                  key=operator.itemgetter(1))[:2]
+        indexed_vertices = sorted(indexed_vertices,
+                                  key=operator.itemgetter(0))
+
+        first_vertex_index = indexed_vertices[0][2]
+        second_vertex_index = indexed_vertices[1][2]
+
+        first_edge = (first_vertex_index, second_vertex_index)
+
+        if first_edge == (0, 1):
+            return ImageOrientation.up
+
+        elif first_edge == (1, 2):
+            return ImageOrientation.left
+
+        elif first_edge == (2, 3):
+            return ImageOrientation.down
+
+        elif first_edge == (3, 0):
+            return ImageOrientation.right
+
+        else:
+            logger.error("Unknown orientation: edge {}, vertices {}"
+                         "".format(first_edge, self.vertices))
+            return ImageOrientation.unknown
 
 
 class OCRTextAnnotation:
@@ -608,8 +795,7 @@ class OCRTextAnnotation:
     def __init__(self, data: JSONType):
         self.locale = data.get('locale')
         self.text = data['description']
-        self.bounding_poly = [(point.get('x', 0), point.get('y', 0))
-                              for point in data['boundingPoly']['vertices']]
+        self.bounding_poly = BoundingPoly(data['boundingPoly'])
 
 
 class LogoAnnotation:
@@ -994,6 +1180,16 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
     return insights
 
 
+def find_image_orientation(ocr_result: OCRResult) -> List[Dict]:
+    orientation_result = ocr_result.get_orientation()
+
+    if (orientation_result is None
+            or orientation_result.orientation == ImageOrientation.up):
+        return []
+
+    return [orientation_result.to_json()]
+
+
 def extract_insights(ocr_result: OCRResult,
                      insight_type: str) -> List[Dict]:
     if insight_type == 'packager_code':
@@ -1007,6 +1203,9 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == 'image_flag':
         return flag_image(ocr_result)
+
+    elif insight_type == 'image_orientation':
+        return find_image_orientation(ocr_result)
 
     elif insight_type == 'product_weight':
         return find_product_weight(ocr_result)

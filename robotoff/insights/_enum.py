@@ -10,3 +10,4 @@ class InsightType(Enum):
     product_weight = 6
     expiration_date = 7
     brand = 8
+    image_orientation = 9
