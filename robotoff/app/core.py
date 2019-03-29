@@ -14,44 +14,6 @@ import peewee
 logger = get_logger(__name__)
 
 
-CATEGORY_PRODUCT_FIELDS = [
-    'image_front_url',
-    'product_name',
-    'brands',
-    'categories_tags',
-    'code',
-]
-
-
-def normalize_lang(lang):
-    if lang is None:
-        return
-
-    if '-' in lang:
-        return lang.split('-')[0]
-
-    return lang
-
-
-def parse_product_json(data, lang=None):
-    product = {
-        'image_url': data.get('image_front_url'),
-        'product_name': data.get('product_name'),
-        'brands': data.get('brands'),
-        'categories_tags': list(set(data.get('categories_tags', []))),
-    }
-
-    if lang is None:
-        domain = "https://world.openfoodfacts.org"
-    else:
-        domain = "https://{}.openfoodfacts.org".format(lang)
-
-    product['product_link'] = "{}/product/{}".format(domain, data.get('code'))
-    product['edit_product_link'] = "{}/cgi/product.pl?type=edit&code={}".format(domain, data.get('code'))
-
-    return product
-
-
 def get_insights(barcode: Optional[str] = None,
                  keep_types: List[str] = None,
                  country: str = None,

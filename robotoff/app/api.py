@@ -9,17 +9,14 @@ from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
 from robotoff import settings
-from robotoff.app.core import (normalize_lang,
-                               parse_product_json,
-                               get_insights,
+from robotoff.app.core import (get_insights,
                                get_random_insight,
-                               save_insight, CATEGORY_PRODUCT_FIELDS)
+                               save_insight)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
-from robotoff.off import get_product
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger
@@ -46,36 +43,6 @@ def init_sentry(app):
         return SentryWsgiMiddleware(app)
 
     return app
-
-
-class CategoryPredictionResource:
-    def on_get(self, req, resp):
-        response = {}
-
-        country = req.get_param('country')
-        lang = normalize_lang(req.get_param('lang'))
-
-        insight = get_random_insight(InsightType.category.name, country)
-
-        if not insight:
-            response['status'] = "no_prediction_left"
-
-        else:
-            product = get_product(insight.barcode,
-                                  CATEGORY_PRODUCT_FIELDS)
-            response['product'] = parse_product_json(product, lang)
-            response['task_id'] = str(insight.id)
-
-            category_tag = insight.data['category']
-            predicted_category_name = CATEGORY_TAXONOMY.get_localized_name(
-                category_tag, lang)
-            response['prediction'] = {
-                'confidence': insight.data.get('confidence'),
-                'id': category_tag,
-                'name': predicted_category_name,
-            }
-
-        resp.media = response
 
 
 class ProductInsightResource:
@@ -125,23 +92,6 @@ class AnnotateInsightResource:
         resp.media = {
             'status': annotation_result.status,
             'description': annotation_result.description,
-        }
-
-
-class CategoryAnnotateResource:
-    def on_post(self, req, resp):
-        task_id = req.get_param('task_id', required=True)
-        annotation = req.get_param_as_int('annotation', required=True,
-                                          min=-1, max=1)
-
-        update = req.get_param_as_bool('save')
-
-        if update is None:
-            update = True
-
-        save_insight(task_id, annotation, update=update)
-        resp.media = {
-            'status': 'saved',
         }
 
 
@@ -341,8 +291,6 @@ api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
 api.add_route('/api/v1/insights/random', RandomInsightResource())
 api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/insights/import', InsightImporterResource())
-api.add_route('/api/v1/categories/predictions', CategoryPredictionResource())
-api.add_route('/api/v1/categories/annotate', CategoryAnnotateResource())
 api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
 api.add_route('/api/v1/products/dataset',
