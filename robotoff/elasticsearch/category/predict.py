@@ -28,7 +28,7 @@ def generate_dataset(client, products: Iterable[Dict]) -> Iterable[Dict]:
                 continue
 
             category, score = prediction
-            predictions.append((lang, category, score))
+            predictions.append((lang, category, product_name, score))
             continue
 
         if predictions:
@@ -38,12 +38,13 @@ def generate_dataset(client, products: Iterable[Dict]) -> Iterable[Dict]:
                                         reverse=True)
 
             prediction = sorted_predictions[0]
-            lang, category, score = prediction
+            lang, category, product_name, score = prediction
 
             yield {
                 'barcode': product['code'],
                 'category': category,
                 'matcher_lang': lang,
+                'product_name': product_name,
                 'model': 'matcher',
             }
 

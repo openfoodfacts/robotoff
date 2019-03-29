@@ -444,6 +444,12 @@ class CategoryImporter(InsightImporter):
             if 'confidence' in insight:
                 insert['data']['confidence'] = insight['confidence']
 
+            if 'product_name' in insight:
+                insert['data']['product_name'] = insight['product_name']
+
+            if 'matcher_lang' in insight:
+                insert['data']['matcher_lang'] = insight['matcher_lang']
+
             yield insert
             category_seen.setdefault(barcode, set())
             category_seen[barcode].add(category)
