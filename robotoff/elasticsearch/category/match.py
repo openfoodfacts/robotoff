@@ -39,29 +39,10 @@ def match(client, query: str, lang: str):
 def generate_request(query: str, lang: str):
     return {
         "query": {
-            "bool": {
-                "should": [
-                    {
-                        "match_phrase": {
-                            f"{lang}:name": query
-                        }
-                    },
-                    {
-                        "match_phrase": {
-                            f"{lang}:name.stemmed": {
-                                "query": query,
-                                "boost": 10,
-                            }
-                        }
-                    }
-                ],
-                "filter": [
-                    {
-                        "match_phrase": {
-                            f"{lang}:name.stemmed": query
-                        }
-                    }
-                ]
+            "match_phrase": {
+                f"{lang}:name.stemmed": {
+                    "query": query,
+                }
             }
         }
     }

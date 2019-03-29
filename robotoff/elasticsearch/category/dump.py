@@ -27,7 +27,8 @@ def category_export():
     delete_categories(client)
     logger.info("Starting export...")
     category_data = generate_category_data(category_taxonomy)
-    rows_inserted = perform_export(client, category_data, settings.ELASTICSEARCH_CATEGORY_INDEX)
+    rows_inserted = perform_export(client, category_data,
+                                   settings.ELASTICSEARCH_CATEGORY_INDEX)
     logger.info("%d rows inserted" % rows_inserted)
 
 
@@ -52,17 +53,6 @@ def delete_categories(client):
     client.delete_by_query(body=body,
                            index=settings.ELASTICSEARCH_CATEGORY_INDEX,
                            doc_type=settings.ELASTICSEARCH_TYPE)
-
-
-def insert_batch(client, batch: Iterable[Tuple[dict, dict]]):
-    body = ""
-    for action, source in batch:
-        body += "{}\n{}\n".format(json.dumps(action),
-                                  json.dumps(source))
-
-    client.bulk(body=body,
-                index=settings.ELASTICSEARCH_CATEGORY_INDEX,
-                doc_type=settings.ELASTICSEARCH_TYPE)
 
 
 if __name__ == "__main__":

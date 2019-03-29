@@ -41,10 +41,19 @@ def batch_annotate(insight_type: str, dry: bool, filter_clause: str):
     batch.run(insight_type, dry, filter_clause)
 
 
+@click.command()
+@click.argument('output')
+def predict_category(output: str):
+    from robotoff.elasticsearch.category.predict import predict
+    from robotoff.utils import dump_jsonl
+    dump_jsonl(output, predict())
+
+
 cli.add_command(run)
 cli.add_command(generate_ocr_insights)
 cli.add_command(annotate)
 cli.add_command(batch_annotate)
+cli.add_command(predict_category)
 
 
 if __name__ == '__main__':
