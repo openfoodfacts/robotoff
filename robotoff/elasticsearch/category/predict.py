@@ -1,14 +1,13 @@
 import operator
-import pathlib
 from typing import Iterable, Dict
 
 from robotoff.products import ProductDataset
 from robotoff import settings
-from robotoff.utils import dump_jsonl, get_logger
+from robotoff.utils import get_logger
 
 from robotoff.utils.es import get_es_client
 from robotoff.elasticsearch.category.match import predict_category
-
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -49,9 +48,7 @@ def generate_dataset(client, products: Iterable[Dict]) -> Iterable[Dict]:
             }
 
 
-def predict(output_path: pathlib.Path):
-    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-
+def predict_from_dataset(dataset: ProductDataset) -> Iterable[JSONType]:
     product_iter = (dataset.stream()
                            .filter_nonempty_text_field('code')
                            .filter_nonempty_text_field('product_name')
@@ -63,5 +60,9 @@ def predict(output_path: pathlib.Path):
     logger.info("Performing prediction on products without categories")
 
     es_client = get_es_client()
-    prediction_dataset = generate_dataset(es_client, product_iter)
-    dump_jsonl(output_path, prediction_dataset)
+    yield from generate_dataset(es_client, product_iter)
+
+
+def predict() -> Iterable[JSONType]:
+    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
+    yield from predict_from_dataset(dataset)
