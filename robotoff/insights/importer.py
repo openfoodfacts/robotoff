@@ -388,11 +388,6 @@ class LabelInsightImporter(OCRInsightImporter):
 
 
 class CategoryImporter(InsightImporter):
-    def deduplicate_insights(self,
-                             data: Iterable[JSONType]) -> Iterable[JSONType]:
-        key_func = operator.itemgetter('category')
-        yield from self._deduplicate_insights(data, key_func)
-
     @staticmethod
     def get_type() -> str:
         return InsightType.category.name
@@ -401,7 +396,6 @@ class CategoryImporter(InsightImporter):
         if purge:
             self.purge_insights()
 
-        data = self.deduplicate_insights(data)
         inserts = self.process_product_insights(data)
         return batch_insert(ProductInsight, inserts, 50)
 
