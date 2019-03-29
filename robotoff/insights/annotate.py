@@ -186,7 +186,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 class CategoryAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        category_tag = insight.data['category']
+        category_tag = insight.value_tag
         add_category(insight.barcode, category_tag)
 
         return UPDATED_ANNOTATION_RESULT

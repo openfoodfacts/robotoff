@@ -83,7 +83,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
     question = "Does the product belong to this category?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.data['category']
+        value: str = insight.value_tag
         taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)

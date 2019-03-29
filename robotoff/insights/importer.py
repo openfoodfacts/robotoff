@@ -408,13 +408,12 @@ class CategoryImporter(InsightImporter):
     def process_product_insights(self, insights: Iterable[JSONType]) \
             -> Iterable[JSONType]:
         category_seen: Dict[str, Set[str]] = {}
-        for t in (ProductInsight.select(ProductInsight.data['category']
-                                        .as_json().alias('category'),
+        for t in (ProductInsight.select(ProductInsight.value_tag,
                                         ProductInsight.barcode)
                                 .where(ProductInsight.type ==
                                        self.get_type())).iterator():
             category_seen.setdefault(t.barcode, set())
-            category_seen[t.barcode].add(t.category)
+            category_seen[t.barcode].add(t.value_tag)
 
         timestamp = datetime.datetime.utcnow()
         for insight in insights:
