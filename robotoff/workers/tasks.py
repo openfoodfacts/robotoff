@@ -43,7 +43,8 @@ def import_insights(insight_type: str,
                                                               product_store)
 
     with db.atomic():
-        imported = importer.import_insights((json.loads(l) for l in items))
+        imported = importer.import_insights((json.loads(l) for l in items),
+                                            automatic=False)
         logger.info("Import finished, {} insights imported".format(imported))
 
 
@@ -69,7 +70,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
                                                                   product_store)
 
         with db.atomic():
-            imported = importer.import_insights([insights])
+            imported = importer.import_insights([insights], automatic=True)
             logger.info("Import finished, {} insights imported".format(imported))
 
 

@@ -50,6 +50,7 @@ class ProductInsight(BaseModel):
     process_after = peewee.DateTimeField(null=True)
     value_tag = peewee.TextField(null=True, index=True)
     source_image = peewee.TextField(null=True, index=True)
+    automatic_processing = peewee.BooleanField(default=False, index=True)
 
     def serialize(self) -> JSONType:
         return {

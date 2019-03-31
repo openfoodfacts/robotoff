@@ -1,6 +1,6 @@
 import datetime
 import os
-from typing import Dict, Set, Optional
+from typing import Dict, Optional
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -8,9 +8,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from robotoff import slack, settings
-from robotoff.insights._enum import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
-from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.validator import InsightValidator, \
     InsightValidatorFactory
 from robotoff.models import ProductInsight, db
@@ -26,8 +24,6 @@ if settings.SENTRY_DSN:
 
 
 logger = get_logger(__name__)
-
-NEED_VALIDATION_INSIGHTS: Set[str] = set()
 
 
 def process_insights():
@@ -146,36 +142,19 @@ def delete_invalid_insight(insight: ProductInsight,
 
 
 def mark_insights():
-    importers: Dict[str, InsightImporter] = {
-        insight_type.name: InsightImporterFactory.create(insight_type.name,
-                                                         None)
-        for insight_type in InsightType
-        if insight_type.name in InsightImporterFactory.importers
-    }
-
     marked = 0
     with db:
         with db.atomic():
             for insight in (ProductInsight.select()
-                                          .where(ProductInsight.process_after.is_null(),
+                                          .where(ProductInsight.automatic_processing == True,
+                                                 ProductInsight.process_after.is_null(),
                                                  ProductInsight.annotation.is_null())
                                           .iterator()):
-                if insight.id in NEED_VALIDATION_INSIGHTS:
-                    continue
-
-                importer = importers.get(insight.type)
-
-                if importer is None:
-                    continue
-
-                if not importer.need_validation(insight):
-                    logger.info("Marking insight {} as processable automatically "
-                                "(product: {})".format(insight.id, insight.barcode))
-                    insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
-                    insight.save()
-                    marked += 1
-                else:
-                    NEED_VALIDATION_INSIGHTS.add(insight.id)
+                logger.info("Marking insight {} as processable automatically "
+                            "(product: {})".format(insight.id, insight.barcode))
+                insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+                insight.save()
+                marked += 1
 
     logger.info("{} insights marked".format(marked))
 

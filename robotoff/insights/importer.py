@@ -21,7 +21,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         self.product_store: ProductStore = product_store
 
     @abc.abstractmethod
-    def import_insights(self, data: Iterable[Dict]) -> int:
+    def import_insights(self, data: Iterable[Dict], automatic: bool) -> int:
         pass
 
     @staticmethod
@@ -31,14 +31,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     def from_jsonl(self, file_path):
         items = jsonl_iter(file_path)
-        self.import_insights(items)
+        self.import_insights(items, automatic=False)
 
     def from_jsonl_fp(self, fp):
         items = jsonl_iter_fp(fp)
-        self.import_insights(items)
+        self.import_insights(items, automatic=False)
 
     @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
+    def need_validation(insight: JSONType) -> bool:
         return True
 
     @staticmethod
@@ -59,7 +59,7 @@ class IngredientSpellcheckImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.ingredient_spellcheck.name
 
-    def import_insights(self, data: Iterable[Dict]) -> int:
+    def import_insights(self, data: Iterable[Dict], automatic: bool = False) -> int:
         timestamp = datetime.datetime.utcnow()
         barcode_seen: Set[str] = set()
         insight_seen: Set = set()
@@ -96,6 +96,7 @@ class IngredientSpellcheckImporter(InsightImporter):
                         'type': InsightType.ingredient_spellcheck.name,
                         'barcode': barcode,
                         'timestamp': timestamp,
+                        'automatic_processing': False,
                         'data': {
                             **correction,
                             'original_snippet': original_snippet,
@@ -131,7 +132,7 @@ GroupedByOCRInsights = Dict[str, List]
 
 
 class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
-    def import_insights(self, data: Iterable[Dict]) -> int:
+    def import_insights(self, data: Iterable[Dict], automatic: bool = False) -> int:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
         inserts: List[Dict] = []
         timestamp = datetime.datetime.utcnow()
@@ -140,13 +141,15 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             insights = list(self.deduplicate_insights(insights))
             insights = self.sort_by_priority(insights)
             inserts += list(self._process_product_insights(barcode, insights,
-                                                           timestamp))
+                                                           timestamp,
+                                                           automatic))
 
         return batch_insert(ProductInsight, inserts, 50)
 
     def _process_product_insights(self, barcode: str,
                                   insights: List[JSONType],
-                                  timestamp: datetime.datetime) -> \
+                                  timestamp: datetime.datetime,
+                                  automatic: bool) -> \
             Iterable[JSONType]:
         countries_tags = getattr(self.product_store[barcode],
                                  'countries_tags', [])
@@ -160,6 +163,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             insight['type'] = self.get_type()
             insight['countries'] = countries_tags
             insight['brands'] = brands_tags
+            insight['automatic_processing'] = automatic and not self.need_validation(insight)
             yield insight
 
     def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
@@ -268,13 +272,13 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             code_seen.add(emb_code)
 
     @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
-        if insight.type != PackagerCodeInsightImporter.get_type():
+    def need_validation(insight: JSONType) -> bool:
+        if insight['type'] != PackagerCodeInsightImporter.get_type():
             raise ValueError("insight must be of type "
                              "{}".format(PackagerCodeInsightImporter
                                          .get_type()))
 
-        if insight.data['matcher_type'] in ('eu_fr', 'eu_de', 'fr_emb'):
+        if insight['data']['matcher_type'] in ('eu_fr', 'eu_de', 'fr_emb'):
             return False
 
         return True
@@ -355,12 +359,8 @@ class LabelInsightImporter(OCRInsightImporter):
             label_seen.add(label_tag)
 
     @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
-        if insight.type != LabelInsightImporter.get_type():
-            raise ValueError("insight must be of type "
-                             "{}".format(LabelInsightImporter.get_type()))
-
-        if insight.data['label_tag'] in AUTHORIZED_LABELS:
+    def need_validation(insight: JSONType) -> bool:
+        if insight['data']['label_tag'] in AUTHORIZED_LABELS:
             return False
 
         return True
@@ -371,11 +371,12 @@ class CategoryImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.category.name
 
-    def import_insights(self, data: Iterable[Dict]) -> int:
-        inserts = self.process_product_insights(data)
+    def import_insights(self, data: Iterable[Dict], automatic: bool = False) -> int:
+        inserts = self.process_product_insights(data, automatic)
         return batch_insert(ProductInsight, inserts, 50)
 
-    def process_product_insights(self, insights: Iterable[JSONType]) \
+    def process_product_insights(self, insights: Iterable[JSONType],
+                                 automatic: bool) \
             -> Iterable[JSONType]:
         category_seen: Dict[str, Set[str]] = {}
         for t in (ProductInsight.select(ProductInsight.value_tag,
@@ -406,6 +407,7 @@ class CategoryImporter(InsightImporter):
                 'brands': brands_tags,
                 'timestamp': timestamp,
                 'value_tag': category,
+                'automatic_processing': False,
                 'data': {
                     'category': category,
                 }
@@ -556,7 +558,7 @@ class ProductWeightImporter(OCRInsightImporter):
         }
 
     @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
+    def need_validation(insight: JSONType) -> bool:
         return False
 
 
@@ -616,7 +618,7 @@ class ExpirationDateImporter(OCRInsightImporter):
             break
 
     @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
+    def need_validation(insight: JSONType) -> bool:
         return False
 
 
@@ -687,7 +689,7 @@ class BrandInsightImporter(OCRInsightImporter):
             brand_seen.add(brand_tag)
 
     @staticmethod
-    def need_validation(insight: ProductInsight) -> bool:
+    def need_validation(insight: JSONType) -> bool:
         return False
 
     @staticmethod
