@@ -8,6 +8,7 @@ Auchan
 Barilla
 Bellarom
 Betty Bossi
+Biocoop
 Bjorg
 Boni
 By Sainsbury's
@@ -53,6 +54,7 @@ Heinz
 Hipp
 Italiamo
 Ja!
+Jardin Bio
 K-Classic
 Kaufland
 Kellogg's
