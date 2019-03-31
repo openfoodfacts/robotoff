@@ -163,7 +163,10 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             insight['type'] = self.get_type()
             insight['countries'] = countries_tags
             insight['brands'] = brands_tags
-            insight['automatic_processing'] = automatic and not self.need_validation(insight)
+
+            if 'automatic_processing' not in insight:
+                insight['automatic_processing'] = automatic and not self.need_validation(insight)
+
             yield insight
 
     def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
@@ -346,7 +349,7 @@ class LabelInsightImporter(OCRInsightImporter):
                 continue
 
             source = insight['source']
-            yield {
+            insert = {
                 'value_tag': label_tag,
                 'source_image': source,
                 'data': {
@@ -356,6 +359,11 @@ class LabelInsightImporter(OCRInsightImporter):
                     'notify': content['notify'],
                 }
             }
+
+            if 'automatic_processing' in content:
+                insert['automatic_processing'] = content['automatic_processing']
+
+            yield insert
             label_seen.add(label_tag)
 
     @staticmethod
@@ -675,7 +683,7 @@ class BrandInsightImporter(OCRInsightImporter):
                 continue
 
             source = insight['source']
-            yield {
+            insert = {
                 'value_tag': brand_tag,
                 'source_image': source,
                 'data': {
@@ -686,6 +694,11 @@ class BrandInsightImporter(OCRInsightImporter):
                     'notify': content['notify'],
                 }
             }
+
+            if 'automatic_processing' in content:
+                insert['automatic_processing'] = content['automatic_processing']
+
+            yield insert
             brand_seen.add(brand_tag)
 
     @staticmethod
