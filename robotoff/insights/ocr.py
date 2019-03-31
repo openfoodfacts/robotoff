@@ -400,6 +400,21 @@ def brand_sort_key(item):
     return -len(brand), brand
 
 
+def get_logo_annotation_labels() -> Dict[str, str]:
+    labels: Dict[str, str] = {}
+
+    for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_LABELS_DATA_PATH):
+        if '||' in item:
+            logo_description, label_tag = item.split('||')
+        else:
+            logger.warn("'||' separator expected!")
+            continue
+
+        labels[logo_description] = label_tag
+
+    return labels
+
+
 def get_sorted_brands() -> List[Tuple[str, str]]:
     sorted_brands: Dict[str, str] = {}
 
@@ -1066,6 +1081,9 @@ def find_recycling_instructions(text) -> List[Dict]:
     return results
 
 
+LOGO_ANNOTATION_LABELS: Dict[str, str] = get_logo_annotation_labels()
+
+
 def find_labels(ocr_result: OCRResult) -> List[Dict]:
     results = []
 
@@ -1087,6 +1105,16 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                     'text': match.group(),
                     'notify': ocr_regex.notify,
                 })
+
+    for logo_annotation in ocr_result.logo_annotations:
+        if logo_annotation.description in LOGO_ANNOTATION_LABELS:
+            label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
+
+            results.append({
+                'label_tag': label_tag,
+                'automatic_processing': False,
+                'confidence': logo_annotation.score,
+            })
 
     return results
 

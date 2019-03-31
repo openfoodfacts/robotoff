@@ -1,0 +1,3 @@
+label rouge||en:label-rouge
+igp||en:pgi
+label ab||fr:ab-agriculture-biologique

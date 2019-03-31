@@ -55,3 +55,4 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN")
 OCR_DATA_DIR = DATA_DIR / 'ocr'
 OCR_BRANDS_DATA_PATH = OCR_DATA_DIR / 'regex_brands.txt'
 OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH = OCR_DATA_DIR / 'notify_whitelist_brands.txt'
+OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_labels.txt'

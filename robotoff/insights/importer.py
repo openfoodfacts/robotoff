@@ -354,11 +354,15 @@ class LabelInsightImporter(OCRInsightImporter):
                 'source_image': source,
                 'data': {
                     'source': source,
-                    'text': content['text'],
                     'label_tag': label_tag,
-                    'notify': content['notify'],
                 }
             }
+
+            if 'text' in content:
+                insert['data']['text'] = content['text']
+
+            if 'notify' in content:
+                insert['data']['notify'] = content['notify']
 
             if 'automatic_processing' in content:
                 insert['automatic_processing'] = content['automatic_processing']
