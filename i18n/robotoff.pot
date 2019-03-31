@@ -17,3 +17,6 @@ msgstr ""
 
 msgid "Does the product have this label?"
 msgstr ""
+
+msgid "Does the product belong to this brand?"
+msgstr ""
