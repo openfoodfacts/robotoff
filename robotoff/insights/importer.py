@@ -21,7 +21,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         self.product_store: ProductStore = product_store
 
     @abc.abstractmethod
-    def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
+    def import_insights(self, data: Iterable[Dict]) -> int:
         pass
 
     @staticmethod
@@ -40,12 +40,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @staticmethod
     def need_validation(insight: ProductInsight) -> bool:
         return True
-    
-    def purge_insights(self):
-        ProductInsight.delete().where(ProductInsight.type ==
-                                      self.get_type(),
-                                      ProductInsight.annotation.is_null()
-                                      ).execute()
 
     @staticmethod
     def _deduplicate_insights(data: Iterable[Dict],
@@ -65,18 +59,7 @@ class IngredientSpellcheckImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.ingredient_spellcheck.name
 
-    def purge_insights(self):
-        # Purge all non-annotated insights, partial updates are not allowed
-        ProductInsight.delete().where(ProductInsight.type ==
-                                      self.get_type(),
-                                      ProductInsight.annotation.is_null()
-                                      ).execute()
-        ProductIngredient.delete().execute()
-    
-    def import_insights(self, data: Iterable[Dict], purge: bool = True) -> int:
-        if purge:
-            self.purge_insights()
-
+    def import_insights(self, data: Iterable[Dict]) -> int:
         timestamp = datetime.datetime.utcnow()
         barcode_seen: Set[str] = set()
         insight_seen: Set = set()
@@ -148,13 +131,9 @@ GroupedByOCRInsights = Dict[str, List]
 
 
 class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
-    def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
+    def import_insights(self, data: Iterable[Dict]) -> int:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
         inserts: List[Dict] = []
-
-        if purge:
-            self.purge_insights()
-
         timestamp = datetime.datetime.utcnow()
 
         for barcode, insights in grouped_by.items():
@@ -392,10 +371,7 @@ class CategoryImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.category.name
 
-    def import_insights(self, data: Iterable[Dict], purge: bool = False) -> int:
-        if purge:
-            self.purge_insights()
-
+    def import_insights(self, data: Iterable[Dict]) -> int:
         inserts = self.process_product_insights(data)
         return batch_insert(ProductInsight, inserts, 50)
 
