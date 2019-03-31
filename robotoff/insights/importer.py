@@ -1,6 +1,5 @@
 import abc
 import datetime
-import operator
 import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable
 
