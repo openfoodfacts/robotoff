@@ -63,7 +63,11 @@ class PackagerCodeAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
         emb_code: str = insight.data['text']
 
-        product: Dict = get_product(insight.barcode, ['emb_codes'])
+        product = get_product(insight.barcode, ['emb_codes'])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
         emb_codes_str: str = product.get('emb_codes', '')
 
         emb_codes: List[str] = []
@@ -204,7 +208,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
         expiration_date: str = insight.data['text']
 
-        product: Dict = get_product(insight.barcode, ['expiration_date'])
+        product = get_product(insight.barcode, ['expiration_date'])
 
         if product is None:
             return MISSING_PRODUCT_RESULT
@@ -222,12 +226,12 @@ class BrandAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
         brand: str = insight.data['brand']
 
-        product: Dict = get_product(insight.barcode, ['brands_tags'])
+        product = get_product(insight.barcode, ['brands_tags'])
 
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        brand_tags: str = product.get('brand_tags') or []
+        brand_tags: List[str] = product.get('brand_tags') or []
 
         if brand_tags:
             # For now, don't annotate if a brand has already been provided

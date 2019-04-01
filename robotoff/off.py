@@ -34,12 +34,12 @@ def get_product(product_id: str, fields: List[str] = None) -> Optional[Dict]:
     r = http_session.get(url)
 
     if r.status_code != 200:
-        return
+        return None
 
     data = r.json()
 
     if data['status_verbose'] != 'product found':
-        return
+        return None
 
     return data['product']
 
