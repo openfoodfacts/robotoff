@@ -21,9 +21,9 @@ PRODUCT_URL = API_URL + "/product"
 logger = get_logger(__name__)
 
 
-def get_product(product_id: str, fields: List[str] = None) -> Optional[Dict]:
+def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
     fields = fields or []
-    url = PRODUCT_URL + "/{}.json".format(product_id)
+    url = PRODUCT_URL + "/{}.json".format(barcode)
 
     if fields:
         # requests escape comma in URLs, as expected, but openfoodfacts server
