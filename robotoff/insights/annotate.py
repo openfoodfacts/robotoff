@@ -1,6 +1,6 @@
 import abc
 import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 from dataclasses import dataclass
 from enum import Enum

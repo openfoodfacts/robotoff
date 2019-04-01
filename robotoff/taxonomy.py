@@ -2,7 +2,7 @@ import collections
 import functools
 import json
 from enum import Enum
-from typing import List, Dict, Iterable, Optional, Set, Union
+from typing import List, Dict, Iterable, Optional, Set
 
 import requests
 

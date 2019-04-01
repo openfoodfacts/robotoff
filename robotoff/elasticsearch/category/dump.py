@@ -1,5 +1,4 @@
 import hashlib
-import json
 from typing import Iterable, Tuple, Dict
 
 from robotoff.insights._enum import InsightType
