@@ -6,7 +6,7 @@ from typing import Optional
 import click
 
 from robotoff.insights.ocr import (ocr_iter, OCRResult,
-                                   get_ocr_result, extract_insights,
+                                   extract_insights,
                                    get_barcode_from_path)
 
 
@@ -28,7 +28,7 @@ def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
                            "{}".format(source), err=True)
                 continue
 
-            ocr_result: Optional[OCRResult] = get_ocr_result(ocr_json)
+            ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
 
             if ocr_result is None:
                 continue

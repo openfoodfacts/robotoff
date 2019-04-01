@@ -77,20 +77,6 @@ def get_json_for_image(barcode: str, image_name: str) -> \
     return r.json()
 
 
-def get_ocr_result(data: JSONType) -> Optional[OCRResult]:
-    responses = data.get('responses', [])
-
-    if not responses:
-        return None
-
-    response = responses[0]
-
-    if 'error' in response:
-        return None
-
-    return OCRResult(response)
-
-
 def extract_insights(ocr_result: OCRResult,
                      insight_type: str) -> List[Dict]:
     if insight_type == 'packager_code':
@@ -192,7 +178,7 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
     r.raise_for_status()
 
     ocr_data: Dict = requests.get(ocr_url).json()
-    ocr_result = get_ocr_result(ocr_data)
+    ocr_result = OCRResult.from_json(ocr_data)
 
     if ocr_result is None:
         return None

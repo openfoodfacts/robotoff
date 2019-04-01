@@ -179,6 +179,20 @@ class OCRResult:
         else:
             return None
 
+    @classmethod
+    def from_json(cls, data: JSONType) -> Optional['OCRResult']:
+        responses = data.get('responses', [])
+
+        if not responses:
+            return None
+
+        response = responses[0]
+
+        if 'error' in response:
+            return None
+
+        return OCRResult(response)
+
 
 class OCRFullTextAnnotation:
     __slots__ = ('text', 'text_lower',
