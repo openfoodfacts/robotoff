@@ -21,6 +21,10 @@ PRODUCT_URL = API_URL + "/product"
 logger = get_logger(__name__)
 
 
+def product_exists(barcode: str) -> bool:
+    return get_product(barcode, ['code']) is not None
+
+
 def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
     fields = fields or []
     url = PRODUCT_URL + "/{}.json".format(barcode)

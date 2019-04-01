@@ -9,7 +9,8 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db, ProductIngredient
 from robotoff.off import get_product, save_ingredients, update_emb_codes, \
-    add_label_tag, add_category, update_quantity, update_expiration_date, add_brand
+    add_label_tag, add_category, update_quantity, update_expiration_date, \
+    add_brand, product_exists
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -97,6 +98,9 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 class LabelAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        if not product_exists(insight.barcode):
+            return MISSING_PRODUCT_RESULT
+
         add_label_tag(insight.barcode, insight.value_tag)
 
         return UPDATED_ANNOTATION_RESULT
@@ -104,6 +108,9 @@ class LabelAnnotator(InsightAnnotator):
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        if not product_exists(insight.barcode):
+            return MISSING_PRODUCT_RESULT
+
         barcode = insight.barcode
 
         try:
@@ -190,6 +197,9 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 class CategoryAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        if not product_exists(insight.barcode):
+            return MISSING_PRODUCT_RESULT
+
         category_tag = insight.value_tag
         add_category(insight.barcode, category_tag)
 
@@ -198,6 +208,9 @@ class CategoryAnnotator(InsightAnnotator):
 
 class ProductWeightAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        if not product_exists(insight.barcode):
+            return MISSING_PRODUCT_RESULT
+
         weight = insight.data['text']
         update_quantity(insight.barcode, weight)
 
