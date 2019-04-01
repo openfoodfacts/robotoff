@@ -7,3 +7,6 @@ datasets
 .ipynb_checkpoints
 .mypy_cache
 .pytest_cache
+insights
+models
+docker-compose.production.yml
