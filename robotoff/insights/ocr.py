@@ -775,16 +775,17 @@ class BoundingPoly:
         """
         indexed_vertices = [(x[0], x[1], i)
                             for i, x in enumerate(self.vertices)]
-        # Sort first
+        # Sort by ascending y-value and select first two vertices:
+        # get the two topmost vertices
         indexed_vertices = sorted(indexed_vertices,
                                   key=operator.itemgetter(1))[:2]
-        indexed_vertices = sorted(indexed_vertices,
-                                  key=operator.itemgetter(0))
 
         first_vertex_index = indexed_vertices[0][2]
         second_vertex_index = indexed_vertices[1][2]
 
-        first_edge = (first_vertex_index, second_vertex_index)
+        # Sort by index ID, to make sure to filter permutations ((0, 1) and
+        # not (1, 0))
+        first_edge = tuple(sorted((first_vertex_index, second_vertex_index)))
 
         if first_edge == (0, 1):
             return ImageOrientation.up
@@ -795,7 +796,7 @@ class BoundingPoly:
         elif first_edge == (2, 3):
             return ImageOrientation.down
 
-        elif first_edge == (3, 0):
+        elif first_edge == (0, 3):
             return ImageOrientation.right
 
         else:
