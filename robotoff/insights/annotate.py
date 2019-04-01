@@ -31,16 +31,21 @@ class AnnotationStatus(Enum):
     error_unknown_insight = 6
 
 
-SAVED_ANNOTATION_RESULT = AnnotationResult(status=AnnotationStatus.saved.name,
-                                           description="the annotation was saved")
-UPDATED_ANNOTATION_RESULT = AnnotationResult(status=AnnotationStatus.updated.name,
-                                             description="the annotation was saved and sent to OFF")
-MISSING_PRODUCT_RESULT = AnnotationResult(status=AnnotationStatus.error_missing_product.name,
-                                          description="the product could not be found on OFF")
-ALREADY_ANNOTATED_RESULT = AnnotationResult(status=AnnotationStatus.error_already_annotated.name,
-                                            description="the insight has already been annotated")
-UNKNOWN_INSIGHT_RESULT = AnnotationResult(status=AnnotationStatus.error_unknown_insight.name,
-                                          description="unknown insight ID")
+SAVED_ANNOTATION_RESULT = AnnotationResult(
+    status=AnnotationStatus.saved.name,
+    description="the annotation was saved")
+UPDATED_ANNOTATION_RESULT = AnnotationResult(
+    status=AnnotationStatus.updated.name,
+    description="the annotation was saved and sent to OFF")
+MISSING_PRODUCT_RESULT = AnnotationResult(
+    status=AnnotationStatus.error_missing_product.name,
+    description="the product could not be found on OFF")
+ALREADY_ANNOTATED_RESULT = AnnotationResult(
+    status=AnnotationStatus.error_already_annotated.name,
+    description="the insight has already been annotated")
+UNKNOWN_INSIGHT_RESULT = AnnotationResult(
+    status=AnnotationStatus.error_unknown_insight.name,
+    description="unknown insight ID")
 
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
