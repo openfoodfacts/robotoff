@@ -182,16 +182,6 @@ def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
                             yield source, json_data['content']
 
 
-def get_ocr_from_barcode(barcode: str):
-    image_data = fetch_images_for_ean(barcode)['product']['images']
-
-    for image_name in image_data.keys():
-        if image_name.isdigit():
-            print("Getting OCR for image {}".format(image_name))
-            data = get_json_for_image(barcode, image_name)
-            return data
-
-
 def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
         -> Optional[Dict]:
     r = requests.get(ocr_url)
