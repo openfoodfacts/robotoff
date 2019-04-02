@@ -1,3 +1,4 @@
+import re
 from typing import List, Dict, Optional
 
 import requests
@@ -19,6 +20,33 @@ API_URL = "https://world.openfoodfacts.org/api/v0"
 PRODUCT_URL = API_URL + "/product"
 
 logger = get_logger(__name__)
+
+
+BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
+
+
+def split_barcode(barcode: str) -> List[str]:
+    if not barcode.isdigit():
+        raise ValueError("unknown barcode format: {}".format(barcode))
+
+    match = BARCODE_PATH_REGEX.fullmatch(barcode)
+
+    if match:
+        return [x for x in match.groups() if x]
+
+    return [barcode]
+
+
+def generate_json_ocr_url(barcode: str, image_name: str) -> str:
+    splitted_barcode = split_barcode(barcode)
+    path = "/{}/{}.json".format('/'.join(splitted_barcode), image_name)
+    return settings.OFF_IMAGE_BASE_URL + path
+
+
+def generate_image_url(barcode: str, image_name: str) -> str:
+    splitted_barcode = split_barcode(barcode)
+    path = "/{}/{}.jpg".format('/'.join(splitted_barcode), image_name)
+    return settings.OFF_IMAGE_BASE_URL + path
 
 
 def product_exists(barcode: str) -> bool:

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import gzip
-import re
 import json
 
 import pathlib as pathlib
@@ -9,7 +8,6 @@ from urllib.parse import urlparse
 
 import requests
 
-from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.ocr.brand import find_brands
 from robotoff.insights.ocr.dataclass import OCRResult
@@ -21,12 +19,11 @@ from robotoff.insights.ocr.nutrient import find_nutrient_values
 from robotoff.insights.ocr.packager_code import find_packager_codes
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.trace import find_traces
+from robotoff.off import generate_json_ocr_url
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
-
-BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 
 def get_barcode_from_path(path: str) -> Optional[str]:
@@ -41,24 +38,6 @@ def get_barcode_from_path(path: str) -> Optional[str]:
     return barcode or None
 
 
-def split_barcode(barcode: str) -> List[str]:
-    if not barcode.isdigit():
-        raise ValueError("unknown barcode format: {}".format(barcode))
-
-    match = BARCODE_PATH_REGEX.fullmatch(barcode)
-
-    if match:
-        return [x for x in match.groups() if x]
-
-    return [barcode]
-
-
-def generate_image_url(barcode: str, image_name: str) -> str:
-    splitted_barcode = split_barcode(barcode)
-    path = "/{}/{}.json".format('/'.join(splitted_barcode), image_name)
-    return settings.OFF_IMAGE_BASE_URL + path
-
-
 def fetch_images_for_ean(ean: str):
     url = "https://world.openfoodfacts.org/api/v0/product/" \
           "{}.json?fields=images".format(ean)
@@ -68,7 +47,7 @@ def fetch_images_for_ean(ean: str):
 
 def get_json_for_image(barcode: str, image_name: str) -> \
         Optional[JSONType]:
-    url = generate_image_url(barcode, image_name)
+    url = generate_json_ocr_url(barcode, image_name)
     r = requests.get(url)
 
     if r.status_code == 404:
