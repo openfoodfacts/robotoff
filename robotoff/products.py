@@ -4,7 +4,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import List, Iterable, Dict, Optional
+from typing import List, Iterable, Dict, Optional, Iterator
 
 import requests
 
@@ -93,10 +93,10 @@ def download_dataset(output_path: os.PathLike) -> str:
 
 
 class ProductStream:
-    def __init__(self, iterator):
-        self.iterator = iterator
+    def __init__(self, iterator: Iterable[JSONType]):
+        self.iterator: Iterable[JSONType] = iterator
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[JSONType]:
         yield from self.iterator
 
     def filter_by_country_tag(self, country_tag: str) -> 'ProductStream':
@@ -136,14 +136,14 @@ class ProductStream:
 
             yield item
 
-    def iter(self) -> Iterable[Dict]:
+    def iter(self) -> Iterable[JSONType]:
         return iter(self)
 
-    def iter_product(self):
+    def iter_product(self) -> Iterable['Product']:
         for item in self:
             yield Product(item)
 
-    def collect(self) -> List[Dict]:
+    def collect(self) -> List[JSONType]:
         return list(self)
 
 
