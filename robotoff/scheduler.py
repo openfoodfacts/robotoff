@@ -29,24 +29,19 @@ logger = get_logger(__name__)
 def process_insights():
     processed = 0
     with db:
-        with db.atomic():
-            for insight in (ProductInsight.select()
-                                          .where(ProductInsight.annotation.is_null(),
-                                                 ProductInsight.process_after.is_null(False),
-                                                 ProductInsight.process_after <= datetime.datetime.utcnow())
-                                          .iterator()):
-                insight.annotation = 1
-                insight.completed_at = datetime.datetime.utcnow()
-                insight.save()
+        for insight in (ProductInsight.select()
+                                      .where(ProductInsight.annotation.is_null(),
+                                             ProductInsight.process_after.is_null(False),
+                                             ProductInsight.process_after <= datetime.datetime.utcnow())
+                                      .iterator()):
+            annotator = InsightAnnotatorFactory.get(insight.type)
+            logger.info("Annotating insight {} (product: {})".format(insight.id, insight.barcode))
+            annotation_result = annotator.annotate(insight, 1, update=True)
+            processed += 1
 
-                annotator = InsightAnnotatorFactory.get(insight.type)
-                logger.info("Annotating insight {} (product: {})".format(insight.id, insight.barcode))
-                annotation_result = annotator.annotate(insight, 1, update=True)
-                processed += 1
-
-                if (annotation_result == UPDATED_ANNOTATION_RESULT and
-                        insight.data.get('notify', False)):
-                    slack.notify_automatic_processing(insight)
+            if (annotation_result == UPDATED_ANNOTATION_RESULT and
+                    insight.data.get('notify', False)):
+                slack.notify_automatic_processing(insight)
 
     logger.info("{} insights processed".format(processed))
 
