@@ -1,3 +1,6 @@
+import tempfile
+
+import requests
 from typing import Union, Optional, List, Iterable
 
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
@@ -7,6 +10,7 @@ from robotoff.insights.annotate import (InsightAnnotatorFactory,
 from robotoff.models import ProductInsight
 from robotoff.off import get_product
 from robotoff.utils import get_logger
+from PIL import Image
 
 import peewee
 
@@ -100,3 +104,16 @@ def save_insight(insight_id: str, annotation: int, update: bool = True) \
 
     annotator = InsightAnnotatorFactory.get(insight.type)
     return annotator.annotate(insight, annotation, update)
+
+
+def get_image_from_url(image_url: str) -> Optional[Image.Image]:
+    r = requests.get(image_url)
+
+    if r.status_code != 200:
+        return None
+
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(r.content)
+        image = Image.open(f.name)
+
+    return image

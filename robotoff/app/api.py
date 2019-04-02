@@ -11,12 +11,13 @@ from falcon_multipart.middleware import MultipartMiddleware
 from robotoff import settings
 from robotoff.app.core import (get_insights,
                                get_random_insight,
-                               save_insight)
+                               save_insight, get_image_from_url)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
+from robotoff.ml.nutrition_table import NutritionTableDetectionModel
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger
@@ -30,6 +31,8 @@ from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 
 logger = get_logger()
 es_client = get_es_client()
+
+nutrition_table_model = NutritionTableDetectionModel.load()
 
 CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
@@ -169,6 +172,25 @@ class ImageImporterResource:
         }
 
 
+class ImagePredictorResource:
+    def on_post(self, req, resp):
+        image_url = req.get_param('image_url', required=True)
+
+        image = get_image_from_url(image_url)
+
+        if image is None:
+            return
+
+        nutrition_table_result = nutrition_table_model.detect_from_image(
+            image, output_image=False)
+
+        resp.media = {
+            'predictions': {
+                'nutrition_table': nutrition_table_result.to_json()
+            }
+        }
+
+
 class WebhookProductResource:
     def on_post(self, req, resp):
         barcode = req.get_param('barcode', required=True)
@@ -298,6 +320,7 @@ api.add_route('/api/v1/products/dataset',
 api.add_route('/api/v1/webhook/product',
               WebhookProductResource())
 api.add_route('/api/v1/images/import', ImageImporterResource())
+api.add_route('/api/v1/images/predict', ImagePredictorResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
 api.add_route('/api/v1/questions/random', RandomQuestionsResource())
 

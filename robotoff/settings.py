@@ -24,8 +24,6 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.json'
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.json'
 
-MODELS_DIR = PROJECT_DIR / 'models'
-
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
@@ -56,3 +54,11 @@ OCR_DATA_DIR = DATA_DIR / 'ocr'
 OCR_BRANDS_DATA_PATH = OCR_DATA_DIR / 'regex_brands.txt'
 OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH = OCR_DATA_DIR / 'notify_whitelist_brands.txt'
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_labels.txt'
+
+
+# Models and ML
+
+MODELS_DIR = PROJECT_DIR / 'models'
+NUTRITION_TABLE_MODEL_DIR = MODELS_DIR / 'nutrition-table'
+NUTRITION_TABLE_MODEL_CKPT = NUTRITION_TABLE_MODEL_DIR / 'frozen_inference_graph.pb'
+NUTRITION_TABLE_LABELS_PATH = NUTRITION_TABLE_MODEL_DIR / 'nutrition.pbtxt'
