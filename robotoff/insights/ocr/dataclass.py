@@ -263,29 +263,96 @@ class Paragraph:
     def detect_words_orientation(self) -> List[ImageOrientation]:
         return [word.detect_orientation() for word in self.words]
 
+    def get_text(self) -> str:
+        """Return the text of the paragraph, by concatenating the words."""
+        return ''.join(w.get_text() for w in self.words)
+
 
 class Word:
-    __slots__ = ('bounding_poly', 'symbols', 'text')
+    __slots__ = ('bounding_poly', 'symbols', 'languages')
 
     def __init__(self, data: JSONType):
         self.bounding_poly = BoundingPoly(data['boundingBox'])
         self.symbols: List[Symbol] = [Symbol(s) for s in data['symbols']]
-        self.text = ''.join(s.text for s in self.symbols)
+
+        self.languages: Optional[List[DetectedLanguage]] = None
+        word_property = data.get('property', {})
+
+        if 'detectedLanguages' in word_property:
+            self.languages: List[DetectedLanguage] = [
+                DetectedLanguage(l) for l in
+                data['property']['detectedLanguages']]
+
+    def get_text(self) -> str:
+        text_list = []
+        for symbol in self.symbols:
+            symbol_str = ''
+
+            if symbol.symbol_break and symbol.symbol_break.is_prefix:
+                symbol_str = symbol.symbol_break.get_value()
+
+            symbol_str += symbol.text
+
+            if symbol.symbol_break and not symbol.symbol_break.is_prefix:
+                symbol_str += symbol.symbol_break.get_value()
+
+            text_list.append(symbol_str)
+
+        return ''.join(text_list)
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
 
 
 class Symbol:
-    __slots__ = ('bounding_poly', 'text', 'confidence')
+    __slots__ = ('bounding_poly', 'text', 'confidence', 'symbol_break')
 
     def __init__(self, data: JSONType):
         self.bounding_poly = BoundingPoly(data['boundingBox'])
         self.text = data['text']
         self.confidence = data.get('confidence', None)
 
+        self.symbol_break: Optional[DetectedBreak] = None
+        symbol_property = data.get('property', {})
+
+        if 'detectedBreak' in symbol_property:
+            self.symbol_break = DetectedBreak(
+                symbol_property['detectedBreak'])
+
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
+
+
+class DetectedBreak:
+    __slots__ = ('type', 'is_prefix')
+
+    def __init__(self, data: JSONType):
+        self.type = data['type']
+        self.is_prefix = data.get('isPrefix', False)
+
+    def __repr__(self):
+        return "<DetectedBreak {}>".format(self.type)
+
+    def get_value(self):
+        if self.type in ('UNKNOWN', 'HYPHEN'):
+            return ''
+
+        elif self.type in ('SPACE', 'SURE_SPACE', 'EOL_SURE_SPACE'):
+            return ' '
+
+        elif self.type == 'LINE_BREAK':
+            return '\n'
+
+        else:
+            raise ValueError("unknown type: {}".format(self.type))
+
+
+class DetectedLanguage:
+    __slots__ = ('language', 'confidence')
+
+    def __init__(self, data: JSONType):
+        self.language = data['languageCode']
+        self.confidence = data.get('confidence', 0)
 
 
 class BoundingPoly:
