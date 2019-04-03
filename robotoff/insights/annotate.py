@@ -103,8 +103,15 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 class LabelAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        if not product_exists(insight.barcode):
+        product = get_product(insight.barcode, ['labels_tags'])
+
+        if product is None:
             return MISSING_PRODUCT_RESULT
+
+        labels_tags: List[str] = product.get('labels_tags') or []
+
+        if insight.value_tag in labels_tags:
+            return ALREADY_ANNOTATED_RESULT
 
         add_label_tag(insight.barcode, insight.value_tag)
 
@@ -202,8 +209,15 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 class CategoryAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        if not product_exists(insight.barcode):
+        product = get_product(insight.barcode, ['categories_tags'])
+
+        if product is None:
             return MISSING_PRODUCT_RESULT
+
+        categories_tags: List[str] = product.get('categories_tags') or []
+
+        if insight.value_tag in categories_tags:
+            return ALREADY_ANNOTATED_RESULT
 
         category_tag = insight.value_tag
         add_category(insight.barcode, category_tag)
@@ -213,8 +227,15 @@ class CategoryAnnotator(InsightAnnotator):
 
 class ProductWeightAnnotator(InsightAnnotator):
     def update_product(self, insight: ProductInsight) -> AnnotationResult:
-        if not product_exists(insight.barcode):
+        product = get_product(insight.barcode, ['quantity'])
+
+        if product is None:
             return MISSING_PRODUCT_RESULT
+
+        quantity: Optional[str] = product.get('quantity') or None
+
+        if quantity is None:
+            return ALREADY_ANNOTATED_RESULT
 
         weight = insight.data['text']
         update_quantity(insight.barcode, weight)
@@ -249,7 +270,7 @@ class BrandAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        brand_tags: List[str] = product.get('brand_tags') or []
+        brand_tags: List[str] = product.get('brands_tags') or []
 
         if brand_tags:
             # For now, don't annotate if a brand has already been provided
