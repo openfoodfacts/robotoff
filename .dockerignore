@@ -2,4 +2,4 @@ es
 ml
 ocr.jsonl.gz
 datasets
-models
+models/category_classifier

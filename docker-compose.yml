@@ -2,8 +2,7 @@ version: '3'
 
 services:
   api:
-    build:
-      context: .
+    image: openfoodfacts/robotoff
     network_mode: "host"
     volumes:
     - api-dataset:/opt/robotoff/datasets

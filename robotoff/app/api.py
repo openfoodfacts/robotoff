@@ -219,8 +219,6 @@ class ImagePredictorResource:
 
     @staticmethod
     def image_response(image: Image.Image, resp: falcon.Response) -> None:
-        logger.info(Image.MIME)
-        logger.info(image.format)
         resp.content_type = 'image/jpeg'
         fp = io.BytesIO()
         image.save(fp, 'JPEG')
