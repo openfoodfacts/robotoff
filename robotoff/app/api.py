@@ -8,6 +8,8 @@ import falcon
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
+from PIL import Image
+
 from robotoff import settings
 from robotoff.app.core import (get_insights,
                                get_random_insight,
@@ -173,22 +175,58 @@ class ImageImporterResource:
 
 
 class ImagePredictorResource:
-    def on_post(self, req, resp):
+    def on_get(self, req, resp):
         image_url = req.get_param('image_url', required=True)
+        models: List[str] = req.get_param_as_list('models')
+
+        if models is None:
+            models = ['nutrition-table']
+
+        output_image = req.get_param_as_bool('output_image')
+
+        if output_image is None:
+            output_image = False
+
+        if output_image and len(models) != 1:
+            raise falcon.HTTPBadRequest(
+                "invalid_request",
+                "a single model must be specified with the `models` parameter "
+                "when `output_image` is True")
 
         image = get_image_from_url(image_url)
 
         if image is None:
+            logger.info("Could not fetch image: {}".format(image_url))
             return
 
-        nutrition_table_result = nutrition_table_model.detect_from_image(
-            image, output_image=False)
+        predictions = {}
+
+        if 'nutrition-table' in models:
+            nutrition_table_result = nutrition_table_model.detect_from_image(
+                image, output_image=output_image)
+
+            if output_image:
+                self.image_response(nutrition_table_result.boxed_image,
+                                    resp)
+                return
+            else:
+                predictions['nutrition-table'] = nutrition_table_result. \
+                    to_json()
 
         resp.media = {
-            'predictions': {
-                'nutrition_table': nutrition_table_result.to_json()
-            }
+            'predictions': predictions
         }
+
+    @staticmethod
+    def image_response(image: Image.Image, resp: falcon.Response) -> None:
+        logger.info(Image.MIME)
+        logger.info(image.format)
+        resp.content_type = 'image/jpeg'
+        fp = io.BytesIO()
+        image.save(fp, 'JPEG')
+        resp.stream_len = fp.tell()
+        fp.seek(0)
+        resp.stream = fp
 
 
 class WebhookProductResource:
@@ -207,7 +245,8 @@ class WebhookProductResource:
             })
 
         elif action == 'updated':
-            updated_fields = req.get_param_as_list('updated_fields', required=True)
+            updated_fields = req.get_param_as_list('updated_fields',
+                                                   required=True)
 
             send_ipc_event('product_updated', {
                 'barcode': barcode,
