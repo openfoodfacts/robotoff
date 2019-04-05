@@ -8,12 +8,14 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from robotoff import slack, settings
+from robotoff.elasticsearch.category.predict import predict as predict_category
 from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
+from robotoff.insights.importer import CategoryImporter
 from robotoff.insights.validator import InsightValidator, \
     InsightValidatorFactory
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
-    CACHED_PRODUCT_STORE, Product
+    CACHED_PRODUCT_STORE, Product, ProductStore
 from robotoff.utils import get_logger
 
 import sentry_sdk
@@ -161,6 +163,21 @@ def download_product_dataset():
         fetch_dataset()
 
 
+def generate_insights():
+    """Generate and import category insights from the latest dataset dump, for
+    products added at day-1."""
+    logger.info("Generating new category insights")
+    product_store: ProductStore = CACHED_PRODUCT_STORE.get()
+    importer = CategoryImporter(product_store)
+
+    datetime_threshold = datetime.datetime.utcnow().replace(
+        hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
+    category_insights_iter = predict_category(datetime_threshold)
+
+    imported = importer.import_insights(category_insights_iter)
+    logger.info("{} category insights imported".format(imported))
+
+
 def exception_listener(event):
     if event.exception:
         capture_exception(event.exception)
@@ -170,9 +187,15 @@ def run():
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
-    scheduler.add_job(process_insights, 'interval', minutes=2, max_instances=1, jitter=20)
-    scheduler.add_job(mark_insights, 'interval', minutes=2, max_instances=1, jitter=20)
-    scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3', max_instances=1)
-    scheduler.add_job(refresh_insights, 'cron', day='*', hour='4', max_instances=1)
+    scheduler.add_job(process_insights, 'interval', minutes=2, max_instances=1,
+                      jitter=20)
+    scheduler.add_job(mark_insights, 'interval', minutes=2, max_instances=1,
+                      jitter=20)
+    scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3',
+                      max_instances=1)
+    scheduler.add_job(refresh_insights, 'cron', day='*', hour='4',
+                      max_instances=1)
+    scheduler.add_job(generate_insights, 'cron', day='*', hour='4', minutes=15,
+                      max_instances=1)
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()

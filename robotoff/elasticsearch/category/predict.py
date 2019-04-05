@@ -1,5 +1,6 @@
+import datetime
 import operator
-from typing import Iterable, Dict
+from typing import Iterable, Dict, Optional
 
 from robotoff.products import ProductDataset
 from robotoff import settings
@@ -49,21 +50,41 @@ def generate_dataset(client, products: Iterable[Dict]) -> Iterable[Dict]:
             }
 
 
-def predict_from_dataset(dataset: ProductDataset) -> Iterable[JSONType]:
-    product_iter = (dataset.stream()
-                           .filter_nonempty_text_field('code')
-                           .filter_nonempty_text_field('product_name')
-                           .filter_empty_tag_field('categories_tags')
-                           .filter_nonempty_tag_field('countries_tags')
-                           .filter_nonempty_tag_field('languages_codes')
-                           .iter())
+def predict_from_dataset(dataset: ProductDataset,
+                         from_datetime: Optional[datetime.datetime] = None) -> \
+        Iterable[JSONType]:
+    """Return an iterable of category insights, using the provided dataset.
 
+    Args:
+        dataset: a ProductDataset
+        from_datetime: datetime threshold: only keep products modified after
+            `from_datetime`
+    """
+    product_stream = (dataset.stream()
+                             .filter_nonempty_text_field('code')
+                             .filter_nonempty_text_field('product_name')
+                             .filter_empty_tag_field('categories_tags')
+                             .filter_nonempty_tag_field('countries_tags')
+                             .filter_nonempty_tag_field('languages_codes'))
+
+    if from_datetime:
+        product_stream = product_stream.filter_by_modified_datetime(
+            from_t=from_datetime)
+
+    product_iter = product_stream.iter()
     logger.info("Performing prediction on products without categories")
 
     es_client = get_es_client()
     yield from generate_dataset(es_client, product_iter)
 
 
-def predict() -> Iterable[JSONType]:
+def predict(from_datetime: Optional[datetime.datetime] = None) -> \
+        Iterable[JSONType]:
+    """Return an iterable of category insights, using the default dataset.
+
+    Args:
+        from_datetime: datetime threshold: only keep products modified after
+            `from_datetime`
+    """
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-    yield from predict_from_dataset(dataset)
+    yield from predict_from_dataset(dataset, from_datetime)

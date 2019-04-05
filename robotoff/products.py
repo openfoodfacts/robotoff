@@ -1,3 +1,4 @@
+import datetime
 import gzip
 import json
 import os
@@ -127,6 +128,26 @@ class ProductStream:
     def filter_empty_tag_field(self, field: str) -> 'ProductStream':
         filtered = (product for product in self.iterator
                     if not (product.get(field) or []))
+        return ProductStream(filtered)
+
+    def filter_by_modified_datetime(self,
+                                    from_t: Optional[datetime.datetime] = None,
+                                    to_t: Optional[datetime.datetime] = None):
+        if from_t is None and to_t is None:
+            raise ValueError("one of `from_t` or `to_t` must be provided")
+
+        if from_t:
+            from_timestamp = from_t.timestamp()
+            filtered = (product for product in self.iterator
+                        if 'last_modified_t' in product and
+                        product['last_modified_t'] >= from_timestamp)
+
+        elif to_t:
+            to_timestamp = to_t.timestamp()
+            filtered = (product for product in self.iterator
+                        if 'last_modified_t' in product and
+                        product['last_modified_t'] <= to_timestamp)
+
         return ProductStream(filtered)
 
     def take(self, count: int):
