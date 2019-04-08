@@ -24,7 +24,7 @@ All these services are available as docker images. A `docker-compose.yml` file i
 
 To start all services, simply run:
 
-`$ docker-compose.yml up -d`
+`$ docker-compose up -d`
 
 
 ## Licence
