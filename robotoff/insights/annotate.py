@@ -234,7 +234,7 @@ class ProductWeightAnnotator(InsightAnnotator):
 
         quantity: Optional[str] = product.get('quantity') or None
 
-        if quantity is None:
+        if quantity is not None:
             return ALREADY_ANNOTATED_RESULT
 
         weight = insight.data['text']
