@@ -195,7 +195,7 @@ def run():
                       max_instances=1)
     scheduler.add_job(refresh_insights, 'cron', day='*', hour='4',
                       max_instances=1)
-    scheduler.add_job(generate_insights, 'cron', day='*', hour='4', minutes=15,
+    scheduler.add_job(generate_insights, 'cron', day='*', hour='4', minute=15,
                       max_instances=1)
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()
