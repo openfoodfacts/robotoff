@@ -10,9 +10,7 @@ from robotoff.utils.types import JSONType
 logger = get_logger()
 
 ds = ProductDataset(settings.JSONL_DATASET_PATH)
-IMAGE_DATASET_DIR = settings.PROJECT_DIR / 'image_dataset'
-NUTRITION_IMAGE_DATASET_DIR = IMAGE_DATASET_DIR / 'nutrition'
-FRONT_IMAGE_DATASET_DIR = IMAGE_DATASET_DIR / 'front'
+IMAGE_DATASET_DIR = settings.PROJECT_DIR / 'image_dataset' / 'images'
 
 
 def save_image(directory: pathlib.Path,
@@ -40,6 +38,7 @@ def save_image(directory: pathlib.Path,
 count = 0
 
 for product in (ds.stream().filter_by_state_tag('en:complete')
+                           .filter_by_country_tag('en:france')
                            .filter_nonempty_text_field('code')
                            .filter_nonempty_tag_field('images')):
     barcode = product['code']
@@ -49,12 +48,12 @@ for product in (ds.stream().filter_by_state_tag('en:complete')
     for image_key, image_meta in product.get('images', []).items():
         if not has_nutrition and image_key.startswith('nutrition'):
             has_nutrition = True
-            save_image(NUTRITION_IMAGE_DATASET_DIR, image_meta, barcode)
+            save_image(IMAGE_DATASET_DIR, image_meta, barcode)
             continue
 
         elif not has_front and image_key.startswith('front'):
             has_front = False
-            save_image(FRONT_IMAGE_DATASET_DIR, image_meta, barcode)
+            save_image(IMAGE_DATASET_DIR, image_meta, barcode)
             continue
 
     if count >= 100:
