@@ -1,4 +1,6 @@
 import pathlib
+from typing import Set
+
 import requests
 
 from robotoff.off import generate_image_url
@@ -9,8 +11,23 @@ from robotoff.utils.types import JSONType
 
 logger = get_logger()
 
-ds = ProductDataset(settings.JSONL_DATASET_PATH)
-IMAGE_DATASET_DIR = settings.PROJECT_DIR / 'image_dataset' / 'images'
+JSONL_SHUF_DATASET_PATH = settings.DATASET_DIR / 'products-shuf.jsonl.gz'
+ds = ProductDataset(JSONL_SHUF_DATASET_PATH)
+IMAGE_DATASET_DIR = settings.PROJECT_DIR / 'image_dataset'
+NUTRITION_TABLE_IMAGE_DIR = IMAGE_DATASET_DIR / 'nutrition-table-2'
+
+
+def load_seen_set() -> Set[str]:
+    seen_set = set()
+
+    with open(IMAGE_DATASET_DIR / 'dataset.txt') as f:
+        for line in f:
+            if line:
+                line = line.strip('\n')
+                barcode, _ = line.split('_')
+                seen_set.add(barcode)
+
+    return seen_set
 
 
 def save_image(directory: pathlib.Path,
@@ -35,6 +52,7 @@ def save_image(directory: pathlib.Path,
             fd.write(chunk)
 
 
+seen_set = load_seen_set()
 count = 0
 
 for product in (ds.stream().filter_by_state_tag('en:complete')
@@ -42,21 +60,28 @@ for product in (ds.stream().filter_by_state_tag('en:complete')
                            .filter_nonempty_text_field('code')
                            .filter_nonempty_tag_field('images')):
     barcode = product['code']
+
+    if barcode in seen_set:
+        print("Product already seen: {}".format(barcode))
+        continue
+
     has_nutrition = False
     has_front = False
 
     for image_key, image_meta in product.get('images', []).items():
         if not has_nutrition and image_key.startswith('nutrition'):
             has_nutrition = True
-            save_image(IMAGE_DATASET_DIR, image_meta, barcode)
+            save_image(NUTRITION_TABLE_IMAGE_DIR, image_meta, barcode)
+            count += 1
             continue
 
         elif not has_front and image_key.startswith('front'):
-            has_front = False
-            save_image(IMAGE_DATASET_DIR, image_meta, barcode)
+            has_front = True
+            save_image(NUTRITION_TABLE_IMAGE_DIR, image_meta, barcode)
+            count += 1
             continue
 
-    if count >= 100:
+    if count >= 600:
+        print("Breaking")
+        print(count)
         break
-
-    count += 1
