@@ -80,10 +80,13 @@ def notify_automatic_processing(insight: ProductInsight):
         'unfurl_links': False,
         'unfurl_media': False,
     }
-    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL, **slack_kwargs)
-
     if insight.value_tag == 'en:nutriscore':
-        post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
+        post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL,
+                     **slack_kwargs)
+        return
+
+    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL,
+                 **slack_kwargs)
 
 
 def get_base_params() -> JSONType:
