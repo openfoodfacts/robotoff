@@ -5,7 +5,7 @@ WORKDIR /opt/robotoff
 COPY robotoff.py /opt/robotoff/robotoff.py
 COPY robotoff /opt/robotoff/robotoff/
 COPY data /opt/robotoff/data
-COPY models/nutrition-table /opt/robotoff/models/nutrition-table
+COPY models /opt/robotoff/models
 COPY i18n /opt/robotoff/i18n
 COPY requirements.txt /opt/robotoff/
 COPY gunicorn.conf /opt/robotoff/

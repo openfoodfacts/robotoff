@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 
 import dataclasses
 
@@ -23,6 +23,10 @@ from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
+
+
+FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'
+LABEL_MAP_NAME = 'labels.pbtxt'
 
 
 @dataclasses.dataclass
@@ -61,7 +65,7 @@ class ObjectDetectionResult:
         return results
 
 
-class NutritionTableDetectionModel:
+class ObjectDetectionModel:
     def __init__(self,
                  graph: tf.Graph,
                  label_map: StringIntLabelMap):
@@ -69,24 +73,23 @@ class NutritionTableDetectionModel:
         self.label_map: StringIntLabelMap = label_map
 
         self.categories = label_map_util.convert_label_map_to_categories(
-            label_map, max_num_classes=1)
+            label_map, max_num_classes=1000)
         self.category_index = label_map_util.create_category_index(
             self.categories)
 
     @classmethod
-    def load(cls):
-        logger.info("Loading nutrition table detection model...")
+    def load(cls, graph_path: pathlib.Path, label_path: pathlib.Path):
         detection_graph = tf.Graph()
         with detection_graph.as_default():
             od_graph_def = tf.GraphDef()
             with tf.gfile.GFile(
-                    str(settings.NUTRITION_TABLE_MODEL_CKPT), 'rb') as f:
+                    str(graph_path), 'rb') as f:
                 serialized_graph = f.read()
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
 
         label_map = label_map_util.load_labelmap(
-            str(settings.NUTRITION_TABLE_LABELS_PATH))
+            str(label_path))
 
         logger.info("Model loaded")
         return cls(graph=detection_graph,
@@ -186,10 +189,7 @@ class NutritionTableDetectionModel:
 
 
 def run_model(image_dir: pathlib.Path,
-              model: Optional[NutritionTableDetectionModel] = None):
-    if model is None:
-        model = NutritionTableDetectionModel.load()
-
+              model: ObjectDetectionModel):
     for filepath in image_dir.glob('*.jpg'):
         boxed_filename = filepath.parent / "{}_box.jpg".format(filepath.stem)
 
@@ -197,19 +197,49 @@ def run_model(image_dir: pathlib.Path,
             continue
 
         image: PIL.Image.Image = Image.open(str(filepath))
-        print(filepath)
-        print(image.size)
-
         result = model.detect_from_image(image, output_image=True)
 
         with open(str(boxed_filename), 'wb') as f:
             result.boxed_image.save(f)
 
 
-if __name__ == "__main__":
-    # Path to the test images directory
-    IMAGE_DATASET_DIR = settings.PROJECT_DIR / 'image_dataset'
-    NUTRITION_IMAGE_DATASET_DIR = IMAGE_DATASET_DIR / 'nutrition'
-    FRONT_IMAGE_DATASET_DIR = IMAGE_DATASET_DIR / 'front'
+class ObjectDetectionModelRegistry:
+    models_config = {
+        'nutrition-table': settings.MODELS_DIR / 'nutrition-table',
+        'nutriscore': settings.MODELS_DIR / 'nutriscore',
+    }
 
-    run_model(FRONT_IMAGE_DATASET_DIR)
+    models: Dict[str, ObjectDetectionModel] = {}
+
+    @classmethod
+    def get_available_models(cls) -> List[str]:
+        return list(cls.models_config.keys())
+
+    @classmethod
+    def load(cls, name: str) -> ObjectDetectionModel:
+        if name not in cls.models_config:
+            raise ValueError("unknown model: {}".format(name))
+
+        logger.info("Loading model {}".format(name))
+        model_dir = cls.models_config[name]
+        graph_path = model_dir / FROZEN_GRAPH_NAME
+        label_path = model_dir / LABEL_MAP_NAME
+        model = ObjectDetectionModel.load(graph_path=graph_path,
+                                          label_path=label_path)
+        cls.models[name] = model
+        return model
+
+    @classmethod
+    def load_all(cls):
+        for name in cls.models_config:
+            cls.load(name)
+
+    @classmethod
+    def get(cls, name: str):
+        if name not in cls.models:
+            model = cls.load(name)
+        else:
+            model = cls.models[name]
+
+        return model
+

@@ -9,4 +9,5 @@ datasets
 .pytest_cache
 insights
 models
+local_models
 docker-compose.production.yml

@@ -19,7 +19,7 @@ from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
-from robotoff.ml.nutrition_table import NutritionTableDetectionModel
+from robotoff.ml.nutrition_table import ObjectDetectionModelRegistry
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger
@@ -34,7 +34,7 @@ from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 logger = get_logger()
 es_client = get_es_client()
 
-nutrition_table_model = NutritionTableDetectionModel.load()
+ObjectDetectionModelRegistry.load_all()
 
 CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
@@ -179,8 +179,17 @@ class ImagePredictorResource:
         image_url = req.get_param('image_url', required=True)
         models: List[str] = req.get_param_as_list('models')
 
+        available_models = ObjectDetectionModelRegistry.get_available_models()
+
         if models is None:
             models = ['nutrition-table']
+        else:
+            for model_name in models:
+                if model_name not in available_models:
+                    raise falcon.HTTPBadRequest(
+                        "invalid_model",
+                        "unknown model {}, available models: {}"
+                        "".format(model_name, ', '.join(available_models)))
 
         output_image = req.get_param_as_bool('output_image')
 
@@ -201,17 +210,16 @@ class ImagePredictorResource:
 
         predictions = {}
 
-        if 'nutrition-table' in models:
-            nutrition_table_result = nutrition_table_model.detect_from_image(
-                image, output_image=output_image)
+        for model_name in models:
+            model = ObjectDetectionModelRegistry.get(model_name)
+            result = model.detect_from_image(image, output_image=output_image)
 
             if output_image:
-                self.image_response(nutrition_table_result.boxed_image,
+                self.image_response(result.boxed_image,
                                     resp)
                 return
             else:
-                predictions['nutrition-table'] = nutrition_table_result. \
-                    to_json()
+                predictions[model_name] = result.to_json()
 
         resp.media = {
             'predictions': predictions

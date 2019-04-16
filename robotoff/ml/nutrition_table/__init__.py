@@ -1,1 +1,1 @@
-from .core import NutritionTableDetectionModel
+from .core import ObjectDetectionModel, ObjectDetectionModelRegistry
