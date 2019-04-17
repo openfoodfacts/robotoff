@@ -19,7 +19,7 @@ from robotoff.insights.ocr.nutrient import find_nutrient_values
 from robotoff.insights.ocr.packager_code import find_packager_codes
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.trace import find_traces
-from robotoff.off import generate_json_ocr_url
+from robotoff.off import generate_json_ocr_url, split_barcode
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
