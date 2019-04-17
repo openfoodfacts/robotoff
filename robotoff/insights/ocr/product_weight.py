@@ -72,8 +72,7 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=process_multi_packaging,
-        priority=2,
-        notify=True),
+        priority=2),
     'no_mention': OCRRegex(
         re.compile(r"([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])"),
         field=OCRField.full_text_contiguous,
