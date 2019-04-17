@@ -19,7 +19,7 @@ from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
-from robotoff.ml.nutrition_table import ObjectDetectionModelRegistry
+from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger

@@ -12,12 +12,12 @@ from PIL import Image
 
 from robotoff import settings
 
-from robotoff.ml.nutrition_table.utils import ops as utils_ops
-from robotoff.ml.nutrition_table.utils.ops import convert_image_to_array
-from robotoff.ml.nutrition_table.utils.string_int_label_map_pb2 import \
+from robotoff.ml.object_detection.utils import ops as utils_ops
+from robotoff.ml.object_detection.utils.ops import convert_image_to_array
+from robotoff.ml.object_detection.utils.string_int_label_map_pb2 import \
     StringIntLabelMap
-from robotoff.ml.nutrition_table.utils import label_map_util
-from robotoff.ml.nutrition_table.utils import visualization_utils as \
+from robotoff.ml.object_detection.utils import label_map_util
+from robotoff.ml.object_detection.utils import visualization_utils as \
     vis_util
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType

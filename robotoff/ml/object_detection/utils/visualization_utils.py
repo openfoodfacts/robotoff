@@ -35,7 +35,7 @@ import PIL.ImageFont as ImageFont
 import six
 import tensorflow as tf
 
-from robotoff.ml.nutrition_table.utils import \
+from robotoff.ml.object_detection.utils import \
     standard_fields as fields
 
 _TITLE_LEFT_MARGIN = 10
