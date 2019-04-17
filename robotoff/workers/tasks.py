@@ -84,12 +84,8 @@ def delete_product_insights(barcode: str):
     logger.info("{} insights deleted".format(deleted))
 
 
-def created_product_generate_insights(barcode: str):
-    pass
-
-
-def updated_product_update_insights(barcode: str, updated_fields: List[str]):
-    pass
+def updated_product_update_insights(barcode: str):
+    logger.info("Product {} updated".format(barcode))
 
 
 EVENT_MAPPING: Dict[str, Callable] = {
@@ -97,6 +93,5 @@ EVENT_MAPPING: Dict[str, Callable] = {
     'import_image': import_image,
     'download_dataset': download_product_dataset,
     'product_deleted': delete_product_insights,
-    'product_created': created_product_generate_insights,
     'product_updated': updated_product_update_insights,
 }

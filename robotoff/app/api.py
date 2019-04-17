@@ -239,24 +239,19 @@ class WebhookProductResource:
     def on_post(self, req, resp):
         barcode = req.get_param('barcode', required=True)
         action = req.get_param('action', required=True)
+        server_domain = req.get_param('server_domain')
 
-        if action not in ('created', 'updated', 'deleted'):
+        logger.info("New webhook event received for product {} (action: {}, "
+                    "domain: {})".format(barcode, action, server_domain))
+
+        if action not in ('updated', 'deleted'):
             raise falcon.HTTPBadRequest(title="invalid_action",
                                         description="action must be one of "
-                                                    "`created`, `deleted`, `updated`")
+                                                    "`deleted`, `updated`")
 
-        if action == 'created':
-            send_ipc_event('product_created', {
-                'barcode': barcode,
-            })
-
-        elif action == 'updated':
-            updated_fields = req.get_param_as_list('updated_fields',
-                                                   required=True)
-
+        if action == 'updated':
             send_ipc_event('product_updated', {
                 'barcode': barcode,
-                'updated_fields': updated_fields,
             })
 
         elif action == 'deleted':
