@@ -41,7 +41,10 @@ def _validate_label_map(label_map):
                 'Label map id 0 is reserved for the background label')
 
 
-def create_category_index(categories: List[Dict]) -> Dict[str, Dict]:
+CategoryIndex = Dict[int, Dict]
+
+
+def create_category_index(categories: List[Dict]) -> CategoryIndex:
     """Creates dictionary of COCO compatible categories keyed by category id.
 
     Args:

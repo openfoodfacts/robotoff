@@ -13,6 +13,7 @@ from PIL import Image
 from robotoff import settings
 
 from robotoff.ml.object_detection.utils import ops as utils_ops
+from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
 from robotoff.ml.object_detection.utils.ops import convert_image_to_array
 from robotoff.ml.object_detection.utils.string_int_label_map_pb2 import \
     StringIntLabelMap
@@ -36,6 +37,7 @@ class ObjectDetectionResult:
     detection_scores: np.array
     detection_classes: np.array
     image_size: Tuple[int, int]
+    category_index: CategoryIndex
     detection_masks: Optional[np.array] = None
     boxed_image: Optional[PIL.Image.Image] = None
 
@@ -56,10 +58,12 @@ class ObjectDetectionResult:
             bounding_box = (ymin * image_height, xmin * image_width,
                             ymax * image_height, xmax * image_width)
 
+            class_int = int(class_)
+            class_str = self.category_index[class_int]['name']
             results.append({
                 'bounding_box': bounding_box,
                 'score': float(score),
-                'class': int(class_),
+                'class': class_str,
             })
 
         return results
@@ -74,8 +78,8 @@ class ObjectDetectionModel:
 
         self.categories = label_map_util.convert_label_map_to_categories(
             label_map, max_num_classes=1000)
-        self.category_index = label_map_util.create_category_index(
-            self.categories)
+        self.category_index: CategoryIndex = (
+            label_map_util.create_category_index(self.categories))
 
     @classmethod
     def load(cls, graph_path: pathlib.Path, label_path: pathlib.Path):
@@ -164,7 +168,8 @@ class ObjectDetectionModel:
             detection_classes=output_dict['detection_classes'],
             detection_boxes=output_dict['detection_boxes'],
             detection_scores=output_dict['detection_scores'],
-            detection_masks=output_dict.get('detection_masks'))
+            detection_masks=output_dict.get('detection_masks'),
+            category_index=self.category_index)
 
     def detect_from_image(self,
                           image: PIL.Image.Image,
