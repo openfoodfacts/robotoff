@@ -3,8 +3,13 @@ import json
 import logging
 import os
 import pathlib
+import tempfile
+
+import requests
 import sys
-from typing import Union, Iterable, Dict
+from typing import Union, Iterable, Dict, Optional
+
+from PIL import Image
 
 
 def get_logger(name=None, level: str = "INFO"):
@@ -67,3 +72,20 @@ def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
 
             if item:
                 yield item
+
+
+def get_image_from_url(image_url: str,
+                       error_raise: bool = False) -> Optional[Image.Image]:
+    r = requests.get(image_url)
+
+    if error_raise:
+        r.raise_for_status()
+
+    if r.status_code != 200:
+        return None
+
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(r.content)
+        image = Image.open(f.name)
+
+    return image

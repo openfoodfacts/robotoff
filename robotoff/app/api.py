@@ -13,7 +13,7 @@ from PIL import Image
 from robotoff import settings
 from robotoff.app.core import (get_insights,
                                get_random_insight,
-                               save_insight, get_image_from_url)
+                               save_insight)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
@@ -22,7 +22,7 @@ from robotoff.insights.question import QuestionFormatterFactory, \
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, get_image_from_url
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
