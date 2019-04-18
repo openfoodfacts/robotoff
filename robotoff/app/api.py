@@ -162,9 +162,14 @@ class ImageImporterResource:
         barcode = req.get_param('barcode', required=True)
         image_url = req.get_param('image_url', required=True)
         ocr_url = req.get_param('ocr_url', required=True)
-        server_domain = req.get_param('server_domain')
+        server_domain = req.get_param('server_domain', required=True)
 
-        logger.info("Server domain: {}".format(server_domain))
+        if server_domain != settings.OFF_SERVER_DOMAIN:
+            logger.info("Rejecting image import from {}".format(server_domain))
+            resp.media = {
+                'status': 'rejected',
+            }
+            return
 
         send_ipc_event('import_image', {
             'barcode': barcode,
@@ -242,7 +247,14 @@ class WebhookProductResource:
     def on_post(self, req, resp):
         barcode = req.get_param('barcode', required=True)
         action = req.get_param('action', required=True)
-        server_domain = req.get_param('server_domain')
+        server_domain = req.get_param('server_domain', required=True)
+
+        if server_domain != settings.OFF_SERVER_DOMAIN:
+            logger.info("Rejecting webhook event from {}".format(server_domain))
+            resp.media = {
+                'status': 'rejected',
+            }
+            return
 
         logger.info("New webhook event received for product {} (action: {}, "
                     "domain: {})".format(barcode, action, server_domain))
