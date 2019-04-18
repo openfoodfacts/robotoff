@@ -12,7 +12,14 @@ http_session = requests.Session()
 
 BASE_URL = "https://slack.com/api"
 POST_MESSAGE_URL = BASE_URL + "/chat.postMessage"
-
+NUTRISCORE_LABELS = {
+    'en:nutriscore',
+    'en:nutriscore-a',
+    'en:nutriscore-b',
+    'en:nutriscore-c',
+    'en:nutriscore-d',
+    'en:nutriscore-e',
+}
 
 logger = get_logger(__name__)
 
@@ -80,7 +87,7 @@ def notify_automatic_processing(insight: ProductInsight):
         'unfurl_links': False,
         'unfurl_media': False,
     }
-    if insight.value_tag == 'en:nutriscore':
+    if insight.value_tag in NUTRISCORE_LABELS:
         post_message(text, settings.SLACK_OFF_NUTRISCORE_ALERT_CHANNEL,
                      **slack_kwargs)
         return
