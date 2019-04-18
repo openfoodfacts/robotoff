@@ -348,7 +348,8 @@ class LabelInsightImporter(OCRInsightImporter):
                 continue
 
             source = insight['source']
-            yield {
+            automatic_processing = content.pop('automatic_processing', None)
+            insert = {
                 'value_tag': label_tag,
                 'source_image': source,
                 'data': {
@@ -356,6 +357,11 @@ class LabelInsightImporter(OCRInsightImporter):
                     **content
                 }
             }
+
+            if automatic_processing is not None:
+                insert['automatic_processing'] = automatic_processing
+
+            yield insert
             label_seen.add(label_tag)
 
     @staticmethod
