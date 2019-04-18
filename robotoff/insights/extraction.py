@@ -17,7 +17,10 @@ logger = get_logger(__name__)
 def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
         -> Optional[Dict]:
     ocr_insights = extract_ocr_insights(ocr_url)
-    image_ml_insights = extract_image_ml_insights(image_url)
+
+    extract_nutriscore = has_nutriscore_insight(ocr_insights)
+    image_ml_insights = extract_image_ml_insights(
+        image_url, extract_nutriscore=extract_nutriscore)
 
     insight_types = set(ocr_insights.keys()).union(image_ml_insights.keys())
 
@@ -38,6 +41,14 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
     return results
 
 
+def has_nutriscore_insight(insights: JSONType) -> bool:
+    for insight in insights.get('label', []):
+        if insight['label_tag'] == 'en:nutriscore':
+            return True
+
+    return False
+
+
 def generate_insights_dict(insights: List[JSONType],
                            barcode: str,
                            insight_type: str,
@@ -55,20 +66,26 @@ def generate_insights_dict(insights: List[JSONType],
     }
 
 
-def extract_image_ml_insights(image_url: str) -> JSONType:
-    image = get_image_from_url(image_url, error_raise=True)
-    nutriscore_insight = extract_nutriscore_label(image,
-                                                  manual_threshold=0.5,
-                                                  automatic_threshold=0.9)
+def extract_image_ml_insights(image_url: str,
+                              extract_nutriscore: bool = True) -> JSONType:
+    results: JSONType = {}
 
-    if not nutriscore_insight:
-        return {}
+    if extract_nutriscore:
+        image = get_image_from_url(image_url, error_raise=True)
+        nutriscore_insight = extract_nutriscore_label(image,
+                                                      manual_threshold=0.5,
+                                                      automatic_threshold=0.9)
 
-    return {
-        'label': [
-            nutriscore_insight
-        ]
-    }
+        if not nutriscore_insight:
+            return results
+
+        results = {
+            'label': [
+                nutriscore_insight
+            ]
+        }
+
+    return results
 
 
 def extract_ocr_insights(ocr_url: str) -> JSONType:
