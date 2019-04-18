@@ -299,6 +299,7 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                 'label_tag': label_tag,
                 'automatic_processing': False,
                 'confidence': logo_annotation.score,
+                'model': 'google-cloud-vision',
             })
 
     return results

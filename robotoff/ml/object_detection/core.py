@@ -32,6 +32,13 @@ LABEL_MAP_NAME = 'labels.pbtxt'
 
 @dataclasses.dataclass
 class ObjectDetectionResult:
+    bounding_box: Tuple[float, float, float, float]
+    score: float
+    label: str
+
+
+@dataclasses.dataclass
+class ObjectDetectionRawResult:
     num_detections: int
     detection_boxes: np.array
     detection_scores: np.array
@@ -41,7 +48,8 @@ class ObjectDetectionResult:
     detection_masks: Optional[np.array] = None
     boxed_image: Optional[PIL.Image.Image] = None
 
-    def to_json(self, threshold: Optional[float] = None) -> List[JSONType]:
+    def select(self, threshold: Optional[float] = None) -> \
+            List[ObjectDetectionResult]:
         if threshold is None:
             threshold = 0.5
 
@@ -52,21 +60,23 @@ class ObjectDetectionResult:
 
         results = []
         image_width, image_height = self.image_size
-        for box, score, class_ in zip(selected_boxes, selected_scores,
-                                      selected_classes):
+        for box, score, label in zip(selected_boxes, selected_scores,
+                                     selected_classes):
             ymin, xmin, ymax, xmax = box
             bounding_box = (ymin * image_height, xmin * image_width,
                             ymax * image_height, xmax * image_width)
 
-            class_int = int(class_)
-            class_str = self.category_index[class_int]['name']
-            results.append({
-                'bounding_box': bounding_box,
-                'score': float(score),
-                'class': class_str,
-            })
+            label_int = int(label)
+            label_str = self.category_index[label_int]['name']
+            result = ObjectDetectionResult(bounding_box=bounding_box,
+                                           score=float(score),
+                                           label=label_str)
+            results.append(result)
 
         return results
+
+    def to_json(self, threshold: Optional[float] = None) -> List[JSONType]:
+        return [dataclasses.asdict(r) for r in self.select(threshold)]
 
 
 class ObjectDetectionModel:
@@ -100,7 +110,7 @@ class ObjectDetectionModel:
                    label_map=label_map)
 
     def _run_inference_for_single_image(self, image: np.array) -> \
-            ObjectDetectionResult:
+            ObjectDetectionRawResult:
         with tf.Session(graph=self.graph) as sess:
             # Get handles to input and output tensors
             ops = self.graph.get_operations()
@@ -162,7 +172,7 @@ class ObjectDetectionModel:
                     output_dict['detection_masks'][
                         0]
 
-        return ObjectDetectionResult(
+        return ObjectDetectionRawResult(
             image_size=(image.shape[0], image.shape[1]),
             num_detections=output_dict['num_detections'],
             detection_classes=output_dict['detection_classes'],
@@ -173,7 +183,7 @@ class ObjectDetectionModel:
 
     def detect_from_image(self,
                           image: PIL.Image.Image,
-                          output_image: bool = False) -> ObjectDetectionResult:
+                          output_image: bool = False) -> ObjectDetectionRawResult:
         image_array = convert_image_to_array(image)
         result = self._run_inference_for_single_image(image_array)
 

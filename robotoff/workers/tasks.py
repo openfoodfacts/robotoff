@@ -5,7 +5,7 @@ from typing import List, Dict, Callable
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
-from robotoff.insights.ocr import get_insights_from_image
+from robotoff.insights.extraction import get_insights_from_image
 from robotoff.models import db, ProductInsight
 from robotoff.products import (has_dataset_changed, fetch_dataset,
                                CACHED_PRODUCT_STORE)
@@ -55,7 +55,6 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
     insights_all = get_insights_from_image(barcode, image_url, ocr_url)
 
     if insights_all is None:
-        logger.info("OCR file not found")
         return
 
     for insight_type, insights in insights_all.items():

@@ -162,6 +162,9 @@ class ImageImporterResource:
         barcode = req.get_param('barcode', required=True)
         image_url = req.get_param('image_url', required=True)
         ocr_url = req.get_param('ocr_url', required=True)
+        server_domain = req.get_param('server_domain')
+
+        logger.info("Server domain: {}".format(server_domain))
 
         send_ipc_event('import_image', {
             'barcode': barcode,

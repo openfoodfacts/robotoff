@@ -348,25 +348,14 @@ class LabelInsightImporter(OCRInsightImporter):
                 continue
 
             source = insight['source']
-            insert = {
+            yield {
                 'value_tag': label_tag,
                 'source_image': source,
                 'data': {
                     'source': source,
-                    'label_tag': label_tag,
+                    **content
                 }
             }
-
-            if 'text' in content:
-                insert['data']['text'] = content['text']
-
-            if 'notify' in content:
-                insert['data']['notify'] = content['notify']
-
-            if 'automatic_processing' in content:
-                insert['automatic_processing'] = content['automatic_processing']
-
-            yield insert
             label_seen.add(label_tag)
 
     @staticmethod

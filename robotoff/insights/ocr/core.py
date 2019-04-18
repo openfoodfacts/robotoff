@@ -4,11 +4,9 @@ import json
 
 import pathlib as pathlib
 from typing import List, Dict, Iterable, Optional, Tuple
-from urllib.parse import urlparse
 
 import requests
 
-from robotoff.insights._enum import InsightType
 from robotoff.insights.ocr.brand import find_brands
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.expiration_date import find_expiration_date
@@ -145,44 +143,3 @@ def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
                         if 'content' in json_data:
                             source = json_data['source'].replace('//', '/')
                             yield source, json_data['content']
-
-
-def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
-        -> Optional[Dict]:
-    r = requests.get(ocr_url)
-
-    if r.status_code == 404:
-        return None
-
-    r.raise_for_status()
-
-    ocr_data: Dict = requests.get(ocr_url).json()
-    ocr_result = OCRResult.from_json(ocr_data)
-
-    if ocr_result is None:
-        return None
-
-    image_url_path = urlparse(image_url).path
-
-    if image_url_path.startswith('/images/products'):
-        image_url_path = image_url_path[len("/images/products"):]
-
-    results = {}
-
-    for insight_type in (InsightType.label.name,
-                         InsightType.packager_code.name,
-                         InsightType.product_weight.name,
-                         InsightType.image_flag.name,
-                         InsightType.expiration_date.name,
-                         InsightType.brand.name):
-        insights = extract_insights(ocr_result, insight_type)
-
-        if insights:
-            results[insight_type] = {
-                'insights': insights,
-                'barcode': barcode,
-                'type': insight_type,
-                'source': image_url_path,
-            }
-
-    return results
