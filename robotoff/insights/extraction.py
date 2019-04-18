@@ -61,6 +61,9 @@ def extract_image_ml_insights(image_url: str) -> JSONType:
                                                   manual_threshold=0.5,
                                                   automatic_threshold=0.9)
 
+    if not nutriscore_insight:
+        return {}
+
     return {
         'label': [
             nutriscore_insight
@@ -106,6 +109,9 @@ def extract_nutriscore_label(image: Image.Image,
     model = ObjectDetectionModelRegistry.get('nutriscore')
     raw_result = model.detect_from_image(image, output_image=False)
     results = raw_result.select(threshold=manual_threshold)
+
+    if not results:
+        return None
 
     if len(results) > 1:
         logger.warn("more than one nutriscore detected, discarding detections")
