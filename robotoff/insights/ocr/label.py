@@ -153,27 +153,27 @@ LABELS_REGEX = {
     ],
     'en:gluten-free': [
         OCRRegex(
-            re.compile(r"sans gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
+            re.compile(r"(?<!\w)(?:sans|ni) gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:no-preservatives': [
         OCRRegex(
-            re.compile(r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|sans conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"),
+            re.compile(r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|(?<!\w)(?:sans|ni) conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:no-flavors': [
         OCRRegex(
             re.compile(
-                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|sans ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"),
+                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:no-artificial-flavors': [
         OCRRegex(
             re.compile(
-                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|sans ar[ôo]mes? artificiels?|no artificial flavors?"),
+                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? artificiels?|no artificial flavors?"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
@@ -187,34 +187,34 @@ LABELS_REGEX = {
     'en:no-colorings': [
         OCRRegex(
             re.compile(
-                r"no colorings?|no colourants?|ohne farbstoffzusatz|sans colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti"),
+                r"no colorings?|no colourants?|ohne farbstoffzusatz|(?<!\w)(?:sans|ni) colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:no-additives': [
         OCRRegex(
             re.compile(
-                r"zonder toevoegingen|sin aditivos(?! arti)|sans additif(?!s? arti)|ohne zusätze|no additives?"),
+                r"zonder toevoegingen|sin aditivos(?! arti)|(?<!\w)(?:sans|ni) additif(?!s? arti)|ohne zusätze|no additives?"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:no-added-sugar': [
         OCRRegex(
             re.compile(
-                r"senza zuccheri aggiunti|zonder toegevoegde suikers|sans sucres? ajout[ée]s?|sin azúcares añadidos|ohne zuckerzusatz|sem açúcares adicionados|no added sugar"),
+                r"senza zuccheri aggiunti|zonder toegevoegde suikers|(?<!\w)(?:sans|ni) sucres? ajout[ée]s?|sin azúcares añadidos|ohne zuckerzusatz|sem açúcares adicionados|no added sugar"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:no-lactose': [
         OCRRegex(
             re.compile(
-                r"senza lattosio|без лактозы|bez laktozy|sans lactose|lactosevrij|no lactose|lactose[ -]free|laktózmentes|lactosefrei|sin lactosa"),
+                r"senza lattosio|без лактозы|bez laktozy|(?<!\w)(?:sans|ni) lactose|lactosevrij|no lactose|lactose[ -]free|laktózmentes|lactosefrei|sin lactosa"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
     'en:palm-oil-free': [
         OCRRegex(
-            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|sans huile de palme|sin aceite de palma|palm oil[ -]free"),
+            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|(?<!\w)(?:sans|ni) huile de palme|sin aceite de palma|palm oil[ -]free"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
