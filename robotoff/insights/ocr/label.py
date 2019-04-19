@@ -248,6 +248,13 @@ LABELS_REGEX = {
             field=OCRField.text_annotations,
             lowercase=True),
     ],
+    'en:kosher': [
+        OCRRegex(
+            re.compile(r"(?<!\w)kosher|casher(?!\w)"),
+            field=OCRField.full_text,
+            lowercase=True,
+            notify=True),
+    ],
 }
 
 
