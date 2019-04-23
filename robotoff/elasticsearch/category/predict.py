@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 def predict(client, product: Dict) -> Optional[Dict]:
     predictions = []
 
-    for lang in product['languages_codes']:
+    for lang in product.get('languages_codes', []):
         product_name = product.get(f"product_name_{lang}")
 
         if not product_name:
