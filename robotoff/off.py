@@ -53,6 +53,17 @@ def product_exists(barcode: str) -> bool:
     return get_product(barcode, ['code']) is not None
 
 
+def is_valid_image(barcode: str, image_id: str) -> bool:
+    product = get_product(barcode, fields=['images'])
+
+    if product is None:
+        return False
+
+    images = product.get('images', {})
+
+    return image_id in images
+
+
 def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
     fields = fields or []
     url = PRODUCT_URL + "/{}.json".format(barcode)

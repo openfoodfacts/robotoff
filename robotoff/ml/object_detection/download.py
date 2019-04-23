@@ -68,7 +68,7 @@ for product in (ds.stream().filter_by_state_tag('en:complete')
     has_nutrition = False
     has_front = False
 
-    for image_key, image_meta in product.get('images', []).items():
+    for image_key, image_meta in product.get('images', {}).items():
         if not has_nutrition and image_key.startswith('nutrition'):
             has_nutrition = True
             save_image(NUTRITION_TABLE_IMAGE_DIR, image_meta, barcode)
