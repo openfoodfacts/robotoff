@@ -12,8 +12,7 @@ services:
       IPC_HOST: "localhost"
 
   workers:
-    build:
-      context: .
+    image: openfoodfacts/robotoff
     volumes:
       - api-dataset:/opt/robotoff/datasets
     network_mode: "host"
@@ -23,8 +22,7 @@ services:
     entrypoint: "python3 robotoff.py run workers"
 
   scheduler:
-    build:
-      context: .
+    image: openfoodfacts/robotoff
     volumes:
       - api-dataset:/opt/robotoff/datasets
     environment:
