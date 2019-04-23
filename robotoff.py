@@ -44,9 +44,12 @@ def batch_annotate(insight_type: str, dry: bool, filter_clause: str):
 @click.command()
 @click.argument('output')
 def predict_category(output: str):
-    from robotoff.elasticsearch.category.predict import predict
+    from robotoff.elasticsearch.category.predict import predict_from_dataset
     from robotoff.utils import dump_jsonl
-    dump_jsonl(output, predict())
+    from robotoff.products import ProductDataset
+    from robotoff import settings
+    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
+    dump_jsonl(output, predict_from_dataset(dataset))
 
 
 cli.add_command(run)

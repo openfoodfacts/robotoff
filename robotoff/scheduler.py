@@ -8,14 +8,14 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from robotoff import slack, settings
-from robotoff.elasticsearch.category.predict import predict as predict_category
+from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
 from robotoff.insights.importer import CategoryImporter
 from robotoff.insights.validator import InsightValidator, \
     InsightValidatorFactory
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
-    CACHED_PRODUCT_STORE, Product, ProductStore
+    CACHED_PRODUCT_STORE, Product, ProductStore, ProductDataset
 from robotoff.utils import get_logger
 
 import sentry_sdk
@@ -172,7 +172,8 @@ def generate_insights():
 
     datetime_threshold = datetime.datetime.utcnow().replace(
         hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
-    category_insights_iter = predict_category(datetime_threshold)
+    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
+    category_insights_iter = predict_from_dataset(dataset, datetime_threshold)
 
     imported = importer.import_insights(category_insights_iter)
     logger.info("{} category insights imported".format(imported))

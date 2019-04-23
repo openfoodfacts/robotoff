@@ -3,7 +3,6 @@ import operator
 from typing import Iterable, Dict, Optional
 
 from robotoff.products import ProductDataset
-from robotoff import settings
 from robotoff.utils import get_logger
 
 from robotoff.utils.es import get_es_client
@@ -13,41 +12,50 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-def generate_dataset(client, products: Iterable[Dict]) -> Iterable[Dict]:
-    for product in products:
-        predictions = []
+def predict(client, product: Dict) -> Optional[Dict]:
+    predictions = []
 
-        for lang in product['languages_codes']:
-            product_name = product.get(f"product_name_{lang}")
+    for lang in product['languages_codes']:
+        product_name = product.get(f"product_name_{lang}")
 
-            if not product_name:
-                continue
-
-            prediction = predict_category(client, product_name, lang)
-
-            if prediction is None:
-                continue
-
-            category, score = prediction
-            predictions.append((lang, category, product_name, score))
+        if not product_name:
             continue
 
-        if predictions:
-            # Sort by descending score
-            sorted_predictions = sorted(predictions,
-                                        key=operator.itemgetter(2),
-                                        reverse=True)
+        prediction = predict_category(client, product_name, lang)
 
-            prediction = sorted_predictions[0]
-            lang, category, product_name, score = prediction
+        if prediction is None:
+            continue
 
-            yield {
-                'barcode': product['code'],
-                'category': category,
-                'matcher_lang': lang,
-                'product_name': product_name,
-                'model': 'matcher',
-            }
+        category, score = prediction
+        predictions.append((lang, category, product_name, score))
+        continue
+
+    if predictions:
+        # Sort by descending score
+        sorted_predictions = sorted(predictions,
+                                    key=operator.itemgetter(2),
+                                    reverse=True)
+
+        prediction = sorted_predictions[0]
+        lang, category, product_name, score = prediction
+
+        return {
+            'barcode': product['code'],
+            'category': category,
+            'matcher_lang': lang,
+            'product_name': product_name,
+            'model': 'matcher',
+        }
+
+    return None
+
+
+def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
+    for product in products:
+        prediction = predict(client, product)
+
+        if prediction:
+            yield prediction
 
 
 def predict_from_dataset(dataset: ProductDataset,
@@ -75,16 +83,4 @@ def predict_from_dataset(dataset: ProductDataset,
     logger.info("Performing prediction on products without categories")
 
     es_client = get_es_client()
-    yield from generate_dataset(es_client, product_iter)
-
-
-def predict(from_datetime: Optional[datetime.datetime] = None) -> \
-        Iterable[JSONType]:
-    """Return an iterable of category insights, using the default dataset.
-
-    Args:
-        from_datetime: datetime threshold: only keep products modified after
-            `from_datetime`
-    """
-    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-    yield from predict_from_dataset(dataset, from_datetime)
+    yield from predict_from_iterable(es_client, product_iter)
