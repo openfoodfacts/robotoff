@@ -3,14 +3,17 @@ import logging
 import multiprocessing
 from typing import List, Dict, Callable
 
+from robotoff.elasticsearch.category.predict import predict_from_product
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.extraction import get_insights_from_image
 from robotoff.models import db, ProductInsight
+from robotoff.off import get_product
 from robotoff.products import (has_dataset_changed, fetch_dataset,
                                CACHED_PRODUCT_STORE)
 from robotoff.slack import notify_image_flag
 from robotoff.utils import get_logger, configure_root_logger
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 root_logger = multiprocessing.get_logger()
@@ -84,7 +87,37 @@ def delete_product_insights(barcode: str):
 
 
 def updated_product_update_insights(barcode: str):
-    logger.info("Product {} updated".format(barcode))
+    product = get_product(barcode)
+
+    if product is None:
+        logger.warn("Updated product does not exist: {}".format(barcode))
+
+    category_added = updated_product_add_category_insight(barcode, product)
+
+    if category_added:
+        logger.info("Product {} updated".format(barcode))
+
+
+def updated_product_add_category_insight(barcode: str,
+                                         product: JSONType) -> bool:
+    if product.get('categories_tags', []):
+        return False
+
+    insight = predict_from_product(product)
+
+    if insight is None:
+        return False
+
+    product_store = CACHED_PRODUCT_STORE.get()
+    importer = InsightImporterFactory.create(InsightType.category.name,
+                                             product_store)
+
+    imported = importer.import_insights([insight], automatic=False)
+
+    if imported:
+        logger.info("Category insight imported for product {}".format(barcode))
+
+    return bool(imported)
 
 
 EVENT_MAPPING: Dict[str, Callable] = {

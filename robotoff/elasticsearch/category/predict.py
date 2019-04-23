@@ -50,6 +50,11 @@ def predict(client, product: Dict) -> Optional[Dict]:
     return None
 
 
+def predict_from_product(product: Dict) -> Optional[Dict]:
+    client = get_es_client()
+    return predict(client, product)
+
+
 def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
     for product in products:
         prediction = predict(client, product)
