@@ -45,4 +45,3 @@ services:
 
 volumes:
   api-dataset:
-    external: true
