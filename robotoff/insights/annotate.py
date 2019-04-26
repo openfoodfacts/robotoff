@@ -10,7 +10,7 @@ from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db, ProductIngredient
 from robotoff.off import get_product, save_ingredients, update_emb_codes, \
     add_label_tag, add_category, update_quantity, update_expiration_date, \
-    add_brand, product_exists
+    add_brand, product_exists, add_store
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -280,6 +280,25 @@ class BrandAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class StoreAnnotator(InsightAnnotator):
+    def update_product(self, insight: ProductInsight) -> AnnotationResult:
+        store: str = insight.data['store']
+        store_tag: str = insight.value_tag
+
+        product = get_product(insight.barcode, ['stores_tags'])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        stores_tags: List[str] = product.get('stores_tags') or []
+
+        if store_tag in stores_tags:
+            return ALREADY_ANNOTATED_RESULT
+
+        add_store(insight.barcode, store)
+        return UPDATED_ANNOTATION_RESULT
+
+
 class InsightAnnotatorFactory:
     mapping = {
         InsightType.packager_code.name: PackagerCodeAnnotator(),
@@ -289,6 +308,7 @@ class InsightAnnotatorFactory:
         InsightType.product_weight.name: ProductWeightAnnotator(),
         InsightType.expiration_date.name: ExpirationDateAnnotator(),
         InsightType.brand.name: BrandAnnotator(),
+        InsightType.store.name: StoreAnnotator(),
     }
 
     @classmethod

@@ -8,6 +8,7 @@ from robotoff.utils import text_file_iter
 
 def get_brand_tag(brand: str) -> str:
     return (brand.lower()
+                 .replace(' & ', '-')
                  .replace(' ', '-')
                  .replace("'", '-'))
 

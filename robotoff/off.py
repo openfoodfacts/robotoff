@@ -165,6 +165,16 @@ def add_brand(barcode: str, brand: str, dry=False):
     update_product(params, dry=dry)
 
 
+def add_store(barcode: str, store: str, dry=False):
+    params = {
+        'code': barcode,
+        'add_stores': store,
+        'comment': "Adding store '{}' (automated edit)".format(store),
+        **AUTH_DICT,
+    }
+    update_product(params, dry=dry)
+
+
 def update_product(params: Dict, dry=False):
     if dry:
         r = http_session.get(DRY_POST_URL, params=params,

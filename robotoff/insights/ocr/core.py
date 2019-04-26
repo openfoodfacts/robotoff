@@ -7,6 +7,7 @@ from typing import List, Dict, Iterable, Optional, Tuple
 
 import requests
 
+from robotoff.insights._enum import InsightType
 from robotoff.insights.ocr.brand import find_brands
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.expiration_date import find_expiration_date
@@ -16,6 +17,7 @@ from robotoff.insights.ocr.label import find_labels
 from robotoff.insights.ocr.nutrient import find_nutrient_values
 from robotoff.insights.ocr.packager_code import find_packager_codes
 from robotoff.insights.ocr.product_weight import find_product_weight
+from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
 from robotoff.off import generate_json_ocr_url, split_barcode
 from robotoff.utils import get_logger
@@ -56,22 +58,22 @@ def get_json_for_image(barcode: str, image_name: str) -> \
 
 def extract_insights(ocr_result: OCRResult,
                      insight_type: str) -> List[Dict]:
-    if insight_type == 'packager_code':
+    if insight_type == InsightType.packager_code.name:
         return find_packager_codes(ocr_result)
 
-    elif insight_type == 'label':
+    elif insight_type == InsightType.label.name:
         return find_labels(ocr_result)
 
-    elif insight_type == 'expiration_date':
+    elif insight_type == InsightType.expiration_date.name:
         return find_expiration_date(ocr_result)
 
-    elif insight_type == 'image_flag':
+    elif insight_type == InsightType.image_flag.name:
         return flag_image(ocr_result)
 
-    elif insight_type == 'image_orientation':
+    elif insight_type == InsightType.image_orientation.name:
         return find_image_orientation(ocr_result)
 
-    elif insight_type == 'product_weight':
+    elif insight_type == InsightType.product_weight.name:
         return find_product_weight(ocr_result)
 
     elif insight_type == 'trace':
@@ -80,8 +82,11 @@ def extract_insights(ocr_result: OCRResult,
     elif insight_type == 'nutrient':
         return find_nutrient_values(ocr_result)
 
-    elif insight_type == 'brand':
+    elif insight_type == InsightType.brand.name:
         return find_brands(ocr_result)
+
+    elif insight_type == InsightType.store.name:
+        return find_stores(ocr_result)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))

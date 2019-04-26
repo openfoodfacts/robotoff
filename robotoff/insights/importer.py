@@ -727,6 +727,67 @@ class BrandInsightImporter(OCRInsightImporter):
         return False
 
 
+class StoreInsightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['store_tag'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.store.name
+
+    def is_valid(self,
+                 store_tag: str,
+                 store_seen: Set[str]) -> bool:
+        if store_tag in store_seen:
+            return False
+
+        return True
+
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType]) \
+            -> Iterable[JSONType]:
+        store_seen: Set[str] = set()
+
+        for t in (ProductInsight.select(ProductInsight.value_tag)
+                .where(ProductInsight.type ==
+                       self.get_type(),
+                       ProductInsight.barcode ==
+                       barcode)).iterator():
+            store_seen.add(t.value_tag)
+
+        for insight in insights:
+            content = insight['content']
+            store_tag = content['store_tag']
+
+            if not self.is_valid(store_tag, store_seen):
+                continue
+
+            source = insight['source']
+            insert = {
+                'value_tag': store_tag,
+                'source_image': source,
+                'data': {
+                    'source': source,
+                    'store_tag': store_tag,
+                    'text': content['text'],
+                    'store': content['store'],
+                    'notify': content['notify'],
+                }
+            }
+
+            if 'automatic_processing' in content:
+                insert['automatic_processing'] = content['automatic_processing']
+
+            yield insert
+            store_seen.add(store_tag)
+
+    @staticmethod
+    def need_validation(insight: JSONType) -> bool:
+        return False
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
@@ -736,6 +797,7 @@ class InsightImporterFactory:
         InsightType.product_weight.name: ProductWeightImporter,
         InsightType.expiration_date.name: ExpirationDateImporter,
         InsightType.brand.name: BrandInsightImporter,
+        InsightType.store.name: StoreInsightImporter,
     }
 
     @classmethod

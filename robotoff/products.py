@@ -202,6 +202,7 @@ class Product:
         self.quantity = product.get('quantity') or None
         self.expiration_date = product.get('expiration_date') or None
         self.brands_tags = product.get('brands_tags') or []
+        self.stores_tags = product.get('stores_tags') or []
 
     @staticmethod
     def get_fields():
@@ -214,6 +215,7 @@ class Product:
             'quantity',
             'expiration_date',
             'brands_tags',
+            'stores_tags',
         }
 
 
