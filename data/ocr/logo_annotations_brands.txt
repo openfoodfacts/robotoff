@@ -1,2 +1,5 @@
 carrefour||fr:Carrefour
 carrefour bio||fr:Carrefour bio
+nutella||fr:Nutella
+Fleury Michon||fr:Fleury Michon
+bledina||fr:Blédina
