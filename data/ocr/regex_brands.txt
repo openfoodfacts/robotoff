@@ -1,4 +1,5 @@
 Aldi
+Albert Heijn
 Alesto
 Alnatura
 Alpenmark
@@ -9,8 +10,10 @@ Barilla
 Bellarom
 Betty Bossi
 Biocoop
+Bio Village
 Bjorg
 Boni
+Bredial
 By Sainsbury's
 Carrefour
 Carrefour Baby||carrefour [bg]aby
@@ -23,8 +26,12 @@ Coop Betty Bossi
 Coop Fine Food
 Coop Naturaplan
 Coop Prix Garantie
+Daco Bello
+Danone
 De Cecco
+Delacre
 Delhaize
+Del Monte
 Delpeyrat
 Delpierre
 Denner
@@ -35,6 +42,7 @@ Ducros
 Edeka
 Edeka Bio
 Ehrmann
+El Corte Inglés||El Corte Ingl[ée]s
 Eridanous
 Eroski
 Esselunga
@@ -48,11 +56,14 @@ Gerblé
 Grand Jury
 Gut & Gunstig
 Gutbio
+Häagen-Dazs||H[aä]agen[- ]Dazs
 Hacendado
 Haribo
 Heinz
 Hipp
+Hortex
 Italiamo
+Ibsa
 Ja!
 Jardin Bio
 K-Classic
@@ -62,12 +73,15 @@ Knorr
 La Belle-Îloise||la belle[- ][iî]loise
 La Vie Claire
 Labeyrie
+Léa Nature
 Leader Price
+Le Gaulois
 Lidl
 Lindt
 Lipton
 Lutti
 Léa Nature
+Le chocolat des français
 M-Budget
 M-Classic
 Maggi
@@ -78,6 +92,7 @@ Migros
 Migros Bio
 Migros Selection||migros s[ée]lection
 Milbona
+Milfina
 Milka
 Milsani
 Monoprix
@@ -88,8 +103,11 @@ Morrison's
 Mulino Bianco
 MyProtein
 Naturaplan
+Nescafé||Nescaf[ée]
 Nestlé||nestl[eé]
 Nutella
+Nos régions ont du talent
+Old El Paso
 Panzani
 REWE
 REWE Beste Wahl
@@ -98,6 +116,7 @@ Ricola
 Rochambeau
 Royco
 Sainsbury's
+Saint Alby
 San Benedetto
 Saupiquet
 Schär
@@ -117,3 +136,4 @@ Twinings
 U Saveurs
 Waitrose
 Yoplait
+Yves Rocher
