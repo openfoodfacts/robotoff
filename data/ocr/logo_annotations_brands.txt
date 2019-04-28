@@ -1,1 +1,2 @@
-carrefour||fr:carrefour
+carrefour||fr:Carrefour
+carrefour bio||fr:Carrefour bio
