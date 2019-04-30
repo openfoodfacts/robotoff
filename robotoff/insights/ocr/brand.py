@@ -3,7 +3,27 @@ from typing import List, Dict, Tuple, Set
 
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
-from robotoff.utils import text_file_iter
+from robotoff.utils import text_file_iter, get_logger
+
+logger = get_logger(__name__)
+
+
+def get_logo_annotation_brands() -> Dict[str, str]:
+    brands: Dict[str, str] = {}
+
+    for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
+        if '||' in item:
+            logo_description, label_tag = item.split('||')
+        else:
+            logger.warn("'||' separator expected!")
+            continue
+
+        brands[logo_description] = label_tag
+
+    return brands
+
+
+LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
 
 
 def get_brand_tag(brand: str) -> str:
@@ -68,6 +88,19 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
                     'text': match_str,
                     'notify': brand not in NOTIFY_BRANDS_WHITELIST,
                 })
-                break
+                return results
+
+    for logo_annotation in ocr_result.logo_annotations:
+        if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
+            brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
+
+            results.append({
+                'brand': brand,
+                'brand_tag': get_brand_tag(brand),
+                'automatic_processing': False,
+                'confidence': logo_annotation.score,
+                'model': 'google-cloud-vision',
+            })
+            return results
 
     return results
