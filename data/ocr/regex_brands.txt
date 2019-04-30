@@ -42,7 +42,7 @@ Ducros
 Edeka
 Edeka Bio
 Ehrmann
-El Corte Inglés||El Corte Ingl[ée]s
+El Corte Inglés||el corte ingl[ée]s
 Eridanous
 Eroski
 Esselunga
@@ -56,7 +56,7 @@ Gerblé
 Grand Jury
 Gut & Gunstig
 Gutbio
-Häagen-Dazs||H[aä]agen[- ]Dazs
+Häagen-Dazs||h[aä]agen[- ]dazs
 Hacendado
 Haribo
 Heinz
@@ -103,7 +103,7 @@ Morrison's
 Mulino Bianco
 MyProtein
 Naturaplan
-Nescafé||Nescaf[ée]
+Nescafé||nescaf[ée]
 Nestlé||nestl[eé]
 Nutella
 Nos régions ont du talent
