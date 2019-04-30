@@ -501,6 +501,11 @@ class ProductWeightImporter(OCRInsightImporter):
             logger.debug("Weight value is <= 0")
             return False
 
+        if float(int(weight_value)) != weight_value:
+            logger.info("Weight value is not an integer ({}), "
+                        "returning non valid".format(weight_value))
+            return False
+
         product = self.product_store[barcode]
 
         if not product:
