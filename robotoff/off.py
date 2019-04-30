@@ -24,6 +24,10 @@ logger = get_logger(__name__)
 
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
+USER_AGENT_HEADERS = {
+    'User-Agent': settings.ROBOTOFF_USER_AGENT,
+}
+
 
 def split_barcode(barcode: str) -> List[str]:
     if not barcode.isdigit():
@@ -74,7 +78,7 @@ def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
         # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
         url += '?fields={}'.format(','.join(fields))
 
-    r = http_session.get(url)
+    r = http_session.get(url, headers=USER_AGENT_HEADERS)
 
     if r.status_code != 200:
         return None
@@ -178,9 +182,11 @@ def add_store(barcode: str, store: str, dry=False):
 def update_product(params: Dict, dry=False):
     if dry:
         r = http_session.get(DRY_POST_URL, params=params,
-                             auth=('off', 'off'))
+                             auth=('off', 'off'),
+                             headers=USER_AGENT_HEADERS)
     else:
-        r = http_session.get(POST_URL, params=params)
+        r = http_session.get(POST_URL, params=params,
+                             headers=USER_AGENT_HEADERS)
 
     r.raise_for_status()
     json = r.json()
