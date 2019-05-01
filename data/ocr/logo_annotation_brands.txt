@@ -31,11 +31,14 @@ milbona||Milbona
 marks & spencer||Marks & Spencer
 maitre coq||Maître Coq
 tropicana orange juice||Tropicana
+tropicana||Tropicana
+Tropicana
 budweiser||Budweiser
 e leclerc||Leclerc
 tim hortons||Tim Hortons
 minute maid||Minute Maid
 volvic||Volvic
+Volvic
 Findus
 William Saurin
 charal||Charal
@@ -45,24 +48,31 @@ rewe bio||REWE Bio
 kühne||Kühne
 findus||Findus
 kellogg's||Kellogg's
+Kellogg's
 Le Gaulois
 francine||Francine
+Francine
 heinz||Heinz
+Heinz
 dr pepper||Dr.Pepper
 danone||Danone
+Danone
 Franprix
 yoplait||Yoplait
 andros||Andros
 Andros
 babybio||BabyBio
+Babybio||BabyBio
 Knorr
 U Saveurs
 pierre martinet||Pierre Martinet
+Pierre Martinet
 connetable||Connétable
 Connetable||Connétable
 candia||Candia
 regilait||Régilait
 Bonne Maman
+bonne maman||Bonne Maman
 pepsi||Pepsi
 lipton ice tea||Lipton
 lipton||Lipton
@@ -85,6 +95,7 @@ doritos||Doritos
 vitamin water||Vitamin Water
 nescafe||Nescafé
 henaff||Hénaff
+HENAFF||Hénaff
 la boulangère||La Boulangère
 don simon||Don Simon
 Benedicta
@@ -92,21 +103,26 @@ Gut und Günstig
 dr oetker||Dr.Oetker
 nesquik||Nesquik
 coca cola||Coca-Cola
+Coca Cola||Coca-Cola
 Lindt
 lindt||Lindt
+Lindt Excellence||Lindt
 florette||Florette
 Florette
 bofrost||Bofrost
 Tipiak
 Herta
+herta||Herta
 Daucy||D'Aucy
 D Aucy||D'Aucy
 toupargel||Toupargel
 heineken||Heineken
 Primeal||Priméal
+Priméal
 panzani||Panzani
 heineken light||Heineken
 St-Hubert
+St Hubert Omega 3||St-Hubert
 carrefour contact||Carrefour
 Benenuts
 Milbona
@@ -116,13 +132,15 @@ cristaline||Cristaline
 cosmebio||Cosmébio
 special k||Spécial K
 naturland||Naturland
-brossard||Brossard
+Naturland
 unilever||Unilever
 tic tac||Tic Tac
 cochonou||Cochonou
 Mondelez
 Milka
+milka||Milka
 evian||Evian
+Evian
 cheetos||Cheetos
 oreo||Oreo
 Marque Repere||Marque Repère
@@ -130,3 +148,117 @@ justin bridou||Justin Bridou
 Ducros
 Bridelice||Bridélice
 bonduelle||Bonduelle
+Sainte Lucie Culinaire||Sainte Lucie
+Le Prix Gagnant||
+ISLA DELICE||Isla Délice
+Delhaize Group||Delhaize
+Delhaize
+coca cola classic||Coca-Cola
+nissin||Nissin
+Ja Rewe||Ja!
+coffee mate||CoffeeMate
+carlsberg group||Carlsberg
+smirnoff ice||Smirnoff
+schweppes||Schweppes
+hema||Hema
+carambar||Carambar
+pringles||Pringles
+Lutti
+ikea||Ikea
+Delpeyrat
+reeses peanut butter cup||Reese's
+lactel||Lactel
+walgreens||Walgreens
+teisseire||Teisseire
+starbucks||Starbucks
+starbucks coffee||Starbucks
+Starbucks
+nespresso||Nespresso
+Daunat
+Brossard
+brossard||Brossard
+Vitamont
+les 2 vaches||Les 2 vaches
+Les 2 Vaches
+guinness||Guinness
+coles||Coles
+Lustucru
+Clipper Tea
+arla foods||Arla Foods
+purina||Purina
+morrisons||Morrisons
+Campbells||Campbells
+lucozade||Lucozade
+Iglo
+sara lee||Sara Lee
+prince de bretagne||Prince de Bretagne
+gallia||Gallia
+milo||Milo
+JA||Ja!
+gatorade||Gatorade
+chupa chups||Chupa Chups
+Ocean Spray
+johnnie walker||Johnnie Walker
+dolce gusto||Dolce Gusto
+coca cola light||Coca-Cola
+senseo||Senseo
+snickers||Snickers
+Lutti
+kroger||Kroger
+del monte||Del Monter
+Cracotte
+tabasco||Tabasco
+Quaker Oats Company||Quaker Oats
+Pere Dodu||Père Dodu
+Lindt & Sprüngli
+heinz ketchup||Heinz
+estee lauder||Estée Lauder
+ruinart||Ruinard
+general mills||General Mills
+yves rocher||Yves Rocher
+Unilever
+perrier||Perrier
+Old El Paso
+Heinz Tomato Ketchup||Heinz
+Hollywood Chewing Gum||Hollywood
+corine de farme||Corine de Farme
+Candia
+Bioland
+red bull||Red Bull
+Primeal||Priméal
+Larnaudie
+cadbury||Cadbury's
+whole foods||Whole Foods
+skittles||Skittles
+pom potes||Pom Potes
+Naturalia
+La Boulangère
+Phare d'Eckmühl
+mcvities||McVities
+Jardin Bio
+ferrero rocher||Ferrero Rocher
+coleman||Coleman
+coop prix||Coop
+carrefour express||Carrefour
+heineken open your world||Heineken
+ritter sport||Ritter Sport
+dunkin donuts||Dunkin' Donuts
+Daddy Sucre||Daddy
+Beurre Président||Président
+Poulain Chocolat||Poulain
+Pierre Martinet
+nabisco||Nabisco
+Good Gout
+barilla||Barilla
+Atelier Blini
+Pringles
+Régilait
+Old El Paso Restaurante||Old El Paso
+oasis||Oasis
+labeyrie||Labeyrie
+Kinder Bueno
+Juvamine
+fruittella||Fruittella
+Chocolates Valor
+Andros France||Andros
+stonyfield||
