@@ -111,7 +111,8 @@ def extract_ocr_insights(ocr_url: str) -> JSONType:
                          InsightType.product_weight.name,
                          InsightType.image_flag.name,
                          InsightType.expiration_date.name,
-                         InsightType.brand.name):
+                         InsightType.brand.name,
+                         InsightType.store.name):
         insights = ocr.extract_insights(ocr_result, insight_type)
 
         if insights:
