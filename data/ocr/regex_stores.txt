@@ -4,10 +4,13 @@ Auchan
 Biocoop
 Carrefour
 Carrefour||grand jury
+Casino
 Colruyt
+Coop
 Delhaize
 Edeka
 Eroski
+Franprix
 Hacendado
 La Vie Claire
 Leader Price
