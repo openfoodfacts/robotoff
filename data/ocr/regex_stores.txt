@@ -33,15 +33,15 @@ Intermarché||Saint Eloi
 Intermarché||Itineraire des saveurs
 Intermarché||Paquito
 Intermarché||Les Mousquetaires
-Intermarché||Selection intermarche
+Intermarché||S[ée]lection intermarch[ée]
 Intermarché||Bouton d'or
 Intermarché||Jean roze
-Intermarché||Selection des Mousquetaires
+Intermarché||S[ée]lection des Mousquetaires
 Intermarché||Top budget
 Intermarché||Capitaine Cook
 Intermarché||Odyssee
-Leclerc||Nos Régions Ont du Talent
-Leclerc||Marque Repère
+Leclerc||Nos R[ée]gions Ont du Talent
+Leclerc||Marque Rep[èe]re
 Leclerc||Autour du Dessert
 Leclerc||Bio Village
 Leclerc||Bon Choco
@@ -51,21 +51,21 @@ Leclerc||Chaque Jour Réduit en Lactose
 Leclerc||Chaque Jour sans Gluten
 Leclerc||Chantegril
 Leclerc||Comptoir du Grain
-Leclerc||Côté' Snack
-Leclerc||Côté Snack
-Leclerc||Côté Table
+Leclerc||Côt[ée]' Snack
+Leclerc||Côt[ée] Snack
+Leclerc||Côt[ée] Table
 Leclerc||Couleurs Vives
-Leclerc||Confiséo
+Leclerc||Confis[ée]o
 Leclerc||Copains Copines
 Leclerc||Day Break
-Leclerc||Déli Délo
-Leclerc||Délisse
-Leclerc||Déli'Light
+Leclerc||D[ée]li Délo
+Leclerc||D[ée]lisse
+Leclerc||D[ée]li'Light
 Leclerc||Douceur du Verger
 Leclerc||Edulcorel
 Leclerc||Entre'aide
 Leclerc||Équador
-Leclerc||Férial
+Leclerc||F[ée]rial
 Leclerc||Eskiss
 Leclerc||Festalie
 Leclerc||Fresh Tea
@@ -76,8 +76,8 @@ Leclerc||Jean's
 Leclerc||Hilbörg
 Leclerc||Laqueuille
 Leclerc||Lagoa
-Leclerc||Les Caractères
-Leclerc||Les Croisés
+Leclerc||Les Caract[èe]res
+Leclerc||Les Crois[ée]s
 Leclerc||Les Goëlleries
 Leclerc||L’Origine du Goût
 Leclerc||Lydog
@@ -110,14 +110,13 @@ Leclerc||Ronde des Mers
 Leclerc||Rustica
 Leclerc||Saint Azay
 Leclerc||St Azay
-Leclerc||St Diéry
-Leclerc||Saint Diéry
+Leclerc||St Di[ée]ry
 Leclerc||Saint Charmin
 Leclerc||Smicy
 Leclerc||Tables du Monde
 Leclerc||Tablette d’Or
 Leclerc||Tablier Blanc
-Leclerc||Téva
+Leclerc||T[ée]va
 Leclerc||Tiséa
 Leclerc||Tokapi
 Leclerc||Tradilège
