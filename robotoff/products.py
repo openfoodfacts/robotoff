@@ -191,7 +191,7 @@ class Product:
     """Product class."""
     __slots__ = ('barcode', 'countries_tags', 'categories_tags',
                  'emb_codes_tags', 'labels_tags', 'quantity', 'expiration_date',
-                 'brands_tags')
+                 'brands_tags', 'stores_tags')
 
     def __init__(self, product: JSONType):
         self.barcode = product.get('code')
