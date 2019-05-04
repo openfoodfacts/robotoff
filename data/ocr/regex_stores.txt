@@ -25,3 +25,19 @@ REWE
 Sainsbury's
 Tesco
 Waitrose
+Intermarché
+Intermarché||Paturages
+Intermarché||Chabrior
+Intermarché||Monique Ranou
+Intermarché||Saint Eloi
+Intermarché||Itineraire des saveurs
+Intermarché||Paquito
+Intermarché||Les Mousquetaires
+Intermarché||Selection intermarche
+Intermarché||Bouton d'or
+Intermarché||Jean roze
+Intermarché||Selection des Mousquetaires
+Intermarché||Top budget
+Intermarché||Capitaine Cook
+Intermarché||Odyssee
+
