@@ -11,7 +11,7 @@ Delhaize
 Edeka
 Eroski
 Franprix
-Hacendado
+Mercadona||Hacendado
 La Vie Claire
 Leader Price
 Lidl
