@@ -12,6 +12,7 @@ Edeka
 Eroski
 Franprix
 Mercadona||Hacendado
+Morrisson's
 La Vie Claire
 Leader Price
 Lidl
@@ -22,3 +23,5 @@ Migros
 Monoprix
 REWE
 Sainsbury's
+Tesco
+Waitrose
