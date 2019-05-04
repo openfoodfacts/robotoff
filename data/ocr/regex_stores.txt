@@ -11,7 +11,7 @@ Delhaize
 Edeka
 Eroski
 Franprix
-Mercadona||Hacendado
+Mercadona||hacendado
 Morrisson's
 La Vie Claire
 Leader Price
@@ -26,103 +26,104 @@ Sainsbury's
 Tesco
 Waitrose
 Intermarché
-Intermarché||Paturages
-Intermarché||Chabrior
-Intermarché||Monique Ranou
-Intermarché||Saint Eloi
-Intermarché||Itineraire des saveurs
-Intermarché||Paquito
-Intermarché||Les Mousquetaires
-Intermarché||S[ée]lection intermarch[ée]
-Intermarché||Bouton d'or
-Intermarché||Jean roze
-Intermarché||S[ée]lection des Mousquetaires
-Intermarché||Top budget
-Intermarché||Capitaine Cook
-Intermarché||Odyssee
-Leclerc||Nos R[ée]gions Ont du Talent
-Leclerc||Marque Rep[èe]re
-Leclerc||Autour du Dessert
-Leclerc||Bio Village
-Leclerc||Bon Choco
-Leclerc||Brin de Jour
-Leclerc||Britley
-Leclerc||Chaque Jour R[ée]duit en Lactose
-Leclerc||Chaque Jour sans Gluten
-Leclerc||Chantegril
-Leclerc||Comptoir du Grain
-Leclerc||Côt[ée]' Snack
-Leclerc||Côt[ée] Snack
-Leclerc||Côt[ée] Table
-Leclerc||Couleurs Vives
-Leclerc||Confis[ée]o
-Leclerc||Copains Copines
-Leclerc||Day Break
-Leclerc||D[ée]li Délo
-Leclerc||D[ée]lisse
-Leclerc||D[ée]li'Light
-Leclerc||Douceur du Verger
-Leclerc||Edulcorel
-Leclerc||Entre'aide
+Intermarché||paturages
+Intermarché||chabrior
+Intermarché||monique ranou
+Intermarché||saint eloi
+Intermarché||itineraire des saveurs
+Intermarché||paquito
+Intermarché||les mousquetaires
+Intermarché||s[ée]lection intermarch[ée]
+Intermarché||bouton d'or
+Intermarché||jean roze
+Intermarché||s[ée]lection des mousquetaires
+Intermarché||top budget
+Intermarché||capitaine cook
+Intermarché||odyssee
+Leclerc||nos r[ée]gions ont du talent
+Leclerc||marque rep[èe]re
+Leclerc||autour du dessert
+Leclerc||bio village
+Leclerc||bon choco
+Leclerc||brin de jour
+Leclerc||britley
+Leclerc||chaque jour r[ée]duit en lactose
+Leclerc||chaque jour sans gluten
+Leclerc||chantegril
+Leclerc||comptoir du grain
+Leclerc||côt[ée]' snack
+Leclerc||côt[ée] snack
+Leclerc||côt[ée] table
+Leclerc||couleurs Vives
+Leclerc||confis[ée]o
+Leclerc||copains copines
+Leclerc||day break
+Leclerc||d[ée]li d[ée]lo
+Leclerc||d[ée]lisse
+Leclerc||d[ée]li'light
+Leclerc||douceur du verger
+Leclerc||edulcorel
+Leclerc||entre'aide
 Leclerc||[ÉE]quador
-Leclerc||F[ée]rial
-Leclerc||Eskiss
-Leclerc||Festalie
-Leclerc||Fresh Tea
-Leclerc||Frucci
-Leclerc||Fruistar
-Leclerc||Jafaden
-Leclerc||Jean's
-Leclerc||Hilbörg
-Leclerc||Laqueuille
-Leclerc||Lagoa
-Leclerc||Les Caract[èe]res
-Leclerc||Les Crois[ée]s
-Leclerc||Les Goëlleries
-Leclerc||L’Origine du Goût
-Leclerc||Lydog
-Leclerc||Maître Coquille
-Leclerc||Manava
-Leclerc||Mamie Douceur
-Leclerc||Menu Fraîcheur
-Leclerc||Mots d'enfants
-Leclerc||Notre Jardin
-Leclerc||Nustikao
-Leclerc||Nadya
-Leclerc||Nat & Vie
-Leclerc||Nat&Vie
-Leclerc||Nat et Vie
-Leclerc||New’R
-Leclerc||New’ R
-Leclerc||Nid d'Abeille
-Leclerc||Œufs de nos Régions
-Leclerc||oeufs de nos régions
-Leclerc||Pause Fraîcheur
-Leclerc||Pêche Océan
-Leclerc||Pic'Express
-Leclerc||Pierre de Chaumeyrac
-Leclerc||Plantation
-Leclerc||Pom'Lisse
-Leclerc||P'tit Deli
-Leclerc||Régal Soupe
-Leclerc||Rives & Terrasses, Rives et Terrasses
-Leclerc||Ronde des Mers
-Leclerc||Rustica
-Leclerc||Saint Azay
-Leclerc||St Azay
-Leclerc||St Di[ée]ry
-Leclerc||Saint Charmin
-Leclerc||Smicy
-Leclerc||Tables du Monde
-Leclerc||Tablette d’Or
-Leclerc||Tablier Blanc
-Leclerc||T[ée]va
-Leclerc||Tis[ée]a
-Leclerc||Tokapi
-Leclerc||Tradilège
-Leclerc||Tradizioni d’Italia
-Leclerc||Trofic
-Leclerc||Turini
-Leclerc||Vieux Carion
-Leclerc||Volandry
-Leclerc||Volpone
+Leclerc||f[ée]rial
+Leclerc||eskiss
+Leclerc||festalie
+Leclerc||fresh tea
+Leclerc||frucci
+Leclerc||fruistar
+Leclerc||jafaden
+Leclerc||jean's
+Leclerc||hilb[öo]rg
+Leclerc||laqueuille
+Leclerc||lagoa
+Leclerc||les caract[èe]res
+Leclerc||les crois[ée]s
+Leclerc||les go[ëe]lleries
+Leclerc||l’Origine du goût
+Leclerc||lydog
+Leclerc||ma[îi]tre coquille
+Leclerc||manava
+Leclerc||mamie douceur
+Leclerc||menu fra[îi]cheur
+Leclerc||mots d'enfants
+Leclerc||notre jardin
+Leclerc||nustikao
+Leclerc||nadya
+Leclerc||nat & vie
+Leclerc||nat&vie
+Leclerc||nat et vie
+Leclerc||new’r
+Leclerc||new’ r
+Leclerc||nid d'Abeille
+Leclerc||Œufs de nos r[ée]gions
+Leclerc||oeufs de nos r[ée]gions
+Leclerc||pause fra[îi]cheur
+Leclerc||pêche oc[ée]an
+Leclerc||pic'express
+Leclerc||pierre de chaumeyrac
+Leclerc||plantation
+Leclerc||pom'lisse
+Leclerc||p'tit deli
+Leclerc||r[ée]gal soupe
+Leclerc||rives & terrasses
+Leclerc||rives et terrasses
+Leclerc||ronde des mers
+Leclerc||rustica
+Leclerc||saint azay
+Leclerc||st azay
+Leclerc||st di[ée]ry
+Leclerc||saint charmin
+Leclerc||smicy
+Leclerc||tables du monde
+Leclerc||tablette d’or
+Leclerc||tablier blanc
+Leclerc||t[ée]va
+Leclerc||tis[ée]a
+Leclerc||tokapi
+Leclerc||tradilège
+Leclerc||tradizioni d’italia
+Leclerc||trofic
+Leclerc||turini
+Leclerc||vieux carion
+Leclerc||volandry
+Leclerc||volpone
