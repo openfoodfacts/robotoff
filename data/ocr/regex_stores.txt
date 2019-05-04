@@ -47,7 +47,7 @@ Leclerc||Bio Village
 Leclerc||Bon Choco
 Leclerc||Brin de Jour
 Leclerc||Britley
-Leclerc||Chaque Jour Réduit en Lactose
+Leclerc||Chaque Jour R[ée]duit en Lactose
 Leclerc||Chaque Jour sans Gluten
 Leclerc||Chantegril
 Leclerc||Comptoir du Grain
@@ -64,7 +64,7 @@ Leclerc||D[ée]li'Light
 Leclerc||Douceur du Verger
 Leclerc||Edulcorel
 Leclerc||Entre'aide
-Leclerc||Équador
+Leclerc||[ÉE]quador
 Leclerc||F[ée]rial
 Leclerc||Eskiss
 Leclerc||Festalie
@@ -117,7 +117,7 @@ Leclerc||Tables du Monde
 Leclerc||Tablette d’Or
 Leclerc||Tablier Blanc
 Leclerc||T[ée]va
-Leclerc||Tiséa
+Leclerc||Tis[ée]a
 Leclerc||Tokapi
 Leclerc||Tradilège
 Leclerc||Tradizioni d’Italia
