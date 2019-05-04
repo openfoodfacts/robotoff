@@ -6,6 +6,9 @@ Carrefour
 Carrefour||grand jury
 Colruyt
 Delhaize
+Edeka
+Eroski
+Hacendado
 La Vie Claire
 Leader Price
 Lidl
@@ -14,4 +17,5 @@ Magasins U||u saveurs
 Marks & Spencer
 Migros
 Monoprix
+REWE
 Sainsbury's
