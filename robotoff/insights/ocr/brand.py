@@ -100,6 +100,7 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
                 'automatic_processing': False,
                 'confidence': logo_annotation.score,
                 'model': 'google-cloud-vision',
+                'notify': False,
             })
             return results
 
