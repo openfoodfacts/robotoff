@@ -1,123 +1,98 @@
-label rouge||en:label-rouge
-label rouge vectoriel||en:label-rouge
-"Label Rouge||/m/0kv95by"
+1% for the Planet||en:1% for the Planet
+AB||fr:Agriculture Biologique
+Agricoltura Biologica||en:Organic
+agricultura ecologica||en:Organic
+Agricultura Ecologica||en:Organic
+agriculture biologique||fr:Agriculture Biologique
+Agriculture Biologique||fr:Agriculture Biologique
+aop||fr:AOP
+Australian Made||en:Australian Made
+australian made||en:Australian Made
+Bien Se Nourrir||
+Bio Siegel||de:Bio Siegel
+bio suisse||en:Bio Suisse
+bio||en:Organic
+Biogarantie||en:Biogarantie
+biogarantie||en:Biogarantie
+Biologische Producten||en:Organic
+canada organic||en:Canada Organic
+certified vegan||en:Vegan
+cosmebio||fr:Cosmébio
+Demeter||en:Demeter
+demeter||en:Demeter
+dlg tele||de:DLG
+DLG||de:DLG
+DLG||de:DLG
+Dolphin Safe||en:Dolphin Safe
+dop vettoriale||en:DOP
+dop||en:DOP
+ecocert||en:Ecocert
+ECOCERT||en:Ecocert
+europees biologisch keurmerk||
+fair trade||en:Fairtrade
+Fairtrade Fortnight 2012||en:Fairtrade
+fairtrade||en:Fairtrade
+Femme Enceinte||en:Not advised for pregnant women
+Forest Stewardship Council||en:FSC
+Forest Stewardship Council||en:FSC
+FSC Mixed Sources||en:FSC
+fsc||en:FSC
+FSC||en:FSC
+German Agricultural Society||de:DLG
+gluten free||en:Gluten-free
+grønt punkt||en:Green Point
+igp vettoriale||en:pgi
+IGP||en:pgi
 igp||en:pgi
+kosher||en:kosher
 label ab||fr:ab-agriculture-biologique
+label rouge vectoriel||en:label-rouge
+Label Rouge||en:label-rouge
+label rouge||en:label-rouge
+lapin de france||fr:Lapin de France
+Le Porc Français||fr:Le Porc Français
+made in france||en:made in france
+made in italy||en:made in italy
+made in luxembourg||en:Made in Luxembourg
+marine stewardship council||en:Marine Stewardship Council
+Marine Stewardship Council||en:Marine Stewardship Council
+max havelaar||en:Max Havelaar
+MSC||en:Marine Stewardship Council
+nature et progrès||fr:Nature et Progrès
+non gmo project||en:Non-GMO project
+not tested on animals||en:Not tested on animals
+Numero Vert||fr:Produit comportant un Numéro Vert
+Ohne Gentechnik||en:Without GMOs
+Organic certification||en:Organic
+Organic farming||en:Organic
+organico||en:Organic
+PEFC||en:PEFC
+pegi 12||en:PEGI
+Pensez Au Tri||fr:Pensez Au Tri
+produit de montagne||fr:produit de montagne
 produit en bretagne||en:produced-in-bretagne
-Produit en Bretagne
-agriculture biologique
-bio
-triman
-vegetarismus
-dop
-Agriculture Biologique
-fsc
-Forest Stewardship Council||"
-max havelaar
-kosher
-AB||
-gentechnik||
-igp vettoriale||
-marine stewardship council|
-Pensez Au Tri||/g/120jx1zk"
-Pensez Au Tri||/g/1vbnq9n3"
-lapin de france||"
-tetra pak||/m/01d8rd"
-Tetra Pak||/m/01d8rd"
-Forest Stewardship Council||/m/03j_48"
-usda organic||/g/11fz9yn_t5"
-dop vettoriale||"
-agricultura ecologica||/g/1tdby2x7"
-Agricultura Ecologica||/m/0jlhg"
-ecocert||/m/03grcb9"
-Biogarantie||"
-vegan||/g/11bxflwzgj"
-non gmo project||/m/0807txv"
-sin gluten vectorial||"
-biogarantie||/ g / 122tpdt1"
-gluten free||"
-Bio Siegel||/m/0259kw"
-aop||"
-dlg tele||"
-"DLG||"
-"rainforest alliance||/m/08l9s1"
-"alu 41||"
-"canada organic||"
-made in italy||
-switzerland||"
-demeter||/m/07jzkz"
-Denominacion de Origen||/m/026r89"
-grønt punkt||/m/02vxl8l"
-cosmebio
-suisse garantie
-made in france
-WWF Brasil||
-Numero Vert||
-UTZ Certified||/m/02q0slp"
-fairtrade||/m/04rr0b"
-Organic certification||/m/018325"
-Triman Vectoriel||"
-rspo||"
-Organic farming||"
-europees biologisch keurmerk||"
-Le Porc Français||/g/11b72qz8pv"
-"Organic farming||/m/0jlhg"
-German Agricultural Society||/m/03h3th3"
-Saveur en or||"
-mozzarella di bufala campana vettoriale||"
-FSC||/m/03j_48"
-Organic certification||/m/0259kw"
-not tested on animals||"
-ECOCERT||/m/08ft_m"
-Bio||"
-Biologische Producten||"
-celiachia vettoriale||"
-"recycle||/m/07qqfn"
-     31 "Fairtrade Fortnight 2012||"
-     31 "fair trade||"
-     UTZ||/m/02q0slp"
-     DLG||/m/03h3th3"
-     biały krzyż na czerwonym tle     swiss flag
-     MSC||"
-     drapeau francais||"
-     "Australian Made||"
-     "tidyman||"
-     "bio suisse||/g/121m7y5m"
-     "Marine Stewardship Council||/m/04z1l6"
-     "FSC Mixed Sources||"
-     "wwf||/m/0gy1_"
-     "Demeter||/m/0296l"
-     1% for the Planet||/m/03ylkck"
-     USDA Organic||/m/0259kw"
-     "terracycle||/m/0f38px"
-     "Le Porc Français||"
-     Organic farming||/g/1td7sbh8"
-     "nature et progrès||"
-     "australian made||/m/0fq25wr"
-     Saveur de L Année||/g/122h6n6f"
-     "Soil Association||/m/026_pq"
-     Acier Recyclable||"
-     "AB||/g/120t4119"
-     "Saveur en or||/g/1tyywd12"
-     "produit de montagne||"
-     "organico||"
-     17 "organic india||"
-     "Ohne Gentechnik||/g/1231g60l"
-     IGP||/m/01z5vj"
-     "certified vegan||"
-     spécialité traditionnelle garantie||"
-     recycle bin||"
-     "Dolphin Safe||/m/02wz78k"
-     "Bio||/g/1hc1hhv3l"
-     "aliments du québec||"
-     "PEFC||/m/07t8vl"
-     "Organic farming||/g/11b6d7dxpg"
-     "Femme Enceinte||/m/05vqh7"
-     "bureau veritas||/m/03cp08c"
-     "Agricoltura Biologica||"
-     "VPF||"
-     "pegi 12||/m/03zv_3"
-     "made in luxembourg||"
-     "Geographical indications and traditional specialities in the European Union||/m/01z5vj"
-     "Bien Se Nourrir||"
-     Rainforest Alliance||/m/08l9s1"
+Produit en Bretagne||en:produced-in-bretagne
+rainforest alliance||en:Rainforest Alliance
+Rainforest Alliance||en:Rainforest Alliance
+rspo||en:RSPO
+Saveur de L Année||fr:Saveur de l'année
+Saveur en or||fr:Saveur en Or
+sin gluten vectorial||en:Without gluten
+Soil Association||en:Soil Association
+spécialité traditionnelle garantie||fr:Spécialité Traditionnelle Garantie
+suisse garantie||en:Suisse garantie
+terracycle||en:Terracycle
+tetra pak||en:Tetra Pak
+Tetra Pak||en:Tetra Pak
+tidyman||en:Tidyman
+Triman Vectoriel||en:Triman
+triman||en:Triman
+usda organic||en:USDA Organic
+USDA Organic||en:USDA Organic
+UTZ Certified||en:UTZ
+UTZ||en:UTZ
+vegan||en:Vegan
+vegetarismus||en:Vegetarian
+VPF||en:VPF
+WWF Brasil||en:WWF
+wwf||en:WWF
