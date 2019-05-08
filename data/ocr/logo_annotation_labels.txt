@@ -96,3 +96,4 @@ vegetarismus||en:Vegetarian
 VPF||en:VPF
 WWF Brasil||en:WWF
 wwf||en:WWF
+rspca assured||en:RSPCA assured
