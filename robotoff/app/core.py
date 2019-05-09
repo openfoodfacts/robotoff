@@ -1,6 +1,3 @@
-import tempfile
-
-import requests
 from typing import Union, Optional, List, Iterable
 
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
@@ -10,7 +7,6 @@ from robotoff.insights.annotate import (InsightAnnotatorFactory,
 from robotoff.models import ProductInsight
 from robotoff.off import get_product
 from robotoff.utils import get_logger
-from PIL import Image
 
 import peewee
 
