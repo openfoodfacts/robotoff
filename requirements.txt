@@ -9,7 +9,7 @@ elasticsearch==6.3.1
 Click==7.0
 apscheduler==3.5.3
 sentry-sdk==0.7.6
-tensorflow==1.13.1
 Pillow==6.0.0
 numpy==1.15.4
 matplotlib==3.0.3
+protobuf==3.7.1

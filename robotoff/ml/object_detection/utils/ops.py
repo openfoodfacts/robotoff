@@ -1,7 +1,4 @@
 import tensorflow as tf
-import numpy as np
-import PIL
-from PIL import Image
 
 
 def reframe_box_masks_to_image_masks(box_masks, boxes, image_height,
@@ -51,13 +48,3 @@ def reframe_box_masks_to_image_masks(box_masks, boxes, image_height,
         reframe_box_masks_to_image_masks_default,
         lambda: tf.zeros([0, image_height, image_width, 1], dtype=tf.float32))
     return tf.squeeze(image_masks, axis=3)
-
-
-def convert_image_to_array(image: PIL.Image.Image) -> np.array:
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-
-    (im_width, im_height) = image.size
-
-    return np.array(image.getdata()).reshape(
-        (im_height, im_width, 3)).astype(np.uint8)

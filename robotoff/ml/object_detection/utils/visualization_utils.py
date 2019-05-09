@@ -26,17 +26,12 @@ import functools
 import matplotlib
 
 matplotlib.use('Agg')  # pylint: disable=multiple-statements
-import matplotlib.pyplot as plt  # pylint: disable=g-import-not-at-top
 import numpy as np
 import PIL.Image as Image
 import PIL.ImageColor as ImageColor
 import PIL.ImageDraw as ImageDraw
 import PIL.ImageFont as ImageFont
 import six
-import tensorflow as tf
-
-from robotoff.ml.object_detection.utils import \
-    standard_fields as fields
 
 _TITLE_LEFT_MARGIN = 10
 _TITLE_TOP_MARGIN = 10
@@ -75,7 +70,7 @@ def save_image_array_as_png(image, output_path):
       output_path: path to which image should be written.
     """
     image_pil = Image.fromarray(np.uint8(image)).convert('RGB')
-    with tf.gfile.Open(output_path, 'w') as fid:
+    with open(output_path, 'w') as fid:
         image_pil.save(fid, 'PNG')
 
 
@@ -312,144 +307,6 @@ def _visualize_boxes_and_masks_and_keypoints(
         **kwargs)
 
 
-def draw_bounding_boxes_on_image_tensors(images,
-                                         boxes,
-                                         classes,
-                                         scores,
-                                         category_index,
-                                         instance_masks=None,
-                                         keypoints=None,
-                                         max_boxes_to_draw=20,
-                                         min_score_thresh=0.2):
-    """Draws bounding boxes, masks, and keypoints on batch of image tensors.
-
-    Args:
-      images: A 4D uint8 image tensor of shape [N, H, W, C].
-      boxes: [N, max_detections, 4] float32 tensor of detection boxes.
-      classes: [N, max_detections] int tensor of detection classes. Note that
-        classes are 1-indexed.
-      scores: [N, max_detections] float32 tensor of detection scores.
-      category_index: a dict that maps integer ids to category dicts. e.g.
-        {1: {1: 'dog'}, 2: {2: 'cat'}, ...}
-      instance_masks: A 4D uint8 tensor of shape [N, max_detection, H, W] with
-        instance masks.
-      keypoints: A 4D float32 tensor of shape [N, max_detection, num_keypoints, 2]
-        with keypoints.
-      max_boxes_to_draw: Maximum number of boxes to draw on an image. Default 20.
-      min_score_thresh: Minimum score threshold for visualization. Default 0.2.
-
-    Returns:
-      4D image tensor of type uint8, with boxes drawn on top.
-    """
-    visualization_keyword_args = {
-        'use_normalized_coordinates': True,
-        'max_boxes_to_draw': max_boxes_to_draw,
-        'min_score_thresh': min_score_thresh,
-        'agnostic_mode': False,
-        'line_thickness': 4
-    }
-
-    if instance_masks is not None and keypoints is None:
-        visualize_boxes_fn = functools.partial(
-            _visualize_boxes_and_masks,
-            category_index=category_index,
-            **visualization_keyword_args)
-        elems = [images, boxes, classes, scores, instance_masks]
-    elif instance_masks is None and keypoints is not None:
-        visualize_boxes_fn = functools.partial(
-            _visualize_boxes_and_keypoints,
-            category_index=category_index,
-            **visualization_keyword_args)
-        elems = [images, boxes, classes, scores, keypoints]
-    elif instance_masks is not None and keypoints is not None:
-        visualize_boxes_fn = functools.partial(
-            _visualize_boxes_and_masks_and_keypoints,
-            category_index=category_index,
-            **visualization_keyword_args)
-        elems = [images, boxes, classes, scores, instance_masks, keypoints]
-    else:
-        visualize_boxes_fn = functools.partial(
-            _visualize_boxes,
-            category_index=category_index,
-            **visualization_keyword_args)
-        elems = [images, boxes, classes, scores]
-
-    def draw_boxes(image_and_detections):
-        """Draws boxes on image."""
-        image_with_boxes = tf.py_func(visualize_boxes_fn, image_and_detections,
-                                      tf.uint8)
-        return image_with_boxes
-
-    images = tf.map_fn(draw_boxes, elems, dtype=tf.uint8, back_prop=False)
-    return images
-
-
-def draw_side_by_side_evaluation_image(eval_dict,
-                                       category_index,
-                                       max_boxes_to_draw=20,
-                                       min_score_thresh=0.2):
-    """Creates a side-by-side image with detections and groundtruth.
-
-    Bounding boxes (and instance masks, if available) are visualized on both
-    subimages.
-
-    Args:
-      eval_dict: The evaluation dictionary returned by
-        eval_util.result_dict_for_single_example().
-      category_index: A category index (dictionary) produced from a labelmap.
-      max_boxes_to_draw: The maximum number of boxes to draw for detections.
-      min_score_thresh: The minimum score threshold for showing detections.
-
-    Returns:
-      A [1, H, 2 * W, C] uint8 tensor. The subimage on the left corresponds to
-        detections, while the subimage on the right corresponds to groundtruth.
-    """
-    detection_fields = fields.DetectionResultFields()
-    input_data_fields = fields.InputDataFields()
-    instance_masks = None
-    if detection_fields.detection_masks in eval_dict:
-        instance_masks = tf.cast(
-            tf.expand_dims(eval_dict[detection_fields.detection_masks], axis=0),
-            tf.uint8)
-    keypoints = None
-    if detection_fields.detection_keypoints in eval_dict:
-        keypoints = tf.expand_dims(
-            eval_dict[detection_fields.detection_keypoints], axis=0)
-    groundtruth_instance_masks = None
-    if input_data_fields.groundtruth_instance_masks in eval_dict:
-        groundtruth_instance_masks = tf.cast(
-            tf.expand_dims(
-                eval_dict[input_data_fields.groundtruth_instance_masks],
-                axis=0),
-            tf.uint8)
-    images_with_detections = draw_bounding_boxes_on_image_tensors(
-        eval_dict[input_data_fields.original_image],
-        tf.expand_dims(eval_dict[detection_fields.detection_boxes], axis=0),
-        tf.expand_dims(eval_dict[detection_fields.detection_classes], axis=0),
-        tf.expand_dims(eval_dict[detection_fields.detection_scores], axis=0),
-        category_index,
-        instance_masks=instance_masks,
-        keypoints=keypoints,
-        max_boxes_to_draw=max_boxes_to_draw,
-        min_score_thresh=min_score_thresh)
-    images_with_groundtruth = draw_bounding_boxes_on_image_tensors(
-        eval_dict[input_data_fields.original_image],
-        tf.expand_dims(eval_dict[input_data_fields.groundtruth_boxes], axis=0),
-        tf.expand_dims(eval_dict[input_data_fields.groundtruth_classes],
-                       axis=0),
-        tf.expand_dims(
-            tf.ones_like(
-                eval_dict[input_data_fields.groundtruth_classes],
-                dtype=tf.float32),
-            axis=0),
-        category_index,
-        instance_masks=groundtruth_instance_masks,
-        keypoints=None,
-        max_boxes_to_draw=None,
-        min_score_thresh=0.0)
-    return tf.concat([images_with_detections, images_with_groundtruth], axis=2)
-
-
 def draw_keypoints_on_image_array(image,
                                   keypoints,
                                   color='red',
@@ -666,67 +523,3 @@ def visualize_boxes_and_labels_on_image_array(
                 use_normalized_coordinates=use_normalized_coordinates)
 
     return image
-
-
-def add_cdf_image_summary(values, name):
-    """Adds a tf.summary.image for a CDF plot of the values.
-
-    Normalizes `values` such that they sum to 1, plots the cumulative distribution
-    function and creates a tf image summary.
-
-    Args:
-      values: a 1-D float32 tensor containing the values.
-      name: name for the image summary.
-    """
-
-    def cdf_plot(values):
-        """Numpy function to plot CDF."""
-        normalized_values = values / np.sum(values)
-        sorted_values = np.sort(normalized_values)
-        cumulative_values = np.cumsum(sorted_values)
-        fraction_of_examples = (
-                np.arange(cumulative_values.size, dtype=np.float32)
-                / cumulative_values.size)
-        fig = plt.figure(frameon=False)
-        ax = fig.add_subplot('111')
-        ax.plot(fraction_of_examples, cumulative_values)
-        ax.set_ylabel('cumulative normalized values')
-        ax.set_xlabel('fraction of examples')
-        fig.canvas.draw()
-        width, height = fig.get_size_inches() * fig.get_dpi()
-        image = np.fromstring(fig.canvas.tostring_rgb(), dtype='uint8').reshape(
-            1, int(height), int(width), 3)
-        return image
-
-    cdf_plot = tf.py_func(cdf_plot, [values], tf.uint8)
-    tf.summary.image(name, cdf_plot)
-
-
-def add_hist_image_summary(values, bins, name):
-    """Adds a tf.summary.image for a histogram plot of the values.
-
-    Plots the histogram of values and creates a tf image summary.
-
-    Args:
-      values: a 1-D float32 tensor containing the values.
-      bins: bin edges which will be directly passed to np.histogram.
-      name: name for the image summary.
-    """
-
-    def hist_plot(values, bins):
-        """Numpy function to plot hist."""
-        fig = plt.figure(frameon=False)
-        ax = fig.add_subplot('111')
-        y, x = np.histogram(values, bins=bins)
-        ax.plot(x[:-1], y)
-        ax.set_ylabel('count')
-        ax.set_xlabel('value')
-        fig.canvas.draw()
-        width, height = fig.get_size_inches() * fig.get_dpi()
-        image = np.fromstring(
-            fig.canvas.tostring_rgb(), dtype='uint8').reshape(
-            1, int(height), int(width), 3)
-        return image
-
-    hist_plot = tf.py_func(hist_plot, [values, bins], tf.uint8)
-    tf.summary.image(name, hist_plot)
