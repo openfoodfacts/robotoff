@@ -59,7 +59,7 @@ Submit an annotation, given the `insight_id`. The request type must be `applicat
 
 # Group Questions
 
-See [here](https://github.com/openfoodfacts/robotoff/blob/master/robotoff/doc/questions.md) for more information about 
+See [here](https://github.com/openfoodfacts/robotoff/blob/master/doc/questions.md) for more information about 
 questions.
 
 Current question types:
