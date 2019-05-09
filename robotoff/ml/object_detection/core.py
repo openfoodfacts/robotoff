@@ -120,10 +120,9 @@ class RemoteModel:
                           output_image: bool = False) -> \
             ObjectDetectionRawResult:
         image_array = convert_image_to_array(image)
-        image_array = np.expand_dims(image_array, 0)
         data = {
             "signature_name": "serving_default",
-            "instances": image_array.tolist()
+            "instances": np.expand_dims(image_array, 0).tolist()
         }
 
         r = http_session.post('{}/{}:predict'.format(TF_SERVING_BASE_URL,
