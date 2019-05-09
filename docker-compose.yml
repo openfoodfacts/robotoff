@@ -6,6 +6,7 @@ services:
     network_mode: "host"
     volumes:
     - api-dataset:/opt/robotoff/datasets
+    - ./tf_models:/opt/robotoff/tf_models:Z
     environment:
       DB_HOST: "localhost"
       ELASTICSEARCH_HOSTS: "elasticsearch"
@@ -15,6 +16,7 @@ services:
     image: openfoodfacts/robotoff
     volumes:
       - api-dataset:/opt/robotoff/datasets
+      - ./tf_models:/opt/robotoff/tf_models:Z
     network_mode: "host"
     environment:
       DB_HOST: "localhost"
@@ -25,6 +27,7 @@ services:
     image: openfoodfacts/robotoff
     volumes:
       - api-dataset:/opt/robotoff/datasets
+      - ./tf_models:/opt/robotoff/tf_models:Z
     environment:
       DB_HOST: "postgres"
       ELASTICSEARCH_HOSTS: "elasticsearch"
@@ -40,6 +43,15 @@ services:
     ports:
       - "127.0.0.1:9200:9200"
       - "127.0.0.1:9300:9300"
+
+  tf_serving:
+    image: tensorflow/serving:1.13.0
+    ports:
+      - "8501:8501"
+      - "8500:8500"
+    volumes:
+      - ./tf_models:/models:Z
+    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
 
 volumes:
   api-dataset:

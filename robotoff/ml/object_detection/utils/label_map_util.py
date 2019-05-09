@@ -18,7 +18,6 @@
 import logging
 from typing import Dict, List
 
-import tensorflow as tf
 from google.protobuf import text_format
 from . import string_int_label_map_pb2
 
@@ -133,7 +132,7 @@ def load_labelmap(path: str) -> string_int_label_map_pb2.StringIntLabelMap:
     Returns:
       a StringIntLabelMapProto
     """
-    with tf.gfile.GFile(path, 'r') as fid:
+    with open(path, 'r') as fid:
         label_map_string = fid.read()
         label_map = string_int_label_map_pb2.StringIntLabelMap()
         try:

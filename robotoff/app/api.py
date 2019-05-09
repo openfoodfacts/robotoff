@@ -34,8 +34,6 @@ from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 logger = get_logger()
 es_client = get_es_client()
 
-ObjectDetectionModelRegistry.load_all()
-
 CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
@@ -185,19 +183,16 @@ class ImageImporterResource:
 class ImagePredictorResource:
     def on_get(self, req, resp):
         image_url = req.get_param('image_url', required=True)
-        models: List[str] = req.get_param_as_list('models')
+        models: List[str] = req.get_param_as_list('models', required=True)
 
         available_models = ObjectDetectionModelRegistry.get_available_models()
 
-        if models is None:
-            models = ['nutrition-table']
-        else:
-            for model_name in models:
-                if model_name not in available_models:
-                    raise falcon.HTTPBadRequest(
-                        "invalid_model",
-                        "unknown model {}, available models: {}"
-                        "".format(model_name, ', '.join(available_models)))
+        for model_name in models:
+            if model_name not in available_models:
+                raise falcon.HTTPBadRequest(
+                    "invalid_model",
+                    "unknown model {}, available models: {}"
+                    "".format(model_name, ', '.join(available_models)))
 
         output_image = req.get_param_as_bool('output_image')
 

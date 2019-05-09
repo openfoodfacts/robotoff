@@ -9,6 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 from PIL import Image
+import requests
 
 from robotoff import settings
 
@@ -28,6 +29,12 @@ logger = get_logger(__name__)
 
 FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'
 LABEL_MAP_NAME = 'labels.pbtxt'
+
+TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
+    settings.TF_SERVING_HOST,
+    settings.TF_SERVING_HTTP_PORT)
+
+http_session = requests.session()
 
 
 @dataclasses.dataclass
@@ -188,17 +195,69 @@ class ObjectDetectionModel:
         result = self._run_inference_for_single_image(image_array)
 
         if output_image:
-            vis_util.visualize_boxes_and_labels_on_image_array(
-                image_array,
-                result.detection_boxes,
-                result.detection_classes,
-                result.detection_scores,
-                self.category_index,
-                instance_masks=result.detection_masks,
-                use_normalized_coordinates=True,
-                line_thickness=5)
-            image_with_boxes = Image.fromarray(image_array)
-            result.boxed_image = image_with_boxes
+            add_boxes_and_labels(image_array, result)
+
+        return result
+
+
+def add_boxes_and_labels(image_array: np.array,
+                         raw_result: ObjectDetectionRawResult):
+    vis_util.visualize_boxes_and_labels_on_image_array(
+        image_array,
+        raw_result.detection_boxes,
+        raw_result.detection_classes,
+        raw_result.detection_scores,
+        raw_result.category_index,
+        instance_masks=raw_result.detection_masks,
+        use_normalized_coordinates=True,
+        line_thickness=5)
+    image_with_boxes = Image.fromarray(image_array)
+    raw_result.boxed_image = image_with_boxes
+
+
+class RemoteModel:
+    def __init__(self, name: str, label_path: pathlib.Path):
+        self.name: str = name
+        label_map = label_map_util.load_labelmap(
+            str(label_path))
+        self.categories = label_map_util.convert_label_map_to_categories(
+            label_map, max_num_classes=1000)
+        self.category_index: CategoryIndex = (
+            label_map_util.create_category_index(self.categories))
+
+    def detect_from_image(self, image: np.array,
+                          output_image: bool = False) -> \
+            ObjectDetectionRawResult:
+        image_array = convert_image_to_array(image)
+        image_array = np.expand_dims(image_array, 0)
+        data = {
+            "signature_name": "serving_default",
+            "instances": image_array.tolist()
+        }
+
+        r = http_session.post('{}/{}:predict'.format(TF_SERVING_BASE_URL,
+                                                     self.name),
+                              json=data)
+        r.raise_for_status()
+        response = r.json()
+        prediction = response['predictions'][0]
+        num_detections = int(prediction['num_detections'])
+        detection_classes = np.array(prediction['detection_classes'],
+                                     dtype=np.uint8)
+        detection_scores = np.array(prediction['detection_scores'])
+        detection_boxes = np.array(prediction['detection_boxes'])
+
+        result = ObjectDetectionRawResult(
+            image_size=(image_array.shape[0], image_array.shape[1]),
+            num_detections=num_detections,
+            detection_classes=detection_classes,
+            detection_boxes=detection_boxes,
+            detection_scores=detection_scores,
+            detection_masks=None,
+            category_index=self.category_index)
+
+        if output_image:
+            add_boxes_and_labels(image_array, result)
 
         return result
 
@@ -219,42 +278,30 @@ def run_model(image_dir: pathlib.Path,
 
 
 class ObjectDetectionModelRegistry:
-    models_config = {
-        'nutrition-table': settings.MODELS_DIR / 'nutrition-table',
-        'nutriscore': settings.MODELS_DIR / 'nutriscore',
-    }
-
-    models: Dict[str, ObjectDetectionModel] = {}
+    models: Dict[str, RemoteModel] = {}
 
     @classmethod
     def get_available_models(cls) -> List[str]:
-        return list(cls.models_config.keys())
+        return list(cls.models.keys())
 
     @classmethod
-    def load(cls, name: str) -> ObjectDetectionModel:
-        if name not in cls.models_config:
-            raise ValueError("unknown model: {}".format(name))
+    def load_all(cls):
+        for filepath in settings.TF_SERVING_MODELS_PATH.glob('*'):
+            if filepath.is_dir():
+                model_name = filepath.name
+                logger.info("TF model '{}' found".format(model_name))
+                cls.models[filepath.name] = cls.load(filepath.name, filepath)
 
-        logger.info("Loading model {}".format(name))
-        model_dir = cls.models_config[name]
-        graph_path = model_dir / FROZEN_GRAPH_NAME
+    @classmethod
+    def load(cls, name: str, model_dir: pathlib.Path) -> RemoteModel:
         label_path = model_dir / LABEL_MAP_NAME
-        model = ObjectDetectionModel.load(graph_path=graph_path,
-                                          label_path=label_path)
+        model = RemoteModel(name, label_path)
         cls.models[name] = model
         return model
 
     @classmethod
-    def load_all(cls):
-        for name in cls.models_config:
-            cls.load(name)
+    def get(cls, name: str) -> RemoteModel:
+        return cls.models[name]
 
-    @classmethod
-    def get(cls, name: str):
-        if name not in cls.models:
-            model = cls.load(name)
-        else:
-            model = cls.models[name]
 
-        return model
-
+ObjectDetectionModelRegistry.load_all()

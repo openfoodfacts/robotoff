@@ -1,1 +1,1 @@
-from .core import ObjectDetectionModel, ObjectDetectionModelRegistry
+from .core import ObjectDetectionModelRegistry
