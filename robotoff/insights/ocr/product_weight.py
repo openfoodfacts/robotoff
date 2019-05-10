@@ -72,7 +72,7 @@ def is_valid_weight(weight_value) -> bool:
     return True
 
 
-def is_high_weight(normalized_value: float, unit: str):
+def is_high_weight(normalized_value: float, unit: str) -> bool:
     if unit == 'g':
         # weights above 10 kg
         return normalized_value >= 10000
@@ -82,6 +82,24 @@ def is_high_weight(normalized_value: float, unit: str):
 
     raise ValueError("invalid unit: {}, 'g', or 'ml' "
                      "expected".format(unit))
+
+
+def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
+    """Return True is the weight is suspicious, i.e is likely wrongly
+    detected."""
+    if is_high_weight(normalized_value, unit):
+        return True
+
+    if normalized_value > 1000:
+        # weight value is above 1000 and
+        # last digit is not 0
+        # See https://github.com/openfoodfacts/robotoff/issues/43
+        last_digit = str(int(normalized_value))[-1]
+
+        if last_digit != '0':
+            return True
+
+    return False
 
 
 def process_product_weight(match, prompt: bool) -> Optional[Dict]:
@@ -116,7 +134,7 @@ def process_product_weight(match, prompt: bool) -> Optional[Dict]:
         'normalized_unit': normalized_unit,
     }
 
-    if is_high_weight(normalized_value, normalized_unit):
+    if is_suspicious_weight(normalized_value, normalized_unit):
         # Don't process the insight automatically if the value
         # is suspiciously high
         result['automatic_processing'] = False
@@ -154,7 +172,7 @@ def process_multi_packaging(match) -> Optional[Dict]:
         'normalized_unit': normalized_unit,
     }
 
-    if is_high_weight(normalized_value, normalized_unit):
+    if is_suspicious_weight(normalized_value, normalized_unit):
         # Don't process the insight automatically if the value
         # is suspiciously high
         result['automatic_processing'] = False

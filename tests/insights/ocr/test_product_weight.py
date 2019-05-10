@@ -6,7 +6,8 @@ from robotoff.insights.ocr.dataclass import OCRRegex
 from robotoff.insights.ocr.product_weight import (PRODUCT_WEIGHT_REGEX,
                                                   normalize_weight,
                                                   is_valid_weight,
-                                                  is_high_weight)
+                                                  is_high_weight,
+                                                  is_suspicious_weight)
 
 
 @pytest.mark.parametrize('input_str,is_match', [
@@ -67,3 +68,19 @@ def test_is_valid_weight(value: str, is_valid: bool):
 ])
 def test_is_valid_weight(value: float, unit: str, expected: bool):
     assert is_high_weight(value, unit) is expected
+
+
+@pytest.mark.parametrize('value,unit,expected', [
+    (100, 'g', False),
+    (125, 'g', False),
+    (250, 'g', False),
+    (100, 'ml', False),
+    (563, 'ml', False),
+    (2530, 'g', False),
+    (6250, 'ml', False),
+    (2532, 'g', True),
+    (2537, 'ml', True),
+    (6259, 'ml', True),
+])
+def test_is_suspicious_weight(value: float, unit: str, expected: bool):
+    assert is_suspicious_weight(value, unit) is expected
