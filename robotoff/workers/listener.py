@@ -17,7 +17,8 @@ logger = get_logger()
 
 
 def run():
-    pool: Pool = Pool(settings.WORKER_COUNT)
+    pool: Pool = Pool(settings.WORKER_COUNT,
+                      maxtasksperchild=30)
 
     logger.info("Starting listener server on {}:{}"
                 "".format(*settings.IPC_ADDRESS))
