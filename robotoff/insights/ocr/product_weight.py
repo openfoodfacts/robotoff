@@ -1,11 +1,90 @@
 import functools
 import re
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
+
+import pint
 
 from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.utils import get_logger
+
+logger = get_logger(__name__)
 
 
-def process_product_weight(match, prompt: bool) -> Dict:
+ureg = pint.UnitRegistry()
+
+
+def normalize_weight(value: str, unit: str) -> Tuple[float, str]:
+    """Normalize the product weight unit to g for mass and mL for volumes.
+    Return a (value, unit) tuple, where value is the normalized value as a
+    float and unit either 'g' or 'ml'."""
+    if ',' in value:
+        # pint does not recognize ',' separator
+        value = value.replace(',', '.')
+
+    if unit == 'fl oz':
+        # For nutrition labeling, a fluid ounce is equal to 30 ml
+        value = str(float(value) * 30)
+        unit = 'ml'
+
+    quantity = ureg.parse_expression("{} {}".format(value, unit))
+
+    if ureg.gram in quantity.compatible_units():
+        normalized_quantity = quantity.to(ureg.gram)
+        normalized_unit = 'g'
+    elif ureg.liter in quantity.compatible_units():
+        normalized_quantity = quantity.to(ureg.milliliter)
+        normalized_unit = 'ml'
+    else:
+        raise ValueError('unknown unit: {}'.format(quantity.u))
+
+    return normalized_quantity.magnitude, normalized_unit
+
+
+def is_valid_weight(weight_value) -> bool:
+    """Weight values are considered invalid if one of the following rules
+    is met:
+    - value is not convertible to a float
+    - value is negative
+    - value is not an integer
+    - value starts with a 0 and does not have a '.' or ',' in it
+    """
+    weight_value = weight_value.replace(',', '.')
+
+    if weight_value.startswith('0') and '.' not in weight_value:
+        return False
+
+    try:
+        weight_value_float = float(weight_value)
+    except ValueError:
+        logger.warn("Weight value is not a float: {}"
+                    "".format(weight_value))
+        return False
+
+    if weight_value_float <= 0:
+        logger.debug("Weight value is <= 0")
+        return False
+
+    if float(int(weight_value_float)) != weight_value_float:
+        logger.info("Weight value is not an integer ({}), "
+                    "returning non valid".format(weight_value))
+        return False
+
+    return True
+
+
+def is_high_weight(normalized_value: float, unit: str):
+    if unit == 'g':
+        # weights above 10 kg
+        return normalized_value >= 10000
+    elif unit == 'ml':
+        # volumes above 10 l
+        return normalized_value >= 10000
+
+    raise ValueError("invalid unit: {}, 'g', or 'ml' "
+                     "expected".format(unit))
+
+
+def process_product_weight(match, prompt: bool) -> Optional[Dict]:
     raw = match.group()
 
     if prompt:
@@ -22,13 +101,25 @@ def process_product_weight(match, prompt: bool) -> Dict:
         # space is often not detected
         unit = unit[:-1]
 
+    if not is_valid_weight(value):
+        return None
+
     text = "{} {}".format(value, unit)
+    normalized_value, normalized_unit = normalize_weight(value, unit)
+
     result = {
         'text': text,
         'raw': raw,
         'value': value,
         'unit': unit,
+        'normalized_value': normalized_value,
+        'normalized_unit': normalized_unit,
     }
+
+    if is_high_weight(normalized_value, normalized_unit):
+        # Don't process the insight automatically if the value
+        # is suspiciously high
+        result['automatic_processing'] = False
 
     if prompt_str is not None:
         result['prompt'] = prompt_str
@@ -36,7 +127,7 @@ def process_product_weight(match, prompt: bool) -> Dict:
     return result
 
 
-def process_multi_packaging(match) -> Dict:
+def process_multi_packaging(match) -> Optional[Dict]:
     raw = match.group()
 
     count = match.group(1)
@@ -48,14 +139,25 @@ def process_multi_packaging(match) -> Dict:
         # space is often not detected
         unit = unit[:-1]
 
+    if not is_valid_weight(value):
+        return None
+
+    normalized_value, normalized_unit = normalize_weight(value, unit)
     text = "{} x {} {}".format(count, value, unit)
     result = {
         'text': text,
         'raw': raw,
         'value': value,
         'unit': unit,
-        'count': count
+        'count': count,
+        'normalized_value': normalized_value,
+        'normalized_unit': normalized_unit,
     }
+
+    if is_high_weight(normalized_value, normalized_unit):
+        # Don't process the insight automatically if the value
+        # is suspiciously high
+        result['automatic_processing'] = False
 
     return result
 
@@ -96,6 +198,10 @@ def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
                 continue
 
             result = ocr_regex.processing_func(match)
+
+            if result is None:
+                continue
+
             result['matcher_type'] = type_
             result['priority'] = ocr_regex.priority
             result['notify'] = ocr_regex.notify

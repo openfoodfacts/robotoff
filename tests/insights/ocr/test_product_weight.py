@@ -1,7 +1,12 @@
+from typing import Tuple
+
 import pytest
 
 from robotoff.insights.ocr.dataclass import OCRRegex
-from robotoff.insights.ocr.product_weight import PRODUCT_WEIGHT_REGEX
+from robotoff.insights.ocr.product_weight import (PRODUCT_WEIGHT_REGEX,
+                                                  normalize_weight,
+                                                  is_valid_weight,
+                                                  is_high_weight)
 
 
 @pytest.mark.parametrize('input_str,is_match', [
@@ -18,3 +23,47 @@ def test_product_weight_with_mention_regex(input_str: str, is_match: bool):
     with_mention_regex = with_mention_ocr_regex.regex
 
     assert (with_mention_regex.match(input_str) is not None) == is_match
+
+
+@pytest.mark.parametrize('value,unit,expected', [
+    ("2", "l", (2000., 'ml')),
+    ("1549.45", "dl", (154945., 'ml')),
+    ("10,5", "cl", (105, 'ml')),
+    ("20", "ml", (20., 'ml')),
+    ("2,5", "kg", (2500., 'g')),
+    ("2.5", "g", (2.5, 'g')),
+    ("25", "g", (25, 'g')),
+    ("15", "fl oz", (450, 'ml')),
+    ("1", "oz", (28.349523125, 'g')),
+])
+def test_product_weight_with_mention_regex(value: str, unit: str,
+                                           expected: Tuple[float, str]):
+    result = normalize_weight(value, unit)
+    assert result == expected
+
+
+@pytest.mark.parametrize('value,is_valid', [
+    ("25", True),
+    ("150", True),
+    ("150.0", True),
+    ("0225", False),
+    ("00225", False),
+    ("gsg", False),
+    ("-15", False),
+    ("12,5", False),
+    ("12.5", False),
+])
+def test_is_valid_weight(value: str, is_valid: bool):
+    assert is_valid_weight(value) is is_valid
+
+
+@pytest.mark.parametrize('value,unit,expected', [
+    (10000, 'g', True),
+    (10000, 'ml', True),
+    (9999, 'ml', False),
+    (9999, 'g', False),
+    (100, 'g', False),
+    (100, 'ml', False),
+])
+def test_is_valid_weight(value: float, unit: str, expected: bool):
+    assert is_high_weight(value, unit) is expected

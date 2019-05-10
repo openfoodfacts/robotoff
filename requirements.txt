@@ -13,3 +13,4 @@ Pillow==6.0.0
 numpy==1.15.4
 matplotlib==3.0.3
 protobuf==3.7.1
+Pint==0.9
