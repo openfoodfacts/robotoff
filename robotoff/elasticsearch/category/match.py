@@ -2,6 +2,7 @@ import json
 import argparse
 from typing import Tuple, Optional
 
+from robotoff.elasticsearch.category.preprocessing import preprocess_name
 from robotoff.utils.es import get_es_client
 from robotoff import settings
 
@@ -17,7 +18,8 @@ def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]
     if lang not in SUPPORTED_LANG:
         return None
 
-    results = match(client, name, lang)
+    preprocessed_name = preprocess_name(name, lang)
+    results = match(client, preprocessed_name, lang)
 
     hits = results['hits']['hits']
 

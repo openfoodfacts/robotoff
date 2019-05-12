@@ -1,4 +1,8 @@
+import re
 import unicodedata
+
+
+CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 
 
 def strip_accents_ascii(s):
@@ -19,3 +23,8 @@ def strip_accents_ascii(s):
     """
     nkfd_form = unicodedata.normalize('NFKD', s)
     return nkfd_form.encode('ASCII', 'ignore').decode('ASCII')
+
+
+def strip_consecutive_spaces(text: str) -> str:
+    """Convert a sequence of 2+ spaces into a single space."""
+    return CONSECUTIVE_SPACES_REGEX.sub(' ', text)
