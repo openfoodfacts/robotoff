@@ -10,6 +10,11 @@ LABELS_REGEX = {
     'en': re.compile(r'organic|pgi'),
 }
 
+EXTRAWORDS_REGEX = {
+    'fr': re.compile(r'gourmand'),
+    'en': re.compile(r'delicious'),
+}
+
 
 def preprocess_name(name: str, lang: str) -> str:
     """Preprocess category name before matching:
