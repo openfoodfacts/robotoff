@@ -1,6 +1,7 @@
 Aldi
 Albert Heijn
 Alesto
+Alteza
 Alipende
 Alnatura
 Alpenmark
@@ -32,7 +33,6 @@ Danone
 De Cecco
 Delacre
 Delhaize
-Del Monte
 Delpeyrat
 Delpierre
 Denner
@@ -80,6 +80,7 @@ Léa Nature
 Leader Price
 Le Gaulois
 Moulin de Valdonne
+Mercadona
 Lidl
 Lindt
 Lipton
@@ -126,6 +127,7 @@ Saupiquet
 Schär
 Solevita
 Sondey
+superSol
 Teisseire
 Terrasuisse
 Tesco
