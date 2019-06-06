@@ -12,7 +12,7 @@ from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
 from robotoff.insights.importer import CategoryImporter
 from robotoff.insights.validator import InsightValidator, \
-    InsightValidatorFactory
+    InsightValidatorFactory, delete_invalid_insight
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
     CACHED_PRODUCT_STORE, Product, ProductStore, ProductDataset
@@ -124,18 +124,6 @@ def update_insight_attributes(product: Product, insight: ProductInsight) \
         insight.save()
 
     return to_update
-
-
-def delete_invalid_insight(insight: ProductInsight,
-                           validator: Optional[InsightValidator]) -> bool:
-    if validator is None:
-        return False
-
-    if not validator.is_valid(insight):
-        insight.delete_instance()
-        return True
-
-    return False
 
 
 def mark_insights():

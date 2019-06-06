@@ -3,7 +3,7 @@ from typing import Optional
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
-from robotoff.products import ProductStore
+from robotoff.products import ProductStore, Product
 from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES
 from robotoff.utils.types import JSONType
 
@@ -18,7 +18,8 @@ class InsightValidator(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def is_valid(self, insight: ProductInsight) -> bool:
+    def is_valid(self, insight: ProductInsight,
+                 product: Optional[Product] = None) -> bool:
         pass
 
 
@@ -27,8 +28,11 @@ class LabelValidator(InsightValidator):
     def get_type() -> str:
         return InsightType.label.name
 
-    def is_valid(self, insight: ProductInsight) -> bool:
-        product = self.product_store[insight.barcode]
+    def is_valid(self, insight: ProductInsight,
+                 product: Optional[Product] = None) -> bool:
+        if product is None:
+            product = self.product_store[insight.barcode]
+
         product_labels_tags = getattr(product, 'labels_tags', [])
         label_tag = insight.value_tag
 
@@ -53,8 +57,11 @@ class CategoryValidator(InsightValidator):
     def get_type() -> str:
         return InsightType.category.name
 
-    def is_valid(self, insight: ProductInsight) -> bool:
-        product = self.product_store[insight.barcode]
+    def is_valid(self, insight: ProductInsight,
+                 product: Optional[Product] = None) -> bool:
+        if product is None:
+            product = self.product_store[insight.barcode]
+
         product_categories_tags = getattr(product, 'categories_tags', [])
         category_tag = insight.value_tag
 
@@ -88,3 +95,16 @@ class InsightValidatorFactory:
             return cls.validators[insight_type](product_store)
         else:
             return None
+
+
+def delete_invalid_insight(insight: ProductInsight,
+                           validator: Optional[InsightValidator],
+                           product: Optional[Product] = None) -> bool:
+    if validator is None:
+        return False
+
+    if not validator.is_valid(insight, product=product):
+        insight.delete_instance()
+        return True
+
+    return False

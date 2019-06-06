@@ -7,10 +7,11 @@ from robotoff.elasticsearch.category.predict import predict_from_product
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.extraction import get_insights_from_image
+from robotoff.insights.validator import delete_invalid_insight, InsightValidator, InsightValidatorFactory
 from robotoff.models import db, ProductInsight
 from robotoff.off import get_product
 from robotoff.products import (has_dataset_changed, fetch_dataset,
-                               CACHED_PRODUCT_STORE)
+                               CACHED_PRODUCT_STORE, Product)
 from robotoff.slack import notify_image_flag
 from robotoff.utils import get_logger, configure_root_logger
 from robotoff.utils.types import JSONType
@@ -87,15 +88,34 @@ def delete_product_insights(barcode: str):
 
 
 def updated_product_update_insights(barcode: str):
-    product = get_product(barcode)
+    product_dict = get_product(barcode)
 
-    if product is None:
+    if product_dict is None:
         logger.warn("Updated product does not exist: {}".format(barcode))
+        return
 
-    category_added = updated_product_add_category_insight(barcode, product)
+    category_added = updated_product_add_category_insight(barcode, product_dict)
 
     if category_added:
         logger.info("Product {} updated".format(barcode))
+
+    product = Product(product_dict)
+    validators: Dict[str, InsightValidator] = {}
+
+    for insight in (ProductInsight.select()
+                                  .where(ProductInsight.annotation.is_null(),
+                                         ProductInsight.barcode == barcode)
+                                  .iterator()):
+        if insight.type not in validators:
+            validators[insight.type] = InsightValidatorFactory.create(
+                insight.type, None)
+
+        validator = validators[insight.type]
+        insight_deleted = delete_invalid_insight(insight,
+                                                 validator=validator,
+                                                 product=product)
+        if insight_deleted:
+            logger.info("Insight {} deleted (type: {})".format(insight.id, insight.type))
 
 
 def updated_product_add_category_insight(barcode: str,
