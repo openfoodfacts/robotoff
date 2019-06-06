@@ -81,10 +81,31 @@ class CategoryValidator(InsightValidator):
         return True
 
 
+class ProductWeightValidator(InsightValidator):
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.product_weight.name
+
+    def is_valid(self, insight: ProductInsight,
+                 product: Optional[Product] = None) -> bool:
+        if product is None:
+            product = self.product_store[insight.barcode]
+
+            if product is None:
+                # Product is not in product store yet, keep the insight
+                return True
+
+        if product.quantity is not None:
+            return False
+
+        return True
+
+
 class InsightValidatorFactory:
     validators: JSONType = {
         InsightType.label.name: LabelValidator,
         InsightType.category.name: CategoryValidator,
+        InsightType.product_weight.name: ProductWeightValidator,
     }
 
     @classmethod
