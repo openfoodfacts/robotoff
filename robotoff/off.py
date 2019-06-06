@@ -91,23 +91,37 @@ def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
     return data['product']
 
 
-def add_category(barcode: str, category: str, dry=False):
+def add_category(barcode: str, category: str, dry=False,
+                 insight_id: Optional[str] = None):
+    comment = "Adding category '{}'".format(category)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
+
     params = {
         'code': barcode,
         'add_categories': category,
-        'comment': "Adding category '{}' "
-                   "(automated edit)".format(category),
+        'comment': comment,
         **AUTH_DICT
     }
     update_product(params, dry=dry)
 
 
-def update_quantity(barcode: str, quantity: str, dry=False):
+def update_quantity(barcode: str, quantity: str, dry=False,
+                    insight_id: Optional[str] = None):
+    comment = "Updating quantity to '{}'".format(quantity)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
+
     params = {
         'code': barcode,
         'quantity': quantity,
-        'comment': "Updating quantity to '{}' "
-                   "(automated edit)".format(quantity),
+        'comment': comment,
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -126,54 +140,93 @@ def save_ingredients(barcode: str, ingredient_text: str,
     update_product(params, dry=dry)
 
 
-def update_emb_codes(barcode: str, emb_codes: List[str], dry=False):
+def update_emb_codes(barcode: str, emb_codes: List[str], dry=False,
+                     insight_id: Optional[str] = None):
     emb_codes_str = ','.join(emb_codes)
+
+    comment = "Adding packager codes '{}'".format(emb_codes_str)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
 
     params = {
         'code': barcode,
         'emb_codes': emb_codes_str,
-        'comment': "Adding packager code (automated edit)",
+        'comment': comment,
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
 
-def update_expiration_date(barcode: str, expiration_date: str, dry=False):
+def update_expiration_date(barcode: str, expiration_date: str, dry=False,
+                           insight_id: Optional[str] = None):
+    comment = "Adding expiration date '{}'".format(expiration_date)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
+
     params = {
         'code': barcode,
         'expiration_date': expiration_date,
-        'comment': "Adding expiration date '{}' "
-                   "(automated edit)".format(expiration_date),
+        'comment': comment,
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
 
-def add_label_tag(barcode: str, label_tag: str, dry=False):
+def add_label_tag(barcode: str, label_tag: str, dry=False,
+                  insight_id: Optional[str] = None):
+    comment = "Adding label tag '{}'".format(label_tag)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
+
     params = {
         'code': barcode,
         'add_labels': label_tag,
-        'comment': "Adding label tag '{}' (automated edit)".format(label_tag),
+        'comment': comment,
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
 
-def add_brand(barcode: str, brand: str, dry=False):
+def add_brand(barcode: str, brand: str, dry=False,
+              insight_id: Optional[str] = None):
+    comment = "Adding brand '{}'".format(brand)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
+
     params = {
         'code': barcode,
         'add_brands': brand,
-        'comment': "Adding brand '{}' (automated edit)".format(brand),
+        'comment': comment,
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
 
-def add_store(barcode: str, store: str, dry=False):
+def add_store(barcode: str, store: str, dry=False,
+              insight_id: Optional[str] = None):
+    comment = "Adding store '{}'".format(store)
+
+    if insight_id:
+        comment += " (automated edit, ID: {})".format(insight_id)
+    else:
+        comment += " (automated edit)"
+
     params = {
         'code': barcode,
         'add_stores': store,
-        'comment': "Adding store '{}' (automated edit)".format(store),
+        'comment': comment,
         **AUTH_DICT,
     }
     update_product(params, dry=dry)

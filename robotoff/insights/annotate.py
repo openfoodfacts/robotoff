@@ -84,7 +84,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
             return ALREADY_ANNOTATED_RESULT
 
         emb_codes.append(emb_code)
-        update_emb_codes(insight.barcode, emb_codes)
+        update_emb_codes(insight.barcode, emb_codes, insight_id=insight.id)
         return UPDATED_ANNOTATION_RESULT
 
     @staticmethod
@@ -113,7 +113,7 @@ class LabelAnnotator(InsightAnnotator):
         if insight.value_tag in labels_tags:
             return ALREADY_ANNOTATED_RESULT
 
-        add_label_tag(insight.barcode, insight.value_tag)
+        add_label_tag(insight.barcode, insight.value_tag, insight_id=insight.id)
 
         return UPDATED_ANNOTATION_RESULT
 
@@ -220,7 +220,7 @@ class CategoryAnnotator(InsightAnnotator):
             return ALREADY_ANNOTATED_RESULT
 
         category_tag = insight.value_tag
-        add_category(insight.barcode, category_tag)
+        add_category(insight.barcode, category_tag, insight_id=insight.id)
 
         return UPDATED_ANNOTATION_RESULT
 
@@ -238,7 +238,7 @@ class ProductWeightAnnotator(InsightAnnotator):
             return ALREADY_ANNOTATED_RESULT
 
         weight = insight.data['text']
-        update_quantity(insight.barcode, weight)
+        update_quantity(insight.barcode, weight, insight_id=insight.id)
 
         return UPDATED_ANNOTATION_RESULT
 
@@ -257,7 +257,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
         if current_expiration_date:
             return ALREADY_ANNOTATED_RESULT
 
-        update_expiration_date(insight.barcode, expiration_date)
+        update_expiration_date(insight.barcode, expiration_date, insight_id=insight.id)
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -276,7 +276,7 @@ class BrandAnnotator(InsightAnnotator):
             # For now, don't annotate if a brand has already been provided
             return ALREADY_ANNOTATED_RESULT
 
-        add_brand(insight.barcode, brand)
+        add_brand(insight.barcode, brand, insight_id=insight.id)
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -295,7 +295,7 @@ class StoreAnnotator(InsightAnnotator):
         if store_tag in stores_tags:
             return ALREADY_ANNOTATED_RESULT
 
-        add_store(insight.barcode, store)
+        add_store(insight.barcode, store, insight_id=insight.id)
         return UPDATED_ANNOTATION_RESULT
 
 
