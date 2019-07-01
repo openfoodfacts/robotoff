@@ -3,26 +3,26 @@ carrefour bio||Carrefour bio
 nutella||Nutella
 fleury michon||Fleury Michon
 bledina||Blédina
-carrefour||carrefour
-carrefour||carrefour bio
 carrefour||Carrefour
-carrefour||carrefour contact
-carrefour||carrefour express
-carrefour||Carrefour l'Abbaye Velours
-carrefour||Carrefour Uno Mobile
-carrefour||Carrefour Cerveza Trigo
-carrefour||Carrefour
-carrefour||groupe carrefour
-carrefour||Viajes Carrefour
-carrefour||carrefour détouré
-carrefour||Carrefour Discount Cerveza Sin Alcohol
-carrefour||carrefour city
-carrefour||Viajes Carrefour
-carrefour||Carrefour
-carrefour||Carrefour Discount
-carrefour||Viajes Carrefour
-carrefour||Grupo Carrefour
-carrefour||Engagement Qualité Carrefour
-carrefour||Carrefour Selection
-carrefour||Carrefour Market
-carrefour||Carrefour City
+carrefour bio||Carrefour
+Carrefour||Carrefour
+carrefour contact||Carrefour
+carrefour express||Carrefour
+Carrefour l'Abbaye Velours||Carrefour
+Carrefour Uno Mobile||Carrefour
+Carrefour Cerveza Trigo||Carrefour
+Carrefour||Carrefour
+groupe carrefour||Carrefour
+Viajes Carrefour||Carrefour
+carrefour détouré||Carrefour
+Carrefour Discount Cerveza Sin Alcohol||Carrefour
+carrefour city||Carrefour
+Viajes Carrefour||Carrefour
+Carrefour||Carrefour
+Carrefour Discount||Carrefour
+Viajes Carrefour||Carrefour
+Grupo Carrefour||Carrefour
+Engagement Qualité Carrefour||Carrefour
+Carrefour Selection||Carrefour
+Carrefour Market||Carrefour
+Carrefour City||Carrefour
