@@ -1,6 +1,6 @@
 # Robotoff
 
-Robotoff is a service managing potential Openfoodfacts updates (also known as _insights_).
+Robotoff is a service managing potential Open Food Facts updates (also known as _insights_).
 These insights include a growing set of facts, including:
 - the product category, weight, brand, packager codes and expiration date
 - some of its labels
