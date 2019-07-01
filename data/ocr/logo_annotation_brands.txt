@@ -250,15 +250,15 @@ Pierre Martinet
 nabisco||Nabisco
 Good Gout
 barilla||Barilla
-Atelier Blini
-Pringles
-Régilait
+Atelier Blini||Atelier Blini
+Pringles||Pringles
+Régilait||Régilait
 Old El Paso Restaurante||Old El Paso
 oasis||Oasis
 labeyrie||Labeyrie
-Kinder Bueno
-Juvamine
+Kinder Bueno||Kinder Bueno
+Juvamine||Juvamine
 fruittella||Fruittella
-Chocolates Valor
+Chocolates Valor||Chocolates Valor
 Andros France||Andros
 stonyfield||Stonyfield
