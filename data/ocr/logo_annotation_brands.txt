@@ -1,264 +1,264 @@
-carrefour||Carrefour
-carrefour bio||Carrefour bio
-nutella||Nutella
-fleury michon||Fleury Michon
+alnatura||Alnatura
+Andros France||Andros
+andros||Andros
+Andros||Andros
+arla foods||Arla Foods
+Atelier Blini||Atelier Blini
+Auchan Direct||Auchan
+Auchan Drive||Auchan
+Auchan||Auchan
+babybio||BabyBio
+Babybio||BabyBio
+barilla||Barilla
+belvita||Belvita
+Belvita||Belvita
+Benedicta||Benedicta
+Benenuts||Benenuts
+Beurre Président||Président
+Bioland||Bioland
+bjorg||Bjorg
 bledina||Blédina
 Bledina||Blédina
-leader price||Leader Price
-Leader Price||Leader Price
-Societe SA Leader Price Holding||Leader Price
-la vie claire||La Vie Claire
-La Vie Claire||La Vie Claire
-alnatura||Alnatura
-Marque Repère Leclerc||Marque Repère
-nutella||Nutella
-Nutella||Nutella
-herbalife||Herbalife
-pepperidge farm||Pepperidge Farm
-smartwater||SmartWater
-Auchan||Auchan
-Auchan Drive||Auchan
-Auchan Direct||Auchan
-spar||Spar
-maggi||Maggi
-bjorg||Bjorg
-EDEKA Mobil||EDEKA
-coop||COOP
 bledina||Blédina
+bofrost||Bofrost
+bonduelle||Bonduelle
+Bonne Maman||Bonne Maman
+bonne maman||Bonne Maman
+Bridelice||Bridélice
+Brossard||Brossard
+brossard||Brossard
+budweiser||Budweiser
+cadbury||Cadbury's
+Campbells||Campbells
+candia||Candia
+Candia||Candia
+carambar||Carambar
+carlsberg group||Carlsberg
+carrefour bio||Carrefour bio
+carrefour contact||Carrefour
+carrefour express||Carrefour
+carrefour||Carrefour
+charal||Charal
+Charles Et Alice||Charles Et Alice
+cheetos||Cheetos
+Chocolates Valor||Chocolates Valor
+chupa chups||Chupa Chups
+Clipper Tea||Clipper Tea
+coca cola classic||Coca-Cola
+coca cola light||Coca-Cola
+coca cola||Coca-Cola
+Coca Cola||Coca-Cola
+cochonou||Cochonou
+coffee mate||CoffeeMate
+coleman||Coleman
+coles||Coles
+connetable||Connétable
+Connetable||Connétable
+coop prix||Coop
+coop||COOP
+corine de farme||Corine de Farme
+cosmebio||Cosmébio
+Cracotte||Cracotte
+cristaline||Cristaline
+D Aucy||D'Aucy
+Daddy Sucre||Daddy
+danone||Danone
+Danone||Danone
+Daucy||D'Aucy
+Daunat||Daunat
+del monte||Del Monter
+Delhaize Group||Delhaize
+Delhaize||Delhaize
+Delpeyrat||Delpeyrat
+Dennree||Dennree
+dolce gusto||Dolce Gusto
+don simon||Don Simon
+doritos||Doritos
+dr oetker||Dr.Oetker
+dr pepper||Dr.Pepper
+Ducros||Ducros
+dunkin donuts||Dunkin' Donuts
+e leclerc||Leclerc
+EDEKA Mobil||EDEKA
+Edeka||Edeka
+estee lauder||Estée Lauder
+evian||Evian
+Evian||Evian
+ferrero rocher||Ferrero Rocher
+Findus||Findus
+findus||Findus
+fleury michon||Fleury Michon
+florette||Florette
+Florette||Florette
+francine||Francine
+Francine||Francine
+Franprix||Franprix
+fruittella||Fruittella
+gallia||Gallia
+gatorade||Gatorade
+general mills||General Mills
+Good Gout||Good Goût
+guinness||Guinness
+Gut und Günstig||Gut und Günstig
+heineken light||Heineken
+heineken open your world||Heineken
+heineken||Heineken
+heinz ketchup||Heinz
+Heinz Tomato Ketchup||Heinz
+heinz||Heinz
+Heinz||Heinz
+hema||Hema
+henaff||Hénaff
+HENAFF||Hénaff
+herbalife||Herbalife
+Herta||Herta
+herta||Herta
+Hollywood Chewing Gum||Hollywood
+Iglo||Iglo
+ikea||Ikea
+ISLA DELICE||Isla Délice
+Ja Rewe||Ja!
 jardin bio||Jardin Bio
 Jardin Bio||Jardin Bio
-milbona||Milbona
-marks & spencer||Marks & Spencer
+Jardin Bio||Jardin Bio
+JA||Ja!
+johnnie walker||Johnnie Walker
+justin bridou||Justin Bridou
+Juvamine||Juvamine
+kellogg's||Kellogg's
+Kellogg's||Kellogg's
+kerastase||Kerastase
+Kinder Bueno||Kinder Bueno
+Knorr||Knorr
+kroger||Kroger
+kühne||Kühne
+la boulangère||La Boulangère
+La Boulangère||La Boulangère
+la vie claire||La Vie Claire
+La Vie Claire||La Vie Claire
+labeyrie||Labeyrie
+lactel||Lactel
+Larnaudie||Larnaudie
+Lay's||Lay's
+lays||Lay's
+Lays||Lay's
+Le Gaulois|Le Gaulois
+Le Prix Gagnant||Le Prix Gagnant
+leader price||Leader Price
+Leader Price||Leader Price
+les 2 vaches||Les 2 vaches
+Les 2 Vaches||Les 2 Vaches
+lesieur||Lesieur
+Lesieur||Lesieur
+lidl||Lidl
+Lindt & Sprüngli
+Lindt Excellence||Lindt
+Lindt||Lindt
+lindt||Lindt
+lipton ice tea||Lipton
+lipton||Lipton
+lucozade||Lucozade
+Lustucru||Lustucru
+Lutti||Lutti
+Lutti||Lutti
+maggi||Maggi
 maitre coq||Maître Coq
+marks & spencer||Marks & Spencer
+Marque Repere||Marque Repère
+Marque Repère Leclerc||Marque Repère
+mcvities||McVities
+milbona||Milbona
+Milbona||Milbona
+Milka||Milka
+milka||Milka
+milo||Milo
+minute maid||Minute Maid
+Mondelez||Mondelez
+morrisons||Morrisons
+nabisco||Nabisco
+Naturalia||Naturalia
+nature valley||Nature Valley
+naturland||Naturland
+Naturland||Naturland
+nescafe||Nescafé
+nespresso||Nespresso
+nesquik||Nesquik
+nicolas feuillatte||Nicolas Feuillatte
+nissin||Nissin
+nutella||Nutella
+nutella||Nutella
+Nutella||Nutella
+oasis||Oasis
+Ocean Spray||Ocean Spray
+Old El Paso Restaurante||Old El Paso
+Old El Paso||Old El Paso
+oreo||Oreo
+panzani||Panzani
+pepperidge farm||Pepperidge Farm
+pepsi||Pepsi
+Pere Dodu||Père Dodu
+perrier||Perrier
+Petit Navire||Petit Navire
+petit navire||Petit Navire
+Phare d'Eckmühl||Phare d'Eckmühl
+Pierre Martinet
+pierre martinet||Pierre Martinet
+Pierre Martinet||Pierre Martinet
+pom potes||Pom Potes
+Poulain Chocolat||Poulain
+Primeal||Priméal
+Primeal||Priméal
+Priméal||Priméal
+prince de bretagne||Prince de Bretagne
+pringles||Pringles
+Pringles||Pringles
+purina||Purina
+Quaker Oats Company||Quaker Oats
+red bull||Red Bull
+reeses peanut butter cup||Reese's
+regilait||Régilait
+rewe bio||REWE Bio
+ritter sport||Ritter Sport
+ruinart||Ruinard
+Régilait||Régilait
+Sainte Lucie Culinaire||Sainte Lucie
+sara lee||Sara Lee
+saupiquet||Saupiquet
+Saupiquet||Saupiquet
+saveol||Savéol
+schweppes||Schweppes
+senseo||Senseo
+skittles||Skittles
+smartwater||SmartWater
+smirnoff ice||Smirnoff
+snickers||Snickers
+Societe SA Leader Price Holding||Leader Price
+spar||Spar
+special k||Spécial K
+St Hubert Omega 3||St-Hubert
+St-Hubert||St-Hubert
+starbucks coffee||Starbucks
+starbucks||Starbucks
+Starbucks||Starbucks
+stonyfield||Stonyfield
+tabasco||Tabasco
+teisseire||Teisseire
+tic tac||Tic Tac
+tim hortons||Tim Hortons
+Tipiak||Tipiak
+toupargel||Toupargel
 tropicana orange juice||Tropicana
 tropicana||Tropicana
 Tropicana||Tropicana
-budweiser||Budweiser
-e leclerc||Leclerc
-tim hortons||Tim Hortons
-minute maid||Minute Maid
+U Saveurs||U Saveurs
+unilever||Unilever
+Unilever||Unilever
+vitamin water||Vitamin Water
+Vitamont||Vitamont
 volvic||Volvic
 Volvic||Volvic
-Findus||Findus
-William Saurin||William Saurin
-charal||Charal
-Charles Et Alice||Charles Et Alice
-Dennree||Dennree
-rewe bio||REWE Bio
-kühne||Kühne
-findus||Findus
-kellogg's||Kellogg's
-Kellogg's||Kellogg's
-Le Gaulois|Le Gaulois
-francine||Francine
-Francine||Francine
-heinz||Heinz
-Heinz||Heinz
-dr pepper||Dr.Pepper
-danone||Danone
-Danone||Danone
-Franprix||Franprix
-yoplait||Yoplait
-andros||Andros
-Andros||Andros
-babybio||BabyBio
-Babybio||BabyBio
-Knorr||Knorr
-U Saveurs||U Saveurs
-pierre martinet||Pierre Martinet
-Pierre Martinet||Pierre Martinet
-connetable||Connétable
-Connetable||Connétable
-candia||Candia
-regilait||Régilait
-Bonne Maman||Bonne Maman
-bonne maman||Bonne Maman
-pepsi||Pepsi
-lipton ice tea||Lipton
-lipton||Lipton
-nature valley||Nature Valley
-nicolas feuillatte||Nicolas Feuillatte
-lidl||Lidl
-lays||Lay's
-Lays||Lay's
-Lay's||Lay's
-saveol||Savéol
-saupiquet||Saupiquet
-Saupiquet||Saupiquet
-kerastase||Kerastase
-Petit Navire||Petit Navire
-petit navire||Petit Navire
-lesieur||Lesieur
-Lesieur||Lesieur
-Edeka||Edeka
-doritos||Doritos
-vitamin water||Vitamin Water
-nescafe||Nescafé
-henaff||Hénaff
-HENAFF||Hénaff
-la boulangère||La Boulangère
-don simon||Don Simon
-Benedicta||Benedicta
-Gut und Günstig||Gut und Günstig
-dr oetker||Dr.Oetker
-nesquik||Nesquik
-coca cola||Coca-Cola
-Coca Cola||Coca-Cola
-Lindt||Lindt
-lindt||Lindt
-Lindt Excellence||Lindt
-florette||Florette
-Florette||Florette
-bofrost||Bofrost
-Tipiak||Tipiak
-Herta||Herta
-herta||Herta
-Daucy||D'Aucy
-D Aucy||D'Aucy
-toupargel||Toupargel
-heineken||Heineken
-Primeal||Priméal
-Priméal||Priméal
-panzani||Panzani
-heineken light||Heineken
-St-Hubert||St-Hubert
-St Hubert Omega 3||St-Hubert
-carrefour contact||Carrefour
-Benenuts||Benenuts
-Milbona||Milbona
-belvita||Belvita
-Belvita||Belvita
-cristaline||Cristaline
-cosmebio||Cosmébio
-special k||Spécial K
-naturland||Naturland
-Naturland||Naturland
-unilever||Unilever
-tic tac||Tic Tac
-cochonou||Cochonou
-Mondelez||Mondelez
-Milka||Milka
-milka||Milka
-evian||Evian
-Evian||Evian
-cheetos||Cheetos
-oreo||Oreo
-Marque Repere||Marque Repère
-justin bridou||Justin Bridou
-Ducros||Ducros
-Bridelice||Bridélice
-bonduelle||Bonduelle
-Sainte Lucie Culinaire||Sainte Lucie
-Le Prix Gagnant||Le Prix Gagnant
-ISLA DELICE||Isla Délice
-Delhaize Group||Delhaize
-Delhaize||Delhaize
-coca cola classic||Coca-Cola
-nissin||Nissin
-Ja Rewe||Ja!
-coffee mate||CoffeeMate
-carlsberg group||Carlsberg
-smirnoff ice||Smirnoff
-schweppes||Schweppes
-hema||Hema
-carambar||Carambar
-pringles||Pringles
-Lutti||Lutti
-ikea||Ikea
-Delpeyrat||Delpeyrat
-reeses peanut butter cup||Reese's
-lactel||Lactel
 walgreens||Walgreens
-teisseire||Teisseire
-starbucks||Starbucks
-starbucks coffee||Starbucks
-Starbucks||Starbucks
-nespresso||Nespresso
-Daunat||Daunat
-Brossard||Brossard
-brossard||Brossard
-Vitamont||Vitamont
-les 2 vaches||Les 2 vaches
-Les 2 Vaches||Les 2 Vaches
-guinness||Guinness
-coles||Coles
-Lustucru||Lustucru
-Clipper Tea||Clipper Tea
-arla foods||Arla Foods
-purina||Purina
-morrisons||Morrisons
-Campbells||Campbells
-lucozade||Lucozade
-Iglo||Iglo
-sara lee||Sara Lee
-prince de bretagne||Prince de Bretagne
-gallia||Gallia
-milo||Milo
-JA||Ja!
-gatorade||Gatorade
-chupa chups||Chupa Chups
-Ocean Spray||Ocean Spray
-johnnie walker||Johnnie Walker
-dolce gusto||Dolce Gusto
-coca cola light||Coca-Cola
-senseo||Senseo
-snickers||Snickers
-Lutti||Lutti
-kroger||Kroger
-del monte||Del Monter
-Cracotte||Cracotte
-tabasco||Tabasco
-Quaker Oats Company||Quaker Oats
-Pere Dodu||Père Dodu
-Lindt & Sprüngli
-heinz ketchup||Heinz
-estee lauder||Estée Lauder
-ruinart||Ruinard
-general mills||General Mills
-yves rocher||Yves Rocher
-Unilever||Unilever
-perrier||Perrier
-Old El Paso||Old El Paso
-Heinz Tomato Ketchup||Heinz
-Hollywood Chewing Gum||Hollywood
-corine de farme||Corine de Farme
-Candia||Candia
-Bioland||Bioland
-red bull||Red Bull
-Primeal||Priméal
-Larnaudie||Larnaudie
-cadbury||Cadbury's
 whole foods||Whole Foods
-skittles||Skittles
-pom potes||Pom Potes
-Naturalia||Naturalia
-La Boulangère||La Boulangère
-Phare d'Eckmühl||Phare d'Eckmühl
-mcvities||McVities
-Jardin Bio||Jardin Bio
-ferrero rocher||Ferrero Rocher
-coleman||Coleman
-coop prix||Coop
-carrefour express||Carrefour
-heineken open your world||Heineken
-ritter sport||Ritter Sport
-dunkin donuts||Dunkin' Donuts
-Daddy Sucre||Daddy
-Beurre Président||Président
-Poulain Chocolat||Poulain
-Pierre Martinet
-nabisco||Nabisco
-Good Gout||Good Goût
-barilla||Barilla
-Atelier Blini||Atelier Blini
-Pringles||Pringles
-Régilait||Régilait
-Old El Paso Restaurante||Old El Paso
-oasis||Oasis
-labeyrie||Labeyrie
-Kinder Bueno||Kinder Bueno
-Juvamine||Juvamine
-fruittella||Fruittella
-Chocolates Valor||Chocolates Valor
-Andros France||Andros
-stonyfield||Stonyfield
+William Saurin||William Saurin
+yoplait||Yoplait
+yves rocher||Yves Rocher
