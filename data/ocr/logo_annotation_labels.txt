@@ -8,7 +8,7 @@ Agriculture Biologique||fr:Agriculture Biologique
 aop||fr:AOP
 Australian Made||en:Australian Made
 australian made||en:Australian Made
-Bien Se Nourrir||
+Bien Se Nourrir||fr:Bien se nourrir
 Bio Siegel||de:Bio Siegel
 bio suisse||en:Bio Suisse
 bio||en:Organic
