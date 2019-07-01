@@ -1,6 +1,6 @@
 import datetime
 import os
-from typing import Dict, Optional
+from typing import Dict
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
