@@ -34,10 +34,20 @@ candia||Candia
 Candia||Candia
 carambar||Carambar
 carlsberg group||Carlsberg
-carrefour bio||Carrefour bio
+carrefour bio||Carrefour
+Carrefour Cerveza Trigo||Carrefour
+carrefour city||Carrefour
+Carrefour City||Carrefour
 carrefour contact||Carrefour
+Carrefour Discount Cerveza Sin Alcohol||Carrefour
+Carrefour Discount||Carrefour
 carrefour express||Carrefour
+Carrefour l'Abbaye Velours||Carrefour
+Carrefour Market||Carrefour
+Carrefour Selection||Carrefour
+Carrefour Uno Mobile||Carrefour
 carrefour||Carrefour
+Carrefour||Carrefour
 charal||Charal
 Charles Et Alice||Charles Et Alice
 cheetos||Cheetos
@@ -81,6 +91,7 @@ dunkin donuts||Dunkin' Donuts
 e leclerc||Leclerc
 EDEKA Mobil||EDEKA
 Edeka||Edeka
+Engagement Qualité Carrefour||Carrefour
 estee lauder||Estée Lauder
 evian||Evian
 Evian||Evian
@@ -98,6 +109,8 @@ gallia||Gallia
 gatorade||Gatorade
 general mills||General Mills
 Good Gout||Good Goût
+groupe carrefour||Carrefour
+Grupo Carrefour||Carrefour
 guinness||Guinness
 Gut und Günstig||Gut und Günstig
 heineken light||Heineken
@@ -253,6 +266,9 @@ Tropicana||Tropicana
 U Saveurs||U Saveurs
 unilever||Unilever
 Unilever||Unilever
+Viajes Carrefour||Carrefour
+Viajes Carrefour||Carrefour
+Viajes Carrefour||Carrefour
 vitamin water||Vitamin Water
 Vitamont||Vitamont
 volvic||Volvic
