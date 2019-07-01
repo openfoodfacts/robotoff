@@ -1,6 +1,8 @@
 Aldi
 Albert Heijn
 Alesto
+Alteza
+Alipende
 Alnatura
 Alpenmark
 Anna's Best
@@ -31,7 +33,6 @@ Danone
 De Cecco
 Delacre
 Delhaize
-Del Monte
 Delpeyrat
 Delpierre
 Denner
@@ -41,6 +42,7 @@ Duchy organic
 Ducros
 Edeka
 Edeka Bio
+Edmond Fallot
 Ehrmann
 El Corte Inglés||el corte ingl[ée]s
 Eridanous
@@ -72,10 +74,13 @@ Kellogg's
 Knorr
 La Belle-Îloise||la belle[- ][iî]loise
 La Vie Claire
+La Nouvelle Agriculture
 Labeyrie
 Léa Nature
 Leader Price
 Le Gaulois
+Moulin de Valdonne
+Mercadona
 Lidl
 Lindt
 Lipton
@@ -122,6 +127,7 @@ Saupiquet
 Schär
 Solevita
 Sondey
+superSol
 Teisseire
 Terrasuisse
 Tesco
