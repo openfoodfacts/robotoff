@@ -28,13 +28,15 @@ class OCRRegex:
                  lowercase: bool = False,
                  processing_func: Optional[Callable] = None,
                  priority: Optional[int] = None,
-                 notify: bool = False):
+                 notify: bool = False,
+                 trust: float = 1):
         self.regex = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
         self.priority = priority
         self.notify = notify
+        self.trust = trust
 
 
 class ImageOrientation(enum.Enum):

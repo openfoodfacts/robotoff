@@ -149,13 +149,15 @@ LABELS_REGEX = {
             re.compile(
                 r"australian made|made in australia|fabriqu[ée] en australie|geproduceerd in australi[ëe]|fabricado en australia"),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+            trust=1.5),
     ],
     'en:gluten-free': [
         OCRRegex(
             re.compile(r"(?<!\w)(?:sans|ni) gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+            trust=1.5),
     ],
     'en:no-preservatives': [
         OCRRegex(
@@ -182,7 +184,8 @@ LABELS_REGEX = {
             re.compile(
                 r"(?<!\w)(?:vegan|v[ée]g[ée]talien|vegano|veganistisch)(?!\w)"),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+            trust=1.5),
     ],
     'en:no-colorings': [
         OCRRegex(
@@ -296,6 +299,7 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                     'label_tag': label_value,
                     'text': match.group(),
                     'notify': ocr_regex.notify,
+                    'automatic_processing': ocr_regex.trust > 1
                 })
 
     for logo_annotation in ocr_result.logo_annotations:
