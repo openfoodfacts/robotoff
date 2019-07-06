@@ -1,4 +1,9 @@
 Aldi
+Aldi||gletscherkrone
+Aldi||gold[aä]hren
+Aldi||gutbio
+Aldi||milsani
+Aldi||sprengel
 Alnatura
 Auchan
 Biocoop
@@ -6,12 +11,24 @@ Carrefour
 Carrefour||grand jury
 Colruyt
 Delhaize
+Edeka
+Edeka||gut[- \n]g[uü]nstig
+Kaufland
+Kaufland||k-bio
+Kaufland||k-classic
 La Vie Claire
 Leader Price
 Lidl
+Lidl||alesto
+Lidl||belbake
+Lidl||dulano
+Lidl||freshona
 Lidl||milbona
+Lidl||sondey
 Magasins U||u saveurs
 Marks & Spencer
 Migros
 Monoprix
+REWE
 Sainsbury's
+Woolworth||woolworths?

@@ -9,6 +9,7 @@ Anna's Best
 Asda
 Auchan
 Barilla
+Belbake
 Bellarom
 Betty Bossi
 Biocoop
@@ -40,6 +41,7 @@ Dennree
 Dr. Oetker||dr\.? oetker
 Duchy organic
 Ducros
+Dulano
 Edeka
 Edeka Bio
 Edmond Fallot
@@ -55,9 +57,11 @@ Ferrero
 Fleury Michon
 Freshona
 Gerblé
+Gletscherkrone
+Goldähren||gold[aä]hren
 Grand Jury
-Gut & Gunstig
-Gutbio
+Gut & Günstig||gut[- \n]g[uü]nstig
+GutBio
 Häagen-Dazs||h[aä]agen[- ]dazs
 Hacendado
 Haribo
@@ -68,6 +72,7 @@ Italiamo
 Ibsa
 Ja!
 Jardin Bio
+K-Bio
 K-Classic
 Kaufland
 Kellogg's
@@ -141,5 +146,6 @@ Tropicana
 Twinings
 U Saveurs
 Waitrose
+Woolworths||woolworths?
 Yoplait
 Yves Rocher
