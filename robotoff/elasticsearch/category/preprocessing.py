@@ -8,7 +8,13 @@ WEIGHT_REGEX = re.compile(r"[0-9]+[,.]?[0-9]*\s?(fl oz|dl|cl|mg|ml|lbs|oz|g|kg|l
 LABELS_REGEX = {
     'fr': re.compile(r'agriculture biologique|biologique|bio|igp|aop|aoc|label rouge'),
     'en': re.compile(r'organic|pgi'),
+    'es': re.compile(r'ecológico|extra'),
+    'de': re.compile(r'bio'),
+    'nl': re.compile(r'bio'),
+    'it': re.compile(r'biologica'),    
 }
+
+BRANDS_REGEX = re.compile(r'k bio|ja!|coop|belvita|carrefour|auchan|danone')
 
 
 def preprocess_name(name: str, lang: str) -> str:
@@ -20,6 +26,7 @@ def preprocess_name(name: str, lang: str) -> str:
     precision."""
     name = name.lower()
     name = remove_weights(name)
+    name = remove_brands(name)
     name = remove_labels(name, lang)
     name = strip_consecutive_spaces(name)
     name = name.strip()
@@ -28,6 +35,10 @@ def preprocess_name(name: str, lang: str) -> str:
 
 def remove_weights(name: str) -> str:
     return WEIGHT_REGEX.sub('', name)
+
+
+def remove_brands(name: str) -> str:
+    return BRANDS_REGEX.sub('', name)
 
 
 def remove_labels(name: str, lang: str) -> str:
