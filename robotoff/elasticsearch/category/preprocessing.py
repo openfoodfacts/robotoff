@@ -26,6 +26,7 @@ def preprocess_name(name: str, lang: str) -> str:
     name = name.lower()
     name = remove_weights(name)
     name = remove_labels(name, lang)
+    name = remove_marketing_words(name, lang)
     name = strip_consecutive_spaces(name)
     name = name.strip()
     return name
@@ -34,6 +35,9 @@ def preprocess_name(name: str, lang: str) -> str:
 def remove_weights(name: str) -> str:
     return WEIGHT_REGEX.sub('', name)
 
+def remove_marketing_words(name: str, lang: str) -> str:
+    if lang in EXTRAWORDS_REGEX:
+        name = EXTRAWORDS_REGEX[lang].sub('', name)
 
 def remove_labels(name: str, lang: str) -> str:
     if lang in LABELS_REGEX:
