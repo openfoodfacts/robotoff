@@ -28,6 +28,7 @@ Coop Betty Bossi
 Coop Fine Food
 Coop Naturaplan
 Coop Prix Garantie
+Coviran
 Daco Bello
 Danone
 De Cecco
@@ -45,6 +46,7 @@ Edeka Bio
 Edmond Fallot
 Ehrmann
 El Corte Inglés||el corte ingl[ée]s
+Entrepinares
 Eridanous
 Eroski
 Esselunga
@@ -108,6 +110,7 @@ Morrison's
 Mulino Bianco
 MyProtein
 Naturaplan
+Natursoy
 Nescafé||nescaf[ée]
 Nestlé||nestl[eé]
 Nutella
