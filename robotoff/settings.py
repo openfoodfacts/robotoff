@@ -15,6 +15,7 @@ JSONL_DATASET_URL = "https://static.openfoodfacts.org/data/openfoodfacts-product
 TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.json"
 TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.json"
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.json"
+TAXONOMY_BRAND_URL = "https://static.openfoodfacts.org/data/taxonomies/brands.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
 OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
@@ -24,6 +25,7 @@ TAXONOMY_DIR = DATA_DIR / 'taxonomies'
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.json'
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.json'
+TAXONOMY_BRAND_PATH = TAXONOMY_DIR / 'brands.json'
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
