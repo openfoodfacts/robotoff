@@ -16,6 +16,11 @@ Current insight types:
 - `packager_code`
 - `label`
 - `category`
+- `product_weight`
+- `expiration_date`
+- `brand`
+- `store`
+- `nutrient`
 
 ## Random insight [/insights/random]
 
