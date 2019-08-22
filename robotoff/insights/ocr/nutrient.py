@@ -8,7 +8,7 @@ def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
     nutrient_names_str = '|'.join(nutrient_names)
     units_str = '|'.join(units)
     return re.compile(r"(?<!\w)({}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({})(?!\w)".format(nutrient_names_str,
-                                                                                          units_str))
+                                                                                        units_str))
 
 
 NUTRIENT_VALUES_REGEX = {
@@ -38,6 +38,10 @@ NUTRIENT_VALUES_REGEX = {
         lowercase=True),
     'protein': OCRRegex(
         generate_nutrient_regex(["prot[ée]ines?", "protein"], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'salt': OCRRegex(
+        generate_nutrient_regex(["sel", "salt"], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
 }
