@@ -17,6 +17,12 @@ def process_eu_bio_label_code(match) -> str:
             .replace('ø', 'o'))
 
 
+def process_es_bio_label_code(match) -> str:
+    return ("en:es-eco-{}-{}".format(match.group(1),
+                                     match.group(2))
+            .lower())
+
+
 EN_ORGANIC_REGEX_STR = [
     r'ingr[ée]dients?\sbiologiques?',
     r'ingr[ée]dients?\sbio[\s.,)]',
@@ -35,10 +41,15 @@ LABELS_REGEX = {
     'xx-bio-xx': [
         # The negative lookbehind (?<![a-zA-Z]) is useful to avoid to match
         # strings if additional chars are before the label
-        OCRRegex(re.compile(r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|ECO|Bio)[\-\s.](\d{2,3})"),
+        OCRRegex(re.compile(r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|Bio)[\-\s.](\d{2,3})"),
                  field=OCRField.text_annotations,
                  lowercase=False,
                  processing_func=process_eu_bio_label_code),
+        # Spain specific regex
+        OCRRegex(re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2})"),
+                 field=OCRField.text_annotations,
+                 lowercase=False,
+                 processing_func=process_es_bio_label_code),
     ],
     'fr:ab-agriculture-biologique': [
         OCRRegex(re.compile(r"certifi[ée] ab[\s.,)]"),
