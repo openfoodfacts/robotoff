@@ -1,6 +1,5 @@
 from urllib.parse import urlparse
 
-import requests
 from typing import Optional, Dict, List
 
 from PIL import Image
@@ -8,6 +7,7 @@ from PIL import Image
 from robotoff.insights._enum import InsightType
 from robotoff.insights import ocr
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.off import http_session
 from robotoff.utils import get_image_from_url, get_logger
 from robotoff.utils.types import JSONType
 
@@ -71,7 +71,7 @@ def extract_image_ml_insights(image_url: str,
     results: JSONType = {}
 
     if extract_nutriscore:
-        image = get_image_from_url(image_url, error_raise=True)
+        image = get_image_from_url(image_url, error_raise=True, session=http_session)
         nutriscore_insight = extract_nutriscore_label(image,
                                                       manual_threshold=0.5,
                                                       automatic_threshold=0.9)
@@ -89,7 +89,7 @@ def extract_image_ml_insights(image_url: str,
 
 
 def extract_ocr_insights(ocr_url: str) -> JSONType:
-    r = requests.get(ocr_url)
+    r = http_session.get(ocr_url)
 
     if r.status_code == 404:
         logger.info("OCR JSON {} not found".format(ocr_url))
@@ -97,7 +97,7 @@ def extract_ocr_insights(ocr_url: str) -> JSONType:
 
     r.raise_for_status()
 
-    ocr_data: Dict = requests.get(ocr_url).json()
+    ocr_data: Dict = r.json()
     ocr_result = ocr.OCRResult.from_json(ocr_data)
 
     if ocr_result is None:

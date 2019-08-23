@@ -4,9 +4,8 @@ import json
 from enum import Enum
 from typing import List, Dict, Iterable, Optional, Set
 
-import requests
-
 from robotoff import settings
+from robotoff.off import http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -201,7 +200,7 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) \
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = requests.get(url, timeout=5)
+        r = http_session.get(url, timeout=5)
         data = r.json()
     except Exception:
         if fallback_path:

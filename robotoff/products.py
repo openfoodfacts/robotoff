@@ -9,6 +9,7 @@ from typing import List, Iterable, Dict, Optional, Iterator
 
 import requests
 
+from robotoff.off import http_session
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
 from robotoff.utils.cache import CachedStore
@@ -80,8 +81,8 @@ def has_dataset_changed() -> bool:
 
 
 def download_dataset(output_path: os.PathLike) -> str:
-    r = requests.get(settings.JSONL_DATASET_URL,
-                     stream=True)
+    r = http_session.get(settings.JSONL_DATASET_URL,
+                         stream=True)
     current_etag = r.headers.get('ETag', '').strip("'\"")
 
     logger.info("Dataset has changed, downloading file")

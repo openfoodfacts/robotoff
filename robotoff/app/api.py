@@ -20,6 +20,7 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger, get_image_from_url
@@ -205,7 +206,7 @@ class ImagePredictorResource:
                 "a single model must be specified with the `models` parameter "
                 "when `output_image` is True")
 
-        image = get_image_from_url(image_url)
+        image = get_image_from_url(image_url, session=http_session)
 
         if image is None:
             logger.info("Could not fetch image: {}".format(image_url))

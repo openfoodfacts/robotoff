@@ -75,8 +75,12 @@ def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
 
 
 def get_image_from_url(image_url: str,
-                       error_raise: bool = False) -> Optional[Image.Image]:
-    r = requests.get(image_url)
+                       error_raise: bool = False,
+                       session: Optional[requests.Session] = None) -> Optional[Image.Image]:
+    if session:
+        r = session.get(image_url)
+    else:
+        r = requests.get(image_url)
 
     if error_raise:
         r.raise_for_status()
