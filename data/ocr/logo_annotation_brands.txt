@@ -76,7 +76,7 @@ danone||Danone
 Danone||Danone
 Daucy||D'Aucy
 Daunat||Daunat
-del monte||Del Monter
+del monte||Del Monte
 Delhaize Group||Delhaize
 Delhaize||Delhaize
 Delpeyrat||Delpeyrat
