@@ -51,7 +51,7 @@ LABELS_REGEX = {
                  lowercase=False,
                  processing_func=process_eu_bio_label_code),
         # Spain specific regex
-        OCRRegex(re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2})"),
+        OCRRegex(re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2,3})"),
                  field=OCRField.text_annotations,
                  lowercase=False,
                  processing_func=process_es_bio_label_code),
