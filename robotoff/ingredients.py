@@ -9,7 +9,10 @@ from typing import List, Tuple, Iterable, Dict
 
 from robotoff import settings
 from robotoff.products import ProductDataset
+from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client, generate_msearch_body
+
+logger = get_logger(__name__)
 
 SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 
@@ -17,6 +20,10 @@ SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})|(?:[_•])")
 
 OffsetType = Tuple[int, int]
+
+
+class TokenLengthMismatchException(Exception):
+    pass
 
 
 @dataclass
@@ -117,9 +124,9 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
                                                   suggestion_tokens,
                                                   offsets[0])
             corrections.append(Correction(term_corrections, option['score']))
-        except ValueError:
-            print("Mismatch")
-            # Length mismatch exception
+        except TokenLengthMismatchException:
+            logger.warning("The original text and the suggestions must have the same number "
+                           "of tokens: {} / {}".format(original_tokens, suggestion_tokens))
             continue
 
     return corrections
@@ -149,11 +156,11 @@ def generate_corrected_text(corrections: List[TermCorrection], text: str):
 
 def format_corrections(original_tokens: List[Dict],
                        suggestion_tokens: List[Dict],
-                       offset: int=0):
+                       offset: int = 0):
     corrections = []
 
     if len(original_tokens) != len(suggestion_tokens):
-        raise ValueError("The original text and the suggestions must have the same number of tokens")
+        raise TokenLengthMismatchException()
 
     for original_token, suggestion_token in zip(original_tokens, suggestion_tokens):
         original_token_str = original_token['token']
