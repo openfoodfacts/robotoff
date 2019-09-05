@@ -14,9 +14,18 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
+DEFAULT_INSIGHT_TYPES = (InsightType.label.name,
+                         InsightType.packager_code.name,
+                         InsightType.product_weight.name,
+                         InsightType.image_flag.name,
+                         InsightType.expiration_date.name,
+                         InsightType.brand.name,
+                         InsightType.store.name)
+
+
 def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
         -> Optional[Dict]:
-    ocr_insights = extract_ocr_insights(ocr_url)
+    ocr_insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
 
     extract_nutriscore = has_nutriscore_insight(ocr_insights)
     image_ml_insights = extract_image_ml_insights(
@@ -88,8 +97,8 @@ def extract_image_ml_insights(image_url: str,
     return results
 
 
-def extract_ocr_insights(ocr_url: str) -> JSONType:
-    r = http_session.get(ocr_url)
+def extract_ocr_insights(ocr_url: str,
+                         insight_types: Iterable[str]) -> JSONType:
 
     if r.status_code == 404:
         logger.info("OCR JSON {} not found".format(ocr_url))
@@ -106,13 +115,7 @@ def extract_ocr_insights(ocr_url: str) -> JSONType:
 
     results = {}
 
-    for insight_type in (InsightType.label.name,
-                         InsightType.packager_code.name,
-                         InsightType.product_weight.name,
-                         InsightType.image_flag.name,
-                         InsightType.expiration_date.name,
-                         InsightType.brand.name,
-                         InsightType.store.name):
+    for insight_type in insight_types:
         insights = ocr.extract_insights(ocr_result, insight_type)
 
         if insights:
