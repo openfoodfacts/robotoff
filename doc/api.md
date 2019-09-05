@@ -125,3 +125,25 @@ Current question types:
             ],
             "text": "fqrine de blé"
         }
+
+
+## Nutrient prediction [/predict/nutrient]
+
+### Predict nutrient from OCR JSON [GET]
+
++ ocr_url (str, required) - the url of the OCR JSON
+
+
++ Response 200 (application/json)
+        {
+            "nutrients": {
+                "glucid": [
+                    {
+                        "nutrient": "glucid",
+                        "raw": "glucides 53 g",
+                        "unit": "g",
+                        "value": "53"
+                    }
+                ]
+            }
+        }

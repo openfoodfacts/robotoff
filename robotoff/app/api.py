@@ -17,6 +17,7 @@ from robotoff.app.core import (get_insights,
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
+from robotoff.insights.extraction import extract_ocr_insights
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
@@ -113,6 +114,24 @@ class IngredientSpellcheckResource:
             'text': text,
             'corrected': generate_corrected_text(term_corrections, text),
         }
+
+
+class NutrientPredictorResource:
+    def on_get(self, req, resp):
+        ocr_url = req.get_param('ocr_url', required=True)
+        insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
+
+        if not insights:
+            response = {
+                'error': "invalid_ocr",
+                'error_description': "an error occurred during OCR result download or parsing",
+            }
+        else:
+            response = {
+                'nutrients': insights['nutrient'][0]['nutrients']
+            }
+
+        resp.media = response
 
 
 class UpdateDatasetResource:
@@ -366,6 +385,8 @@ api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/insights/import', InsightImporterResource())
 api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
+api.add_route('/api/v1/predict/nutrient',
+              NutrientPredictorResource())
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
 api.add_route('/api/v1/webhook/product',

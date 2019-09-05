@@ -2,6 +2,7 @@ import re
 from typing import List, Dict
 
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.utils.types import JSONType
 
 
 def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
@@ -48,7 +49,7 @@ NUTRIENT_VALUES_REGEX = {
 
 
 def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
-    results = []
+    nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
         text = ocr_result.get_text(ocr_regex)
@@ -59,12 +60,20 @@ def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
         for match in ocr_regex.regex.finditer(text):
             value = match.group(2).replace(',', '.')
             unit = match.group(3)
-            results.append({
+            nutrients.setdefault(regex_code, [])
+            nutrients[regex_code].append({
                 "raw": match.group(0),
                 "nutrient": regex_code,
                 'value': value,
                 'unit': unit,
-                'notify': ocr_regex.notify,
             })
 
-    return results
+    if not nutrients:
+        return []
+
+    return [
+        {
+            'nutrients': nutrients,
+            'notify': False,
+        }
+    ]
