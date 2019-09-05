@@ -1,7 +1,8 @@
 from urllib.parse import urlparse
 
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Iterable
 
+import requests
 from PIL import Image
 
 from robotoff.insights._enum import InsightType
@@ -99,6 +100,12 @@ def extract_image_ml_insights(image_url: str,
 
 def extract_ocr_insights(ocr_url: str,
                          insight_types: Iterable[str]) -> JSONType:
+    try:
+        r = http_session.get(ocr_url)
+    except requests.exceptions.RequestException as e:
+        logger.error("An exception occurred during OCR JSON download",
+                     exc_info=e)
+        return {}
 
     if r.status_code == 404:
         logger.info("OCR JSON {} not found".format(ocr_url))
