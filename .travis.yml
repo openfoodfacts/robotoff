@@ -12,6 +12,6 @@ install:
 
 script:
   - python3 -m pytest tests
-  - docker build -t openfoodfacts/robotoff:dev .
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t openfoodfacts/robotoff .
+  - echo "$DOCKER_PASSWORD" | docker login --password-stdin -u "$DOCKER_USERNAME"
   - docker push openfoodfacts/robotoff
