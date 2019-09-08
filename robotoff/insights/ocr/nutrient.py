@@ -91,9 +91,9 @@ NUTRIENT_VALUES_REGEX = {
     'fiber': OCRRegex(
         generate_nutrient_regex(["fibres?",  # en/fr
                                  "fibres? alimentaires?",  # fr
-                                 "(voedings)?vezels?",  # nl
+                                 "(?:voedings)?vezels?",  # nl
                                  "ballaststoffe",  # de
-                                 "fibra( alimentaria)?",  # es
+                                 "fibra(?: alimentaria)?",  # es
                                  ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
