@@ -5,6 +5,7 @@ from typing import List, Optional
 import dataclasses
 
 import falcon
+import requests
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
@@ -18,6 +19,7 @@ from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import extract_ocr_insights
+from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
@@ -119,19 +121,33 @@ class IngredientSpellcheckResource:
 class NutrientPredictorResource:
     def on_get(self, req, resp):
         ocr_url = req.get_param('ocr_url', required=True)
-        insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
+
+        try:
+            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
+
+        except requests.exceptions.RequestException:
+            resp.media = {
+                'error': "download_error",
+                'error_description': "an error occurred during OCR JSON download",
+            }
+            return
+
+        except OCRParsingException as e:
+            logger.error(e)
+            resp.media = {
+                'error': "invalid_ocr",
+                'error_description': "an error occurred during OCR parsing",
+            }
+            return
 
         if not insights:
-            response = {
-                'error': "invalid_ocr",
-                'error_description': "an error occurred during OCR result download or parsing",
+            resp.media = {
+                'nutrients': {},
             }
         else:
-            response = {
+            resp.media = {
                 'nutrients': insights['nutrient'][0]['nutrients']
             }
-
-        resp.media = response
 
 
 class UpdateDatasetResource:

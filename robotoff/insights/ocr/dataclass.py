@@ -13,6 +13,10 @@ MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 logger = get_logger(__name__)
 
 
+class OCRParsingException(Exception):
+    pass
+
+
 class OCRField(enum.Enum):
     full_text = 1
     full_text_contiguous = 2
@@ -186,12 +190,20 @@ class OCRResult:
         if not responses:
             return None
 
-        response = responses[0]
-
-        if 'error' in response:
+        try:
+            response = responses[0]
+        except IndexError:
             return None
 
-        return OCRResult(response)
+        if 'error' in response:
+            logger.info("error in OCR response: "
+                        "{}".format(response['error']))
+            return None
+
+        try:
+            return OCRResult(response)
+        except Exception as e:
+            raise OCRParsingException("error during OCR parsing") from e
 
 
 class OCRFullTextAnnotation:

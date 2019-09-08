@@ -7,6 +7,7 @@ from PIL import Image
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights import ocr
+from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.off import http_session
 from robotoff.utils import get_image_from_url, get_logger
@@ -26,7 +27,14 @@ DEFAULT_INSIGHT_TYPES = (InsightType.label.name,
 
 def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
         -> Optional[Dict]:
-    ocr_insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+    try:
+        ocr_insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+    except requests.exceptions.RequestException as e:
+        logger.info("error during OCR JSON download", exc_info=e)
+        return None
+    except OCRParsingException as e:
+        logger.error("OCR JSON Parsing error", exc_info=e)
+        return None
 
     extract_nutriscore = has_nutriscore_insight(ocr_insights)
     image_ml_insights = extract_image_ml_insights(
@@ -100,17 +108,7 @@ def extract_image_ml_insights(image_url: str,
 
 def extract_ocr_insights(ocr_url: str,
                          insight_types: Iterable[str]) -> JSONType:
-    try:
-        r = http_session.get(ocr_url)
-    except requests.exceptions.RequestException as e:
-        logger.error("An exception occurred during OCR JSON download",
-                     exc_info=e)
-        return {}
-
-    if r.status_code == 404:
-        logger.info("OCR JSON {} not found".format(ocr_url))
-        return {}
-
+    r = http_session.get(ocr_url)
     r.raise_for_status()
 
     ocr_data: Dict = r.json()
