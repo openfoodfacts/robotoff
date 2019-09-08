@@ -16,6 +16,7 @@ jobs:
     - stage: deploy
       if: tag =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?
       script:
-        - docker build -t openfoodfacts/robotoff:${TRAVIS_TAG:1} .
+        - docker build -t openfoodfacts/robotoff:latest .
+        - docker tag openfoodfacts/robotoff:latest openfoodfacts/robotoff:${TRAVIS_TAG:1}
         - echo "$DOCKER_PASSWORD" | docker login --password-stdin -u "$DOCKER_USERNAME"
         - docker push openfoodfacts/robotoff
