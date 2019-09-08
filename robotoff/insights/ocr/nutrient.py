@@ -18,31 +18,63 @@ NUTRIENT_VALUES_REGEX = {
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'saturated_fat': OCRRegex(
-        generate_nutrient_regex(["mati[èe]res? grasses? satur[ée]s?", "saturated fat"], ["g"]),
+        generate_nutrient_regex(["mati[èe]res? grasses? satur[ée]s?",  # fr
+                                 "acides? gras satur[ée]s?",  # fr
+                                 "saturated fat",  # en
+                                 "of which saturates",  # en
+                                 "verzadigde vetzuren",  # nl
+                                 "waarvan verzadigde",  # nl
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'trans_fat': OCRRegex(
-        generate_nutrient_regex(["mati[èe]res? grasses? trans", "trans fat"], ["g"]),
+        generate_nutrient_regex(["mati[èe]res? grasses? trans",  # fr
+                                 "trans fat",  # en
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'fat': OCRRegex(
-        generate_nutrient_regex(["mati[èe]res? grasses?", "total fat"], ["g"]),
+        generate_nutrient_regex(["mati[èe]res? grasses?",  # fr
+                                 "total fat",  # en
+                                 "vetten",  # nl
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'sugar': OCRRegex(
-        generate_nutrient_regex(["sucres?", "sugars?"], ["g"]),
+        generate_nutrient_regex(["sucres?",  # fr
+                                 "sugars?",  # en
+                                 "suikers?",  # nl
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'carbohydrate': OCRRegex(
-        generate_nutrient_regex(["total carbohydrate", "glucides?", "glucid"], ["g"]),
+        generate_nutrient_regex(["total carbohydrate",  # en
+                                 "glucid",  # en
+                                 "glucides?",  # fr
+                                 "koolhydraten",  # nl
+                                 "koolhydraat",  # nl
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'protein': OCRRegex(
-        generate_nutrient_regex(["prot[ée]ines?", "protein"], ["g"]),
+        generate_nutrient_regex(["prot[ée]ines?",  # fr
+                                 "protein",  # en
+                                 "eiwitten",  # nl
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'salt': OCRRegex(
-        generate_nutrient_regex(["sel", "salt"], ["g"]),
+        generate_nutrient_regex(["sel",  # fr
+                                 "salt",  # en
+                                 "zout",  # nl
+                                 ], ["g"]),
+        field=OCRField.full_text_contiguous,
+        lowercase=True),
+    'fiber': OCRRegex(
+        generate_nutrient_regex(["fibres?",  # en/fr
+                                 "fibres? alimentaires?",  # fr
+                                 "(voedings)?vezels?",  # nl
+                                 ], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
 }
