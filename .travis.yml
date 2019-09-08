@@ -1,4 +1,8 @@
 language: python
+
+services:
+  - docker
+
 python:
   - "3.7"
 
@@ -7,3 +11,5 @@ install:
 
 script:
   - python3 -m pytest tests
+  - docker build -t openfoodfacts/robotoff .
+  - docker push openfoodfacts/robotoff
