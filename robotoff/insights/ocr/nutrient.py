@@ -29,12 +29,12 @@ NUTRIENT_VALUES_REGEX = {
         generate_nutrient_regex(["mati[èe]res? grasses?", "total fat"], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
-    'glucid': OCRRegex(
-        generate_nutrient_regex(["glucides?", "glucid"], ["g"]),
+    'sugar': OCRRegex(
+        generate_nutrient_regex(["sucres?", "sugars?"], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'carbohydrate': OCRRegex(
-        generate_nutrient_regex(["sucres?", "total carbohydrate", "sugars?"], ["g"]),
+        generate_nutrient_regex(["total carbohydrate", "glucides?", "glucid"], ["g"]),
         field=OCRField.full_text_contiguous,
         lowercase=True),
     'protein': OCRRegex(
