@@ -55,7 +55,9 @@ def predict_category(output: str):
 @click.command()
 @click.option('--index/--no-index', default=True)
 @click.option('--data/--no-data', default=True)
-def init_elasticsearch(index: bool, data: bool):
+@click.option('--product/--no-product', default=True)
+@click.option('--category/--no-category', default=True)
+def init_elasticsearch(index: bool, data: bool, product: bool, category: bool):
     import json
     from robotoff import settings
     from robotoff.utils.es import get_es_client
@@ -70,12 +72,19 @@ def init_elasticsearch(index: bool, data: bool):
             category_index_config = json.load(f)
 
         client = get_es_client()
-        client.indices.create('product', product_index_config)
-        client.indices.create('category', category_index_config)
+
+        if product:
+            client.indices.create('product', product_index_config)
+
+        if category:
+            client.indices.create('category', category_index_config)
 
     if data:
-        product_export()
-        category_export()
+        if product:
+            product_export()
+
+        if category:
+            category_export()
 
 
 cli.add_command(run)
