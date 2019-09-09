@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import pathlib
+from typing import Dict
 
 from peewee import fn
 
@@ -19,7 +20,7 @@ class InvalidInsight(Exception):
     pass
 
 
-def is_automatically_processable(insight):
+def is_automatically_processable(insight: ProductInsight) -> bool:
     image_path = pathlib.Path(insight.source_image)
     image_id = image_path.stem
 
@@ -42,6 +43,28 @@ def is_automatically_processable(insight):
         logger.info("Missing image for product {}, ID: {}".format(insight.barcode, image_id))
         raise InvalidInsight()
 
+    if is_recent_image(product_images, image_id):
+        return True
+
+    if is_selected_image(product_images, image_id):
+        return True
+
+    return False
+
+
+def is_selected_image(product_images: Dict, image_id: str) -> bool:
+    for key_prefix in ('nutrition', 'front', 'ingredients'):
+        for key, image in product_images.items():
+            if key.startswith(key_prefix):
+                if image['imgid'] == image_id:
+                    logger.info("Image {} is a selected image for "
+                                "'{}'".format(image_id, key_prefix))
+                    return True
+
+    return False
+
+
+def is_recent_image(product_images: Dict, image_id: str) -> bool:
     upload_datetimes = []
     insight_image_upload_datetime = None
 
@@ -99,7 +122,6 @@ def run(insight_type: str):
                                                                      insight.barcode))
             annotator.annotate(insight, 1, update=True)
             count += 1
-            break
 
     logger.info("Annotated insights: {}".format(count))
 
