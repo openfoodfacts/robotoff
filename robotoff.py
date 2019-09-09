@@ -1,3 +1,4 @@
+import pathlib
 from typing import Optional
 
 import click
@@ -53,6 +54,29 @@ def predict_category(output: str):
 
 
 @click.command()
+@click.argument('output', type=pathlib.Path)
+@click.option('--confidence', type=float, default=1)
+def generate_spellcheck_insights(output: str, confidence: float):
+    from robotoff.utils import dump_jsonl
+    from robotoff.utils.es import get_es_client
+    from robotoff.ingredients import generate_insights
+
+    client = get_es_client()
+    insights_iter = generate_insights(client, confidence=confidence)
+    dump_jsonl(output, insights_iter)
+
+
+@click.command()
+def download_dataset():
+    from robotoff.products import has_dataset_changed, fetch_dataset
+    from robotoff.utils import get_logger
+    logger = get_logger()
+
+    if has_dataset_changed():
+        fetch_dataset()
+
+
+@click.command()
 @click.option('--index/--no-index', default=True)
 @click.option('--data/--no-data', default=True)
 @click.option('--product/--no-product', default=True)
@@ -93,6 +117,8 @@ cli.add_command(annotate)
 cli.add_command(batch_annotate)
 cli.add_command(predict_category)
 cli.add_command(init_elasticsearch)
+cli.add_command(generate_spellcheck_insights)
+cli.add_command(download_dataset)
 
 
 if __name__ == '__main__':
