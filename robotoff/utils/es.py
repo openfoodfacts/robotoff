@@ -13,7 +13,7 @@ def get_es_client():
 def perform_export(client,
                    data: Iterable[Tuple[str, Dict]],
                    index: str,
-                   batch_size=100):
+                   batch_size=100) -> int:
     batch = []
     rows_inserted = 0
 

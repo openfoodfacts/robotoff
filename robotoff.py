@@ -52,11 +52,38 @@ def predict_category(output: str):
     dump_jsonl(output, predict_from_dataset(dataset))
 
 
+@click.command()
+@click.option('--index/--no-index', default=True)
+@click.option('--data/--no-data', default=True)
+def init_elasticsearch(index: bool, data: bool):
+    import json
+    from robotoff import settings
+    from robotoff.utils.es import get_es_client
+    from robotoff.elasticsearch.product.dump import product_export
+    from robotoff.elasticsearch.category.dump import category_export
+
+    if index:
+        with settings.ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH.open('r') as f:
+            product_index_config = json.load(f)
+
+        with settings.ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH.open('r') as f:
+            category_index_config = json.load(f)
+
+        client = get_es_client()
+        client.indices.create('product', product_index_config)
+        client.indices.create('category', category_index_config)
+
+    if data:
+        product_export()
+        category_export()
+
+
 cli.add_command(run)
 cli.add_command(generate_ocr_insights)
 cli.add_command(annotate)
 cli.add_command(batch_annotate)
 cli.add_command(predict_category)
+cli.add_command(init_elasticsearch)
 
 
 if __name__ == '__main__':

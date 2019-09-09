@@ -49,6 +49,8 @@ services:
     ports:
       - "127.0.0.1:9200:9200"
       - "127.0.0.1:9300:9300"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
 
   tf_serving:
     restart: always
@@ -63,3 +65,4 @@ services:
 volumes:
   postgres-data:
   api-dataset:
+  es-data:

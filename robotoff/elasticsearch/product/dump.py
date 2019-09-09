@@ -33,7 +33,8 @@ def product_export():
     logger.info("Importing products")
 
     es_client = get_es_client()
-    perform_export(es_client, data, settings.ELASTICSEARCH_PRODUCT_INDEX)
+    inserted = perform_export(es_client, data, settings.ELASTICSEARCH_PRODUCT_INDEX)
+    logger.info("{} rows inserted".format(inserted))
 
 
 def empty_ingredient(ingredient: str) -> bool:

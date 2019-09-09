@@ -41,6 +41,8 @@ ELASTICSEARCH_TYPE = "document"
 
 ELASTICSEARCH_CATEGORY_INDEX = 'category'
 ELASTICSEARCH_PRODUCT_INDEX = 'product'
+ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = PROJECT_DIR / 'robotoff/elasticsearch/index/category_index.json'
+ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = PROJECT_DIR / 'robotoff/elasticsearch/index/product_index.json'
 
 SLACK_TOKEN = os.environ.get('SLACK_TOKEN', "")
 SLACK_OFF_TEST_CHANNEL = "CGLCKGVHS"
