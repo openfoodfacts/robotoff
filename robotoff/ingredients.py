@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})|(?:[_•])")
+BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:E\d{3,5}[a-z]*)|(?:[_•])")
 
 OffsetType = Tuple[int, int]
 
