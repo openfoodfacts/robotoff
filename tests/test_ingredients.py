@@ -6,6 +6,7 @@ from robotoff.ingredients import process_ingredients, normalize_ingredients, Ing
 @pytest.mark.parametrize('text,normalized', [
     ("farine de blé 10,5%, huile de colza 8%, soja 0,15%", "farine de blé      , huile de colza   , soja      "),
     ("Eau, céréales 15,2 % (épeautre 7 %, riz 6 %, °avoine_), pâte", "Eau, céréales        (épeautre    , riz    , °avoine ), pâte"),
+    ("Eau, céréales 15.2% (E162, E 262i, E1905iii), 151", "Eau, céréales       (    ,       ,         ),    "),
 ])
 def test_normalize_ingredients(text, normalized):
     assert normalized == normalize_ingredients(text)
