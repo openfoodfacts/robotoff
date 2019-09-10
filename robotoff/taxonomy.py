@@ -17,14 +17,20 @@ class TaxonomyType(Enum):
 
 
 class TaxonomyNode:
-    __slots__ = ('id', 'names', 'parents', 'children')
+    __slots__ = ('id', 'names', 'parents', 'children', 'synonyms')
 
     def __init__(self, identifier: str,
-                 names: List[Dict[str, str]]):
+                 names: Dict[str, str],
+                 synonyms: Optional[Dict[str, str]]):
         self.id: str = identifier
         self.names: Dict[str, str] = names
         self.parents: List['TaxonomyNode'] = []
         self.children: List['TaxonomyNode'] = []
+
+        if synonyms:
+            self.synonyms = synonyms
+        else:
+            self.synonyms = {}
 
     def is_child_of(self, item: 'TaxonomyNode'):
         if not self.parents:
@@ -150,7 +156,8 @@ class Taxonomy:
         for key, key_data in data.items():
             if key not in taxonomy:
                 node = TaxonomyNode(identifier=key,
-                                    names=key_data.get('name', {}))
+                                    names=key_data.get('name', {}),
+                                    synonyms=key_data.get('synonyms', None))
                 taxonomy.add(key, node)
 
         for key, key_data in data.items():
