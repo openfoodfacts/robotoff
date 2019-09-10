@@ -3,6 +3,7 @@
 This document presents a brief, high-level overview of Robotoff’s library primary features. This guide will cover:
 
 - Using OFF dataset
+- Using the taxonomies (ingredient, label, category)
 
 ## Installation
 
@@ -42,3 +43,36 @@ The following filters are currently available:
 - filter_nonempty_tag_field
 - filter_empty_tag_field
 - filter_by_modified_datetime
+
+
+## Using the taxonomies
+
+Taxonomies contains items (such as ingredients, labels or categories) organized in a hierarchical way.
+Some items are children of other items. For instance, `en:brown-rice` is a child of `en:rice`.
+
+```
+from robotoff.taxonomy import get_taxonomy
+
+# supported taxonomies: ingredient, category, label
+taxonomy = get_taxonomy('category')
+
+brown_rice = taxonomy['en:brown-rices']
+rice = taxonomy['en:rices']
+print(brown_rice)
+# Output: <TaxonomyNode en:brown-rices>
+
+print(brown_rice.children)
+# Output: [<TaxonomyNode en:brown-jasmine-rices>, <TaxonomyNode en:brown-basmati-rices>]
+
+assert brown_rice.is_child_of(rice)
+assert rice.is_parent_of(brown_rice)
+
+assert brown_rice.get_localized_name('fr') == 'Riz complet'
+
+# find_deepest_item takes a list of string as input and outputs a string
+deepest_item = taxonomy.find_deepest_item([rice.id, brown_rice.id])
+assert deepest_item == brown_rice.id
+
+print(brown_rice.get_synonyms('fr'))
+# Output: ['Riz complet', 'riz cargo', 'riz brun', 'riz semi-complet']
+```
