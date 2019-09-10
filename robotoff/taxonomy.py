@@ -48,7 +48,10 @@ class TaxonomyNode:
 
         return False
 
-    def is_parent_of_any(self, candidates: Iterable['TaxonomyNode']):
+    def is_parent_of(self, item: 'TaxonomyNode') -> bool:
+        return item.is_child_of(self)
+
+    def is_parent_of_any(self, candidates: Iterable['TaxonomyNode']) -> bool:
         for candidate in candidates:
             if candidate.is_child_of(self):
                 return True
@@ -60,6 +63,9 @@ class TaxonomyNode:
             return self.names[lang]
 
         return self.id
+
+    def get_synonyms(self, lang: str) -> List[str]:
+        return self.synonyms.get(lang, [])
 
     def add_parents(self, parents: Iterable['TaxonomyNode']):
         for parent in parents:
