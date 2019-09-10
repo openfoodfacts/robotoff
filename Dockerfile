@@ -2,7 +2,6 @@ FROM python:3.7-slim
 
 WORKDIR /opt/robotoff
 
-COPY robotoff.py /opt/robotoff/robotoff.py
 COPY robotoff /opt/robotoff/robotoff/
 COPY data /opt/robotoff/data
 COPY i18n /opt/robotoff/i18n

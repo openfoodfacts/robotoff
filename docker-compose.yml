@@ -23,7 +23,7 @@ services:
     environment:
       DB_HOST: "localhost"
       ELASTICSEARCH_HOSTS: "localhost"
-    entrypoint: "python3 robotoff.py run workers"
+    entrypoint: "python3 -m robotoff run workers"
 
   scheduler:
     image: openfoodfacts/robotoff
@@ -33,7 +33,7 @@ services:
     environment:
       DB_HOST: "postgres"
       ELASTICSEARCH_HOSTS: "elasticsearch"
-    entrypoint: "python3 robotoff.py run scheduler"
+    entrypoint: "python3 -m robotoff run scheduler"
 
   postgres:
     restart: always
