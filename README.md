@@ -21,6 +21,8 @@ A scheduler takes care of regularly marking insights for automatic annotation an
 
 The [API documentation](https://github.com/openfoodfacts/robotoff/blob/master/doc/api.md) describes the API endpoints.
 
+For a quickstart of Robotoff as a library, go to the [Quickstart](https://github.com/openfoodfacts/robotoff/blob/master/doc/quickstart.md).
+
 ## Installation
 
 Robotoff is made of an API web server, a scheduler, a pool of asynchronous workers and a an Elasticsearch server.
