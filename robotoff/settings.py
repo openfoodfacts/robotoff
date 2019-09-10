@@ -12,18 +12,18 @@ JSONL_DATASET_ETAG_PATH = DATASET_DIR / 'products-etag.txt'
 JSONL_MIN_DATASET_PATH = DATASET_DIR / 'products-min.jsonl.gz'
 JSONL_DATASET_URL = "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz"
 
-TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.json"
-TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.json"
-TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.json"
+TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.full.json"
+TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.full.json"
+TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.full.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
 OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
 OFF_SERVER_DOMAIN = "api.openfoodfacts.org"
 
 TAXONOMY_DIR = DATA_DIR / 'taxonomies'
-TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.json'
-TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.json'
-TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.json'
+TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.full.json'
+TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.full.json'
+TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.full.json'
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
