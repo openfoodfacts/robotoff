@@ -32,7 +32,8 @@ class TaxonomyNode:
         else:
             self.synonyms = {}
 
-    def is_child_of(self, item: 'TaxonomyNode'):
+    def is_child_of(self, item: 'TaxonomyNode') -> bool:
+        """Return True if `item` is a child of `self` in the taxonomy."""
         if not self.parents:
             return False
 
@@ -43,6 +44,13 @@ class TaxonomyNode:
             is_parent = parent.is_child_of(item)
 
             if is_parent:
+                return True
+
+        return False
+
+    def is_parent_of_any(self, candidates: Iterable['TaxonomyNode']):
+        for candidate in candidates:
+            if candidate.is_child_of(self):
                 return True
 
         return False
@@ -83,12 +91,17 @@ class Taxonomy:
         return self.nodes.get(item)
 
     def iter_nodes(self) -> Iterable[TaxonomyNode]:
+        """Iterate over the nodes of the taxonomy."""
         return iter(self.nodes.values())
 
     def keys(self):
         return self.nodes.keys()
 
     def find_deepest_item(self, keys: List[str]) -> Optional[str]:
+        """From a list of node keys, find the deepest item in the taxonomy.
+        If keys is empty or no key is present in the taxonomy, return None.
+        Otherwise, return the key of the deepest item of the list.
+        """
         keys = list(set(keys))
         excluded: Set[str] = set()
 
@@ -129,11 +142,7 @@ class Taxonomy:
             if candidate_node is not None:
                 to_check_nodes.add(candidate_node)
 
-        for other_node in to_check_nodes:
-            if other_node.is_child_of(node):
-                return True
-
-        return False
+        return node.is_parent_of_any(to_check_nodes)
 
     def get_localized_name(self, key: str, lang: str) -> str:
         if key not in self.nodes:
