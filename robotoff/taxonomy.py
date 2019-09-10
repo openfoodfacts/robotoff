@@ -235,3 +235,8 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
                                       fallback_path=
                                       settings.TAXONOMY_LABEL_PATH))
 }
+
+
+def get_taxonomy(taxonomy_type: str) -> Taxonomy:
+    """Returned the requested Taxonomy."""
+    return TAXONOMY_STORES.get(taxonomy_type).get()

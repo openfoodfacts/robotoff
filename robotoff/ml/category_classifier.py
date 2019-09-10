@@ -25,8 +25,8 @@ from sklearn_hierarchical_classification.metrics import h_precision_score, \
 
 from robotoff import settings
 from robotoff.products import ProductDataset
-from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES, TaxonomyType, \
-    generate_category_hierarchy
+from robotoff.taxonomy import Taxonomy, TaxonomyType, \
+    generate_category_hierarchy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -252,7 +252,7 @@ def preprocess_product_name(text):
 
 
 def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
-    category_taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
+    category_taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
     category_classifier = CategoryClassifier(category_taxonomy)
     dataset: ProductDataset = ProductDataset.load()
     train_df, test_df = category_classifier.train(dataset)

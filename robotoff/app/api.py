@@ -25,7 +25,6 @@ from robotoff.insights.question import QuestionFormatterFactory, \
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
-from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger, get_image_from_url
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -38,7 +37,6 @@ from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 logger = get_logger()
 es_client = get_es_client()
 
-CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
 
