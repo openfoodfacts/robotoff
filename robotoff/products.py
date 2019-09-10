@@ -221,31 +221,33 @@ class Product:
 
 
 class ProductStore:
-    def __init__(self):
-        self.store: Dict[str, Product] = {}
+    def __init__(self, store: Dict[str, Product]):
+        self.store: Dict[str, Product] = store
 
-    def load(self, path: str, reset: bool=True):
+    def __len__(self):
+        return len(self.store)
+
+    @classmethod
+    def load_from_path(cls, path: str):
         logger.info("Loading product store")
         ds = ProductDataset(path)
         stream = ds.stream()
 
-        seen = set()
+        store: Dict[str, Product] = {}
+
         for product in stream.iter_product():
             if product.barcode:
-                seen.add(product.barcode)
-                self.store[product.barcode] = product
+                store[product.barcode] = product
 
-        if reset:
-            for key in set(self.store.keys()).difference(seen):
-                self.store.pop(key)
-
-        logger.info("product store loaded ({} items added)".format(len(seen)))
+        return cls(store)
 
     @classmethod
-    def load_from_min_dataset(cls):
-        product_store = ProductStore()
-        product_store.load(settings.JSONL_MIN_DATASET_PATH, False)
-        return product_store
+    def load_min(cls):
+        return ProductStore.load_from_path(settings.JSONL_MIN_DATASET_PATH)
+
+    @classmethod
+    def load_full(cls):
+        return ProductStore.load_from_path(settings.JSONL_DATASET_PATH)
 
     def __getitem__(self, item) -> Optional[Product]:
         return self.store.get(item)
@@ -254,4 +256,10 @@ class ProductStore:
         return iter(self.store.values())
 
 
-CACHED_PRODUCT_STORE = CachedStore(lambda: ProductStore.load_from_min_dataset())
+def load_min_dataset():
+    ps = ProductStore.load_min()
+    logger.info("product store loaded ({} items)".format(len(ps)))
+    return ps
+
+
+CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)
