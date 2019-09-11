@@ -32,10 +32,10 @@ class TestTaxonomy:
     @pytest.mark.parametrize('taxonomy,item,output', [
         (category_taxonomy, 'en:plant-based-foods-and-beverages', set()),
         (category_taxonomy, 'en:plant-based-foods', {'en:plant-based-foods-and-beverages'}),
-        (category_taxonomy, 'en:brown-rice', {'en:rices', 'en:cereal-grains',
-                                              'en:cereals-and-their-products',
-                                              'en:cereals-and-potatoes', 'en:plant-based-foods',
-                                              'en:plant-based-foods-and-beverages', 'en:seeds'}),
+        (category_taxonomy, 'en:brown-rices', {'en:rices', 'en:cereal-grains',
+                                               'en:cereals-and-their-products',
+                                               'en:cereals-and-potatoes', 'en:plant-based-foods',
+                                               'en:plant-based-foods-and-beverages', 'en:seeds'}),
     ])
     def test_get_parents_hierarchy(self, taxonomy: Taxonomy,
                                    item: str,
