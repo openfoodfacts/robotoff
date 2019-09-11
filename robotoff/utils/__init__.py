@@ -47,7 +47,7 @@ def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
 
 
 def gzip_jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
-    with gzip.open(jsonl_path, 'rt') as f:
+    with gzip.open(jsonl_path, 'rt', encoding='utf-8') as f:
         yield from jsonl_iter_fp(f)
 
 

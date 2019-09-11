@@ -25,7 +25,7 @@ def minify_product_dataset(dataset_path: pathlib.Path,
     else:
         jsonl_iter_func = jsonl_iter
 
-    with gzip.open(output_path, 'wt') as output_:
+    with gzip.open(output_path, 'wt', encoding='utf-8') as output_:
         for item in jsonl_iter_func(dataset_path):
             available_fields = Product.get_fields()
 
