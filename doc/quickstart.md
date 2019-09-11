@@ -7,7 +7,7 @@ This document presents a brief, high-level overview of Robotoff’s library prim
 
 ## Installation
 
-Robotoff is currently only compatible with Python 3.7.
+Robotoff is currently compatible with Python 3.6 and 3.7.
 Robotoff can be installed easily with pip: `pip3 install robotoff`
 
 ## Using the dataset
