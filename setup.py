@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="robotoff",
-    version="1.0.7",
+    version="1.0.8",
     author="Openfoodfacts Team",
     description="Real-time and batch prediction service for Openfoodfacts",
     url="https://github.com/openfoodfacts/robotoff",
