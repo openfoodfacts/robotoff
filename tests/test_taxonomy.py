@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 
 import pytest
 
@@ -7,6 +7,7 @@ from robotoff.taxonomy import Taxonomy
 
 
 label_taxonomy = Taxonomy.from_json(settings.TAXONOMY_LABEL_PATH)
+category_taxonomy = Taxonomy.from_json(settings.TAXONOMY_CATEGORY_PATH)
 
 
 class TestTaxonomy:
@@ -27,3 +28,18 @@ class TestTaxonomy:
     def test_is_child_of_any_unknwon_item(self):
         with pytest.raises(ValueError):
             label_taxonomy.is_parent_of_any("unknown-id", set())
+
+    @pytest.mark.parametrize('taxonomy,item,output', [
+        (category_taxonomy, 'en:plant-based-foods-and-beverages', set()),
+        (category_taxonomy, 'en:plant-based-foods', {'en:plant-based-foods-and-beverages'}),
+        (category_taxonomy, 'en:brown-rice', {'en:rices', 'en:cereal-grains',
+                                              'en:cereals-and-their-products',
+                                              'en:cereals-and-potatoes', 'en:plant-based-foods',
+                                              'en:plant-based-foods-and-beverages', 'en:seeds'}),
+    ])
+    def test_get_parents_hierarchy(self, taxonomy: Taxonomy,
+                                   item: str,
+                                   output: Set[str]):
+        node = taxonomy[item]
+        parents = node.get_parents_hierarchy()
+        assert set((x.id for x in parents)) == output

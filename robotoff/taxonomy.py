@@ -58,6 +58,26 @@ class TaxonomyNode:
 
         return False
 
+    def get_parents_hierarchy(self) -> List['TaxonomyNode']:
+        """Return the list of all parent nodes (direct and indirect)."""
+        all_parents = []
+        seen: Set[str] = set()
+
+        if not self.parents:
+            return []
+
+        for self_parent in self.parents:
+            if self_parent.id not in seen:
+                all_parents.append(self_parent)
+                seen.add(self_parent.id)
+
+            for parent_parent in self_parent.get_parents_hierarchy():
+                if parent_parent.id not in seen:
+                    all_parents.append(parent_parent)
+                    seen.add(parent_parent.id)
+
+        return all_parents
+
     def get_localized_name(self, lang: str) -> str:
         if lang in self.names:
             return self.names[lang]

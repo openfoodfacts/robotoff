@@ -75,4 +75,7 @@ assert deepest_item == brown_rice.id
 
 print(brown_rice.get_synonyms('fr'))
 # Output: ['Riz complet', 'riz cargo', 'riz brun', 'riz semi-complet']
+
+print(brown_rice.get_parents_hierarchy())
+# Output: [<TaxonomyNode en:rices>, <TaxonomyNode en:cereal-grains>, <TaxonomyNode en:cereals-and-their-products>, <TaxonomyNode en:cereals-and-potatoes>, <TaxonomyNode en:plant-based-foods>, <TaxonomyNode en:plant-based-foods-and-beverages>, <TaxonomyNode en:seeds>]
 ```
