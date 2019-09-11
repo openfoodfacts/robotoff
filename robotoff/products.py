@@ -48,19 +48,23 @@ def save_product_dataset_etag(etag: str):
         return f.write(etag)
 
 
-def fetch_dataset():
+def fetch_dataset(minify: bool = True):
     with tempfile.TemporaryDirectory() as tmp_dir:
         output_dir = pathlib.Path(tmp_dir)
         output_path = output_dir / 'products.jsonl.gz'
         etag = download_dataset(output_path)
-        minify_path = output_dir / 'products-min.jsonl.gz'
 
-        logger.info("Minifying product JSONL")
-        minify_product_dataset(output_path, minify_path)
+        if minify:
+            minify_path = output_dir / 'products-min.jsonl.gz'
+            logger.info("Minifying product JSONL")
+            minify_product_dataset(output_path, minify_path)
 
-        logger.info("Moving files to dataset directory")
+        logger.info("Moving file(s) to dataset directory")
         shutil.move(output_path, settings.JSONL_DATASET_PATH)
-        shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
+
+        if minify:
+            shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
+
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
 

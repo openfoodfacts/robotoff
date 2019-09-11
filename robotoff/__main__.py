@@ -68,13 +68,14 @@ if __name__ == "__main__":
 
 
     @click.command()
-    def download_dataset():
+    @click.option('--minify/--no-minify', default=False)
+    def download_dataset(minify: bool):
         from robotoff.products import has_dataset_changed, fetch_dataset
         from robotoff.utils import get_logger
         logger = get_logger()
 
         if has_dataset_changed():
-            fetch_dataset()
+            fetch_dataset(minify)
 
 
     @click.command()
