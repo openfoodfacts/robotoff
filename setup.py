@@ -32,4 +32,5 @@ setup(
         "Pint==0.9",
         'dataclasses>=0.6;python_version<"3.7"',
     ],
+    include_package_data=True,
 )
