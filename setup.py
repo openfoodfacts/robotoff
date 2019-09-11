@@ -29,5 +29,6 @@ setup(
         "numpy>=1.9.1",
         "protobuf>=3.5.1",
         "Pint==0.9",
+        'dataclasses>=0.6;python_version<"3.7"',
     ],
 )
