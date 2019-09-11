@@ -5,6 +5,7 @@ from typing import Tuple
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / 'data'
 DATASET_DIR = PROJECT_DIR / 'datasets'
+DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / 'i18n'
 DATASET_PATH = DATASET_DIR / 'en.openfoodfacts.org.products.csv'
 JSONL_DATASET_PATH = DATASET_DIR / 'products.jsonl.gz'
