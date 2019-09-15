@@ -1,4 +1,5 @@
 import datetime
+import enum
 import gzip
 import json
 import os
@@ -98,6 +99,43 @@ def download_dataset(output_path: os.PathLike) -> str:
     return current_etag
 
 
+class ComparisonOperator(enum.Enum):
+    eq = 1
+    gt = 2
+    geq = 3
+    lt = 4
+    leq = 5
+
+    @classmethod
+    def get_from_string(cls, value: str):
+        for operator in cls:
+            if operator.name == value:
+                return operator
+
+        raise ValueError("unknown operator: {}".format(value))
+
+
+def apply_comparison_operator(value_1, value_2,
+                              comparison_operator: ComparisonOperator) -> bool:
+    try:
+        if comparison_operator == ComparisonOperator.eq:
+            return value_1 == value_2
+
+        elif comparison_operator == ComparisonOperator.gt:
+            return value_1 > value_2
+
+        elif comparison_operator == ComparisonOperator.geq:
+            return value_1 >= value_2
+
+        elif comparison_operator == ComparisonOperator.lt:
+            return value_1 < value_2
+
+        else:
+            return value_1 <= value_2
+    except TypeError:
+        return False
+
+
 class ProductStream:
     def __init__(self, iterator: Iterable[JSONType]):
         self.iterator: Iterable[JSONType] = iterator
@@ -113,6 +151,23 @@ class ProductStream:
     def filter_by_state_tag(self, state_tag: str) -> 'ProductStream':
         filtered = (product for product in self.iterator
                     if state_tag in (product.get('states_tags') or []))
+        return ProductStream(filtered)
+
+    def filter_text_field(self, field: str, value: str):
+        filtered = (product for product in self.iterator
+                    if product.get(field, '') == value)
+        return ProductStream(filtered)
+
+    def filter_number_field(self, field: str,
+                            ref: [int, float],
+                            default: [int, float],
+                            operator: str = 'eq') -> 'ProductStream':
+        operator_ = ComparisonOperator.get_from_string(operator)
+        filtered = (
+            product for product in self.iterator
+            if apply_comparison_operator(
+            product.get(field, default), ref, operator_)
+        )
         return ProductStream(filtered)
 
     def filter_nonempty_text_field(self, field: str) -> 'ProductStream':
