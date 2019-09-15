@@ -61,6 +61,8 @@ if __name__ == "__main__":
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
         from robotoff.ingredients import generate_insights
+        from robotoff.utils import get_logger
+        get_logger()
 
         client = get_es_client()
         insights_iter = generate_insights(client, confidence=confidence)
