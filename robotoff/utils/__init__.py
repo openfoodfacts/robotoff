@@ -59,10 +59,14 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
 
 
 def dump_jsonl(filepath: Union[str, pathlib.Path],
-               json_iter: Iterable[Dict]):
+               json_iter: Iterable[Dict]) -> int:
+    count = 0
     with open(str(filepath), 'w') as f:
         for item in json_iter:
             f.write(json.dumps(item) + "\n")
+            count += 1
+
+    return count
 
 
 def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
