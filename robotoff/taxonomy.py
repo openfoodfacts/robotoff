@@ -116,6 +116,9 @@ class Taxonomy:
     def __getitem__(self, item: str):
         return self.nodes.get(item)
 
+    def __len__(self):
+        return len(self.nodes)
+
     def iter_nodes(self) -> Iterable[TaxonomyNode]:
         """Iterate over the nodes of the taxonomy."""
         return iter(self.nodes.values())
