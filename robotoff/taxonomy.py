@@ -9,6 +9,11 @@ from robotoff.off import http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
+try:
+    import networkx
+except ImportError:
+    networkx = None
+
 
 class TaxonomyType(Enum):
     category = 1
@@ -211,6 +216,17 @@ class Taxonomy:
         with open(file_path, 'r') as f:
             data = json.load(f)
             return cls.from_dict(data)
+
+    def to_graph(self):
+        """Generate a networkx.DiGraph from the taxonomy."""
+        graph = networkx.DiGraph()
+        graph.add_nodes_from((x.id for x in self.iter_nodes()))
+
+        for node in self.iter_nodes():
+            for child in node.children:
+                graph.add_edge(node.id, child.id)
+
+        return graph
 
 
 def generate_category_hierarchy(taxonomy: Taxonomy,
