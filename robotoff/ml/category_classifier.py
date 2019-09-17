@@ -231,12 +231,12 @@ class CategoryClassifier:
         y_pred_matrix = np.zeros((y_pred.shape[0], category_count))
         y_pred_matrix[:, y_pred] = 1
 
-        return evaluate(y_true_matrix, y_pred_matrix, category_graph)
+        return precision_recall_f1(y_true_matrix, y_pred_matrix, category_graph)
 
 
-def evaluate(y_true: np.ndarray,
-             y_pred: np.ndarray,
-             class_hierarchy: networkx.DiGraph):
+def precision_recall_f1(y_true: np.ndarray,
+                        y_pred: np.ndarray,
+                        class_hierarchy: networkx.DiGraph):
     y_true_ = fill_ancestors(y_true, graph=class_hierarchy)
     y_pred_ = fill_ancestors(y_pred, graph=class_hierarchy)
 
