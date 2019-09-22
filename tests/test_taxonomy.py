@@ -43,3 +43,19 @@ class TestTaxonomy:
         node = taxonomy[item]
         parents = node.get_parents_hierarchy()
         assert set((x.id for x in parents)) == output
+
+    @pytest.mark.parametrize('taxonomy,items,output', [
+        (category_taxonomy, [], []),
+        (category_taxonomy, ['en:brown-rices'], ['en:brown-rices']),
+        (category_taxonomy, ['en:brown-rices', 'en:rices'], ['en:brown-rices']),
+        (category_taxonomy, ['en:brown-rices', 'en:rices', 'en:cereal-grains'],
+         ['en:brown-rices']),
+        (category_taxonomy, ['en:brown-rices', 'en:teas', 'en:cereal-grains'],
+         ['en:brown-rices', 'en:teas']),
+    ])
+    def test_find_deepest_nodes(self, taxonomy: Taxonomy,
+                                items: List[str],
+                                output: List[str]):
+        item_nodes = [taxonomy[item] for item in items]
+        output_nodes = [taxonomy[o] for o in output]
+        assert taxonomy.find_deepest_nodes(item_nodes) == output_nodes

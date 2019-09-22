@@ -70,8 +70,8 @@ assert rice.is_parent_of(brown_rice)
 assert brown_rice.get_localized_name('fr') == 'Riz complet'
 
 # find_deepest_item takes a list of string as input and outputs a string
-deepest_item = taxonomy.find_deepest_item([rice.id, brown_rice.id])
-assert deepest_item == brown_rice.id
+deepest_node = taxonomy.find_deepest_nodes([rice, brown_rice])
+assert deepest_node == [brown_rice]
 
 print(brown_rice.get_synonyms('fr'))
 # Output: ['Riz complet', 'riz cargo', 'riz brun', 'riz semi-complet']

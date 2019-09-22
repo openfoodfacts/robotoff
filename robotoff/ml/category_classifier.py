@@ -25,7 +25,7 @@ from sklearn_hierarchical_classification.metrics import fill_ancestors
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import Taxonomy, TaxonomyType, \
-    generate_category_hierarchy, get_taxonomy
+    generate_category_hierarchy, get_taxonomy, TaxonomyNode
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -92,14 +92,18 @@ class CategoryClassifier:
 
         if add_category:
             categories_tags: List[str] = product['categories_tags']
+            category_nodes: List[TaxonomyNode] = [
+                self.category_taxonomy[c] for c in categories_tags
+                if c in self.category_taxonomy
+            ]
 
-            deepest_category: Optional[str] = (
-                self.category_taxonomy.find_deepest_item(categories_tags))
+            deepest_categories: List[TaxonomyNode] = (self.category_taxonomy
+                                                   .find_deepest_nodes(category_nodes))
 
-            if deepest_category is not None:
+            if deepest_categories is not None:
+                deepest_category = deepest_categories[0].id
                 item['deepest_category'] = deepest_category
-                item['deepest_category_int'] = self.categories_to_index[
-                    deepest_category]
+                item['deepest_category_int'] = self.categories_to_index[deepest_category]
 
         return item
 

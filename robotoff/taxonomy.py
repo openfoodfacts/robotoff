@@ -131,34 +131,17 @@ class Taxonomy:
     def keys(self):
         return self.nodes.keys()
 
-    def find_deepest_item(self, keys: List[str]) -> Optional[str]:
-        """From a list of node keys, find the deepest item in the taxonomy.
-        If keys is empty or no key is present in the taxonomy, return None.
-        Otherwise, return the key of the deepest item of the list.
-        """
-        keys = list(set(keys))
+    def find_deepest_nodes(self, nodes: List[TaxonomyNode]) -> List[TaxonomyNode]:
+        """From a list of nodes, find the deepest nodes using the taxonomy."""
         excluded: Set[str] = set()
 
-        if not any(True if key in self.keys() else False for key in keys):
-            return None
+        for node in nodes:
+            for second_node in (n for n in nodes
+                                if n.id not in excluded and n.id != node.id):
+                if node.is_child_of(second_node):
+                    excluded.add(second_node.id)
 
-        keys = [key for key in keys if key in self.keys()]
-
-        if len(keys) == 0:
-            return None
-
-        elif len(keys) == 1:
-            return keys[0]
-
-        for key in keys:
-            for second_item in (i for i in keys if i not in excluded):
-                if key == second_item:
-                    continue
-
-                if self[key].is_child_of(self[second_item]):
-                    excluded.add(second_item)
-
-        return [key for key in keys if key not in excluded][0]
+        return [node for node in nodes if node.id not in excluded]
 
     def is_parent_of_any(self,
                          item: str,
