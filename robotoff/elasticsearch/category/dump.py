@@ -2,7 +2,7 @@ import hashlib
 from typing import Iterable, Tuple, Dict
 
 from robotoff.insights._enum import InsightType
-from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy
+from robotoff.taxonomy import Taxonomy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client, perform_export
 from robotoff import settings
@@ -21,7 +21,7 @@ SUPPORTED_LANG = {
 def category_export():
     logger.info("Starting category export to Elasticsearch...")
     client = get_es_client()
-    category_taxonomy: Taxonomy = TAXONOMY_STORES[InsightType.category.name].get()
+    category_taxonomy: Taxonomy = get_taxonomy(InsightType.category.name)
     logger.info("Deleting existing categories...")
     delete_categories(client)
     logger.info("Starting export...")

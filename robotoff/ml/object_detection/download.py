@@ -1,9 +1,7 @@
 import pathlib
 from typing import Set
 
-import requests
-
-from robotoff.off import generate_image_url
+from robotoff.off import generate_image_url, http_session
 from robotoff.products import ProductDataset
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -44,7 +42,7 @@ def save_image(directory: pathlib.Path,
     image_url = generate_image_url(barcode,
                                    image_name)
     logger.info("Downloading image {}".format(image_url))
-    r = requests.get(image_url)
+    r = http_session.get(image_url)
 
     with open(str(image_path), 'wb') as fd:
         logger.info("Saving image in {}".format(image_path))

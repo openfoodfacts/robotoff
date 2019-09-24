@@ -4,7 +4,7 @@ from typing import Optional
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.products import ProductStore, Product
-from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES
+from robotoff.taxonomy import Taxonomy, get_taxonomy
 from robotoff.utils.types import JSONType
 
 
@@ -41,8 +41,7 @@ class LabelValidator(InsightValidator):
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
-        label_taxonomy: Taxonomy = TAXONOMY_STORES[
-            InsightType.label.name].get()
+        label_taxonomy: Taxonomy = get_taxonomy(InsightType.label.name)
 
         if (label_tag in label_taxonomy and
             label_taxonomy.is_parent_of_any(label_tag,
@@ -70,8 +69,7 @@ class CategoryValidator(InsightValidator):
 
         # Check that the predicted category is not a parent of a
         # current/already predicted category
-        category_taxonomy: Taxonomy = TAXONOMY_STORES[
-            InsightType.category.name].get()
+        category_taxonomy: Taxonomy = get_taxonomy(InsightType.category.name)
 
         if (category_tag in category_taxonomy and
             category_taxonomy.is_parent_of_any(category_tag,

@@ -7,6 +7,10 @@ from robotoff import settings
 from robotoff.utils import get_logger
 
 http_session = requests.Session()
+USER_AGENT_HEADERS = {
+    'User-Agent': settings.ROBOTOFF_USER_AGENT,
+}
+http_session.headers.update(USER_AGENT_HEADERS)
 
 POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
 DRY_POST_URL = "https://world.openfoodfacts.net/cgi/product_jqm2.pl"
@@ -23,10 +27,6 @@ logger = get_logger(__name__)
 
 
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
-
-USER_AGENT_HEADERS = {
-    'User-Agent': settings.ROBOTOFF_USER_AGENT,
-}
 
 
 def split_barcode(barcode: str) -> List[str]:
@@ -78,7 +78,7 @@ def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
         # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
         url += '?fields={}'.format(','.join(fields))
 
-    r = http_session.get(url, headers=USER_AGENT_HEADERS)
+    r = http_session.get(url)
 
     if r.status_code != 200:
         return None
@@ -235,11 +235,9 @@ def add_store(barcode: str, store: str, dry=False,
 def update_product(params: Dict, dry=False):
     if dry:
         r = http_session.get(DRY_POST_URL, params=params,
-                             auth=('off', 'off'),
-                             headers=USER_AGENT_HEADERS)
+                             auth=('off', 'off'))
     else:
-        r = http_session.get(POST_URL, params=params,
-                             headers=USER_AGENT_HEADERS)
+        r = http_session.get(POST_URL, params=params)
 
     r.raise_for_status()
     json = r.json()

@@ -4,11 +4,15 @@ import json
 from enum import Enum
 from typing import List, Dict, Iterable, Optional, Set
 
-import requests
-
 from robotoff import settings
+from robotoff.off import http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
+
+try:
+    import networkx
+except ImportError:
+    networkx = None
 
 
 class TaxonomyType(Enum):
@@ -18,16 +22,23 @@ class TaxonomyType(Enum):
 
 
 class TaxonomyNode:
-    __slots__ = ('id', 'names', 'parents', 'children')
+    __slots__ = ('id', 'names', 'parents', 'children', 'synonyms')
 
     def __init__(self, identifier: str,
-                 names: List[Dict[str, str]]):
+                 names: Dict[str, str],
+                 synonyms: Optional[Dict[str, str]]):
         self.id: str = identifier
         self.names: Dict[str, str] = names
         self.parents: List['TaxonomyNode'] = []
         self.children: List['TaxonomyNode'] = []
 
-    def is_child_of(self, item: 'TaxonomyNode'):
+        if synonyms:
+            self.synonyms = synonyms
+        else:
+            self.synonyms = {}
+
+    def is_child_of(self, item: 'TaxonomyNode') -> bool:
+        """Return True if `item` is a child of `self` in the taxonomy."""
         if not self.parents:
             return False
 
@@ -42,11 +53,44 @@ class TaxonomyNode:
 
         return False
 
+    def is_parent_of(self, item: 'TaxonomyNode') -> bool:
+        return item.is_child_of(self)
+
+    def is_parent_of_any(self, candidates: Iterable['TaxonomyNode']) -> bool:
+        for candidate in candidates:
+            if candidate.is_child_of(self):
+                return True
+
+        return False
+
+    def get_parents_hierarchy(self) -> List['TaxonomyNode']:
+        """Return the list of all parent nodes (direct and indirect)."""
+        all_parents = []
+        seen: Set[str] = set()
+
+        if not self.parents:
+            return []
+
+        for self_parent in self.parents:
+            if self_parent.id not in seen:
+                all_parents.append(self_parent)
+                seen.add(self_parent.id)
+
+            for parent_parent in self_parent.get_parents_hierarchy():
+                if parent_parent.id not in seen:
+                    all_parents.append(parent_parent)
+                    seen.add(parent_parent.id)
+
+        return all_parents
+
     def get_localized_name(self, lang: str) -> str:
         if lang in self.names:
             return self.names[lang]
 
         return self.id
+
+    def get_synonyms(self, lang: str) -> List[str]:
+        return self.synonyms.get(lang, [])
 
     def add_parents(self, parents: Iterable['TaxonomyNode']):
         for parent in parents:
@@ -77,36 +121,27 @@ class Taxonomy:
     def __getitem__(self, item: str):
         return self.nodes.get(item)
 
+    def __len__(self):
+        return len(self.nodes)
+
     def iter_nodes(self) -> Iterable[TaxonomyNode]:
+        """Iterate over the nodes of the taxonomy."""
         return iter(self.nodes.values())
 
     def keys(self):
         return self.nodes.keys()
 
-    def find_deepest_item(self, keys: List[str]) -> Optional[str]:
-        keys = list(set(keys))
+    def find_deepest_nodes(self, nodes: List[TaxonomyNode]) -> List[TaxonomyNode]:
+        """From a list of nodes, find the deepest nodes using the taxonomy."""
         excluded: Set[str] = set()
 
-        if not any(True if key in self.keys() else False for key in keys):
-            return None
+        for node in nodes:
+            for second_node in (n for n in nodes
+                                if n.id not in excluded and n.id != node.id):
+                if node.is_child_of(second_node):
+                    excluded.add(second_node.id)
 
-        keys = [key for key in keys if key in self.keys()]
-
-        if len(keys) == 0:
-            return None
-
-        elif len(keys) == 1:
-            return keys[0]
-
-        for key in keys:
-            for second_item in (i for i in keys if i not in excluded):
-                if key == second_item:
-                    continue
-
-                if self[key].is_child_of(self[second_item]):
-                    excluded.add(second_item)
-
-        return [key for key in keys if key not in excluded][0]
+        return [node for node in nodes if node.id not in excluded]
 
     def is_parent_of_any(self,
                          item: str,
@@ -124,11 +159,7 @@ class Taxonomy:
             if candidate_node is not None:
                 to_check_nodes.add(candidate_node)
 
-        for other_node in to_check_nodes:
-            if other_node.is_child_of(node):
-                return True
-
-        return False
+        return node.is_parent_of_any(to_check_nodes)
 
     def get_localized_name(self, key: str, lang: str) -> str:
         if key not in self.nodes:
@@ -151,7 +182,8 @@ class Taxonomy:
         for key, key_data in data.items():
             if key not in taxonomy:
                 node = TaxonomyNode(identifier=key,
-                                    names=key_data.get('name', {}))
+                                    names=key_data.get('name', {}),
+                                    synonyms=key_data.get('synonyms', None))
                 taxonomy.add(key, node)
 
         for key, key_data in data.items():
@@ -167,6 +199,17 @@ class Taxonomy:
         with open(file_path, 'r') as f:
             data = json.load(f)
             return cls.from_dict(data)
+
+    def to_graph(self):
+        """Generate a networkx.DiGraph from the taxonomy."""
+        graph = networkx.DiGraph()
+        graph.add_nodes_from((x.id for x in self.iter_nodes()))
+
+        for node in self.iter_nodes():
+            for child in node.children:
+                graph.add_edge(node.id, child.id)
+
+        return graph
 
 
 def generate_category_hierarchy(taxonomy: Taxonomy,
@@ -201,7 +244,7 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) \
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = requests.get(url, timeout=5)
+        r = http_session.get(url, timeout=5)
         data = r.json()
     except Exception:
         if fallback_path:
@@ -229,3 +272,8 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
                                       fallback_path=
                                       settings.TAXONOMY_LABEL_PATH))
 }
+
+
+def get_taxonomy(taxonomy_type: str) -> Taxonomy:
+    """Returned the requested Taxonomy."""
+    return TAXONOMY_STORES.get(taxonomy_type).get()

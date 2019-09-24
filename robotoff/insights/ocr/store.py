@@ -41,8 +41,8 @@ def get_sorted_stores() -> List[Tuple[str, str]]:
 SORTED_STORES = get_sorted_stores()
 STORE_REGEX_STR = "|".join(r"((?<!\w){}(?!\w))".format(pattern)
                            for _, pattern in SORTED_STORES)
-NOTIFY_STORES_WHITELIST: Set[str] = set(
-    text_file_iter(settings.OCR_STORES_NOTIFY_WHITELIST_DATA_PATH))
+NOTIFY_STORES: Set[str] = set(
+    text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
 STORE_REGEX = OCRRegex(re.compile(STORE_REGEX_STR),
                        field=OCRField.full_text_contiguous,
                        lowercase=True)
@@ -66,7 +66,7 @@ def find_stores(ocr_result: OCRResult) -> List[Dict]:
                     'store': store,
                     'store_tag': get_store_tag(store),
                     'text': match_str,
-                    'notify': store not in NOTIFY_STORES_WHITELIST,
+                    'notify': store in NOTIFY_STORES,
                 })
                 break
 

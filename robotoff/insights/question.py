@@ -6,7 +6,7 @@ from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.off import get_product
-from robotoff.taxonomy import TaxonomyType, TAXONOMY_STORES, Taxonomy
+from robotoff.taxonomy import TaxonomyType, Taxonomy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
@@ -84,7 +84,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
         value: str = insight.value_tag
-        taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
+        taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
         source_image_url = self.get_source_image_url(insight.barcode)
@@ -146,7 +146,7 @@ class LabelQuestionFormatter(QuestionFormatter):
         if value in LABEL_IMAGES:
             image_url = LABEL_IMAGES[value]
 
-        taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.label.name].get()
+        taxonomy: Taxonomy = get_taxonomy(TaxonomyType.label.name)
         localized_value: str = taxonomy.get_localized_name(value, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
         source_image_url = (settings.OFF_IMAGE_BASE_URL +

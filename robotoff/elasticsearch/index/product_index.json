@@ -11,6 +11,14 @@
             "lowercase",
             "shingle"
           ]
+        },
+        "reverse": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "reverse"
+          ]
         }
       },
       "filter": {
@@ -31,6 +39,10 @@
             "trigram": {
               "type": "text",
               "analyzer": "trigram"
+            },
+            "reverse": {
+              "type": "text",
+              "analyzer": "reverse"
             }
           }
         },

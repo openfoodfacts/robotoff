@@ -1,5 +1,7 @@
 # Robotoff
 
+[![Build Status](https://travis-ci.org/openfoodfacts/robotoff.svg?branch=master)](https://travis-ci.org/openfoodfacts/robotoff)
+
 Robotoff is a service managing potential Open Food Facts updates (also known as _insights_).
 These insights include a growing set of facts, including:
 - the product category, weight, brand, packager codes and expiration date
@@ -18,6 +20,8 @@ Once generated, the insights can be applied automatically, or after a manual val
 A scheduler takes care of regularly marking insights for automatic annotation and for sending the update to Openfoodfacts.
 
 The [API documentation](https://github.com/openfoodfacts/robotoff/blob/master/doc/api.md) describes the API endpoints.
+
+For a quickstart of Robotoff as a library, go to the [Quickstart](https://github.com/openfoodfacts/robotoff/blob/master/doc/quickstart.md).
 
 ## Installation
 

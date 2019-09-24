@@ -8,7 +8,7 @@ from robotoff.insights.data import AUTHORIZED_LABELS, BRANDS_BARCODE_RANGE
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
 from robotoff.products import ProductStore, Product
-from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy, TaxonomyNode
+from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
@@ -310,8 +310,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
-        label_taxonomy: Taxonomy = TAXONOMY_STORES[
-            InsightType.label.name].get()
+        label_taxonomy: Taxonomy = get_taxonomy(InsightType.label.name)
 
         if label_tag in label_taxonomy:
             label_node: TaxonomyNode = label_taxonomy[label_tag]
@@ -456,8 +455,7 @@ class CategoryImporter(InsightImporter):
 
         # Check that the predicted category is not a parent of a
         # current/already predicted category
-        category_taxonomy: Taxonomy = TAXONOMY_STORES[
-            InsightType.category.name].get()
+        category_taxonomy: Taxonomy = get_taxonomy(InsightType.category.name)
 
         if category in category_taxonomy:
             category_node: TaxonomyNode = category_taxonomy[category]

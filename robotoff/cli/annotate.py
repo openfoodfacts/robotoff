@@ -3,7 +3,6 @@ from difflib import SequenceMatcher
 from typing import Optional, Dict
 import click
 import requests
-from robotoff.off import USER_AGENT_HEADERS
 from robotoff.utils.types import JSONType
 
 http_session = requests.Session()
@@ -60,7 +59,7 @@ def get_random_insight(insight_type: Optional[str] = None,
     if country:
         params['country'] = country
 
-    r = http_session.get(RANDOM_INSIGHT_URL, params=params, headers=USER_AGENT_HEADERS)
+    r = http_session.get(RANDOM_INSIGHT_URL, params=params)
     data = r.json()
 
     if data['status'] == 'no_insights':

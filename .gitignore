@@ -1,5 +1,8 @@
 __pycache__
+build
+dist
 .idea
+robotoff.egg-info
 ml/data/*
 datasets
 *.joblib

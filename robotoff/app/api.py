@@ -5,6 +5,7 @@ from typing import List, Optional
 import dataclasses
 
 import falcon
+import requests
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
 
@@ -17,11 +18,13 @@ from robotoff.app.core import (get_insights,
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
+from robotoff.insights.extraction import extract_ocr_insights
+from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
-from robotoff.taxonomy import TAXONOMY_STORES, TaxonomyType, Taxonomy
 from robotoff.utils import get_logger, get_image_from_url
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -34,7 +37,6 @@ from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
 logger = get_logger()
 es_client = get_es_client()
 
-CATEGORY_TAXONOMY: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
 
@@ -112,6 +114,38 @@ class IngredientSpellcheckResource:
             'text': text,
             'corrected': generate_corrected_text(term_corrections, text),
         }
+
+
+class NutrientPredictorResource:
+    def on_get(self, req, resp):
+        ocr_url = req.get_param('ocr_url', required=True)
+
+        try:
+            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
+
+        except requests.exceptions.RequestException:
+            resp.media = {
+                'error': "download_error",
+                'error_description': "an error occurred during OCR JSON download",
+            }
+            return
+
+        except OCRParsingException as e:
+            logger.error(e)
+            resp.media = {
+                'error': "invalid_ocr",
+                'error_description': "an error occurred during OCR parsing",
+            }
+            return
+
+        if not insights:
+            resp.media = {
+                'nutrients': {},
+            }
+        else:
+            resp.media = {
+                'nutrients': insights['nutrient'][0]['nutrients']
+            }
 
 
 class UpdateDatasetResource:
@@ -205,7 +239,7 @@ class ImagePredictorResource:
                 "a single model must be specified with the `models` parameter "
                 "when `output_image` is True")
 
-        image = get_image_from_url(image_url)
+        image = get_image_from_url(image_url, session=http_session)
 
         if image is None:
             logger.info("Could not fetch image: {}".format(image_url))
@@ -365,6 +399,8 @@ api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/insights/import', InsightImporterResource())
 api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
+api.add_route('/api/v1/predict/nutrient',
+              NutrientPredictorResource())
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
 api.add_route('/api/v1/webhook/product',

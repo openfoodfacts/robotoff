@@ -61,8 +61,8 @@ def get_sorted_brands() -> List[Tuple[str, str]]:
 SORTED_BRANDS = get_sorted_brands()
 BRAND_REGEX_STR = "|".join(r"((?<!\w){}(?!\w))".format(pattern)
                            for _, pattern in SORTED_BRANDS)
-NOTIFY_BRANDS_WHITELIST: Set[str] = set(
-    text_file_iter(settings.OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH))
+NOTIFY_BRANDS: Set[str] = set(
+    text_file_iter(settings.OCR_BRANDS_NOTIFY_DATA_PATH))
 BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
                        field=OCRField.full_text_contiguous,
                        lowercase=True)
@@ -86,7 +86,7 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
                     'brand': brand,
                     'brand_tag': get_brand_tag(brand),
                     'text': match_str,
-                    'notify': brand not in NOTIFY_BRANDS_WHITELIST,
+                    'notify': brand in NOTIFY_BRANDS,
                 })
                 return results
 

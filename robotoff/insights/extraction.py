@@ -1,22 +1,40 @@
 from urllib.parse import urlparse
 
-import requests
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Iterable
 
+import requests
 from PIL import Image
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights import ocr
+from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.off import http_session
 from robotoff.utils import get_image_from_url, get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
 
+DEFAULT_INSIGHT_TYPES = (InsightType.label.name,
+                         InsightType.packager_code.name,
+                         InsightType.product_weight.name,
+                         InsightType.image_flag.name,
+                         InsightType.expiration_date.name,
+                         InsightType.brand.name,
+                         InsightType.store.name)
+
+
 def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
         -> Optional[Dict]:
-    ocr_insights = extract_ocr_insights(ocr_url)
+    try:
+        ocr_insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+    except requests.exceptions.RequestException as e:
+        logger.info("error during OCR JSON download", exc_info=e)
+        return None
+    except OCRParsingException as e:
+        logger.error("OCR JSON Parsing error", exc_info=e)
+        return None
 
     extract_nutriscore = has_nutriscore_insight(ocr_insights)
     image_ml_insights = extract_image_ml_insights(
@@ -71,7 +89,7 @@ def extract_image_ml_insights(image_url: str,
     results: JSONType = {}
 
     if extract_nutriscore:
-        image = get_image_from_url(image_url, error_raise=True)
+        image = get_image_from_url(image_url, error_raise=True, session=http_session)
         nutriscore_insight = extract_nutriscore_label(image,
                                                       manual_threshold=0.5,
                                                       automatic_threshold=0.9)
@@ -88,16 +106,12 @@ def extract_image_ml_insights(image_url: str,
     return results
 
 
-def extract_ocr_insights(ocr_url: str) -> JSONType:
-    r = requests.get(ocr_url)
-
-    if r.status_code == 404:
-        logger.info("OCR JSON {} not found".format(ocr_url))
-        return {}
-
+def extract_ocr_insights(ocr_url: str,
+                         insight_types: Iterable[str]) -> JSONType:
+    r = http_session.get(ocr_url)
     r.raise_for_status()
 
-    ocr_data: Dict = requests.get(ocr_url).json()
+    ocr_data: Dict = r.json()
     ocr_result = ocr.OCRResult.from_json(ocr_data)
 
     if ocr_result is None:
@@ -106,13 +120,7 @@ def extract_ocr_insights(ocr_url: str) -> JSONType:
 
     results = {}
 
-    for insight_type in (InsightType.label.name,
-                         InsightType.packager_code.name,
-                         InsightType.product_weight.name,
-                         InsightType.image_flag.name,
-                         InsightType.expiration_date.name,
-                         InsightType.brand.name,
-                         InsightType.store.name):
+    for insight_type in insight_types:
         insights = ocr.extract_insights(ocr_result, insight_type)
 
         if insights:

@@ -20,13 +20,12 @@ from sklearn.pipeline import Pipeline
 
 from sklearn_hierarchical_classification.classifier import HierarchicalClassifier
 from sklearn_hierarchical_classification.constants import ROOT
-from sklearn_hierarchical_classification.metrics import h_precision_score, \
-    h_recall_score, h_fbeta_score
+from sklearn_hierarchical_classification.metrics import fill_ancestors
 
 from robotoff import settings
 from robotoff.products import ProductDataset
-from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES, TaxonomyType, \
-    generate_category_hierarchy
+from robotoff.taxonomy import Taxonomy, TaxonomyType, \
+    generate_category_hierarchy, get_taxonomy, TaxonomyNode
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -93,14 +92,18 @@ class CategoryClassifier:
 
         if add_category:
             categories_tags: List[str] = product['categories_tags']
+            category_nodes: List[TaxonomyNode] = [
+                self.category_taxonomy[c] for c in categories_tags
+                if c in self.category_taxonomy
+            ]
 
-            deepest_category: Optional[str] = (
-                self.category_taxonomy.find_deepest_item(categories_tags))
+            deepest_categories: List[TaxonomyNode] = (self.category_taxonomy
+                                                   .find_deepest_nodes(category_nodes))
 
-            if deepest_category is not None:
+            if deepest_categories is not None:
+                deepest_category = deepest_categories[0].id
                 item['deepest_category'] = deepest_category
-                item['deepest_category_int'] = self.categories_to_index[
-                    deepest_category]
+                item['deepest_category_int'] = self.categories_to_index[deepest_category]
 
         return item
 
@@ -227,16 +230,36 @@ class CategoryClassifier:
                   y_pred: np.ndarray,
                   category_count: int) -> JSONType:
         y_true_matrix = np.zeros((y_true.shape[0], category_count))
-        y_true_matrix[np.arange(y_true.shape[0]), y_true] = 1
+        y_true_matrix[:, y_true] = 1
 
         y_pred_matrix = np.zeros((y_pred.shape[0], category_count))
-        y_pred_matrix[np.arange(y_pred.shape[0]), y_pred] = 1
+        y_pred_matrix[:, y_pred] = 1
 
-        return {
-            'h_precision': h_precision_score(y_true_matrix, y_pred_matrix, category_graph),
-            'h_recall': h_recall_score(y_true_matrix, y_pred_matrix, category_graph),
-            'h_fbeta': h_fbeta_score(y_true_matrix, y_pred_matrix, category_graph),
-        }
+        return precision_recall_f1(y_true_matrix, y_pred_matrix, category_graph)
+
+
+def precision_recall_f1(y_true: np.ndarray,
+                        y_pred: np.ndarray,
+                        class_hierarchy: networkx.DiGraph):
+    y_true_ = fill_ancestors(y_true, graph=class_hierarchy)
+    y_pred_ = fill_ancestors(y_pred, graph=class_hierarchy)
+
+    ix = np.where((y_true_ != 0) & (y_pred_ != 0))
+
+    true_positives = len(ix[0])
+    all_results = np.count_nonzero(y_pred_)
+    all_positives = np.count_nonzero(y_true_)
+
+    h_precision = true_positives / all_results
+    h_recall = true_positives / all_positives
+    beta = 1
+    h_f_1 = (1. + beta ** 2.) * h_precision * h_recall / (beta ** 2. * h_precision + h_recall)
+
+    return {
+        'h_precision': h_precision,
+        'h_recall': h_recall,
+        'h_f1': h_f_1,
+    }
 
 
 def ingredient_preprocess(ingredients_tags: List[str]) -> str:
@@ -252,7 +275,7 @@ def preprocess_product_name(text):
 
 
 def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
-    category_taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
+    category_taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
     category_classifier = CategoryClassifier(category_taxonomy)
     dataset: ProductDataset = ProductDataset.load()
     train_df, test_df = category_classifier.train(dataset)

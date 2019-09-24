@@ -76,7 +76,7 @@ danone||Danone
 Danone||Danone
 Daucy||D'Aucy
 Daunat||Daunat
-del monte||Del Monter
+del monte||Del Monte
 Delhaize Group||Delhaize
 Delhaize||Delhaize
 Delpeyrat||Delpeyrat
@@ -155,7 +155,7 @@ Larnaudie||Larnaudie
 Lay's||Lay's
 lays||Lay's
 Lays||Lay's
-Le Gaulois|Le Gaulois
+Le Gaulois||Le Gaulois
 Le Prix Gagnant||Le Prix Gagnant
 leader price||Leader Price
 Leader Price||Leader Price
@@ -164,7 +164,7 @@ Les 2 Vaches||Les 2 Vaches
 lesieur||Lesieur
 Lesieur||Lesieur
 lidl||Lidl
-Lindt & Sprüngli
+Lindt & Sprüngli||Lindt & Sprüngli
 Lindt Excellence||Lindt
 Lindt||Lindt
 lindt||Lindt
@@ -214,7 +214,6 @@ perrier||Perrier
 Petit Navire||Petit Navire
 petit navire||Petit Navire
 Phare d'Eckmühl||Phare d'Eckmühl
-Pierre Martinet
 pierre martinet||Pierre Martinet
 Pierre Martinet||Pierre Martinet
 pom potes||Pom Potes
@@ -275,6 +274,8 @@ volvic||Volvic
 Volvic||Volvic
 walgreens||Walgreens
 whole foods||Whole Foods
+Woolworths||Woolworths
+woolworths||Woolworths
 William Saurin||William Saurin
 yoplait||Yoplait
 yves rocher||Yves Rocher

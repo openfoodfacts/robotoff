@@ -1,5 +1,4 @@
 import itertools
-import json
 import operator
 import re
 
@@ -9,14 +8,21 @@ from typing import List, Tuple, Iterable, Dict
 
 from robotoff import settings
 from robotoff.products import ProductDataset
-from robotoff.utils.es import get_es_client, generate_msearch_body
+from robotoff.utils import get_logger
+from robotoff.utils.es import generate_msearch_body
+
+logger = get_logger(__name__)
 
 SPLITTER_CHAR = {'(', ')', ',', ';', '[', ']', '-', '{', '}'}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:,\d+)?\s*%)|(?:E\d{3})|(?:[_•])")
+BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:E ?\d{3,5}[a-z]*)|(?:[_•:0-9])")
 
 OffsetType = Tuple[int, int]
+
+
+class TokenLengthMismatchException(Exception):
+    pass
 
 
 @dataclass
@@ -117,9 +123,9 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
                                                   suggestion_tokens,
                                                   offsets[0])
             corrections.append(Correction(term_corrections, option['score']))
-        except ValueError:
-            print("Mismatch")
-            # Length mismatch exception
+        except TokenLengthMismatchException:
+            logger.warning("The original text and the suggestions must have the same number "
+                           "of tokens: {} / {}".format(original_tokens, suggestion_tokens))
             continue
 
     return corrections
@@ -149,11 +155,11 @@ def generate_corrected_text(corrections: List[TermCorrection], text: str):
 
 def format_corrections(original_tokens: List[Dict],
                        suggestion_tokens: List[Dict],
-                       offset: int=0):
+                       offset: int = 0):
     corrections = []
 
     if len(original_tokens) != len(suggestion_tokens):
-        raise ValueError("The original text and the suggestions must have the same number of tokens")
+        raise TokenLengthMismatchException()
 
     for original_token, suggestion_token in zip(original_tokens, suggestion_tokens):
         original_token_str = original_token['token']
@@ -280,21 +286,3 @@ def generate_insights(client, confidence=1):
             'corrected': generate_corrected_text(term_corrections, text),
             'barcode': product['code'],
         }
-
-
-if __name__ == "__main__":
-    client = get_es_client()
-    # r = _suggest_batch(client, ["Fromage  blcnc allégé", "fruits & sucralose", "Huile  d'oluve"])
-    # print(r)
-    # suggest(client, "huile de colza 15,6%, gras de porn, huile de morie")
-    # print(analyze(client, "Huile  d\"olive"))
-    # text = "Fromage  Blcnc allégé 10,5%, fruits & sucralose, Huile  d'oluve"
-    # text = """Garniture 57,4 % : préparation de viande bovine hachée cuite* 42,9 % (viande bovine origine France, sel, arômes), cheddar 21,4 % (lait de vache pasteurisé, sel, ferments lactiques, coagulant, colorant : E160b), sauce ketchup (tomate, sirop de glucose et fructose, sucre, vinaigre d'alcool, amidon modifié de maïs, sel, arôme, conservateurs : E202, E211), bacon* 10,7 % (maigre de porc, sel, dextrose de blé, arôme de fumée, acidifiant : E330, conservateurs : E316, E250), cornichons, 7,1 %,(cornichons, eau, vinaigre d'alcool, sel, conservateurs : E224). Pourcentages exprimés sur la garniture. Pain spécial* 42,6 % : farine de blé, eau, sucre, levure, huile de colza, graines de sésame, dextrose de blé, sel, conservateur : E282, émulsifiants : E471, E472e, agent de traitement de la farine : E300. * Ingrédients décongelés, ne pas congeler ce produit."""
-    # text = """légumes 65% (jus de tomate reconstilué 48%, oignon 5,8%, pois chiche cuit 5,6%, céleril, eau, lentille verte cuite 5,6%, huile d'olive, amidon transformé de mais, sel, persil 0,6%, coriandre 0,6%, arômes, piment 0,01% Traces possibles de lait, crustacé poissons, mollusques, moutarde, gluten, ceuf, soja et fruits à coque"""
-    # text = """farine de blé - viande de dinde 21,6% eau viande de porc 6,7% - beurre-gras de porc foie de porc - brandy - pistaches-sel - fécule dextrose gélatine de porc tissu conjonctif de porc - épices et plantes aromatiques vin arômes naturels vin aromatisé eufs entiers-colorants : E160a, E150a gélifiant E407 antioxydant E301 lactose - acidifiant E330 conservateur E250 Traces de fruits à coques, moutarde.soja céleri et poissons Dinde et viande de porc origine: UE Les informations en gras sont destinées aux personnes intolérantes ou allergiques. CONSEIL D'UTILISATION pour plus de saveur, sortez le produit de son emballage 15 minutes avant de servir. CONSERVATION CONDITIONS DE"""
-    # corrections = generate_corrections(client, text, confidence=1)
-    # print(corrections)
-
-    with open('insights_10.jsonl', 'w') as f:
-        for insight in generate_insights(client, confidence=10):
-            f.write(json.dumps(insight) + '\n')

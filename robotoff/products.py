@@ -1,4 +1,5 @@
 import datetime
+import enum
 import gzip
 import json
 import os
@@ -9,6 +10,7 @@ from typing import List, Iterable, Dict, Optional, Iterator
 
 import requests
 
+from robotoff.off import http_session
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
 from robotoff.utils.cache import CachedStore
@@ -24,7 +26,7 @@ def minify_product_dataset(dataset_path: pathlib.Path,
     else:
         jsonl_iter_func = jsonl_iter
 
-    with gzip.open(output_path, 'wt') as output_:
+    with gzip.open(output_path, 'wt', encoding='utf-8') as output_:
         for item in jsonl_iter_func(dataset_path):
             available_fields = Product.get_fields()
 
@@ -47,19 +49,23 @@ def save_product_dataset_etag(etag: str):
         return f.write(etag)
 
 
-def fetch_dataset():
+def fetch_dataset(minify: bool = True):
     with tempfile.TemporaryDirectory() as tmp_dir:
         output_dir = pathlib.Path(tmp_dir)
         output_path = output_dir / 'products.jsonl.gz'
         etag = download_dataset(output_path)
-        minify_path = output_dir / 'products-min.jsonl.gz'
 
-        logger.info("Minifying product JSONL")
-        minify_product_dataset(output_path, minify_path)
+        if minify:
+            minify_path = output_dir / 'products-min.jsonl.gz'
+            logger.info("Minifying product JSONL")
+            minify_product_dataset(output_path, minify_path)
 
-        logger.info("Moving files to dataset directory")
+        logger.info("Moving file(s) to dataset directory")
         shutil.move(output_path, settings.JSONL_DATASET_PATH)
-        shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
+
+        if minify:
+            shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
+
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
 
@@ -80,8 +86,8 @@ def has_dataset_changed() -> bool:
 
 
 def download_dataset(output_path: os.PathLike) -> str:
-    r = requests.get(settings.JSONL_DATASET_URL,
-                     stream=True)
+    r = http_session.get(settings.JSONL_DATASET_URL,
+                         stream=True)
     current_etag = r.headers.get('ETag', '').strip("'\"")
 
     logger.info("Dataset has changed, downloading file")
@@ -91,6 +97,43 @@ def download_dataset(output_path: os.PathLike) -> str:
         shutil.copyfileobj(r.raw, f)
 
     return current_etag
+
+
+class ComparisonOperator(enum.Enum):
+    eq = 1
+    gt = 2
+    geq = 3
+    lt = 4
+    leq = 5
+
+    @classmethod
+    def get_from_string(cls, value: str):
+        for operator in cls:
+            if operator.name == value:
+                return operator
+
+        raise ValueError("unknown operator: {}".format(value))
+
+
+def apply_comparison_operator(value_1, value_2,
+                              comparison_operator: ComparisonOperator) -> bool:
+    try:
+        if comparison_operator == ComparisonOperator.eq:
+            return value_1 == value_2
+
+        elif comparison_operator == ComparisonOperator.gt:
+            return value_1 > value_2
+
+        elif comparison_operator == ComparisonOperator.geq:
+            return value_1 >= value_2
+
+        elif comparison_operator == ComparisonOperator.lt:
+            return value_1 < value_2
+
+        else:
+            return value_1 <= value_2
+    except TypeError:
+        return False
 
 
 class ProductStream:
@@ -108,6 +151,23 @@ class ProductStream:
     def filter_by_state_tag(self, state_tag: str) -> 'ProductStream':
         filtered = (product for product in self.iterator
                     if state_tag in (product.get('states_tags') or []))
+        return ProductStream(filtered)
+
+    def filter_text_field(self, field: str, value: str):
+        filtered = (product for product in self.iterator
+                    if product.get(field, '') == value)
+        return ProductStream(filtered)
+
+    def filter_number_field(self, field: str,
+                            ref: [int, float],
+                            default: [int, float],
+                            operator: str = 'eq') -> 'ProductStream':
+        operator_ = ComparisonOperator.get_from_string(operator)
+        filtered = (
+            product for product in self.iterator
+            if apply_comparison_operator(
+            product.get(field, default), ref, operator_)
+        )
         return ProductStream(filtered)
 
     def filter_nonempty_text_field(self, field: str) -> 'ProductStream':
@@ -220,31 +280,33 @@ class Product:
 
 
 class ProductStore:
-    def __init__(self):
-        self.store: Dict[str, Product] = {}
+    def __init__(self, store: Dict[str, Product]):
+        self.store: Dict[str, Product] = store
 
-    def load(self, path: str, reset: bool=True):
+    def __len__(self):
+        return len(self.store)
+
+    @classmethod
+    def load_from_path(cls, path: str):
         logger.info("Loading product store")
         ds = ProductDataset(path)
         stream = ds.stream()
 
-        seen = set()
+        store: Dict[str, Product] = {}
+
         for product in stream.iter_product():
             if product.barcode:
-                seen.add(product.barcode)
-                self.store[product.barcode] = product
+                store[product.barcode] = product
 
-        if reset:
-            for key in set(self.store.keys()).difference(seen):
-                self.store.pop(key)
-
-        logger.info("product store loaded ({} items added)".format(len(seen)))
+        return cls(store)
 
     @classmethod
-    def load_from_min_dataset(cls):
-        product_store = ProductStore()
-        product_store.load(settings.JSONL_MIN_DATASET_PATH, False)
-        return product_store
+    def load_min(cls):
+        return ProductStore.load_from_path(settings.JSONL_MIN_DATASET_PATH)
+
+    @classmethod
+    def load_full(cls):
+        return ProductStore.load_from_path(settings.JSONL_DATASET_PATH)
 
     def __getitem__(self, item) -> Optional[Product]:
         return self.store.get(item)
@@ -253,4 +315,10 @@ class ProductStore:
         return iter(self.store.values())
 
 
-CACHED_PRODUCT_STORE = CachedStore(lambda: ProductStore.load_from_min_dataset())
+def load_min_dataset():
+    ps = ProductStore.load_min()
+    logger.info("product store loaded ({} items)".format(len(ps)))
+    return ps
+
+
+CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)

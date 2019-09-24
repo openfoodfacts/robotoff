@@ -47,7 +47,7 @@ def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
 
 
 def gzip_jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
-    with gzip.open(jsonl_path, 'rt') as f:
+    with gzip.open(jsonl_path, 'rt', encoding='utf-8') as f:
         yield from jsonl_iter_fp(f)
 
 
@@ -59,10 +59,14 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
 
 
 def dump_jsonl(filepath: Union[str, pathlib.Path],
-               json_iter: Iterable[Dict]):
+               json_iter: Iterable[Dict]) -> int:
+    count = 0
     with open(str(filepath), 'w') as f:
         for item in json_iter:
             f.write(json.dumps(item) + "\n")
+            count += 1
+
+    return count
 
 
 def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
@@ -75,8 +79,12 @@ def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
 
 
 def get_image_from_url(image_url: str,
-                       error_raise: bool = False) -> Optional[Image.Image]:
-    r = requests.get(image_url)
+                       error_raise: bool = False,
+                       session: Optional[requests.Session] = None) -> Optional[Image.Image]:
+    if session:
+        r = session.get(image_url)
+    else:
+        r = requests.get(image_url)
 
     if error_raise:
         r.raise_for_status()
