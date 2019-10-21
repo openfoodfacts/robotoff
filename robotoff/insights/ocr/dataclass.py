@@ -250,7 +250,10 @@ class Block:
         self.type = data['blockType']
         self.paragraphs = [Paragraph(paragraph)
                            for paragraph in data['paragraphs']]
-        self.bounding_poly = BoundingPoly(data['boundingBox'])
+
+        self.bounding_poly = None
+        if 'boundingBox' in data:
+            self.bounding_poly = BoundingPoly(data['boundingBox'])
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
@@ -267,7 +270,10 @@ class Block:
 class Paragraph:
     def __init__(self, data: JSONType):
         self.words = [Word(word) for word in data['words']]
-        self.bounding_poly = BoundingPoly(data['boundingBox'])
+
+        self.bounding_poly = None
+        if 'boundingBox' in data:
+            self.bounding_poly = BoundingPoly(data['boundingBox'])
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
