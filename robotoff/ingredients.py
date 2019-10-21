@@ -177,8 +177,8 @@ def format_corrections(original_tokens: List[Dict],
             token_end = original_token['end_offset']
             corrections.append(TermCorrection(original=original_token_str,
                                               correction=token_str,
-                                              start_offset=offset+token_start,
-                                              end_offset=offset+token_end))
+                                              start_offset=offset + token_start,
+                                              end_offset=offset + token_end))
 
     return corrections
 
