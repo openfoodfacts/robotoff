@@ -31,8 +31,13 @@ def test_brand_regex(input_str: str, is_match: bool):
 
 def test_check_ocr_brands():
     brands: Set[str] = set()
+    items: Set[str] = set()
 
     for item in text_file_iter(settings.OCR_BRANDS_DATA_PATH):
+        assert item not in items
+        items.add(item)
+
+        assert '’' not in item
         if '||' in item:
             brand, regex_str = item.split('||')
         else:
@@ -44,5 +49,17 @@ def test_check_ocr_brands():
 
         brands.add(brand)
 
+    items = set()
     for item in text_file_iter(settings.OCR_BRANDS_NOTIFY_DATA_PATH):
         assert item in brands
+        assert item not in items
+        items.add(item)
+
+
+def test_check_logo_annotation_brands():
+    items: Set[str] = set()
+
+    for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
+        assert '||' in item
+        assert item not in items
+        items.add(item)
