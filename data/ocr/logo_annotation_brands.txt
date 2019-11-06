@@ -274,8 +274,8 @@ volvic||Volvic
 Volvic||Volvic
 walgreens||Walgreens
 whole foods||Whole Foods
+William Saurin||William Saurin
 Woolworths||Woolworths
 woolworths||Woolworths
-William Saurin||William Saurin
 yoplait||Yoplait
 yves rocher||Yves Rocher
