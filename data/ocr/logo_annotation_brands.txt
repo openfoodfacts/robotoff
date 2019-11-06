@@ -19,7 +19,6 @@ Bioland||Bioland
 bjorg||Bjorg
 bledina||Blédina
 Bledina||Blédina
-bledina||Blédina
 bofrost||Bofrost
 bonduelle||Bonduelle
 Bonne Maman||Bonne Maman
@@ -133,7 +132,6 @@ ISLA DELICE||Isla Délice
 Ja Rewe||Ja!
 jardin bio||Jardin Bio
 Jardin Bio||Jardin Bio
-Jardin Bio||Jardin Bio
 JA||Ja!
 johnnie walker||Johnnie Walker
 justin bridou||Justin Bridou
@@ -173,7 +171,6 @@ lipton||Lipton
 lucozade||Lucozade
 Lustucru||Lustucru
 Lutti||Lutti
-Lutti||Lutti
 maggi||Maggi
 maitre coq||Maître Coq
 marks & spencer||Marks & Spencer
@@ -199,7 +196,6 @@ nesquik||Nesquik
 nicolas feuillatte||Nicolas Feuillatte
 nissin||Nissin
 nutella||Nutella
-nutella||Nutella
 Nutella||Nutella
 oasis||Oasis
 Ocean Spray||Ocean Spray
@@ -218,7 +214,6 @@ pierre martinet||Pierre Martinet
 Pierre Martinet||Pierre Martinet
 pom potes||Pom Potes
 Poulain Chocolat||Poulain
-Primeal||Priméal
 Primeal||Priméal
 Priméal||Priméal
 prince de bretagne||Prince de Bretagne
@@ -265,8 +260,6 @@ Tropicana||Tropicana
 U Saveurs||U Saveurs
 unilever||Unilever
 Unilever||Unilever
-Viajes Carrefour||Carrefour
-Viajes Carrefour||Carrefour
 Viajes Carrefour||Carrefour
 vitamin water||Vitamin Water
 Vitamont||Vitamont
