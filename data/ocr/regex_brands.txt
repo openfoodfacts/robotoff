@@ -1,10 +1,10 @@
-Aldi
 Albert Heijn
+Aldi
 Alesto
-Alteza
 Alipende
 Alnatura
 Alpenmark
+Alteza
 Anna's Best
 Asda
 Auchan
@@ -12,8 +12,8 @@ Barilla
 Belbake
 Bellarom
 Betty Bossi
-Biocoop
 Bio Village
+Biocoop
 Bjorg
 Boni
 Bredial
@@ -64,14 +64,14 @@ Goldähren||gold[aä]hren
 Grand Jury
 Gut & Günstig||gut[- \n]g[uü]nstig
 GutBio
-Häagen-Dazs||h[aä]agen[- ]dazs
 Hacendado
 Haribo
 Heinz
 Hipp
 Hortex
-Italiamo
+Häagen-Dazs||h[aä]agen[- ]dazs
 Ibsa
+Italiamo
 Ja!
 Jardin Bio
 K-Bio
@@ -80,26 +80,24 @@ Kaufland
 Kellogg's
 Knorr
 La Belle-Îloise||la belle[- ][iî]loise
-La Vie Claire
 La Nouvelle Agriculture
+La Vie Claire
 Labeyrie
-Léa Nature
-Leader Price
+Le chocolat des français
 Le Gaulois
-Moulin de Valdonne
-Mercadona
+Leader Price
 Lidl
 Lindt
 Lipton
 Lutti
 Léa Nature
-Le chocolat des français
 M-Budget
 M-Classic
 Maggi
 Marks & Spencer
 Maître Coq
 Mcennedy
+Mercadona
 Migros
 Migros Bio
 Migros Selection||migros s[ée]lection
@@ -112,14 +110,15 @@ Monoprix Bio
 Monoprix Gourmet
 Monoprix P'tit Prix||monoprix p'?tit prix
 Morrison's
+Moulin de Valdonne
 Mulino Bianco
 MyProtein
 Naturaplan
 Natursoy
 Nescafé||nescaf[ée]
 Nestlé||nestl[eé]
-Nutella
 Nos régions ont du talent
+Nutella
 Old El Paso
 Panzani
 REWE
