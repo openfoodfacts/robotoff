@@ -9,7 +9,7 @@ elasticsearch==6.3.1
 Click==7.0
 apscheduler==3.5.3
 sentry-sdk==0.7.6
-Pillow==6.0.0
+Pillow==6.2.0
 numpy==1.15.4
 protobuf==3.7.1
 Pint==0.9
