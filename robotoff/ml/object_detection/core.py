@@ -153,11 +153,13 @@ class ObjectDetectionModelRegistry:
 
     @classmethod
     def load_all(cls):
-        for filepath in settings.TF_SERVING_MODELS_PATH.glob('*'):
-            if filepath.is_dir():
-                model_name = filepath.name
+        for model_name in ("nutriscore", ):
+            file_path = settings.TF_SERVING_MODELS_PATH / model_name
+            if file_path.is_dir():
                 logger.info("TF model '{}' found".format(model_name))
-                cls.models[filepath.name] = cls.load(filepath.name, filepath)
+                cls.models[model_name] = cls.load(model_name, file_path)
+            else:
+                logger.info("Missing TF model: '{}'".format(model_name))
 
     @classmethod
     def load(cls, name: str, model_dir: pathlib.Path) -> RemoteModel:
