@@ -42,7 +42,7 @@ def predict(client, product: Dict) -> Optional[Dict]:
         return {
             'barcode': product['code'],
             'category': category,
-            'matcher_lang': lang,
+            'lang': lang,
             'product_name': product_name,
             'model': 'matcher',
         }

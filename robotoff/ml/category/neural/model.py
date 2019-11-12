@@ -224,7 +224,7 @@ def format_predictions(product: Dict,
         formatted = {
             'barcode': product['code'],
             'category': category,
-            'model_lang': lang,
+            'lang': lang,
             'model': 'neural',
             'confidence': confidence,
         }
