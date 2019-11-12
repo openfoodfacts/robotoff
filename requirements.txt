@@ -17,3 +17,4 @@ dataclasses>=0.6;python_version<"3.7"
 dacite==1.0.2
 tensorflow==2.0.0
 spacy==2.0.18
+scikit-learn==0.20.1
