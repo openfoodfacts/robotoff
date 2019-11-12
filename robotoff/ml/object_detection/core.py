@@ -8,9 +8,9 @@ import PIL
 import numpy as np
 
 from PIL import Image
-import requests
 
 from robotoff import settings
+from robotoff.ml.networking import http_session, TF_SERVING_BASE_URL
 
 from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
 from robotoff.ml.object_detection.utils import label_map_util
@@ -21,15 +21,7 @@ from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
-
-FROZEN_GRAPH_NAME = 'frozen_inference_graph.pb'
 LABEL_MAP_NAME = 'labels.pbtxt'
-
-TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
-    settings.TF_SERVING_HOST,
-    settings.TF_SERVING_HTTP_PORT)
-
-http_session = requests.session()
 
 
 @dataclasses.dataclass
