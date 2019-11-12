@@ -85,7 +85,7 @@ class BaseModel:
         for predicted_category_id, predicted_category in zip(predicted_categories_ids,
                                                              predicted_categories):
             confidence = y_pred[0, predicted_category_id]
-            predicted.append((predicted_category, confidence))
+            predicted.append((predicted_category, float(confidence)))
 
         return sorted(predicted, key=operator.itemgetter(1), reverse=True)
 
