@@ -23,6 +23,7 @@ from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.ml.category.neural.model import ModelRegistry, filter_blacklisted_categories
 from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
@@ -146,6 +147,31 @@ class NutrientPredictorResource:
             resp.media = {
                 'nutrients': insights['nutrient'][0]['nutrients']
             }
+
+
+class CategoryPredictorResource:
+    def on_get(self, req, resp):
+        barcode = req.get_param('barcode', required=True)
+        deepest_only = req.get_param_as_bool('deepest_only', blank_as_true=True)
+        blacklist = req.get_param_as_bool('blacklist', blank_as_true=False)
+        model = ModelRegistry.get()
+        predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
+
+        if predicted:
+            if blacklist:
+                predicted = filter_blacklisted_categories(predicted)
+
+            predicted = [
+                {
+                    "category": category,
+                    "confidence": confidence,
+                } for category, confidence in predicted
+            ]
+
+        predicted = predicted or []
+        resp.media = {
+            'categories': predicted
+        }
 
 
 class UpdateDatasetResource:
@@ -401,6 +427,8 @@ api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
 api.add_route('/api/v1/predict/nutrient',
               NutrientPredictorResource())
+api.add_route('/api/v1/predict/category',
+              CategoryPredictorResource())
 api.add_route('/api/v1/products/dataset',
               UpdateDatasetResource())
 api.add_route('/api/v1/webhook/product',
