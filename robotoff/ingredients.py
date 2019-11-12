@@ -155,8 +155,8 @@ def generate_corrected_text(corrections: List[TermCorrection], text: str):
 
 def format_corrections(original_tokens: List[Dict],
                        suggestion_tokens: List[Dict],
-                       offset: int = 0):
-    corrections = []
+                       offset: int = 0) -> List[TermCorrection]:
+    corrections: List[TermCorrection] = []
 
     if len(original_tokens) != len(suggestion_tokens):
         raise TokenLengthMismatchException()

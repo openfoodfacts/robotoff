@@ -1,8 +1,9 @@
 import collections
 import functools
 import json
+import pathlib
 from enum import Enum
-from typing import List, Dict, Iterable, Optional, Set
+from typing import List, Dict, Iterable, Optional, Set, Union
 
 from robotoff import settings
 from robotoff.off import http_session
@@ -195,8 +196,8 @@ class Taxonomy:
         return taxonomy
 
     @classmethod
-    def from_json(cls, file_path: str):
-        with open(file_path, 'r') as f:
+    def from_json(cls, file_path: Union[str, pathlib.Path]):
+        with open(str(file_path), 'r') as f:
             data = json.load(f)
             return cls.from_dict(data)
 
