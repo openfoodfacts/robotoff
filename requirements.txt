@@ -14,3 +14,4 @@ numpy==1.15.4
 protobuf==3.7.1
 Pint==0.9
 dataclasses>=0.6;python_version<"3.7"
+dacite==1.0.2

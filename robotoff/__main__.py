@@ -79,6 +79,25 @@ if __name__ == "__main__":
         if has_dataset_changed():
             fetch_dataset(minify)
 
+    @click.command()
+    @click.argument('barcode')
+    @click.option('--deepest-only/--all-categories', default=False)
+    @click.option('--blacklist/--no-blacklist', default=False)
+    def categorize(barcode: str, deepest_only: bool, blacklist: bool):
+        from robotoff.ml.category.neural.model import LocalModel, \
+            filter_blacklisted_categories
+        from robotoff import settings
+        from robotoff.utils import get_logger
+        get_logger()
+        model = LocalModel(settings.CATEGORY_CLF_MODEL_PATH)
+        predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
+
+        if predicted:
+            if blacklist:
+                predicted = filter_blacklisted_categories(predicted)
+
+            for cat, confidence in predicted:
+                print("{}: {}".format(cat, confidence))
 
     @click.command()
     @click.option('--index/--no-index', default=True)
@@ -123,5 +142,6 @@ if __name__ == "__main__":
     cli.add_command(init_elasticsearch)
     cli.add_command(generate_spellcheck_insights)
     cli.add_command(download_dataset)
+    cli.add_command(categorize)
 
     cli()

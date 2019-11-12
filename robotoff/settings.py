@@ -70,3 +70,6 @@ MODELS_DIR = PROJECT_DIR / 'models'
 TF_SERVING_HOST = "localhost"
 TF_SERVING_HTTP_PORT = "8501"
 TF_SERVING_MODELS_PATH = PROJECT_DIR / 'tf_models'
+
+CATEGORY_CLF_MODEL_PATH = MODELS_DIR / 'category' / 'checkpoint.hdf5'
+CATEGORY_CLF_CATEGORY_BLACKLIST = DATA_DIR / 'clf_category_blacklist.txt'

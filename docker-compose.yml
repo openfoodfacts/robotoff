@@ -8,6 +8,7 @@ services:
     volumes:
     - api-dataset:/opt/robotoff/datasets
     - ./tf_models:/opt/robotoff/tf_models:Z
+    - ./models:/opt/robotoff/models:Z
     environment:
       DB_HOST: "localhost"
       ELASTICSEARCH_HOSTS: "elasticsearch"
@@ -19,6 +20,7 @@ services:
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
+      - ./models:/opt/robotoff/models:Z
     network_mode: "host"
     environment:
       DB_HOST: "localhost"
@@ -30,6 +32,7 @@ services:
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
+      - ./models:/opt/robotoff/models:Z
     environment:
       DB_HOST: "postgres"
       ELASTICSEARCH_HOSTS: "elasticsearch"
