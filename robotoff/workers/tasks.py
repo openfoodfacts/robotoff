@@ -3,7 +3,8 @@ import logging
 import multiprocessing
 from typing import List, Dict, Callable
 
-from robotoff.elasticsearch.category.predict import predict_from_product
+from robotoff.elasticsearch.category.predict import predict_from_product as predict_category_from_product_es
+from robotoff.ml.category.neural.model import predict_from_product as predict_category_from_product_ml
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.extraction import get_insights_from_image
@@ -123,16 +124,27 @@ def updated_product_add_category_insight(barcode: str,
     if product.get('categories_tags', []):
         return False
 
-    insight = predict_from_product(product)
+    insight = predict_category_from_product_es(product)
 
     if insight is None:
-        return False
+        insights = predict_category_from_product_ml(product, filter_blacklisted=True)
+
+        if not insights:
+            return False
+        else:
+            predicted = ["{} ({})".format(insight["category"],
+                                          insight["confidence"])
+                         for insight in insights]
+            logger.info("Predicted categories for product {}: {}"
+                        "".format(barcode, predicted))
+    else:
+        insights = [insight]
 
     product_store = CACHED_PRODUCT_STORE.get()
     importer = InsightImporterFactory.create(InsightType.category.name,
                                              product_store)
 
-    imported = importer.import_insights([insight], automatic=False)
+    imported = importer.import_insights(insights, automatic=False)
 
     if imported:
         logger.info("Category insight imported for product {}".format(barcode))
