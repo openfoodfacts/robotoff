@@ -10,7 +10,7 @@ python:
 
 before_install:
   - sudo apt-get install gettext
-  - cd i18n && bash compile.sh
+  - cd i18n && bash compile.sh && cd ..
 install:
   - pip install -r requirements.txt
 script: python3 -m pytest tests
