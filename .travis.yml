@@ -8,6 +8,9 @@ python:
   - "3.6"
   - "3.7"
 
+before_install:
+  - sudo apt-get install gettext
+  - cd i18n && bash compile.sh
 install:
   - pip install -r requirements.txt
 script: python3 -m pytest tests
