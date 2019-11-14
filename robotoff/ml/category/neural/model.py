@@ -1,8 +1,9 @@
 import operator
 import pathlib
-from typing import List, Optional, Tuple, Dict, Set
+from typing import List, Optional, Tuple, Dict, Set, Iterable
 
 import numpy as np
+from more_itertools import chunked
 from tensorflow import keras
 
 from robotoff import settings
@@ -55,13 +56,15 @@ class BaseModel:
         self.product_name_vocabulary = load_product_name_vocabulary(self.model_dir)
         self.loaded = True
 
-    def get_input_from_product(self, product: Dict
-                               ) -> Optional[List[np.ndarray]]:
-        ingredient_tags = product.get('ingredients_tags', []) or []
-        product_name = product.get('product_name', '') or ''
+    def get_input_from_products(self,
+                                products: Iterable[Dict]) -> List[np.ndarray]:
+        ingredient_tags = [product.get('ingredients_tags', []) or []
+                           for product in products]
+        product_name = [product.get('product_name', '') or ''
+                        for product in products]
 
-        return generate_data(ingredient_tags=ingredient_tags,
-                             product_name=product_name,
+        return generate_data(ingredient_tags_iter=ingredient_tags,
+                             product_name_iter=product_name,
                              ingredient_to_id=self.ingredient_to_id,
                              product_name_token_to_int=self.product_name_vocabulary,
                              nlp=self.nlp,
@@ -72,22 +75,38 @@ class BaseModel:
     def process_predictions(y_pred: np.ndarray,
                             category_names: List[str],
                             taxonomy: Taxonomy,
-                            threshold: float = 0.5) -> List[CategoryPrediction]:
+                            threshold: float = 0.5,
+                            deepest_only: bool = False) -> List[List[CategoryPrediction]]:
         y_pred_int = (y_pred > threshold).astype(y_pred.dtype)
         y_pred_int_filled = fill_ancestors(y_pred_int,
                                            taxonomy=taxonomy,
                                            category_names=category_names)
 
-        predicted_categories_ids = y_pred_int_filled[0].nonzero()[0]
-        predicted_categories = [category_names[id_] for id_ in predicted_categories_ids]
-
         predicted = []
-        for predicted_category_id, predicted_category in zip(predicted_categories_ids,
-                                                             predicted_categories):
-            confidence = y_pred[0, predicted_category_id]
-            predicted.append((predicted_category, float(confidence)))
+        for i in range(y_pred_int_filled.shape[0]):
+            predicted_categories_ids = y_pred_int_filled[i].nonzero()[0]
+            predicted_categories = [category_names[id_]
+                                    for id_ in predicted_categories_ids]
 
-        return sorted(predicted, key=operator.itemgetter(1), reverse=True)
+            product_predicted = []
+            for predicted_category_id, predicted_category in zip(predicted_categories_ids,
+                                                                 predicted_categories):
+                confidence = y_pred[i, predicted_category_id]
+                product_predicted.append((predicted_category, float(confidence)))
+
+            product_predicted = sorted(product_predicted,
+                                       key=operator.itemgetter(1), reverse=True)
+
+            if deepest_only:
+                category_to_confidence = dict(product_predicted)
+                product_predicted = [
+                    (x.id, category_to_confidence[x.id])
+                    for x in taxonomy.find_deepest_nodes(
+                        [taxonomy[c] for c, confidence in product_predicted])
+                ]
+            predicted.append(product_predicted)
+
+        return predicted
 
 
 class LocalModel(BaseModel):
@@ -108,22 +127,19 @@ class LocalModel(BaseModel):
 
     def predict_from_product(self, product: Dict,
                              deepest_only: bool = False) -> List[CategoryPrediction]:
+        return self.predict_from_product_batch([product], deepest_only)[0]
+
+    def predict_from_product_batch(self, products: Iterable[Dict],
+                                   deepest_only: bool = False
+                                   ) -> List[List[CategoryPrediction]]:
         if not self.loaded:
             self.load()
 
-        X = self.get_input_from_product(product)
+        X = self.get_input_from_products(products)
         y_pred = self.model.predict(X)
-        predicted = self.process_predictions(y_pred, self.category_names, self.taxonomy)
-
-        if deepest_only:
-            category_to_confidence = dict(predicted)
-            predicted = [
-                (x.id, category_to_confidence[x.id])
-                for x in self.taxonomy.find_deepest_nodes(
-                    [self.taxonomy[c] for c, confidence in predicted])
-            ]
-
-        return predicted
+        return self.process_predictions(y_pred,
+                                        self.category_names, self.taxonomy,
+                                        deepest_only=deepest_only)
 
 
 class RemoteModel(BaseModel):
@@ -137,7 +153,7 @@ class RemoteModel(BaseModel):
             logger.info("Product {} not found".format(barcode))
             return
 
-        X = self.get_input_from_product(product)
+        X = self.get_input_from_products([product])[0]
         X = [X[0].tolist(), X[1].tolist()]
 
         data = {
@@ -196,14 +212,7 @@ def fill_ancestors(y: np.ndarray, taxonomy: Taxonomy,
 
 def predict_from_product(product: Dict,
                          filter_blacklisted: bool = False) -> Optional[List[Dict]]:
-    if 'fr' not in product.get('languages_codes', []):
-        logger.debug("fr is not one on product languages, skipping category detection")
-        return
-
-    product_name = product.get('product_name', '') or ''
-
-    if not product_name:
-        logger.debug("No product name, skipping category detection")
+    if not keep_product(product, {'fr'}):
         return
 
     model = ModelRegistry.get()
@@ -212,7 +221,48 @@ def predict_from_product(product: Dict,
     if filter_blacklisted:
         predictions = filter_blacklisted_categories(predictions)
 
-    return format_predictions(product, predictions, 'fr')
+    return format_predictions(product, predictions, 'xx')
+
+
+def keep_product(product: Dict,
+                 allowed_lang: Set[str]) -> bool:
+    product_languages = set(product.get('languages_codes', []))
+
+    if not allowed_lang.intersection(product_languages):
+        logger.debug(
+            "fr is not one on product languages, skipping category detection")
+        return False
+
+    product_name = product.get('product_name', '') or ''
+
+    if not product_name:
+        logger.debug("No product name, skipping category detection")
+        return False
+
+    return True
+
+
+def predict_from_product_batch(product_iter: Iterable[Dict],
+                               allowed_lang: Iterable[str],
+                               filter_blacklisted: bool = False,
+                               batch_size: int = 32) -> Iterable[Dict]:
+    model = ModelRegistry.get()
+    allowed_lang = set(allowed_lang)
+
+    filtered_product_iter = (p for p in product_iter
+                             if keep_product(p, allowed_lang))
+
+    for product_batch in chunked(filtered_product_iter, batch_size):
+        predictions_batch = model.predict_from_product_batch(product_batch,
+                                                             deepest_only=True)
+
+        if filter_blacklisted:
+            predictions_batch = [filter_blacklisted_categories(predictions)
+                                 for predictions in predictions_batch]
+
+        for predictions, product in zip(predictions_batch, product_batch):
+            for insight in format_predictions(product, predictions, 'xx'):
+                yield insight
 
 
 def format_predictions(product: Dict,
