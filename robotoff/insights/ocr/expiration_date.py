@@ -61,7 +61,8 @@ def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
             if date.year > 2025 or date.year < 2015:
                 continue
 
-            value = date.strftime("%d/%m/%Y")
+            # Format dates according to ISO 8601
+            value = date.strftime("%Y-%m-%d")
 
             results.append({
                 "raw": raw,
