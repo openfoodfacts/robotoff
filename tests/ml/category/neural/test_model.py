@@ -10,11 +10,11 @@ def test_predict_from_product_missing_product_name():
     assert predictions is None
 
 
-def test_predict_from_product_non_fr_lang():
+def test_predict_from_product():
     product = {
         'code': "XXX",
         'languages_codes': ['en'],
         'product_name': "test",
     }
     predictions = predict_from_product(product)
-    assert predictions is None
+    assert predictions is not None

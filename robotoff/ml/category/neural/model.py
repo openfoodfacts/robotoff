@@ -211,8 +211,9 @@ def fill_ancestors(y: np.ndarray, taxonomy: Taxonomy,
 
 
 def predict_from_product(product: Dict,
+                         allowed_lang: Optional[Set[str]] = None,
                          filter_blacklisted: bool = False) -> Optional[List[Dict]]:
-    if not keep_product(product, {'fr'}):
+    if not keep_product(product, allowed_lang):
         return
 
     model = ModelRegistry.get()
@@ -225,10 +226,10 @@ def predict_from_product(product: Dict,
 
 
 def keep_product(product: Dict,
-                 allowed_lang: Set[str]) -> bool:
+                 allowed_lang: Optional[Set[str]] = None) -> bool:
     product_languages = set(product.get('languages_codes', []))
 
-    if not allowed_lang.intersection(product_languages):
+    if allowed_lang is not None and not allowed_lang.intersection(product_languages):
         logger.debug(
             "fr is not one on product languages, skipping category detection")
         return False
@@ -243,7 +244,7 @@ def keep_product(product: Dict,
 
 
 def predict_from_product_batch(product_iter: Iterable[Dict],
-                               allowed_lang: Iterable[str],
+                               allowed_lang: Optional[Iterable[str]] = None,
                                filter_blacklisted: bool = False,
                                batch_size: int = 32) -> Iterable[Dict]:
     model = ModelRegistry.get()
