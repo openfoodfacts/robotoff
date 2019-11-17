@@ -1,14 +1,19 @@
+Aeroplane Jelly
 Albert Heijn
 Aldi
 Alesto
+Allen's
 Alipende
 Alnatura
 Alpenmark
 Alteza
+Arnott's
 Anna's Best
 Asda
 Auchan
 Barilla
+Beerenberg
+Bega
 Belbake
 Bellarom
 Betty Bossi
@@ -30,7 +35,9 @@ Coop Betty Bossi
 Coop Fine Food
 Coop Naturaplan
 Coop Prix Garantie
+Cottee's
 Coviran
+CSR Limited
 Daco Bello
 Danone
 De Cecco
@@ -40,6 +47,7 @@ Delpeyrat
 Delpierre
 Denner
 Dennree
+Dick Smith
 Dr. Oetker||dr\.? oetker
 Duchy organic
 Ducros
@@ -66,6 +74,7 @@ Grand Jury
 Gut & Günstig||gut[- \n]g[uü]nstig
 GutBio
 Hacendado
+Haigh's
 Haribo
 Heinz
 Hipp
@@ -99,6 +108,7 @@ Marks & Spencer
 Maître Coq
 Mcennedy
 Mercadona
+Milo
 Migros
 Migros Bio
 Migros Selection||migros s[ée]lection
@@ -112,16 +122,20 @@ Monoprix Gourmet
 Monoprix P'tit Prix||monoprix p'?tit prix
 Morrison's
 Moulin de Valdonne
+Mrs Mac's
 Mulino Bianco
 MyProtein
 Naturaplan
 Natursoy
 Nescafé||nescaf[ée]
 Nestlé||nestl[eé]
+Nobby's
 Nos régions ont du talent
 Nutella
 Old El Paso
 Panzani
+Pauls
+Peters
 REWE
 REWE Beste Wahl
 REWE Bio
@@ -140,6 +154,7 @@ Teisseire
 Terrasuisse
 Tesco
 Tesco Finest
+The a2 Milk Company
 The co-operative
 Thiriet
 Thomy
@@ -148,7 +163,12 @@ Trader's Joe
 Tropicana
 Twinings
 U Saveurs
+Uncle Tobys
+Vegemite
 Waitrose
+Weis
+Western Star
 Woolworths||woolworths?
+Yellow Tail
 Yoplait
 Yves Rocher
