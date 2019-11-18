@@ -101,8 +101,14 @@ class AnnotateInsightResource:
 
         update = req.get_param_as_bool('update', default=True)
 
+        session_cookie = req.get_cookie_values('session')
 
-        annotation_result = save_insight(insight_id, annotation, update=update)
+        if session_cookie:
+            session_cookie = session_cookie[0]
+
+        annotation_result = save_insight(insight_id, annotation,
+                                         update=update,
+                                         session_cookie=session_cookie)
 
         resp.media = {
             'status': annotation_result.status,
