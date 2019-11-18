@@ -97,12 +97,10 @@ class AnnotateInsightResource:
     def on_post(self, req, resp):
         insight_id = req.get_param('insight_id', required=True)
         annotation = req.get_param_as_int('annotation', required=True,
-                                          min=-1, max=1)
+                                          min_value=-1, max_value=1)
 
-        update = req.get_param_as_bool('update')
+        update = req.get_param_as_bool('update', default=True)
 
-        if update is None:
-            update = True
 
         annotation_result = save_insight(insight_id, annotation, update=update)
 
@@ -163,8 +161,8 @@ class NutrientPredictorResource:
 class CategoryPredictorResource:
     def on_get(self, req, resp):
         barcode = req.get_param('barcode', required=True)
-        deepest_only = req.get_param_as_bool('deepest_only', blank_as_true=True)
-        blacklist = req.get_param_as_bool('blacklist', blank_as_true=False)
+        deepest_only = req.get_param_as_bool('deepest_only', default=False)
+        blacklist = req.get_param_as_bool('blacklist', default=False)
         model = ModelRegistry.get()
         predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
 
@@ -348,7 +346,7 @@ class WebhookProductResource:
 class ProductQuestionsResource:
     def on_get(self, req, resp, barcode):
         response = {}
-        count: int = req.get_param_as_int('count', min=1) or 1
+        count: int = req.get_param_as_int('count', min_value=1) or 1
         lang: str = req.get_param('lang', default='en')
 
         keep_types = QuestionFormatterFactory.get_available_types()
@@ -377,7 +375,7 @@ class ProductQuestionsResource:
 class RandomQuestionsResource:
     def on_get(self, req, resp):
         response = {}
-        count: int = req.get_param_as_int('count', min=1) or 1
+        count: int = req.get_param_as_int('count', min_value=1) or 1
         lang: str = req.get_param('lang', default='en')
         keep_types: Optional[List[str]] = req.get_param_as_list(
             'insight_types', required=False)
