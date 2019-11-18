@@ -46,6 +46,18 @@ Return all insights associated with a specific product.
 + Response 200 (application/json)
 
 
+## Insight detail [/insights/detail/{id}]
+
+### Get a specific insight [GET]
+
+Return a specific insight.
+
++ Parameters
+    + insight_id: ID of the insight
+
++ Response 200 (application/json)
+
+
 ## Insight annotations [/insights/annotate]
 
 ### Submit an annotation [POST]

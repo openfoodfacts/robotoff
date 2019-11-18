@@ -24,6 +24,7 @@ from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.ml.category.neural.model import ModelRegistry, filter_blacklisted_categories
+from robotoff.models import ProductInsight
 from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
@@ -52,7 +53,7 @@ def init_sentry(app):
 
 
 class ProductInsightResource:
-    def on_get(self, req, resp, barcode):
+    def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         response = {}
         insights = [i.serialize() for i in get_insights(barcode=barcode)]
 
@@ -63,6 +64,16 @@ class ProductInsightResource:
             response['status'] = "found"
 
         resp.media = response
+
+
+class ProductInsightDetail:
+    def on_get(self, req: falcon.Request, resp: falcon.Response, insight_id: str):
+        try:
+            insight: ProductInsight = ProductInsight.get_by_id(insight_id)
+        except ProductInsight.DoesNotExist:
+            raise falcon.HTTPNotFound()
+
+        resp.media = insight.serialize(full=True)
 
 
 class RandomInsightResource:
@@ -420,6 +431,7 @@ api = falcon.API(middleware=[cors.middleware,
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
 api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
+api.add_route('/api/v1/insights/detail/{insight_id:uuid}', ProductInsightDetail())
 api.add_route('/api/v1/insights/random', RandomInsightResource())
 api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/insights/import', InsightImporterResource())
