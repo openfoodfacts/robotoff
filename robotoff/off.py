@@ -103,6 +103,7 @@ def add_category(barcode: str, category: str,
         'code': barcode,
         'add_categories': category,
         'comment': comment,
+        **AUTH_DICT
     }
     update_product(params, **kwargs)
 
@@ -119,6 +120,7 @@ def update_quantity(barcode: str, quantity: str,
         'code': barcode,
         'quantity': quantity,
         'comment': comment,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -138,6 +140,7 @@ def save_ingredients(barcode: str, ingredient_text: str,
         'code': barcode,
         'comment': comment,
         ingredient_key: ingredient_text,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -156,6 +159,7 @@ def update_emb_codes(barcode: str, emb_codes: List[str],
         'code': barcode,
         'emb_codes': emb_codes_str,
         'comment': comment,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -172,6 +176,7 @@ def update_expiration_date(barcode: str, expiration_date: str,
         'code': barcode,
         'expiration_date': expiration_date,
         'comment': comment,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -188,6 +193,7 @@ def add_label_tag(barcode: str, label_tag: str,
         'code': barcode,
         'add_labels': label_tag,
         'comment': comment,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -204,6 +210,7 @@ def add_brand(barcode: str, brand: str,
         'code': barcode,
         'add_brands': brand,
         'comment': comment,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -220,6 +227,7 @@ def add_store(barcode: str, store: str,
         'code': barcode,
         'add_stores': store,
         'comment': comment,
+        **AUTH_DICT,
     }
     update_product(params, **kwargs)
 
@@ -233,7 +241,6 @@ def update_product(params: Dict, dry=False,
             'session': session_cookie,
         }
     else:
-        params.update(AUTH_DICT)
         if comment:
             params['comment'] = comment + " (automated edit)"
 
