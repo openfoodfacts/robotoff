@@ -435,6 +435,7 @@ api = falcon.API(middleware=[cors.middleware,
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
 api.req_options.strip_url_path_trailing_slash = True
+api.req_options.auto_parse_qs_csv = True
 api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
 api.add_route('/api/v1/insights/detail/{insight_id:uuid}', ProductInsightDetail())
 api.add_route('/api/v1/insights/random', RandomInsightResource())
