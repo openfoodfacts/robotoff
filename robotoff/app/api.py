@@ -24,6 +24,7 @@ from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.ml.category.neural.model import ModelRegistry, filter_blacklisted_categories
+from robotoff.models import ProductInsight
 from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
@@ -52,7 +53,7 @@ def init_sentry(app):
 
 
 class ProductInsightResource:
-    def on_get(self, req, resp, barcode):
+    def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         response = {}
         insights = [i.serialize() for i in get_insights(barcode=barcode)]
 
@@ -63,6 +64,16 @@ class ProductInsightResource:
             response['status'] = "found"
 
         resp.media = response
+
+
+class ProductInsightDetail:
+    def on_get(self, req: falcon.Request, resp: falcon.Response, insight_id: str):
+        try:
+            insight: ProductInsight = ProductInsight.get_by_id(insight_id)
+        except ProductInsight.DoesNotExist:
+            raise falcon.HTTPNotFound()
+
+        resp.media = insight.serialize(full=True)
 
 
 class RandomInsightResource:
@@ -86,14 +97,18 @@ class AnnotateInsightResource:
     def on_post(self, req, resp):
         insight_id = req.get_param('insight_id', required=True)
         annotation = req.get_param_as_int('annotation', required=True,
-                                          min=-1, max=1)
+                                          min_value=-1, max_value=1)
 
-        update = req.get_param_as_bool('update')
+        update = req.get_param_as_bool('update', default=True)
 
-        if update is None:
-            update = True
+        session_cookie = req.get_cookie_values('session')
 
-        annotation_result = save_insight(insight_id, annotation, update=update)
+        if session_cookie:
+            session_cookie = session_cookie[0]
+
+        annotation_result = save_insight(insight_id, annotation,
+                                         update=update,
+                                         session_cookie=session_cookie)
 
         resp.media = {
             'status': annotation_result.status,
@@ -152,8 +167,8 @@ class NutrientPredictorResource:
 class CategoryPredictorResource:
     def on_get(self, req, resp):
         barcode = req.get_param('barcode', required=True)
-        deepest_only = req.get_param_as_bool('deepest_only', blank_as_true=True)
-        blacklist = req.get_param_as_bool('blacklist', blank_as_true=False)
+        deepest_only = req.get_param_as_bool('deepest_only', default=False)
+        blacklist = req.get_param_as_bool('blacklist', default=False)
         model = ModelRegistry.get()
         predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
 
@@ -337,7 +352,7 @@ class WebhookProductResource:
 class ProductQuestionsResource:
     def on_get(self, req, resp, barcode):
         response = {}
-        count: int = req.get_param_as_int('count', min=1) or 1
+        count: int = req.get_param_as_int('count', min_value=1) or 1
         lang: str = req.get_param('lang', default='en')
 
         keep_types = QuestionFormatterFactory.get_available_types()
@@ -366,7 +381,7 @@ class ProductQuestionsResource:
 class RandomQuestionsResource:
     def on_get(self, req, resp):
         response = {}
-        count: int = req.get_param_as_int('count', min=1) or 1
+        count: int = req.get_param_as_int('count', min_value=1) or 1
         lang: str = req.get_param('lang', default='en')
         keep_types: Optional[List[str]] = req.get_param_as_list(
             'insight_types', required=False)
@@ -419,7 +434,9 @@ api = falcon.API(middleware=[cors.middleware,
                              DBConnectionMiddleware()])
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
+api.req_options.strip_url_path_trailing_slash = True
 api.add_route('/api/v1/insights/{barcode}', ProductInsightResource())
+api.add_route('/api/v1/insights/detail/{insight_id:uuid}', ProductInsightDetail())
 api.add_route('/api/v1/insights/random', RandomInsightResource())
 api.add_route('/api/v1/insights/annotate', AnnotateInsightResource())
 api.add_route('/api/v1/insights/import', InsightImporterResource())

@@ -1,3 +1,4 @@
+en:alcoholic-beverages
 en:beverages
 en:biscuits-and-cakes
 en:breakfasts
@@ -11,6 +12,7 @@ en:fruits-and-vegetables-based-foods
 en:fruits-based-foods
 en:groceries
 en:meals
+en:meat-based-products
 en:meats
 en:non-alcoholic-beverages
 en:plant-based-beverages

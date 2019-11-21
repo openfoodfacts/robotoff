@@ -52,14 +52,31 @@ class ProductInsight(BaseModel):
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False, index=True)
 
-    def serialize(self) -> JSONType:
-        return {
-            'id': str(self.id),
-            'type': self.type,
-            'barcode': self.barcode,
-            'countries': self.countries,
-            **self.data,
-        }
+    def serialize(self, full: bool = False) -> JSONType:
+        if full:
+            return {
+                'id': str(self.id),
+                'barcode': self.barcode,
+                'type': self.type,
+                'data': self.data,
+                'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+                'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+                'annotation': self.annotation,
+                'countries': self.countries,
+                'brands': self.brands,
+                'process_after': self.process_after.isoformat() if self.process_after else None,
+                'value_tag': self.value_tag,
+                'source_image': self.source_image,
+                'automatic_processing': self.automatic_processing,
+            }
+        else:
+            return {
+                'id': str(self.id),
+                'type': self.type,
+                'barcode': self.barcode,
+                'countries': self.countries,
+                **self.data,
+            }
 
 
 class ProductIngredient(BaseModel):

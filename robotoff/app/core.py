@@ -84,7 +84,10 @@ def get_random_insight(insight_type: str = None,
             logger.info("Product not found, insight deleted")
 
 
-def save_insight(insight_id: str, annotation: int, update: bool = True) \
+def save_insight(insight_id: str,
+                 annotation: int,
+                 update: bool = True,
+                 session_cookie: Optional[str] = None) \
         -> AnnotationResult:
     try:
         insight: Union[ProductInsight, None] \
@@ -99,4 +102,5 @@ def save_insight(insight_id: str, annotation: int, update: bool = True) \
         return ALREADY_ANNOTATED_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(insight, annotation, update)
+    return annotator.annotate(insight, annotation, update,
+                              session_cookie=session_cookie)
