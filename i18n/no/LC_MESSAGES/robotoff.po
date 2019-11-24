@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2019-06-01 13:17\n"
+"PO-Revision-Date: 2019-11-24 09:49\n"
 "Last-Translator: Pierre Slamich (pierreslamich)\n"
 "Language-Team: Norwegian\n"
 "Language: no\n"
@@ -15,12 +15,15 @@ msgstr ""
 "X-Crowdin-Language: no\n"
 "X-Crowdin-File: /master/i18n/robotoff.pot\n"
 
+# Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
 msgstr ""
 
+# Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
 msgstr ""
 
+# Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
 msgstr ""
 
