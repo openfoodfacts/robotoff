@@ -425,6 +425,13 @@ class RandomQuestionsResource:
         resp.media = response
 
 
+class StatusResource:
+    def on_get(self, req, resp):
+        resp.media = {
+            'status': 'running',
+        }
+
+
 cors = CORS(allow_all_origins=True,
             allow_all_headers=True,
             allow_all_methods=True,
@@ -457,5 +464,6 @@ api.add_route('/api/v1/images/import', ImageImporterResource())
 api.add_route('/api/v1/images/predict', ImagePredictorResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
 api.add_route('/api/v1/questions/random', RandomQuestionsResource())
+api.add_route('/api/v1/status', StatusResource())
 
 api = init_sentry(api)
