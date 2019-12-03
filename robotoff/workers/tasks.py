@@ -120,9 +120,6 @@ def updated_product_update_insights(barcode: str):
 
 def updated_product_add_category_insight(barcode: str,
                                          product: JSONType) -> bool:
-    if product.get('categories_tags', []):
-        return False
-
     insights = predict_category_from_product_ml(product, filter_blacklisted=True)
 
     if not insights:
