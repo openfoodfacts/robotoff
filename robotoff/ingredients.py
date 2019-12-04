@@ -230,7 +230,7 @@ def generate_suggest_query(text,
                            confidence=1,
                            size=1,
                            min_word_length=4,
-                           suggest_mode="popular",
+                           suggest_mode="missing",
                            name="autocorrect"):
     return {
         "suggest": {
