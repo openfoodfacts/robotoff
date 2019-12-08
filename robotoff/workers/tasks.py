@@ -9,7 +9,7 @@ from robotoff.insights.importer import InsightImporterFactory, InsightImporter
 from robotoff.insights.extraction import get_insights_from_image
 from robotoff.insights.validator import delete_invalid_insight, InsightValidator, InsightValidatorFactory
 from robotoff.models import db, ProductInsight
-from robotoff.off import get_product
+from robotoff.off import get_product, get_server_type, ServerType
 from robotoff.products import (has_dataset_changed, fetch_dataset,
                                CACHED_PRODUCT_STORE, Product)
 from robotoff.slack import notify_image_flag
@@ -41,18 +41,20 @@ def download_product_dataset():
 
 
 def import_insights(insight_type: str,
-                    items: List[str]):
+                    items: List[str],
+                    server_domain: str):
     product_store = CACHED_PRODUCT_STORE.get()
     importer: InsightImporter = InsightImporterFactory.create(insight_type,
                                                               product_store)
 
     with db.atomic():
         imported = importer.import_insights((json.loads(l) for l in items),
+                                            server_domain=server_domain,
                                             automatic=False)
         logger.info("Import finished, {} insights imported".format(imported))
 
 
-def import_image(barcode: str, image_url: str, ocr_url: str):
+def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
     logger.info("Detect insights for product {}, "
                 "image {}".format(barcode, image_url))
     product_store = CACHED_PRODUCT_STORE.get()
@@ -73,28 +75,33 @@ def import_image(barcode: str, image_url: str, ocr_url: str):
                                                                   product_store)
 
         with db.atomic():
-            imported = importer.import_insights([insights], automatic=True)
+            imported = importer.import_insights([insights],
+                                                server_domain=server_domain,
+                                                automatic=True)
             logger.info("Import finished, {} insights imported".format(imported))
 
 
-def delete_product_insights(barcode: str):
+def delete_product_insights(barcode: str, server_domain: str):
     logger.info("Product {} deleted, deleting associated "
                 "insights...".format(barcode))
     with db.atomic():
         deleted = (ProductInsight.delete()
-                   .where(ProductInsight.barcode == barcode).execute())
+                   .where(ProductInsight.barcode == barcode,
+                          ProductInsight.server_domain == server_domain).execute())
 
     logger.info("{} insights deleted".format(deleted))
 
 
-def updated_product_update_insights(barcode: str):
+def updated_product_update_insights(barcode: str, server_domain: str):
     product_dict = get_product(barcode)
 
     if product_dict is None:
         logger.warn("Updated product does not exist: {}".format(barcode))
         return
 
-    category_added = updated_product_add_category_insight(barcode, product_dict)
+    category_added = updated_product_add_category_insight(barcode,
+                                                          product_dict,
+                                                          server_domain)
 
     if category_added:
         logger.info("Product {} updated".format(barcode))
@@ -104,7 +111,8 @@ def updated_product_update_insights(barcode: str):
 
     for insight in (ProductInsight.select()
                                   .where(ProductInsight.annotation.is_null(),
-                                         ProductInsight.barcode == barcode)
+                                         ProductInsight.barcode == barcode,
+                                         ProductInsight.server_domain == server_domain)
                                   .iterator()):
         if insight.type not in validators:
             validators[insight.type] = InsightValidatorFactory.create(
@@ -119,7 +127,11 @@ def updated_product_update_insights(barcode: str):
 
 
 def updated_product_add_category_insight(barcode: str,
-                                         product: JSONType) -> bool:
+                                         product: JSONType,
+                                         server_domain: str) -> bool:
+    if get_server_type(server_domain) != ServerType.off:
+        return False
+
     insights = predict_category_from_product_ml(product, filter_blacklisted=True)
 
     if not insights:
@@ -135,7 +147,9 @@ def updated_product_add_category_insight(barcode: str,
     importer = InsightImporterFactory.create(InsightType.category.name,
                                              product_store)
 
-    imported = importer.import_insights(insights, automatic=False)
+    imported = importer.import_insights(insights,
+                                        server_domain=server_domain,
+                                        automatic=False)
 
     if imported:
         logger.info("Category insight imported for product {}".format(barcode))

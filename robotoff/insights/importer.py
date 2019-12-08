@@ -1,5 +1,6 @@
 import abc
 import datetime
+import pathlib
 import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable
 
@@ -7,6 +8,7 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS, BRANDS_BARCODE_RANGE
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight, ProductIngredient
+from robotoff.off import get_server_type
 from robotoff.products import ProductStore, Product
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
@@ -15,12 +17,27 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
+def add_server_fields(data: Iterable[Dict],
+                      server_domain: str) -> Iterable[Dict]:
+    """Add `server_domain` and `server_type` fields to an iterable of insights to
+    import."""
+    server_type: str = get_server_type(server_domain).name
+
+    for item in data:
+        item['server_domain'] = server_domain
+        item['server_type'] = server_type
+        yield item
+
+
 class InsightImporter(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
     @abc.abstractmethod
-    def import_insights(self, data: Iterable[Dict], automatic: bool) -> int:
+    def import_insights(self,
+                        data: Iterable[Dict],
+                        server_domain: str,
+                        automatic: bool) -> int:
         pass
 
     @staticmethod
@@ -28,13 +45,17 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def get_type() -> str:
         pass
 
-    def from_jsonl(self, file_path):
+    def from_jsonl(self, file_path: pathlib.Path, server_domain: str):
         items = jsonl_iter(file_path)
-        self.import_insights(items, automatic=False)
+        self.import_insights(items,
+                             server_domain=server_domain,
+                             automatic=False)
 
-    def from_jsonl_fp(self, fp):
+    def from_jsonl_fp(self, fp, server_domain: str):
         items = jsonl_iter_fp(fp)
-        self.import_insights(items, automatic=False)
+        self.import_insights(items,
+                             server_domain=server_domain,
+                             automatic=False)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -58,7 +79,9 @@ class IngredientSpellcheckImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.ingredient_spellcheck.name
 
-    def import_insights(self, data: Iterable[Dict], automatic: bool = False) -> int:
+    def import_insights(self, data: Iterable[Dict],
+                        server_domain: str,
+                        automatic: bool = False) -> int:
         timestamp = datetime.datetime.utcnow()
         barcode_seen: Set[str] = set()
         insight_seen: Set = set()
@@ -131,7 +154,10 @@ GroupedByOCRInsights = Dict[str, List]
 
 
 class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
-    def import_insights(self, data: Iterable[Dict], automatic: bool = False) -> int:
+    def import_insights(self,
+                        data: Iterable[Dict],
+                        server_domain: str,
+                        automatic: bool = False) -> int:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
         inserts: List[Dict] = []
         timestamp = datetime.datetime.utcnow()
@@ -143,6 +169,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
                                                            timestamp,
                                                            automatic))
 
+        inserts = list(add_server_fields(inserts, server_domain))
         return batch_insert(ProductInsight, inserts, 50)
 
     def _process_product_insights(self, barcode: str,
@@ -376,8 +403,12 @@ class CategoryImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.category.name
 
-    def import_insights(self, data: Iterable[Dict], automatic: bool = False) -> int:
+    def import_insights(self,
+                        data: Iterable[Dict],
+                        server_domain: str,
+                        automatic: bool = False) -> int:
         inserts = self.process_product_insights(data, automatic)
+        inserts = add_server_fields(inserts, server_domain)
         return batch_insert(ProductInsight, inserts, 50)
 
     def process_product_insights(self, insights: Iterable[JSONType],

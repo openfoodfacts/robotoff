@@ -1,3 +1,4 @@
+import enum
 import re
 from typing import List, Dict, Optional
 
@@ -27,6 +28,34 @@ logger = get_logger(__name__)
 
 
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
+
+
+class ServerType(enum.Enum):
+    off = 1
+    obf = 2
+    opff = 3
+    opf = 4
+
+
+def get_server_type(server_domain: str) -> Optional[ServerType]:
+    """Return the server type (off, obf, opff, opf) associated with the server
+    domain, or None if the server_domain was not recognized."""
+    server_split = server_domain.split('.')
+
+    if len(server_split) == 3:
+        subdomain, domain, tld = server_split
+
+        if domain == 'openfoodfacts':
+            return ServerType.off
+        elif domain == 'openbeautyfacts':
+            return ServerType.obf
+        elif domain == 'openpetfoodfacts':
+            return ServerType.opff
+        elif domain == 'openproductsfacts':
+            return ServerType.opf
+
+    logger.warning("unknown server domain: {}".format(server_domain))
+    return None
 
 
 def split_barcode(barcode: str) -> List[str]:

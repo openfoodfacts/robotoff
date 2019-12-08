@@ -51,6 +51,12 @@ class ProductInsight(BaseModel):
     value_tag = peewee.TextField(null=True, index=True)
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False, index=True)
+    server_domain = peewee.TextField(null=True,
+                                     help_text="server domain linked to the insight")
+    server_type = peewee.CharField(null=True,
+                                   max_length=10,
+                                   help_text="project associated with the server_domain, "
+                                             "one of 'off', 'obf', 'opff', 'opf'")
 
     def serialize(self, full: bool = False) -> JSONType:
         if full:
@@ -68,6 +74,8 @@ class ProductInsight(BaseModel):
                 'value_tag': self.value_tag,
                 'source_image': self.source_image,
                 'automatic_processing': self.automatic_processing,
+                'server_domain': self.server_domain,
+                'server_type': self.server_type,
             }
         else:
             return {

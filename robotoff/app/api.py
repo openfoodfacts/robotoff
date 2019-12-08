@@ -207,6 +207,7 @@ class InsightImporterResource:
     def on_post(self, req, resp):
         logger.info("New insight import request")
         insight_type = req.get_param('type', required=True)
+        server_domain = req.get_param('server_domain', required=True)
 
         if insight_type not in (t.name for t in InsightType):
             raise falcon.HTTPBadRequest(description="unknown insight type: "
@@ -221,6 +222,7 @@ class InsightImporterResource:
         send_ipc_event('import_insights', {
             'insight_type': insight_type,
             'items': lines,
+            'server_domain': server_domain,
         })
 
         logger.info("Import scheduled")
@@ -248,6 +250,7 @@ class ImageImporterResource:
             'barcode': barcode,
             'image_url': image_url,
             'ocr_url': ocr_url,
+            'server_domain': server_domain,
         })
 
         resp.media = {
@@ -337,11 +340,13 @@ class WebhookProductResource:
         if action == 'updated':
             send_ipc_event('product_updated', {
                 'barcode': barcode,
+                'server_domain': server_domain,
             })
 
         elif action == 'deleted':
             send_ipc_event('product_deleted', {
                 'barcode': barcode,
+                'server_domain': server_domain,
             })
 
         resp.media = {
