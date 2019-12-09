@@ -55,7 +55,9 @@ def init_sentry(app):
 class ProductInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         response = {}
-        insights = [i.serialize() for i in get_insights(barcode=barcode)]
+        insights = [i.serialize()
+                    for i in get_insights(barcode=barcode,
+                                          count=None)]
 
         if not insights:
             response['status'] = "no_insights"
@@ -406,6 +408,7 @@ class RandomQuestionsResource:
         insights = list(get_insights(keep_types=keep_types,
                                      count=count,
                                      country=country,
+                                     random_order=True,
                                      brands=brands))
 
         if not insights:

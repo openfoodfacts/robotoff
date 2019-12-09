@@ -18,10 +18,13 @@ def get_insights(barcode: Optional[str] = None,
                  keep_types: List[str] = None,
                  country: str = None,
                  brands: List[str] = None,
-                 count=25) -> Iterable[ProductInsight]:
-    where_clauses = [
-        ProductInsight.annotation.is_null(),
-    ]
+                 annotated: Optional[bool] = False,
+                 random_order: bool = False,
+                 count: Optional[int] = 25) -> Iterable[ProductInsight]:
+    where_clauses = []
+
+    if annotated is not None:
+        where_clauses.append(ProductInsight.annotation.is_null(not annotated))
 
     if barcode:
         where_clauses.append(ProductInsight.barcode == barcode)
@@ -37,10 +40,17 @@ def get_insights(barcode: Optional[str] = None,
         where_clauses.append(ProductInsight.brands.contains_any(
             brands))
 
-    query = (ProductInsight.select()
-                           .where(*where_clauses)
-                           .limit(count)
-                           .order_by(peewee.fn.Random()))
+    query = ProductInsight.select()
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count is not None:
+        query = query.limit(count)
+
+    if random_order:
+        query = query.order_by(peewee.fn.Random())
+
     return query.iterator()
 
 
