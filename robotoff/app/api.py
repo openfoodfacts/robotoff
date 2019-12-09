@@ -1,5 +1,7 @@
+import csv
 import io
 import itertools
+import tempfile
 from typing import List, Optional
 
 import dataclasses
@@ -440,6 +442,44 @@ class StatusResource:
         }
 
 
+class DumpResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            'insight_types', required=False)
+
+        if keep_types is not None:
+            keep_types = keep_types[:10]
+
+        barcode = req.get_param('barcode')
+        annotated = req.get_param_as_bool('annotated', blank_as_true=False)
+
+        insights_iter = get_insights(barcode=barcode,
+                                     keep_types=keep_types,
+                                     annotated=annotated,
+                                     count=None)
+
+        writer = None
+        f = tempfile.TemporaryFile('w', newline='')
+
+        for insight in insights_iter:
+            serial = insight.serialize(full=True)
+
+            if writer is None:
+                writer = csv.DictWriter(f, fieldnames=serial.keys())
+                writer.writeheader()
+
+            writer.writerow(serial)
+
+        f.seek(0)
+
+        if writer is not None:
+            resp.content_type = "text/csv"
+            resp.stream = f
+        else:
+            f.close()
+            resp.status = falcon.HTTP_204
+
+
 cors = CORS(allow_all_origins=True,
             allow_all_headers=True,
             allow_all_methods=True,
@@ -473,5 +513,6 @@ api.add_route('/api/v1/images/predict', ImagePredictorResource())
 api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
 api.add_route('/api/v1/questions/random', RandomQuestionsResource())
 api.add_route('/api/v1/status', StatusResource())
+api.add_route('/api/v1/dump', DumpResource())
 
 api = init_sentry(api)
