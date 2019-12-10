@@ -458,31 +458,24 @@ class DumpResource:
                                      count=None)
 
         writer = None
-        # csv writer only accepts a file object in text mode and
-        # falcon a file object in binary mode, so we use a temporary
-        # file object to store csv lines
-        f = tempfile.TemporaryFile('w+b')
-        temp_f = io.StringIO(newline='')
 
-        for insight in insights_iter:
-            serial = insight.serialize(full=True)
+        with tempfile.TemporaryFile('w+', newline='') as temp_f:
+            for insight in insights_iter:
+                serial = insight.serialize(full=True)
 
-            if writer is None:
-                writer = csv.DictWriter(temp_f, fieldnames=serial.keys())
-                writer.writeheader()
+                if writer is None:
+                    writer = csv.DictWriter(temp_f, fieldnames=serial.keys())
+                    writer.writeheader()
 
-            writer.writerow(serial)
+                writer.writerow(serial)
+
             temp_f.seek(0)
-            f.write(temp_f.read().encode('utf-8'))
-            temp_f.truncate()
+            content = temp_f.read()
 
-        f.seek(0)
-
-        if writer is not None:
+        if content:
             resp.content_type = "text/csv"
-            resp.stream = f
+            resp.body = content
         else:
-            f.close()
             resp.status = falcon.HTTP_204
 
 
