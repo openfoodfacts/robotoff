@@ -20,6 +20,7 @@ def get_insights(barcode: Optional[str] = None,
                  brands: List[str] = None,
                  annotated: Optional[bool] = False,
                  random_order: bool = False,
+                 value_tag: Optional[str] = None,
                  count: Optional[int] = 25) -> Iterable[ProductInsight]:
     where_clauses = []
 
@@ -28,6 +29,9 @@ def get_insights(barcode: Optional[str] = None,
 
     if barcode:
         where_clauses.append(ProductInsight.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(ProductInsight.value_tag == value_tag)
 
     if keep_types:
         where_clauses.append(ProductInsight.type.in_(keep_types))

@@ -449,10 +449,12 @@ class DumpResource:
 
         barcode = req.get_param('barcode')
         annotated = req.get_param_as_bool('annotated', blank_as_true=False)
+        value_tag = req.get_param('value_tag')
 
         insights_iter = get_insights(barcode=barcode,
                                      keep_types=keep_types,
                                      annotated=annotated,
+                                     value_tag=value_tag,
                                      count=None)
 
         writer = None
