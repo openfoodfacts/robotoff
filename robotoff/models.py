@@ -87,9 +87,5 @@ class ProductInsight(BaseModel):
             }
 
 
-class ProductIngredient(BaseModel):
-    barcode = peewee.CharField(max_length=100, null=False, index=True, unique=True)
-    ingredients = peewee.TextField(null=False)
 
-
-MODELS = [ProductInsight, ProductIngredient]
+MODELS = [ProductInsight]

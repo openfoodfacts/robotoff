@@ -7,7 +7,7 @@ from typing import Dict, Iterable, List, Set, Optional, Callable
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS, BRANDS_BARCODE_RANGE
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import batch_insert, ProductInsight, ProductIngredient
+from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
 from robotoff.products import ProductStore, Product
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
@@ -72,82 +72,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
             seen.add(value)
             yield item
-
-
-class IngredientSpellcheckImporter(InsightImporter):
-    @staticmethod
-    def get_type() -> str:
-        return InsightType.ingredient_spellcheck.name
-
-    def import_insights(self, data: Iterable[Dict],
-                        server_domain: str,
-                        automatic: bool = False) -> int:
-        timestamp = datetime.datetime.utcnow()
-        barcode_seen: Set[str] = set()
-        insight_seen: Set = set()
-        insights = []
-        product_ingredients = []
-        inserted = 0
-
-        for item in data:
-            barcode = item['barcode']
-            corrections = item['corrections']
-            text = item['text']
-
-            if barcode not in barcode_seen:
-                product_ingredients.append({
-                    'barcode': barcode,
-                    'ingredients': item['text'],
-                })
-                barcode_seen.add(barcode)
-
-            for correction in corrections:
-                start_offset = correction['start_offset']
-                end_offset = correction['end_offset']
-                key = (barcode, start_offset, end_offset)
-
-                if key not in insight_seen:
-                    original_snippet = self.generate_snippet(text,
-                                                             start_offset, end_offset,
-                                                             correction['original'])
-                    corrected_snippet = self.generate_snippet(text,
-                                                              start_offset, end_offset,
-                                                              correction['correction'])
-                    insights.append({
-                        'id': str(uuid.uuid4()),
-                        'type': InsightType.ingredient_spellcheck.name,
-                        'barcode': barcode,
-                        'timestamp': timestamp,
-                        'automatic_processing': False,
-                        'data': {
-                            **correction,
-                            'original_snippet': original_snippet,
-                            'corrected_snippet': corrected_snippet,
-                        },
-                    })
-                    insight_seen.add(key)
-
-            if len(product_ingredients) >= 50:
-                batch_insert(ProductIngredient, product_ingredients, 50)
-                product_ingredients = []
-
-            if len(insights) >= 50:
-                inserted += batch_insert(ProductInsight, insights, 50)
-                insights = []
-
-        batch_insert(ProductIngredient, product_ingredients, 50)
-        inserted += batch_insert(ProductInsight, insights, 50)
-        return inserted
-
-    @staticmethod
-    def generate_snippet(ingredient_str: str,
-                         start_offset: int,
-                         end_offset: int,
-                         correction: str) -> str:
-        context_len = 15
-        return "{}{}{}".format(ingredient_str[start_offset-context_len:start_offset],
-                               correction,
-                               ingredient_str[end_offset:end_offset+context_len])
 
 
 GroupedByOCRInsights = Dict[str, List]
@@ -824,7 +748,6 @@ class StoreInsightImporter(OCRInsightImporter):
 
 class InsightImporterFactory:
     importers: JSONType = {
-        InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
         InsightType.label.name: LabelInsightImporter,
         InsightType.category.name: CategoryImporter,

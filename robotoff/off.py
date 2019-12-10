@@ -82,10 +82,6 @@ def generate_image_url(barcode: str, image_name: str) -> str:
     return settings.OFF_IMAGE_BASE_URL + path
 
 
-def product_exists(barcode: str) -> bool:
-    return get_product(barcode, ['code']) is not None
-
-
 def is_valid_image(barcode: str, image_id: str) -> bool:
     product = get_product(barcode, fields=['images'])
 
@@ -148,25 +144,6 @@ def update_quantity(barcode: str, quantity: str,
         'code': barcode,
         'quantity': quantity,
         'comment': comment,
-    }
-    update_product(params, **kwargs)
-
-
-def save_ingredients(barcode: str, ingredient_text: str,
-                     insight_id: Optional[str] = None,
-                     lang: str = None, **kwargs):
-    ingredient_key = ('ingredients_text' if lang is None
-                      else f'ingredients_{lang}_text')
-
-    comment = "[robotoff] Ingredient spellcheck correction",
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
-    params = {
-        'code': barcode,
-        'comment': comment,
-        ingredient_key: ingredient_text,
     }
     update_product(params, **kwargs)
 
