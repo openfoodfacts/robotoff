@@ -8,7 +8,7 @@ falcon-multipart==0.2.0
 elasticsearch==6.3.1
 Click==7.0
 apscheduler==3.5.3
-sentry-sdk==0.7.6
+sentry-sdk[falcon]==0.13.5
 Pillow==6.2.0
 numpy==1.15.4
 protobuf==3.7.1

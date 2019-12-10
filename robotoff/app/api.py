@@ -36,22 +36,19 @@ from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
 
 import sentry_sdk
-from sentry_sdk.integrations.wsgi import SentryWsgiMiddleware
+from sentry_sdk.integrations.falcon import FalconIntegration
 
 logger = get_logger()
+
+sentry_sdk.init(
+    dsn=settings.SENTRY_DSN,
+    integrations=[FalconIntegration()]
+)
+
 es_client = get_es_client()
 
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
-
-
-def init_sentry(app):
-    if settings.SENTRY_DSN:
-        sentry_sdk.init(
-            dsn=settings.SENTRY_DSN)
-        return SentryWsgiMiddleware(app)
-
-    return app
 
 
 class ProductInsightResource:
@@ -514,5 +511,3 @@ api.add_route('/api/v1/questions/{barcode}', ProductQuestionsResource())
 api.add_route('/api/v1/questions/random', RandomQuestionsResource())
 api.add_route('/api/v1/status', StatusResource())
 api.add_route('/api/v1/dump', DumpResource())
-
-api = init_sentry(api)
