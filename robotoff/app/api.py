@@ -456,16 +456,23 @@ class DumpResource:
                                      count=None)
 
         writer = None
-        f = tempfile.TemporaryFile('w', newline='')
+        # csv writer only accepts a file object in text mode and
+        # falcon a file object in binary mode, so we use a temporary
+        # file object to store csv lines
+        f = tempfile.TemporaryFile('w+b')
+        temp_f = io.StringIO(newline='')
 
         for insight in insights_iter:
             serial = insight.serialize(full=True)
 
             if writer is None:
-                writer = csv.DictWriter(f, fieldnames=serial.keys())
+                writer = csv.DictWriter(temp_f, fieldnames=serial.keys())
                 writer.writeheader()
 
             writer.writerow(serial)
+            temp_f.seek(0)
+            f.write(temp_f.read().encode('utf-8'))
+            temp_f.truncate()
 
         f.seek(0)
 
