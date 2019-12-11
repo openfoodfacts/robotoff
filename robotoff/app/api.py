@@ -15,7 +15,6 @@ from PIL import Image
 
 from robotoff import settings
 from robotoff.app.core import (get_insights,
-                               get_random_insight,
                                save_insight)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
@@ -79,16 +78,21 @@ class ProductInsightDetail:
 
 class RandomInsightResource:
     def on_get(self, req, resp):
-        insight_type = req.get_param('type') or None
-        country = req.get_param('country') or None
+        insight_type: str = req.get_param('type')
+        country: str = req.get_param('country')
+        value_tag: str = req.get_param('value_tag')
+
+        insights = list(get_insights(keep_types=[insight_type],
+                                     country=country,
+                                     value_tag=value_tag,
+                                     random_order=True,
+                                     count=1))
+
         response = {}
-
-        insight = get_random_insight(insight_type, country)
-
-        if not insight:
+        if not insights:
             response['status'] = "no_insights"
         else:
-            response['insight'] = insight.serialize()
+            response['insight'] = insights[0].serialize()
             response['status'] = "found"
 
         resp.media = response

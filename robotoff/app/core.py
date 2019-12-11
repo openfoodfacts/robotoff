@@ -5,7 +5,6 @@ from robotoff.insights.annotate import (InsightAnnotatorFactory,
                                         ALREADY_ANNOTATED_RESULT,
                                         UNKNOWN_INSIGHT_RESULT)
 from robotoff.models import ProductInsight
-from robotoff.off import get_product
 from robotoff.utils import get_logger
 
 import peewee
@@ -56,46 +55,6 @@ def get_insights(barcode: Optional[str] = None,
         query = query.order_by(peewee.fn.Random())
 
     return query.iterator()
-
-
-def get_random_insight(insight_type: str = None,
-                       country: str = None) -> Optional[ProductInsight]:
-    attempts = 0
-    while True:
-        attempts += 1
-
-        if attempts > 4:
-            return None
-
-        query = ProductInsight.select()
-        where_clauses = [ProductInsight.annotation.is_null()]
-
-        if country is not None:
-            where_clauses.append(ProductInsight.countries.contains(
-                country))
-
-        if insight_type is not None:
-            where_clauses.append(ProductInsight.type ==
-                                 insight_type)
-
-        query = query.where(*where_clauses).order_by(peewee.fn.Random())
-
-        insight_list = list(query.limit(1))
-
-        if not insight_list:
-            return None
-
-        insight = insight_list[0]
-        # We only need to know if the product exists, so fetching barcode
-        # is enough
-        product = get_product(insight.barcode, ['code'])
-
-        # Product may be None if not found
-        if product:
-            return insight
-        else:
-            insight.delete_instance()
-            logger.info("Product not found, insight deleted")
 
 
 def save_insight(insight_id: str,

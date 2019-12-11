@@ -30,6 +30,7 @@ Fetch a random insight.
 
 + type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.
 + country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
++ value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
 
 + Response 200 (application/json)
 
