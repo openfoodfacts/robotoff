@@ -91,7 +91,8 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
             insights = self.sort_by_priority(insights)
             inserts += list(self._process_product_insights(barcode, insights,
                                                            timestamp,
-                                                           automatic))
+                                                           automatic,
+                                                           server_domain))
 
         inserts = list(add_server_fields(inserts, server_domain))
         return batch_insert(ProductInsight, inserts, 50)
@@ -99,14 +100,15 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
     def _process_product_insights(self, barcode: str,
                                   insights: List[JSONType],
                                   timestamp: datetime.datetime,
-                                  automatic: bool) -> \
+                                  automatic: bool,
+                                  server_domain: str) -> \
             Iterable[JSONType]:
         countries_tags = getattr(self.product_store[barcode],
                                  'countries_tags', [])
         brands_tags = getattr(self.product_store[barcode],
                               'brands_tags', [])
 
-        for insight in self.process_product_insights(barcode, insights):
+        for insight in self.process_product_insights(barcode, insights, server_domain):
             insight['id'] = str(uuid.uuid4())
             insight['barcode'] = barcode
             insight['timestamp'] = timestamp
@@ -153,7 +155,8 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         pass
 
@@ -192,16 +195,18 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         return True
     
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         code_seen: Set[str] = set()
 
         for t in (ProductInsight.select(ProductInsight.data['text']
                                         .as_json().alias('text'))
-                                .where(ProductInsight.type ==
-                                       self.get_type(),
-                                       ProductInsight.barcode ==
-                                       barcode)).iterator():
+                                .where(
+            ProductInsight.type == self.get_type(),
+            ProductInsight.barcode == barcode,
+            ProductInsight.server_domain == server_domain)
+        ).iterator():
             code_seen.add(t.text)
 
         for insight in insights:
@@ -278,15 +283,17 @@ class LabelInsightImporter(OCRInsightImporter):
         return True
     
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         label_seen: Set[str] = set()
 
         for t in (ProductInsight.select(ProductInsight.value_tag)
-                                .where(ProductInsight.type ==
-                                       self.get_type(),
-                                       ProductInsight.barcode ==
-                                       barcode)).iterator():
+                                .where(
+            ProductInsight.type == self.get_type(),
+            ProductInsight.barcode == barcode,
+            ProductInsight.server_domain == server_domain)
+        ).iterator():
             label_seen.add(t.value_tag)
 
         for insight in insights:
@@ -331,18 +338,21 @@ class CategoryImporter(InsightImporter):
                         data: Iterable[Dict],
                         server_domain: str,
                         automatic: bool = False) -> int:
-        inserts = self.process_product_insights(data, automatic)
+        inserts = self.process_product_insights(data, automatic, server_domain)
         inserts = add_server_fields(inserts, server_domain)
         return batch_insert(ProductInsight, inserts, 50)
 
     def process_product_insights(self, insights: Iterable[JSONType],
-                                 automatic: bool) \
+                                 automatic: bool,
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         category_seen: Dict[str, Set[str]] = {}
         for t in (ProductInsight.select(ProductInsight.value_tag,
                                         ProductInsight.barcode)
-                                .where(ProductInsight.type ==
-                                       self.get_type())).iterator():
+                                .where(
+            ProductInsight.type == self.get_type(),
+            ProductInsight.server_domain == server_domain,
+        )).iterator():
             category_seen.setdefault(t.barcode, set())
             category_seen[t.barcode].add(t.value_tag)
 
@@ -483,7 +493,8 @@ class ProductWeightImporter(OCRInsightImporter):
         return insights_by_subtype
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         if not insights:
             return
@@ -500,10 +511,10 @@ class ProductWeightImporter(OCRInsightImporter):
                                                      barcode))
             return
 
-        if ProductInsight.select().where(ProductInsight.type ==
-                                         self.get_type(),
-                                         ProductInsight.barcode ==
-                                         barcode).count():
+        if ProductInsight.select().where(
+                ProductInsight.type == self.get_type(),
+                ProductInsight.barcode == barcode,
+                ProductInsight.server_domain == server_domain).count():
             return
 
         content = insight['content']
@@ -550,7 +561,8 @@ class ExpirationDateImporter(OCRInsightImporter):
         return True
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         if len(insights) > 1:
             logger.info("{} distinct expiration dates found for product "
@@ -558,10 +570,10 @@ class ExpirationDateImporter(OCRInsightImporter):
                                                      barcode))
             return
 
-        if ProductInsight.select().where(ProductInsight.type ==
-                                         self.get_type(),
-                                         ProductInsight.barcode ==
-                                         barcode).count():
+        if ProductInsight.select().where(
+                ProductInsight.type == self.get_type(),
+                ProductInsight.barcode == barcode,
+                ProductInsight.server_domain == server_domain).count():
             return
 
         for insight in insights:
@@ -619,15 +631,17 @@ class BrandInsightImporter(OCRInsightImporter):
         return True
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         brand_seen: Set[str] = set()
 
         for t in (ProductInsight.select(ProductInsight.value_tag)
-                .where(ProductInsight.type ==
-                       self.get_type(),
-                       ProductInsight.barcode ==
-                       barcode)).iterator():
+                .where(
+            ProductInsight.type == self.get_type(),
+            ProductInsight.barcode == barcode,
+            ProductInsight.server_domain == server_domain)
+        ).iterator():
             brand_seen.add(t.value_tag)
 
         for insight in insights:
@@ -704,15 +718,17 @@ class StoreInsightImporter(OCRInsightImporter):
         return True
 
     def process_product_insights(self, barcode: str,
-                                 insights: List[JSONType]) \
+                                 insights: List[JSONType],
+                                 server_domain: str) \
             -> Iterable[JSONType]:
         store_seen: Set[str] = set()
 
         for t in (ProductInsight.select(ProductInsight.value_tag)
-                .where(ProductInsight.type ==
-                       self.get_type(),
-                       ProductInsight.barcode ==
-                       barcode)).iterator():
+                .where(
+            ProductInsight.type == self.get_type(),
+            ProductInsight.barcode == barcode,
+            ProductInsight.server_domain == server_domain)
+        ).iterator():
             store_seen.add(t.value_tag)
 
         for insight in insights:
