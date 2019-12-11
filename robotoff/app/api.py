@@ -391,7 +391,8 @@ class RandomQuestionsResource:
         lang: str = req.get_param('lang', default='en')
         keep_types: Optional[List[str]] = req.get_param_as_list(
             'insight_types', required=False)
-        country: Optional[str] = req.get_param('country') or None
+        country: Optional[str] = req.get_param('country')
+        value_tag: str = req.get_param('value_tag')
         brands = req.get_param_as_list('brands') or None
 
         if keep_types is None:
@@ -408,6 +409,7 @@ class RandomQuestionsResource:
                                      count=count,
                                      country=country,
                                      random_order=True,
+                                     value_tag=value_tag,
                                      brands=brands))
 
         if not insights:

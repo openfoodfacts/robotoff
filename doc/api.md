@@ -89,7 +89,7 @@ Current question types:
 
 + Parameters
     + barcode: Product barcode
-   
+
 + lang (str, optional) - the language of the question/value. 'en' by default.
 + count (int, optional) - Number of questions to return. Default to 1.
 
@@ -105,6 +105,7 @@ Current question types:
 + insight_types (list, optional) - comma-separated list, filter by insight types.
 + country (str, optional) - filter by country tag.
 + brands (str, optional) - filter by brands, comma-separated list of brand tags.
++ value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
 
 + Response 200 (application/json)
 
