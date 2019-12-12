@@ -1,5 +1,6 @@
 from typing import Union, Optional, List, Iterable
 
+from robotoff import settings
 from robotoff.insights.annotate import (InsightAnnotatorFactory,
                                         AnnotationResult,
                                         ALREADY_ANNOTATED_RESULT,
@@ -20,8 +21,12 @@ def get_insights(barcode: Optional[str] = None,
                  annotated: Optional[bool] = False,
                  random_order: bool = False,
                  value_tag: Optional[str] = None,
+                 server_domain: Optional[str] = None,
                  count: Optional[int] = 25) -> Iterable[ProductInsight]:
-    where_clauses = []
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [ProductInsight.server_domain == server_domain]
 
     if annotated is not None:
         where_clauses.append(ProductInsight.annotation.is_null(not annotated))

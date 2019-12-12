@@ -4,6 +4,10 @@ FORMAT: 1A
 
 Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.
 All endpoints must be prefixed with `/api/v1` (the full URL being `https://robotoff.openfoodfacts.org/api/v1/{endpoint}`)
+Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all 
+environments (production, development, pro). The `server_domain` field should be used to specify the 
+product/environment: `api.openfoodfacts.org` for OFF-prod, `api.openfoodfacts.net` for OFF-dev, 
+`api.openbeautyfacts.org` for OBF-prod,...
 
 # Group Insights
 
@@ -31,6 +35,7 @@ Fetch a random insight.
 + type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.
 + country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
 + value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
 
 + Response 200 (application/json)
 
@@ -43,6 +48,8 @@ Return all insights associated with a specific product.
 
 + Parameters
     + barcode: Product barcode
+
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
 
 + Response 200 (application/json)
 
@@ -93,6 +100,7 @@ Current question types:
 
 + lang (str, optional) - the language of the question/value. 'en' by default.
 + count (int, optional) - Number of questions to return. Default to 1.
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
 
 + Response 200 (application/json)
 
@@ -107,7 +115,7 @@ Current question types:
 + country (str, optional) - filter by country tag.
 + brands (str, optional) - filter by brands, comma-separated list of brand tags.
 + value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
-
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
 + Response 200 (application/json)
 
 

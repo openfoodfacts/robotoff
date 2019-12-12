@@ -52,9 +52,11 @@ TRANSLATION_STORE.load()
 
 class ProductInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
+        server_domain: Optional[str] = req.get_param('server_domain')
         response = {}
         insights = [i.serialize()
                     for i in get_insights(barcode=barcode,
+                                          server_domain=server_domain,
                                           count=None)]
 
         if not insights:
@@ -78,14 +80,16 @@ class ProductInsightDetail:
 
 class RandomInsightResource:
     def on_get(self, req, resp):
-        insight_type: str = req.get_param('type')
-        country: str = req.get_param('country')
-        value_tag: str = req.get_param('value_tag')
+        insight_type: Optional[str] = req.get_param('type')
+        country: Optional[str] = req.get_param('country')
+        value_tag: Optional[str] = req.get_param('value_tag')
+        server_domain: Optional[str] = req.get_param('server_domain')
 
         insights = list(get_insights(keep_types=[insight_type],
                                      country=country,
                                      value_tag=value_tag,
                                      random_order=True,
+                                     server_domain=server_domain,
                                      count=1))
 
         response = {}
@@ -364,10 +368,12 @@ class ProductQuestionsResource:
         response = {}
         count: int = req.get_param_as_int('count', min_value=1) or 1
         lang: str = req.get_param('lang', default='en')
+        server_domain: Optional[str] = req.get_param('server_domain')
 
         keep_types = QuestionFormatterFactory.get_available_types()
         insights = list(get_insights(barcode=barcode,
                                      keep_types=keep_types,
+                                     server_domain=server_domain,
                                      count=count))
 
         if not insights:
@@ -398,6 +404,7 @@ class RandomQuestionsResource:
         country: Optional[str] = req.get_param('country')
         value_tag: str = req.get_param('value_tag')
         brands = req.get_param_as_list('brands') or None
+        server_domain: Optional[str] = req.get_param('server_domain')
 
         if keep_types is None:
             keep_types = QuestionFormatterFactory.get_available_types()
@@ -413,6 +420,7 @@ class RandomQuestionsResource:
                                      count=count,
                                      country=country,
                                      random_order=True,
+                                     server_domain=server_domain,
                                      value_tag=value_tag,
                                      brands=brands))
 
