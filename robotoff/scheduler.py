@@ -69,7 +69,8 @@ def refresh_insights():
         with db.atomic():
             for insight in (ProductInsight.select()
                     .where(ProductInsight.annotation.is_null(),
-                           ProductInsight.timestamp <= datetime_threshold)
+                           ProductInsight.timestamp <= datetime_threshold,
+                           ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN)
                     .iterator()):
                 product: Product = product_store[insight.barcode]
 
