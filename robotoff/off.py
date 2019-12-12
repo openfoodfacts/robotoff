@@ -13,8 +13,6 @@ USER_AGENT_HEADERS = {
 }
 http_session.headers.update(USER_AGENT_HEADERS)
 
-POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
-DRY_POST_URL = "https://world.openfoodfacts.net/cgi/product_jqm2.pl"
 AUTH = ("roboto-app", settings.OFF_PASSWORD)
 AUTH_DICT = {
     'user_id': AUTH[0],
@@ -35,6 +33,15 @@ class ServerType(enum.Enum):
     obf = 2
     opff = 3
     opf = 4
+
+
+def get_api_url(server_domain: str) -> str:
+    return "https://{}/api/v0".format(server_domain)
+
+
+def get_product_update_url(server_domain: str) -> str:
+    base_url = get_api_url(server_domain)
+    return base_url + "/cgi/product_jqm2.pl"
 
 
 def get_server_type(server_domain: str) -> Optional[ServerType]:
@@ -230,8 +237,14 @@ def add_store(barcode: str, store: str,
     update_product(params, **kwargs)
 
 
-def update_product(params: Dict, dry=False,
+def update_product(params: Dict,
+                   server_domain: Optional[str] = None,
                    session_cookie: Optional[str] = None):
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    url = get_product_update_url(server_domain)
+
     comment = params.get('comment')
     cookies = None
     if session_cookie:
@@ -243,12 +256,14 @@ def update_product(params: Dict, dry=False,
         if comment:
             params['comment'] = comment + " (automated edit)"
 
-    if dry:
-        r = http_session.get(DRY_POST_URL, params=params,
-                             auth=('off', 'off'),
-                             cookies=cookies)
-    else:
-        r = http_session.get(POST_URL, params=params, cookies=cookies)
+    auth = None
+    if server_domain.endswith('openfoodfacts.net'):
+        # dev environment requires authentication
+        auth = ('off', 'off')
+
+    r = http_session.get(url, params=params,
+                         auth=auth,
+                         cookies=cookies)
 
     r.raise_for_status()
     json = r.json()

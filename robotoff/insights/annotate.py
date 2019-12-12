@@ -90,6 +90,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
         emb_codes.append(emb_code)
         update_emb_codes(insight.barcode, emb_codes,
+                         server_domain=insight.server_domain,
                          insight_id=insight.id,
                          session_cookie=session_cookie)
         return UPDATED_ANNOTATION_RESULT
@@ -123,6 +124,7 @@ class LabelAnnotator(InsightAnnotator):
 
         add_label_tag(insight.barcode, insight.value_tag,
                       insight_id=insight.id,
+                      server_domain=insight.server_domain,
                       session_cookie=session_cookie)
 
         return UPDATED_ANNOTATION_RESULT
@@ -144,6 +146,7 @@ class CategoryAnnotator(InsightAnnotator):
         category_tag = insight.value_tag
         add_category(insight.barcode, category_tag,
                      insight_id=insight.id,
+                     server_domain=insight.server_domain,
                      session_cookie=session_cookie)
 
         return UPDATED_ANNOTATION_RESULT
@@ -165,6 +168,7 @@ class ProductWeightAnnotator(InsightAnnotator):
         weight = insight.data['text']
         update_quantity(insight.barcode, weight,
                         insight_id=insight.id,
+                        server_domain=insight.server_domain,
                         session_cookie=session_cookie)
 
         return UPDATED_ANNOTATION_RESULT
@@ -187,6 +191,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
 
         update_expiration_date(insight.barcode, expiration_date,
                                insight_id=insight.id,
+                               server_domain=insight.server_domain,
                                session_cookie=session_cookie)
         return UPDATED_ANNOTATION_RESULT
 
@@ -209,6 +214,7 @@ class BrandAnnotator(InsightAnnotator):
 
         add_brand(insight.barcode, brand,
                   insight_id=insight.id,
+                  server_domain=insight.server_domain,
                   session_cookie=session_cookie)
         return UPDATED_ANNOTATION_RESULT
 
@@ -231,6 +237,7 @@ class StoreAnnotator(InsightAnnotator):
 
         add_store(insight.barcode, store,
                   insight_id=insight.id,
+                  server_domain=insight.server_domain,
                   session_cookie=session_cookie)
         return UPDATED_ANNOTATION_RESULT
 
