@@ -35,13 +35,8 @@ class ServerType(enum.Enum):
     opf = 4
 
 
-def get_api_url(server_domain: str) -> str:
-    return "https://{}/api/v0".format(server_domain)
-
-
 def get_product_update_url(server_domain: str) -> str:
-    base_url = get_api_url(server_domain)
-    return base_url + "/cgi/product_jqm2.pl"
+    return "https://{}/cgi/product_jqm2.pl".format(server_domain)
 
 
 def get_server_type(server_domain: str) -> Optional[ServerType]:
