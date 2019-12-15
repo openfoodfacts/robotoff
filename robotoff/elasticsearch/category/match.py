@@ -42,7 +42,7 @@ def generate_request(query: str, lang: str):
     return {
         "query": {
             "match_phrase": {
-                f"{lang}:name.stemmed": {
+                "{}:name.stemmed".format(lang): {
                     "query": query,
                 }
             }

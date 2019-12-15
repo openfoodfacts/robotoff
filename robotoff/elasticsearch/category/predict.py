@@ -16,7 +16,7 @@ def predict(client, product: Dict) -> Optional[Dict]:
     predictions = []
 
     for lang in product.get('languages_codes', []):
-        product_name = product.get(f"product_name_{lang}")
+        product_name = product.get("product_name_{}".format(lang))
 
         if not product_name:
             continue

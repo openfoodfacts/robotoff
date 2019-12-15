@@ -37,7 +37,7 @@ def generate_category_data(category_taxonomy: Taxonomy) -> Iterable[Tuple[str, D
                            if lang in SUPPORTED_LANG]
 
         data = {
-            f"{lang}:name": category_node.names[lang]
+            "{}:name".format(lang): category_node.names[lang]
             for lang in supported_langs
         }
         data['id'] = category_node.id
