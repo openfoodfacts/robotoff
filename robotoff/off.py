@@ -36,7 +36,7 @@ class ServerType(enum.Enum):
 
 
 def get_product_update_url(server_domain: str) -> str:
-    return "https://{}/cgi/product_jqm2.pl".format(server_domain)
+    return "https://world.openfoodfacts.org/cgi/product_jqm2.pl".format(server_domain)
 
 
 def get_server_type(server_domain: str) -> Optional[ServerType]:
