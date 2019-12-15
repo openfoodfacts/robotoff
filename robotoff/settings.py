@@ -73,3 +73,7 @@ TF_SERVING_MODELS_PATH = PROJECT_DIR / 'tf_models'
 
 CATEGORY_CLF_MODEL_PATH = MODELS_DIR / 'category' / 'checkpoint.hdf5'
 CATEGORY_CLF_CATEGORY_BLACKLIST = DATA_DIR / 'clf_category_blacklist.txt'
+
+OBJECT_DETECTION_TF_SERVING_MODELS = ("nutriscore",
+                                      "nutrition-table",
+                                      "universal-logo-detector")

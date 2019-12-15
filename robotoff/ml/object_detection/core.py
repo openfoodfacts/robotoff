@@ -153,7 +153,7 @@ class ObjectDetectionModelRegistry:
 
     @classmethod
     def load_all(cls):
-        for model_name in ("nutriscore", "nutrition-table"):
+        for model_name in settings.OBJECT_DETECTION_TF_SERVING_MODELS:
             file_path = settings.TF_SERVING_MODELS_PATH / model_name
             if file_path.is_dir():
                 logger.info("TF model '{}' found".format(model_name))
