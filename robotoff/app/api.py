@@ -19,7 +19,7 @@ from robotoff.app.core import (get_insights,
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
-from robotoff.insights.extraction import extract_ocr_insights
+from robotoff.insights.extraction import extract_ocr_insights, DEFAULT_INSIGHT_TYPES
 from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatterFactory, \
     QuestionFormatter
@@ -171,6 +171,33 @@ class NutrientPredictorResource:
             resp.media = {
                 'nutrients': insights['nutrient'][0]['nutrients']
             }
+
+
+class OCRInsightsPredictorResource:
+    def on_get(self, req, resp):
+        ocr_url = req.get_param('ocr_url', required=True)
+
+        try:
+            insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+
+        except requests.exceptions.RequestException:
+            resp.media = {
+                'error': "download_error",
+                'error_description': "an error occurred during OCR JSON download",
+            }
+            return
+
+        except OCRParsingException as e:
+            logger.error(e)
+            resp.media = {
+                'error': "invalid_ocr",
+                'error_description': "an error occurred during OCR parsing",
+            }
+            return
+
+        resp.media = {
+            'insights': insights,
+        }
 
 
 class CategoryPredictorResource:
@@ -515,6 +542,8 @@ api.add_route('/api/v1/predict/ingredients/spellcheck',
               IngredientSpellcheckResource())
 api.add_route('/api/v1/predict/nutrient',
               NutrientPredictorResource())
+api.add_route('/api/v1/predict/ocr_insights',
+              OCRInsightsPredictorResource())
 api.add_route('/api/v1/predict/category',
               CategoryPredictorResource())
 api.add_route('/api/v1/products/dataset',
