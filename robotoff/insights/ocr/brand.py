@@ -150,7 +150,7 @@ def extract_brands_regex(ocr_regex: OCRRegex,
                         'brand_tag': get_brand_tag(brand),
                         'text': match_str,
                         'notify': brand in NOTIFY_BRANDS,
-                        'type': "regex",
+                        'type': "whitelisted-brands",
                     }
 
 
