@@ -4,7 +4,9 @@ from typing import Set
 import pytest
 
 from robotoff import settings
-from robotoff.insights.ocr.brand import BRAND_REGEX
+from robotoff.insights.ocr.brand import BRAND_REGEX, generate_brand_keyword_processor, \
+    extract_brands_flashtext
+from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter
 
 
@@ -63,3 +65,27 @@ def test_check_logo_annotation_brands():
         assert '||' in item
         assert item not in items
         items.add(item)
+
+
+@pytest.fixture(scope='session')
+def brand_keyword_processor():
+    taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_PATH)
+    yield generate_brand_keyword_processor(taxonomy=taxonomy,
+                                           min_length=6)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Bio c bon vous propose", {'brand': "Bio C Bon", "brand_tag": "en:bio-c-bon", "text": "Bio c bon"}),
+    ("Netto gewitch: 450 g", None),
+    ("", None),
+    ("Notre marque Alpina savoie est bien positionnée", {'brand': "Alpina Savoie", "brand_tag": "en:alpina-savoie", "text": "Alpina savoie"}),
+])
+def test_extract_brand_flashtext(brand_keyword_processor, text: str, expected):
+    insight = extract_brands_flashtext(brand_keyword_processor, text)
+
+    if not expected:
+        assert insight is None
+    else:
+        for expected_key, expected_value in expected.items():
+            assert expected_key in insight
+            assert insight[expected_key] == expected_value

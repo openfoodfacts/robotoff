@@ -16,6 +16,7 @@ JSONL_DATASET_URL = "https://static.openfoodfacts.org/data/openfoodfacts-product
 TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.full.json"
 TAXONOMY_INGREDIENT_URL = "https://static.openfoodfacts.org/data/taxonomies/ingredients.full.json"
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.full.json"
+TAXONOMY_BRAND_URL = "https://static.openfoodfacts.org/data/taxonomies/brands.full.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
 OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
@@ -25,6 +26,7 @@ TAXONOMY_DIR = DATA_DIR / 'taxonomies'
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.full.json'
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.full.json'
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.full.json'
+TAXONOMY_BRAND_PATH = TAXONOMY_DIR / 'brands.full.json'
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
@@ -61,6 +63,7 @@ OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_brands.tx
 OCR_STORES_DATA_PATH = OCR_DATA_DIR / 'regex_stores.txt'
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'notify_stores.txt'
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_labels.txt'
+OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / 'taxonomy_brands_blacklist.txt'
 
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
@@ -77,3 +80,5 @@ CATEGORY_CLF_CATEGORY_BLACKLIST = DATA_DIR / 'clf_category_blacklist.txt'
 OBJECT_DETECTION_TF_SERVING_MODELS = ("nutriscore",
                                       "nutrition-table",
                                       "universal-logo-detector")
+
+BRAND_MATCHING_MIN_LENGTH = os.environ.get("BRAND_MATCHING_MIN_LENGTH", 6)

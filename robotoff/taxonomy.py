@@ -20,6 +20,7 @@ class TaxonomyType(Enum):
     category = 1
     ingredient = 2
     label = 3
+    brand = 4
 
 
 class TaxonomyNode:
@@ -271,7 +272,12 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
         CachedStore(functools.partial(fetch_taxonomy,
                                       url=settings.TAXONOMY_LABEL_URL,
                                       fallback_path=
-                                      settings.TAXONOMY_LABEL_PATH))
+                                      settings.TAXONOMY_LABEL_PATH)),
+    TaxonomyType.brand.name:
+        CachedStore(functools.partial(fetch_taxonomy,
+                                      url=settings.TAXONOMY_BRAND_URL,
+                                      fallback_path=
+                                      settings.TAXONOMY_LABEL_PATH)),
 }
 
 
