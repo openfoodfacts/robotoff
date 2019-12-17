@@ -18,3 +18,4 @@ dacite==1.0.2
 tensorflow==2.0.0
 spacy==2.2.2
 scikit-learn==0.20.1
+flashtext==2.7
