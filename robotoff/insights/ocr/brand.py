@@ -174,12 +174,6 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
     if insight:
         return [insight]
 
-    text = ocr_result.get_full_text_contiguous()
-    if text:
-        insight = extract_brands_flashtext(BRAND_PROCESSOR, text)
-        if insight:
-            return [insight]
-
     insight = extract_brands_google_cloud_vision(ocr_result)
     if insight:
         return [insight]
