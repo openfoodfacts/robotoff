@@ -3,6 +3,18 @@ from typing import List, Dict
 from robotoff.insights.ocr.dataclass import OCRResult, SafeSearchAnnotationLikelihood
 
 
+LABELS_TO_FLAG = {'Face', 'Head', 'Selfie', 'Hair', 'Forehead', 'Chin', 'Cheek',
+                  'Arm', 'Tooth', 'Finger', 'Hand', 'Leg', 'Human Leg', 'Ankle',
+                  'Eyebrow', 'Ear', 'Neck', 'Jaw', 'Nose', 'Smile', 'Facial Expression',
+                  'Glasses', 'Eyewear', 'Gesture', 'Thumb',
+                  'Footwear', 'Jeans', 'Shoe',
+                  'Child', 'Baby',
+                  'Dog', 'Cat',
+                  'Handwriting',
+                  'Computer', 'Laptop', 'Refrigerator',
+                  }
+
+
 def flag_image(ocr_result: OCRResult) -> List[Dict]:
     safe_search_annotation = ocr_result.get_safe_search_annotation()
     label_annotations = ocr_result.get_label_annotations()
@@ -19,8 +31,8 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
                 })
 
     for label_annotation in label_annotations:
-        if (label_annotation.description in ('Face', 'Head', 'Selfie') and
-                label_annotation.score >= 0.8):
+        if (label_annotation.description in LABELS_TO_FLAG and
+                label_annotation.score >= 0.6):
             insights.append({
                 'type': label_annotation.description.lower(),
                 'likelihood': label_annotation.score
