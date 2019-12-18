@@ -26,6 +26,21 @@ def test_product_weight_with_mention_regex(input_str: str, is_match: bool):
     assert (with_mention_regex.match(input_str) is not None) == is_match
 
 
+@pytest.mark.parametrize('input_str,is_match', [
+    ("poids net à l'emballage: 500g", False),
+    ("poids 2kg", False),
+    ("250g net weight", True),
+    ("10 g net", True),
+    ("1.4 g", False),
+    ("2 l", False),
+])
+def test_product_weight_with_ending_mention_regex(input_str: str, is_match: bool):
+    ocr_regex: OCRRegex = PRODUCT_WEIGHT_REGEX['with_ending_mention']
+    regex = ocr_regex.regex
+
+    assert (regex.match(input_str) is not None) == is_match
+
+
 @pytest.mark.parametrize('value,unit,expected', [
     ("2", "l", (2000., 'ml')),
     ("1549.45", "dl", (154945., 'ml')),
@@ -37,8 +52,8 @@ def test_product_weight_with_mention_regex(input_str: str, is_match: bool):
     ("15", "fl oz", (450, 'ml')),
     ("1", "oz", (28.349523125, 'g')),
 ])
-def test_product_weight_with_mention_regex(value: str, unit: str,
-                                           expected: Tuple[float, str]):
+def test_normalize_weight(value: str, unit: str,
+                          expected: Tuple[float, str]):
     result = normalize_weight(value, unit)
     assert result == expected
 

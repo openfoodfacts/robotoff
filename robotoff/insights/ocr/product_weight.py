@@ -102,13 +102,21 @@ def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
     return False
 
 
-def process_product_weight(match, prompt: bool) -> Optional[Dict]:
+def process_product_weight(match,
+                           prompt: bool,
+                           ending_prompt: bool = False) -> Optional[Dict]:
     raw = match.group()
 
     if prompt:
-        prompt_str = match.group(1)
-        value = match.group(2)
-        unit = match.group(3)
+        if ending_prompt:
+            value = match.group(1)
+            unit = match.group(2)
+            prompt_str = match.group(3)
+
+        else:
+            prompt_str = match.group(1)
+            value = match.group(2)
+            unit = match.group(3)
     else:
         prompt_str = None
         value = match.group(1)
@@ -186,6 +194,13 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=functools.partial(process_product_weight, prompt=True),
+        priority=1),
+    'with_ending_mention': OCRRegex(
+        re.compile(r"([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)\s(net)(?![a-z])"),
+        field=OCRField.full_text_contiguous,
+        lowercase=True,
+        processing_func=functools.partial(process_product_weight, prompt=True,
+                                          ending_prompt=True),
         priority=1),
     'multi_packaging': OCRRegex(
         re.compile(r"(\d+)\s?x\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
