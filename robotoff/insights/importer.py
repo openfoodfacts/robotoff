@@ -17,28 +17,45 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-def add_server_fields(data: Iterable[Dict],
-                      server_domain: str) -> Iterable[Dict]:
-    """Add `server_domain` and `server_type` fields to an iterable of insights to
-    import."""
-    server_type: str = get_server_type(server_domain).name
-
-    for item in data:
-        item['server_domain'] = server_domain
-        item['server_type'] = server_type
-        yield item
-
-
 class InsightImporter(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
-    @abc.abstractmethod
     def import_insights(self,
-                        data: Iterable[Dict],
+                        data: Iterable[JSONType],
                         server_domain: str,
                         automatic: bool) -> int:
+        timestamp = datetime.datetime.utcnow()
+        insights = self.process_insights(data, server_domain, automatic)
+        insights = self.add_fields(insights, timestamp, server_domain)
+        return batch_insert(ProductInsight, insights, 50)
+
+    @abc.abstractmethod
+    def process_insights(self,
+                         data: Iterable[JSONType],
+                         server_domain: str,
+                         automatic: bool) -> Iterable[JSONType]:
         pass
+
+    def add_fields(self,
+                   insights: Iterable[JSONType],
+                   timestamp: datetime.datetime,
+                   server_domain: str) -> Iterable[JSONType]:
+        """Add mandatory insight fields."""
+        server_type: str = get_server_type(server_domain).name
+
+        for insight in insights:
+            barcode = insight['barcode']
+            insight['server_domain'] = server_domain
+            insight['server_type'] = server_type
+            insight['id'] = str(uuid.uuid4())
+            insight['timestamp'] = timestamp
+            insight['type'] = self.get_type()
+            insight['countries'] = getattr(self.product_store[barcode],
+                                           'countries_tags', [])
+            insight['brands'] = getattr(self.product_store[barcode],
+                                        'brands_tags', [])
+            yield insight
 
     @staticmethod
     @abc.abstractmethod
@@ -78,43 +95,28 @@ GroupedByOCRInsights = Dict[str, List]
 
 
 class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
-    def import_insights(self,
-                        data: Iterable[Dict],
-                        server_domain: str,
-                        automatic: bool = False) -> int:
+    def process_insights(self,
+                         data: Iterable[JSONType],
+                         server_domain: str,
+                         automatic: bool) -> Iterable[JSONType]:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
-        inserts: List[Dict] = []
-        timestamp = datetime.datetime.utcnow()
+        inserts: List[JSONType] = []
 
         for barcode, insights in grouped_by.items():
             insights = list(self.deduplicate_insights(insights))
             insights = self.sort_by_priority(insights)
             inserts += list(self._process_product_insights(barcode, insights,
-                                                           timestamp,
                                                            automatic,
                                                            server_domain))
 
-        inserts = list(add_server_fields(inserts, server_domain))
-        return batch_insert(ProductInsight, inserts, 50)
+        return inserts
 
     def _process_product_insights(self, barcode: str,
                                   insights: List[JSONType],
-                                  timestamp: datetime.datetime,
                                   automatic: bool,
-                                  server_domain: str) -> \
-            Iterable[JSONType]:
-        countries_tags = getattr(self.product_store[barcode],
-                                 'countries_tags', [])
-        brands_tags = getattr(self.product_store[barcode],
-                              'brands_tags', [])
-
+                                  server_domain: str) -> Iterable[JSONType]:
         for insight in self.process_product_insights(barcode, insights, server_domain):
-            insight['id'] = str(uuid.uuid4())
             insight['barcode'] = barcode
-            insight['timestamp'] = timestamp
-            insight['type'] = self.get_type()
-            insight['countries'] = countries_tags
-            insight['brands'] = brands_tags
 
             if 'automatic_processing' not in insight:
                 insight['automatic_processing'] = automatic and not self.need_validation(insight)
@@ -334,18 +336,10 @@ class CategoryImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.category.name
 
-    def import_insights(self,
-                        data: Iterable[Dict],
-                        server_domain: str,
-                        automatic: bool = False) -> int:
-        inserts = self.process_product_insights(data, automatic, server_domain)
-        inserts = add_server_fields(inserts, server_domain)
-        return batch_insert(ProductInsight, inserts, 50)
-
-    def process_product_insights(self, insights: Iterable[JSONType],
-                                 automatic: bool,
-                                 server_domain: str) \
-            -> Iterable[JSONType]:
+    def process_insights(self,
+                         data: Iterable[JSONType],
+                         server_domain: str,
+                         automatic: bool) -> Iterable[JSONType]:
         category_seen: Dict[str, Set[str]] = {}
         for t in (ProductInsight.select(ProductInsight.value_tag,
                                         ProductInsight.barcode)
@@ -356,26 +350,15 @@ class CategoryImporter(InsightImporter):
             category_seen.setdefault(t.barcode, set())
             category_seen[t.barcode].add(t.value_tag)
 
-        timestamp = datetime.datetime.utcnow()
-        for insight in insights:
+        for insight in data:
             barcode = insight['barcode']
             category = insight['category']
 
             if not self.is_valid(barcode, category, category_seen):
                 continue
 
-            countries_tags = getattr(self.product_store[barcode],
-                                     'countries_tags', [])
-            brands_tags = getattr(self.product_store[barcode],
-                                  'brands_tags', [])
-
             insert = {
-                'id': str(uuid.uuid4()),
-                'type': self.get_type(),
                 'barcode': barcode,
-                'countries': countries_tags,
-                'brands': brands_tags,
-                'timestamp': timestamp,
                 'value_tag': category,
                 'automatic_processing': False,
                 'data': {
