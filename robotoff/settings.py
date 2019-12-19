@@ -64,6 +64,8 @@ OCR_STORES_DATA_PATH = OCR_DATA_DIR / 'regex_stores.txt'
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'notify_stores.txt'
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_labels.txt'
 OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / 'taxonomy_brands_blacklist.txt'
+OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / 'image_flag_beauty.txt'
+OCR_IMAGE_FLAG_MISCELLANEOUS_PATH = OCR_DATA_DIR / 'image_flag_miscellaneous.txt'
 
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML

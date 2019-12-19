@@ -29,14 +29,26 @@ class SlackException(Exception):
 
 
 def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
-    flags = ", ".join(["{} (score: {})".format(i['type'], i['likelihood'])
-                       for i in insights])
+    text = ""
+
+    for insight in insights:
+        flag_type = insight['type']
+        label = insight['label']
+
+        if flag_type in ('safe_search_annotation', 'label_annotation'):
+            likelihood = insight['likelihood']
+            text += "{}: {}, score: {}\n".format(flag_type, label, likelihood)
+        else:
+            match_text = insight['text']
+            text += "{}: {}, match: {}\n".format(flag_type, label, match_text)
+
     url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
                          source)
     edit_url = "{}/cgi/product.pl?type=edit&code={}" \
                "".format(settings.OFF_BASE_WEBSITE_URL, barcode)
-    text = ("Image flagged as {}: {}\nedit: {}".format(
-        flags, url, edit_url))
+    text += url + "\n"
+    text += "edit: {}".format(edit_url)
+
     post_message(text, settings.SLACK_OFF_ROBOTOFF_IMAGE_ALERT_CHANNEL)
 
 
