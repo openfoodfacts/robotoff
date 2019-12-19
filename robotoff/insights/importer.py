@@ -775,7 +775,7 @@ class InsightImporterFactory:
 
     @classmethod
     def create(cls, insight_type: str,
-               product_store: Optional[ProductStore]) -> InsightImporter:
+               product_store: ProductStore) -> InsightImporter:
         if insight_type in cls.importers:
             return cls.importers[insight_type](product_store)
         else:
