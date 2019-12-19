@@ -42,8 +42,7 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
             match_text = insight['text']
             text += "{}: {}, match: {}\n".format(flag_type, label, match_text)
 
-    url = "{}/{}".format(settings.OFF_IMAGE_BASE_URL,
-                         source)
+    url = settings.OFF_IMAGE_BASE_URL + source
     edit_url = "{}/cgi/product.pl?type=edit&code={}" \
                "".format(settings.OFF_BASE_WEBSITE_URL, barcode)
     text += url + "\n"
