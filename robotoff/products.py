@@ -251,7 +251,7 @@ class Product:
     """Product class."""
     __slots__ = ('barcode', 'countries_tags', 'categories_tags',
                  'emb_codes_tags', 'labels_tags', 'quantity', 'expiration_date',
-                 'brands_tags', 'stores_tags')
+                 'brands_tags', 'stores_tags', 'unique_scans_n')
 
     def __init__(self, product: JSONType):
         self.barcode = product.get('code')
@@ -263,6 +263,7 @@ class Product:
         self.expiration_date = product.get('expiration_date') or None
         self.brands_tags = product.get('brands_tags') or []
         self.stores_tags = product.get('stores_tags') or []
+        self.unique_scans_n = product.get('unique_scans_n') or 0
 
     @staticmethod
     def get_fields():
@@ -276,6 +277,7 @@ class Product:
             'expiration_date',
             'brands_tags',
             'stores_tags',
+            'unique_scans_n',
         }
 
 
