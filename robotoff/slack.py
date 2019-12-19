@@ -37,10 +37,12 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
 
         if flag_type in ('safe_search_annotation', 'label_annotation'):
             likelihood = insight['likelihood']
-            text += "{}: {}, score: {}\n".format(flag_type, label, likelihood)
+            text += "type: {}, label: {}, score: {}\n".format(flag_type,
+                                                              label, likelihood)
         else:
             match_text = insight['text']
-            text += "{}: {}, match: {}\n".format(flag_type, label, match_text)
+            text += "type: {}, label: {}, match: {}\n".format(flag_type,
+                                                              label, match_text)
 
     url = settings.OFF_IMAGE_BASE_URL + source
     edit_url = "{}/cgi/product.pl?type=edit&code={}" \
