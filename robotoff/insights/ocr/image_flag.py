@@ -9,7 +9,7 @@ from robotoff.utils import text_file_iter
 
 LABELS_TO_FLAG = {'Face', 'Head', 'Selfie', 'Hair', 'Forehead', 'Chin', 'Cheek',
                   'Arm', 'Tooth', 'Leg', 'Human Leg', 'Ankle',
-                  'Eyebrow', 'Ear', 'Neck', 'Jaw', 'Nose', 'Smile', 'Facial Expression',
+                  'Eyebrow', 'Ear', 'Neck', 'Jaw', 'Nose', 'Facial Expression',
                   'Glasses', 'Eyewear', 'Gesture', 'Thumb',
                   'Footwear', 'Jeans', 'Shoe',
                   'Child', 'Baby', 'Human',
