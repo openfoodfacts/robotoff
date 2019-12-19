@@ -4,13 +4,12 @@ from robotoff.insights.ocr.dataclass import OCRResult, SafeSearchAnnotationLikel
 
 
 LABELS_TO_FLAG = {'Face', 'Head', 'Selfie', 'Hair', 'Forehead', 'Chin', 'Cheek',
-                  'Arm', 'Tooth', 'Finger', 'Hand', 'Leg', 'Human Leg', 'Ankle',
+                  'Arm', 'Tooth', 'Leg', 'Human Leg', 'Ankle',
                   'Eyebrow', 'Ear', 'Neck', 'Jaw', 'Nose', 'Smile', 'Facial Expression',
                   'Glasses', 'Eyewear', 'Gesture', 'Thumb',
                   'Footwear', 'Jeans', 'Shoe',
-                  'Child', 'Baby',
+                  'Child', 'Baby', 'Human',
                   'Dog', 'Cat',
-                  'Handwriting',
                   'Computer', 'Laptop', 'Refrigerator',
                   }
 
