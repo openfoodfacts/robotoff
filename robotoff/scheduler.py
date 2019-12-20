@@ -74,12 +74,13 @@ def refresh_insights(with_deletion: bool = False):
                     .iterator()):
                 product: Product = product_store[insight.barcode]
 
-                if product is None and with_deletion:
-                    # Product has been deleted from OFF
-                    logger.info("Product with barcode {} deleted"
-                                "".format(insight.barcode))
-                    deleted += 1
-                    insight.delete_instance()
+                if product is None:
+                    if with_deletion:
+                        # Product has been deleted from OFF
+                        logger.info("Product with barcode {} deleted"
+                                    "".format(insight.barcode))
+                        deleted += 1
+                        insight.delete_instance()
                 else:
                     if insight.type not in validators:
                         validators[insight.type] = InsightValidatorFactory.create(
