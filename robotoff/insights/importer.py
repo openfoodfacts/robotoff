@@ -233,11 +233,6 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        if insight['type'] != PackagerCodeInsightImporter.get_type():
-            raise ValueError("insight must be of type "
-                             "{}".format(PackagerCodeInsightImporter
-                                         .get_type()))
-
         if insight['data']['matcher_type'] in ('eu_fr', 'eu_de', 'fr_emb'):
             return False
 
