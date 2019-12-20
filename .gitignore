@@ -13,3 +13,4 @@ datasets
 models
 local_models
 docker-compose.production.yml
+*.mo
