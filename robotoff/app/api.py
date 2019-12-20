@@ -88,7 +88,7 @@ class RandomInsightResource:
         insights = list(get_insights(keep_types=[insight_type],
                                      country=country,
                                      value_tag=value_tag,
-                                     random_order=True,
+                                     order_by='random',
                                      server_domain=server_domain,
                                      count=1))
 
@@ -446,7 +446,7 @@ class RandomQuestionsResource:
         insights = list(get_insights(keep_types=keep_types,
                                      count=count,
                                      country=country,
-                                     random_order=True,
+                                     order_by='random',
                                      server_domain=server_domain,
                                      value_tag=value_tag,
                                      brands=brands))

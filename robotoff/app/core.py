@@ -19,7 +19,7 @@ def get_insights(barcode: Optional[str] = None,
                  country: str = None,
                  brands: List[str] = None,
                  annotated: Optional[bool] = False,
-                 random_order: bool = False,
+                 order_by: Optional[str] = None,
                  value_tag: Optional[str] = None,
                  server_domain: Optional[str] = None,
                  count: Optional[int] = 25) -> Iterable[ProductInsight]:
@@ -56,8 +56,12 @@ def get_insights(barcode: Optional[str] = None,
     if count is not None:
         query = query.limit(count)
 
-    if random_order:
-        query = query.order_by(peewee.fn.Random())
+    if order_by is not None:
+        if order_by == 'random':
+            query = query.order_by(peewee.fn.Random())
+
+        elif order_by == 'popularity':
+            query = query.order_by(ProductInsight.unique_scans_n.desc())
 
     return query.iterator()
 
