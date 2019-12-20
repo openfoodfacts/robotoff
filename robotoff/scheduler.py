@@ -121,6 +121,13 @@ def update_insight_attributes(product: Product, insight: ProductInsight) \
         to_update = True
         insight.countries = product.countries_tags
 
+    if insight.unique_scans_n != product.unique_scans_n:
+        logger.info("Updating unique scan count {} -> {} ({})".format(
+            insight.unique_scans_n, product.unique_scans_n,
+            product.barcode))
+        to_update = True
+        insight.unique_scans_n = product.unique_scans_n
+
     if to_update:
         insight.save()
 
