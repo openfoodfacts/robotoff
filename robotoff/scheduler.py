@@ -48,7 +48,7 @@ def process_insights():
     logger.info("{} insights processed".format(processed))
 
 
-def refresh_insights():
+def refresh_insights(with_deletion: bool = False):
     deleted = 0
     updated = 0
     product_store = CACHED_PRODUCT_STORE.get()
@@ -74,7 +74,7 @@ def refresh_insights():
                     .iterator()):
                 product: Product = product_store[insight.barcode]
 
-                if product is None:
+                if product is None and with_deletion:
                     # Product has been deleted from OFF
                     logger.info("Product with barcode {} deleted"
                                 "".format(insight.barcode))
@@ -184,8 +184,8 @@ def run():
                       jitter=20)
     scheduler.add_job(download_product_dataset, 'cron', day='*', hour='3',
                       max_instances=1)
-    # scheduler.add_job(refresh_insights, 'cron', day='*', hour='4',
-    #                   max_instances=1)
+    scheduler.add_job(refresh_insights, 'cron', day='*', hour='4',
+                      max_instances=1)
     scheduler.add_job(generate_insights, 'cron', day='*', hour='4', minute=15,
                       max_instances=1)
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
