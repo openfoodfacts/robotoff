@@ -57,6 +57,8 @@ class ProductInsight(BaseModel):
                                    max_length=10,
                                    help_text="project associated with the server_domain, "
                                              "one of 'off', 'obf', 'opff', 'opf'")
+    unique_scans_n = peewee.IntegerField(default=0,
+                                         index=True)
 
     def serialize(self, full: bool = False) -> JSONType:
         if full:
@@ -76,6 +78,7 @@ class ProductInsight(BaseModel):
                 'automatic_processing': self.automatic_processing,
                 'server_domain': self.server_domain,
                 'server_type': self.server_type,
+                'unique_scans_n': self.unique_scans_n,
             }
         else:
             return {
