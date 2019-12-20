@@ -52,11 +52,13 @@ class ProductInsight(BaseModel):
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False, index=True)
     server_domain = peewee.TextField(null=True,
-                                     help_text="server domain linked to the insight")
+                                     help_text="server domain linked to the insight",
+                                     index=True)
     server_type = peewee.CharField(null=True,
                                    max_length=10,
                                    help_text="project associated with the server_domain, "
-                                             "one of 'off', 'obf', 'opff', 'opf'")
+                                             "one of 'off', 'obf', 'opff', 'opf'",
+                                   index=True)
     unique_scans_n = peewee.IntegerField(default=0,
                                          index=True)
 
