@@ -96,6 +96,7 @@ def is_valid_image(barcode: str, image_id: str) -> bool:
 
 
 def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
+    # TODO: resolve url given server_domain parameter
     fields = fields or []
     url = PRODUCT_URL + "/{}.json".format(barcode)
 
