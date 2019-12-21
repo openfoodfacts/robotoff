@@ -173,7 +173,8 @@ def generate_insights():
     category_insights_iter = predict_from_dataset(dataset, datetime_threshold)
 
     imported = importer.import_insights(category_insights_iter,
-                                        server_domain=settings.OFF_SERVER_DOMAIN)
+                                        server_domain=settings.OFF_SERVER_DOMAIN,
+                                        automatic=False)
     logger.info("{} category insights imported".format(imported))
 
 
