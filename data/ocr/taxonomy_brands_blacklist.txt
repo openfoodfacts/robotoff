@@ -1,4 +1,5 @@
-en:netto
-en:artisanal
-en:france
-en:fromage
+netto
+artisanal
+france
+fromage
+chateau

@@ -41,6 +41,9 @@ def generate_brand_keyword_processor(taxonomy: Optional[Taxonomy] = None,
         taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_AT_LEAST_50_PATH)
 
     for key, node in taxonomy.nodes.items():
+        if key.startswith('en:'):
+            key = key[3:]
+
         names = node.names
 
         if 'en' not in names:

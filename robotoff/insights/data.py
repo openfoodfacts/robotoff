@@ -110,4 +110,6 @@ BRANDS_BARCODE_RANGE: Dict[str, str] = {
     'boni': "5400141xxxxxx",
     'everyday': "5400141xxxxxx",
     'netto': "325039xxxxxxx",
+    'gourmet': "8413080xxxxxx",
+    'tabasco': "0011210xxxxxx",
 }
