@@ -75,10 +75,10 @@ def brand_keyword_processor():
 
 
 @pytest.mark.parametrize("text,expected", [
-    ("Bio c bon vous propose", {'brand': "Bio C Bon", "brand_tag": "en:bio-c-bon", "text": "Bio c bon"}),
+    ("Bio c bon vous propose", {'brand': "Bio C Bon", "brand_tag": "bio-c-bon", "text": "Bio c bon"}),
     ("Netto gewitch: 450 g", None),
     ("", None),
-    ("Notre marque Alpina savoie est bien positionnée", {'brand': "Alpina Savoie", "brand_tag": "en:alpina-savoie", "text": "Alpina savoie"}),
+    ("Notre marque Alpina savoie est bien positionnée", {'brand': "Alpina Savoie", "brand_tag": "alpina-savoie", "text": "Alpina savoie"}),
 ])
 def test_extract_brand_flashtext(brand_keyword_processor, text: str, expected):
     insight = extract_brands_flashtext(brand_keyword_processor, text)
