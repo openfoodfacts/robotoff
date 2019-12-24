@@ -132,7 +132,7 @@ def extract_brands_flashtext(processor: KeywordProcessor,
             'automatic_processing': False,
             'text': match_str,
             'data_source': "taxonomy",
-            'notify': False,
+            'notify': True,
         }
 
 
