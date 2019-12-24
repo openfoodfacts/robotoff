@@ -131,7 +131,7 @@ def extract_brands_flashtext(processor: KeywordProcessor,
             'brand_tag': brand_tag,
             'automatic_processing': False,
             'text': match_str,
-            'type': "taxonomy",
+            'source': "taxonomy",
             'notify': False,
         }
 
@@ -153,7 +153,7 @@ def extract_brands_regex(ocr_regex: OCRRegex,
                         'brand_tag': get_brand_tag(brand),
                         'text': match_str,
                         'notify': brand in NOTIFY_BRANDS,
-                        'type': "whitelisted-brands",
+                        'source': "whitelisted-brands",
                     }
 
 
@@ -167,7 +167,7 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> Optional[JSONTy
                 'brand_tag': get_brand_tag(brand),
                 'automatic_processing': False,
                 'confidence': logo_annotation.score,
-                'model': 'google-cloud-vision',
+                'source': 'google-cloud-vision',
                 'notify': False,
             }
 
