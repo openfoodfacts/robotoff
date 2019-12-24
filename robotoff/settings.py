@@ -27,7 +27,7 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.full.json'
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.full.json'
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.full.json'
 TAXONOMY_BRAND_PATH = TAXONOMY_DIR / 'brands.full.json'
-TAXONOMY_BRAND_AT_LEAST_50_PATH = TAXONOMY_DIR / 'brands_at_least_50.json'
+TAXONOMY_BRAND_WHITELIST_PATH = TAXONOMY_DIR / 'brands_whitelist.json'
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")

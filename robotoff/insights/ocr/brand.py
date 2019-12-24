@@ -38,7 +38,7 @@ def generate_brand_keyword_processor(taxonomy: Optional[Taxonomy] = None,
             text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
     if taxonomy is None:
-        taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_AT_LEAST_50_PATH)
+        taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_WHITELIST_PATH)
 
     for key, node in taxonomy.nodes.items():
         if key.startswith('en:'):
