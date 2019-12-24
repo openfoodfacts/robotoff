@@ -4,7 +4,7 @@ from typing import List, Dict, Tuple, Set, Optional
 from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
-from robotoff.taxonomy import get_taxonomy, TaxonomyType, Taxonomy
+from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.types import JSONType
 
@@ -38,7 +38,7 @@ def generate_brand_keyword_processor(taxonomy: Optional[Taxonomy] = None,
             text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
     if taxonomy is None:
-        taxonomy = get_taxonomy(TaxonomyType.brand.name)
+        taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_AT_LEAST_50_PATH)
 
     for key, node in taxonomy.nodes.items():
         names = node.names
