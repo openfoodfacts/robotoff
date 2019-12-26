@@ -80,12 +80,13 @@ def brand_keyword_processor():
     ("", None),
     ("Notre marque Alpina savoie est bien positionnée", {'brand': "Alpina Savoie", "brand_tag": "alpina-savoie", "text": "Alpina savoie"}),
 ])
-def test_extract_brand_flashtext(brand_keyword_processor, text: str, expected):
-    insight = extract_brands_taxonomy(brand_keyword_processor, text)
+def test_extract_brand_taxonomy(brand_keyword_processor, text: str, expected):
+    insights = extract_brands_taxonomy(brand_keyword_processor, text)
 
     if not expected:
-        assert insight is None
+        assert not insights
     else:
+        insight = insights[0]
         for expected_key, expected_value in expected.items():
             assert expected_key in insight
             assert insight[expected_key] == expected_value
