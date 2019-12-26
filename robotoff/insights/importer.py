@@ -2,10 +2,11 @@ import abc
 import datetime
 import pathlib
 import uuid
-from typing import Dict, Iterable, List, Set, Optional, Callable
+from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
+from robotoff.brands import BRAND_PREFIX_STORE, generate_barcode_prefix
 from robotoff.insights._enum import InsightType
-from robotoff.insights.data import AUTHORIZED_LABELS, BRANDS_BARCODE_RANGE
+from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
@@ -589,10 +590,12 @@ class BrandInsightImporter(OCRInsightImporter):
     def is_valid(self, barcode: str,
                  brand_tag: str,
                  brand_seen: Set[str]) -> bool:
+        brand_prefix = BRAND_PREFIX_STORE.get()
+
         if brand_tag in brand_seen:
             return False
 
-        if not self.in_barcode_range(brand_tag, barcode):
+        if not self.in_barcode_range(brand_prefix, brand_tag, barcode):
             logger.warn("Barcode {} of brand {} not in barcode "
                         "range".format(barcode, brand_tag))
             return False
@@ -655,27 +658,23 @@ class BrandInsightImporter(OCRInsightImporter):
         return False
 
     @staticmethod
-    def in_barcode_range(brand_tag: str, barcode: str) -> bool:
+    def in_barcode_range(brand_prefix: Set[Tuple[str, str]],
+                         brand_tag: str,
+                         barcode: str) -> bool:
         """Check that the insight barcode is in the range of the detected
         brand barcode range.
         Return True if the check passes, False otherwise
         """
-        if brand_tag not in BRANDS_BARCODE_RANGE:
-            return True
+        if len(barcode) == 13:
+            barcode_prefix = generate_barcode_prefix(barcode)
+            key = (brand_tag, barcode_prefix)
 
-        barcode_range = BRANDS_BARCODE_RANGE[brand_tag]
+            if key not in brand_prefix:
+                logger.info("Barcode {} not in range {} for brand {}"
+                            "".format(barcode, barcode_prefix, brand_tag))
+                return False
 
-        if len(barcode_range) != len(barcode):
-            logger.debug("Barcode range and barcode do not have the same length")
-            return False
-
-        barcode_range = barcode_range.replace('x', '')
-
-        if barcode.startswith(barcode_range):
-            return True
-
-        logger.debug("Barcode {} not in range {}".format(barcode, barcode_range))
-        return False
+        return True
 
 
 class StoreInsightImporter(OCRInsightImporter):

@@ -68,6 +68,8 @@ OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / 'taxonomy_brands_blacklist.t
 OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / 'image_flag_beauty.txt'
 OCR_IMAGE_FLAG_MISCELLANEOUS_PATH = OCR_DATA_DIR / 'image_flag_miscellaneous.txt'
 
+BRAND_PREFIX_PATH = DATA_DIR / 'brand_prefix.json'
+
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
