@@ -121,24 +121,28 @@ BRAND_PROCESSOR = generate_brand_keyword_processor(
     min_length=settings.BRAND_MATCHING_MIN_LENGTH)
 
 
-def extract_brands_flashtext(processor: KeywordProcessor,
-                             text: str) -> Optional[JSONType]:
+def extract_brands_taxonomy(processor: KeywordProcessor,
+                            text: str) -> List[JSONType]:
+    insights = []
+
     for (brand, brand_tag), span_start, span_end in processor.extract_keywords(
             text, span_info=True):
         match_str = text[span_start:span_end]
-        return {
+        insights.append({
             'brand': brand,
             'brand_tag': brand_tag,
             'automatic_processing': False,
             'text': match_str,
             'data_source': "taxonomy",
-            'notify': True,
-        }
+            'notify': False,
+        })
+
+    return insights
 
 
-def extract_brands_regex(ocr_regex: OCRRegex,
-                         ocr_result: OCRResult,
-                         sorted_brands: List[Tuple[str, str]]) -> Optional[JSONType]:
+def extract_brands_whitelist(ocr_regex: OCRRegex,
+                             ocr_result: OCRResult,
+                             sorted_brands: List[Tuple[str, str]]) -> Optional[JSONType]:
     text = ocr_result.get_text(BRAND_REGEX)
 
     if text:
@@ -173,15 +177,15 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> Optional[JSONTy
 
 
 def find_brands(ocr_result: OCRResult) -> List[Dict]:
-    insight = extract_brands_regex(BRAND_REGEX, ocr_result, SORTED_BRANDS)
+    insight = extract_brands_whitelist(BRAND_REGEX, ocr_result, SORTED_BRANDS)
     if insight:
         return [insight]
 
     text = ocr_result.get_full_text_contiguous()
     if text:
-        insight = extract_brands_flashtext(BRAND_PROCESSOR, text)
-        if insight:
-            return [insight]
+        insights = extract_brands_taxonomy(BRAND_PROCESSOR, text)
+        if insights:
+            return insights
 
     insight = extract_brands_google_cloud_vision(ocr_result)
     if insight:

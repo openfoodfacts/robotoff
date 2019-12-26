@@ -5,7 +5,7 @@ import pytest
 
 from robotoff import settings
 from robotoff.insights.ocr.brand import BRAND_REGEX, generate_brand_keyword_processor, \
-    extract_brands_flashtext
+    extract_brands_taxonomy
 from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter
 
@@ -81,7 +81,7 @@ def brand_keyword_processor():
     ("Notre marque Alpina savoie est bien positionnée", {'brand': "Alpina Savoie", "brand_tag": "alpina-savoie", "text": "Alpina savoie"}),
 ])
 def test_extract_brand_flashtext(brand_keyword_processor, text: str, expected):
-    insight = extract_brands_flashtext(brand_keyword_processor, text)
+    insight = extract_brands_taxonomy(brand_keyword_processor, text)
 
     if not expected:
         assert insight is None
