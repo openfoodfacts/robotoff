@@ -92,5 +92,4 @@ class ProductInsight(BaseModel):
             }
 
 
-
 MODELS = [ProductInsight]
