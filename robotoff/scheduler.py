@@ -194,6 +194,7 @@ def transform_insight_iter(insights_iter: Iterable[Dict]):
 def dump_insights():
     logger.info("Dumping insights...")
     insights_iter = get_insights(as_dict=True,
+                                 annotated=None,
                                  count=None)
     insights_iter = transform_insight_iter(insights_iter)
     dumped = dump_jsonl(settings.INSIGHT_DUMP_PATH, insights_iter)
@@ -218,6 +219,8 @@ def run():
     scheduler.add_job(refresh_insights, 'cron', day='*', hour='4',
                       max_instances=1)
     scheduler.add_job(generate_insights, 'cron', day='*', hour='4', minute=15,
+                      max_instances=1)
+    scheduler.add_job(dump_insights, 'cron', day='*', hour='4', minute=45,
                       max_instances=1)
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()
