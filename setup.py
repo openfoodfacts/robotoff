@@ -31,6 +31,7 @@ setup(
         "protobuf>=3.5.1",
         "Pint==0.9",
         'dataclasses>=0.6;python_version<"3.7"',
+        "flashtext==2.7",
     ],
     include_package_data=True,
 )
