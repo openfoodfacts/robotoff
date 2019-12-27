@@ -11,6 +11,8 @@ DATASET_PATH = DATASET_DIR / 'en.openfoodfacts.org.products.csv'
 JSONL_DATASET_PATH = DATASET_DIR / 'products.jsonl.gz'
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / 'products-etag.txt'
 JSONL_MIN_DATASET_PATH = DATASET_DIR / 'products-min.jsonl.gz'
+INSIGHT_DUMP_PATH = DATASET_DIR / 'insights.jsonl.gz'
+
 JSONL_DATASET_URL = "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz"
 
 TAXONOMY_CATEGORY_URL = "https://static.openfoodfacts.org/data/taxonomies/categories.full.json"

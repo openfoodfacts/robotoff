@@ -1,6 +1,7 @@
 import datetime
 import os
-from typing import Dict
+import uuid
+from typing import Dict, Iterable
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -8,6 +9,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from robotoff import slack, settings
+from robotoff.app.core import get_insights
 from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.insights.annotate import InsightAnnotatorFactory, UPDATED_ANNOTATION_RESULT
 from robotoff.insights.importer import CategoryImporter
@@ -16,7 +18,7 @@ from robotoff.insights.validator import InsightValidator, \
 from robotoff.models import ProductInsight, db
 from robotoff.products import has_dataset_changed, fetch_dataset, \
     CACHED_PRODUCT_STORE, Product, ProductStore, ProductDataset
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, dump_jsonl
 
 import sentry_sdk
 from sentry_sdk import capture_exception
@@ -176,6 +178,26 @@ def generate_insights():
                                         server_domain=settings.OFF_SERVER_DOMAIN,
                                         automatic=False)
     logger.info("{} category insights imported".format(imported))
+
+
+def transform_insight_iter(insights_iter: Iterable[Dict]):
+    for insight in insights_iter:
+        for field, value in insight.items():
+            if isinstance(value, uuid.UUID):
+                insight[field] = str(value)
+            elif isinstance(value, datetime.datetime):
+                insight[field] = value.isoformat()
+
+        yield insight
+
+
+def dump_insights():
+    logger.info("Dumping insights...")
+    insights_iter = get_insights(as_dict=True,
+                                 count=None)
+    insights_iter = transform_insight_iter(insights_iter)
+    dumped = dump_jsonl(settings.INSIGHT_DUMP_PATH, insights_iter)
+    logger.info("Dump finished, {} insights dumped".format(dumped))
 
 
 def exception_listener(event):

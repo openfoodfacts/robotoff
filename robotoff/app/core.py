@@ -22,6 +22,7 @@ def get_insights(barcode: Optional[str] = None,
                  order_by: Optional[str] = None,
                  value_tag: Optional[str] = None,
                  server_domain: Optional[str] = None,
+                 as_dict: bool = False,
                  count: Optional[int] = 25) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -62,6 +63,9 @@ def get_insights(barcode: Optional[str] = None,
 
         elif order_by == 'popularity':
             query = query.order_by(ProductInsight.unique_scans_n.desc())
+
+    if as_dict:
+        query = query.dicts()
 
     return query.iterator()
 

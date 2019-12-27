@@ -61,7 +61,12 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
 def dump_jsonl(filepath: Union[str, pathlib.Path],
                json_iter: Iterable[Dict]) -> int:
     count = 0
-    with open(str(filepath), 'w') as f:
+    if filepath.suffix == '.gz':
+        open_fn = gzip.open
+    else:
+        open_fn = open
+
+    with open_fn(str(filepath), 'wt') as f:
         for item in json_iter:
             f.write(json.dumps(item) + "\n")
             count += 1
