@@ -1,8 +1,12 @@
 import json
-from typing import Tuple, Dict, Optional
+import operator
+from typing import Tuple, Dict, Optional, List
+
+import requests
 
 from robotoff import settings
 from robotoff.products import ProductDataset
+from robotoff.utils import dump_text
 from robotoff.utils.cache import CachedStore
 
 
@@ -55,6 +59,31 @@ def save_brand_prefix(count_threshold: int):
 
     with settings.BRAND_PREFIX_PATH.open('w') as f:
         json.dump(brand_prefixes, f)
+
+
+def generate_brand_list(threshold: int) -> List[Tuple[str, str]]:
+    brand_taxonomy = requests.get(settings.TAXONOMY_BRAND_URL).json()
+    brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()['tags']
+
+    brand_count = {tag['id']: tag for tag in brand_count_list}
+    brand_list = []
+
+    for key in list(brand_taxonomy.keys()):
+        name = brand_taxonomy[key]['name']['en']
+
+        if key.startswith('en:'):
+            key = key[3:]
+
+        if brand_count.get(key, {}).get('products', 0) >= threshold:
+            brand_list.append((name, key))
+
+    return sorted(brand_list, key=operator.itemgetter(1))
+
+
+def dump_taxonomy_brands(threshold: int):
+    filtered_brands = generate_brand_list(threshold)
+    filtered_brands = ("{}||{}".format(name, key) for name, key in filtered_brands)
+    dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, filtered_brands)
 
 
 BRAND_PREFIX_STORE = CachedStore(fetch_func=get_brand_prefix,

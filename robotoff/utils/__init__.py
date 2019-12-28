@@ -83,6 +83,13 @@ def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
                 yield item
 
 
+def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):
+    with open(str(filepath), 'w') as f:
+        for item in text_iter:
+            item = item.strip('\n')
+            f.write(item + "\n")
+
+
 def get_image_from_url(image_url: str,
                        error_raise: bool = False,
                        session: Optional[requests.Session] = None) -> Optional[Image.Image]:

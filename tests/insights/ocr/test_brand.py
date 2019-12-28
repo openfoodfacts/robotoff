@@ -69,9 +69,7 @@ def test_check_logo_annotation_brands():
 
 @pytest.fixture(scope='session')
 def brand_keyword_processor():
-    taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_PATH)
-    yield generate_brand_keyword_processor(taxonomy=taxonomy,
-                                           min_length=6)
+    yield generate_brand_keyword_processor(min_length=6)
 
 
 @pytest.mark.parametrize("text,expected", [

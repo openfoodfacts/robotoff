@@ -4,7 +4,6 @@ from typing import List, Dict, Tuple, Set, Optional
 from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
-from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.types import JSONType
 
@@ -27,7 +26,7 @@ def keep_brand_from_taxonomy(brand: str,
     return True
 
 
-def generate_brand_keyword_processor(taxonomy: Optional[Taxonomy] = None,
+def generate_brand_keyword_processor(brands: Optional[List[str]] = None,
                                      min_length: Optional[int] = None,
                                      blacklist: bool = True):
     processor = KeywordProcessor()
@@ -37,22 +36,11 @@ def generate_brand_keyword_processor(taxonomy: Optional[Taxonomy] = None,
         blacklisted_brands = set(
             text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
-    if taxonomy is None:
-        taxonomy = Taxonomy.from_json(settings.TAXONOMY_BRAND_WHITELIST_PATH)
+    if brands is None:
+        brands = text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
 
-    for key, node in taxonomy.nodes.items():
-        if key.startswith('en:'):
-            key = key[3:]
-
-        names = node.names
-
-        if 'en' not in names:
-            logger.warning("Node in brand taxonomy does not have an english "
-                           "name: {}".format(key))
-            continue
-
-        name = names['en']
-
+    for item in brands:
+        name, key = item.split('||')
         if keep_brand_from_taxonomy(name, key, min_length, blacklisted_brands):
             processor.add_keyword(name, clean_name=(name, key))
 

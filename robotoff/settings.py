@@ -21,6 +21,8 @@ TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.fu
 TAXONOMY_BRAND_URL = "https://static.openfoodfacts.org/data/taxonomies/brands.full.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
+OFF_BRANDS_URL = OFF_BASE_WEBSITE_URL + "/brands.json"
+
 OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
 OFF_SERVER_DOMAIN = "api.openfoodfacts.org"
 
@@ -29,7 +31,6 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / 'categories.full.json'
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / 'ingredients.full.json'
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / 'labels.full.json'
 TAXONOMY_BRAND_PATH = TAXONOMY_DIR / 'brands.full.json'
-TAXONOMY_BRAND_WHITELIST_PATH = TAXONOMY_DIR / 'brands_whitelist.json'
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
@@ -62,6 +63,7 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN")
 OCR_DATA_DIR = DATA_DIR / 'ocr'
 OCR_BRANDS_DATA_PATH = OCR_DATA_DIR / 'regex_brands.txt'
 OCR_BRANDS_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'notify_brands.txt'
+OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / 'taxonomy_brands.txt'
 OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_brands.txt'
 OCR_STORES_DATA_PATH = OCR_DATA_DIR / 'regex_stores.txt'
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'notify_stores.txt'
