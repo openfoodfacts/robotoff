@@ -90,4 +90,4 @@ OBJECT_DETECTION_TF_SERVING_MODELS = ("nutriscore",
                                       "nutrition-table",
                                       "universal-logo-detector")
 
-BRAND_MATCHING_MIN_LENGTH = os.environ.get("BRAND_MATCHING_MIN_LENGTH", 6)
+BRAND_MATCHING_MIN_LENGTH = os.environ.get("BRAND_MATCHING_MIN_LENGTH", 5)
