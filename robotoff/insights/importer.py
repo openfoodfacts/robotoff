@@ -4,7 +4,7 @@ import pathlib
 import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
-from robotoff.brands import BRAND_PREFIX_STORE, generate_barcode_prefix
+from robotoff.brands import BRAND_PREFIX_STORE, generate_barcode_prefix, in_barcode_range
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.insights.normalize import normalize_emb_code
@@ -595,7 +595,7 @@ class BrandInsightImporter(OCRInsightImporter):
         if brand_tag in brand_seen:
             return False
 
-        if not self.in_barcode_range(brand_prefix, brand_tag, barcode):
+        if not in_barcode_range(brand_prefix, brand_tag, barcode):
             logger.warn("Barcode {} of brand {} not in barcode "
                         "range".format(barcode, brand_tag))
             return False
@@ -656,25 +656,6 @@ class BrandInsightImporter(OCRInsightImporter):
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
         return False
-
-    @staticmethod
-    def in_barcode_range(brand_prefix: Set[Tuple[str, str]],
-                         brand_tag: str,
-                         barcode: str) -> bool:
-        """Check that the insight barcode is in the range of the detected
-        brand barcode range.
-        Return True if the check passes, False otherwise
-        """
-        if len(barcode) == 13:
-            barcode_prefix = generate_barcode_prefix(barcode)
-            key = (brand_tag, barcode_prefix)
-
-            if key not in brand_prefix:
-                logger.info("Barcode {} not in range {} for brand {}"
-                            "".format(barcode, barcode_prefix, brand_tag))
-                return False
-
-        return True
 
 
 class StoreInsightImporter(OCRInsightImporter):

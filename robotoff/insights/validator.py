@@ -1,11 +1,16 @@
 import abc
 from typing import Optional
 
+from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.products import ProductStore, Product
 from robotoff.taxonomy import Taxonomy, get_taxonomy
+from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
+
+
+logger = get_logger(__name__)
 
 
 class InsightValidator(metaclass=abc.ABCMeta):
@@ -21,6 +26,34 @@ class InsightValidator(metaclass=abc.ABCMeta):
     def is_valid(self, insight: ProductInsight,
                  product: Optional[Product] = None) -> bool:
         pass
+
+
+class BrandValidator(InsightValidator):
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.brand.name
+
+    def is_valid(self, insight: ProductInsight,
+                 product: Optional[Product] = None):
+        brand_prefix = BRAND_PREFIX_STORE.get()
+        brand_tag = insight.value_tag
+        barcode = insight.barcode
+
+        if not in_barcode_range(brand_prefix, brand_tag, barcode):
+            logger.info("Barcode {} of brand {} not in barcode "
+                        "range".format(barcode, brand_tag))
+            return False
+
+        if product is None:
+            product = self.product_store[insight.barcode]
+
+            if product is None:
+                return True
+
+        if brand_tag in product.brands_tags:
+            return False
+
+        return True
 
 
 class LabelValidator(InsightValidator):
@@ -104,6 +137,7 @@ class InsightValidatorFactory:
         InsightType.label.name: LabelValidator,
         InsightType.category.name: CategoryValidator,
         InsightType.product_weight.name: ProductWeightValidator,
+        InsightType.brand.name: BrandValidator,
     }
 
     @classmethod

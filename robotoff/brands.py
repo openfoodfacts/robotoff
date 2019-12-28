@@ -1,6 +1,6 @@
 import json
 import operator
-from typing import Tuple, Dict, Optional, List
+from typing import Tuple, Dict, Optional, List, Set
 
 import requests
 
@@ -88,6 +88,23 @@ def dump_taxonomy_brands(threshold: int):
 
 BRAND_PREFIX_STORE = CachedStore(fetch_func=get_brand_prefix,
                                  expiration_interval=None)
+
+
+def in_barcode_range(brand_prefix: Set[Tuple[str, str]],
+                     brand_tag: str,
+                     barcode: str) -> bool:
+    """Check that the insight barcode is in the range of the detected
+    brand barcode range.
+    Return True if the check passes, False otherwise
+    """
+    if len(barcode) == 13:
+        barcode_prefix = generate_barcode_prefix(barcode)
+        key = (brand_tag, barcode_prefix)
+
+        if key not in brand_prefix:
+            return False
+
+    return True
 
 
 if __name__ == "__main__":
