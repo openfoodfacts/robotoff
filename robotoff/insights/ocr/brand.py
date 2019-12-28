@@ -130,7 +130,8 @@ def extract_brands_taxonomy(processor: KeywordProcessor,
 
 def extract_brands_whitelist(ocr_regex: OCRRegex,
                              ocr_result: OCRResult,
-                             sorted_brands: List[Tuple[str, str]]) -> Optional[JSONType]:
+                             sorted_brands: List[Tuple[str, str]]) -> List[JSONType]:
+    insights = []
     text = ocr_result.get_text(BRAND_REGEX)
 
     if text:
@@ -140,43 +141,42 @@ def extract_brands_whitelist(ocr_regex: OCRRegex,
             for idx, match_str in enumerate(groups):
                 if match_str is not None:
                     brand, _ = sorted_brands[idx]
-                    return {
+                    insights.append({
                         'brand': brand,
                         'brand_tag': get_brand_tag(brand),
                         'text': match_str,
                         'notify': brand in NOTIFY_BRANDS,
                         'data_source': "whitelisted-brands",
-                    }
+                    })
+
+    return insights
 
 
-def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> Optional[JSONType]:
+def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[JSONType]:
+    insights = []
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
             brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
 
-            return {
+            insights.append({
                 'brand': brand,
                 'brand_tag': get_brand_tag(brand),
                 'automatic_processing': False,
                 'confidence': logo_annotation.score,
                 'data_source': 'google-cloud-vision',
                 'notify': False,
-            }
+            })
+
+    return insights
 
 
 def find_brands(ocr_result: OCRResult) -> List[Dict]:
-    insight = extract_brands_whitelist(BRAND_REGEX, ocr_result, SORTED_BRANDS)
-    if insight:
-        return [insight]
+    insights = extract_brands_whitelist(BRAND_REGEX, ocr_result, SORTED_BRANDS)
 
     text = ocr_result.get_full_text_contiguous()
     if text:
-        insights = extract_brands_taxonomy(BRAND_PROCESSOR, text)
-        if insights:
-            return insights
+        insights += extract_brands_taxonomy(BRAND_PROCESSOR, text)
 
-    insight = extract_brands_google_cloud_vision(ocr_result)
-    if insight:
-        return [insight]
+    insights += extract_brands_google_cloud_vision(ocr_result)
 
-    return []
+    return insights
