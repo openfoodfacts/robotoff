@@ -74,7 +74,7 @@ def extract_insights(ocr_result: OCRResult,
     elif insight_type == InsightType.product_weight.name:
         return find_product_weight(ocr_result)
 
-    elif insight_type == 'trace':
+    elif insight_type == InsightType.trace.name:
         return find_traces(ocr_result)
 
     elif insight_type == InsightType.nutrient.name:

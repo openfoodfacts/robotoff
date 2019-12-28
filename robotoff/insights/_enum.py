@@ -13,3 +13,4 @@ class InsightType(Enum):
     image_orientation = 9
     store = 10
     nutrient = 11
+    trace = 12
