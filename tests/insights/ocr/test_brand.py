@@ -73,7 +73,7 @@ def brand_keyword_processor():
 
 
 @pytest.mark.parametrize("text,expected", [
-    ("Bio c bon vous propose", {'brand': "Bio C Bon", "brand_tag": "bio-c-bon", "text": "Bio c bon"}),
+    ("Le comptoir de Mathilde bon vous propose", {'brand': "Le Comptoir de Mathilde", "brand_tag": "le-comptoir-de-mathilde", "text": "Le comptoir de Mathilde"}),
     ("Netto gewitch: 450 g", None),
     ("", None),
     ("Notre marque Alpina savoie est bien positionnée", {'brand': "Alpina Savoie", "brand_tag": "alpina-savoie", "text": "Alpina savoie"}),
