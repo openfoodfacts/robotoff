@@ -5,6 +5,7 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
 from robotoff.utils import text_file_iter, get_logger
+from robotoff.utils.text import strip_accents_ascii
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -66,6 +67,7 @@ LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
 
 
 def get_brand_tag(brand: str) -> str:
+    brand = strip_accents_ascii(brand)
     return (brand.lower()
                  .replace(' & ', '-')
                  .replace(' ', '-')
