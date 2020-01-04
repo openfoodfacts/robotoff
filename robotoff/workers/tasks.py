@@ -3,6 +3,7 @@ import logging
 import multiprocessing
 from typing import List, Dict, Callable
 
+from robotoff.elasticsearch.category.predict import predict_from_product as predict_category_from_product_es
 from robotoff.ml.category.neural.model import predict_from_product as predict_category_from_product_ml
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
@@ -132,16 +133,21 @@ def updated_product_add_category_insight(barcode: str,
     if get_server_type(server_domain) != ServerType.off:
         return False
 
-    insights = predict_category_from_product_ml(product, filter_blacklisted=True)
+    insight = predict_category_from_product_es(product)
 
-    if not insights:
-        return False
+    if insight is None:
+        insights = predict_category_from_product_ml(product, filter_blacklisted=True)
+
+        if not insights:
+            return False
+        else:
+            predicted = ["{} ({})".format(insight["category"],
+                                          insight["confidence"])
+                         for insight in insights]
+            logger.info("Predicted categories for product {}: {}"
+                        "".format(barcode, predicted))
     else:
-        predicted = ["{} ({})".format(insight["category"],
-                                      insight["confidence"])
-                     for insight in insights]
-        logger.info("Predicted categories for product {}: {}"
-                    "".format(barcode, predicted))
+        insights = [insight]
 
     product_store = CACHED_PRODUCT_STORE.get()
     importer = InsightImporterFactory.create(InsightType.category.name,
