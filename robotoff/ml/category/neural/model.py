@@ -212,9 +212,9 @@ def fill_ancestors(y: np.ndarray, taxonomy: Taxonomy,
 
 def predict_from_product(product: Dict,
                          allowed_lang: Optional[Set[str]] = None,
-                         filter_blacklisted: bool = False) -> Optional[List[Dict]]:
+                         filter_blacklisted: bool = False) -> List[Dict]:
     if not keep_product(product, allowed_lang):
-        return
+        return []
 
     model = ModelRegistry.get()
     predictions = model.predict_from_product(product, deepest_only=True)

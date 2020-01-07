@@ -133,21 +133,16 @@ def updated_product_add_category_insight(barcode: str,
     if get_server_type(server_domain) != ServerType.off:
         return False
 
+    insights = []
     insight = predict_category_from_product_es(product)
 
-    if insight is None:
-        insights = predict_category_from_product_ml(product, filter_blacklisted=True)
+    if insight is not None:
+        insights.append(insight)
 
-        if not insights:
-            return False
-        else:
-            predicted = ["{} ({})".format(insight["category"],
-                                          insight["confidence"])
-                         for insight in insights]
-            logger.info("Predicted categories for product {}: {}"
-                        "".format(barcode, predicted))
-    else:
-        insights = [insight]
+    insights += predict_category_from_product_ml(product, filter_blacklisted=True)
+
+    if not insights:
+        return False
 
     product_store = CACHED_PRODUCT_STORE.get()
     importer = InsightImporterFactory.create(InsightType.category.name,

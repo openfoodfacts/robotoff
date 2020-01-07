@@ -7,4 +7,4 @@ def test_predict_from_product_missing_product_name():
         'languages_codes': ['fr']
     }
     predictions = predict_from_product(product)
-    assert predictions is None
+    assert predictions == []
