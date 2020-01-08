@@ -4,7 +4,8 @@ import pathlib
 import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
-from robotoff.brands import BRAND_PREFIX_STORE, generate_barcode_prefix, in_barcode_range
+from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, \
+    BRAND_BLACKLIST_STORE
 from robotoff.insights._enum import InsightType
 from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.insights.normalize import normalize_emb_code
@@ -590,9 +591,13 @@ class BrandInsightImporter(OCRInsightImporter):
     def is_valid(self, barcode: str,
                  brand_tag: str,
                  brand_seen: Set[str]) -> bool:
-        brand_prefix = BRAND_PREFIX_STORE.get()
+        brand_prefix: Set[Tuple[str, str]] = BRAND_PREFIX_STORE.get()
+        brand_blacklist: Set[str] = BRAND_BLACKLIST_STORE.get()
 
         if brand_tag in brand_seen:
+            return False
+
+        if brand_tag in brand_blacklist:
             return False
 
         if not in_barcode_range(brand_prefix, brand_tag, barcode):

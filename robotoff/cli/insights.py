@@ -1,13 +1,20 @@
 import contextlib
 import json
+import pathlib
 import sys
 from typing import Optional
 
 import click
+from more_itertools import chunked
 
+from robotoff.insights._enum import InsightType
+from robotoff.insights.importer import InsightImporterFactory
 from robotoff.insights.ocr import (ocr_iter, OCRResult,
                                    extract_insights,
                                    get_barcode_from_path)
+from robotoff.models import db
+from robotoff.products import CACHED_PRODUCT_STORE
+from robotoff.utils import gzip_jsonl_iter
 
 
 def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
@@ -46,3 +53,20 @@ def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
                     item['source'] = source
 
                 output_f.write(json.dumps(item) + '\n')
+
+
+def import_insights(file_path: pathlib.Path,
+                    insight_type: str,
+                    server_domain: str,
+                    batch_size: int = 1024):
+    product_store = CACHED_PRODUCT_STORE.get()
+    importer = InsightImporterFactory.create(insight_type,
+                                             product_store)
+
+    insights = gzip_jsonl_iter(file_path)
+
+    for insight_batch in chunked(insights, batch_size):
+        with db.atomic():
+            importer.import_insights(insight_batch,
+                                     server_domain=server_domain,
+                                     automatic=False)

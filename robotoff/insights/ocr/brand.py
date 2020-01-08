@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple, Set, Optional
 
 from flashtext import KeywordProcessor
 from robotoff import settings
+from robotoff.brands import BRAND_BLACKLIST_STORE
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.text import strip_accents_ascii
@@ -34,8 +35,7 @@ def generate_brand_keyword_processor(brands: Optional[List[str]] = None,
 
     blacklisted_brands: Optional[Set[str]] = None
     if blacklist:
-        blacklisted_brands = set(
-            text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
+        blacklisted_brands = BRAND_BLACKLIST_STORE.get()
 
     if brands is None:
         brands = text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)

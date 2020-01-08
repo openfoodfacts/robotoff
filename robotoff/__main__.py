@@ -100,6 +100,23 @@ if __name__ == "__main__":
                 print("{}: {}".format(cat, confidence))
 
     @click.command()
+    @click.argument('input_', type=pathlib.Path)
+    @click.option('--insight-type', required=True)
+    @click.option('--server-domain', default=None)
+    @click.option('--batch-size', type=int, default=1024)
+    def import_insights(input_: pathlib.Path,
+                        insight_type: str,
+                        server_domain: Optional[str],
+                        batch_size: int):
+        from robotoff.cli import insights
+        from robotoff import settings
+        from robotoff.utils import get_logger
+        logger = get_logger()
+        logger.info("Importing insights from {}".format(input_))
+        server_domain = server_domain or settings.OFF_SERVER_DOMAIN
+        insights.import_insights(input_, insight_type, server_domain, batch_size)
+
+    @click.command()
     @click.option('--index/--no-index', default=True)
     @click.option('--data/--no-data', default=True)
     @click.option('--product/--no-product', default=True)
@@ -143,5 +160,6 @@ if __name__ == "__main__":
     cli.add_command(generate_spellcheck_insights)
     cli.add_command(download_dataset)
     cli.add_command(categorize)
+    cli.add_command(import_insights)
 
     cli()

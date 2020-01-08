@@ -6,13 +6,18 @@ import requests
 
 from robotoff import settings
 from robotoff.products import ProductDataset
-from robotoff.utils import dump_text
+from robotoff.utils import dump_text, text_file_iter
 from robotoff.utils.cache import CachedStore
 
 
-def get_brand_prefix():
+def get_brand_prefix() -> Set:
     with settings.BRAND_PREFIX_PATH.open('r') as f:
         return set(tuple(x) for x in json.load(f))
+
+
+def get_brand_blacklist() -> Set[str]:
+    return set(
+        text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
 
 def generate_barcode_prefix(barcode: str) -> str:
@@ -86,10 +91,6 @@ def dump_taxonomy_brands(threshold: int):
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, filtered_brands)
 
 
-BRAND_PREFIX_STORE = CachedStore(fetch_func=get_brand_prefix,
-                                 expiration_interval=None)
-
-
 def in_barcode_range(brand_prefix: Set[Tuple[str, str]],
                      brand_tag: str,
                      barcode: str) -> bool:
@@ -106,6 +107,11 @@ def in_barcode_range(brand_prefix: Set[Tuple[str, str]],
 
     return True
 
+
+BRAND_PREFIX_STORE = CachedStore(fetch_func=get_brand_prefix,
+                                 expiration_interval=None)
+BRAND_BLACKLIST_STORE = CachedStore(fetch_func=get_brand_blacklist,
+                                    expiration_interval=None)
 
 if __name__ == "__main__":
     save_brand_prefix(count_threshold=2)
