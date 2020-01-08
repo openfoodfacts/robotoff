@@ -7,7 +7,6 @@ from typing import Optional
 import click
 from more_itertools import chunked
 
-from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory
 from robotoff.insights.ocr import (ocr_iter, OCRResult,
                                    extract_insights,

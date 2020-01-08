@@ -78,7 +78,7 @@ class OCRResult:
                  'logo_annotations', 'safe_search_annotation',
                  'label_annotations')
 
-    def __init__(self, data: JSONType):
+    def __init__(self, data: JSONType, lazy: bool = True):
         self.text_annotations: List[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
         self.logo_annotations: List[LogoAnnotation] = []
@@ -102,7 +102,7 @@ class OCRResult:
 
         if full_text_annotation_data:
             self.full_text_annotation = OCRFullTextAnnotation(
-                full_text_annotation_data)
+                full_text_annotation_data, lazy=lazy)
 
         for logo_annotation_data in data.get('logoAnnotations', []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
@@ -184,7 +184,7 @@ class OCRResult:
             return None
 
     @classmethod
-    def from_json(cls, data: JSONType) -> Optional['OCRResult']:
+    def from_json(cls, data: JSONType, **kwargs) -> Optional['OCRResult']:
         responses = data.get('responses', [])
 
         if not responses:
@@ -201,24 +201,39 @@ class OCRResult:
             return None
 
         try:
-            return OCRResult(response)
+            return OCRResult(response, **kwargs)
         except Exception as e:
             raise OCRParsingException("error during OCR parsing") from e
 
 
 class OCRFullTextAnnotation:
     __slots__ = ('text', 'text_lower',
-                 'pages', 'contiguous_text', 'contiguous_text_lower')
+                 '_pages', '_pages_data', 'contiguous_text', 'contiguous_text_lower')
 
-    def __init__(self, data: JSONType):
+    def __init__(self, data: JSONType, lazy: bool = True):
         self.text = MULTIPLE_SPACES_REGEX.sub(' ', data['text'])
         self.text_lower = self.text.lower()
         self.contiguous_text = self.text.replace('\n', ' ')
         self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ',
                                                          self.contiguous_text)
         self.contiguous_text_lower = self.contiguous_text.lower()
-        self.pages: List[TextAnnotationPage] = [TextAnnotationPage(page)
-                                                for page in data['pages']]
+        self._pages_data = data['pages']
+        self._pages: List[TextAnnotationPage] = []
+
+        if not lazy:
+            self.load_pages()
+
+    @property
+    def pages(self) -> List['TextAnnotationPage']:
+        if self._pages_data is not None:
+            self.load_pages()
+
+        return self._pages
+
+    def load_pages(self):
+        self._pages = [TextAnnotationPage(page)
+                       for page in self._pages_data]
+        self._pages_data = None
 
     def detect_orientation(self) -> OrientationResult:
         word_orientations: List[ImageOrientation] = []
