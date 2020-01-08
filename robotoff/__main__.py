@@ -18,6 +18,19 @@ if __name__ == "__main__":
 
 
     @click.command()
+    @click.argument('ocr_url')
+    def predict_insight(ocr_url: str):
+        import json
+        from robotoff.insights.extraction import extract_ocr_insights, DEFAULT_INSIGHT_TYPES
+        from robotoff.utils import get_logger
+        get_logger()
+
+        results = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+
+        print(json.dumps(results, indent=4))
+
+
+    @click.command()
     @click.argument('input_')
     @click.option('--insight-type', '-t', required=True)
     @click.option('--output', '-o')
@@ -161,5 +174,6 @@ if __name__ == "__main__":
     cli.add_command(download_dataset)
     cli.add_command(categorize)
     cli.add_command(import_insights)
+    cli.add_command(predict_insight)
 
     cli()
