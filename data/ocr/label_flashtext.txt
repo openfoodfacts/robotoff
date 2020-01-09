@@ -1,0 +1,32 @@
+en:fsc-mix||fsc mixte
+en:fsc||vwww.fsc.org
+en:halal||halal
+en:kosher||casher
+en:kosher||kosher
+en:max-havelaar||max havelaar
+en:no-cholesterol||no cholesterol
+en:no-cholesterol||sans cholesterol
+en:no-cholesterol||sans cholestérol
+en:no-lactose||bez laktozy
+en:no-lactose||lactose free
+en:no-lactose||lactose-free
+en:no-lactose||lactosefrei
+en:no-lactose||lactosevrij
+en:no-lactose||laktózmentes
+en:no-lactose||ni lactose
+en:no-lactose||no lactose
+en:no-lactose||sans lactose
+en:no-lactose||senza lattosio
+en:no-lactose||sin lactosa
+en:no-lactose||без лактозы
+en:palm-oil-free||ni huile de palme
+en:palm-oil-free||ohne palmöl
+en:palm-oil-free||palm oil free
+en:palm-oil-free||palm oil-free
+en:palm-oil-free||sans huile de palme
+en:palm-oil-free||senza olio di palma
+en:palm-oil-free||sin aceite de palma
+en:palm-oil-free||без пальмового масла
+en:sustainable-seafood-msc||www.msc.org
+fr:viande-porcine-francaise||le porc francais
+fr:viande-porcine-francaise||le porc français

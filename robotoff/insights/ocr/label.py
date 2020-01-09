@@ -2,9 +2,14 @@ import re
 from typing import Dict, List
 from typing import Optional
 
+from flashtext import KeywordProcessor
+
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.insights.ocr.flashtext import generate_keyword_processor
 from robotoff.utils import text_file_iter, get_logger
+from robotoff.utils.cache import CachedStore
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -221,55 +226,11 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
-    'en:no-lactose': [
-        OCRRegex(
-            re.compile(
-                r"senza lattosio|без лактозы|bez laktozy|(?<!\w)(?:sans|ni) lactose|lactosevrij|no lactose|lactose[ -]free|laktózmentes|lactosefrei|sin lactosa"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:palm-oil-free': [
-        OCRRegex(
-            re.compile(r"без пальмового масла|senza olio di palma|ohne palmöl|(?<!\w)(?:sans|ni) huile de palme|sin aceite de palma|palm oil[ -]free"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:max-havelaar': [
-        OCRRegex(
-            re.compile(r"max havelaar"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
     'fr:viande-bovine-francaise': [
         OCRRegex(
             re.compile(r"viande bovine fran[çc]aise"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
-    ],
-    'fr:viande-porcine-francaise': [
-        OCRRegex(
-            re.compile(r"le po?rc fran[çc]ais"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:sustainable-seafood-msc': [
-        OCRRegex(
-            re.compile(r"www\.msc\.org"),
-            field=OCRField.full_text_contiguous,
-            lowercase=False),
-    ],
-    'en:halal': [
-        OCRRegex(
-            re.compile(r"(?<!\w)halal(?!\w)"),
-            field=OCRField.text_annotations,
-            lowercase=True),
-    ],
-    'en:kosher': [
-        OCRRegex(
-            re.compile(r"(?<!\w)kosher|casher(?!\w)"),
-            field=OCRField.full_text,
-            lowercase=True,
-            notify=True),
     ],
 }
 
@@ -289,11 +250,37 @@ def get_logo_annotation_labels() -> Dict[str, str]:
     return labels
 
 
+def generate_label_keyword_processor(labels: Optional[List[str]] = None):
+    if labels is None:
+        labels = text_file_iter(settings.OCR_LABEL_FLASHTEXT_DATA_PATH)
+
+    return generate_keyword_processor(labels)
+
+
+def extract_label_flashtext(processor: KeywordProcessor,
+                            text: str) -> List[JSONType]:
+    insights = []
+
+    for (label_tag, label), span_start, span_end in processor.extract_keywords(
+            text, span_info=True):
+        match_str = text[span_start:span_end]
+        insights.append({
+            'label_tag': label_tag,
+            'text': match_str,
+            'data_source': "flashtext",
+            'notify': False,
+        })
+
+    return insights
+
+
 LOGO_ANNOTATION_LABELS: Dict[str, str] = get_logo_annotation_labels()
+LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(fetch_func=generate_label_keyword_processor,
+                                            expiration_interval=None)
 
 
 def find_labels(ocr_result: OCRResult) -> List[Dict]:
-    results = []
+    insights = []
 
     for label_tag, regex_list in LABELS_REGEX.items():
         for ocr_regex in regex_list:
@@ -312,21 +299,30 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                 else:
                     label_value = label_tag
 
-                results.append({
+                insights.append({
                     'label_tag': label_value,
                     'text': match.group(),
                     'notify': ocr_regex.notify,
+                    'data_source': "regex",
                 })
+
+    processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
+    text = ocr_result.get_full_text_contiguous(lowercase=True)
+
+    if text is None:
+        text = ocr_result.get_text_annotations(True)
+
+    insights += extract_label_flashtext(processor, text)
 
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_LABELS:
             label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
 
-            results.append({
+            insights.append({
                 'label_tag': label_tag,
                 'automatic_processing': False,
                 'confidence': logo_annotation.score,
-                'model': 'google-cloud-vision',
+                'data_source': 'google-cloud-vision',
             })
 
-    return results
+    return insights
