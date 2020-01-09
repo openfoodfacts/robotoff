@@ -190,26 +190,26 @@ def process_multi_packaging(match) -> Optional[Dict]:
 
 PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
     'with_mention': OCRRegex(
-        re.compile(r"(poids|poids net [aà] l'emballage|poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
+        re.compile(r"(?<![a-z])(poids|poids net [aà] l'emballage|poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=functools.partial(process_product_weight, prompt=True),
         priority=1),
     'with_ending_mention': OCRRegex(
-        re.compile(r"([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)\s(net)(?![a-z])"),
+        re.compile(r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)\s(net)(?![a-z])"),
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=functools.partial(process_product_weight, prompt=True,
                                           ending_prompt=True),
         priority=1),
     'multi_packaging': OCRRegex(
-        re.compile(r"(\d+)\s?x\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
+        re.compile(r"(?<![a-z])(\d+)\s?x\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"),
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=process_multi_packaging,
         priority=2),
     'no_mention': OCRRegex(
-        re.compile(r"([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])"),
+        re.compile(r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])"),
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=functools.partial(process_product_weight, prompt=False),
