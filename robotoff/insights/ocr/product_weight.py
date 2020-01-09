@@ -72,13 +72,13 @@ def is_valid_weight(weight_value) -> bool:
     return True
 
 
-def is_high_weight(normalized_value: float, unit: str) -> bool:
+def is_extreme_weight(normalized_value: float, unit: str) -> bool:
     if unit == 'g':
         # weights above 10 kg
-        return normalized_value >= 10000
+        return normalized_value >= 10000 or normalized_value <= 10
     elif unit == 'ml':
         # volumes above 10 l
-        return normalized_value >= 10000
+        return normalized_value >= 10000 or normalized_value <= 10
 
     raise ValueError("invalid unit: {}, 'g', or 'ml' "
                      "expected".format(unit))
@@ -87,7 +87,7 @@ def is_high_weight(normalized_value: float, unit: str) -> bool:
 def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
     """Return True is the weight is suspicious, i.e is likely wrongly
     detected."""
-    if is_high_weight(normalized_value, unit):
+    if is_extreme_weight(normalized_value, unit):
         return True
 
     if normalized_value > 1000:
@@ -144,7 +144,7 @@ def process_product_weight(match,
 
     if is_suspicious_weight(normalized_value, normalized_unit):
         # Don't process the insight automatically if the value
-        # is suspiciously high
+        # is suspicious (very high, low,...)
         result['automatic_processing'] = False
 
     if prompt_str is not None:
