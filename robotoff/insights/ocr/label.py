@@ -91,10 +91,6 @@ LABELS_REGEX = {
             r"(?<!\w)(?:AOC)(?!\w)"),
             field=OCRField.full_text_contiguous,
             lowercase=False),
-        OCRRegex(re.compile(
-            r"appellation d'origine contr[ôo]l[eé]e"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
     ],
     'en:nutriscore': [
         OCRRegex(re.compile(r"NUTRI-SCORE"),
@@ -118,66 +114,6 @@ LABELS_REGEX = {
                  field=OCRField.full_text_contiguous,
                  lowercase=True),
     ],
-    'en:made-in-france': [
-        OCRRegex(
-            re.compile(r"fabriqu[ée] en france|made in france"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:made-in-spain': [
-        OCRRegex(
-            re.compile(r"made in spain|hecho en espa[ñn]a|geproduceerd in spanje|fabriqu[ée] en espagne|hergestellt in spanien"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:made-in-italy': [
-        OCRRegex(
-            re.compile(
-                r"fatto in italia|made in italy|hergestellt in italien|fabriqu[ée] en italie|geproduceerd in itali[ëe]|fabricado en italia"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:made-in-belgium': [
-        OCRRegex(
-            re.compile(
-                r"made in belgium|geproduceerd in belgi[ëe]|hecho en b[ée]lgica|fabriqu[ée] en belgique|hergestellt in belgien"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:made-in-germany': [
-        OCRRegex(
-            re.compile(
-                r"hergestellt in deutschland|fabriqu[ée] en allemagne|geproduceerd in duitsland|hecho en alemania|made in germany"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:made-in-switzerland': [
-        OCRRegex(
-            re.compile(
-                r"made in switzerland|geproduceerd in zwitserland|fabriqu[ée] en suisse|hecho en suiza|hergestellt in der schweiz"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:made-in-the-eu': [
-        OCRRegex(
-            re.compile(
-                r"hergestellt in der eu|geproduceerd in de eu|fabriqu[ée] dans l'ue|hecho en la ue|made in the eu"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:australian-made': [
-        OCRRegex(
-            re.compile(
-                r"australian made|made in australia|fabriqu[ée] en australie|geproduceerd in australi[ëe]|fabricado en australia"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:gluten-free': [
-        OCRRegex(
-            re.compile(r"(?<!\w)(?:sans|ni) gluten|gluten[- ]free|glutenvrij|senza glutine|sin gluten|glutenfrei|sem gluten|gluténmentes|bez lepku|не містить глютену|bezglutenomy|без глютена"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
     'en:no-preservatives': [
         OCRRegex(
             re.compile(r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|(?<!\w)(?:sans|ni) conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"),
@@ -198,13 +134,6 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
-    'en:vegan': [
-        OCRRegex(
-            re.compile(
-                r"(?<!\w)(?:vegan|v[ée]g[ée]talien|vegano|veganistisch)(?!\w)"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
     'en:no-colorings': [
         OCRRegex(
             re.compile(
@@ -216,19 +145,6 @@ LABELS_REGEX = {
         OCRRegex(
             re.compile(
                 r"zonder toevoegingen|sin aditivos(?! arti)|(?<!\w)(?:sans|ni) additif(?!s? arti)|ohne zusätze|no additives?"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'en:no-added-sugar': [
-        OCRRegex(
-            re.compile(
-                r"senza zuccheri aggiunti|zonder toegevoegde suikers|(?<!\w)(?:sans|ni) sucres? ajout[ée]s?|sin azúcares añadidos|ohne zuckerzusatz|sem açúcares adicionados|no added sugar"),
-            field=OCRField.full_text_contiguous,
-            lowercase=True),
-    ],
-    'fr:viande-bovine-francaise': [
-        OCRRegex(
-            re.compile(r"viande bovine fran[çc]aise"),
             field=OCRField.full_text_contiguous,
             lowercase=True),
     ],
