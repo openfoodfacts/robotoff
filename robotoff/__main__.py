@@ -36,6 +36,8 @@ if __name__ == "__main__":
     @click.option('--output', '-o')
     def generate_ocr_insights(input_: str, insight_type: str, output: str):
         from robotoff.cli import insights
+        from robotoff.utils import get_logger
+        get_logger()
         insights.run_from_ocr_archive(input_, insight_type, output)
 
 
