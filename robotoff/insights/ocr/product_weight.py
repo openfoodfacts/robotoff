@@ -130,6 +130,9 @@ def process_product_weight(match,
     if not is_valid_weight(value):
         return None
 
+    # Strip value from endpoint point: '525. g' -> '525 g'
+    value = value.strip('.')
+
     text = "{} {}".format(value, unit)
     normalized_value, normalized_unit = normalize_weight(value, unit)
 
