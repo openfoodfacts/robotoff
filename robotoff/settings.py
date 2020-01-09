@@ -61,14 +61,14 @@ SLACK_OFF_NUTRISCORE_ALERT_CHANNEL = "CJZNFCSNP"
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
 
 OCR_DATA_DIR = DATA_DIR / 'ocr'
-OCR_BRANDS_DATA_PATH = OCR_DATA_DIR / 'regex_brands.txt'
-OCR_BRANDS_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'notify_brands.txt'
-OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / 'taxonomy_brands.txt'
-OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_brands.txt'
-OCR_STORES_DATA_PATH = OCR_DATA_DIR / 'regex_stores.txt'
-OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'notify_stores.txt'
-OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / 'logo_annotation_labels.txt'
-OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / 'taxonomy_brands_blacklist.txt'
+OCR_BRANDS_DATA_PATH = OCR_DATA_DIR / 'brand_regex.txt'
+OCR_BRANDS_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'brand_notify.txt'
+OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / 'brand_from_taxonomy.txt'
+OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / 'brand_logo_annotation.txt'
+OCR_STORES_DATA_PATH = OCR_DATA_DIR / 'store_regex.txt'
+OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / 'store_notify.txt'
+OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / 'label_logo_annotation.txt'
+OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / 'brand_taxonomy_blacklist.txt'
 OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / 'image_flag_beauty.txt'
 OCR_IMAGE_FLAG_MISCELLANEOUS_PATH = OCR_DATA_DIR / 'image_flag_miscellaneous.txt'
 
