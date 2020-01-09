@@ -1,3 +1,4 @@
+import functools
 import re
 from typing import List, Dict, Tuple, Set, Optional
 
@@ -5,6 +6,7 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.insights.ocr.flashtext import generate_keyword_processor
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.text import strip_accents_ascii
 from robotoff.utils.types import JSONType
@@ -12,8 +14,8 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-def keep_brand_from_taxonomy(brand: str,
-                             brand_tag: str,
+def keep_brand_from_taxonomy(brand_tag: str,
+                             brand: str,
                              min_length: Optional[int] = None,
                              blacklisted_brands: Optional[Set[str]] = None) -> bool:
     if brand.isdigit():
@@ -31,8 +33,6 @@ def keep_brand_from_taxonomy(brand: str,
 def generate_brand_keyword_processor(brands: Optional[List[str]] = None,
                                      min_length: Optional[int] = None,
                                      blacklist: bool = True):
-    processor = KeywordProcessor()
-
     blacklisted_brands: Optional[Set[str]] = None
     if blacklist:
         blacklisted_brands = BRAND_BLACKLIST_STORE.get()
@@ -40,12 +40,10 @@ def generate_brand_keyword_processor(brands: Optional[List[str]] = None,
     if brands is None:
         brands = text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
 
-    for item in brands:
-        name, key = item.split('||')
-        if keep_brand_from_taxonomy(name, key, min_length, blacklisted_brands):
-            processor.add_keyword(name, clean_name=(name, key))
-
-    return processor
+    keep_func = functools.partial(keep_brand_from_taxonomy,
+                                  min_length=min_length,
+                                  blacklisted_brands=blacklisted_brands)
+    return generate_keyword_processor(brands, keep_func=keep_func)
 
 
 def get_logo_annotation_brands() -> Dict[str, str]:
@@ -115,7 +113,7 @@ def extract_brands_taxonomy(processor: KeywordProcessor,
                             text: str) -> List[JSONType]:
     insights = []
 
-    for (brand, brand_tag), span_start, span_end in processor.extract_keywords(
+    for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
             text, span_info=True):
         match_str = text[span_start:span_end]
         insights.append({
