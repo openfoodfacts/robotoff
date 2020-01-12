@@ -206,12 +206,6 @@ class BrandAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        brand_tags: List[str] = product.get('brands_tags') or []
-
-        if brand_tags:
-            # For now, don't annotate if a brand has already been provided
-            return ALREADY_ANNOTATED_RESULT
-
         add_brand(insight.barcode, brand,
                   insight_id=insight.id,
                   server_domain=insight.server_domain,
