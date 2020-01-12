@@ -6,9 +6,8 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
-from robotoff.insights.ocr.flashtext import generate_keyword_processor
+from robotoff.insights.ocr.utils import generate_keyword_processor, get_tag
 from robotoff.utils import text_file_iter, get_logger
-from robotoff.utils.text import strip_accents_ascii
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -62,14 +61,6 @@ def get_logo_annotation_brands() -> Dict[str, str]:
 
 
 LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
-
-
-def get_brand_tag(brand: str) -> str:
-    brand = strip_accents_ascii(brand)
-    return (brand.lower()
-                 .replace(' & ', '-')
-                 .replace(' ', '-')
-                 .replace("'", '-'))
 
 
 def brand_sort_key(item):
@@ -143,7 +134,7 @@ def extract_brands_whitelist(ocr_regex: OCRRegex,
                     brand, _ = sorted_brands[idx]
                     insights.append({
                         'brand': brand,
-                        'brand_tag': get_brand_tag(brand),
+                        'brand_tag': get_tag(brand),
                         'text': match_str,
                         'notify': brand in NOTIFY_BRANDS,
                         'data_source': "whitelisted-brands",
@@ -160,7 +151,7 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[JSONType]:
 
             insights.append({
                 'brand': brand,
-                'brand_tag': get_brand_tag(brand),
+                'brand_tag': get_tag(brand),
                 'automatic_processing': False,
                 'confidence': logo_annotation.score,
                 'data_source': 'google-cloud-vision',

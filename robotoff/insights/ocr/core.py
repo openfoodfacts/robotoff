@@ -14,6 +14,7 @@ from robotoff.insights.ocr.image_orientation import find_image_orientation
 from robotoff.insights.ocr.label import find_labels
 from robotoff.insights.ocr.nutrient import find_nutrient_values
 from robotoff.insights.ocr.packager_code import find_packager_codes
+from robotoff.insights.ocr.packaging import find_packaging
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
@@ -85,6 +86,9 @@ def extract_insights(ocr_result: OCRResult,
 
     elif insight_type == InsightType.store.name:
         return find_stores(ocr_result)
+
+    elif insight_type == InsightType.packaging.name:
+        return find_packaging(ocr_result)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))

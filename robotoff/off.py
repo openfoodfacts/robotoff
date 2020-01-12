@@ -234,6 +234,22 @@ def add_store(barcode: str, store: str,
     update_product(params, **kwargs)
 
 
+def add_packaging(barcode: str, packaging: str,
+                  insight_id: Optional[str] = None,
+                  **kwargs):
+    comment = "[robotoff] Adding packaging '{}'".format(packaging)
+
+    if insight_id:
+        comment += ", ID: {}".format(insight_id)
+
+    params = {
+        'code': barcode,
+        'add_packaging': packaging,
+        'comment': comment,
+    }
+    update_product(params, **kwargs)
+
+
 def update_product(params: Dict,
                    server_domain: Optional[str] = None,
                    session_cookie: Optional[str] = None):

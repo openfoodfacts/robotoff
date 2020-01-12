@@ -1,0 +1,32 @@
+Barquette en plastique||barquette plastique
+Bocal en verre||bocal verre
+Bouchon en plastique||bouchon plastique
+Bouteille en plastique||bouteille plastique
+Bouteille en verre||bouteille verre
+Bouteille plastique;Bouchon plastique||bouteille et bouchon plastique
+Boîte en carton||boite carton
+Boîte en carton||boîte carton
+Boîte en métal||boite metal
+Boîte en métal||boite métal
+Boîte en métal||boîte metal
+Boîte en métal||boîte métal
+Boîte en plastique||boite plastique
+Boîte en plastique||boîte plastique
+Brique en carton||brique carton
+Clip en plastique;Sachet en plastique||clip et sachet plastique
+Clip en plastique||clip plastique
+Couvercle en métal||couvercle metal
+Couvercle en métal||couvercle métal
+Etui en carton||etui carton
+Feuille en carton||feuille carton
+Film en plastique;Sachet en plastique||film et sachet plastique
+Film en plastique||film plastique
+Opercule en aluminium||opercule aluminium
+Opercule en métal||opercule metal
+Opercule en métal||opercule métal
+Opercule en plastique||opercule plastique
+Pot en carton||pot carton
+Pot en plastique||pot plastique
+Pot en verre||pot verre
+Quadrette en plastique||quadrette plastique
+Sachet en plastique||sachet plastique

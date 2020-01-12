@@ -141,32 +141,33 @@ class OCRResult:
             else:
                 return self.text_annotations_str
 
-    def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
-        field = ocr_regex.field
-
+    def _get_text(self, field: OCRField, lowercase: bool) -> Optional[str]:
         if field == OCRField.full_text:
-            text = self.get_full_text(ocr_regex.lowercase)
+            text = self.get_full_text(lowercase)
 
             if text is None:
                 # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations(ocr_regex.lowercase)
+                return self.get_text_annotations(lowercase)
             else:
                 return text
 
         elif field == OCRField.full_text_contiguous:
-            text = self.get_full_text_contiguous(ocr_regex.lowercase)
+            text = self.get_full_text_contiguous(lowercase)
 
             if text is None:
                 # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations(ocr_regex.lowercase)
+                return self.get_text_annotations(lowercase)
             else:
                 return text
 
         elif field == OCRField.text_annotations:
-            return self.get_text_annotations(ocr_regex.lowercase)
+            return self.get_text_annotations(lowercase)
 
         else:
             raise ValueError("invalid field: {}".format(field))
+
+    def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
+        return self._get_text(ocr_regex.field, ocr_regex.lowercase)
 
     def get_logo_annotations(self) -> List['LogoAnnotation']:
         return self.logo_annotations

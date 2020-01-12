@@ -726,6 +726,67 @@ class StoreInsightImporter(OCRInsightImporter):
         return False
 
 
+class PackagingInsightImporter(OCRInsightImporter):
+    def deduplicate_insights(self,
+                             data: Iterable[JSONType]) -> Iterable[JSONType]:
+        yield from self._deduplicate_insights(
+            data, lambda x: x['content']['packaging_tag'])
+
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.packaging.name
+
+    def is_valid(self,
+                 packaging_tag: str,
+                 packaging_seen: Set[str]) -> bool:
+        return packaging_tag not in packaging_seen
+
+    def process_product_insights(self, barcode: str,
+                                 insights: List[JSONType],
+                                 server_domain: str) \
+            -> Iterable[JSONType]:
+        packaging_seen: Set[str] = set()
+
+        for t in (ProductInsight.select(ProductInsight.value_tag)
+                .where(
+            ProductInsight.type == self.get_type(),
+            ProductInsight.barcode == barcode,
+            ProductInsight.server_domain == server_domain)
+        ).iterator():
+            packaging_seen.add(t.value_tag)
+
+        for insight in insights:
+            content = insight['content']
+            packaging_tag = content['packaging_tag']
+            packaging = content['packaging']
+
+            if not self.is_valid(packaging_tag, packaging_seen):
+                continue
+
+            source = insight['source']
+            insert = {
+                'value_tag': packaging_tag,
+                'source_image': source,
+                'data': {
+                    'source': source,
+                    'packaging_tag': packaging_tag,
+                    'text': content['text'],
+                    'packaging': packaging,
+                    'notify': content['notify'],
+                }
+            }
+
+            if 'automatic_processing' in content:
+                insert['automatic_processing'] = content['automatic_processing']
+
+            yield insert
+            packaging_seen.add(packaging_tag)
+
+    @staticmethod
+    def need_validation(insight: JSONType) -> bool:
+        return False
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.packager_code.name: PackagerCodeInsightImporter,
@@ -735,6 +796,7 @@ class InsightImporterFactory:
         InsightType.expiration_date.name: ExpirationDateImporter,
         InsightType.brand.name: BrandInsightImporter,
         InsightType.store.name: StoreInsightImporter,
+        InsightType.packaging.name: PackagingInsightImporter,
     }
 
     @classmethod

@@ -6,7 +6,7 @@ from flashtext import KeywordProcessor
 
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
-from robotoff.insights.ocr.flashtext import generate_keyword_processor
+from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType

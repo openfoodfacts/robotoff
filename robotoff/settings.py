@@ -72,6 +72,7 @@ OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / 'label_flashtext.txt'
 OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / 'brand_taxonomy_blacklist.txt'
 OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / 'image_flag_beauty.txt'
 OCR_IMAGE_FLAG_MISCELLANEOUS_PATH = OCR_DATA_DIR / 'image_flag_miscellaneous.txt'
+OCR_PACKAGING_DATA_PATH = OCR_DATA_DIR / 'packaging.txt'
 
 BRAND_PREFIX_PATH = DATA_DIR / 'brand_prefix.json'
 
