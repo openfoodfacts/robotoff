@@ -69,3 +69,9 @@ Pure-Pak Classic fresh||pure pak classic fresh
 Pure-Pak Classic aseptic||pure pak classic aseptic
 Pure-Pak Diamond fresh||pure pak diamond fresh
 Pure-Pak Diamond aseptic||pure pak diamond aseptic
+21-PAP||21-PAP
+21-PAP||PAP-21
+21-PAP||21-PAP
+05-PP||05-PP
+05-PP||PP-05
+HDPE||HDPE
