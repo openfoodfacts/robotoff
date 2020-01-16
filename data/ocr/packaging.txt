@@ -30,3 +30,5 @@ Pot en plastique||pot plastique
 Pot en verre||pot verre
 Quadrette en plastique||quadrette plastique
 Sachet en plastique||sachet plastique
+bouteille||bottled
+bouteille||embouteillé
