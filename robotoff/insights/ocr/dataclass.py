@@ -1,8 +1,9 @@
 import enum
+import math
 import operator
 import re
 from collections import Counter
-from typing import Optional, Callable, Dict, List
+from typing import Optional, Callable, Dict, List, Tuple
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -140,6 +141,8 @@ class OCRResult:
                 return self.text_annotations_str_lower
             else:
                 return self.text_annotations_str
+    
+        return None
 
     def _get_text(self, field: OCRField, lowercase: bool) -> Optional[str]:
         if field == OCRField.full_text:
@@ -265,7 +268,7 @@ class Block:
     def __init__(self, data: JSONType):
         self.type = data['blockType']
         self.paragraphs: List[Paragraph] = [Paragraph(paragraph)
-                           for paragraph in data['paragraphs']]
+                                            for paragraph in data['paragraphs']]
 
         self.bounding_poly = None
         if 'boundingBox' in data:
@@ -337,6 +340,15 @@ class Word:
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
 
+    def on_same_line(self, word: 'Word'):
+        self_alpha, self_width = (self.bounding_poly.
+                                  get_direction_vector_alpha_distance())
+        word_alpha, word_width = (word.bounding_poly
+                                  .get_direction_vector_alpha_distance())
+        self_symbol_width = self_width / len(self.symbols)
+        word_symbol_width = word_width / len(word.symbols)
+        print("Alpha/distance/mean symbol width:", self_alpha, self_width, self_symbol_width)
+        print("Alpha/distance/mean symbol width:", word_alpha, word_width, word_symbol_width)
 
 class Symbol:
     __slots__ = ('bounding_poly', 'text', 'confidence', 'symbol_break')
