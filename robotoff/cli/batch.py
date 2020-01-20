@@ -5,22 +5,18 @@ from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.models import ProductInsight
 
 
-def run(insight_type: str,
-        dry: bool = True,
-        json_contains_str: Optional[str] = None):
+def run(insight_type: str, dry: bool = True, json_contains_str: Optional[str] = None):
     if json_contains_str is not None:
         json_contains = ast.literal_eval(json_contains_str)
     else:
         json_contains = None
 
-    batch_annotate(insight_type,
-                   dry,
-                   json_contains)
+    batch_annotate(insight_type, dry, json_contains)
 
 
-def batch_annotate(insight_type: str,
-                   dry: bool = True,
-                   json_contains: Optional[Dict] = None):
+def batch_annotate(
+    insight_type: str, dry: bool = True, json_contains: Optional[Dict] = None
+):
     annotator = InsightAnnotatorFactory.get(insight_type)
 
     i = 0
@@ -28,7 +24,7 @@ def batch_annotate(insight_type: str,
     query = ProductInsight.select()
     where_clauses = [
         ProductInsight.type == insight_type,
-        ProductInsight.annotation.is_null()
+        ProductInsight.annotation.is_null(),
     ]
 
     if json_contains is not None:
@@ -38,18 +34,21 @@ def batch_annotate(insight_type: str,
 
     if dry:
         count = query.count()
-        print("-- dry run --\n"
-              "{} items matching filter:\n"
-              "   insight type: {}\n"
-              "   filter: {}"
-              "".format(count, insight_type, json_contains))
+        print(
+            "-- dry run --\n"
+            "{} items matching filter:\n"
+            "   insight type: {}\n"
+            "   filter: {}"
+            "".format(count, insight_type, json_contains)
+        )
     else:
         for insight in query:
             i += 1
             print("Insight %d" % i)
-            print("Add label {} to https://fr.openfoodfacts.org/produit/{}"
-                  "".format(insight.data,
-                            insight.barcode))
+            print(
+                "Add label {} to https://fr.openfoodfacts.org/produit/{}"
+                "".format(insight.data, insight.barcode)
+            )
             print(insight.data)
 
             annotator.annotate(insight, 1, update=True)

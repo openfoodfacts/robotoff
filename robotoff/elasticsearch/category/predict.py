@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 def predict(client, product: Dict) -> Optional[Dict]:
     predictions = []
 
-    for lang in product.get('languages_codes', []):
+    for lang in product.get("languages_codes", []):
         product_name = product.get("product_name_{}".format(lang))
 
         if not product_name:
@@ -32,19 +32,19 @@ def predict(client, product: Dict) -> Optional[Dict]:
 
     if predictions:
         # Sort by descending score
-        sorted_predictions = sorted(predictions,
-                                    key=operator.itemgetter(2),
-                                    reverse=True)
+        sorted_predictions = sorted(
+            predictions, key=operator.itemgetter(2), reverse=True
+        )
 
         prediction = sorted_predictions[0]
         lang, category, product_name, score = prediction
 
         return {
-            'barcode': product['code'],
-            'category': category,
-            'lang': lang,
-            'product_name': product_name,
-            'model': 'matcher',
+            "barcode": product["code"],
+            "category": category,
+            "lang": lang,
+            "product_name": product_name,
+            "model": "matcher",
         }
 
     return None
@@ -63,9 +63,9 @@ def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
             yield prediction
 
 
-def predict_from_dataset(dataset: ProductDataset,
-                         from_datetime: Optional[datetime.datetime] = None) -> \
-        Iterable[JSONType]:
+def predict_from_dataset(
+    dataset: ProductDataset, from_datetime: Optional[datetime.datetime] = None
+) -> Iterable[JSONType]:
     """Return an iterable of category insights, using the provided dataset.
 
     Args:
@@ -73,16 +73,19 @@ def predict_from_dataset(dataset: ProductDataset,
         from_datetime: datetime threshold: only keep products modified after
             `from_datetime`
     """
-    product_stream = (dataset.stream()
-                             .filter_nonempty_text_field('code')
-                             .filter_nonempty_text_field('product_name')
-                             .filter_empty_tag_field('categories_tags')
-                             .filter_nonempty_tag_field('countries_tags')
-                             .filter_nonempty_tag_field('languages_codes'))
+    product_stream = (
+        dataset.stream()
+        .filter_nonempty_text_field("code")
+        .filter_nonempty_text_field("product_name")
+        .filter_empty_tag_field("categories_tags")
+        .filter_nonempty_tag_field("countries_tags")
+        .filter_nonempty_tag_field("languages_codes")
+    )
 
     if from_datetime:
         product_stream = product_stream.filter_by_modified_datetime(
-            from_t=from_datetime)
+            from_t=from_datetime
+        )
 
     product_iter = product_stream.iter()
     logger.info("Performing prediction on products without categories")

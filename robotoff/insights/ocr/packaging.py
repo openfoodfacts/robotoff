@@ -16,8 +16,9 @@ def generate_packaging_keyword_processor(packaging: Optional[List[str]] = None):
     return generate_keyword_processor(packaging)
 
 
-KEYWORD_PROCESSOR_STORE = CachedStore(fetch_func=generate_packaging_keyword_processor,
-                                      expiration_interval=None)
+KEYWORD_PROCESSOR_STORE = CachedStore(
+    fetch_func=generate_packaging_keyword_processor, expiration_interval=None
+)
 
 
 def find_packaging(ocr_result: OCRResult) -> List[Dict]:
@@ -31,17 +32,20 @@ def find_packaging(ocr_result: OCRResult) -> List[Dict]:
     processor = KEYWORD_PROCESSOR_STORE.get()
 
     for (packaging_str, _), span_start, span_end in processor.extract_keywords(
-            text, span_info=True):
-        packagings = packaging_str.split(';')
+        text, span_info=True
+    ):
+        packagings = packaging_str.split(";")
 
         for packaging in packagings:
             match_str = text[span_start:span_end]
-            insights.append({
-                'packaging_tag': get_tag(packaging),
-                'packaging': packaging,
-                'text': match_str,
-                'notify': True,
-                'automatic_processing': True,
-            })
+            insights.append(
+                {
+                    "packaging_tag": get_tag(packaging),
+                    "packaging": packaging,
+                    "text": match_str,
+                    "notify": True,
+                    "automatic_processing": True,
+                }
+            )
 
     return insights

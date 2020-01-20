@@ -14,9 +14,9 @@ class TranslationStore:
                 continue
 
             lang = lang_dir.name
-            t = gettext.translation('robotoff',
-                                    str(settings.I18N_DIR),
-                                    languages=[lang])
+            t = gettext.translation(
+                "robotoff", str(settings.I18N_DIR), languages=[lang]
+            )
             self.translations[lang] = t
 
     def get(self, lang: str) -> Optional[gettext.NullTranslations]:

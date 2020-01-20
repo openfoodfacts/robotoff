@@ -10,10 +10,10 @@ from robotoff.utils import text_file_iter
 from .dataclass import Config
 
 PRODUCT_NAME_VOC_NAME = "product_name_voc.json"
-CONFIG_NAME = 'config.json'
-CATEGORY_VOC_NAME = 'category_voc.json'
-CATEGORY_TAXONOMY_NAME = 'category_taxonomy.json'
-INGREDIENT_VOC_NAME = 'ingredient_voc.json'
+CONFIG_NAME = "config.json"
+CATEGORY_VOC_NAME = "category_voc.json"
+CATEGORY_TAXONOMY_NAME = "category_taxonomy.json"
+INGREDIENT_VOC_NAME = "ingredient_voc.json"
 
 
 def load_product_name_vocabulary(model_dir: pathlib.Path):
@@ -38,7 +38,7 @@ def load_taxonomy(model_dir: pathlib.Path) -> Taxonomy:
 
 
 def load_json(path: pathlib.Path):
-    with path.open('r') as f:
+    with path.open("r") as f:
         return json.load(f)
 
 

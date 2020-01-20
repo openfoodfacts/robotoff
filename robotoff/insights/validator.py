@@ -23,8 +23,9 @@ class InsightValidator(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def is_valid(self, insight: ProductInsight,
-                 product: Optional[Product] = None) -> bool:
+    def is_valid(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
         pass
 
 
@@ -33,15 +34,16 @@ class BrandValidator(InsightValidator):
     def get_type() -> str:
         return InsightType.brand.name
 
-    def is_valid(self, insight: ProductInsight,
-                 product: Optional[Product] = None):
+    def is_valid(self, insight: ProductInsight, product: Optional[Product] = None):
         brand_prefix = BRAND_PREFIX_STORE.get()
         brand_tag = insight.value_tag
         barcode = insight.barcode
 
         if not in_barcode_range(brand_prefix, brand_tag, barcode):
-            logger.info("Barcode {} of brand {} not in barcode "
-                        "range".format(barcode, brand_tag))
+            logger.info(
+                "Barcode {} of brand {} not in barcode "
+                "range".format(barcode, brand_tag)
+            )
             return False
 
         if product is None:
@@ -61,12 +63,13 @@ class LabelValidator(InsightValidator):
     def get_type() -> str:
         return InsightType.label.name
 
-    def is_valid(self, insight: ProductInsight,
-                 product: Optional[Product] = None) -> bool:
+    def is_valid(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
-        product_labels_tags = getattr(product, 'labels_tags', [])
+        product_labels_tags = getattr(product, "labels_tags", [])
         label_tag = insight.value_tag
 
         if label_tag in product_labels_tags:
@@ -76,9 +79,9 @@ class LabelValidator(InsightValidator):
         # current/already predicted label
         label_taxonomy: Taxonomy = get_taxonomy(InsightType.label.name)
 
-        if (label_tag in label_taxonomy and
-            label_taxonomy.is_parent_of_any(label_tag,
-                                            product_labels_tags)):
+        if label_tag in label_taxonomy and label_taxonomy.is_parent_of_any(
+            label_tag, product_labels_tags
+        ):
             return False
 
         return True
@@ -89,12 +92,13 @@ class CategoryValidator(InsightValidator):
     def get_type() -> str:
         return InsightType.category.name
 
-    def is_valid(self, insight: ProductInsight,
-                 product: Optional[Product] = None) -> bool:
+    def is_valid(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
-        product_categories_tags = getattr(product, 'categories_tags', [])
+        product_categories_tags = getattr(product, "categories_tags", [])
         category_tag = insight.value_tag
 
         if category_tag in product_categories_tags:
@@ -104,9 +108,9 @@ class CategoryValidator(InsightValidator):
         # current/already predicted category
         category_taxonomy: Taxonomy = get_taxonomy(InsightType.category.name)
 
-        if (category_tag in category_taxonomy and
-            category_taxonomy.is_parent_of_any(category_tag,
-                                               product_categories_tags)):
+        if category_tag in category_taxonomy and category_taxonomy.is_parent_of_any(
+            category_tag, product_categories_tags
+        ):
             return False
 
         return True
@@ -117,8 +121,9 @@ class ProductWeightValidator(InsightValidator):
     def get_type() -> str:
         return InsightType.product_weight.name
 
-    def is_valid(self, insight: ProductInsight,
-                 product: Optional[Product] = None) -> bool:
+    def is_valid(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
@@ -141,18 +146,20 @@ class InsightValidatorFactory:
     }
 
     @classmethod
-    def create(cls, insight_type: str,
-               product_store: Optional[ProductStore]) -> \
-            Optional[InsightValidator]:
+    def create(
+        cls, insight_type: str, product_store: Optional[ProductStore]
+    ) -> Optional[InsightValidator]:
         if insight_type in cls.validators:
             return cls.validators[insight_type](product_store)
         else:
             return None
 
 
-def delete_invalid_insight(insight: ProductInsight,
-                           validator: Optional[InsightValidator],
-                           product: Optional[Product] = None) -> bool:
+def delete_invalid_insight(
+    insight: ProductInsight,
+    validator: Optional[InsightValidator],
+    product: Optional[Product] = None,
+) -> bool:
     if validator is None:
         return False
 
