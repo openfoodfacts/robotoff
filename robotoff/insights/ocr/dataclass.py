@@ -396,6 +396,21 @@ class BoundingPoly:
         self.vertices = [(point.get('x', 0), point.get('y', 0))
                          for point in data['vertices']]
 
+    def get_direction_vector(self) -> List[Tuple[int, int]]:
+        left_point = ((self.vertices[0][0] + self.vertices[3][0]) / 2,
+                      (self.vertices[0][1] + self.vertices[3][1]) / 2)
+        right_point = ((self.vertices[1][0] + self.vertices[2][0]) / 2,
+                       (self.vertices[1][1] + self.vertices[2][1]) / 2)
+
+        return [left_point, right_point]
+
+    def get_direction_vector_alpha_distance(self) -> Tuple[float, float]:
+        left_point, right_point = self.get_direction_vector()
+        alpha = (right_point[1] - left_point[1]) / (right_point[0] - left_point[0])
+        distance = math.sqrt((left_point[0] - right_point[0]) ** 2 +
+                             (left_point[0] - right_point[0]) ** 2)
+        return alpha, distance
+
     def detect_orientation(self) -> ImageOrientation:
         """Detect bounding poly orientation (up, down, left, or right).
 
