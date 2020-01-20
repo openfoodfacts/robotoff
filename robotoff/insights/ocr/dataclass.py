@@ -250,7 +250,7 @@ class TextAnnotationPage:
     def __init__(self, data: JSONType):
         self.width = data['width']
         self.height = data['height']
-        self.blocks = [Block(d) for d in data['blocks']]
+        self.blocks: List[Block] = [Block(d) for d in data['blocks']]
 
     def detect_words_orientation(self) -> List[ImageOrientation]:
         word_orientations: List[ImageOrientation] = []
@@ -264,7 +264,7 @@ class TextAnnotationPage:
 class Block:
     def __init__(self, data: JSONType):
         self.type = data['blockType']
-        self.paragraphs = [Paragraph(paragraph)
+        self.paragraphs: List[Paragraph] = [Paragraph(paragraph)
                            for paragraph in data['paragraphs']]
 
         self.bounding_poly = None
@@ -285,7 +285,7 @@ class Block:
 
 class Paragraph:
     def __init__(self, data: JSONType):
-        self.words = [Word(word) for word in data['words']]
+        self.words: List[Word] = [Word(word) for word in data['words']]
 
         self.bounding_poly = None
         if 'boundingBox' in data:
@@ -313,7 +313,7 @@ class Word:
         word_property = data.get('property', {})
 
         if 'detectedLanguages' in word_property:
-            self.languages: List[DetectedLanguage] = [
+            self.languages = [
                 DetectedLanguage(l) for l in
                 data['property']['detectedLanguages']]
 
