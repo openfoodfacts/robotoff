@@ -4,10 +4,12 @@ import re
 
 import dataclasses
 from dataclasses import dataclass, field
-from typing import List, Tuple, Iterable, Dict
+from typing import List, Tuple, Iterable, Dict, Optional
 
 from robotoff import settings
+from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.products import ProductDataset
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.es import generate_msearch_body
 
@@ -23,6 +25,32 @@ OffsetType = Tuple[int, int]
 
 class TokenLengthMismatchException(Exception):
     pass
+
+
+def extract_ingredients_from_taxonomy(lang: str):
+    taxonomy = get_taxonomy(TaxonomyType.ingredient.name)
+    ingredients = set()
+    for key, node in taxonomy.nodes.items():
+        synonyms: List[str] = node.get_synonyms(lang)
+
+        for synonym in synonyms:
+            ingredients.add(synonym.lower())
+
+    return ingredients
+
+
+def extract_tokens_ingredients_from_taxonomy(lang: str):
+    from spacy.util import get_lang_class
+
+    ingredients = extract_ingredients_from_taxonomy(lang)
+    nlp = get_lang_class(lang)
+    tokens = set()
+
+    for doc in nlp.pipe(ingredients):
+        for token in doc:
+            tokens.add(token)
+
+    return tokens
 
 
 @dataclass
@@ -102,7 +130,21 @@ def process_ingredients(ingredient_text: str) -> Ingredients:
     return Ingredients(ingredient_text, normalized, offsets)
 
 
-def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correction]:
+def generate_corrections(client, ingredients_text: str,
+                         lang: Optional[str] = None, **kwargs) -> List[Correction]:
+    if lang is None:
+        language_identifier: LanguageIdentifier = DEFAULT_LANGUAGE_IDENTIFIER.get()
+        predicted_languages = language_identifier.predict(ingredients_text.lower(),
+                                                          threshold=0.5)
+
+        if predicted_languages and predicted_languages[0].lang != 'fr':
+            predicted_language = predicted_languages[0]
+            logger.info("Predicted language is not 'fr': {} "
+                        "(confidence: {})\n{}".format(predicted_language.lang,
+                                                      predicted_language.confidence,
+                                                      ingredients_text))
+            return []
+
     corrections = []
     ingredients: Ingredients = process_ingredients(ingredients_text)
     normalized_ingredients: Iterable[str] = ingredients.iter_normalized_ingredients()
@@ -119,16 +161,36 @@ def generate_corrections(client, ingredients_text: str, **kwargs) -> List[Correc
         original_tokens = analyze(client, normalized_ingredient)
         suggestion_tokens = analyze(client, option['text'])
         try:
-            term_corrections = format_corrections(original_tokens,
-                                                  suggestion_tokens,
-                                                  offsets[0])
-            corrections.append(Correction(term_corrections, option['score']))
+            term_corrections = [c for c in format_corrections(original_tokens,
+                                                              suggestion_tokens,
+                                                              offsets[0])
+                                if is_valid_correction(c)]
+
+            if term_corrections:
+                corrections.append(Correction(term_corrections, option['score']))
+
         except TokenLengthMismatchException:
-            logger.warning("The original text and the suggestions must have the same number "
-                           "of tokens: {} / {}".format(original_tokens, suggestion_tokens))
+            #logger.warning("The original text and the suggestions must have the same number "
+            #               "of tokens: {} / {}".format(original_tokens, suggestion_tokens))
             continue
 
     return corrections
+
+
+def is_valid_correction(correction: TermCorrection) -> bool:
+    original_str = correction.original.lower()
+    correction_str = correction.correction.lower()
+
+    if ((len(original_str) > len(correction_str) and
+         original_str.endswith('s') and
+         correction_str == original_str[:-1]) or
+            (len(correction_str) > len(original_str) and
+             correction_str.endswith('s') and
+             original_str == correction_str[:-1])):
+        print(correction)
+        return False
+
+    return True
 
 
 def generate_corrected_text(corrections: List[TermCorrection], text: str):
