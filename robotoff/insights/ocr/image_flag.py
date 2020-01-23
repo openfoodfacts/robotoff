@@ -17,7 +17,6 @@ LABELS_TO_FLAG = {
     "Cheek",
     "Arm",
     "Tooth",
-    "Leg",
     "Human Leg",
     "Ankle",
     "Eyebrow",
