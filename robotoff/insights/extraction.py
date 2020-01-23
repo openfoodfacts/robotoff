@@ -24,6 +24,7 @@ DEFAULT_INSIGHT_TYPES = (
     InsightType.expiration_date.name,
     InsightType.brand.name,
     InsightType.store.name,
+    InsightType.packaging.name,
 )
 
 
