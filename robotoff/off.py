@@ -1,11 +1,18 @@
 import enum
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import requests
 
 from robotoff import settings
 from robotoff.utils import get_logger
+
+
+class ServerType(enum.Enum):
+    off = 1
+    obf = 2
+    opff = 3
+    opf = 4
 
 http_session = requests.Session()
 USER_AGENT_HEADERS = {
@@ -19,8 +26,12 @@ AUTH_DICT = {
     "password": AUTH[1],
 }
 
-API_URL = "https://world.openfoodfacts.org/api/v0"
-PRODUCT_URL = API_URL + "/product"
+API_URLS: Dict[ServerType, str] = {
+    ServerType.off: "https://world.openfoodfacts.org",
+    ServerType.obf: "https://world.openbeautyfacts.org",
+    ServerType.opf: "https://world.openproductfacts.org",
+    ServerType.opff: "https://world.openpetfoodfacts.org",
+}
 
 logger = get_logger(__name__)
 
@@ -28,16 +39,23 @@ logger = get_logger(__name__)
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 
-class ServerType(enum.Enum):
-    off = 1
-    obf = 2
-    opff = 3
-    opf = 4
-
-
 def get_product_update_url(server_domain: str) -> str:
     server_domain = server_domain.replace("api", "world")
     return "https://{}/cgi/product_jqm2.pl".format(server_domain)
+
+
+def get_base_url(server: Union[ServerType, str]) -> str:
+    if isinstance(server, str):
+        return "https://{}".format(server)
+    else:
+        if server not in API_URLS:
+            raise ValueError("unsupported server type: {}".format(server))
+
+        return API_URLS[server]
+
+
+def get_api_product_url(server: Union[ServerType, str]) -> str:
+    return "{}/api/v0/product".format(get_base_url(server))
 
 
 def get_server_type(server_domain: str) -> Optional[ServerType]:
@@ -96,10 +114,17 @@ def is_valid_image(barcode: str, image_id: str) -> bool:
     return image_id in images
 
 
-def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
-    # TODO: resolve url given server_domain parameter
+def get_product(
+    barcode: str,
+    fields: List[str] = None,
+    server: Optional[Union[ServerType, str]] = None,
+) -> Optional[Dict]:
     fields = fields or []
-    url = PRODUCT_URL + "/{}.json".format(barcode)
+
+    if server is None:
+        server = ServerType.off
+
+    url = get_api_product_url(server) + "/{}.json".format(barcode)
 
     if fields:
         # requests escape comma in URLs, as expected, but openfoodfacts server
@@ -281,3 +306,19 @@ def update_product(
 
     if status != "fields saved":
         logger.warn("Unexpected status during product update: {}".format(status))
+
+
+def move_to(barcode: str, to: ServerType) -> bool:
+    if get_product(barcode, server=to) is not None:
+        return False
+
+    url = "{}/cgi/product_jqm.pl".format(settings.OFF_BASE_WEBSITE_URL)
+    params = {
+        "type": "edit",
+        "code": barcode,
+        "new_code": to,
+        **AUTH_DICT,
+    }
+    r = http_session.get(url, params=params)
+    data = r.json()
+    return data['status'] == 1

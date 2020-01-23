@@ -74,6 +74,10 @@ def flag_image(ocr_result: OCRResult) -> List[Dict]:
     insights: List[Dict] = []
 
     text = ocr_result.get_full_text_contiguous()
+
+    if text is None:
+        return insights
+
     insight = extract_image_flag_flashtext(PROCESSOR, text)
 
     if insight is not None:

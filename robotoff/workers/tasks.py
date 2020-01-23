@@ -18,7 +18,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
 )
 from robotoff.models import db, ProductInsight
-from robotoff.off import get_product, get_server_type, ServerType
+from robotoff.off import get_product, get_server_type, move_to, ServerType
 from robotoff.products import (
     has_dataset_changed,
     fetch_dataset,
@@ -78,9 +78,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
 
     for insight_type, insights in insights_all.items():
         if insight_type == InsightType.image_flag.name:
-            notify_image_flag(
-                insights["insights"], insights["source"], insights["barcode"]
-            )
+            handle_image_flag_insights(insights)
             continue
 
         logger.info("Extracting {}".format(insight_type))
@@ -93,6 +91,25 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
                 [insights], server_domain=server_domain, automatic=True
             )
             logger.info("Import finished, {} insights imported".format(imported))
+
+
+def handle_image_flag_insights(insights: JSONType):
+    source = insights["source"]
+    barcode = insights["barcode"]
+    insights_: List[JSONType] = insights["insights"]
+
+    for insight in insights_:
+        insight_subtype = insight["type"]
+
+        if insight_subtype == "text":
+            if insight["label"] == "beauty":
+                moved = move_to(barcode, ServerType.obf)
+
+                if moved:
+                    insight["moved"] = "obf"
+                    logger.info("Product {} moved to OBF".format(barcode))
+
+    notify_image_flag(insights_, source, barcode)
 
 
 def delete_product_insights(barcode: str, server_domain: str):

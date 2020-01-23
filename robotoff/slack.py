@@ -74,6 +74,8 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
             text += "type: {}, label: {}, match: {}\n".format(
                 flag_type, label, match_text
             )
+            if "moved" in insight:
+                text += "Product moved to {}\n".format(insight["moved"])
 
     url = settings.OFF_IMAGE_BASE_URL + source
     edit_url = "{}/cgi/product.pl?type=edit&code={}" "".format(
