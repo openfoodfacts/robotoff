@@ -28,14 +28,43 @@ class SlackException(Exception):
     pass
 
 
+PRIVATE_MODERATION_LABELS = {
+    "Face",
+    "Head",
+    "Selfie",
+    "Hair",
+    "Forehead",
+    "Chin",
+    "Cheek",
+    "Tooth",
+    "Eyebrow",
+    "Ear",
+    "Neck",
+    "Jaw",
+    "Nose",
+    "Facial Expression",
+    "Glasses",
+    "Eyewear",
+    "Child",
+    "Baby",
+    "Human",
+}
+
+
 def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
     text = ""
+    slack_channel: str = settings.SLACK_OFF_ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 
     for insight in insights:
         flag_type = insight["type"]
         label = insight["label"]
 
         if flag_type in ("safe_search_annotation", "label_annotation"):
+            if (
+                flag_type == "label_annotation" and label in PRIVATE_MODERATION_LABELS
+            ) or flag_type == "safe_search_annotation":
+                slack_channel = settings.SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL
+
             likelihood = insight["likelihood"]
             text += "type: {}, label: {}, score: {}\n".format(
                 flag_type, label, likelihood
@@ -53,7 +82,7 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
     text += url + "\n"
     text += "edit: {}".format(edit_url)
 
-    post_message(text, settings.SLACK_OFF_ROBOTOFF_IMAGE_ALERT_CHANNEL)
+    post_message(text, slack_channel)
 
 
 def notify_automatic_processing(insight: ProductInsight):
