@@ -103,4 +103,3 @@ AUTHORIZED_LABELS = {
     "en:sustainable-seafood-msc",
     "en:halal",
 }
-

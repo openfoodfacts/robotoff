@@ -32,6 +32,7 @@ setup(
         "Pint==0.9",
         'dataclasses>=0.6;python_version<"3.7"',
         "flashtext==2.7",
+        "langid==1.1.6",
     ],
     include_package_data=True,
 )

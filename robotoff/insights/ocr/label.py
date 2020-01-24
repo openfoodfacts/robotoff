@@ -16,137 +16,170 @@ logger = get_logger(__name__)
 
 def process_eu_bio_label_code(match) -> Optional[str]:
     country = match.group(1).lower()
-    bio_code = match.group(2).replace('ö', 'o').replace('ø', 'o').lower()
+    bio_code = match.group(2).replace("ö", "o").replace("ø", "o").lower()
     id_ = match.group(3).lower()
 
-    if country == 'de' and len(id_) != 3:
+    if country == "de" and len(id_) != 3:
         return None
 
-    return ("en:{}-{}-{}".format(country,
-                                 bio_code,
-                                 id_))
+    return "en:{}-{}-{}".format(country, bio_code, id_)
 
 
 def process_es_bio_label_code(match) -> str:
-    return ("en:es-eco-{}-{}".format(match.group(1),
-                                     match.group(2))
-            .lower())
+    return "en:es-eco-{}-{}".format(match.group(1), match.group(2)).lower()
 
 
 EN_ORGANIC_REGEX_STR = [
-    r'ingr[ée]dients?\sbiologiques?',
-    r'ingr[ée]dients?\sbio[\s.,)]',
-    r'agriculture ue/non ue biologique',
-    r'agriculture bio(?:logique)?[\s.,)]',
-    r'production bio(?:logique)?[\s.,)]',
+    r"ingr[ée]dients?\sbiologiques?",
+    r"ingr[ée]dients?\sbio[\s.,)]",
+    r"agriculture ue/non ue biologique",
+    r"agriculture bio(?:logique)?[\s.,)]",
+    r"production bio(?:logique)?[\s.,)]",
 ]
 
 LABELS_REGEX = {
-    'en:organic': [
-        OCRRegex(re.compile(r"|".join([r"(?:{})".format(x)
-                                       for x in EN_ORGANIC_REGEX_STR])),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
+    "en:organic": [
+        OCRRegex(
+            re.compile(r"|".join([r"(?:{})".format(x) for x in EN_ORGANIC_REGEX_STR])),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
     ],
-    'xx-bio-xx': [
+    "xx-bio-xx": [
         # The negative lookbehind (?<![a-zA-Z]) is useful to avoid to match
         # strings if additional chars are before the label
-        OCRRegex(re.compile(r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|Bio)[\-\s.](\d{2,3})"),
-                 field=OCRField.text_annotations,
-                 lowercase=False,
-                 processing_func=process_eu_bio_label_code),
+        OCRRegex(
+            re.compile(
+                r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|Bio)[\-\s.](\d{2,3})"
+            ),
+            field=OCRField.text_annotations,
+            lowercase=False,
+            processing_func=process_eu_bio_label_code,
+        ),
         # Spain specific regex
-        OCRRegex(re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2,3})"),
-                 field=OCRField.text_annotations,
-                 lowercase=False,
-                 processing_func=process_es_bio_label_code),
+        OCRRegex(
+            re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2,3})"),
+            field=OCRField.text_annotations,
+            lowercase=False,
+            processing_func=process_es_bio_label_code,
+        ),
     ],
-    'fr:ab-agriculture-biologique': [
-        OCRRegex(re.compile(r"certifi[ée] ab[\s.,)]"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-    ],
-    'en:pgi': [
-        OCRRegex(re.compile(
-            r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-        OCRRegex(re.compile(
-            r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
+    "fr:ab-agriculture-biologique": [
+        OCRRegex(
+            re.compile(r"certifi[ée] ab[\s.,)]"),
             field=OCRField.full_text_contiguous,
-            lowercase=False),
+            lowercase=True,
+        ),
     ],
-    'en:pdo': [
-        OCRRegex(re.compile(
-            r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
+    "en:pgi": [
+        OCRRegex(
+            re.compile(
+                r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe"
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=False),
-        OCRRegex(re.compile(
-            r"appellation d'origine prot[eé]g[eé]e"),
+            lowercase=True,
+        ),
+        OCRRegex(
+            re.compile(r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=False,
+        ),
     ],
-    'fr:aoc': [
-        OCRRegex(re.compile(
-            r"(?<!\w)(?:AOC)(?!\w)"),
+    "en:pdo": [
+        OCRRegex(
+            re.compile(r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
             field=OCRField.full_text_contiguous,
-            lowercase=False),
+            lowercase=False,
+        ),
+        OCRRegex(
+            re.compile(r"appellation d'origine prot[eé]g[eé]e"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
     ],
-    'en:nutriscore': [
-        OCRRegex(re.compile(r"NUTRI-SCORE"),
-                 field=OCRField.full_text,
-                 lowercase=False,
-                 notify=True),
+    "fr:aoc": [
+        OCRRegex(
+            re.compile(r"(?<!\w)(?:AOC)(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False,
+        ),
     ],
-    'en:eu-non-eu-agriculture': [
-        OCRRegex(re.compile(r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
+    "en:nutriscore": [
+        OCRRegex(
+            re.compile(r"NUTRI-SCORE"),
+            field=OCRField.full_text,
+            lowercase=False,
+            notify=True,
+        ),
     ],
-    'en:eu-agriculture': [
+    "en:eu-non-eu-agriculture": [
+        OCRRegex(
+            re.compile(
+                r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture"
+            ),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
+    ],
+    "en:eu-agriculture": [
         # The negative lookafter/lookbehind forbid matching "agriculture ue/non ue"
-        OCRRegex(re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-    ],
-    'en:non-eu-agriculture': [
-        OCRRegex(re.compile(r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture"),
-                 field=OCRField.full_text_contiguous,
-                 lowercase=True),
-    ],
-    'en:no-preservatives': [
         OCRRegex(
-            re.compile(r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|(?<!\w)(?:sans|ni) conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"),
+            re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture"),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+        ),
     ],
-    'en:no-flavors': [
+    "en:non-eu-agriculture": [
+        OCRRegex(
+            re.compile(r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
+    ],
+    "en:no-preservatives": [
         OCRRegex(
             re.compile(
-                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"),
+                r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|(?<!\w)(?:sans|ni) conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+        ),
     ],
-    'en:no-artificial-flavors': [
+    "en:no-flavors": [
         OCRRegex(
             re.compile(
-                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? artificiels?|no artificial flavors?"),
+                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+        ),
     ],
-    'en:no-colorings': [
+    "en:no-artificial-flavors": [
         OCRRegex(
             re.compile(
-                r"no colorings?|no colourants?|ohne farbstoffzusatz|(?<!\w)(?:sans|ni) colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti"),
+                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? artificiels?|no artificial flavors?"
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+        ),
     ],
-    'en:no-additives': [
+    "en:no-colorings": [
         OCRRegex(
             re.compile(
-                r"zonder toevoegingen|sin aditivos(?! arti)|(?<!\w)(?:sans|ni) additif(?!s? arti)|ohne zusätze|no additives?"),
+                r"no colorings?|no colourants?|ohne farbstoffzusatz|(?<!\w)(?:sans|ni) colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti"
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=True),
+            lowercase=True,
+        ),
+    ],
+    "en:no-additives": [
+        OCRRegex(
+            re.compile(
+                r"zonder toevoegingen|sin aditivos(?! arti)|(?<!\w)(?:sans|ni) additif(?!s? arti)|ohne zusätze|no additives?"
+            ),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
     ],
 }
 
@@ -155,8 +188,8 @@ def get_logo_annotation_labels() -> Dict[str, str]:
     labels: Dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_LABELS_DATA_PATH):
-        if '||' in item:
-            logo_description, label_tag = item.split('||')
+        if "||" in item:
+            logo_description, label_tag = item.split("||")
         else:
             logger.warn("'||' separator expected!")
             continue
@@ -173,26 +206,29 @@ def generate_label_keyword_processor(labels: Optional[List[str]] = None):
     return generate_keyword_processor(labels)
 
 
-def extract_label_flashtext(processor: KeywordProcessor,
-                            text: str) -> List[JSONType]:
+def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[JSONType]:
     insights = []
 
     for (label_tag, label), span_start, span_end in processor.extract_keywords(
-            text, span_info=True):
+        text, span_info=True
+    ):
         match_str = text[span_start:span_end]
-        insights.append({
-            'label_tag': label_tag,
-            'text': match_str,
-            'data_source': "flashtext",
-            'notify': False,
-        })
+        insights.append(
+            {
+                "label_tag": label_tag,
+                "text": match_str,
+                "data_source": "flashtext",
+                "notify": False,
+            }
+        )
 
     return insights
 
 
 LOGO_ANNOTATION_LABELS: Dict[str, str] = get_logo_annotation_labels()
-LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(fetch_func=generate_label_keyword_processor,
-                                            expiration_interval=None)
+LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(
+    fetch_func=generate_label_keyword_processor, expiration_interval=None
+)
 
 
 def find_labels(ocr_result: OCRResult) -> List[Dict]:
@@ -215,12 +251,14 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                 else:
                     label_value = label_tag
 
-                insights.append({
-                    'label_tag': label_value,
-                    'text': match.group(),
-                    'notify': ocr_regex.notify,
-                    'data_source': "regex",
-                })
+                insights.append(
+                    {
+                        "label_tag": label_value,
+                        "text": match.group(),
+                        "notify": ocr_regex.notify,
+                        "data_source": "regex",
+                    }
+                )
 
     processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
     text = ocr_result.get_full_text_contiguous(lowercase=True)
@@ -234,11 +272,13 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
         if logo_annotation.description in LOGO_ANNOTATION_LABELS:
             label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
 
-            insights.append({
-                'label_tag': label_tag,
-                'automatic_processing': False,
-                'confidence': logo_annotation.score,
-                'data_source': 'google-cloud-vision',
-            })
+            insights.append(
+                {
+                    "label_tag": label_tag,
+                    "automatic_processing": False,
+                    "confidence": logo_annotation.score,
+                    "data_source": "google-cloud-vision",
+                }
+            )
 
     return insights

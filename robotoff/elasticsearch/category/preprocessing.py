@@ -1,20 +1,21 @@
-
 import re
 
 from robotoff.utils.text import strip_consecutive_spaces
 
-WEIGHT_REGEX = re.compile(r"[0-9]+[,.]?[0-9]*\s?(fl oz|dl|cl|mg|ml|lbs|oz|g|kg|l)(?![a-z])")
+WEIGHT_REGEX = re.compile(
+    r"[0-9]+[,.]?[0-9]*\s?(fl oz|dl|cl|mg|ml|lbs|oz|g|kg|l)(?![a-z])"
+)
 
 LABELS_REGEX = {
-    'fr': re.compile(r'agriculture biologique|biologique|bio|igp|aop|aoc|label rouge'),
-    'en': re.compile(r'organic|pgi'),
-    'es': re.compile(r'ecológico|extra'),
-    'de': re.compile(r'bio'),
-    'nl': re.compile(r'bio'),
-    'it': re.compile(r'biologica'),    
+    "fr": re.compile(r"agriculture biologique|biologique|bio|igp|aop|aoc|label rouge"),
+    "en": re.compile(r"organic|pgi"),
+    "es": re.compile(r"ecológico|extra"),
+    "de": re.compile(r"bio"),
+    "nl": re.compile(r"bio"),
+    "it": re.compile(r"biologica"),
 }
 
-BRANDS_REGEX = re.compile(r'k bio|ja!|coop|belvita|carrefour|auchan|danone')
+BRANDS_REGEX = re.compile(r"k bio|ja!|coop|belvita|carrefour|auchan|danone")
 
 
 def preprocess_name(name: str, lang: str) -> str:
@@ -34,15 +35,15 @@ def preprocess_name(name: str, lang: str) -> str:
 
 
 def remove_weights(name: str) -> str:
-    return WEIGHT_REGEX.sub('', name)
+    return WEIGHT_REGEX.sub("", name)
 
 
 def remove_brands(name: str) -> str:
-    return BRANDS_REGEX.sub('', name)
+    return BRANDS_REGEX.sub("", name)
 
 
 def remove_labels(name: str, lang: str) -> str:
     if lang in LABELS_REGEX:
-        name = LABELS_REGEX[lang].sub('', name)
+        name = LABELS_REGEX[lang].sub("", name)
 
     return name

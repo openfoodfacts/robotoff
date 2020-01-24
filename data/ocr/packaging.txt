@@ -76,3 +76,5 @@ Pure-Pak Diamond aseptic||pure pak diamond aseptic
 05-PP||05-PP
 05-PP||PP-05
 HDPE||HDPE
+bouteille||bottled
+bouteille||embouteillé

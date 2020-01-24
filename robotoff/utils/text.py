@@ -23,19 +23,19 @@ def strip_accents_ascii(s):
     strip_accents_unicode
         Remove accentuated char for any unicode symbol.
     """
-    nkfd_form = unicodedata.normalize('NFKD', s)
-    return nkfd_form.encode('ASCII', 'ignore').decode('ASCII')
+    nkfd_form = unicodedata.normalize("NFKD", s)
+    return nkfd_form.encode("ASCII", "ignore").decode("ASCII")
 
 
 def strip_consecutive_spaces(text: str) -> str:
     """Convert a sequence of 2+ spaces into a single space."""
-    return CONSECUTIVE_SPACES_REGEX.sub(' ', text)
+    return CONSECUTIVE_SPACES_REGEX.sub(" ", text)
 
 
 def get_nlp(lang: str):
-    if lang == 'fr':
+    if lang == "fr":
         return French()
-    elif lang == 'en':
+    elif lang == "en":
         return English()
     else:
         raise ValueError("unknown lang: {}".format(lang))
