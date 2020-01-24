@@ -1,5 +1,9 @@
+05-PP||05-PP
+05-PP||PP-05
+21-PAP||21-PAP
+21-PAP||21-PAP
+21-PAP||PAP-21
 Barquette en plastique||barquette plastique
-Film plastique;Barquette plastique||barquette et film plastique
 Bocal en verre||bocal verre
 Bouchon en plastique||bouchon plastique
 Bouteille en plastique||bouteille plastique
@@ -18,63 +22,59 @@ Clip en plastique;Sachet en plastique||clip et sachet plastique
 Clip en plastique||clip plastique
 Couvercle en métal||couvercle metal
 Couvercle en métal||couvercle métal
+Elo-Cap||elo cap
+Elo-Cap||elo-cap
+Elopak||elopak
 Etui en carton||etui carton
 Feuille en carton||feuille carton
 Film en plastique;Sachet en plastique||film et sachet plastique
 Film en plastique||film plastique
+Film plastique;Barquette plastique||barquette et film plastique
+HDPE||HDPE
 Opercule en aluminium||opercule aluminium
 Opercule en métal||opercule metal
 Opercule en métal||opercule métal
 Opercule en plastique||opercule plastique
+Pak-Lok||pak lok
+Pak-Lok||pak-lok
 Pot en carton||pot carton
 Pot en plastique||pot plastique
 Pot en verre||pot verre
+Pure-Cap||pure cap
+Pure-Cap||pure-cap
+Pure-Pak Classic aseptic||pure pak classic aseptic
+Pure-Pak Classic aseptic||pure-pak classic aseptic
+Pure-Pak Classic fresh||pure pak classic fresh
+Pure-Pak Classic fresh||pure-pak classic fresh
+Pure-Pak Classic||pure pak classic
+Pure-Pak Classic||pure-pak classic
+Pure-Pak Diamond aseptic||pure pak diamond aseptic
+Pure-Pak Diamond aseptic||pure-pak diamond aseptic
+Pure-Pak Diamond fresh||pure pak diamond fresh
+Pure-Pak Diamond fresh||pure-pak diamond fresh
+Pure-Pak Sense fresh||pure pak sense fresh
+Pure-Pak Sense fresh||pure-pak sense fresh
+Pure-Pak Sense||pure pak sense
+Pure-Pak Sense||pure-pak sense
+Pure-Pak||pure pak
+Pure-Pak||pure-pak
 Quadrette en plastique||quadrette plastique
 Sachet en plastique||sachet plastique
-Tetra Pak||tetra pak
-Tetra Pak||tetrapak
-Tetra Pack||tetra pack
-Tetra Pack||Tetrapack
+Tetra Brik Aseptic||tetra brik aseptic
 Tetra Brik||tetra brik
 Tetra Brik||tetrabrik
-Tetra Brik Aseptic||tetra brik aseptic
 Tetra Classic Aseptic||tetra classic aseptic
 Tetra Evero Aseptic||tetra evero aseptic
 Tetra Fino Aseptic||tetra fino aseptic
 Tetra Gemina Aseptic||tetra gemina aseptic
+Tetra Pack||Tetrapack
+Tetra Pack||tetra pack
+Tetra Pak||tetra pak
+Tetra Pak||tetrapak
+Tetra Prisma Aseptic||tetra prisma aseptic
 Tetra Recart||tetra recart
 Tetra Rex||tetra rex
-Tetra Wedge Aseptic||tetra wedge aseptic
-Tetra Prisma Aseptic||tetra prisma aseptic
 Tetra Top||tetra top
-Elopak||elopak
-Pak-Lok||pak-lok
-Pak-Lok||pak lok
-Elo-Cap||elo-cap
-Elo-Cap||elo cap
-Pure-Cap||pure-cap
-Pure-Cap||pure cap
-Pure-Pak||pure-pak
-Pure-Pak||pure pak
-Pure-Pak Sense||pure-pak sense
-Pure-Pak Sense||pure pak sense
-Pure-Pak Sense fresh||pure-pak sense fresh
-Pure-Pak Sense fresh||pure pak sense fresh
-Pure-Pak Classic||pure-pak classic
-Pure-Pak Classic||pure pak classic
-Pure-Pak Classic fresh||pure-pak classic fresh
-Pure-Pak Classic aseptic||pure-pak classic aseptic
-Pure-Pak Diamond fresh||pure-pak diamond fresh
-Pure-Pak Diamond aseptic||pure-pak diamond aseptic
-Pure-Pak Classic fresh||pure pak classic fresh
-Pure-Pak Classic aseptic||pure pak classic aseptic
-Pure-Pak Diamond fresh||pure pak diamond fresh
-Pure-Pak Diamond aseptic||pure pak diamond aseptic
-21-PAP||21-PAP
-21-PAP||PAP-21
-21-PAP||21-PAP
-05-PP||05-PP
-05-PP||PP-05
-HDPE||HDPE
+Tetra Wedge Aseptic||tetra wedge aseptic
 bouteille||bottled
 bouteille||embouteillé
