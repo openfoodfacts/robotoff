@@ -1,4 +1,5 @@
 Barquette en plastique||barquette plastique
+Film plastique;Barquette plastique||barquette et film plastique
 Bocal en verre||bocal verre
 Bouchon en plastique||bouchon plastique
 Bouteille en plastique||bouteille plastique
