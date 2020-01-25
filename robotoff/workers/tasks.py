@@ -103,7 +103,8 @@ def handle_image_flag_insights(insights: JSONType):
 
         if insight_subtype == "text":
             if insight["label"] == "beauty":
-                moved = move_to(barcode, ServerType.obf)
+                moved = False
+                # moved = move_to(barcode, ServerType.obf)
 
                 if moved:
                     insight["moved"] = "obf"
