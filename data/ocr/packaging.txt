@@ -3,12 +3,17 @@
 21-PAP||21-PAP
 21-PAP||21-PAP
 21-PAP||PAP-21
+Barquette en carton||barquette carton
+Barquette en plastique;Film en plastique||barquette et film plastique
 Barquette en plastique||barquette plastique
 Bocal en verre||bocal verre
 Bouchon en plastique||bouchon plastique
+Bouteille en plastique;Bouchon en plastique||bouteille et bouchon plastique
 Bouteille en plastique||bouteille plastique
 Bouteille en verre||bouteille verre
-Bouteille plastique;Bouchon plastique||bouteille et bouchon plastique
+Bouteille en verre||bouteilles verre
+Bouteille||bottled
+Bouteille||embouteillé
 Boîte en carton||boite carton
 Boîte en carton||boîte carton
 Boîte en métal||boite metal
@@ -18,8 +23,13 @@ Boîte en métal||boîte métal
 Boîte en plastique||boite plastique
 Boîte en plastique||boîte plastique
 Brique en carton||brique carton
+Capsule en métal||capsule metal
+Capsule en métal||capsule métal
+Capsule en métal||capsules metal
+Capsule en métal||capsules métal
 Clip en plastique;Sachet en plastique||clip et sachet plastique
 Clip en plastique||clip plastique
+Couvercle en fer||couvercle fer
 Couvercle en métal||couvercle metal
 Couvercle en métal||couvercle métal
 Elo-Cap||elo cap
@@ -27,9 +37,10 @@ Elo-Cap||elo-cap
 Elopak||elopak
 Etui en carton||etui carton
 Feuille en carton||feuille carton
+Film en plastique;Barquette en plastique||film et barquette plastique
 Film en plastique;Sachet en plastique||film et sachet plastique
 Film en plastique||film plastique
-Film plastique;Barquette plastique||barquette et film plastique
+Flacon en plastique||flacon plastique
 HDPE||HDPE
 Opercule en aluminium||opercule aluminium
 Opercule en métal||opercule metal
@@ -37,7 +48,9 @@ Opercule en métal||opercule métal
 Opercule en plastique||opercule plastique
 Pak-Lok||pak lok
 Pak-Lok||pak-lok
+Plaque en carton||plaque carton
 Pot en carton||pot carton
+Pot en plastique;Opercule en plastique||pot et opercule plastique
 Pot en plastique||pot plastique
 Pot en verre||pot verre
 Pure-Cap||pure cap
@@ -76,5 +89,3 @@ Tetra Recart||tetra recart
 Tetra Rex||tetra rex
 Tetra Top||tetra top
 Tetra Wedge Aseptic||tetra wedge aseptic
-bouteille||bottled
-bouteille||embouteillé
