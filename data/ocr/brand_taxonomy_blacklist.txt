@@ -13,6 +13,7 @@ cristal
 cucina
 delta
 deluxe
+demeter
 douceur
 edulis
 ensemble
