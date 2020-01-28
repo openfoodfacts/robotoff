@@ -219,11 +219,9 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             if not self.is_valid(barcode, emb_code, code_seen):
                 continue
 
-            source = insight["source"]
             yield {
-                "source_image": source,
+                "source_image": insight["source"],
                 "data": {
-                    "source": source,
                     "matcher_type": content["type"],
                     "raw": content["raw"],
                     "text": emb_code,
@@ -298,12 +296,11 @@ class LabelInsightImporter(OCRInsightImporter):
             if not self.is_valid(barcode, label_tag, label_seen):
                 continue
 
-            source = insight["source"]
             automatic_processing = content.pop("automatic_processing", None)
             insert = {
                 "value_tag": label_tag,
-                "source_image": source,
-                "data": {"source": source, **content},
+                "source_image": insight["source"],
+                "data": {**content},
             }
 
             if automatic_processing is not None:
@@ -503,10 +500,9 @@ class ProductWeightImporter(OCRInsightImporter):
         if not self.is_valid(barcode, content["value"]):
             return
 
-        source = insight["source"]
         yield {
-            "source_image": source,
-            "data": {"source": source, "notify": content["notify"], **content},
+            "source_image": insight["source"],
+            "data": {"notify": content["notify"], **content},
         }
 
     @staticmethod
@@ -563,10 +559,9 @@ class ExpirationDateImporter(OCRInsightImporter):
             if not self.is_valid(barcode):
                 continue
 
-            source = insight["source"]
             yield {
-                "source_image": source,
-                "data": {"source": source, "notify": content["notify"], **content},
+                "source_image": insight["source"],
+                "data": {"notify": content["notify"], **content},
             }
             break
 
@@ -633,12 +628,10 @@ class BrandInsightImporter(OCRInsightImporter):
             if not self.is_valid(barcode, brand_tag, brand_seen):
                 continue
 
-            source = insight["source"]
             insert = {
                 "value_tag": brand_tag,
-                "source_image": source,
+                "source_image": insight["source"],
                 "data": {
-                    "source": source,
                     "brand_tag": brand_tag,
                     "text": content.get("text"),
                     "data_source": content.get("data_source"),
@@ -693,12 +686,10 @@ class StoreInsightImporter(OCRInsightImporter):
             if not self.is_valid(store_tag, store_seen):
                 continue
 
-            source = insight["source"]
             insert = {
                 "value_tag": store_tag,
-                "source_image": source,
+                "source_image": insight["source"],
                 "data": {
-                    "source": source,
                     "store_tag": store_tag,
                     "text": content["text"],
                     "store": content["store"],
@@ -752,12 +743,10 @@ class PackagingInsightImporter(OCRInsightImporter):
             if not self.is_valid(packaging_tag, packaging_seen):
                 continue
 
-            source = insight["source"]
             insert = {
                 "value_tag": packaging_tag,
-                "source_image": source,
+                "source_image": insight["source"],
                 "data": {
-                    "source": source,
                     "packaging_tag": packaging_tag,
                     "text": content["text"],
                     "packaging": packaging,
