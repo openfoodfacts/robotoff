@@ -26,7 +26,7 @@ from robotoff.ml.category.neural.model import (
     ModelRegistry,
     filter_blacklisted_categories,
 )
-from robotoff.models import ProductInsight
+from robotoff.models import ProductInsight, UserAnnotation
 from robotoff.off import http_session
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
@@ -549,6 +549,12 @@ class DumpResource:
             resp.status = falcon.HTTP_204
 
 
+class UserResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response, username: str):
+        annotation_count = UserAnnotation.select().where(username=username).count()
+        resp.media = {"annotations": {"count": annotation_count}}
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -582,3 +588,4 @@ api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/dump", DumpResource())
+api.add_route("/api/v1/users/{username}", UserResource())
