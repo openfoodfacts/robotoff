@@ -25,7 +25,7 @@ setup(
         "psycopg2-binary>=2.8,<2.9",
         "elasticsearch==6.3.1",
         "Click==7.0",
-        "sentry-sdk==0.13.5",
+        "sentry-sdk==0.14.1",
         "Pillow>=5.0.0",
         "numpy>=1.16.0",
         "protobuf>=3.5.1",
