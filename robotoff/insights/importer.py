@@ -291,7 +291,7 @@ class LabelInsightImporter(OCRInsightImporter):
         for insight in insights:
             barcode = insight["barcode"]
             content = insight["content"]
-            label_tag = content["label_tag"]
+            label_tag = content.pop("label_tag")
 
             if not self.is_valid(barcode, label_tag, label_seen):
                 continue
@@ -348,7 +348,7 @@ class CategoryImporter(InsightImporter):
                 "barcode": barcode,
                 "value_tag": category,
                 "automatic_processing": False,
-                "data": {"category": category,},
+                "data": {},
             }
 
             if "category_depth" in insight:
@@ -632,7 +632,6 @@ class BrandInsightImporter(OCRInsightImporter):
                 "value_tag": brand_tag,
                 "source_image": insight["source"],
                 "data": {
-                    "brand_tag": brand_tag,
                     "text": content.get("text"),
                     "data_source": content.get("data_source"),
                     "brand": content["brand"],
@@ -690,7 +689,6 @@ class StoreInsightImporter(OCRInsightImporter):
                 "value_tag": store_tag,
                 "source_image": insight["source"],
                 "data": {
-                    "store_tag": store_tag,
                     "text": content["text"],
                     "store": content["store"],
                     "notify": content["notify"],
@@ -747,7 +745,6 @@ class PackagingInsightImporter(OCRInsightImporter):
                 "value_tag": packaging_tag,
                 "source_image": insight["source"],
                 "data": {
-                    "packaging_tag": packaging_tag,
                     "text": content["text"],
                     "packaging": packaging,
                     "notify": content["notify"],

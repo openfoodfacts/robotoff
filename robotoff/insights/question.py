@@ -148,8 +148,7 @@ class LabelQuestionFormatter(QuestionFormatter):
     question = "Does the product have this label?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.data["label_tag"]
-
+        value: str = insight.value_tag
         image_url = None
 
         if value in LABEL_IMAGES:
