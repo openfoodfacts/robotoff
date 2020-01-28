@@ -108,20 +108,18 @@ def notify_automatic_processing(insight: ProductInsight):
         text = (
             "The weight `{}` (match: `{}`) was automatically added to "
             "product {}"
-            "".format(insight.data["text"], insight.data["raw"], insight.barcode)
+            "".format(insight.value, insight.data["raw"], insight.barcode)
         )
 
     elif insight.type == InsightType.packager_code.name:
         text = "The `{}` packager code was automatically added to " "product {}".format(
-            insight.data["text"], insight.barcode
+            insight.value, insight.barcode
         )
 
     elif insight.type == InsightType.expiration_date.name:
         text = (
             "The expiration date `{}` (match: `{}`) was automatically added to "
-            "product {}".format(
-                insight.data["text"], insight.data["raw"], insight.barcode
-            )
+            "product {}".format(insight.value, insight.data["raw"], insight.barcode)
         )
 
     elif insight.type == InsightType.brand.name:
@@ -131,7 +129,7 @@ def notify_automatic_processing(insight: ProductInsight):
 
     elif insight.type == InsightType.store.name:
         text = "The `{}` store was automatically added to " "product {}".format(
-            insight.data["store"], insight.barcode
+            insight.value, insight.barcode
         )
 
     elif insight.type == InsightType.packaging.name:

@@ -115,7 +115,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        emb_code: str = insight.data["text"]
+        emb_code: str = insight.value
 
         product = get_product(insight.barcode, ["emb_codes"])
 
@@ -218,10 +218,9 @@ class ProductWeightAnnotator(InsightAnnotator):
         if quantity is not None:
             return ALREADY_ANNOTATED_RESULT
 
-        weight = insight.data["text"]
         update_quantity(
             insight.barcode,
-            weight,
+            insight.value,
             insight_id=insight.id,
             server_domain=insight.server_domain,
             session_cookie=session_cookie,
@@ -234,8 +233,6 @@ class ExpirationDateAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        expiration_date: str = insight.data["text"]
-
         product = get_product(insight.barcode, ["expiration_date"])
 
         if product is None:
@@ -248,7 +245,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
 
         update_expiration_date(
             insight.barcode,
-            expiration_date,
+            insight.value,
             insight_id=insight.id,
             server_domain=insight.server_domain,
             session_cookie=session_cookie,
@@ -260,8 +257,6 @@ class BrandAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        brand: str = insight.value
-
         product = get_product(insight.barcode, ["brands_tags"])
 
         if product is None:
@@ -269,7 +264,7 @@ class BrandAnnotator(InsightAnnotator):
 
         add_brand(
             insight.barcode,
-            brand,
+            insight.value,
             insight_id=insight.id,
             server_domain=insight.server_domain,
             session_cookie=session_cookie,
@@ -281,7 +276,6 @@ class StoreAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        store: str = insight.data["store"]
         store_tag: str = insight.value_tag
 
         product = get_product(insight.barcode, ["stores_tags"])
@@ -296,7 +290,7 @@ class StoreAnnotator(InsightAnnotator):
 
         add_store(
             insight.barcode,
-            store,
+            insight.value,
             insight_id=insight.id,
             server_domain=insight.server_domain,
             session_cookie=session_cookie,
@@ -308,7 +302,6 @@ class PackagingAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        packaging: str = insight.data["packaging"]
         packaging_tag: str = insight.value_tag
 
         product = get_product(insight.barcode, ["packaging_tags"])
@@ -323,7 +316,7 @@ class PackagingAnnotator(InsightAnnotator):
 
         add_packaging(
             insight.barcode,
-            packaging,
+            insight.value,
             insight_id=insight.id,
             server_domain=insight.server_domain,
             session_cookie=session_cookie,

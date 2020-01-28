@@ -227,7 +227,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
         for t in (
             ProductInsight.select(
-                ProductInsight.data["text"].as_json().alias("text")
+                ProductInsight.value
             ).where(
                 ProductInsight.type == self.get_type(),
                 ProductInsight.barcode == barcode,
@@ -249,7 +249,6 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                 "data": {
                     "matcher_type": content["type"],
                     "raw": content["raw"],
-                    "text": emb_code,
                     "notify": content["notify"],
                 },
             }
@@ -507,7 +506,7 @@ class ProductWeightImporter(OCRInsightImporter):
         if not self.is_valid(barcode, content["value"]):
             return
 
-        value = content["text"]
+        value = content.pop("text")
         yield {
             "source_image": insight["source"],
             "value": value,
@@ -560,7 +559,7 @@ class ExpirationDateImporter(OCRInsightImporter):
             if not self.is_valid(barcode):
                 continue
 
-            value = content["text"]
+            value = content.pop("text")
             yield {
                 "source_image": insight["source"],
                 "value": value,
@@ -712,18 +711,16 @@ class PackagingInsightImporter(OCRInsightImporter):
         for insight in insights:
             content = insight["content"]
             packaging_tag = content["packaging_tag"]
-            packaging = content["packaging"]
 
             if not self.is_valid(packaging_tag, seen_set):
                 continue
 
             insert = {
                 "value_tag": packaging_tag,
-                "value": packaging,
+                "value": content["packaging"],
                 "source_image": insight["source"],
                 "data": {
                     "text": content["text"],
-                    "packaging": packaging,
                     "notify": content["notify"],
                 },
             }
