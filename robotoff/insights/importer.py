@@ -2,7 +2,7 @@ import abc
 import datetime
 import pathlib
 import uuid
-from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple, Union
+from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
 from robotoff.insights._enum import InsightType
@@ -326,7 +326,7 @@ class LabelInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        if insight["data"]["label_tag"] in AUTHORIZED_LABELS:
+        if insight["value_tag"] in AUTHORIZED_LABELS:
             return False
 
         return True
