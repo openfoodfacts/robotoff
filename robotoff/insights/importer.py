@@ -223,7 +223,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
     ) -> Iterable[JSONType]:
-        code_seen: Set[str] = set()
+        seen_set: Set[str] = set()
 
         for t in (
             ProductInsight.select(
@@ -234,13 +234,13 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                 ProductInsight.server_domain == server_domain,
             )
         ).iterator():
-            code_seen.add(t.text)
+            seen_set.add(t.text)
 
         for insight in insights:
             content = insight["content"]
             emb_code = content["text"]
 
-            if not self.is_valid(barcode, emb_code, code_seen):
+            if not self.is_valid(barcode, emb_code, seen_set):
                 continue
 
             yield {
@@ -252,7 +252,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                     "notify": content["notify"],
                 },
             }
-            code_seen.add(emb_code)
+            seen_set.add(emb_code)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -270,24 +270,24 @@ class LabelInsightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.label.name
 
-    def is_valid(self, barcode: str, label_tag: str, label_seen: Set[str]) -> bool:
+    def is_valid(self, barcode: str, tag: str, seen_set: Set[str]) -> bool:
         product = self.product_store[barcode]
         product_labels_tags = getattr(product, "labels_tags", [])
 
-        if label_tag in product_labels_tags:
+        if tag in product_labels_tags:
             return False
 
-        if label_tag in label_seen:
+        if tag in seen_set:
             return False
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
         label_taxonomy: Taxonomy = get_taxonomy(InsightType.label.name)
 
-        if label_tag in label_taxonomy:
-            label_node: TaxonomyNode = label_taxonomy[label_tag]
+        if tag in label_taxonomy:
+            label_node: TaxonomyNode = label_taxonomy[tag]
 
-            to_check_labels = set(product_labels_tags).union(label_seen)
+            to_check_labels = set(product_labels_tags).union(seen_set)
             for other_label_node in (
                 label_taxonomy[to_check_label] for to_check_label in to_check_labels
             ):
@@ -305,14 +305,14 @@ class LabelInsightImporter(OCRInsightImporter):
 
         for insight in insights:
             content = insight["content"]
-            label_tag = content.pop("label_tag")
+            value_tag = content.pop("label_tag")
 
-            if not self.is_valid(barcode, label_tag, seen_set):
+            if not self.is_valid(barcode, value_tag, seen_set):
                 continue
 
             automatic_processing = content.pop("automatic_processing", None)
             insert = {
-                "value_tag": label_tag,
+                "value_tag": value_tag,
                 "source_image": insight["source"],
                 "data": {**content},
             }
@@ -321,7 +321,7 @@ class LabelInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = automatic_processing
 
             yield insert
-            seen_set.add(label_tag)
+            seen_set.add(value_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -580,20 +580,20 @@ class BrandInsightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.brand.name
 
-    def is_valid(self, barcode: str, brand_tag: str, brand_seen: Set[str]) -> bool:
+    def is_valid(self, barcode: str, tag: str, seen_set: Set[str]) -> bool:
         brand_prefix: Set[Tuple[str, str]] = BRAND_PREFIX_STORE.get()
         brand_blacklist: Set[str] = BRAND_BLACKLIST_STORE.get()
 
-        if brand_tag in brand_seen:
+        if tag in seen_set:
             return False
 
-        if brand_tag in brand_blacklist:
+        if tag in brand_blacklist:
             return False
 
-        if not in_barcode_range(brand_prefix, brand_tag, barcode):
+        if not in_barcode_range(brand_prefix, tag, barcode):
             logger.warn(
                 "Barcode {} of brand {} not in barcode "
-                "range".format(barcode, brand_tag)
+                "range".format(barcode, tag)
             )
             return False
 
@@ -615,13 +615,13 @@ class BrandInsightImporter(OCRInsightImporter):
 
         for insight in insights:
             content = insight["content"]
-            brand_tag = content["brand_tag"]
+            value_tag = content["brand_tag"]
 
-            if not self.is_valid(barcode, brand_tag, seen_set):
+            if not self.is_valid(barcode, value_tag, seen_set):
                 continue
 
             insert = {
-                "value_tag": brand_tag,
+                "value_tag": value_tag,
                 "value": content["brand"],
                 "source_image": insight["source"],
                 "data": {
@@ -650,11 +650,8 @@ class StoreInsightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.store.name
 
-    def is_valid(self, store_tag: str, store_seen: Set[str]) -> bool:
-        if store_tag in store_seen:
-            return False
-
-        return True
+    def is_valid(self, tag: str, seen_set: Set[str]) -> bool:
+        return tag not in seen_set
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
@@ -663,13 +660,13 @@ class StoreInsightImporter(OCRInsightImporter):
 
         for insight in insights:
             content = insight["content"]
-            store_tag = content["store_tag"]
+            value_tag = content["store_tag"]
 
-            if not self.is_valid(store_tag, seen_set):
+            if not self.is_valid(value_tag, seen_set):
                 continue
 
             insert = {
-                "value_tag": store_tag,
+                "value_tag": value_tag,
                 "value": content["store"],
                 "source_image": insight["source"],
                 "data": {
@@ -683,7 +680,7 @@ class StoreInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = content["automatic_processing"]
 
             yield insert
-            seen_set.add(store_tag)
+            seen_set.add(value_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -700,8 +697,8 @@ class PackagingInsightImporter(OCRInsightImporter):
     def get_type() -> str:
         return InsightType.packaging.name
 
-    def is_valid(self, packaging_tag: str, packaging_seen: Set[str]) -> bool:
-        return packaging_tag not in packaging_seen
+    def is_valid(self, tag: str, seen_set: Set[str]) -> bool:
+        return tag not in seen_set
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
@@ -710,13 +707,13 @@ class PackagingInsightImporter(OCRInsightImporter):
 
         for insight in insights:
             content = insight["content"]
-            packaging_tag = content["packaging_tag"]
+            value_tag = content["packaging_tag"]
 
-            if not self.is_valid(packaging_tag, seen_set):
+            if not self.is_valid(value_tag, seen_set):
                 continue
 
             insert = {
-                "value_tag": packaging_tag,
+                "value_tag": value_tag,
                 "value": content["packaging"],
                 "source_image": insight["source"],
                 "data": {
@@ -729,7 +726,7 @@ class PackagingInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = content["automatic_processing"]
 
             yield insert
-            seen_set.add(packaging_tag)
+            seen_set.add(value_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
