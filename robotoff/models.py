@@ -52,6 +52,7 @@ class ProductInsight(BaseModel):
     brands = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)
     value_tag = peewee.TextField(null=True, index=True)
+    value = peewee.TextField(null=True, index=True)
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False, index=True)
     server_domain = peewee.TextField(
@@ -84,6 +85,7 @@ class ProductInsight(BaseModel):
                 if self.process_after
                 else None,
                 "value_tag": self.value_tag,
+                "value": self.value,
                 "source_image": self.source_image,
                 "automatic_processing": self.automatic_processing,
                 "server_domain": self.server_domain,
