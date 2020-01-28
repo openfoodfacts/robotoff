@@ -7,7 +7,7 @@ from enum import Enum
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import ProductInsight
+from robotoff.models import ProductInsight, UserAnnotation
 from robotoff.off import (
     get_product,
     update_emb_codes,
@@ -20,6 +20,7 @@ from robotoff.off import (
     add_packaging,
 )
 from robotoff.utils import get_logger
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -59,6 +60,27 @@ UNKNOWN_INSIGHT_RESULT = AnnotationResult(
 )
 
 
+def extract_username(session_cookie: str) -> Optional[str]:
+    splitted = session_cookie.split("&")
+
+    if splitted:
+        is_next = False
+        for split in splitted:
+            if split == "user_id":
+                is_next = True
+                continue
+            elif is_next:
+                if split:
+                    return split
+                else:
+                    break
+
+    logger.warning(
+        "Unable to extract username from session cookie: {}".format(session_cookie)
+    )
+    return None
+
+
 class InsightAnnotator(metaclass=abc.ABCMeta):
     def annotate(
         self,
@@ -70,6 +92,12 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.annotation = annotation
         insight.completed_at = datetime.datetime.utcnow()
         insight.save()
+
+        if session_cookie:
+            username = extract_username(session_cookie)
+
+            if username:
+                UserAnnotation.create(insight=insight, username=username)
 
         if annotation == 1 and update:
             return self.update_product(insight, session_cookie=session_cookie)

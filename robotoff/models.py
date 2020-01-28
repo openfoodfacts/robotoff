@@ -1,4 +1,5 @@
-from typing import Iterable, Dict
+import datetime
+from typing import Iterable, Dict, Optional
 
 import peewee
 from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
@@ -99,4 +100,19 @@ class ProductInsight(BaseModel):
             }
 
 
-MODELS = [ProductInsight]
+class UserAnnotation(BaseModel):
+    insight = peewee.ForeignKeyField(
+        ProductInsight, primary_key=True, backref="user_annotation"
+    )
+    username = peewee.TextField(index=True)
+
+    @property
+    def annotation(self) -> Optional[int]:
+        return self.insight.annotation
+
+    @property
+    def completed_at(self) -> Optional[datetime.datetime]:
+        return self.insight.completed_at
+
+
+MODELS = [ProductInsight, UserAnnotation]
