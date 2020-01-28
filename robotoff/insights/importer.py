@@ -2,7 +2,7 @@ import abc
 import datetime
 import pathlib
 import uuid
-from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
+from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple, Union
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
 from robotoff.insights._enum import InsightType
@@ -16,6 +16,14 @@ from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
+
+
+def generate_seen_set_query(insight_type: str, barcode: str, server_domain: str):
+    return ProductInsight.select(ProductInsight.value_tag).where(
+        ProductInsight.type == insight_type,
+        ProductInsight.barcode == barcode,
+        ProductInsight.server_domain == server_domain,
+    )
 
 
 class InsightImporter(metaclass=abc.ABCMeta):
@@ -87,6 +95,22 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
             seen.add(value)
             yield item
+
+    @classmethod
+    def get_seen_set(
+        cls, barcode: str, server_domain: str) -> Set[str]:
+        seen_set: Set[str] = set()
+        query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
+
+        for t in query.iterator():
+            seen_set.add(t.value_tag)
+
+        return seen_set
+    
+    @classmethod
+    def get_seen_count(cls, barcode: str, server_domain: str) -> int:
+        query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
+        return query.count()
 
 
 GroupedByOCRInsights = Dict[str, List]
@@ -277,23 +301,13 @@ class LabelInsightImporter(OCRInsightImporter):
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
     ) -> Iterable[JSONType]:
-        label_seen: Set[str] = set()
-
-        for t in (
-            ProductInsight.select(ProductInsight.value_tag).where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-        ).iterator():
-            label_seen.add(t.value_tag)
+        seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
-            barcode = insight["barcode"]
             content = insight["content"]
             label_tag = content.pop("label_tag")
 
-            if not self.is_valid(barcode, label_tag, label_seen):
+            if not self.is_valid(barcode, label_tag, seen_set):
                 continue
 
             automatic_processing = content.pop("automatic_processing", None)
@@ -307,7 +321,7 @@ class LabelInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = automatic_processing
 
             yield insert
-            label_seen.add(label_tag)
+            seen_set.add(label_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -484,15 +498,7 @@ class ProductWeightImporter(OCRInsightImporter):
             )
             return
 
-        if (
-            ProductInsight.select()
-            .where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-            .count()
-        ):
+        if self.get_seen_count(barcode=barcode, server_domain=server_domain):
             return
 
         content = insight["content"]
@@ -542,15 +548,7 @@ class ExpirationDateImporter(OCRInsightImporter):
             )
             return
 
-        if (
-            ProductInsight.select()
-            .where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-            .count()
-        ):
+        if self.get_seen_count(barcode=barcode, server_domain=server_domain):
             return
 
         for insight in insights:
@@ -609,23 +607,13 @@ class BrandInsightImporter(OCRInsightImporter):
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
     ) -> Iterable[JSONType]:
-        brand_seen: Set[str] = set()
-
-        for t in (
-            ProductInsight.select(ProductInsight.value_tag).where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-        ).iterator():
-            brand_seen.add(t.value_tag)
+        seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
-            barcode = insight["barcode"]
             content = insight["content"]
             brand_tag = content["brand_tag"]
 
-            if not self.is_valid(barcode, brand_tag, brand_seen):
+            if not self.is_valid(barcode, brand_tag, seen_set):
                 continue
 
             insert = {
@@ -643,7 +631,7 @@ class BrandInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = content["automatic_processing"]
 
             yield insert
-            brand_seen.add(brand_tag)
+            seen_set.add(brand_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -667,22 +655,13 @@ class StoreInsightImporter(OCRInsightImporter):
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
     ) -> Iterable[JSONType]:
-        store_seen: Set[str] = set()
-
-        for t in (
-            ProductInsight.select(ProductInsight.value_tag).where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-        ).iterator():
-            store_seen.add(t.value_tag)
+        seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
             content = insight["content"]
             store_tag = content["store_tag"]
 
-            if not self.is_valid(store_tag, store_seen):
+            if not self.is_valid(store_tag, seen_set):
                 continue
 
             insert = {
@@ -699,7 +678,7 @@ class StoreInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = content["automatic_processing"]
 
             yield insert
-            store_seen.add(store_tag)
+            seen_set.add(store_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
@@ -722,23 +701,14 @@ class PackagingInsightImporter(OCRInsightImporter):
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
     ) -> Iterable[JSONType]:
-        packaging_seen: Set[str] = set()
-
-        for t in (
-            ProductInsight.select(ProductInsight.value_tag).where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-        ).iterator():
-            packaging_seen.add(t.value_tag)
+        seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
             content = insight["content"]
             packaging_tag = content["packaging_tag"]
             packaging = content["packaging"]
 
-            if not self.is_valid(packaging_tag, packaging_seen):
+            if not self.is_valid(packaging_tag, seen_set):
                 continue
 
             insert = {
@@ -755,7 +725,7 @@ class PackagingInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = content["automatic_processing"]
 
             yield insert
-            packaging_seen.add(packaging_tag)
+            seen_set.add(packaging_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
