@@ -174,7 +174,7 @@ class BrandQuestionFormatter(QuestionFormatter):
     question = "Does the product belong to this brand?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.data["brand"]
+        value: str = insight.value
         localized_question = self.translation_store.gettext(lang, self.question)
         source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
             insight.source_image

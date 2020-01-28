@@ -260,7 +260,7 @@ class BrandAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        brand: str = insight.data["brand"]
+        brand: str = insight.value
 
         product = get_product(insight.barcode, ["brands_tags"])
 

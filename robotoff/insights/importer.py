@@ -628,7 +628,6 @@ class BrandInsightImporter(OCRInsightImporter):
                 "data": {
                     "text": content.get("text"),
                     "data_source": content.get("data_source"),
-                    "brand": content["brand"],
                     "notify": content["notify"],
                 },
             }
