@@ -112,16 +112,15 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
         selected_images = product["selected_images"]
 
-        if "front" not in selected_images:
-            return None
+        for key in ("front", "ingredients", "nutrition"):
+            if key in selected_images:
+                images = selected_images[key]
 
-        front_images = selected_images["front"]
+                if "display" in images:
+                    display_images = list(images["display"].values())
 
-        if "display" in front_images:
-            display_images = list(front_images["display"].values())
-
-            if display_images:
-                return display_images[0]
+                    if display_images:
+                        return display_images[0]
 
         return None
 
