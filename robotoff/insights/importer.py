@@ -234,7 +234,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
                 ProductInsight.server_domain == server_domain,
             )
         ).iterator():
-            seen_set.add(t.text)
+            seen_set.add(t.value)
 
         for insight in insights:
             content = insight["content"]
