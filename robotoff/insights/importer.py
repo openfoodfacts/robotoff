@@ -635,7 +635,7 @@ class BrandInsightImporter(OCRInsightImporter):
                 insert["automatic_processing"] = content["automatic_processing"]
 
             yield insert
-            seen_set.add(brand_tag)
+            seen_set.add(value_tag)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
