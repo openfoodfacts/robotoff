@@ -551,7 +551,9 @@ class DumpResource:
 
 class UserStatisticsResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, username: str):
-        annotation_count = UserAnnotation.select().where(username=username).count()
+        annotation_count = (
+            UserAnnotation.select().where(UserAnnotation.username == username).count()
+        )
         resp.media = {"count": {"annotations": annotation_count}}
 
 
