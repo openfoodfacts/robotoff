@@ -50,6 +50,7 @@ patissier
 premium
 prima
 royal
+salada
 sante
 schweizer
 selection
