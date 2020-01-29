@@ -549,10 +549,10 @@ class DumpResource:
             resp.status = falcon.HTTP_204
 
 
-class UserResource:
+class UserStatisticsResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, username: str):
         annotation_count = UserAnnotation.select().where(username=username).count()
-        resp.media = {"annotations": {"count": annotation_count}}
+        resp.media = {"count": {"annotations": annotation_count}}
 
 
 cors = CORS(
@@ -588,4 +588,4 @@ api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/dump", DumpResource())
-api.add_route("/api/v1/users/{username}", UserResource())
+api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
