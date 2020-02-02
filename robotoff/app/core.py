@@ -26,7 +26,8 @@ def get_insights(
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     as_dict: bool = False,
-    count: Optional[int] = 25,
+    limit: Optional[int] = 25,
+    count: bool = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -56,8 +57,11 @@ def get_insights(
     if where_clauses:
         query = query.where(*where_clauses)
 
-    if count is not None:
-        query = query.limit(count)
+    if count:
+        return query.count()
+
+    if limit is not None:
+        query = query.limit(limit)
 
     if order_by is not None:
         if order_by == "random":

@@ -240,7 +240,7 @@ def transform_insight_iter(insights_iter: Iterable[Dict]):
 
 def dump_insights():
     logger.info("Dumping insights...")
-    insights_iter = get_insights(as_dict=True, annotated=None, count=None)
+    insights_iter = get_insights(as_dict=True, annotated=None, limit=None)
     insights_iter = transform_insight_iter(insights_iter)
     dumped = dump_jsonl(settings.INSIGHT_DUMP_PATH, insights_iter)
     logger.info("Dump finished, {} insights dumped".format(dumped))

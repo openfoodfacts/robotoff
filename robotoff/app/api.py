@@ -1,6 +1,7 @@
 import csv
 import io
 import itertools
+import functools
 import tempfile
 from typing import List, Optional
 
@@ -55,7 +56,7 @@ class ProductInsightResource:
         insights = [
             i.serialize()
             for i in get_insights(
-                barcode=barcode, server_domain=server_domain, count=None
+                barcode=barcode, server_domain=server_domain, limit=None
             )
         ]
 
@@ -92,7 +93,7 @@ class RandomInsightResource:
                 value_tag=value_tag,
                 order_by="random",
                 server_domain=server_domain,
-                count=1,
+                limit=1,
             )
         )
 
@@ -409,7 +410,7 @@ class ProductQuestionsResource:
                 barcode=barcode,
                 keep_types=keep_types,
                 server_domain=server_domain,
-                count=count,
+                limit=count,
             )
         )
 
@@ -444,7 +445,7 @@ class PopularQuestionsResource:
 def get_questions_resource_on_get(
     req: falcon.Request, resp: falcon.Response, order_by: str
 ):
-    response = {}
+    response: JSONType = {}
     count: int = req.get_param_as_int("count", min_value=1) or 1
     lang: str = req.get_param("lang", default="en")
     keep_types: Optional[List[str]] = req.get_param_as_list(
@@ -465,17 +466,18 @@ def get_questions_resource_on_get(
         # Limit the number of brands to prevent slow SQL queries
         brands = brands[:10]
 
-    insights = list(
-        get_insights(
-            keep_types=keep_types,
-            count=count,
-            country=country,
-            order_by=order_by,
-            server_domain=server_domain,
-            value_tag=value_tag,
-            brands=brands,
-        )
+    get_insights_ = functools.partial(
+        get_insights,
+        keep_types=keep_types,
+        country=country,
+        server_domain=server_domain,
+        value_tag=value_tag,
+        brands=brands,
+        order_by=order_by,
     )
+
+    insights = list(get_insights_(limit=count))
+    response["count"] = get_insights_(count=True)
 
     if not insights:
         response["questions"] = []
@@ -524,7 +526,7 @@ class DumpResource:
             keep_types=keep_types,
             annotated=annotated,
             value_tag=value_tag,
-            count=None,
+            limit=None,
         )
 
         writer = None
