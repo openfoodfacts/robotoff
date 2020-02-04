@@ -79,6 +79,58 @@ class ProductInsightDetail:
         resp.media = insight.serialize(full=True)
 
 
+class InsightCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            "insight_types", required=False
+        )
+        barcode: Optional[str] = req.get_param("barcode")
+        country: Optional[str] = req.get_param("country")
+        annotated: Optional[bool] = req.get_param_as_bool("annotated")
+        annotation: Optional[int] = req.get_param_as_int("annotation")
+        value_tag: str = req.get_param("value_tag")
+        brands = req.get_param_as_list("brands") or None
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        if brands is not None:
+            # Limit the number of brands to prevent slow SQL queries
+            brands = brands[:10]
+
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=keep_types,
+            country=country,
+            server_domain=server_domain,
+            value_tag=value_tag,
+            brands=brands,
+            annotated=annotated,
+            annotation=annotation,
+            barcode=barcode,
+        )
+
+        offset: int = (page - 1) * count
+        insights = [
+            i.serialize(full=True) for i in get_insights_(limit=count, offset=offset)
+        ]
+        response["count"] = get_insights_(count=True)
+
+        if not insights:
+            response["insights"] = []
+            response["status"] = "no_insights"
+        else:
+            response["insights"] = insights
+            response["status"] = "found"
+
+        resp.media = response
+
+
 class RandomInsightResource:
     def on_get(self, req, resp):
         insight_type: Optional[str] = req.get_param("type")
@@ -446,7 +498,7 @@ def get_questions_resource_on_get(
     req: falcon.Request, resp: falcon.Response, order_by: str
 ):
     response: JSONType = {}
-    count: int = req.get_param_as_int("count", min_value=1) or 1
+    count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
     keep_types: Optional[List[str]] = req.get_param_as_list(
         "insight_types", required=False
@@ -576,6 +628,7 @@ api.req_options.strip_url_path_trailing_slash = True
 api.req_options.auto_parse_qs_csv = True
 api.add_route("/api/v1/insights/{barcode}", ProductInsightResource())
 api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail())
+api.add_route("/api/v1/insights", InsightCollection())
 api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
 api.add_route("/api/v1/insights/import", InsightImporterResource())

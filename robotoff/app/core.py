@@ -22,11 +22,13 @@ def get_insights(
     country: str = None,
     brands: List[str] = None,
     annotated: Optional[bool] = False,
+    annotation: Optional[int] = None,
     order_by: Optional[str] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     as_dict: bool = False,
     limit: Optional[int] = 25,
+    offset: Optional[int] = None,
     count: bool = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
@@ -36,6 +38,9 @@ def get_insights(
 
     if annotated is not None:
         where_clauses.append(ProductInsight.annotation.is_null(not annotated))
+
+    if annotation is not None:
+        where_clauses.append(ProductInsight.annotation == annotation)
 
     if barcode:
         where_clauses.append(ProductInsight.barcode == barcode)
@@ -61,7 +66,7 @@ def get_insights(
         return query.count()
 
     if limit is not None:
-        query = query.limit(limit)
+        query = query.limit(limit).offset(offset)
 
     if order_by is not None:
         if order_by == "random":
