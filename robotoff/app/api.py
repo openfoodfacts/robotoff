@@ -52,7 +52,7 @@ TRANSLATION_STORE.load()
 class ProductInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         server_domain: Optional[str] = req.get_param("server_domain")
-        response = {}
+        response: JSONType = {}
         insights = [
             i.serialize()
             for i in get_insights(
