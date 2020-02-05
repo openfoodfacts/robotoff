@@ -26,6 +26,7 @@ def get_insights(
     order_by: Optional[str] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
+    reserved_barcode: Optional[bool] = None,
     as_dict: bool = False,
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
@@ -56,6 +57,9 @@ def get_insights(
 
     if brands:
         where_clauses.append(ProductInsight.brands.contains_any(brands))
+
+    if reserved_barcode is not None:
+        where_clauses.append(ProductInsight.reserved_barcode == reserved_barcode)
 
     query = ProductInsight.select()
 

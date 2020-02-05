@@ -66,6 +66,7 @@ class ProductInsight(BaseModel):
         index=True,
     )
     unique_scans_n = peewee.IntegerField(default=0, index=True)
+    reserved_barcode = peewee.BooleanField(default=False, index=True)
 
     def serialize(self, full: bool = False) -> JSONType:
         if full:

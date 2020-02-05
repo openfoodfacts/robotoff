@@ -507,6 +507,11 @@ def get_questions_resource_on_get(
     value_tag: str = req.get_param("value_tag")
     brands = req.get_param_as_list("brands") or None
     server_domain: Optional[str] = req.get_param("server_domain")
+    reserved_barcode: Optional[bool] = req.get_param_as_bool("reserved_barcode", default=False)
+
+    if reserved_barcode:
+        # Include all results, including non reserved barcodes
+        reserved_barcode = None
 
     if keep_types is None:
         keep_types = QuestionFormatterFactory.get_available_types()
@@ -526,6 +531,7 @@ def get_questions_resource_on_get(
         value_tag=value_tag,
         brands=brands,
         order_by=order_by,
+        reserved_barcode=reserved_barcode,
     )
 
     insights = list(get_insights_(limit=count))

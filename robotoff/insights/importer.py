@@ -26,6 +26,13 @@ def generate_seen_set_query(insight_type: str, barcode: str, server_domain: str)
     )
 
 
+def is_reserved_barcode(barcode: str) -> bool:
+    if barcode.startswith("0"):
+        barcode = barcode[1:]
+
+    return barcode.startswith("2")
+
+
 class InsightImporter(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
@@ -55,6 +62,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
         for insight in insights:
             barcode = insight["barcode"]
+            insight["reserved_barcode"] = is_reserved_barcode(barcode)
             insight["server_domain"] = server_domain
             insight["server_type"] = server_type
             insight["id"] = str(uuid.uuid4())
@@ -97,8 +105,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             yield item
 
     @classmethod
-    def get_seen_set(
-        cls, barcode: str, server_domain: str) -> Set[str]:
+    def get_seen_set(cls, barcode: str, server_domain: str) -> Set[str]:
         seen_set: Set[str] = set()
         query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
 
@@ -106,7 +113,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             seen_set.add(t.value_tag)
 
         return seen_set
-    
+
     @classmethod
     def get_seen_count(cls, barcode: str, server_domain: str) -> int:
         query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
@@ -226,9 +233,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         seen_set: Set[str] = set()
 
         for t in (
-            ProductInsight.select(
-                ProductInsight.value
-            ).where(
+            ProductInsight.select(ProductInsight.value).where(
                 ProductInsight.type == self.get_type(),
                 ProductInsight.barcode == barcode,
                 ProductInsight.server_domain == server_domain,
@@ -592,8 +597,7 @@ class BrandInsightImporter(OCRInsightImporter):
 
         if not in_barcode_range(brand_prefix, tag, barcode):
             logger.warn(
-                "Barcode {} of brand {} not in barcode "
-                "range".format(barcode, tag)
+                "Barcode {} of brand {} not in barcode " "range".format(barcode, tag)
             )
             return False
 
@@ -716,10 +720,7 @@ class PackagingInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["packaging"],
                 "source_image": insight["source"],
-                "data": {
-                    "text": content["text"],
-                    "notify": content["notify"],
-                },
+                "data": {"text": content["text"], "notify": content["notify"],},
             }
 
             if "automatic_processing" in content:
