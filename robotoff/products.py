@@ -6,7 +6,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import List, Iterable, Dict, Optional, Iterator
+from typing import List, Iterable, Dict, Optional, Iterator, Union
 
 import requests
 
@@ -195,7 +195,11 @@ class ProductStream:
         return ProductStream(filtered)
 
     def filter_number_field(
-        self, field: str, ref: [int, float], default: [int, float], operator: str = "eq"
+        self,
+        field: str,
+        ref: Union[int, float],
+        default: Union[int, float],
+        operator: str = "eq",
     ) -> "ProductStream":
         operator_ = ComparisonOperator.get_from_string(operator)
         filtered = (
