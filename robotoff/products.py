@@ -52,11 +52,15 @@ def save_product_dataset_etag(etag: str):
         return f.write(etag)
 
 
-def fetch_dataset(minify: bool = True):
+def fetch_dataset(minify: bool = True) -> bool:
     with tempfile.TemporaryDirectory() as tmp_dir:
         output_dir = pathlib.Path(tmp_dir)
         output_path = output_dir / "products.jsonl.gz"
         etag = download_dataset(output_path)
+
+        logger.info("Checking dataset file integrity")
+        if not is_valid_dataset(output_path):
+            return False
 
         if minify:
             minify_path = output_dir / "products-min.jsonl.gz"
@@ -71,6 +75,7 @@ def fetch_dataset(minify: bool = True):
 
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
+        return True
 
 
 def has_dataset_changed() -> bool:
@@ -99,6 +104,27 @@ def download_dataset(output_path: os.PathLike) -> str:
         shutil.copyfileobj(r.raw, f)
 
     return current_etag
+
+
+def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
+    """Check the dataset integrity: readable end to end and with a minimum number of products.
+    This is used to spot corrupted archive files."""
+    dataset = ProductDataset(dataset_path)
+    try:
+        count = dataset.count()
+    except Exception as e:
+        logger.error("Exception raised during dataset iteration", exc_info=e)
+        return False
+
+    if count < settings.DATASET_CHECK_MIN_PRODUCT_COUNT:
+        logger.error(
+            "Dataset has {} products, less than minimum of {} products".format(
+                count, settings.DATASET_CHECK_MIN_PRODUCT_COUNT
+            )
+        )
+        return False
+
+    return True
 
 
 class ComparisonOperator(enum.Enum):
@@ -260,6 +286,13 @@ class ProductDataset:
             iterator = jsonl_iter(json_path_str)
 
         return ProductStream(iterator)
+
+    def count(self) -> int:
+        count = 0
+        for product in self.stream():
+            count += 1
+
+        return count
 
     @classmethod
     def load(cls):

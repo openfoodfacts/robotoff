@@ -11,6 +11,7 @@ DATASET_PATH = DATASET_DIR / "en.openfoodfacts.org.products.csv"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
+DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
 INSIGHT_DUMP_PATH = DATASET_DIR / "insights.jsonl.gz"
 
 JSONL_DATASET_URL = (
