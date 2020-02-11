@@ -35,6 +35,10 @@ gusto
 ideal
 italia
 jacques
+kellog-s
+kelloggs
+kellogg
+kellogs
 label-rouge
 le-porc-francais
 leger
