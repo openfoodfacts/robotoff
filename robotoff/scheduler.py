@@ -1,4 +1,5 @@
 import datetime
+import functools
 import os
 import uuid
 from typing import Dict, Iterable
@@ -84,9 +85,7 @@ def refresh_insights(with_deletion: bool = False):
     )
 
     if dataset_datetime.date() != datetime_threshold.date():
-        logger.warn(
-            "Dataset version is not up to date, aborting insight " "removal job"
-        )
+        logger.warn("Dataset version is not up to date, aborting insight removal job")
         return
 
     validators: Dict[str, InsightValidator] = {}
@@ -262,7 +261,13 @@ def run():
     scheduler.add_job(
         download_product_dataset, "cron", day="*", hour="3", max_instances=1
     )
-    scheduler.add_job(refresh_insights, "cron", day="*", hour="4", max_instances=1)
+    scheduler.add_job(
+        functools.partial(refresh_insights, with_deletion=True),
+        "cron",
+        day="*",
+        hour="4",
+        max_instances=1,
+    )
     scheduler.add_job(
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
     )
