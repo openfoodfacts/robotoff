@@ -61,8 +61,8 @@ def find_stores(ocr_result: OCRResult) -> List[Dict]:
                 store, _ = SORTED_STORES[idx]
                 results.append(
                     {
-                        "store": store,
-                        "store_tag": get_store_tag(store),
+                        "value": store,
+                        "value_tag": get_store_tag(store),
                         "text": match_str,
                         "notify": store in NOTIFY_STORES,
                     }

@@ -648,7 +648,7 @@ class BrandInsightImporter(OCRInsightImporter):
 
 class StoreInsightImporter(OCRInsightImporter):
     def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["store_tag"])
+        yield from self._deduplicate_insights(data, lambda x: x["content"]["value_tag"])
 
     @staticmethod
     def get_type() -> str:
@@ -664,18 +664,17 @@ class StoreInsightImporter(OCRInsightImporter):
 
         for insight in insights:
             content = insight["content"]
-            value_tag = content["store_tag"]
+            value_tag = content["value_tag"]
 
             if not self.is_valid(value_tag, seen_set):
                 continue
 
             insert = {
                 "value_tag": value_tag,
-                "value": content["store"],
+                "value": content["value"],
                 "source_image": insight["source"],
                 "data": {
                     "text": content["text"],
-                    "store": content["store"],
                     "notify": content["notify"],
                 },
             }

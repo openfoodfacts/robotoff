@@ -276,8 +276,6 @@ class StoreAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, session_cookie: Optional[str] = None
     ) -> AnnotationResult:
-        store_tag: str = insight.value_tag
-
         product = get_product(insight.barcode, ["stores_tags"])
 
         if product is None:
@@ -285,7 +283,7 @@ class StoreAnnotator(InsightAnnotator):
 
         stores_tags: List[str] = product.get("stores_tags") or []
 
-        if store_tag in stores_tags:
+        if insight.value_tag in stores_tags:
             return ALREADY_ANNOTATED_RESULT
 
         add_store(
