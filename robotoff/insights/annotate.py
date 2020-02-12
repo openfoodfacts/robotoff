@@ -7,7 +7,7 @@ from enum import Enum
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import ProductInsight, UserAnnotation
+from robotoff.models import db, ProductInsight, UserAnnotation
 from robotoff.off import (
     get_product,
     update_emb_codes,
@@ -89,12 +89,14 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         update=True,
         session_cookie: Optional[str] = None,
     ) -> AnnotationResult:
-        insight.annotation = annotation
-        insight.completed_at = datetime.datetime.utcnow()
-        insight.save()
-
+        username: Optional[str] = None
         if session_cookie:
             username = extract_username(session_cookie)
+
+        with db.atomic():
+            insight.annotation = annotation
+            insight.completed_at = datetime.datetime.utcnow()
+            insight.save()
 
             if username:
                 UserAnnotation.create(insight=insight, username=username)
