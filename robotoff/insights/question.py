@@ -44,6 +44,7 @@ class AddBinaryQuestion(Question):
         insight: ProductInsight,
         image_url: Optional[str] = None,
         source_image_url: Optional[str] = None,
+        value_tag: Optional[str] = None,
     ):
         self.question: str = question
         self.value: str = value
@@ -52,6 +53,7 @@ class AddBinaryQuestion(Question):
         self.barcode: str = insight.barcode
         self.image_url: Optional[str] = image_url
         self.source_image_url: Optional[str] = source_image_url
+        self.value_tag: Optional[str] = value_tag
 
     def get_type(self):
         return "add-binary"
@@ -61,6 +63,7 @@ class AddBinaryQuestion(Question):
             "barcode": self.barcode,
             "type": self.get_type(),
             "value": self.value,
+            "value_tag": self.value_tag,
             "question": self.question,
             "insight_id": self.insight_id,
             "insight_type": self.insight_type,
@@ -88,14 +91,14 @@ class CategoryQuestionFormatter(QuestionFormatter):
     question = "Does the product belong to this category?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.value_tag
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
-        localized_value: str = taxonomy.get_localized_name(value, lang)
+        localized_value: str = taxonomy.get_localized_name(insight.value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
         source_image_url = self.get_source_image_url(insight.barcode)
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
+            value_tag=insight.value_tag,
             insight=insight,
             source_image_url=source_image_url,
         )
@@ -146,14 +149,14 @@ class LabelQuestionFormatter(QuestionFormatter):
     question = "Does the product have this label?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.value_tag
+        value_tag: str = insight.value_tag
         image_url = None
 
-        if value in LABEL_IMAGES:
-            image_url = LABEL_IMAGES[value]
+        if value_tag in LABEL_IMAGES:
+            image_url = LABEL_IMAGES[value_tag]
 
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.label.name)
-        localized_value: str = taxonomy.get_localized_name(value, lang)
+        localized_value: str = taxonomy.get_localized_name(value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
         source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
             insight.source_image
@@ -162,6 +165,7 @@ class LabelQuestionFormatter(QuestionFormatter):
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
+            value_tag=value_tag,
             insight=insight,
             image_url=image_url,
             source_image_url=source_image_url,
@@ -180,6 +184,7 @@ class BrandQuestionFormatter(QuestionFormatter):
         return AddBinaryQuestion(
             question=localized_question,
             value=insight.value,
+            value_tag=insight.value_tag,
             insight=insight,
             source_image_url=source_image_url,
         )
