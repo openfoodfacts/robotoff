@@ -63,7 +63,6 @@ class AddBinaryQuestion(Question):
             "barcode": self.barcode,
             "type": self.get_type(),
             "value": self.value,
-            "value_tag": self.value_tag,
             "question": self.question,
             "insight_id": self.insight_id,
             "insight_type": self.insight_type,
