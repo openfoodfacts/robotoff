@@ -12,7 +12,7 @@ Bouteille en plastique;Bouchon en plastique||bouteille et bouchon plastique
 Bouteille en plastique||bouteille plastique
 Bouteille en verre||bouteille verre
 Bouteille en verre||bouteilles verre
-Bouteille||bottled
+en:Bottle||bottled
 Bouteille||embouteillé
 Boîte en carton||boite carton
 Boîte en carton||boîte carton
