@@ -122,6 +122,7 @@ def delete_product_insights(barcode: str, server_domain: str):
             ProductInsight.delete()
             .where(
                 ProductInsight.barcode == barcode,
+                ProductInsight.annotation.is_null(),
                 ProductInsight.server_domain == server_domain,
             )
             .execute()
