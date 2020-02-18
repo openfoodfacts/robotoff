@@ -82,7 +82,7 @@ AUTHORIZED_LABELS = {
     "en:made-in-italy",
     "en:made-in-belgium",
     "en:made-in-germany",
-    "en:made-in-swiss",
+    "en:made-in-switzerland",
     "en:made-in-the-eu",
     "en:australian-made",
     "en:gluten-free",
