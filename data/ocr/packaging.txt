@@ -3,6 +3,8 @@
 21-PAP||21-PAP
 21-PAP||21-PAP
 21-PAP||PAP-21
+es:Envase en cartón||envase cartón
+es:Envase en metal||envase metal
 fr:Barquette en carton||barquette carton
 fr:Barquette en plastique;Film en plastique||barquette et film plastique
 fr:Barquette en plastique||barquette plastique
