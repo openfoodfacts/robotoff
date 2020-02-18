@@ -103,6 +103,9 @@ en:palm-oil-free||sans huile de palme
 en:palm-oil-free||senza olio di palma
 en:palm-oil-free||sin aceite de palma
 en:palm-oil-free||без пальмового масла
+en:sustainable-palm-oil||huile de palme certifiée durable
+en:sustainable-palm-oil||huile de palme certifiee durable
+en:sustainable-palm-oil||sustainable palm oil
 en:sustainable-seafood-msc||www.msc.org
 en:utz-certified||utz certified
 en:vegan||vegan
