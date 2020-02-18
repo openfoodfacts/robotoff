@@ -70,16 +70,6 @@ en:made-in-the-eu||hecho en la ue
 en:made-in-the-eu||hergestellt in der eu
 en:made-in-the-eu||made in the eu
 en:max-havelaar||max havelaar
-en:natural-flavors||Luontaisia aromeja
-en:natural-flavors||Sabores naturais
-en:natural-flavors||aromas naturales
-en:natural-flavors||aromat naturalny
-en:natural-flavors||aromes naturels
-en:natural-flavors||arômes naturels
-en:natural-flavors||natuurlijke aromas
-en:natural-flavors||natürliche aromen
-en:natural-flavors||חומרי טעם טבעיים
-en:natural-flavors||ใช้สีธรรมชาติ
 en:no-added-sugar||no added sugar
 en:no-added-sugar||ohne zuckerzusatz
 en:no-added-sugar||sans sucre ajoute
