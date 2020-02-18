@@ -6,11 +6,11 @@
 es:Envase en cartón||envase cartón
 es:Envase en metal||envase metal
 fr:Barquette en carton||barquette carton
-fr:Barquette en plastique;Film en plastique||barquette et film plastique
+fr:Barquette en plastique;fr:Film en plastique||barquette et film plastique
 fr:Barquette en plastique||barquette plastique
 fr:Bocal en verre||bocal verre
 fr:Bouchon en plastique||bouchon plastique
-fr:Bouteille en plastique;Bouchon en plastique||bouteille et bouchon plastique
+fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastique
 fr:Bouteille en plastique||bouteille plastique
 fr:Bouteille en verre||bouteille verre
 fr:Bouteille en verre||bouteilles verre
@@ -29,7 +29,7 @@ fr:Capsule en métal||capsule metal
 fr:Capsule en métal||capsule métal
 fr:Capsule en métal||capsules metal
 fr:Capsule en métal||capsules métal
-fr:Clip en plastique;Sachet en plastique||clip et sachet plastique
+fr:Clip en plastique;fr:Sachet en plastique||clip et sachet plastique
 fr:Clip en plastique||clip plastique
 fr:Couvercle en fer||couvercle fer
 fr:Couvercle en métal||couvercle metal
@@ -39,8 +39,8 @@ Elo-Cap||elo-cap
 Elopak||elopak
 fr:Etui en carton||etui carton
 fr:Feuille en carton||feuille carton
-fr:Film en plastique;Barquette en plastique||film et barquette plastique
-fr:Film en plastique;Sachet en plastique||film et sachet plastique
+fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
+fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
 fr:Film en plastique||film plastique
 fr:Flacon en plastique||flacon plastique
 HDPE||HDPE
@@ -52,7 +52,7 @@ Pak-Lok||pak lok
 Pak-Lok||pak-lok
 fr:Plaque en carton||plaque carton
 fr:Pot en carton||pot carton
-fr:Pot en plastique;Opercule en plastique||pot et opercule plastique
+fr:Pot en plastique;fr:Opercule en plastique||pot et opercule plastique
 fr:Pot en plastique||pot plastique
 fr:Pot en verre||pot verre
 Pure-Cap||pure cap
