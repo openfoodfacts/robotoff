@@ -1,6 +1,6 @@
 import enum
 import re
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Tuple, Union
 
 import requests
 
@@ -8,11 +8,29 @@ from robotoff import settings
 from robotoff.utils import get_logger
 
 
+class OFFAuthentication:
+    def __init__(
+        self,
+        session_cookie: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+    ):
+        if session_cookie is None and username is None and password is None:
+            raise ValueError(
+                "one of session_cookie or credentials (username and password) must be provided"
+            )
+
+        self.session_cookie = session_cookie
+        self.username = username
+        self.password = password
+
+
 class ServerType(enum.Enum):
     off = 1
     obf = 2
     opff = 3
     opf = 4
+
 
 http_session = requests.Session()
 USER_AGENT_HEADERS = {
@@ -274,7 +292,7 @@ def add_packaging(
 def update_product(
     params: Dict,
     server_domain: Optional[str] = None,
-    session_cookie: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
 ):
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -283,21 +301,27 @@ def update_product(
 
     comment = params.get("comment")
     cookies = None
-    if session_cookie:
-        cookies = {
-            "session": session_cookie,
-        }
+
+    if auth is not None:
+        if auth.session_cookie:
+            cookies = {
+                "session": auth.session_cookie,
+            }
+        elif auth.username:
+            params["user_id"] = auth.username
+            params["password"] = auth.password
     else:
         params.update(AUTH_DICT)
+
         if comment:
             params["comment"] = comment + " (automated edit)"
 
-    auth = None
+    request_auth: Optional[Tuple[str, str]] = None
     if server_domain.endswith("openfoodfacts.net"):
         # dev environment requires authentication
-        auth = ("off", "off")
+        request_auth = ("off", "off")
 
-    r = http_session.get(url, params=params, auth=auth, cookies=cookies)
+    r = http_session.get(url, params=params, auth=request_auth, cookies=cookies)
 
     r.raise_for_status()
     json = r.json()
@@ -321,4 +345,4 @@ def move_to(barcode: str, to: ServerType) -> bool:
     }
     r = http_session.get(url, params=params)
     data = r.json()
-    return data['status'] == 1
+    return data["status"] == 1

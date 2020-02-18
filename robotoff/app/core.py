@@ -8,6 +8,7 @@ from robotoff.insights.annotate import (
     UNKNOWN_INSIGHT_RESULT,
 )
 from robotoff.models import ProductInsight
+from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
 import peewee
@@ -89,7 +90,7 @@ def save_insight(
     insight_id: str,
     annotation: int,
     update: bool = True,
-    session_cookie: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
 ) -> AnnotationResult:
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
@@ -103,6 +104,4 @@ def save_insight(
         return ALREADY_ANNOTATED_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(
-        insight, annotation, update, session_cookie=session_cookie
-    )
+    return annotator.annotate(insight, annotation, update, auth=auth)
