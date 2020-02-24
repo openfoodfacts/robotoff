@@ -136,7 +136,6 @@ amandin||Amandín
 amanhecer||Amanhecer
 amazonas-rainforest-product||Amazonas Rainforest Product
 ambar||Ambar
-ambiente||Ambiente
 ambrosi||Ambrosi
 ambrozia||Ambrozia
 amecke||Amecke
@@ -197,7 +196,6 @@ apidis||Apidis
 apiflor||Apiflor
 apis||Apis
 apollo||Apollo
-appel||Appel
 apple-eve||Apple & Eve
 applegate||Applegate
 applegate-naturals||Applegate Naturals
@@ -277,7 +275,6 @@ auchan||Auchan
 auchan-baby||Auchan Baby
 auchan-bio||Auchan Bio
 auchan-production||Auchan Production
-aucune||Aucune
 august-storck-kg||August Storck Kg
 auguste-mugniot||Auguste Mugniot
 aunt-jemima||Aunt Jemima
@@ -292,7 +289,6 @@ autour-du-riz||Autour du riz
 auvernou||Auvernou
 aux-caprices-de-jess||Aux Caprices de Jess
 auzier-chabernac||Auzier Chabernac
-avenue||Avenue
 aveve||Aveve
 avril||Avril
 axelrod||Axelrod
@@ -622,7 +618,6 @@ boots||Boots
 bord-a-bord||Bord à Bord
 borde||Borde
 bordeau-chesnel||Bordeau Chesnel
-bordeaux||Bordeaux
 borden||Borden
 borden-dairy-company||Borden Dairy Company
 bordier||Bordier
@@ -641,7 +636,6 @@ boulder-organic||Boulder Organic!
 bounty||Bounty
 bouquet||Bouquet
 bouquet-bio||Bouquet Bio
-bourbon||Bourbon
 bourdon||Bourdon
 bourgain-et-fils||Bourgain et Fils
 boursin||Boursin
@@ -901,7 +895,6 @@ charles-vignon||Charles Vignon
 charms||Charms
 charms-company||Charms Company
 chase-and-poe-candy-company||Chase And Poe Candy Company
-chateau||Château
 chaudfontaine||Chaudfontaine
 chaumes||Chaumes
 chavroux||Chavroux
@@ -975,7 +968,6 @@ clair-de-lorraine||Clair De Lorraine
 clancy-s||Clancy's
 clarkys||Clarkys
 clasen-bio||Clasen Bio
-classic||Classic
 classico||Classico
 claude-leger||Claude Léger
 claviere||Clavière
@@ -1052,7 +1044,6 @@ comptoir-du-grain||Comptoir du Grain
 comptoir-sushi||Comptoir Sushi
 comptoirs-compagnies||Comptoirs & Compagnies
 comptoirs-et-compagnies||Comptoirs et compagnies
-comte||Comté
 comte-de-la-seynie||Comte De La Seynie
 comtesse-du-barry||Comtesse du Barry
 conad||Conad
@@ -1076,7 +1067,6 @@ conserverie-des-saveurs||Conserverie des Saveurs
 conserverie-parmentier||Conserverie parmentier
 conserverie-st-christophe||Conserverie St Christophe
 consilia||Consilia
-consum||Consum
 contadina||Contadina
 continental-bakeries||Continental Bakeries
 continental-foods||Continental Foods
@@ -1155,8 +1145,6 @@ creperie-loheac||Crêperie Lohéac
 crescent||Crescent
 crespo||Crespo
 crich||Crich
-crisp||Crisp
-cristal||Cristal
 cristaline||Cristaline
 croc-frais||Croc frais
 croc-me||Croc Me
@@ -1183,7 +1171,6 @@ crystal-geyser||Crystal Geyser
 crystal-geyser-water-company||Crystal Geyser Water Company
 crystal-light||Crystal Light
 cuca||Cuca
-cucina||Cucina
 cucina-antica||Cucina Antica
 cuetara||Cuétara
 cuisine-evasion||Cuisine evasion
@@ -1306,12 +1293,9 @@ delouis||Delouis
 delouis-fils||Delouis fils
 delpeyrat||Delpeyrat
 delpierre||Delpierre
-delta||Delta
-deluxe||Deluxe
 delverde||Delverde
 demet-s||Demet's
 demet-s-candy-company||Demet's Candy Company
-demeter||Demeter
 den-gamle-fabrik||Den Gamle Fabrik
 denner||Denner
 dennree||Dennree
@@ -1383,7 +1367,6 @@ dorset-cereals||Dorset cereals
 dos-pinos||Dos Pinos
 double-rainbow||Double Rainbow
 douce-france||Douce France
-douceur||Douceur
 douceur-du-verger||Douceur du Verger
 dounia-halal||Dounia Halal
 douwe-egberts||Douwe Egberts
@@ -1465,7 +1448,6 @@ eden-gourmet||Eden Gourmet
 ederki||Ederki
 edgell||Edgell
 edmond-fallot||Edmond Fallot
-edulis||Edulis
 edward-sons||Edward & Sons
 ehrmann||Ehrmann
 eicotech-corporation||Eicotech Corporation
@@ -1527,7 +1509,6 @@ ener-bio||Ener Bio
 enerbio||EnerBio
 engine-2||Engine 2
 enjoy-life||Enjoy Life
-ensemble||Ensemble
 ensoleil-ade||Ensoleil'ade
 entenmann-s||Entenmann's
 entertainment-production-house-inc||Entertainment Production House Inc.
@@ -1583,34 +1564,28 @@ euromadi-iberica-s-a||Euromadi Ibérica S.A.
 european-gourmet-bakery||European Gourmet Bakery
 ever-fresh-juice-co||Ever Fresh Juice Co
 evernat||Evernat
-everyday||Everyday
 evian||Evian
 evol||Evol
 evolution-fresh||Evolution Fresh
-excellence||Excellence
 excelsior||Excelsior
 exki||Exki
 exotic-food||Exotic Food
 expert-club||Expert Club
 explore-asian||Explore Asian
 exquisa||Exquisa
-extra||Extra
 extra-special||Extra Special
 extreme||Extrême
 eyguebelle||Eyguebelle
 f-lli-de-cecco-di-filippo-fara-s-martino-s-p-a||F.Lli De Cecco Di Filippo Fara S. Martino S.P.A.
 fabi-saa||Fabi-Saa
-fabrication-artisanale||Fabrication Artisanale
 facundo||Facundo
 fage||Fage
 fair||Fair
 fairglobe||Fairglobe
 fairgrounds||Fairgrounds
-fairtrade||Fairtrade
 fairway||Fairway
 fairway-operating-corp||Fairway Operating Corp.
 falsbourg||Falsbourg
-familia||Familia
 famille-mary||Famille Mary
 famille-michaud||Famille Michaud
 famille-perronneau||Famille Perronneau
@@ -1799,7 +1774,6 @@ frico||Frico
 friendly-farms||Friendly Farms
 friendly-s||Friendly's
 frieslandcampina||FrieslandCampina
-frigo||Frigo
 frit-ravich||Frit Ravich
 frito-lay||Frito Lay
 frito-lay-company||Frito-Lay Company
@@ -1827,7 +1801,6 @@ fruistar||Fruistar
 fruit-d-or||Fruit d'Or
 fruit-shoot||Fruit Shoot
 fruit2o||Fruit2o
-fruite||Fruité
 fruits-rouges-co||Fruits Rouges & Co
 frutobos||Frutobos
 fuchs||Fuchs
@@ -1944,7 +1917,6 @@ gold||Gold
 gold-emblem||Gold Emblem
 gold-emblem-abound||Gold Emblem Abound
 goldahren||Goldähren
-golden||Golden
 golden-boy||Golden Boy
 golden-bridge||Golden Bridge
 golden-circle||Golden Circle
@@ -1970,7 +1942,6 @@ gorton-s-inc||Gorton's Inc.
 gorton-s-of-gloucester||Gorton's Of Gloucester
 gotxoki||Gotxoki
 goulibeur||Goulibeur
-gourmet||Gourmet
 gourmet-du-village||Gourmet Du Village
 gourmet-garden||Gourmet Garden
 gourmet-gift-concepts||Gourmet Gift Concepts
@@ -1999,7 +1970,6 @@ granforno||Granforno
 granini||Granini
 granja-san-francisco||Granja san francisco
 granny-s-secret||Granny's Secret
-granola||Granola
 granoro||Granoro
 granovita||GranoVita
 granvita||GRANVITA
@@ -2016,7 +1986,6 @@ green-shoot||Green Shoot
 green-way||Green Way
 greenbrier-international||Greenbrier International
 grefusa||Grefusa
-grenade||Grenade
 gretchen-s-shoebox-express||Gretchen's Shoebox Express
 griesson||Griesson
 grillon-d-or||Grillon d'Or
@@ -2043,7 +2012,6 @@ gummi-bears||Gummi Bears
 gunnar-dafgard||Gunnar Dafgård
 gunz||Gunz
 gustadea||Gustadéa
-gusto||Gusto
 gusto-debrio||Gusto DeBrio
 gut-bartenhof||Gut Bartenhof
 gut-gunstig||Gut & Günstig
@@ -2250,11 +2218,9 @@ ibsa||Ibsa
 ica-basic||ICA Basic
 ica-i♥eco||ICA i♥eco
 ice-chips-candy||Ice Chips Candy
-ice-tea||Ice Tea
 iceland||Iceland
 id-halal||Id Halal
 idahoan||Idahoan
-ideal||Idéal
 idenat||Idénat
 ifa-eliges||Ifa Eliges
 ifantis||Ifantis
@@ -2316,7 +2282,6 @@ issimo||Issimo
 istara||Istara
 iswari||Iswari
 ital-passion||Ital Passion
-italia||Italia
 italiamo||Italiamo
 italians-do-it-better||Italians do it better
 italpasta||Italpasta
@@ -2339,7 +2304,6 @@ jackie-s-jams-inc||Jackie's Jams Inc.
 jacob-s||Jacob's
 jacobs||Jacobs
 jacoby||Jacoby
-jacques||Jacques
 jacques-gonidec||Jacques Gonidec
 jacques-menou||Jacques Menou
 jacquet||Jacquet
@@ -2476,11 +2440,7 @@ kc-masterpiece||Kc Masterpiece
 keebler||Keebler
 keesbo||Keesbo
 kelkin||Kelkin
-kellog-s||Kellog's
-kellogg||Kellogg
 kellogg-s||Kellogg's
-kelloggs||Kelloggs
-kellogs||Kellogs
 kelly-s||Kelly's
 kemps||Kemps
 kemps-llc||Kemps Llc
@@ -2754,7 +2714,6 @@ la-villa||La Villa
 la-vosgienne||La Vosgienne
 la-william||La William
 la-yogurt||La Yogurt
-label-rouge||Label Rouge
 labeyrie||Labeyrie
 laboratoires-vitarmonyl||Laboratoires vitarmonyl
 labree-s-bakery-inc||Labree's Bakery Inc
@@ -2869,7 +2828,6 @@ le-petit-duc||Le Petit Duc
 le-petit-marseillais||Le petit marseillais
 le-picoreur||Le Picoreur
 le-porc-de-nos-villages||Le porc de nos villages
-le-porc-francais||Le Porc Français
 le-prix-gagnant||Le prix gagnant
 le-reflexe-bio||Le Réflexe Bio
 le-revelois||Le Revelois
@@ -2903,7 +2861,6 @@ leerdammer||Leerdammer
 leffe||Leffe
 legal||Legal
 legendes-gourmandes||Légendes Gourmandes
-leger||Léger
 legumor||Légumor
 lehmann||Lehmann
 leibniz||Leibniz
@@ -3134,7 +3091,6 @@ macro||Macro
 madame-gougousse||Madame Gougousse
 made-good||Made Good
 made-in-nature||Made In Nature
-made-with||Made With
 madhava||Madhava
 madrange||Madrange
 mae-ploy||Mae Ploy
@@ -3240,7 +3196,6 @@ mariage-freres||Mariage Frères
 mariani||Mariani
 maribel||Maribel
 marich-confectionery-company||Marich Confectionery Company
-marie||Marie
 marie-amelie||Marie-Amélie
 marie-dolin||Marie dolin
 marie-morin||Marie Morin
@@ -3353,7 +3308,6 @@ meray||Meray
 merba||Merba
 mercadier||Mercadier
 mercadona||Mercadona
-merci||Merci
 mere-lalie||Mère Lalie
 mere-poulard||Mère Poulard
 mericq||Mericq
@@ -3592,7 +3546,6 @@ natur-compagnie||Natur compagnie
 natur-gut||Natur Gut
 natur-lieblinge||Natur Lieblinge
 natur-pur||Natur*Pur
-natura||Natura
 natura-nuova||Natura Nuova
 naturafarm||Naturafarm
 natural-cool||Natural Cool
@@ -3652,7 +3605,6 @@ nestea||Nestea
 nestle||Nestlé
 nestle-bebe||Nestlé bébé
 nestle-dessert||Nestlé Dessert
-netto||Netto
 neuhaus||Neuhaus
 new-century-snacks||New Century Snacks
 new-england-confectionery-company-inc||New England Confectionery Company Inc.
@@ -3775,14 +3727,12 @@ orca-beverage-co||Orca Beverage Co.
 orchard-valley-harvest||Orchard Valley Harvest
 oregon-growers||Oregon Growers
 oreo||Oreo
-organic||Organic
 organic-prairie||Organic Prairie
 organic-valley||Organic Valley
 organic-ville||Organic Ville
 organics||Organics
 orgran||Orgran
 oriental-viandes||Oriental Viandes
-origen||Origen
 original-gourmet-food-company-inc||Original Gourmet Food Company Inc.
 original-wagner-steinofen-pizza||Original Wagner Steinofen Pizza
 orion||Orion
@@ -3827,7 +3777,6 @@ p-tit-deli||P'tit Déli
 p-tit-gourmand||P'tit Gourmand
 p-tit-louis||P'tit Louis
 pacari||Pacari
-pacific||Pacific
 paesana||Paesana
 pagen||Pagen
 pages||Pagès
@@ -3895,7 +3844,6 @@ patak-s||Patak's
 patisdecor||Patisdecor
 patisserie-des-flandres||Pâtisserie des Flandres
 patisseries-gourmandes||Patisseries gourmandes
-patissier||Patissier
 patrelle||Patrelle
 patrimoine-gourmand||Patrimoine Gourmand
 patros||Patros
@@ -4065,7 +4013,6 @@ premibio||Premibio
 premier-nutrition-corporation||Premier Nutrition Corporation
 premier-protein||Premier Protein
 premio||Premio
-premium||Premium
 president||President
 president-professionnel||Président Professionnel
 president-s-choice||President's Choice
@@ -4078,7 +4025,6 @@ price-chopper||Price Chopper
 price-chopper-supermarkets||Price Chopper Supermarkets
 price-first||Price First
 price-rite||Price Rite
-prima||Prima
 primadonna||Primadonna
 primaflor||Primaflor
 primana||Primana
@@ -4328,7 +4274,6 @@ roundy-s-select||Roundy's Select
 roundys||Roundys
 rovagnati||Rovagnati
 rowse||Rowse
-royal||Royal
 royal-bourbon||Royal Bourbon
 royal-dansk||Royal Dansk
 royal-family||Royal Family
@@ -4399,7 +4344,6 @@ saint-mamet||Saint Mamet
 sainte-lucie||Sainte Lucie
 saitaku||Saitaku
 saiwa||Saiwa
-salada||Salada
 saladinettes||Saladinettes
 salaisons-du-maconnais||Salaisons du Mâconnais
 salakis||Salakis
@@ -4435,7 +4379,6 @@ santa-clara||Santa Clara
 santa-maria||Santa Maria
 santa-s-treats||Santa's Treats
 santal||Santal
-sante||Santé
 sante-nat||Santé Nat
 santiveri||Santiveri
 sapori-dintorni||Sapori Dintorni
@@ -4502,7 +4445,6 @@ schwartz||Schwartz
 schwartz-brothers-bakery||Schwartz Brothers Bakery
 schwarz-beteiligungs-gmbh||Schwarz Beteiligungs GmbH
 schwarzwaldmilch||Schwarzwaldmilch
-schweizer||Schweizer
 schweppes||Schweppes
 scitec-nutrition||Scitec nutrition
 scott-s||Scott's
@@ -4524,7 +4466,6 @@ seggiano||Seggiano
 seitenbacher||Seitenbacher
 select||Select
 select-maree||Select Marée
-selection||Selection
 selection-de-nos-regions||Sélection de nos Régions
 selection-des-mousquetaires||Sélection des Mousquetaires
 selection-intermarche||Sélection Intermarché
@@ -4539,7 +4480,6 @@ sera||Sera
 serano||Serano
 serebis||Serebis
 serpis||Serpis
-serrano||Serrano
 settele||Settele
 setton-farms||Setton Farms
 setton-international-foods-inc||Setton International Foods Inc
@@ -4581,7 +4521,6 @@ simple-mills||Simple Mills
 simple-truth||Simple Truth
 simple-truth-organic||Simple Truth Organic
 simplement-bon-et-bio||Simplement Bon Et Bio
-simply||Simply
 simply-asia||Simply Asia
 simply-balanced||Simply Balanced
 simply-enjoy||Simply Enjoy
@@ -4665,7 +4604,6 @@ solgar||Solgar
 solis||Solis
 solleone||Solleone
 solo||Solo
-sommer||Sommer
 sondey||Sondey
 sonnen-bassermann||Sonnen Bassermann
 sonnentor||Sonnentor
@@ -4826,7 +4764,6 @@ sushi-daily||Sushi Daily
 sushi-gourmet||Sushi Gourmet
 suzi-wan||Suzi Wan
 sveltesse||Sveltesse
-sweet||Sweet
 sweet-baby-ray-s||Sweet Baby Ray's
 sweet-candy-company||Sweet Candy Company
 sweet-creek-foods||Sweet Creek Foods
@@ -4906,7 +4843,6 @@ tendre-plus||Tendre & Plus
 tendriade||Tendriade
 tentation-cacao||Tentation Cacao
 tereos||Tereos
-terra||Terra
 terra-delyssa||Terra Delyssa
 terra-etica||Terra Etica
 terra-sana||Terra Sana
@@ -4946,7 +4882,6 @@ the-berry-company||The berry company
 the-better-chip||The Better Chip
 the-bridge||The bridge
 the-co-operative||The co-operative
-the-coca-cola-company||The Coca-Cola Company
 the-decorated-cookie-company||The Decorated Cookie Company
 the-essential-baking-company||The Essential Baking Company
 the-father-s-table-llc||The Father's Table Llc
@@ -4972,7 +4907,6 @@ thes-de-la-pagode||Thés de la Pagode
 thierry-schweitzer||Thierry Schweitzer
 think-thin||Think Thin
 thiriet||Thiriet
-thomas||Thomas
 thomas-brioche||Thomas Brioche
 thomas-le-prince||Thomas Le Prince
 thomy||Thomy
@@ -5039,7 +4973,6 @@ trader-joe-s||Trader Joe's
 trader-joes||Trader Joes
 tradi-bergere||Tradi Bergère
 tradilege||Tradilège
-tradition||Tradition
 traditions-d-asie||Traditions d'Asie
 tradival||Tradival
 tradizioni-d-italia||Tradizioni D'italia
@@ -5074,7 +5007,6 @@ trocadero||Trocadero
 trofic||Trofic
 trolli||Trolli
 tropic-apero||Tropic Apéro
-tropical||Tropical
 tropical-foods-inc||Tropical Foods Inc.
 tropical-nut-fruit-co||Tropical Nut & Fruit Co.
 tropical-valley-foods||Tropical Valley Foods
@@ -5164,7 +5096,6 @@ valio||Valio
 vallee-verte||Vallée Verte
 valley-fine-foods-company||Valley Fine Foods Company
 valmartin||Valmartin
-valor||Valor
 valpi-bio||Valpi Bio
 valpibio||Valpibio
 valpiform||Valpiform
@@ -5186,7 +5117,6 @@ vedere||Védère
 vedrenne||Vedrenne
 veetee||Veetee
 vega||Vega
-vegan||Vegan
 veganz||Veganz
 vegetalia||Vegetalia
 vegetarisch-lecker||Vegetarisch Lecker
@@ -5202,7 +5132,6 @@ verfeuille||Verfeuille
 vergers-des-alpilles||Vergers des Alpilles
 vergers-gourmands||Vergers Gourmands
 veritable-delice||Véritable Délice
-veritas||Veritas
 verival||Verival
 verkade||Verkade
 verneuil||Verneuil

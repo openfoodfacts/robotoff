@@ -87,7 +87,9 @@ def keep_brand_from_taxonomy(
 
 
 def generate_brand_list(
-    threshold: int, min_length: Optional[int] = None
+    threshold: int,
+    min_length: Optional[int] = None,
+    blacklisted_brands: Optional[Set[str]] = None,
 ) -> List[Tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = requests.get(settings.TAXONOMY_BRAND_URL).json()
@@ -103,7 +105,7 @@ def generate_brand_list(
             key = key[3:]
 
         if (
-            keep_brand_from_taxonomy(key, name, min_length)
+            keep_brand_from_taxonomy(key, name, min_length, blacklisted_brands)
             and brand_count.get(key, {}).get("products", 0) >= threshold
         ):
             brand_list.append((key, name))
@@ -111,8 +113,12 @@ def generate_brand_list(
     return sorted(brand_list, key=operator.itemgetter(0))
 
 
-def dump_taxonomy_brands(threshold: int, min_length: Optional[int] = None):
-    filtered_brands = generate_brand_list(threshold, min_length)
+def dump_taxonomy_brands(
+    threshold: int,
+    min_length: Optional[int] = None,
+    blacklisted_brands: Optional[Set[str]] = None,
+):
+    filtered_brands = generate_brand_list(threshold, min_length, blacklisted_brands)
     line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 
@@ -140,7 +146,9 @@ BRAND_BLACKLIST_STORE = CachedStore(
 )
 
 if __name__ == "__main__":
+    blacklisted_brands = get_brand_blacklist()
     dump_taxonomy_brands(
         threshold=settings.BRAND_MATCHING_MIN_COUNT,
         min_length=settings.BRAND_MATCHING_MIN_LENGTH,
+        blacklisted_brands=blacklisted_brands,
     )
