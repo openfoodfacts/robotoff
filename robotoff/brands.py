@@ -68,6 +68,24 @@ def save_brand_prefix(count_threshold: int):
         json.dump(brand_prefixes, f)
 
 
+def keep_brand_from_taxonomy(
+    brand_tag: str,
+    brand: str,
+    min_length: Optional[int] = None,
+    blacklisted_brands: Optional[Set[str]] = None,
+) -> bool:
+    if brand.isdigit():
+        return False
+
+    if min_length and len(brand) < min_length:
+        return False
+
+    if blacklisted_brands is not None and brand_tag in blacklisted_brands:
+        return False
+
+    return True
+
+
 def generate_brand_list(
     threshold: int, min_length: Optional[int] = None
 ) -> List[Tuple[str, str]]:
@@ -85,7 +103,7 @@ def generate_brand_list(
             key = key[3:]
 
         if (
-            len(name) >= min_length
+            keep_brand_from_taxonomy(key, name, min_length)
             and brand_count.get(key, {}).get("products", 0) >= threshold
         ):
             brand_list.append((key, name))
@@ -95,8 +113,8 @@ def generate_brand_list(
 
 def dump_taxonomy_brands(threshold: int, min_length: Optional[int] = None):
     filtered_brands = generate_brand_list(threshold, min_length)
-    filtered_brands = ("{}||{}".format(key, name) for key, name in filtered_brands)
-    dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, filtered_brands)
+    line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
+    dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 
 
 def in_barcode_range(

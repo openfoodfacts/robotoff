@@ -4,31 +4,13 @@ from typing import List, Dict, Tuple, Set, Optional
 
 from flashtext import KeywordProcessor
 from robotoff import settings
-from robotoff.brands import BRAND_BLACKLIST_STORE
+from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
 from robotoff.insights.ocr.utils import generate_keyword_processor, get_tag
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
-
-
-def keep_brand_from_taxonomy(
-    brand_tag: str,
-    brand: str,
-    min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
-) -> bool:
-    if brand.isdigit():
-        return False
-
-    if min_length and len(brand) < min_length:
-        return False
-
-    if blacklisted_brands is not None and brand_tag in blacklisted_brands:
-        return False
-
-    return True
 
 
 def generate_brand_keyword_processor(
