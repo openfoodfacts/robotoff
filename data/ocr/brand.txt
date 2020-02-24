@@ -1,0 +1,2 @@
+auchan||Auchan||auchan production
+coca-cola||Coca-Cola||cocacola

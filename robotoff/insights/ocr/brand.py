@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import List, Dict, Tuple, Set, Optional
+from typing import Iterable, List, Dict, Tuple, Set, Optional
 
 from flashtext import KeywordProcessor
 from robotoff import settings
@@ -14,21 +14,14 @@ logger = get_logger(__name__)
 
 
 def generate_brand_keyword_processor(
-    brands: Optional[List[str]] = None,
-    min_length: Optional[int] = None,
-    blacklist: bool = True,
+    brands: Iterable[str], blacklist: bool = True,
 ):
     blacklisted_brands: Optional[Set[str]] = None
     if blacklist:
         blacklisted_brands = BRAND_BLACKLIST_STORE.get()
 
-    if brands is None:
-        brands = text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
-
     keep_func = functools.partial(
-        keep_brand_from_taxonomy,
-        min_length=min_length,
-        blacklisted_brands=blacklisted_brands,
+        keep_brand_from_taxonomy, blacklisted_brands=blacklisted_brands,
     )
     return generate_keyword_processor(brands, keep_func=keep_func)
 
@@ -49,12 +42,17 @@ def get_logo_annotation_brands() -> Dict[str, str]:
 
 
 LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
+TAXONOMY_BRAND_PROCESSOR = generate_brand_keyword_processor(
+    text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
+)
 BRAND_PROCESSOR = generate_brand_keyword_processor(
-    min_length=settings.BRAND_MATCHING_MIN_LENGTH
+    text_file_iter(settings.OCR_BRANDS_PATH),
 )
 
 
-def extract_brands_taxonomy(processor: KeywordProcessor, text: str) -> List[JSONType]:
+def extract_brands_taxonomy(
+    processor: KeywordProcessor, text: str, data_source_name: str
+) -> List[JSONType]:
     insights = []
 
     for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
@@ -67,7 +65,7 @@ def extract_brands_taxonomy(processor: KeywordProcessor, text: str) -> List[JSON
                 "brand_tag": brand_tag,
                 "automatic_processing": False,
                 "text": match_str,
-                "data_source": "taxonomy",
+                "data_source": data_source_name,
                 "notify": False,
             }
         )
@@ -99,7 +97,8 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
     text = ocr_result.get_full_text_contiguous()
     insights: List[Dict] = []
     if text:
-        insights += extract_brands_taxonomy(BRAND_PROCESSOR, text)
+        insights += extract_brands_taxonomy(BRAND_PROCESSOR, text, "curated-list")
+        insights += extract_brands_taxonomy(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
 
     insights += extract_brands_google_cloud_vision(ocr_result)
 

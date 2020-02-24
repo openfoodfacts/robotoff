@@ -5,36 +5,11 @@ import pytest
 
 from robotoff import settings
 from robotoff.insights.ocr.brand import (
-    BRAND_REGEX,
     generate_brand_keyword_processor,
     extract_brands_taxonomy,
 )
 from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter
-
-
-@pytest.mark.parametrize(
-    "input_str,is_match",
-    [
-        ("other string", False),
-        ("carre", False),
-        ("carrefour", True),
-        ("monoprix p'tit prix", True),
-        ("marks & spencer", True),
-        ("nestlé", True),
-        ("nestle", True),
-        ("carrefour gaby", True),
-        ("carrefour baby", True),
-        ("dr. oetker", True),
-        ("dr oetker", True),
-        ("m-budget", True),
-        ("la belle iloise", True),
-        ("la belle-îloise", True),
-    ],
-)
-def test_brand_regex(input_str: str, is_match: bool):
-    regex = BRAND_REGEX.regex
-    assert (regex.match(input_str) is not None) == is_match
 
 
 def test_check_logo_annotation_brands():
@@ -60,6 +35,7 @@ def brand_keyword_processor():
                 "brand": "Le Comptoir de Mathilde",
                 "brand_tag": "le-comptoir-de-mathilde",
                 "text": "Le comptoir de Mathilde",
+                "data-source": "test",
             },
         ),
         ("Netto gewitch: 450 g", None),
@@ -70,12 +46,13 @@ def brand_keyword_processor():
                 "brand": "Alpina Savoie",
                 "brand_tag": "alpina-savoie",
                 "text": "Alpina savoie",
+                "data-source": "test",
             },
         ),
     ],
 )
 def test_extract_brand_taxonomy(brand_keyword_processor, text: str, expected):
-    insights = extract_brands_taxonomy(brand_keyword_processor, text)
+    insights = extract_brands_taxonomy(brand_keyword_processor, text, "test")
 
     if not expected:
         assert not insights
