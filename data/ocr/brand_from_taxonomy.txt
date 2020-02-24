@@ -1,4 +1,3 @@
-มาม่า||มาม่า
 1-2-3-bio||1.2.3 Bio
 1001-delights||1001 delights
 123-bio||123 Bio
@@ -10,8 +9,6 @@
 365||365
 4c-foods-corp||4c Foods Corp.
 4c||4c
-д||Д
-домик-в-деревне||Домик в деревне
 7-11||7-11
 7-days||7 Days
 7-eleven||7-Eleven
@@ -20,13 +17,6 @@
 7days||7days
 7up||7up
 9bar||9bar
-каждый-день||Каждый День
-красная-цена||Красная цена
-от-фермера||От фермера
-пекарня-марии||Пекарня Марии
-первым-делом||Первым делом
-простоквашино||Простоквашино
-łowicz||Łowicz
 a-1||A.1
 a-capella||A Capella
 a-l-olivier||A l olivier
@@ -40,11 +30,12 @@ a-vogel||A.Vogel
 abbaye-de-sept-fons||Abbaye de sept fons
 abba||Abba
 abbelen||Abbelen
+abbot-kinney-s||Abbot Kinney's
+abbott||Abbott
 abc||ABC
 abtey||Abtey
 actilife||Actilife
 actimel||Actimel
-action||Action
 activia||Activia
 ad-visor||Ad-Visor
 adelholzener||Adelholzener
@@ -86,12 +77,14 @@ alain-martin||Alain Martin
 alain-milliat||Alain Milliat
 alb-gold||Alb Gold
 albanese||Albanese
+alba||Alba
 albert-heijn||Albert Heijn
 albert-hein||Albert Hein
 albert-menes||Albert Ménès
 albertheijn||AlbertHeijn
 albertson-s||Albertson's
 albertsons||Albertsons
+albhof||Albhof
 albi||Albi
 albona||Albona
 albo||Albo
@@ -106,6 +99,7 @@ aldi||Aldi
 alelor||Alélor
 alessi||Alessi
 alesto||Alesto
+alete||Alete
 alfredo||Alfredo
 aliada||Aliada
 alice-delice||Alice Délice
@@ -128,6 +122,7 @@ alnavit||Alnavit
 alouette-cheese-usa-llc||Alouette Cheese Usa Llc
 alouette||Alouette
 alo||Alo
+alpen-fest||Alpen Fest
 alpenfest||Alpenfest
 alpengut||Alpengut
 alpenhain||Alpenhain
@@ -141,6 +136,7 @@ alpro||Alpro
 alpura||Alpura
 alsace-lait||Alsace lait
 alsa||Alsa
+alsur||Alsur
 altanatura||ALTANATURA
 alter-eco||Alter Eco
 altesse||Altesse
@@ -148,11 +144,14 @@ alteza||Alteza
 altiflore||Altiflore
 alvalle||Alvalle
 always-save||Always Save
+amandin||Amandín
 amanhecer||Amanhecer
 amazonas-rainforest-product||Amazonas Rainforest Product
+ambar||Ambar
 ambiente||Ambiente
 ambrosi||Ambrosi
 ambrozia||Ambrozia
+amecke||Amecke
 america-s-choice||America's Choice
 american-beauty||American Beauty
 american-beverage-marketers||American Beverage Marketers
@@ -164,6 +163,7 @@ american-style||American Style
 american||American
 ametller-origen||Ametller Origen
 amigos||Amigos
+amilcar||Amilcar
 amora||Amora
 amore||Amore
 amoy||Amoy
@@ -201,6 +201,7 @@ antica-pasteria||Antica Pasteria
 antiu-xixona||Antiu Xixona
 antoine-barrier||Antoine Barrier
 antoinette-patisserie||Antoinette Pâtisserie
+antton||Antton
 aoste||Aoste
 apericube||Apéricube
 aperivrais||Apérivrais
@@ -222,6 +223,7 @@ aquibio||Aquibio
 arabi||Arabi
 arcadie||Arcadie
 archer-farms||Archer Farms
+arche||Arche
 archway||Archway
 arcor||Arcor
 arctic-zero||Arctic Zero
@@ -241,6 +243,7 @@ armor-delices||Armor Délices
 armoric||Armoric
 armour-eckrich-meats-llc||Armour-Eckrich Meats Llc
 armour||Armour
+arnabar||Arnabar
 arnaud-soubeyran||Arnaud Soubeyran
 arnaud||Arnaud
 arnie-s||Arnie's
@@ -253,6 +256,8 @@ aroy-d||Aroy-D
 aro||Aro
 arrighi||Arrighi
 arrowhead-mills||Arrowhead Mills
+arruabarrena||ArruaBarrena
+artemis||Artemis
 artesania||Artesania
 artesani||Artesani
 artiach||Artiach
@@ -271,11 +276,12 @@ assi||Assi
 astro||Astro
 astruc-patisserie||Astruc Pâtisserie
 asturiana||Asturiana
-štark||Štark
 atelier-patrick-font||Atelier Patrick Font
 athenos||Athenos
 atkins||Atkins
 atlantic||Atlantic
+ato||Ato
+atria||Atria
 au-bec-fin||Au Bec Fin
 au-bord-du-lac||Au Bord du Lac
 au-faisan-dore||Au Faisan Doré
@@ -320,8 +326,11 @@ babylove||Babylove
 bacardi||Bacardi
 baccara||Baccara
 bachman||Bachman
+back-family||Back Family
 back-to-nature||Back To Nature
 backfee||Backfee
+bad-heilbrunner||Bad Heilbrunner
+bad-reichenhaller||Bad Reichenhaller
 badia-spices-inc||Badia Spices Inc.
 badia||Badia
 badoit||Badoit
@@ -334,6 +343,7 @@ baiko||Baïko
 baileys||Baileys
 baionade||Baionade
 bai||Bai
+bajamar||Bajamar
 baken-ets||Baken-Ets
 bakers||Bakers
 bakery-fresh-goodness||Bakery Fresh Goodness
@@ -351,6 +361,7 @@ ballreich-s||Ballreich's
 balocco||Balocco
 baltic||Baltic
 bambi||Bambi
+bamboo-garden||Bamboo Garden
 banania||Banania
 banga||Banga
 banquet||Banquet
@@ -360,6 +371,9 @@ bar-s-foods-co||Bar-S Foods Co.
 bar-s||Bar-S
 baramel||Baramel
 barcel||Barcel
+barco||Barco
+barebells||Barebells
+barenmarke||Bärenmarke
 baresa||Baresa
 bare||Bare
 barilla-g-r-f-lli-s-p-a||Barilla G & R F.Lli S.P.A.
@@ -382,6 +396,7 @@ bauducco||Bauducco
 bauer||Bauer
 bauli||Bauli
 bavaria||Bavaria
+baxters||Baxters
 bayernland||Bayernland
 bayer||Bayer
 bdg||BDG
@@ -393,6 +408,7 @@ beaver||Beaver
 bebe-nestle||Bébé Nestlé
 bebivita||Bebivita
 becel||Becel
+beckers-bester||Beckers bester
 becky-s||Becky's
 bedros-et-savino||Bedros Et Savino
 bedros-savino||Bedros & Savino
@@ -416,6 +432,7 @@ bella-italia||Bella Italia
 bella-strada||Bella Strada
 bellamy||Bellamy
 bellarom||Bellarom
+bellasan||Bellasan
 bella||Bella
 belle-france||Belle France
 belledonne||Belledonne
@@ -434,6 +451,7 @@ berchtesgadener-land||Berchtesgadener Land
 beretta||Beretta
 bergader||Bergader
 bergams||Bergams
+berida||Berida
 berief||Berief
 bernard-gaborit||Bernard Gaborit
 bernard-jarnoux||Bernard Jarnoux
@@ -478,6 +496,8 @@ bigard||Bigard
 bijou||Bijou
 billa||Billa
 bimbo||Bimbo
+bimo||Bimo
+bio-cesta||Bio Cesta
 bio-company||Bio Company
 bio-conseils||Bio Conseils
 bio-day||Bio Day
@@ -504,6 +524,7 @@ biocop||Biocop
 biodyne||Biodyne
 biofournil||Biofournil
 biogam||Biogam
+biogoret||Biogoret
 biogourmet||BioGourmet
 biogran-s-l||Biogran S.L.
 biogra||Biográ
@@ -516,20 +537,22 @@ bionade||Bionade
 bionaturae||Bionaturae
 biona||Biona
 bioporc||Bioporc
+biorganica-nuova||Biorganica nuova
 biorigine||BiOrigine
 biosagesse||Biosagesse
 biospirit||BioSpirit
 biotech-usa||Biotech usa
 biotechnie||Biotechnie
 biotechusa||BiotechUSA
-biotech||Biotech
 biothentic||Biothentic
+biotona||Biotona
 biotrend||Biotrend
 biotta||Biotta
 bioverde||Bioverde
 bio||Bio
 biraben||Biraben
 birds-eye||Birds Eye
+birkel||Birkel
 bischofszell||Bischofszell
 biscochoc||Biscochoc
 biscoteria||Biscoteria
@@ -577,6 +600,7 @@ blue-elephant||Blue Elephant
 blue-ribbon||Blue Ribbon
 blue-sky-natural-beverage-co||Blue Sky Natural Beverage Co.
 blue-sky||Blue Sky
+blues||Blues
 bn||BN
 boar-s-head-brand||Boar's Head Brand
 boar-s-head||Boar's Head
@@ -653,6 +677,7 @@ bragg||Bragg
 brake||Brake
 bramwells||Bramwells
 brandstorm-inc||Brandstorm Inc
+brandt||Brandt
 brasserie-du-mont-blanc||Brasserie du Mont Blanc
 braswell-s||Braswell's
 bravo||Bravo
@@ -704,15 +729,18 @@ brut-de-coques||Brut De Coques
 bryan||Bryan
 buckley-farms||Buckley Farms
 buddig||Buddig
+budweiser||Budweiser
 buitoni||Buitoni
 buko||Buko
 bulk-powders||Bulk Powders
 bulk-powder||Bulk powder
 bulkpowders||Bulkpowders
+bull-s-eye||Bull's Eye
 bumble-bee||Bumble Bee
 bundaberg||Bundaberg
 burger-king||Burger King
 burger||Bürger
+burn||Burn
 bush-s-best||Bush's Best
 buttella||Buttella
 butterball||Butterball
@@ -729,6 +757,7 @@ cabo-de-penas||Cabo de Peñas
 cabot-creamery-cooperative||Cabot Creamery Cooperative
 cabot||Cabot
 cacao-barry||Cacao Barry
+cacaolat||Cacaolat
 cachere-distributing-inc||Cachere Distributing Inc.
 cachet||Cachet
 cacique-inc||Cacique Inc.
@@ -740,6 +769,7 @@ cafe-michel||Café Michel
 cafe-royal||Café Royal
 cafe-tasse||Café-Tasse
 cafe-valley-inc||Cafe Valley Inc
+cafes-meo||Cafés Méo
 caffarel||Caffarel
 cailler||Cailler
 cake-boss||Cake Boss
@@ -821,6 +851,7 @@ casa-cardenas||Casa Cardenas
 casa-di-oliva||Casa Di Oliva
 casa-fiesta||Casa Fiesta
 casa-imports-inc||Casa Imports Inc.
+casa-modena||Casa Modena
 casa-morando||Casa Morando
 casa-ramon||Casa Ramon
 casa-rinaldi||Casa Rinaldi
@@ -852,12 +883,12 @@ cellier-sarlat||Cellier Sarlat
 celliflore||Celliflore
 celnat||Celnat
 celorrio||Celorrio
+cem-porcento||Cem Porcento
 cemoi||Cémoi
 cento||Cento
 central-lechera-asturiana||Central Lechera Asturiana
 central-market||Central Market
 centrella||Centrella
-centurion||Centurion
 cereal-bio||Céréal Bio
 cerealpes||Céréalpes
 cereal||Céréal
@@ -924,6 +955,7 @@ chili-s||Chili's
 chimay||Chimay
 chin-chin||Chin Chin
 chio||Chio
+chips-ahoy||Chips Ahoy!
 chiquita||Chiquita
 chiron||Chiron
 chiu-hop-company||Chiu Hop Company
@@ -939,7 +971,7 @@ chocolat-stella||Chocolat Stella
 chocolaterie-castelain||Chocolaterie Castelain
 chocolaterie-monbana||Chocolaterie Monbana
 chocolates-sole||Chocolates Solé
-chocolates-valor-s-a||Chocolates Valor S.A.
+chocola||Chocola
 chocolove||Chocolove
 chocomaker-inc||Chocomaker Inc.
 chocorite||Chocorite
@@ -948,9 +980,11 @@ chop-stick||Chop Stick
 chovi||Chovi
 christian-potier||Christian Potier
 christie||Christie
+christinen||Christinen
 chuao-chocolatier||Chuao Chocolatier
 chuckanut-bay||Chuckanut Bay
 chupa-chups||Chupa Chups
+churruca||Churruca
 ciao-bella||Ciao Bella
 cibo-vita-inc||Cibo Vita Inc
 cidacos||Cidacos
@@ -966,6 +1000,7 @@ cj||CJ
 clair-de-lorraine||Clair De Lorraine
 clancy-s||Clancy's
 clarkys||Clarkys
+clasen-bio||Clasen Bio
 classico||Classico
 classic||Classic
 claude-leger||Claude Léger
@@ -1001,7 +1036,6 @@ coburn-farms||Coburn Farms
 coca-cola-company||Coca-Cola Company
 coca-cola-zero||Coca cola zero
 coca-cola||Coca-Cola
-cocacola||Cocacola
 cochonnailles-du-haut-bois||Cochonnailles du Haut-Bois
 cochonou||Cochonou
 cock-brand||Cock Brand
@@ -1040,6 +1074,7 @@ compal||Compal
 compliments||Compliments
 comptoir-du-cacao||Comptoir du Cacao
 comptoir-du-grain||Comptoir du Grain
+comptoir-sushi||Comptoir Sushi
 comptoirs-compagnies||Comptoirs & Compagnies
 comptoirs-et-compagnies||Comptoirs et compagnies
 comte-de-la-seynie||Comte De La Seynie
@@ -1056,6 +1091,7 @@ confiserie-adam||Confiserie Adam
 confiserie-du-roy-rene||Confiserie du Roy René
 confiserie-firenze||Confiserie Firenze
 confit-de-provence||Confit de Provence
+confiture-parisienne||Confiture Parisienne
 confiturelle||Confiturelle
 confitures-ardechoises||Confitures Ardéchoises
 conimex||Conimex
@@ -1063,6 +1099,7 @@ connetable||Connétable
 conserverie-courtin||Conserverie Courtin
 conserverie-des-saveurs||Conserverie des Saveurs
 conserverie-parmentier||Conserverie parmentier
+conserverie-st-christophe||Conserverie St Christophe
 consilia||Consilia
 consum||Consum
 contadina||Contadina
@@ -1162,6 +1199,7 @@ crown-prince||Crown Prince
 crownfield||Crownfield
 cruesli||Cruesli
 crunch-pak||Crunch Pak
+crunchips||Crunchips
 crunch||Crunch
 cruscana||Cruscana
 crustarmor||Crustarmor
@@ -1189,6 +1227,7 @@ current-s-tackle||Current's Tackle
 cvs-pharmacy||Cvs Pharmacy
 cyril-pinabel||Cyril Pinabel
 d-antelli||D'Antelli
+d-arbo||D'Arbo
 d-aucy||D'Aucy
 d-f-stauffer-biscuit-co-inc||D. F. Stauffer Biscuit Co. Inc
 d-l||D&L
@@ -1206,6 +1245,7 @@ damel||Damel
 damhert||Damhert
 damiano||Damiano
 dammann-freres||Dammann Frères
+dam||DAM
 dan-cake||Dan Cake
 danao||Danao
 danette||Danette
@@ -1215,7 +1255,7 @@ danival||Danival
 dani||Dani
 dannon||Dannon
 danone||Danone
-danonino||Danonino
+dantza||Dantza
 dao||Dao
 dar-vida||Dar vida
 darbo||Darbo
@@ -1237,6 +1277,7 @@ davis-lewis-orchards||Davis Lewis Orchards
 dawn-foods||Dawn Foods
 dawtona||Dawtona
 day-s-beverages-inc||Day's Beverages Inc.
+de-beukelaer||De Beukelaer
 de-cecco||De Cecco
 de-good-lish||De Good & Lish
 de-la-region||De la Région
@@ -1256,6 +1297,7 @@ deep||Deep
 defroidmont||Defroidmont
 dei-fratelli||Dei Fratelli
 deit||Deit
+dekora||Dekora
 del-monte-foods-inc||Del Monte Foods Inc.
 del-monte-foods||Del Monte Foods
 del-monte-quality||Del Monte Quality
@@ -1273,6 +1315,7 @@ deli-salades||Déli'Salades
 delical||Delical
 delicato||Delicato
 delica||Delica
+delice-danone||Délice Danone
 delicemer||Delicemer
 delices-d-orient||Delices D'orient
 delices-de-guyane||Délices de Guyane
@@ -1316,6 +1359,7 @@ destination-premium||Destination Premium
 destination-saveurs||Destination Saveurs
 destination||Destination
 develey||Develey
+devina||Devina
 devos-lemmens||Devos & Lemmens
 dextro-energy||Dextro Energy
 dhul||Dhul
@@ -1326,10 +1370,10 @@ diamant||Diamant
 diamir||Diamir
 diamond||Diamond
 dia||Dia
+didi||Didi
 diego||Diego
 dierbergs-kitchen||Dierbergs Kitchen
 dierbergs||Dierbergs
-diet-nature||Diet Nature
 diet-radisson||Diet Rádisson
 dietaroma||Dietaroma
 dietbon||Dietbon
@@ -1341,7 +1385,6 @@ direct-producteurs-fruits-secs||Direct Producteurs Fruits Secs
 direct-producteurs||Direct producteurs
 disney||Disney
 distriborg||Distriborg
-dittmann||Dittmann
 divella||Divella
 divin-bio||Divin Bio
 divina||Divina
@@ -1377,6 +1420,7 @@ double-rainbow||Double Rainbow
 douce-france||Douce France
 douceur-du-verger||Douceur du Verger
 douceur||Douceur
+dounia-halal||Dounia Halal
 douwe-egberts||Douwe Egberts
 dove||Dove
 dovgan||Dovgan
@@ -1385,9 +1429,11 @@ dr-mcdougall-s-right-foods||Dr. Mcdougall's Right Foods
 dr-oetker||Dr. Oetker
 dr-pepper||Dr Pepper
 dr-praeger-s-sensible-foods||Dr. Praeger's Sensible Foods
+dr-quendt||Dr. Quendt
 dragonfly||Dragonfly
 drake-s||Drake's
 dreamhouse-fine-foods||Dreamhouse Fine Foods
+dreimaster||Dreimaster
 drew-s-llc||Drew's Llc
 drew-s||Drew's
 drink-daily-greens-llc||Drink Daily Greens Llc
@@ -1397,6 +1443,7 @@ dsd-merchandisers||Dsd Merchandisers
 du-bruit-dans-la-cuisine||Du Bruit Dans La Cuisine
 dubble-bubble||Dubble Bubble
 duc-de-coeur||Duc de Coeur
+duc-de-pressac||Duc De Pressac
 ducal||Ducal
 ducros||Ducros
 ducs-de-gascogne||Ducs de Gascogne
@@ -1404,6 +1451,7 @@ duerr-s||Duerr's
 dukan||Dukan
 dulano||Dulano
 dulcesol||Dulcesol
+dulcinea||Dulcinea
 duncan-hines||Duncan Hines
 dunnes-stores||Dunnes Stores
 durkee||Durkee
@@ -1464,9 +1512,12 @@ ekibio||Ekibio
 ekoland||Ekoland
 ekoplaza||Ekoplaza
 el-almendro||El Almendro
+el-artesano||El Artesano
+el-caserio||El Caserio
 el-corte-ingles-s-a||El Corte Inglés S.A.
 el-corte-ingles||El Corte Inglés
 el-cultivador||El Cultivador
+el-faro||El Faro
 el-granero-integral||El Granero Integral
 el-granero||El granero
 el-guapo||El Guapo
@@ -1486,7 +1537,6 @@ elite-naturel||Elite naturel
 elite||Elite
 elixia||Elixia
 ella-s-kitchen||Ella's Kitchen
-elle-et-vire||Elle Et Vire
 elle-vire||Elle & Vire
 elli||Elli
 elmer-candy-corporation||Elmer Candy Corporation
@@ -1495,6 +1545,7 @@ elmhurst-milk-cream-co-inc||Elmhurst Milk & Cream Co.Inc.
 elodie||Elodie
 elpozo||Elpozo
 elsa||Elsa
+em-eukal||Em-eukal
 emco||Emco
 emerald||Emerald
 emeril-s||Emeril's
@@ -1553,6 +1604,7 @@ espuna||Espuña
 esselunga||Esselunga
 essential-everyday||Essential Everyday
 essential-waitrose||Essential Waitrose
+estrella-galicia||Estrella Galicia
 estrella||Estrella
 etai-s||Etai's
 ethiquable||Ethiquable
@@ -1620,6 +1672,7 @@ farmhouse||Farmhouse
 farmington||Farmington
 farmland||Farmland
 fauchon||Fauchon
+fauquet||Fauquet
 favarger||Favarger
 favols||Favols
 favorina||Favorina
@@ -1681,6 +1734,7 @@ fire-flavor||Fire & Flavor
 firenze||Firenze
 first-price||First Price
 first-street||First Street
+fischer||Fischer
 fisherman-s-friend||Fisherman's Friend
 fisher||Fisher
 fishin-company||Fishin' Company
@@ -1708,6 +1762,7 @@ floressance||Floressance
 florette||Florette
 florida-s-natural||Florida's Natural
 flying-goose-brand||Flying Goose Brand
+flying-tiger||Flying Tiger
 foco||Foco
 fol-epi||Fol Epi
 follow-your-heart||Follow Your Heart
@@ -1747,6 +1802,7 @@ francine||Francine
 francis-miot||Francis Miot
 francois-pralus||Francois pralus
 frank-s||Frank's
+frankenland||Frankenland
 frankford||Frankford
 franprix-bio||Franprix Bio
 franprix||Franprix
@@ -1760,6 +1816,7 @@ freedent||Freedent
 freedom-foods||Freedom Foods
 freeland-foods||Freeland Foods
 freeway||Freeway
+freihofer-gourmet||Freihofer Gourmet
 french-s||French's
 freschetta||Freschetta
 fresenius-kabi||Fresenius Kabi
@@ -1793,10 +1850,13 @@ fromagerie-milleret||Fromagerie Milleret
 fromageries-arnaud||Fromageries Arnaud
 fromageries-bel||Fromageries Bel
 fromageries-perreault||Fromageries Perreault
+fromapac||Fromapac
+fromarsac||Fromarsac
 frontera||Frontera
 frontier||Frontier
 frosta||FRoSTA
 frucci||Frucci
+frucht-stern||Frucht Stern
 fructivia||Fructivia
 fruidelys||Fruidelys
 fruima||Fruima
@@ -1807,8 +1867,10 @@ fruit-shoot||Fruit Shoot
 fruit2o||Fruit2o
 fruite||Fruité
 fruits-rouges-co||Fruits Rouges & Co
+frutobos||Frutobos
 fuchs||Fuchs
 fud||Fud
+fuego||Fuego
 full-circle-market||Full Circle Market
 full-circle||Full Circle
 funky-veggie||Funky Veggie
@@ -1855,6 +1917,7 @@ geant-vert||Géant Vert
 geant||Geant
 gecchele||Gecchele
 gefen||Gefen
+gefro||Gefro
 geisha||Geisha
 gelatelli||Gelatelli
 general-mills||General Mills
@@ -1868,6 +1931,7 @@ gerard-bertrand||Gérard Bertrand
 gerber||Gerber
 gerble||Gerblé
 gerentes||Gerentes
+gerio||Gerio
 gerlinea||Gerlinéa
 germinal||Germinal
 germline||Germline
@@ -1970,8 +2034,10 @@ grand-jury||Grand Jury
 grand-mere||Grand Mère
 grandessa||Grandessa
 grandeur-nature||Grandeur Nature
+granducale||Granducale
 granforno||Granforno
 granini||Granini
+granja-san-francisco||Granja san francisco
 granny-s-secret||Granny's Secret
 granola||Granola
 granoro||Granoro
@@ -2019,10 +2085,11 @@ gunz||Gunz
 gustadea||Gustadéa
 gusto-debrio||Gusto DeBrio
 gusto||Gusto
+gut-bartenhof||Gut Bartenhof
 gut-gunstig||Gut & Günstig
-gut-und-gunstig||Gut und Günstig
 gutbio||GutBio
 gutes-land||Gutes Land
+gutfried||Gutfried
 guy-fieri||Guy Fieri
 guyader||Guyader
 guylian||Guylian
@@ -2035,6 +2102,7 @@ h-e-b-organics||H-E-B Organics
 h-e-butt-grocery-company||H E Butt Grocery Company
 h-e-b||H-E-B
 haagen-dazs||Häagen-Dazs
+haas||Haas
 hacendado||Hacendado
 hachez||Hachez
 haddon-house-food-products-inc||Haddon House Food Products Inc
@@ -2080,12 +2148,15 @@ harry-and-david||Harry And David
 harry-david||Harry & David
 harrys||Harrys
 harry||Harry
+hartkorn||Hartkorn
 harvard-pastry-baking-corporation||Harvard Pastry & Baking Corporation
 harvest-basket||Harvest Basket
 harvest-farms||Harvest Farms
 harvest-fresh||Harvest Fresh
 harvest-hill-beverage-company||Harvest Hill Beverage Company
+harvest-morn||Harvest Morn
 hatfield||Hatfield
+hatherwood||Hatherwood
 haudecoeur||Haudecoeur
 havarti||Havarti
 hawaiian-host-inc||Hawaiian Host Inc.
@@ -2142,7 +2213,6 @@ hilco||Hilco
 hill-country-fare||Hill Country Fare
 hills-bros||Hills Bros.
 hines-nut-company||Hines Nut Company
-hipercor-s-a||Hipercor S.A.
 hipp||Hipp
 hiruak||Hiruak
 hirz||Hirz
@@ -2192,8 +2262,11 @@ hot-stop-foods||Hot Stop Foods
 house-by-sainsbury-s||House by Sainsbury's
 house-foods||House Foods
 house-of-tsang||House Of Tsang
+hovis||Hovis
+howe||HoWe
 howie-s||Howie's
 hp-hood-llc||Hp Hood Llc
+hp||HP
 ht-traders||Ht Traders
 hudsonville||Hudsonville
 huel||Huel
@@ -2205,6 +2278,7 @@ huilerie-croix-verte||Huilerie Croix Verte
 huilerie-de-lapalisse||Huilerie de Lapalisse
 huilerie-richard||Huilerie Richard
 humpty-dumpty||Humpty Dumpty
+hunt-s||Hunt's
 hunts||Hunts
 huober||Huober
 husman-s||Husman's
@@ -2228,7 +2302,6 @@ ice-tea||Ice Tea
 iceland||Iceland
 id-halal||Id Halal
 idahoan||Idahoan
-idea-team-s-r-l||Idea Team S.R.L.
 ideal||Idéal
 idenat||Idénat
 ifa-eliges||Ifa Eliges
@@ -2241,6 +2314,7 @@ ijsboerke||Ijsboerke
 ikalia||Ikalia
 ikea||Ikea
 il-gusto-dell-italia||Il Gusto Dell' Italia
+il-nutrimento||Il Nutrimento
 il-viaggiator-goloso||Il Viaggiator Goloso
 ile-de-france||Ile De France
 ile-de-re-chocolats||Ile de Ré Chocolats
@@ -2321,8 +2395,10 @@ jacques||Jacques
 jacquet||Jacquet
 jacquot||Jacquot
 jada-foods-llc||Jada Foods Llc
+jade||Jade
 jafaden||Jafaden
 jagermeister||Jägermeister
+jake||Jake
 jamadu||Jamadu
 jampi||Jampi
 jaouda||Jaouda
@@ -2365,6 +2441,7 @@ jewel||Jewel
 jfc-international-inc||Jfc International Inc.
 jfc||Jfc
 jif||Jif
+jim-beam||Jim Beam
 jimini-s||Jimini's
 jimmy-dean||Jimmy Dean
 jimmy-joy||Jimmy Joy
@@ -2412,6 +2489,7 @@ juraflore||JuraFlore
 justebio||JusteBio
 justin-bridou||Justin Bridou
 justin-s||Justin's
+jutro||Jütro
 juvamine||Juvamine
 juver||Juver
 k-bio||K-Bio
@@ -2423,6 +2501,7 @@ kahiki||Kahiki
 kaiku||Kaiku
 kailo-brand||Kailo Brand
 kalios||Kalios
+kalise||Kalise
 kalona-super-natural||Kalona Super Natural
 kambly||Kambly
 kamis||Kamis
@@ -2447,6 +2526,7 @@ kattus||Kattus
 kauffer-s||Kauffer's
 kaufland-classic||Kaufland Classic
 kaufland||Kaufland
+kaviari||Kaviari
 kavli||Kavli
 kc-masterpiece||Kc Masterpiece
 keebler||Keebler
@@ -2457,6 +2537,7 @@ kellogg-s||Kellogg's
 kelloggs||Kelloggs
 kellogg||Kellogg
 kellogs||Kellogs
+kelly-s||Kelly's
 kemps-llc||Kemps Llc
 kemps||Kemps
 ken-s-steak-house||Ken's Steak House
@@ -2490,6 +2571,7 @@ king-arthur-flour||King Arthur Flour
 king-cheese-inc||King Cheese Inc.
 king-nut-company||King Nut Company
 king-oscar||King Oscar
+king-regal||King Regal
 king-s-crown||King's Crown
 king-s-hawaiian||King's Hawaiian
 king-soopers||King Soopers
@@ -2517,6 +2599,7 @@ knouse-foods-inc||Knouse Foods Inc.
 knudsen-sons-inc||Knudsen & Sons Inc
 knudsen||Knudsen
 knusperone||Knusperone
+koawach||Koawach
 kodiak-cakes||Kodiak Cakes
 koh-kae||Koh kae
 kohl-corporation||Kohl Corporation
@@ -2538,6 +2621,7 @@ krakus||Krakus
 kras||Kras
 krause-gentle-corporation||Krause Gentle Corporation
 krema||Krema
+krini||Krini
 krisprolls||Krisprolls
 kritsen||Kritsen
 kroger||Kroger
@@ -2547,9 +2631,11 @@ kronenbourg||Kronenbourg
 kruger||Krüger
 kruidvat||Kruidvat
 krusteaz||Krusteaz
+ktc||KTC
 kuchenmeister||Kuchenmeister
 kuhlmann||Kühlmann
 kuhne||Kühne
+kultive||Kultive
 kuner-s||Kuner's
 kung-markatta||Kung Markatta
 kupiec||Kupiec
@@ -2592,7 +2678,9 @@ l-or||L'Or
 l-oulibo||L'Oulibo
 la-asturiana||La Asturiana
 la-baleine||La Baleine
+la-banderita||La Banderita
 la-barre||La Barre
+la-bella-easo||La Bella Easo
 la-belle-aude||La Belle Aude
 la-belle-chaurienne||La Belle Chaurienne
 la-belle-etoile||La belle étoile
@@ -2618,6 +2706,7 @@ la-chareyrade||La Chareyrade
 la-chinata||La Chinata
 la-cigale-provencale||La Cigale Provencale
 la-ciota||La Ciota
+la-cocinera||La Cocinera
 la-colombe||La Colombe
 la-compagnie-artique||La Compagnie Artique
 la-compagnie-bretonne-du-poisson||La compagnie bretonne du poisson
@@ -2631,6 +2720,7 @@ la-criolla||La Criolla
 la-croix||La Croix
 la-cuisine-d-autrefois||La cuisine d autrefois
 la-cuisine-d-oceane||La Cuisine d'Océane
+la-cuisine-des-potagers||La Cuisine des Potagers
 la-cuisine-des-saveurs||La cuisine des Saveurs
 la-cuisine-du-poissonnier||La Cuisine du Poissonnier
 la-cure-gourmande||La Cure Gourmande
@@ -2660,6 +2750,7 @@ la-huerta||LA HUERTA
 la-jasse||La Jasse
 la-laitiere||La Laitière
 la-lemance||La Lémance
+la-lorraine||La Lorraine
 la-maison-d-armorine||La Maison d'Armorine
 la-maison-des-bistrots||La Maison Des Bistrots
 la-maison-du-chocolat||La Maison Du Chocolat
@@ -2705,6 +2796,7 @@ la-sierra||La Sierra
 la-sirena-alimentacion-congelada-s-l-u||La Sirena Alimentación Congelada S.L.U.
 la-sirena||La Sirena
 la-source-du-verger||La Source du Verger
+la-table-d-antan||La Table d'Antan
 la-table-des-pecheurs||La Table des Pêcheurs
 la-tisaniere||La Tisanière
 la-torre||La Torre
@@ -2731,10 +2823,12 @@ lacasa||Lacasa
 lacroix||Lacroix
 lactaid||Lactaid
 lactalis||Lactalis
+lactasoy||Lactasoy
 lactel||Lactel
 lafitte||Lafitte
 lagoa||Lagoa
 lagrange||Lagrange
+laima||Laima
 lait-age-d-or||Lait'Age d'Or
 lait-plaisirs||Lait Plaisirs
 laita||Laita
@@ -2765,9 +2859,11 @@ larabar||Larabar
 larnaudie-prestige||Larnaudie Prestige
 larnaudie||Larnaudie
 larroque||Larroque
+larsen||Larsen
 lartigue||Lartigue
 laselva||Laselva
 late-july||Late July
+latta||Lätta
 laura-lynn||Laura Lynn
 lavandine||Lavandine
 lavazza||Lavazza
@@ -2804,7 +2900,6 @@ le-cretin-des-alpes||Le Cretin Des Alpes
 le-fleuron-de-la-reunion||Le Fleuron de la Réunion
 le-floch||Le Floch
 le-flutiau||Le Flutiau
-le-forban||Le Forban
 le-fromager-des-halles||Le Fromager Des Halles
 le-fromager||Le Fromager
 le-fumet-des-dombes||Le Fumet des Dombes
@@ -2821,15 +2916,18 @@ le-jardin-d-orante||Le jardin d'Orante
 le-jardin-de-corentin||Le jardin de corentin
 le-jardin-de-lydie||Le Jardin de Lydie
 le-kiosque-a-sandwiches||Le Kiosque à Sandwiches
+le-manoir-alexandre||Le Manoir Alexandre
 le-manoir-des-abeilles||Le Manoir des Abeilles
 le-marsigny||Le Marsigny
 le-moulin-du-pivert||Le moulin du pivert
 le-pain-des-fleurs||Le pain des fleurs
 le-pain-quotidien||Le Pain Quotidien
 le-pere-eugene||Le Père Eugène
+le-pere-jean||Le Père Jean
 le-petit-basque||Le Petit Basque
 le-petit-cuisinier||Le Petit Cuisinier
 le-petit-duc||Le Petit Duc
+le-petit-marseillais||Le petit marseillais
 le-picoreur||Le Picoreur
 le-porc-de-nos-villages||Le porc de nos villages
 le-porc-francais||Le Porc Français
@@ -2867,7 +2965,6 @@ leffe||Leffe
 legal||Legal
 legendes-gourmandes||Légendes Gourmandes
 leger||Léger
-legumbres-pedro||Legumbres Pedro
 legumor||Légumor
 lehmann||Lehmann
 leibniz||Leibniz
@@ -2970,6 +3067,7 @@ les-thomasines||Les Thomasines
 les-tilapins-de-casino||Les Tilapins De Casino
 les-tilapins||Les Tilapins
 les-toques-blanches-du-monde||Les Toques Blanches du Monde
+les-trois-chefs||Les Trois Chefs
 les-vergers-d-escoute||Les Vergers d'Escoute
 lescure||Lescure
 lesieur||Lesieur
@@ -2983,11 +3081,13 @@ lidl||Lidl
 lieber-chocolate-food-products-co||Lieber Chocolate & Food Products Co.
 lieber-s||Lieber's
 liebig||Liebig
+lieken||Lieken
 lien-ying||Lien Ying
 lifefood||Lifefood
 lifesavers||Lifesavers
 lifeway-foods-inc||Lifeway Foods Inc.
 lifeway||Lifeway
+ligeresa||Ligeresa
 lightbody||Lightbody
 lightlife-foods||Lightlife Foods
 ligo||Ligo
@@ -3072,12 +3172,14 @@ lunds-inc||Lunds Inc
 lune-de-miel||Lune de Miel
 lunor||Lunor
 lurpak||Lurpak
+lusitana||Lusitana
 lustucru-selection||Lustucru Sélection
 lustucru||Lustucru
 lutosa||Lutosa
 lutti||Lutti
 luxlait||Luxlait
 lu||LU
+lyttos||Lyttos
 m-amour||M'amour
 m-budget||M-Budget
 m-classic||M Classic
@@ -3091,6 +3193,7 @@ maaza||Maaza
 macarico||Maçarico
 machandel||Machandel
 mackays||Mackays
+macro||Macro
 madame-gougousse||Madame Gougousse
 made-good||Made Good
 made-in-nature||Made In Nature
@@ -3105,6 +3208,7 @@ magnolia||Magnolia
 magnum||Magnum
 mahdia||Mahdia
 maheso||Maheso
+mahou||Mahou
 maille||Maille
 maina||Maina
 maingourd||Maingourd
@@ -3136,6 +3240,7 @@ maison-raguin||Maison Raguin
 maison-raymond||Maison Raymond
 maison-riviere||Maison Rivière
 maison-roucadil||Maison Roucadil
+maison-sauveterre||Maison Sauveterre
 maison-taillefer||Maison Taillefer
 maison-tino||Maison Tino
 maison-vital-aine||Maison Vital Ainé
@@ -3147,6 +3252,7 @@ maitre-prunille||Maître Prunille
 maitre-truffout||Maitre Truffout
 maitres-laitiers-en-normandie||Maîtres Laitiers en Normandie
 maizena||Maizena
+majestic||Majestic
 malakoff||Malakoff
 malbuner||Malbuner
 maline-thomas||Maline Thomas
@@ -3230,6 +3336,7 @@ mars-chocolat||Mars Chocolat
 mars||Mars
 martin-pouret||Martin Pouret
 martin-s||Martin's
+martinez||Martinez
 martini||Martini
 maruchan||Maruchan
 mary-s-gone-crackers||Mary's Gone Crackers
@@ -3297,8 +3404,10 @@ mellidor||Mellidor
 meltonic||MelTonic
 melville-candy-corporation||Melville Candy Corporation
 melvita||Melvita
+melvit||Melvit
 member-s-mark||Member's Mark
 meme-georgette||Mémé Georgette
+meme-helene||Mémé Hélène
 meneau||Meneau
 menguy-s||Menguy's
 mentos||Mentos
@@ -3307,7 +3416,6 @@ meo||Méo
 meray||Meray
 merba||Merba
 mercadier||Mercadier
-mercadona-s-a||Mercadona S.A.
 mercadona||Mercadona
 merci||Merci
 mere-lalie||Mère Lalie
@@ -3320,6 +3428,7 @@ mes-p-tits-secrets||Mes P'tits Secrets
 messmer||Meßmer
 mestemacher||Mestemacher
 met-rx||Met-Rx
+meteor||Meteor
 metro-chef||Metro Chef
 metro||Metro
 mets-des-rois||Mets Des Rois
@@ -3363,6 +3472,7 @@ mike-and-ike||Mike And Ike
 mike-sell-s||Mike-Sell's
 miko||Miko
 milaneza||Milaneza
+mila||Mila
 milbona||Milbona
 milco||Milco
 milfina||Milfina
@@ -3419,6 +3529,7 @@ monarc||Monarc
 monari-federzoni||Monari Federzoni
 monbana||Monbana
 monbio||Monbio
+mondamin||Mondamin
 mondelez-international||Mondelez International
 mondelez||Mondelez
 mondo-italiano||Mondo Italiano
@@ -3441,6 +3552,7 @@ mont-blanc||Mont Blanc
 mont-pele||Mont Pelé
 montagne-noire||Montagne Noire
 montebello||Montebello
+montes-lara||Montes Lara
 montfort||Montfort
 montignac||Montignac
 montorsi||Montorsi
@@ -3511,6 +3623,7 @@ mx3||Mx3
 my-best-veggie||My Best Veggie
 my-essentials||My Essentials
 my-protein||My Protein
+mymuesli2go||MyMuesli2Go
 mymuesli||Mymuesli
 myprotein||Myprotein
 m||M
@@ -3545,6 +3658,9 @@ natur-aktiv||Natur aktiv
 natur-avenir||Natur Avenir
 natur-compagnie||Natur compagnie
 natur-gut||Natur Gut
+natur-lieblinge||Natur Lieblinge
+natur-pur||Natur*Pur
+natura-nuova||Natura Nuova
 naturafarm||Naturafarm
 natural-cool||Natural Cool
 natural-directions||Natural Directions
@@ -3587,6 +3703,7 @@ naturis||Naturis
 naturland||Naturland
 naturnes||Naturnes
 natursoy||Natursoy
+naturtierra||NaturTierra
 nautilus||Nautilus
 navarre||Navarre
 navidul||Navidul
@@ -3630,6 +3747,7 @@ nobre||Nobre
 nocco||Nocco
 nocilla||Nocilla
 noel||Noel
+nomandi||Nomandi
 nomen||Nomen
 nom||Nöm
 nongshim||Nongshim
@@ -3715,6 +3833,7 @@ olw||OLW
 olympus||Olympus
 olz||Ölz
 oma||Oma
+omira||Omira
 on-cor||On-Cor
 on-vous-veut-du-bien||On Vous Veut Du Bien
 one-degree-organic-foods||One Degree Organic Foods
@@ -3793,6 +3912,7 @@ pago||Pago
 paiarrop||Paiarrop
 palacio-de-oriente||Palacio de Oriente
 palacios||Palacios
+paladin||Paladin
 palais-d-ebene||Palais D'Ébène
 palais-des-mets||Palais Des Mets
 palais-des-thes||Palais Des Thés
@@ -3804,6 +3924,7 @@ palermo||Palermo
 palmer-candy-company||Palmer Candy Company
 palmer-s-candies||Palmer's Candies
 palmer||Palmer
+paluani||Paluani
 pam-panorama||Pam & Panorama
 pampryl||Pampryl
 pams||Pams
@@ -3860,6 +3981,7 @@ paturages||Pâturages
 paul-heumann||Paul Heumann
 paul-louise||Paul & Louise
 paulaner||Paulaner
+pauls||Pauls
 pause-fraicheur||Pause Fraîcheur
 pause-snack||Pause Snack
 pave-d-affinois||Pavé d'Affinois
@@ -3909,6 +4031,7 @@ perfetti||Perfetti
 perl-amande||Perl'Amande
 perlamande||Perlamande
 perle-de-lait||Perle de Lait
+perlenbacher||Perlenbacher
 perrier||Perrier
 perry-s-ice-cream-co-inc||Perry's Ice Cream Co. Inc.
 peru-food||Peru Food
@@ -4073,6 +4196,7 @@ prosain||Prosain
 protifast||Protifast
 provamel||Provamel
 provenance-nature||Provenance Nature
+provence-d-antan||Provence d'Antan
 prozis||Prozis
 psp||PSP
 psst||Psst...
@@ -4083,6 +4207,7 @@ puget||Puget
 pukka||Pukka
 pulco||Pulco
 puleva||Puleva
+pulmoll||Pulmoll
 punch-power||Punch power
 pur-fruit||Pur Fruit
 pur-natur||Pur Natur
@@ -4107,6 +4232,7 @@ quaker||Quaker
 qualite-prix||Qualité & Prix
 qualite-traiteur||Qualité Traiteur
 quarre-de-chocolat||Quarré de Chocolat
+quebon||Québon
 quely||Quely
 quesos-la-ricura||Quesos La Ricura
 quest||Quest
@@ -4148,6 +4274,7 @@ raynal-et-roquelaure||Raynal et Roquelaure
 raynal-roquelaure||Raynal & Roquelaure
 rayon-d-or||Rayon d'Or
 ready-pac||Ready Pac
+real-bio||Real Bio
 real-foods||Real Foods
 real-quality||Real Quality
 realvalle||Realvalle
@@ -4184,6 +4311,7 @@ regilait||Régilait
 reily-foods-company||Reily Foods Company
 reina||Reina
 reine-de-dijon||Reine de Dijon
+reinert||Reinert
 rema-1000||REMA 1000
 remia||Remia
 remlinger-farms||Remlinger Farms
@@ -4197,11 +4325,13 @@ revillon||Révillon
 rewe-beste-wahl||REWE Beste Wahl
 rewe-bio||REWE Bio
 rewe-feine-welt||REWE Feine Welt
+rewe-to-go||REWE to go
 rewe||Rewe
 rhee-bros-inc||Rhee Bros. Inc.
 rians||Rians
 rib-rack||Rib Rack
 ribeira||Ribeira
+ribena||Ribena
 ricard||Ricard
 rice-a-roni||Rice A Roni
 rice-dream||Rice Dream
@@ -4222,6 +4352,7 @@ rienzi||Rienzi
 riesa||Riesa
 rigoni-di-asiago||Rigoni di Asiago
 rik-rok||Rik & Rok
+rimi||Rimi
 rinatura||Rinatura
 rio-d-oro||Rio d'oro
 rio-mare||Rio mare
@@ -4241,6 +4372,7 @@ rivella||Rivella
 rivercote||Rivercote
 river||River
 riviana-foods-inc||Riviana Foods Inc.
+riviera||Riviera
 rivoire-carret||Rivoire & Carret
 riz-du-monde||Riz du monde
 robert-esposito||Robert Esposito
@@ -4258,6 +4390,7 @@ rocky-mountain-pies||Rocky Mountain Pies
 roger-vidal||Roger Vidal
 roger||Roger
 rohan||Rohan
+roi-de-trefle||Roi de Trefle
 roland-monterrat||Roland Monterrat
 roland||Roland
 roler||Roler
@@ -4275,6 +4408,7 @@ rostain||Rostain
 roth||Roth
 rotui||Rotui
 rougette||Rougette
+rougie||Rougié
 rouiba||Rouiba
 roundy-s-select||Roundy's Select
 roundy-s||Roundy's
@@ -4282,6 +4416,7 @@ roundys||Roundys
 rovagnati||Rovagnati
 rowse||Rowse
 royal-bourbon||Royal Bourbon
+royal-dansk||Royal Dansk
 royal-family||Royal Family
 royal-greenland||Royal Greenland
 royal-snacks||Royal Snacks
@@ -4297,6 +4432,7 @@ rude-health||Rude health
 rudi-s-organic-bakery||Rudi's Organic Bakery
 ruffles||Ruffles
 ruf||Ruf
+rugenfisch||RügenFisch
 rugenwalder-muhle||Rügenwalder Mühle
 rummo||Rummo
 ruol||Ruol
@@ -4314,6 +4450,7 @@ s-w||S&W
 sabarot||Sabarot
 sabaton||Sabaton
 sable-rosenfeld||Sable & Rosenfeld
+sabo||Sabo
 sabra-dipping-company-llc||Sabra Dipping Company Llc
 sabra||Sabra
 sabritas||Sabritas
@@ -4351,6 +4488,7 @@ saint-louis||Saint Louis
 saint-mamet||Saint Mamet
 sainte-lucie||Sainte Lucie
 saitaku||Saitaku
+saiwa||Saiwa
 salada||Salada
 saladinettes||Saladinettes
 salaisons-du-maconnais||Salaisons du Mâconnais
@@ -4372,8 +4510,10 @@ san-marco||San Marco
 san-miguel||San Miguel
 san-pellegrino||San Pellegrino
 san-remo||San Remo
+sanchon||Sanchon
 sanders||Sanders
 sandro-vanini||Sandro Vanini
+sanex||Sanex
 sanitarium||Sanitarium
 sanofruit||Sanofruit
 sanovita||SanoVita
@@ -4405,6 +4545,7 @@ sarotti||Sarotti
 sartori-company||Sartori Company
 sartori||Sartori
 saskia||Saskia
+satori||Satori
 saupiquet||Saupiquet
 sautter||Sautter
 save-mart-supermarkets-inc||Save Mart Supermarkets Inc.
@@ -4415,6 +4556,7 @@ saveur-de-nos-regions||Saveur De Nos Regions
 saveur-des-mauges||Saveur Des Mauges
 saveur-passion||Saveur & Passion
 saveurs-attitudes||Saveurs attitudes
+saveurs-bressanes||Saveurs Bressanes
 saveurs-de-nos-regions||Saveurs de nos Régions
 saveurs-des-mauges||Saveurs des mauges
 saveurs-des-terroirs||Saveurs des Terroirs
@@ -4429,6 +4571,7 @@ savoie-yaourt||Savoie Yaourt
 savor-sens-tradition||Savor & Sens Tradition
 savor-sens||Savor & Sens
 savory-foods||Savory Foods
+sawes||Sawes
 saxo||Saxo
 sbd-holdings-group-corp||Sbd Holdings Group Corp.
 scamark-filiale-e-leclerc||Scamark (Filiale E. Leclerc)
@@ -4459,6 +4602,7 @@ scrapcooking||Scrapcooking
 sdb-traiteur||SDB Traiteur
 sea-best||Sea Best
 sea-cuisine||Sea Cuisine
+sea-gold||Sea Gold
 season||Season
 sebahat||Sebahat
 second-nature-snacks-company||Second Nature Snacks Company
@@ -4479,6 +4623,7 @@ sello-rojo||Sello Rojo
 sempio||Sempio
 senfas||Senfas
 senoble||Senoble
+sensations||Sensations
 senseo||Senseo
 serano||Serano
 sera||Sera
@@ -4510,6 +4655,7 @@ shurfine||Shurfine
 sibell||Sibell
 sicard||Sicard
 sierra-nevada-cheese-company||Sierra Nevada Cheese Company
+sigdal||Sigdal
 siggi-s||Siggi's
 sigma||Sigma
 signature-cafe||Signature Cafe
@@ -4537,10 +4683,13 @@ simply-organic||Simply Organic
 simply-roundy-s||Simply Roundy's
 simplynature||Simplynature
 simply||Simply
+sinalco||Sinalco
+sinob||#sinob
 siracuse||Siracuse
 skanemejerier||Skånemejerier
 skinny-pop||Skinny Pop
 skinnygirl||Skinnygirl
+skipper||Skipper
 skippy||Skippy
 skittles||Skittles
 sky-valley-foods-inc||Sky Valley Foods Inc.
@@ -4554,6 +4703,7 @@ smart-simple||Smart & Simple
 smartfood||Smartfood
 smarties||Smarties
 smicy||Smicy
+smint||Smint
 smirnoff||Smirnoff
 smith-bros-farms-inc||Smith Bros. Farms Inc.
 smith-s-food-drug-centers-inc||Smith's Food & Drug Centers Inc.
@@ -4584,6 +4734,7 @@ socolait||Socolait
 socopa||Socopa
 sodastream||Sodastream
 sodebo||Sodebo
+sodiaal||Sodiaal
 soelia||Soélia
 soezie||Soezie
 soignon||Soignon
@@ -4606,6 +4757,7 @@ solleone||Solleone
 solo||Solo
 sommer||Sommer
 sondey||Sondey
+sonnen-bassermann||Sonnen Bassermann
 sonnentor||Sonnentor
 sontner||Sontner
 sophia||Sophia
@@ -4642,12 +4794,14 @@ spice-islands||Spice Islands
 spice-supreme||Spice Supreme
 spielberger-muhle||Spielberger Mühle
 spigol||Spigol
+spitz||Spitz
 sponser||Sponser
 spreewaldhof||Spreewaldhof
 spring-valley||Spring Valley
 springfield||Springfield
 sprink-s||Sprink's
 sprite||Sprite
+sprouts||Sprouts
 sprout||Sprout
 square-enterprises-corp||Square Enterprises Corp.
 st-dalfour||St. Dalfour
@@ -4699,6 +4853,7 @@ stonyfield-organic||Stonyfield Organic
 stop-shop||Stop & Shop
 storck-usa-lp||Storck Usa Lp
 storck||Storck
+stortebeker||Störtebeker
 straub-s||Straub's
 straus-family-creamery||Straus Family Creamery
 streit-s||Streit's
@@ -4709,7 +4864,7 @@ subito||Subito
 suchard||Suchard
 sud-de-france||Sud De France
 sud-n-sol||Sud'n'sol
-sudnif-s-a||Sudnif S.A.
+sudreau||Sudreau
 sudzucker||Südzucker
 sugarland||Sugarland
 suja||Suja
@@ -4748,6 +4903,7 @@ sunwarrior||Sunwarrior
 sun||Sun
 super-chill||Super Chill
 super-diet||Super diet
+super-producteur||Super Producteur
 super-store-industries||Super Store Industries
 super-u||Super U
 superamerica||Superamerica
@@ -4778,6 +4934,7 @@ sweet-valley||Sweet Valley
 sweethearts||Sweethearts
 sweet||Sweet
 swing||Swing
+swiss-delice||Swiss delice
 swisslion||Swisslion
 sylvia-s-restaurant||Sylvia's Restaurant
 systeme-u||Système U
@@ -4794,6 +4951,7 @@ taifun||Taifun
 taillefine||Taillefine
 tait-farm-foods||Tait Farm Foods
 taiwan-dessert||Taiwan Dessert
+take-it-veggie||Take It Veggie
 talenti||Talenti
 tallec||Tallec
 tamara||Tamara
@@ -4818,10 +4976,10 @@ tassimo||Tassimo
 tassos||Tassos
 taste-of-inspirations||Taste Of Inspirations
 taste-of-nature||Taste Of Nature
+tastino||Tastino
 tasty-baking-company||Tasty Baking Company
 tasty-bite||Tasty Bite
 tastykake||Tastykake
-tasty||Tasty
 taureau-aile||Taureau Ailé
 taylor-farms||Taylor Farms
 tazah||Tazah
@@ -4992,18 +5150,20 @@ trattoria-alfredo||Trattoria Alfredo
 tre-marie||Tre Marie
 tre-mulini||Tre Mulini
 tree-top-inc||Tree Top Inc.
+trek||Trek
 tremven||Tremven
 treo||Treo
 tres-bien-merci||Très bien merci!
+tresors-de-chefs||Tresors De Chefs
 tresors-gourmands||Trésors Gourmands
 tresor||Trésor
 trevijano||Trevijano
 trevi||Trevi
 tria||Tria
-triballat-noyal-s-a-s||Triballat Noyal S.A.S.
 tribe-mediterranean-foods||Tribe Mediterranean Foods
 trident||Trident
 trimm||Trimm
+trina||TriNa
 tripes-paillard||Tripes Paillard
 trium||Trium
 trocadero||Trocadero
@@ -5095,6 +5255,7 @@ valade||Valade
 valblanc||Valblanc
 valdelice||Valdélice
 valebio||Valebio
+valencia||Valencia
 valensina||Valensina
 valentino||Valentino
 valette||Valette
@@ -5131,6 +5292,7 @@ veganz||Veganz
 vegan||Vegan
 vega||Vega
 vegetalia||Vegetalia
+vegetarisch-lecker||Vegetarisch Lecker
 velarte||Velarte
 velveeta||Velveeta
 vemondo||Vemondo
@@ -5161,6 +5323,7 @@ vicente-vidal||Vicente Vidal
 vichy-catalan||Vichy catalan
 vichy||Vichy
 vici||Vici
+vicks||Vicks
 vico||Vico
 victoria-fine-foods||Victoria Fine Foods
 victoria||Victoria
@@ -5215,10 +5378,12 @@ vlasic||Vlasic
 voelkel||Voelkel
 voisin||Voisin
 volae||Volaé
+volaille-francaise||Volaille Francaise
 volandry||Volandry
 volg||Volg
 volvic||Volvic
 voortman||Voortman
+voslauer||Vöslauer
 voss||Voss
 vrai||Vrai
 wagner||Wagner
@@ -5274,6 +5439,7 @@ wernli||Wernli
 werther-s-original||Werther's Original
 west-coast-grocery-company||West Coast Grocery Company
 westbrae-natural||Westbrae Natural
+westcliff||Westcliff
 western-family||Western Family
 western-mixers-produce-and-nuts-inc||Western Mixers Produce And Nuts Inc.
 westminster||Westminster
@@ -5291,6 +5457,7 @@ whole-foods||Whole Foods
 wholesome||Wholesome
 wholly-guacamole||Wholly Guacamole
 wicklein||Wicklein
+wiesenhof||Wiesenhof
 wild-friends||Wild Friends
 wild-harvest||Wild Harvest
 wild-oats-marketplace||Wild Oats Marketplace
@@ -5315,8 +5482,10 @@ wise||Wise
 wish-bone||Wish-Bone
 wiso||Wiso
 wit-group||Wit Group
+witor-s||Witor's
 woeber-mustard-mfg-co||Woeber Mustard Mfg. Co.
 wolfgang-puck||Wolfgang Puck
+wolf||Wolf
 women-s-best||Women's Best
 wonderful||Wonderful
 wonder||Wonder
@@ -5340,6 +5509,7 @@ wyler-s-light||Wyler's Light
 wylwood||Wylwood
 wythe-will-distributing-company||Wythe Will Distributing Company
 xcell-international-corp||Xcell International Corp
+xucker||Xucker
 yabon||Yabon
 yakso||Yakso
 yakult||Yakult
@@ -5349,6 +5519,7 @@ yancey-s-fancy-inc||Yancey's Fancy Inc.
 yann-de-bretagne||Yann de Bretagne
 yarden||Yarden
 yasso||Yasso
+yayla||Yayla
 ybarra||Ybarra
 yeo-s||Yeo's
 yeo-valley||Yeo Valley
@@ -5358,6 +5529,7 @@ yoder-s||Yoder's
 yoga||Yoga
 yogi-tea||Yogi Tea
 yogitea||YogiTea
+yogi||Yogi
 yogourmand||YOgourmand
 yoki||Yoki
 yomo||Yomo
@@ -5376,7 +5548,9 @@ yutaka||Yutaka
 yves-rocher||Yves Rocher
 yves-thuries||Yves Thuriès
 zachary-confections-inc||Zachary Confections Inc
+zalea||Zalea
 zanetti||Zanetti
+zanuy||Zanuy
 zapetti||Zapetti
 zatarain-s||Zatarain's
 zb-importing-inc||Zb Importing Inc.
@@ -5388,10 +5562,12 @@ zeta||Zeta
 zevia-llc||Zevia Llc
 zevia||Zevia
 zico||Zico
+zimmermann||Zimmermann
 ziyad||Ziyad
 zoi||Zoi
 zone-perfect||Zone Perfect
 zonnatura||Zonnatura
+zotter||Zotter
 zott||Zott
 zuegg||Zuegg
 zumosol||Zumosol
@@ -5399,3 +5575,13 @@ zuruck-zum-ursprung||Zurück zum Ursprung
 zwan||Zwan
 zweifel||Zweifel
 zwergenwiese||Zwergenwiese
+łowicz||Łowicz
+štark||Štark
+д||Д
+от-фермера||От фермера
+домик-в-деревне||Домик в деревне
+มาม่า||มาม่า
+каждый-день||Каждый День
+первым-делом||Первым делом
+красная-цена||Красная цена
+пекарня-марии||Пекарня Марии
