@@ -68,7 +68,10 @@ def save_brand_prefix(count_threshold: int):
         json.dump(brand_prefixes, f)
 
 
-def generate_brand_list(threshold: int) -> List[Tuple[str, str]]:
+def generate_brand_list(
+    threshold: int, min_length: Optional[int] = None
+) -> List[Tuple[str, str]]:
+    min_length = min_length or 0
     brand_taxonomy = requests.get(settings.TAXONOMY_BRAND_URL).json()
     brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()["tags"]
 
@@ -81,14 +84,17 @@ def generate_brand_list(threshold: int) -> List[Tuple[str, str]]:
         if key.startswith("en:"):
             key = key[3:]
 
-        if brand_count.get(key, {}).get("products", 0) >= threshold:
+        if (
+            len(name) >= min_length
+            and brand_count.get(key, {}).get("products", 0) >= threshold
+        ):
             brand_list.append((key, name))
 
     return sorted(brand_list, key=operator.itemgetter(0))
 
 
-def dump_taxonomy_brands(threshold: int):
-    filtered_brands = generate_brand_list(threshold)
+def dump_taxonomy_brands(threshold: int, min_length: Optional[int] = None):
+    filtered_brands = generate_brand_list(threshold, min_length)
     filtered_brands = ("{}||{}".format(key, name) for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, filtered_brands)
 
@@ -116,4 +122,7 @@ BRAND_BLACKLIST_STORE = CachedStore(
 )
 
 if __name__ == "__main__":
-    save_brand_prefix(count_threshold=2)
+    dump_taxonomy_brands(
+        threshold=settings.BRAND_MATCHING_MIN_COUNT,
+        min_length=settings.BRAND_MATCHING_MIN_LENGTH,
+    )
