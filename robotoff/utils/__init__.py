@@ -81,7 +81,8 @@ def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
         for item in f:
             item = item.strip("\n")
 
-            if item:
+            # commented lines start with '//'
+            if item and not item.startswith("//"):
                 yield item
 
 
