@@ -82,14 +82,14 @@ def generate_brand_list(threshold: int) -> List[Tuple[str, str]]:
             key = key[3:]
 
         if brand_count.get(key, {}).get("products", 0) >= threshold:
-            brand_list.append((name, key))
+            brand_list.append((key, name))
 
-    return sorted(brand_list, key=operator.itemgetter(1))
+    return sorted(brand_list, key=operator.itemgetter(0))
 
 
 def dump_taxonomy_brands(threshold: int):
     filtered_brands = generate_brand_list(threshold)
-    filtered_brands = ("{}||{}".format(name, key) for name, key in filtered_brands)
+    filtered_brands = ("{}||{}".format(key, name) for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, filtered_brands)
 
 
