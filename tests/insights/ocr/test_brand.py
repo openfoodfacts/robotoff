@@ -23,7 +23,9 @@ def test_check_logo_annotation_brands():
 
 @pytest.fixture(scope="session")
 def brand_keyword_processor():
-    yield generate_brand_keyword_processor(min_length=6)
+    yield generate_brand_keyword_processor(
+        text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
+    )
 
 
 @pytest.mark.parametrize(
@@ -35,7 +37,7 @@ def brand_keyword_processor():
                 "brand": "Le Comptoir de Mathilde",
                 "brand_tag": "le-comptoir-de-mathilde",
                 "text": "Le comptoir de Mathilde",
-                "data-source": "test",
+                "data_source": "test",
             },
         ),
         ("Netto gewitch: 450 g", None),
@@ -46,7 +48,7 @@ def brand_keyword_processor():
                 "brand": "Alpina Savoie",
                 "brand_tag": "alpina-savoie",
                 "text": "Alpina savoie",
-                "data-source": "test",
+                "data_source": "test",
             },
         ),
     ],
