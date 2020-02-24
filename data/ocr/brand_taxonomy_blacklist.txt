@@ -1,11 +1,13 @@
 ambiente
 appel
 artisanal
+aucune
 avenue
 bordeaux
 bourbon
 chateau
 classic
+cocacola
 comte
 consum
 crisp
@@ -32,6 +34,7 @@ gourmet
 granola
 grenade
 gusto
+ice-tea
 ideal
 italia
 jacques
@@ -59,8 +62,10 @@ sante
 schweizer
 selection
 serrano
+simply
 sommer
 sweet
+tasty
 terra
 the-coca-cola-company
 thomas
