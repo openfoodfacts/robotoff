@@ -50,7 +50,7 @@ BRAND_PROCESSOR = generate_brand_keyword_processor(
 )
 
 
-def extract_brands_taxonomy(
+def extract_brands(
     processor: KeywordProcessor, text: str, data_source_name: str
 ) -> List[JSONType]:
     insights = []
@@ -97,8 +97,8 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
     text = ocr_result.get_full_text_contiguous()
     insights: List[Dict] = []
     if text:
-        insights += extract_brands_taxonomy(BRAND_PROCESSOR, text, "curated-list")
-        insights += extract_brands_taxonomy(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
+        insights += extract_brands(BRAND_PROCESSOR, text, "curated-list")
+        insights += extract_brands(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
 
     insights += extract_brands_google_cloud_vision(ocr_result)
 

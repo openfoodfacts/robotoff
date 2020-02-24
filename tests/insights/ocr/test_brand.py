@@ -6,7 +6,7 @@ import pytest
 from robotoff import settings
 from robotoff.insights.ocr.brand import (
     generate_brand_keyword_processor,
-    extract_brands_taxonomy,
+    extract_brands,
 )
 from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter
@@ -22,10 +22,15 @@ def test_check_logo_annotation_brands():
 
 
 @pytest.fixture(scope="session")
-def brand_keyword_processor():
+def brand_taxonomy_keyword_processor():
     yield generate_brand_keyword_processor(
         text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
     )
+
+
+@pytest.fixture(scope="session")
+def brand_keyword_processor():
+    yield generate_brand_keyword_processor(text_file_iter(settings.OCR_BRANDS_PATH))
 
 
 @pytest.mark.parametrize(
@@ -53,8 +58,34 @@ def brand_keyword_processor():
         ),
     ],
 )
-def test_extract_brand_taxonomy(brand_keyword_processor, text: str, expected):
-    insights = extract_brands_taxonomy(brand_keyword_processor, text, "test")
+def test_extract_brand_taxonomy(brand_taxonomy_keyword_processor, text: str, expected):
+    insights = extract_brands(brand_taxonomy_keyword_processor, text, "test")
+
+    if not expected:
+        assert not insights
+    else:
+        insight = insights[0]
+        for expected_key, expected_value in expected.items():
+            assert expected_key in insight
+            assert insight[expected_key] == expected_value
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        (
+            "le nouveau cocacola",
+            {
+                "brand": "Coca-Cola",
+                "brand_tag": "coca-cola",
+                "text": "cocacola",
+                "data_source": "test",
+            },
+        ),
+    ],
+)
+def test_extract_brand(brand_keyword_processor, text: str, expected):
+    insights = extract_brands(brand_keyword_processor, text, "test")
 
     if not expected:
         assert not insights
