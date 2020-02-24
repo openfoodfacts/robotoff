@@ -49,41 +49,6 @@ def get_logo_annotation_brands() -> Dict[str, str]:
 
 
 LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
-
-
-def brand_sort_key(item):
-    """Sorting function for BRAND_DATA items.
-    For the regex to work correctly, we want the longest brand names to
-    appear first.
-    """
-    brand, _ = item
-
-    return -len(brand), brand
-
-
-def get_sorted_brands() -> List[Tuple[str, str]]:
-    sorted_brands: Dict[str, str] = {}
-
-    for item in text_file_iter(settings.OCR_BRANDS_DATA_PATH):
-        if "||" in item:
-            brand, regex_str = item.split("||")
-        else:
-            brand = item
-            regex_str = re.escape(item.lower())
-
-        sorted_brands[brand] = regex_str
-
-    return sorted(sorted_brands.items(), key=brand_sort_key)
-
-
-SORTED_BRANDS = get_sorted_brands()
-BRAND_REGEX_STR = "|".join(
-    r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in SORTED_BRANDS
-)
-NOTIFY_BRANDS: Set[str] = set(text_file_iter(settings.OCR_BRANDS_NOTIFY_DATA_PATH))
-BRAND_REGEX = OCRRegex(
-    re.compile(BRAND_REGEX_STR), field=OCRField.full_text_contiguous, lowercase=True
-)
 BRAND_PROCESSOR = generate_brand_keyword_processor(
     min_length=settings.BRAND_MATCHING_MIN_LENGTH
 )
@@ -110,32 +75,6 @@ def extract_brands_taxonomy(processor: KeywordProcessor, text: str) -> List[JSON
     return insights
 
 
-def extract_brands_whitelist(
-    ocr_regex: OCRRegex, ocr_result: OCRResult, sorted_brands: List[Tuple[str, str]]
-) -> List[JSONType]:
-    insights = []
-    text = ocr_result.get_text(BRAND_REGEX)
-
-    if text:
-        for match in ocr_regex.regex.finditer(text):
-            groups = match.groups()
-
-            for idx, match_str in enumerate(groups):
-                if match_str is not None:
-                    brand, _ = sorted_brands[idx]
-                    insights.append(
-                        {
-                            "brand": brand,
-                            "brand_tag": get_tag(brand),
-                            "text": match_str,
-                            "notify": brand in NOTIFY_BRANDS,
-                            "data_source": "whitelisted-brands",
-                        }
-                    )
-
-    return insights
-
-
 def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[JSONType]:
     insights = []
     for logo_annotation in ocr_result.logo_annotations:
@@ -157,9 +96,8 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[JSONType]:
 
 
 def find_brands(ocr_result: OCRResult) -> List[Dict]:
-    insights = extract_brands_whitelist(BRAND_REGEX, ocr_result, SORTED_BRANDS)
-
     text = ocr_result.get_full_text_contiguous()
+    insights: List[Dict] = []
     if text:
         insights += extract_brands_taxonomy(BRAND_PROCESSOR, text)
 
