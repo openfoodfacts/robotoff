@@ -16,7 +16,7 @@ fr:Bouteille en verre||bouteille verre
 fr:Bouteille en verre||bouteilles verre
 en:Bottle||bottled
 es:Botella||embotellado
-en:Bottle||abfüller
+de:Flasche||abfüller
 fr:Bouteille||embouteillé
 fr:Boîte en carton||boite carton
 fr:Boîte en carton||boîte carton
