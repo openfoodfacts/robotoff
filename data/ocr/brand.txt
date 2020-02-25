@@ -1,3 +1,4 @@
 // the format is the following: brand tag, brand name (the value that is sent to OFF), detected pattern (case insensitive)
 auchan||Auchan||auchan production
 coca-cola||Coca-Cola||cocacola
+sacla||Sacla||sacla italia
