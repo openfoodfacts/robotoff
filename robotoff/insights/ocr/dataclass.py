@@ -3,7 +3,7 @@ import math
 import operator
 import re
 from collections import Counter
-from typing import Optional, Callable, Dict, List, Tuple
+from typing import Optional, Callable, Dict, List, Tuple, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -95,8 +95,8 @@ class OCRResult:
             text_annotation = OCRTextAnnotation(text_annotation_data)
             self.text_annotations.append(text_annotation)
 
-        self.text_annotations_str: Optional[str] = None
-        self.text_annotations_str_lower: Optional[str] = None
+        self.text_annotations_str: str = ""
+        self.text_annotations_str_lower: str = ""
 
         if self.text_annotations:
             self.text_annotations_str = "||".join(t.text for t in self.text_annotations)
@@ -122,34 +122,31 @@ class OCRResult:
                 data["safeSearchAnnotation"]
             )
 
-    def get_full_text(self, lowercase: bool = False) -> Optional[str]:
+    def get_full_text(self, lowercase: bool = False) -> str:
         if self.full_text_annotation is not None:
             if lowercase:
                 return self.full_text_annotation.text_lower
 
             return self.full_text_annotation.text
 
-        return None
+        return ""
 
-    def get_full_text_contiguous(self, lowercase: bool = False) -> Optional[str]:
+    def get_full_text_contiguous(self, lowercase: bool = False) -> str:
         if self.full_text_annotation is not None:
             if lowercase:
                 return self.full_text_annotation.contiguous_text_lower
 
             return self.full_text_annotation.contiguous_text
 
-        return None
+        return ""
 
-    def get_text_annotations(self, lowercase: bool = False) -> Optional[str]:
-        if self.text_annotations_str is not None:
-            if lowercase:
-                return self.text_annotations_str_lower
-            else:
-                return self.text_annotations_str
+    def get_text_annotations(self, lowercase: bool = False) -> str:
+        if lowercase:
+            return self.text_annotations_str_lower
+        else:
+            return self.text_annotations_str
 
-        return None
-
-    def _get_text(self, field: OCRField, lowercase: bool) -> Optional[str]:
+    def _get_text(self, field: OCRField, lowercase: bool) -> str:
         if field == OCRField.full_text:
             text = self.get_full_text(lowercase)
 
@@ -174,7 +171,7 @@ class OCRResult:
         else:
             raise ValueError("invalid field: {}".format(field))
 
-    def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
+    def get_text(self, ocr_regex: OCRRegex) -> str:
         return self._get_text(ocr_regex.field, ocr_regex.lowercase)
 
     def get_logo_annotations(self) -> List["LogoAnnotation"]:
@@ -212,6 +209,31 @@ class OCRResult:
             return OCRResult(response, **kwargs)
         except Exception as e:
             raise OCRParsingException("error during OCR parsing") from e
+
+
+def get_text(
+    content: Union[OCRResult, str],
+    ocr_regex: Optional[OCRRegex] = None,
+    lowercase: bool = True,
+) -> str:
+    if isinstance(content, str):
+        if ocr_regex and ocr_regex.lowercase:
+            return content.lower()
+
+        return content.lower() if lowercase else content
+
+    elif isinstance(content, OCRResult):
+        if ocr_regex:
+            return content.get_text(ocr_regex)
+        else:
+            text = content.get_full_text_contiguous(lowercase=lowercase)
+
+            if not text:
+                text = content.get_text_annotations(lowercase=lowercase)
+
+            return text
+
+    raise TypeError("invalid type: {}".format(type(content)))
 
 
 class OCRFullTextAnnotation:

@@ -164,7 +164,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
         for item in data:
             barcode = item["barcode"]
-            source = item["source"]
+            source = item.get("source")
 
             if item["type"] != insight_type:
                 raise ValueError(
@@ -673,10 +673,7 @@ class StoreInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["value"],
                 "source_image": insight["source"],
-                "data": {
-                    "text": content["text"],
-                    "notify": content["notify"],
-                },
+                "data": {"text": content["text"], "notify": content["notify"],},
             }
 
             if "automatic_processing" in content:

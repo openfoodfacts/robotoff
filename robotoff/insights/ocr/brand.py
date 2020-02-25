@@ -1,11 +1,11 @@
 import functools
 import re
-from typing import Iterable, List, Dict, Tuple, Set, Optional
+from typing import Iterable, List, Dict, Tuple, Set, Optional, Union
 
 from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor, get_tag
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.types import JSONType
@@ -93,13 +93,15 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[JSONType]:
     return insights
 
 
-def find_brands(ocr_result: OCRResult) -> List[Dict]:
-    text = ocr_result.get_full_text_contiguous()
+def find_brands(content: Union[OCRResult, str]) -> List[Dict]:
     insights: List[Dict] = []
+    text = get_text(content)
+
     if text:
         insights += extract_brands(BRAND_PROCESSOR, text, "curated-list")
         insights += extract_brands(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
 
-    insights += extract_brands_google_cloud_vision(ocr_result)
+    if isinstance(content, OCRResult):
+        insights += extract_brands_google_cloud_vision(content)
 
     return insights

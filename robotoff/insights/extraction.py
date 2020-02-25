@@ -28,6 +28,28 @@ DEFAULT_INSIGHT_TYPES = (
 )
 
 
+PRODUCT_NAME_INSIGHT_TYPES = (
+    InsightType.label.name,
+    InsightType.product_weight.name,
+    InsightType.brand.name,
+)
+
+
+def get_insights_from_product_name(barcode: str, product_name: str) -> Optional[Dict]:
+    results = {}
+    for insight_type in PRODUCT_NAME_INSIGHT_TYPES:
+        insights = ocr.extract_insights(product_name, insight_type)
+
+        if insights:
+            results[insight_type] = {
+                "insights": insights,
+                "barcode": barcode,
+                "type": insight_type,
+            }
+
+    return results or None
+
+
 def get_insights_from_image(
     barcode: str, image_url: str, ocr_url: str
 ) -> Optional[Dict]:

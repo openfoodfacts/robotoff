@@ -1,8 +1,8 @@
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
@@ -28,10 +28,10 @@ TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_traces(ocr_result: OCRResult) -> List[Dict]:
+def find_traces(content: Union[OCRResult, str]) -> List[Dict]:
     insights = []
 
-    text = ocr_result.get_text(TRACES_REGEX)
+    text = get_text(content, TRACES_REGEX)
 
     if not text:
         return []
