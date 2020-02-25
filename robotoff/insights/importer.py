@@ -521,7 +521,9 @@ class ProductWeightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        return False
+        # Validation is needed if the weight was extracted from the product name
+        # (not as trustworthy as OCR)
+        return insight["data"].get("source") == "product_name"
 
 
 class ExpirationDateImporter(OCRInsightImporter):
@@ -647,7 +649,9 @@ class BrandInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        return False
+        # Validation is needed if the weight was extracted from the product name
+        # (not as trustworthy as OCR)
+        return insight["data"].get("source") == "product_name"
 
 
 class StoreInsightImporter(OCRInsightImporter):
