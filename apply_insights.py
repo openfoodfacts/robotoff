@@ -21,26 +21,31 @@ class InvalidInsight(Exception):
 
 
 def is_automatically_processable(insight: ProductInsight) -> bool:
+    if not insight.source_image:
+        return False
+
     image_path = pathlib.Path(insight.source_image)
     image_id = image_path.stem
 
     if not image_id.isdigit():
         return False
 
-    product = get_product(insight.barcode, fields=['images'])
+    product = get_product(insight.barcode, fields=["images"])
 
     if product is None:
         logger.info("Missing product: {}".format(insight.barcode))
         raise InvalidInsight()
 
-    if 'images' not in product:
+    if "images" not in product:
         logger.info("No images for product {}".format(insight.barcode))
         raise InvalidInsight()
 
-    product_images = product['images']
+    product_images = product["images"]
 
     if image_id not in product_images:
-        logger.info("Missing image for product {}, ID: {}".format(insight.barcode, image_id))
+        logger.info(
+            "Missing image for product {}, ID: {}".format(insight.barcode, image_id)
+        )
         raise InvalidInsight()
 
     if is_recent_image(product_images, image_id):
@@ -53,12 +58,14 @@ def is_automatically_processable(insight: ProductInsight) -> bool:
 
 
 def is_selected_image(product_images: Dict, image_id: str) -> bool:
-    for key_prefix in ('nutrition', 'front', 'ingredients'):
+    for key_prefix in ("nutrition", "front", "ingredients"):
         for key, image in product_images.items():
             if key.startswith(key_prefix):
-                if image['imgid'] == image_id:
-                    logger.info("Image {} is a selected image for "
-                                "'{}'".format(image_id, key_prefix))
+                if image["imgid"] == image_id:
+                    logger.info(
+                        "Image {} is a selected image for "
+                        "'{}'".format(image_id, key_prefix)
+                    )
                     return True
 
     return False
@@ -72,7 +79,9 @@ def is_recent_image(product_images: Dict, image_id: str) -> bool:
         if not key.isdigit():
             continue
 
-        upload_datetime = datetime.datetime.utcfromtimestamp(int(image_meta['uploaded_t']))
+        upload_datetime = datetime.datetime.utcfromtimestamp(
+            int(image_meta["uploaded_t"])
+        )
         if key == image_id:
             insight_image_upload_datetime = upload_datetime
         else:
@@ -82,16 +91,27 @@ def is_recent_image(product_images: Dict, image_id: str) -> bool:
         logger.info("No other images")
         return True
 
-    elif all(x.date() <= insight_image_upload_datetime.date() for x in upload_datetimes):
-        sorted_datetimes = [str(x) for x in sorted(set(x.date() for x in upload_datetimes),
-                                                   reverse=True)]
-        logger.info("All images were uploaded the same day or before the target "
-                    "image:\n{} >= {}".format(insight_image_upload_datetime.date(),
-                                              ', '.join(sorted_datetimes)))
+    elif all(
+        x.date() <= insight_image_upload_datetime.date() for x in upload_datetimes
+    ):
+        sorted_datetimes = [
+            str(x)
+            for x in sorted(set(x.date() for x in upload_datetimes), reverse=True)
+        ]
+        logger.info(
+            "All images were uploaded the same day or before the target "
+            "image:\n{} >= {}".format(
+                insight_image_upload_datetime.date(), ", ".join(sorted_datetimes)
+            )
+        )
         return True
 
-    logger.info("More recent images: {} < {}".format(insight_image_upload_datetime.date(),
-                                                     max(x.date() for x in upload_datetimes)))
+    logger.info(
+        "More recent images: {} < {}".format(
+            insight_image_upload_datetime.date(),
+            max(x.date() for x in upload_datetimes),
+        )
+    )
     return False
 
 
@@ -101,13 +121,21 @@ def run(insight_type: str):
 
     annotator = InsightAnnotatorFactory.get(insight_type)
 
-    for insight in ProductInsight.select().where(ProductInsight.type == insight_type,
-                                                 ProductInsight.annotation.is_null())\
-                                          .order_by(fn.Random()):
-        if insight.process_after is not None and insight.process_after >= datetime.datetime.utcnow():
+    for insight in (
+        ProductInsight.select()
+        .where(ProductInsight.type == insight_type, ProductInsight.annotation.is_null())
+        .order_by(fn.Random())
+    ):
+        if (
+            insight.process_after is not None
+            and insight.process_after >= datetime.datetime.utcnow()
+        ):
             continue
 
-        if insight_type == InsightType.label.name and insight.value_tag not in AUTHORIZED_LABELS:
+        if (
+            insight_type == InsightType.label.name
+            and insight.value_tag not in AUTHORIZED_LABELS
+        ):
             continue
 
         try:
@@ -118,8 +146,11 @@ def run(insight_type: str):
             continue
 
         if is_processable:
-            logger.info("Annotating insight {} (barcode: {})".format(insight.value_tag,
-                                                                     insight.barcode))
+            logger.info(
+                "Annotating insight {} (barcode: {})".format(
+                    insight.value_tag, insight.barcode
+                )
+            )
             annotator.annotate(insight, 1, update=True)
             count += 1
 
@@ -128,6 +159,6 @@ def run(insight_type: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('insight_type', choices=[x.name for x in InsightType])
+    parser.add_argument("insight_type", choices=[x.name for x in InsightType])
     args = parser.parse_args()
     run(args.insight_type)
