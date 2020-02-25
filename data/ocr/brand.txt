@@ -2,3 +2,4 @@
 auchan||Auchan||auchan production
 coca-cola||Coca-Cola||cocacola
 maison-meneau||Maison Meneau||Meneau
+marks-spencer||Marks & Spencer||M&S
