@@ -151,10 +151,11 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         for insight in self.process_product_insights(barcode, insights, server_domain):
             insight["barcode"] = barcode
 
-            if "automatic_processing" not in insight:
-                insight[
-                    "automatic_processing"
-                ] = automatic and not self.need_validation(insight)
+            if not automatic:
+                insight["automatic_processing"] = False
+
+            elif "automatic_processing" not in insights:
+                insight["automatic_processing"] = not self.need_validation(insight)
 
             yield insight
 
