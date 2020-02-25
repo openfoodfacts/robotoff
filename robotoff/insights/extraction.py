@@ -41,6 +41,9 @@ def get_insights_from_product_name(barcode: str, product_name: str) -> Optional[
         insights = ocr.extract_insights(product_name, insight_type)
 
         if insights:
+            for insight in insights:
+                insight["source"] = "product_name"
+
             results[insight_type] = {
                 "insights": insights,
                 "barcode": barcode,

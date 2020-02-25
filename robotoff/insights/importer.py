@@ -635,6 +635,9 @@ class BrandInsightImporter(OCRInsightImporter):
                 },
             }
 
+            if "source" in content:
+                insert["data"]["source"] = content["source"]
+
             if "automatic_processing" in content:
                 insert["automatic_processing"] = content["automatic_processing"]
 
