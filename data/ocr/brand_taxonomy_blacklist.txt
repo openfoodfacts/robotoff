@@ -5,6 +5,7 @@ appel
 artisanal
 aucune
 avenue
+bien
 bordeaux
 bourbon
 chateau
