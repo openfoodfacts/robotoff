@@ -63,14 +63,17 @@ def import_insights(
     insight_type: str,
     server_domain: str,
     batch_size: int = 1024,
-):
+) -> int:
     product_store = CACHED_PRODUCT_STORE.get()
     importer = InsightImporterFactory.create(insight_type, product_store)
 
     insights = gzip_jsonl_iter(file_path)
+    imported: int = 0
 
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
-            importer.import_insights(
+            imported += importer.import_insights(
                 insight_batch, server_domain=server_domain, automatic=False
             )
+
+    return imported
