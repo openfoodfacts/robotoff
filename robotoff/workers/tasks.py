@@ -220,7 +220,7 @@ def updated_product_predict_insights(
     for insight_type, insights in insights_all.items():
         importer = InsightImporterFactory.create(insight_type, product_store)
         imported = importer.import_insights(
-            insights, server_domain=server_domain, automatic=False
+            [insights], server_domain=server_domain, automatic=False
         )
 
         if imported:
