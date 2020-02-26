@@ -1,7 +1,7 @@
 import re
-from typing import Dict, List
+from typing import Dict, List, Union
 
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
 
 
 def process_fr_packaging_match(match) -> str:
@@ -48,11 +48,11 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
 }
 
 
-def find_packager_codes(ocr_result: OCRResult) -> List[Dict]:
-    results = []
+def find_packager_codes(ocr_result: Union[OCRResult, str]) -> List[Dict]:
+    results: List[Dict] = []
 
     for regex_code, ocr_regex in PACKAGER_CODE.items():
-        text = ocr_result.get_text(ocr_regex)
+        text = get_text(ocr_result, ocr_regex)
 
         if not text:
             continue

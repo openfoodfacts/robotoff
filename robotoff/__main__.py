@@ -137,7 +137,10 @@ if __name__ == "__main__":
         logger = get_logger()
         logger.info("Importing insights from {}".format(input_))
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
-        insights.import_insights(input_, insight_type, server_domain, batch_size)
+        imported = insights.import_insights(
+            input_, insight_type, server_domain, batch_size
+        )
+        logger.info("{} insights imported".format(imported))
 
     @click.command()
     @click.option("--index/--no-index", default=True)

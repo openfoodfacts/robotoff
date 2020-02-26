@@ -1,8 +1,11 @@
+7-days
 ambiente
+american
 appel
 artisanal
 aucune
 avenue
+bien
 bordeaux
 bourbon
 chateau
@@ -12,6 +15,7 @@ comte
 consum
 crisp
 cristal
+crunch
 cucina
 delta
 deluxe
@@ -29,6 +33,7 @@ france
 frigo
 fromage
 fruite
+geant
 golden
 gourmet
 granola
@@ -56,8 +61,11 @@ pacific
 patissier
 premium
 prima
+pure
+quick
 royal
 salada
+sans
 sante
 schweizer
 selection

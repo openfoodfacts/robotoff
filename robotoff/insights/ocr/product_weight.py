@@ -1,10 +1,10 @@
 import functools
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 
 import pint
 
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -233,11 +233,11 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_product_weight(ocr_result: OCRResult) -> List[Dict]:
+def find_product_weight(content: Union[OCRResult, str]) -> List[Dict]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
-        text = ocr_result.get_text(ocr_regex)
+        text = get_text(content, ocr_regex)
 
         if not text:
             continue

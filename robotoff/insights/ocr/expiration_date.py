@@ -1,9 +1,9 @@
 import datetime
 import functools
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
 
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
@@ -44,13 +44,13 @@ EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
+def find_expiration_date(content: Union[OCRResult, str]) -> List[Dict]:
     # Parse expiration date
     #        "À consommer de préférence avant",
-    results = []
+    results: List[Dict] = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
-        text = ocr_result.get_text(ocr_regex)
+        text = get_text(content, ocr_regex)
 
         if not text:
             continue

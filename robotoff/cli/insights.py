@@ -16,7 +16,7 @@ from robotoff.insights.ocr import (
 )
 from robotoff.models import db
 from robotoff.products import CACHED_PRODUCT_STORE
-from robotoff.utils import gzip_jsonl_iter
+from robotoff.utils import gzip_jsonl_iter, jsonl_iter
 
 
 def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
@@ -63,14 +63,21 @@ def import_insights(
     insight_type: str,
     server_domain: str,
     batch_size: int = 1024,
-):
+) -> int:
     product_store = CACHED_PRODUCT_STORE.get()
     importer = InsightImporterFactory.create(insight_type, product_store)
 
-    insights = gzip_jsonl_iter(file_path)
+    if file_path.suffix == ".gz":
+        insights = gzip_jsonl_iter(file_path)
+    else:
+        insights = jsonl_iter(file_path)
+
+    imported: int = 0
 
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
-            importer.import_insights(
+            imported += importer.import_insights(
                 insight_batch, server_domain=server_domain, automatic=False
             )
+
+    return imported

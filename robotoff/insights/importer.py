@@ -151,10 +151,11 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         for insight in self.process_product_insights(barcode, insights, server_domain):
             insight["barcode"] = barcode
 
-            if "automatic_processing" not in insight:
-                insight[
-                    "automatic_processing"
-                ] = automatic and not self.need_validation(insight)
+            if not automatic:
+                insight["automatic_processing"] = False
+
+            elif "automatic_processing" not in insights:
+                insight["automatic_processing"] = not self.need_validation(insight)
 
             yield insight
 
@@ -164,7 +165,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
 
         for item in data:
             barcode = item["barcode"]
-            source = item["source"]
+            source = item.get("source")
 
             if item["type"] != insight_type:
                 raise ValueError(
@@ -520,7 +521,9 @@ class ProductWeightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        return False
+        # Validation is needed if the weight was extracted from the product name
+        # (not as trustworthy as OCR)
+        return insight["data"].get("source") == "product_name"
 
 
 class ExpirationDateImporter(OCRInsightImporter):
@@ -635,6 +638,9 @@ class BrandInsightImporter(OCRInsightImporter):
                 },
             }
 
+            if "source" in content:
+                insert["data"]["source"] = content["source"]
+
             if "automatic_processing" in content:
                 insert["automatic_processing"] = content["automatic_processing"]
 
@@ -643,7 +649,9 @@ class BrandInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        return False
+        # Validation is needed if the weight was extracted from the product name
+        # (not as trustworthy as OCR)
+        return insight["data"].get("source") == "product_name"
 
 
 class StoreInsightImporter(OCRInsightImporter):
@@ -673,10 +681,7 @@ class StoreInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["value"],
                 "source_image": insight["source"],
-                "data": {
-                    "text": content["text"],
-                    "notify": content["notify"],
-                },
+                "data": {"text": content["text"], "notify": content["notify"],},
             }
 
             if "automatic_processing" in content:

@@ -1,11 +1,11 @@
 import re
 from typing import Dict, List
-from typing import Optional
+from typing import Optional, Union
 
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.cache import CachedStore
@@ -231,12 +231,12 @@ LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_labels(ocr_result: OCRResult) -> List[Dict]:
+def find_labels(content: Union[OCRResult, str]) -> List[Dict]:
     insights = []
 
     for label_tag, regex_list in LABELS_REGEX.items():
         for ocr_regex in regex_list:
-            text = ocr_result.get_text(ocr_regex)
+            text = get_text(content, ocr_regex)
 
             if not text:
                 continue
@@ -261,24 +261,22 @@ def find_labels(ocr_result: OCRResult) -> List[Dict]:
                 )
 
     processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
-    text = ocr_result.get_full_text_contiguous(lowercase=True)
 
-    if text is None:
-        text = ocr_result.get_text_annotations(True)
-
+    text = get_text(content)
     insights += extract_label_flashtext(processor, text)
 
-    for logo_annotation in ocr_result.logo_annotations:
-        if logo_annotation.description in LOGO_ANNOTATION_LABELS:
-            label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
+    if isinstance(content, OCRResult):
+        for logo_annotation in content.logo_annotations:
+            if logo_annotation.description in LOGO_ANNOTATION_LABELS:
+                label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
 
-            insights.append(
-                {
-                    "label_tag": label_tag,
-                    "automatic_processing": False,
-                    "confidence": logo_annotation.score,
-                    "data_source": "google-cloud-vision",
-                }
-            )
+                insights.append(
+                    {
+                        "label_tag": label_tag,
+                        "automatic_processing": False,
+                        "confidence": logo_annotation.score,
+                        "data_source": "google-cloud-vision",
+                    }
+                )
 
     return insights

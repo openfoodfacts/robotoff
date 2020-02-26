@@ -1,7 +1,7 @@
 import re
-from typing import List, Dict
+from typing import List, Dict, Union
 
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
 from robotoff.utils.types import JSONType
 
 
@@ -137,11 +137,11 @@ NUTRIENT_VALUES_REGEX = {
 }
 
 
-def find_nutrient_values(ocr_result: OCRResult) -> List[Dict]:
+def find_nutrient_values(content: Union[OCRResult, str]) -> List[Dict]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
-        text = ocr_result.get_text(ocr_regex)
+        text = get_text(content, ocr_regex)
 
         if not text:
             continue

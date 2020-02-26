@@ -1,8 +1,8 @@
 import re
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict, Tuple, Set, Union
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
 from robotoff.utils import text_file_iter
 
 
@@ -45,10 +45,10 @@ STORE_REGEX = OCRRegex(
 )
 
 
-def find_stores(ocr_result: OCRResult) -> List[Dict]:
+def find_stores(content: Union[OCRResult, str]) -> List[Dict]:
     results = []
 
-    text = ocr_result.get_text(STORE_REGEX)
+    text = get_text(content, STORE_REGEX)
 
     if not text:
         return []
