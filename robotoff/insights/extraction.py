@@ -35,7 +35,7 @@ PRODUCT_NAME_INSIGHT_TYPES = (
 )
 
 
-def get_insights_from_product_name(barcode: str, product_name: str) -> Optional[Dict]:
+def get_insights_from_product_name(barcode: str, product_name: str) -> Dict:
     results = {}
     for insight_type in PRODUCT_NAME_INSIGHT_TYPES:
         insights = ocr.extract_insights(product_name, insight_type)
@@ -50,7 +50,7 @@ def get_insights_from_product_name(barcode: str, product_name: str) -> Optional[
                 "type": insight_type,
             }
 
-    return results or None
+    return results
 
 
 def get_insights_from_image(

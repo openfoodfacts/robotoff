@@ -1,7 +1,7 @@
 import json
 import logging
 import multiprocessing
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Optional
 
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
@@ -11,7 +11,10 @@ from robotoff.ml.category.neural.model import (
 )
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, InsightImporter
-from robotoff.insights.extraction import get_insights_from_image
+from robotoff.insights.extraction import (
+    get_insights_from_image,
+    get_insights_from_product_name,
+)
 from robotoff.insights.validator import (
     delete_invalid_insight,
     InsightValidator,
@@ -138,15 +141,13 @@ def updated_product_update_insights(barcode: str, server_domain: str):
         logger.warn("Updated product does not exist: {}".format(barcode))
         return
 
-    category_added = updated_product_add_category_insight(
-        barcode, product_dict, server_domain
-    )
+    updated = updated_product_predict_insights(barcode, product_dict, server_domain)
 
-    if category_added:
+    if updated:
         logger.info("Product {} updated".format(barcode))
 
     product = Product(product_dict)
-    validators: Dict[str, InsightValidator] = {}
+    validators: Dict[str, Optional[InsightValidator]] = {}
 
     for insight in (
         ProductInsight.select()
@@ -163,13 +164,15 @@ def updated_product_update_insights(barcode: str, server_domain: str):
             )
 
         validator = validators[insight.type]
-        insight_deleted = delete_invalid_insight(
-            insight, validator=validator, product=product
-        )
-        if insight_deleted:
-            logger.info(
-                "Insight {} deleted (type: {})".format(insight.id, insight.type)
+
+        if validator is not None:
+            insight_deleted = delete_invalid_insight(
+                insight, validator=validator, product=product
             )
+            if insight_deleted:
+                logger.info(
+                    "Insight {} deleted (type: {})".format(insight.id, insight.type)
+                )
 
 
 def updated_product_add_category_insight(
@@ -200,6 +203,35 @@ def updated_product_add_category_insight(
         logger.info("Category insight imported for product {}".format(barcode))
 
     return bool(imported)
+
+
+def updated_product_predict_insights(
+    barcode: str, product: JSONType, server_domain: str
+) -> bool:
+    updated = updated_product_add_category_insight(barcode, product, server_domain)
+    product_name = product.get("product_name")
+
+    if not product_name:
+        return updated
+
+    product_store = CACHED_PRODUCT_STORE.get()
+    insights_all = get_insights_from_product_name(barcode, product_name)
+
+    for insight_type, insights in insights_all.items():
+        importer = InsightImporterFactory.create(insight_type, product_store)
+        imported = importer.import_insights(
+            insights, server_domain=server_domain, automatic=False
+        )
+
+        if imported:
+            logger.info(
+                "{} insights ({}) imported for product {}".format(
+                    imported, insight_type, barcode
+                )
+            )
+            updated = True
+
+    return updated
 
 
 EVENT_MAPPING: Dict[str, Callable] = {
