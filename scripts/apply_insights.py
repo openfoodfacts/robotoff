@@ -1,7 +1,7 @@
 import argparse
 import datetime
 import pathlib
-from typing import Dict
+from typing import Dict, Optional
 
 from peewee import fn
 
@@ -20,7 +20,9 @@ class InvalidInsight(Exception):
     pass
 
 
-def is_automatically_processable(insight: ProductInsight) -> bool:
+def is_automatically_processable(
+    insight: ProductInsight, max_timedelta: datetime.timedelta
+) -> bool:
     if not insight.source_image:
         return False
 
@@ -48,7 +50,7 @@ def is_automatically_processable(insight: ProductInsight) -> bool:
         )
         raise InvalidInsight()
 
-    if is_recent_image(product_images, image_id):
+    if is_recent_image(product_images, image_id, max_timedelta):
         return True
 
     if is_selected_image(product_images, image_id):
@@ -71,9 +73,11 @@ def is_selected_image(product_images: Dict, image_id: str) -> bool:
     return False
 
 
-def is_recent_image(product_images: Dict, image_id: str) -> bool:
+def is_recent_image(
+    product_images: Dict, image_id: str, max_timedelta: datetime.timedelta
+) -> bool:
     upload_datetimes = []
-    insight_image_upload_datetime = None
+    insight_image_upload_datetime: Optional[datetime.datetime] = None
 
     for key, image_meta in product_images.items():
         if not key.isdigit():
@@ -91,9 +95,19 @@ def is_recent_image(product_images: Dict, image_id: str) -> bool:
         logger.info("No other images")
         return True
 
-    elif all(
-        x.date() <= insight_image_upload_datetime.date() for x in upload_datetimes
-    ):
+    if insight_image_upload_datetime is None:
+        raise ValueError("Image with ID {} not found".format(image_id))
+
+    else:
+        for upload_datetime in upload_datetimes:
+            if upload_datetime - insight_image_upload_datetime > max_timedelta:
+                logger.info(
+                    "More recent image: {} > {}".format(
+                        upload_datetime, insight_image_upload_datetime
+                    )
+                )
+                return False
+
         sorted_datetimes = [
             str(x)
             for x in sorted(set(x.date() for x in upload_datetimes), reverse=True)
@@ -115,7 +129,8 @@ def is_recent_image(product_images: Dict, image_id: str) -> bool:
     return False
 
 
-def run(insight_type: str):
+def run(insight_type: str, max_timedelta: datetime.timedelta):
+    logger.info("Timedelta: {}".format(max_timedelta))
     count = 0
     insight: ProductInsight
 
@@ -139,7 +154,7 @@ def run(insight_type: str):
             continue
 
         try:
-            is_processable = is_automatically_processable(insight)
+            is_processable = is_automatically_processable(insight, max_timedelta)
         except InvalidInsight:
             logger.info("Deleting insight {}".format(insight.id))
             insight.delete_instance()
@@ -160,5 +175,6 @@ def run(insight_type: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("insight_type", choices=[x.name for x in InsightType])
+    parser.add_argument("--delta", type=int, default=1)
     args = parser.parse_args()
-    run(args.insight_type)
+    run(args.insight_type, datetime.timedelta(days=args.delta))
