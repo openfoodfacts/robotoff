@@ -132,9 +132,12 @@ class ProductWeightQuestionFormatter(QuestionFormatter):
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
-            insight.source_image
-        )
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
 
         return AddBinaryQuestion(
             question=localized_question,
@@ -157,9 +160,12 @@ class LabelQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.label.name)
         localized_value: str = taxonomy.get_localized_name(value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
-            insight.source_image
-        )
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
 
         return AddBinaryQuestion(
             question=localized_question,
@@ -176,9 +182,12 @@ class BrandQuestionFormatter(QuestionFormatter):
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
-            insight.source_image
-        )
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
 
         return AddBinaryQuestion(
             question=localized_question,
