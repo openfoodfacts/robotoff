@@ -29,6 +29,7 @@ extra
 fabrication-artisanale
 fairtrade
 familia
+fini
 france
 frigo
 fromage
