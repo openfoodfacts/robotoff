@@ -25,7 +25,7 @@ from robotoff.off import get_product, get_server_type, move_to, ServerType
 from robotoff.products import (
     has_dataset_changed,
     fetch_dataset,
-    CACHED_PRODUCT_STORE,
+    get_product_store,
     Product,
 )
 from robotoff.slack import notify_image_flag
@@ -57,7 +57,7 @@ def download_product_dataset():
 
 
 def import_insights(insight_type: str, items: List[str], server_domain: str):
-    product_store = CACHED_PRODUCT_STORE.get()
+    product_store = get_product_store()
     importer: InsightImporter = InsightImporterFactory.create(
         insight_type, product_store
     )
@@ -73,7 +73,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
     logger.info(
         "Detect insights for product {}, " "image {}".format(barcode, image_url)
     )
-    product_store = CACHED_PRODUCT_STORE.get()
+    product_store = get_product_store()
     insights_all = get_insights_from_image(barcode, image_url, ocr_url)
 
     if insights_all is None:
@@ -192,7 +192,7 @@ def updated_product_add_category_insight(
     if not insights:
         return False
 
-    product_store = CACHED_PRODUCT_STORE.get()
+    product_store = get_product_store()
     importer = InsightImporterFactory.create(InsightType.category.name, product_store)
 
     imported = importer.import_insights(
@@ -214,7 +214,7 @@ def updated_product_predict_insights(
     if not product_name:
         return updated
 
-    product_store = CACHED_PRODUCT_STORE.get()
+    product_store = get_product_store()
     insights_all = get_insights_from_product_name(barcode, product_name)
 
     for insight_type, insights in insights_all.items():

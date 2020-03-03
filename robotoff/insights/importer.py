@@ -62,6 +62,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
         for insight in insights:
             barcode = insight["barcode"]
+            product = self.product_store[barcode]
             insight["reserved_barcode"] = is_reserved_barcode(barcode)
             insight["server_domain"] = server_domain
             insight["server_type"] = server_type
@@ -69,9 +70,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
             insight["timestamp"] = timestamp
             insight["type"] = self.get_type()
             insight["countries"] = getattr(
-                self.product_store[barcode], "countries_tags", []
+                product, "countries_tags", []
             )
-            insight["brands"] = getattr(self.product_store[barcode], "brands_tags", [])
+            insight["brands"] = getattr(product, "brands_tags", [])
             yield insight
 
     @staticmethod

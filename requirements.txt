@@ -21,3 +21,4 @@ spacy==2.2.2
 scikit-learn==0.20.1
 flashtext==2.7
 langid==1.1.6
+pymongo==3.10.1
