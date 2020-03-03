@@ -15,7 +15,7 @@ import requests
 from robotoff.off import http_session
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
-from robotoff.mongo import mongo_client
+from robotoff.mongo import MONGO_CLIENT_CACHE
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -424,6 +424,7 @@ def load_min_dataset() -> ProductStore:
 
 
 def get_product_store() -> DBProductStore:
+    mongo_client = MONGO_CLIENT_CACHE.get()
     return DBProductStore(client=mongo_client)
 
 
