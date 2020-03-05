@@ -18,9 +18,14 @@
     if kcal_candidate = stored_value_kcal:
       # We could add a check between kcal and kJ (kJ/4,184 is roughly equal to kcal)
       if stored_value_kcal is Empty:
-        create_insight("kJ_candidate")
+        create_insight(code, kJ_candidate)
         
     if kJ_candidate = stored_value_kJ:
       # We could add a check between kcal and kJ (kJ/4,184 is roughly equal to kcal)
       if stored_value_kJ is Empty:
-        create_insight("kcal_candidate")
+        create_insight(code, kcal_candidate)
+
+        
+       # po strings
+    "Is this product %s kJ per 100g ?"
+    "Is this product %s kcal per 100g ?"
