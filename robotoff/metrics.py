@@ -7,7 +7,14 @@ import requests
 
 from robotoff import settings
 
-URL_PATHS: List[str] = ["/ingredients-analysis?json=1", "/data-quality?json=1"]
+URL_PATHS: List[str] = [
+    "/ingredients-analysis?json=1",
+    "/data-quality?json=1",
+    "/ingredients?stats=1&json=1",
+    "/states?json=1",
+    "/countries?json=1",
+]
+
 COUNTRY_TAGS = [
     "world",
     "us",
@@ -17,6 +24,37 @@ COUNTRY_TAGS = [
     "it",
     "be",
     "nl",
+    "de",
+    "ch",
+    "be",
+    "ca",
+    "au",
+    "mx",
+    "at",
+    "ie",
+    "po",
+    "pt",
+    "se",
+    "ru",
+    "th",
+    "ma",
+    "lu",
+    "re",
+    "ro",
+    "bg",
+    "hu",
+    "dz",
+    "da",
+    "br",
+    "cz",
+    "sg",
+    "fi",
+    "ar",
+    "gd",
+    "jp",
+    "no",
+    "in",
+    "tn",
 ]
 
 
@@ -38,6 +76,9 @@ def save_facet_metrics():
 
     for url_path in URL_PATHS:
         for country_tag in COUNTRY_TAGS:
+            if country_tag != "world" and url_path.startswith("/countries"):
+                continue
+
             inserts += generate_metrics_from_path(
                 country_tag, url_path, target_datetime
             )
