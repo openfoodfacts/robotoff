@@ -12,7 +12,6 @@ URL_PATHS: List[str] = [
     "/data-quality?json=1",
     "/ingredients?stats=1&json=1",
     "/states?json=1",
-    "/countries?json=1",
 ]
 
 COUNTRY_TAGS = [
@@ -74,15 +73,21 @@ def save_facet_metrics():
     inserts = []
     target_datetime = datetime.datetime.now()
 
-    for url_path in URL_PATHS:
-        for country_tag in COUNTRY_TAGS:
-            if country_tag != "world" and url_path.startswith("/countries"):
-                continue
-
+    for country_tag in COUNTRY_TAGS:
+        for url_path in URL_PATHS:
             inserts += generate_metrics_from_path(
                 country_tag, url_path, target_datetime
             )
 
+        inserts += generate_metrics_from_path(
+            country_tag,
+            "/entry-date/{}/contributors?json=1".format(
+                target_datetime.strftime("%Y-%m-%d")
+            ),
+            target_datetime,
+        )
+
+    inserts += generate_metrics_from_path("world", "/countries?json=1", target_datetime)
     client.write_points(inserts)
 
 
