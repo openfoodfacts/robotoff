@@ -6,6 +6,10 @@ from influxdb import InfluxDBClient
 import requests
 
 from robotoff import settings
+from datetime import date
+
+today = date.today()
+date = today.strftime("%y-%m-%d")
 
 URL_PATHS: List[str] = [
     "/ingredients-analysis?json=1",
@@ -13,6 +17,7 @@ URL_PATHS: List[str] = [
     "/ingredients?stats=1&json=1",
     "/states?json=1",
     "/countries?json=1",
+    "/entry-date/"+date+"/contributors?json=1",
 ]
 
 COUNTRY_TAGS = [
