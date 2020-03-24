@@ -1,6 +1,6 @@
 import datetime
 from urllib.parse import urlparse
-from typing import List
+from typing import List, Optional
 
 from influxdb import InfluxDBClient
 import requests
@@ -67,16 +67,28 @@ def get_influx_client() -> InfluxDBClient:
     )
 
 
+def get_product_count(country_tag: str) -> int:
+    r = requests.get(
+        "https://{}.openfoodfacts.org/3.json?fields=null".format(country_tag)
+    ).json()
+    return r["count"]
+
+
 def save_facet_metrics():
     client = get_influx_client()
 
     inserts = []
     target_datetime = datetime.datetime.now()
+    product_counts = {
+        country_tag: get_product_count(country_tag) for country_tag in COUNTRY_TAGS
+    }
 
     for country_tag in COUNTRY_TAGS:
+        count = product_counts[country_tag]
+
         for url_path in URL_PATHS:
             inserts += generate_metrics_from_path(
-                country_tag, url_path, target_datetime
+                country_tag, url_path, target_datetime, count
             )
 
         inserts += generate_metrics_from_path(
@@ -86,6 +98,7 @@ def save_facet_metrics():
                 (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
             ),
             target_datetime,
+            facet="contributors",
         )
 
     inserts += generate_metrics_from_path("world", "/countries?json=1", target_datetime)
@@ -97,17 +110,33 @@ def get_facet_name(url: str) -> str:
 
 
 def generate_metrics_from_path(
-    country_tag: str, path: str, target_datetime: datetime.datetime
+    country_tag: str,
+    path: str,
+    target_datetime: datetime.datetime,
+    count: Optional[int] = None,
+    facet: Optional[str] = None,
 ) -> List:
     url = f"https://{country_tag}-en.openfoodfacts.org{path}"
-    facet = get_facet_name(url)
+
+    if facet is None:
+        facet = get_facet_name(url)
+
     data = requests.get(url).json()
 
     inserts = []
     for tag in data["tags"]:
         name = tag["name"]
         products = tag["products"]
+        fields = {"products": products}
+
+        if "percent" in tag:
+            fields["percent"] = tag["percent"]
+
+        elif count is not None:
+            fields["percent"] = products / count
+
         tag_id = tag["id"]
+
         inserts.append(
             {
                 "measurement": "facets",
@@ -118,7 +147,7 @@ def generate_metrics_from_path(
                     "facet": facet,
                 },
                 "time": target_datetime.isoformat(),
-                "fields": {"products": products},
+                "fields": fields,
             }
         )
     return inserts
