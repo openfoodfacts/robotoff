@@ -82,7 +82,8 @@ def save_facet_metrics():
         inserts += generate_metrics_from_path(
             country_tag,
             "/entry-date/{}/contributors?json=1".format(
-                target_datetime.strftime("%Y-%m-%d")
+                # get contribution metrics for the previous day
+                (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
             ),
             target_datetime,
         )
