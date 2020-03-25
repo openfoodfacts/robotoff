@@ -1,3 +1,10 @@
+// These brands are excluded from Robotoff's detection. So these brands won't be suggested by Robotoff to users.
+// Also Hunger Game won't propose suggestions for these brands.
+//
+// Why adding brands here?
+// * avoid brands that only represent a part of a brand (mostly); examples: american, france, italia, deluxe, classic, etc.
+// * avoid mispellings such as kellog-s, kelloggs, kellog or kellogs (the right one is kellogg-s)
+//
 7-days
 ambiente
 american
