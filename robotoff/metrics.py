@@ -130,7 +130,7 @@ def generate_metrics_from_path(
         fields = {"products": products}
 
         if "percent" in tag:
-            fields["percent"] = tag["percent"]
+            fields["percent"] = float(tag["percent"])
 
         elif count is not None:
             fields["percent"] = products * 100 / count
