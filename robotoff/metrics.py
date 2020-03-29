@@ -127,9 +127,9 @@ def generate_metrics_from_path(
         facet = get_facet_name(url)
 
     try:
-        r = requests.get(url, timeout=15)
+        r = requests.get(url, timeout=60)
     except requests.exceptions.Timeout:
-        logger.error("OFF request timeout (15s): {}".format(url))
+        logger.error("OFF request timeout (60s): {}".format(url))
         return inserts
 
     if not r.ok:
