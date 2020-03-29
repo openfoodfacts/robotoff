@@ -1,4 +1,5 @@
 import datetime
+import json
 from urllib.parse import urlparse
 from typing import List, Optional
 
@@ -6,6 +7,9 @@ from influxdb import InfluxDBClient
 import requests
 
 from robotoff import settings
+from robotoff.utils import get_logger
+
+logger = get_logger(__name__)
 
 URL_PATHS: List[str] = [
     "/ingredients-analysis?json=1",
@@ -116,14 +120,28 @@ def generate_metrics_from_path(
     count: Optional[int] = None,
     facet: Optional[str] = None,
 ) -> List:
+    inserts: List = []
     url = f"https://{country_tag}-en.openfoodfacts.org{path}"
 
     if facet is None:
         facet = get_facet_name(url)
 
-    data = requests.get(url).json()
+    try:
+        r = requests.get(url, timeout=15)
+    except requests.exceptions.Timeout:
+        logger.error("OFF request timeout (15s): {}".format(url))
+        return inserts
 
-    inserts = []
+    if not r.ok:
+        logger.error("Error during OFF request: {}".format(r.status_code))
+        return inserts
+
+    try:
+        data = r.json()
+    except json.JSONDecodeError as e:
+        logger.error("Error during OFF request JSON decoding:\n{}".format(e))
+        return inserts
+
     for tag in data["tags"]:
         name = tag["name"]
         products = tag["products"]
