@@ -25,7 +25,7 @@ LABEL_MAP_NAME = "labels.pbtxt"
 
 @dataclasses.dataclass
 class ObjectDetectionResult:
-    bounding_box: Tuple[float, float, float, float]
+    bounding_box: Tuple
     score: float
     label: str
 
@@ -56,7 +56,9 @@ class ObjectDetectionRawResult:
             label_int = int(label)
             label_str = self.category_index[label_int]["name"]
             result = ObjectDetectionResult(
-                bounding_box=bounding_box, score=float(score), label=label_str
+                bounding_box=tuple(bounding_box.tolist()),
+                score=float(score),
+                label=label_str,
             )
             results.append(result)
 
