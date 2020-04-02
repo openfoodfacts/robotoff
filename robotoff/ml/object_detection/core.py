@@ -90,6 +90,18 @@ def add_boxes_and_labels(image_array: np.array, raw_result: ObjectDetectionRawRe
     raw_result.boxed_image = image_with_boxes
 
 
+def resize_image(image: Image.Image, max_size: Tuple[int, int]) -> Image.Image:
+    width, height = image.size
+    max_width, max_height = max_size
+
+    if width > max_width or height > max_height:
+        new_image = image.copy()
+        new_image.thumbnail((max_width, max_height))
+        return new_image
+
+    return image
+
+
 class RemoteModel:
     def __init__(self, name: str, label_path: pathlib.Path):
         self.name: str = name
@@ -104,7 +116,8 @@ class RemoteModel:
     def detect_from_image(
         self, image: np.array, output_image: bool = False
     ) -> ObjectDetectionRawResult:
-        image_array = convert_image_to_array(image)
+        resized_image = resize_image(image, settings.OBJECT_DETECTION_IMAGE_MAX_SIZE)
+        image_array = convert_image_to_array(resized_image)
         data = {
             "signature_name": "serving_default",
             "instances": np.expand_dims(image_array, 0).tolist(),
