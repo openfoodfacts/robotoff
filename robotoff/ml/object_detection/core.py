@@ -36,7 +36,6 @@ class ObjectDetectionRawResult:
     detection_boxes: np.array
     detection_scores: np.array
     detection_classes: np.array
-    image_size: Tuple[int, int]
     category_index: CategoryIndex
     detection_masks: Optional[np.array] = None
     boxed_image: Optional[PIL.Image.Image] = None
@@ -51,16 +50,9 @@ class ObjectDetectionRawResult:
         selected_classes = self.detection_classes[box_masks]
 
         results = []
-        image_width, image_height = self.image_size
-        for box, score, label in zip(selected_boxes, selected_scores, selected_classes):
-            ymin, xmin, ymax, xmax = box
-            bounding_box = (
-                ymin * image_height,
-                xmin * image_width,
-                ymax * image_height,
-                xmax * image_width,
-            )
-
+        for bounding_box, score, label in zip(
+            selected_boxes, selected_scores, selected_classes
+        ):
             label_int = int(label)
             label_str = self.category_index[label_int]["name"]
             result = ObjectDetectionResult(
@@ -130,7 +122,6 @@ class RemoteModel:
         detection_boxes = np.array(prediction["detection_boxes"])
 
         result = ObjectDetectionRawResult(
-            image_size=(image_array.shape[0], image_array.shape[1]),
             num_detections=num_detections,
             detection_classes=detection_classes,
             detection_boxes=detection_boxes,
