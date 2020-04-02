@@ -1,3 +1,4 @@
+from collections import defaultdict
 import enum
 import math
 import operator
@@ -210,6 +211,12 @@ class OCRResult:
         except Exception as e:
             raise OCRParsingException("error during OCR parsing") from e
 
+    def get_languages(self) -> Optional[Dict[str, int]]:
+        if self.full_text_annotation is not None:
+            return self.full_text_annotation.get_languages()
+
+        return None
+
 
 def get_text(
     content: Union[OCRResult, str],
@@ -258,6 +265,16 @@ class OCRFullTextAnnotation:
         if not lazy:
             self.load_pages()
 
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+        for page in self.pages:
+            page_counts = page.get_languages()
+
+            for key, value in page_counts.items():
+                counts[key] += value
+
+        return dict(counts)
+
     @property
     def pages(self) -> List["TextAnnotationPage"]:
         if self._pages_data is not None:
@@ -285,6 +302,16 @@ class TextAnnotationPage:
         self.height = data["height"]
         self.blocks: List[Block] = [Block(d) for d in data["blocks"]]
 
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+        for block in self.blocks:
+            block_counts = block.get_languages()
+
+            for key, value in block_counts.items():
+                counts[key] += value
+
+        return dict(counts)
+
     def detect_words_orientation(self) -> List[ImageOrientation]:
         word_orientations: List[ImageOrientation] = []
 
@@ -305,6 +332,16 @@ class Block:
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
 
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+        for paragraph in self.paragraphs:
+            paragraph_counts = paragraph.get_languages()
+
+            for key, value in paragraph_counts.items():
+                counts[key] += value
+
+        return dict(counts)
+
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
 
@@ -324,6 +361,19 @@ class Paragraph:
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
+
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+
+        for word in self.words:
+            if word.languages is not None:
+                for language in word.languages:
+                    counts[language.language] += 1
+            else:
+                counts["null"] += 1
+
+        counts["words"] = len(self.words)
+        return dict(counts)
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
@@ -444,6 +494,11 @@ class DetectedLanguage:
     def __init__(self, data: JSONType):
         self.language = data["languageCode"]
         self.confidence = data.get("confidence", 0)
+
+    def __repr__(self):
+        return "<DetectedLanguage: {} (confidence: {})>".format(
+            self.language, self.confidence
+        )
 
 
 class BoundingPoly:
