@@ -43,14 +43,23 @@ def extract_tokens_ingredients_from_taxonomy(lang: str):
     from spacy.util import get_lang_class
 
     ingredients = extract_ingredients_from_taxonomy(lang)
-    nlp = get_lang_class(lang)
+    nlp_class = get_lang_class(lang)
+    nlp = nlp_class()
     tokens = set()
 
-    for doc in nlp.pipe(ingredients):
+    for doc in nlp.pipe(texts=ingredients):
         for token in doc:
-            tokens.add(token)
+            tokens.add(token.orth_)
 
     return tokens
+
+
+def dump_token_ingredients_from_taxonomy(lang: str):
+    tokens = sorted(extract_tokens_ingredients_from_taxonomy(lang))
+
+    with settings.INGREDIENT_TOKENS_PATH.open("w") as f:
+        for token in tokens:
+            f.write(token + "\n")
 
 
 @dataclass
