@@ -4,14 +4,19 @@ import re
 
 import dataclasses
 from dataclasses import dataclass, field
-from typing import List, Tuple, Iterable, Dict, Optional
+from typing import List, Tuple, Iterable, Dict, Optional, Set
 
 from robotoff import settings
 from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import CachedStore
 from robotoff.utils.es import generate_msearch_body
+from robotoff.utils.text import FR_NLP_CACHE
+
+from spacy.util import get_lang_class
+
 
 logger = get_logger(__name__)
 
@@ -27,6 +32,15 @@ class TokenLengthMismatchException(Exception):
     pass
 
 
+def get_fr_known_tokens() -> Set[str]:
+    tokens = set(text_file_iter(settings.INGREDIENT_TOKENS_PATH, comment=False))
+    tokens = tokens.union(set(text_file_iter(settings.FR_TOKENS_PATH, comment=False)))
+    return tokens
+
+
+FR_KNOWN_TOKENS = CachedStore(get_fr_known_tokens)
+
+
 def extract_ingredients_from_taxonomy(lang: str):
     taxonomy = get_taxonomy(TaxonomyType.ingredient.name)
     ingredients = set()
@@ -40,8 +54,6 @@ def extract_ingredients_from_taxonomy(lang: str):
 
 
 def extract_tokens_ingredients_from_taxonomy(lang: str):
-    from spacy.util import get_lang_class
-
     ingredients = extract_ingredients_from_taxonomy(lang)
     nlp_class = get_lang_class(lang)
     nlp = nlp_class()
@@ -90,6 +102,7 @@ class TermCorrection:
     correction: str
     start_offset: int
     end_offset: int
+    is_valid: bool = True
 
 
 @dataclass
@@ -178,16 +191,14 @@ def generate_corrections(
         original_tokens = analyze(client, normalized_ingredient)
         suggestion_tokens = analyze(client, option["text"])
         try:
-            term_corrections = [
-                c
-                for c in format_corrections(
-                    original_tokens, suggestion_tokens, offsets[0]
-                )
-                if is_valid_correction(c)
-            ]
+            term_corrections = format_corrections(
+                original_tokens, suggestion_tokens, offsets[0]
+            )
 
-            if term_corrections:
-                corrections.append(Correction(term_corrections, option["score"]))
+            for term_correction in term_corrections:
+                term_correction.is_valid = is_valid_correction(term_correction)
+
+            corrections.append(Correction(term_corrections, option["score"]))
 
         except TokenLengthMismatchException:
             # logger.warning("The original text and the suggestions must have the same number "
@@ -197,11 +208,23 @@ def generate_corrections(
     return corrections
 
 
-def is_valid_correction(correction: TermCorrection) -> bool:
+def is_valid_correction(
+    correction: TermCorrection, plural: bool = True, original_known: bool = True
+) -> bool:
+    if plural and is_plural_correction(correction):
+        return False
+
+    if original_known and is_original_ingredient_known(correction.original):
+        return False
+
+    return True
+
+
+def is_plural_correction(correction: TermCorrection) -> bool:
     original_str = correction.original.lower()
     correction_str = correction.correction.lower()
 
-    if (
+    return (
         len(original_str) > len(correction_str)
         and original_str.endswith("s")
         and correction_str == original_str[:-1]
@@ -209,15 +232,25 @@ def is_valid_correction(correction: TermCorrection) -> bool:
         len(correction_str) > len(original_str)
         and correction_str.endswith("s")
         and original_str == correction_str[:-1]
-    ):
-        print(correction)
-        return False
+    )
+
+
+def is_original_ingredient_known(text: str):
+    nlp = FR_NLP_CACHE.get()
+    known_tokens = FR_KNOWN_TOKENS.get()
+
+    for token in nlp(text):
+        if token.lower_ not in known_tokens:
+            return False
 
     return True
 
 
 def generate_corrected_text(corrections: List[TermCorrection], text: str):
-    sorted_corrections = sorted(corrections, key=operator.attrgetter("start_offset"))
+    valid_corrections = [c for c in corrections if c.is_valid]
+    sorted_corrections = sorted(
+        valid_corrections, key=operator.attrgetter("start_offset")
+    )
     corrected_fragments = []
 
     last_correction = None

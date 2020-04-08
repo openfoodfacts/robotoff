@@ -7,7 +7,7 @@ import tempfile
 
 import requests
 import sys
-from typing import Union, Iterable, Dict, Optional
+from typing import Callable, Union, Iterable, Dict, Optional
 
 from PIL import Image
 
@@ -63,10 +63,7 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
 
 def dump_jsonl(filepath: Union[str, pathlib.Path], json_iter: Iterable[Dict]) -> int:
     count = 0
-    if filepath.suffix == ".gz":
-        open_fn = gzip.open
-    else:
-        open_fn = open
+    open_fn = get_open_fn(filepath)
 
     with open_fn(str(filepath), "wt") as f:
         for item in json_iter:
@@ -76,14 +73,27 @@ def dump_jsonl(filepath: Union[str, pathlib.Path], json_iter: Iterable[Dict]) ->
     return count
 
 
-def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
-    with open(str(filepath), "r") as f:
+def get_open_fn(filepath: Union[str, pathlib.Path]) -> Callable:
+    filepath = str(filepath)
+    if filepath.endswith(".gz"):
+        return gzip.open
+    else:
+        return open
+
+
+def text_file_iter(
+    filepath: Union[str, pathlib.Path], comment: bool = True
+) -> Iterable[str]:
+    open_fn = get_open_fn(filepath)
+
+    with open_fn(str(filepath), "rt") as f:
         for item in f:
             item = item.strip("\n")
 
-            # commented lines start with '//'
-            if item and not item.startswith("//"):
-                yield item
+            if item:
+                # commented lines start with '//'
+                if not comment or not item.startswith("//"):
+                    yield item
 
 
 def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):

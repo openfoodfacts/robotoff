@@ -39,6 +39,7 @@ TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
 TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
+FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
