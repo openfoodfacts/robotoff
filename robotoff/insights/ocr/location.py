@@ -177,14 +177,9 @@ class AddressExtractor:
             return match.group(), sub_start + match.start(), sub_start + match.end()
 
 
-def find_location(content: Union[OCRResult, str]) -> List[Dict]:
+def find_locations(content: Union[OCRResult, str]) -> List[Dict]:
     # TODO (alexandre.marty, 20200401): Is there an existing way to properly cache
-    #  data expensive to load?
-    with importlib_resources.path(
-            __package__ + ".resources", "laposte_hexasmal.json.gz"
-    ) as cities_path:
-        cities = load_cities_fr(cities_path)
-
+    #  resources expensive to load?
+    cities = load_cities_fr()
     location_extractor = AddressExtractor(cities)
-
     return [location_extractor.extract_location(content)]

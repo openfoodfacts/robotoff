@@ -71,16 +71,16 @@ def test_remove_accents():
 def test_city_extractor():
     c1 = City("abc", "12345", None)
     c2 = City("def g", "12345", None)
-    ce = AddressExtractor([c1, c2])
+    ae = AddressExtractor([c1, c2])
 
-    assert ce.find_city_names("without city") == []
-    assert ce.find_city_names("with def and g") == []
-    assert ce.find_city_names("with the abc city") == [(c1, 9, 12)]
-    assert ce.find_city_names("with the def g city") == [(c2, 9, 14)]
-    assert ce.find_city_names("with def g and abc cities") == [
+    assert ae.find_city_names("without city") == []
+    assert ae.find_city_names("with def and g") == []
+    assert ae.find_city_names("with the abc city") == [(c1, 9, 12)]
+    assert ae.find_city_names("with the def g city") == [(c2, 9, 14)]
+    assert ae.find_city_names("with def g and abc cities") == [
         (c2, 5, 10), (c1, 15, 18)]
     # To fix
-    assert ce.find_city_names("with àbç and déf g with accents") == [
+    assert ae.find_city_names("with àbç and déf g with accents") == [
         (c1, 5, 8), (c2, 13, 18)]
-    assert ce.find_city_names("with def'g and l'abc and def-g") == [
+    assert ae.find_city_names("with def'g and l'abc and def-g") == [
         (c2, 5, 10), (c1, 17, 20), (c2, 25, 30)]
