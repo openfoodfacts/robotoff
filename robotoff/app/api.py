@@ -29,7 +29,7 @@ from robotoff.ml.category.neural.model import (
     filter_blacklisted_categories,
 )
 from robotoff.models import ProductInsight, UserAnnotation
-from robotoff.off import http_session, OFFAuthentication
+from robotoff.off import http_session, OFFAuthentication, get_product
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
 from robotoff.utils.es import get_es_client
@@ -208,8 +208,28 @@ class AnnotateInsightResource:
 
 
 class IngredientSpellcheckResource:
-    def on_post(self, req, resp):
-        text = req.get_param("text", required=True)
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        self.spellcheck(req, resp)
+
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        self.spellcheck(req, resp)
+
+    def spellcheck(self, req: falcon.Request, resp: falcon.Response):
+        text = req.get_param("text")
+        barcode = req.get_param("barcode")
+
+        if text is None and barcode is None:
+            raise falcon.HTTPBadRequest("text or barcode is required.")
+
+        if not text:
+            product = get_product(barcode) or {}
+            text = product.get("ingredients_text_fr")
+
+            if text is None:
+                resp.media = {
+                    "status": "not_found",
+                }
+                return
 
         corrections = generate_corrections(es_client, text, confidence=1)
         term_corrections = list(
