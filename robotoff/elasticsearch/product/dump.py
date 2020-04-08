@@ -25,9 +25,7 @@ def product_export():
         .iter()
     )
     product_iter = (
-        p
-        for p in product_iter
-        if "ingredients-unknown-score-above-0" not in p.get("quality_tags", [])
+        p for p in product_iter if int(p.get("unknown_ingredients_n", 0)) == 0
     )
 
     data = (
