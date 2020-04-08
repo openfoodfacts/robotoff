@@ -272,6 +272,19 @@ def _suggest(client, text):
     return response["suggest"][suggester_name]
 
 
+def suggest(text: str, client, confidence: float = 1) -> Dict:
+    corrections = generate_corrections(client, text, confidence=confidence)
+    term_corrections = list(
+        itertools.chain.from_iterable((c.term_corrections for c in corrections))
+    )
+
+    return {
+        "corrections": [dataclasses.asdict(c) for c in term_corrections],
+        "text": text,
+        "corrected": generate_corrected_text(term_corrections, text),
+    }
+
+
 def analyze(client, ingredient_text: str):
     r = client.indices.analyze(
         index=settings.ELASTICSEARCH_PRODUCT_INDEX,
@@ -310,7 +323,26 @@ def generate_suggest_query(
     min_word_length=4,
     suggest_mode="missing",
     name="autocorrect",
+    reverse: bool = True,
 ):
+    direct_generators = [
+        {
+            "field": "ingredients_text_fr.trigram",
+            "suggest_mode": suggest_mode,
+            "min_word_length": min_word_length,
+        }
+    ]
+
+    if reverse:
+        direct_generators.append(
+            {
+                "field": "ingredients_text_fr.reverse",
+                "suggest_mode": suggest_mode,
+                "min_word_length": min_word_length,
+                "pre_filter": "reverse",
+                "post_filter": "reverse",
+            },
+        )
     return {
         "suggest": {
             "text": text,
@@ -320,13 +352,7 @@ def generate_suggest_query(
                     "field": "ingredients_text_fr.trigram",
                     "size": size,
                     "gram_size": 3,
-                    "direct_generator": [
-                        {
-                            "field": "ingredients_text_fr.trigram",
-                            "suggest_mode": suggest_mode,
-                            "min_word_length": min_word_length,
-                        }
-                    ],
+                    "direct_generator": direct_generators,
                     "smoothing": {"laplace": {"alpha": 0.5}},
                 }
             },
