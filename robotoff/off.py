@@ -289,6 +289,32 @@ def add_packaging(
     update_product(params, **kwargs)
 
 
+def save_ingredients(
+    barcode: str,
+    ingredient_text: str,
+    insight_id: Optional[str] = None,
+    lang: str = None,
+    comment: Optional[str] = None,
+    **kwargs,
+):
+    ingredient_key = "ingredients_text" if lang is None else f"ingredients_text_{lang}"
+
+    if comment:
+        comment = "[robotoff] Ingredient spellcheck correction ({})".format(comment)
+    else:
+        comment = "[robotoff] Ingredient spellcheck correction"
+
+    if insight_id:
+        comment += ", ID: {}".format(insight_id)
+
+    params = {
+        "code": barcode,
+        "comment": comment,
+        ingredient_key: ingredient_text,
+    }
+    update_product(params, **kwargs)
+
+
 def update_product(
     params: Dict,
     server_domain: Optional[str] = None,

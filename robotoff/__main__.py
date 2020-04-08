@@ -71,6 +71,34 @@ if __name__ == "__main__":
         dump_jsonl(output, predict_from_dataset(dataset))
 
     @click.command()
+    @click.argument("pattern")
+    @click.argument("correction")
+    @click.option("--country", default="fr")
+    @click.option("--username", required=True, prompt="Username")
+    @click.option("--password", required=True, prompt="Password", hide_input=True)
+    @click.option("--dry/--no-dry", default=False)
+    def spellcheck(
+        pattern: str,
+        correction: str,
+        country: str,
+        username: str,
+        password: str,
+        dry: bool,
+    ):
+        from robotoff.cli.spellcheck import correct_ingredient
+        from robotoff.insights.ocr.utils import get_tag
+        from robotoff.utils import get_logger
+        from robotoff.off import OFFAuthentication
+
+        get_logger()
+        ingredient = get_tag(pattern)
+        comment = "Fixing '{}' typo".format(pattern)
+        auth = OFFAuthentication(username=username, password=password)
+        correct_ingredient(
+            country, ingredient, pattern, correction, comment, dry_run=dry, auth=auth
+        )
+
+    @click.command()
     @click.argument("output", type=pathlib.Path)
     @click.option("--confidence", type=float, default=1)
     def generate_spellcheck_insights(output: str, confidence: float):
@@ -91,7 +119,7 @@ if __name__ == "__main__":
         from robotoff.products import has_dataset_changed, fetch_dataset
         from robotoff.utils import get_logger
 
-        logger = get_logger()
+        get_logger()
 
         if has_dataset_changed():
             fetch_dataset(minify)
@@ -182,6 +210,7 @@ if __name__ == "__main__":
     cli.add_command(batch_annotate)
     cli.add_command(predict_category)
     cli.add_command(init_elasticsearch)
+    cli.add_command(spellcheck)
     cli.add_command(generate_spellcheck_insights)
     cli.add_command(download_dataset)
     cli.add_command(categorize)
