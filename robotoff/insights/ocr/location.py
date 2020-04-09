@@ -18,6 +18,7 @@ from flashtext import KeywordProcessor
 
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
+from robotoff.utils.text import strip_accents_ascii
 
 
 logger = get_logger(__name__)
@@ -84,23 +85,6 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
     return list(set(cities))
 
 
-def remove_accents(text: str) -> str:
-    """Replace accented characters with non-accented ones in unicode string.
-
-    Args:
-        text (str): String to remove accents from.
-
-    Returns:
-        str: The input string with accents removed.
-
-    Examples:
-        >>> remove_accents("àéèïç")
-        'aeeic'
-    """
-    nfkd_form = unicodedata.normalize("NFKD", text)
-    return u"".join(c for c in nfkd_form if not unicodedata.combining(c))
-
-
 # TODO (alexandre.marty, 20200401): Is this the right way to extract the locale?
 def get_locale(ocr_result: OCRResult) -> Optional[str]:
     """Extract the most likely locale from the result of an OCR request.
@@ -157,7 +141,7 @@ class AddressExtractor:
     def prepare_text(self, text_annotations_str_lower: str) -> str:
         text = text_annotations_str_lower
         text = text[:text.find("||")]  # Keep only full description
-        text = remove_accents(text)
+        text = strip_accents_ascii(text)
         text = text.replace("'", " ").replace("-", " ")
         return text
 
