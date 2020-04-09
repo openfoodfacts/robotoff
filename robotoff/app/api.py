@@ -225,7 +225,7 @@ class IngredientSpellcheckResource:
             product = get_product(barcode) or {}
             text = product.get("ingredients_text_fr")
 
-            if text is None:
+            if not text:
                 resp.media = {
                     "status": "not_found",
                 }
