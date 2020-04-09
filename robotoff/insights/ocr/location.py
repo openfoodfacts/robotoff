@@ -10,6 +10,7 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
+from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import strip_accents_ascii
 
 
@@ -73,6 +74,9 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
 
     # Remove duplicates
     return list(set(cities))
+
+
+CITIES_FR_STORE = CachedStore(load_cities_fr, expiration_interval=None)
 
 
 # TODO (alexandre.marty, 20200401): Is this the right way to extract the locale?
@@ -152,8 +156,6 @@ class AddressExtractor:
 
 
 def find_locations(content: Union[OCRResult, str]) -> List[Dict]:
-    # TODO (alexandre.marty, 20200401): Is there an existing way to properly cache
-    #  resources expensive to load?
-    cities = load_cities_fr()
+    cities = CITIES_FR_STORE.get()
     location_extractor = AddressExtractor(cities)
     return [location_extractor.extract_location(content)]
