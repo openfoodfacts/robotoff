@@ -1,11 +1,8 @@
-from pathlib import Path
-
+from robotoff import settings
 from robotoff.insights.ocr.location import (
     City,
     AddressExtractor,
     load_cities_fr,
-    remove_accents,
-    CITIES_FR_RESOURCE,
 )
 
 
@@ -13,7 +10,6 @@ module = "robotoff.insights.ocr.location"
 
 
 def test_load_cities_fr(mocker):
-    m_open_binary = mocker.patch(f"{module}.open_binary")
     m_gzip_open = mocker.patch(f"{module}.gzip.open")
     m_json_load = mocker.patch(
         f"{module}.json.load",
@@ -31,10 +27,7 @@ def test_load_cities_fr(mocker):
 
     res = load_cities_fr()
 
-    m_open_binary.assert_called_once_with(*CITIES_FR_RESOURCE)
-    m_gzip_open.assert_called_once_with(
-        m_open_binary.return_value.__enter__.return_value, "rb"
-    )
+    m_gzip_open.assert_called_once_with(settings.OCR_CITIES_FR_PATH, "rb")
     m_json_load.assert_called_once_with(m_gzip_open.return_value.__enter__.return_value)
     assert res == [
         City("paris", "75000", (48.866667, 2.333333)),
@@ -59,13 +52,6 @@ def test_cities_fr_dataset():
         and isinstance(c[1], float)
         for c in non_null_coords
     )
-
-
-def test_remove_accents():
-    assert remove_accents("àéèïçč") == "aeeicc"
-    assert remove_accents("aeeicc") == "aeeicc"
-    assert remove_accents("ÀÉÈÏÇČ'_$^") == "AEEICC'_$^"
-    assert remove_accents("AEEICC'_$^") == "AEEICC'_$^"
 
 
 def test_city_extractor():
