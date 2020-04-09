@@ -89,6 +89,7 @@ OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / "image_flag_beauty.txt"
 OCR_IMAGE_FLAG_MISCELLANEOUS_PATH = OCR_DATA_DIR / "image_flag_miscellaneous.txt"
 OCR_PACKAGING_DATA_PATH = OCR_DATA_DIR / "packaging.txt"
 OCR_TRACE_ALLERGEN_DATA_PATH = OCR_DATA_DIR / "trace_allergen.txt"
+OCR_CITIES_FR_PATH = OCR_DATA_DIR / "cities_laposte_hexasmal.json.gz"
 
 
 BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json"

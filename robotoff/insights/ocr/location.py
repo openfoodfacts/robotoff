@@ -1,28 +1,19 @@
-from contextlib import ExitStack
 import dataclasses
 import gzip
 import json
 from pathlib import Path
 import re
 from typing import Union, List, Dict, Optional, Tuple, Sequence, BinaryIO
-import unicodedata
-
-try:
-    # Python >= 3.7
-    from importlib.resources import open_binary
-except ImportError:
-    # Python < 3.7 with backported importlib_resources installed
-    from importlib_resources import open_binary
 
 from flashtext import KeywordProcessor
 
+from robotoff import settings
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
 from robotoff.utils.text import strip_accents_ascii
 
 
 logger = get_logger(__name__)
-CITIES_FR_RESOURCE = (f"{__package__}.resources", "laposte_hexasmal.json.gz")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -60,12 +51,11 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
     """
     # JSON file contains a lot of repeated data. An alternative could be to use the
     # CSV file.
+    if source is None:
+        source = settings.OCR_CITIES_FR_PATH
 
     # Load JSON content
-    with ExitStack() as cm_stack:
-        if source is None:
-            source = cm_stack.enter_context(open_binary(*CITIES_FR_RESOURCE))
-        cities_file = cm_stack.enter_context(gzip.open(source, "rb"))
+    with gzip.open(source, "rb") as cities_file:
         json_data = json.load(cities_file)
 
     # Create City objects
