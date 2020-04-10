@@ -217,6 +217,9 @@ class IngredientSpellcheckResource:
     def spellcheck(self, req: falcon.Request, resp: falcon.Response):
         text = req.get_param("text")
         barcode = req.get_param("barcode")
+        index_name = req.get_param(
+            "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
+        )
 
         if text is None and barcode is None:
             raise falcon.HTTPBadRequest("text or barcode is required.")
@@ -231,7 +234,9 @@ class IngredientSpellcheckResource:
                 }
                 return
 
-        corrections = generate_corrections(es_client, text, confidence=1)
+        corrections = generate_corrections(
+            es_client, text, confidence=1, index_name=index_name
+        )
         term_corrections = list(
             itertools.chain.from_iterable((c.term_corrections for c in corrections))
         )

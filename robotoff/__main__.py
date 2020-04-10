@@ -171,11 +171,14 @@ if __name__ == "__main__":
         logger.info("{} insights imported".format(imported))
 
     @click.command()
-    @click.option("--index/--no-index", default=True)
+    @click.option("--index/--no-index", default=False)
     @click.option("--data/--no-data", default=True)
-    @click.option("--product/--no-product", default=True)
-    @click.option("--category/--no-category", default=True)
-    def init_elasticsearch(index: bool, data: bool, product: bool, category: bool):
+    @click.option("--product/--no-product", default=False)
+    @click.option("--category/--no-category", default=False)
+    @click.option("--extended/--classic", default=True)
+    def init_elasticsearch(
+        index: bool, data: bool, product: bool, category: bool, extended: bool
+    ):
         import json
         from robotoff import settings
         from robotoff.utils.es import get_es_client
@@ -192,14 +195,19 @@ if __name__ == "__main__":
             client = get_es_client()
 
             if product:
-                client.indices.create("product", product_index_config)
+                index_name = (
+                    settings.ELASTICSEARCH_PRODUCT_EXTENDED_INDEX
+                    if extended
+                    else settings.ELASTICSEARCH_PRODUCT_INDEX
+                )
+                client.indices.create(index_name, product_index_config)
 
             if category:
                 client.indices.create("category", category_index_config)
 
         if data:
             if product:
-                product_export()
+                product_export(extended=extended)
 
             if category:
                 category_export()

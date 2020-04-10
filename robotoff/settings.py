@@ -38,6 +38,7 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
 TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
+INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 
@@ -59,6 +60,7 @@ ELASTICSEARCH_TYPE = "document"
 
 ELASTICSEARCH_CATEGORY_INDEX = "category"
 ELASTICSEARCH_PRODUCT_INDEX = "product"
+ELASTICSEARCH_PRODUCT_EXTENDED_INDEX = "product_extended"
 ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = (
     PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
 )

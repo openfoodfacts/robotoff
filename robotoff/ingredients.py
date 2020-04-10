@@ -337,10 +337,11 @@ def analyze(client, ingredient_text: str):
 
 def _suggest_batch(client, texts: Iterable[str], **kwargs) -> List[Dict]:
     suggester_name = "autocorrect"
+    index_name = kwargs.pop("index_name", settings.ELASTICSEARCH_PRODUCT_INDEX)
     queries = (
         generate_suggest_query(text, name=suggester_name, **kwargs) for text in texts
     )
-    body = generate_msearch_body(settings.ELASTICSEARCH_PRODUCT_INDEX, queries)
+    body = generate_msearch_body(index_name, queries)
     response = client.msearch(body=body, doc_type=settings.ELASTICSEARCH_TYPE)
 
     suggestions = []

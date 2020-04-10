@@ -45,7 +45,9 @@ def configure_root_logger(logger, level: str = "INFO"):
 
 
 def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
-    with open(jsonl_path, "r") as f:
+    open_fn = get_open_fn(jsonl_path)
+
+    with open_fn(str(jsonl_path), "rt", encoding="utf-8") as f:
         yield from jsonl_iter_fp(f)
 
 
