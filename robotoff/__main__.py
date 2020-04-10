@@ -101,16 +101,22 @@ if __name__ == "__main__":
     @click.command()
     @click.argument("output", type=pathlib.Path)
     @click.option("--confidence", type=float, default=1)
-    def generate_spellcheck_insights(output: str, confidence: float):
+    @click.option("--max-errors", type=int)
+    def generate_spellcheck_insights(
+        output: str, confidence: float, max_errors: Optional[int] = None
+    ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
         from robotoff.ingredients import generate_insights
         from robotoff.utils import get_logger
 
-        get_logger()
+        logger = get_logger()
+        logger.info("Max errors: {}".format(max_errors))
 
         client = get_es_client()
-        insights_iter = generate_insights(client, confidence=confidence)
+        insights_iter = generate_insights(
+            client, confidence=confidence, max_errors=max_errors
+        )
         dump_jsonl(output, insights_iter)
 
     @click.command()

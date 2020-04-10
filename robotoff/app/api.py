@@ -220,6 +220,7 @@ class IngredientSpellcheckResource:
         index_name = req.get_param(
             "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
         )
+        confidence = req.get_param_as_float("confidence", default=1.)
 
         if text is None and barcode is None:
             raise falcon.HTTPBadRequest("text or barcode is required.")
@@ -235,7 +236,7 @@ class IngredientSpellcheckResource:
                 return
 
         corrections = generate_corrections(
-            es_client, text, confidence=1, index_name=index_name
+            es_client, text, confidence=confidence, index_name=index_name
         )
         term_corrections = list(
             itertools.chain.from_iterable((c.term_corrections for c in corrections))

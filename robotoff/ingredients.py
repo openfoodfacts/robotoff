@@ -403,7 +403,7 @@ def generate_suggest_query(
     }
 
 
-def generate_insights(client, confidence=1):
+def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_iter = (
@@ -412,6 +412,13 @@ def generate_insights(client, confidence=1):
         .filter_nonempty_text_field("ingredients_text_fr")
         .iter()
     )
+
+    if max_errors is not None:
+        product_iter = (
+            p
+            for p in product_iter
+            if int(p.get("unknown_ingredients_n", 0)) <= max_errors
+        )
 
     for product in product_iter:
         text = product["ingredients_text_fr"]
