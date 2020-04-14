@@ -1,4 +1,8 @@
+from flashtext import KeywordProcessor
+import pytest
+
 from robotoff import settings
+from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.location import (
     City,
     AddressExtractor,
@@ -54,7 +58,43 @@ def test_cities_fr_dataset():
     )
 
 
-def test_city_extractor():
+@pytest.fixture
+def cities():
+    return [City("paris", "75000", (48.866667, 2.333333)), City("poya", "98827", None)]
+
+
+def test_address_extractor_init(mocker, cities):
+    m_add_keyword = mocker.patch.object(KeywordProcessor, "add_keyword")
+
+    ae = AddressExtractor(cities)
+
+    assert isinstance(ae.cities_processor, KeywordProcessor)
+    assert m_add_keyword.call_args_list == [
+        mocker.call("paris", cities[0]), mocker.call("poya", cities[1])
+    ]
+
+
+def test_address_extractor_get_text(mocker):
+    # OCRResult instance with a full_text_annotation
+    m_ocr_result = mocker.Mock(
+        get_full_text=mocker.Mock(return_value="full text à-é'$"),
+        text_annotations=[mocker.Mock(text="TEXT É'-č"), "yolo"],
+    )
+
+    assert AddressExtractor.get_text(m_ocr_result) == "full text a e $"
+    m_ocr_result.get_full_text.assert_called_once_with(lowercase=True)
+
+    # OCRResult instance without a full_text_annotation
+    m_ocr_result = mocker.Mock(
+        get_full_text=mocker.Mock(return_value=None),
+        text_annotations=[mocker.Mock(text="TEXT É'-č"), "yolo"],
+    )
+
+    assert AddressExtractor.get_text(m_ocr_result) == "text e  c"
+    m_ocr_result.get_full_text.assert_called_once_with(lowercase=True)
+
+
+def test_address_extractor_find_city_names():
     c1 = City("abc", "12345", None)
     c2 = City("def g", "12345", None)
     ae = AddressExtractor([c1, c2])
@@ -65,8 +105,7 @@ def test_city_extractor():
     assert ae.find_city_names("with the def g city") == [(c2, 9, 14)]
     assert ae.find_city_names("with def g and abc cities") == [
         (c2, 5, 10), (c1, 15, 18)]
-    # To fix
-    assert ae.find_city_names("with àbç and déf g with accents") == [
-        (c1, 5, 8), (c2, 13, 18)]
-    assert ae.find_city_names("with def'g and l'abc and def-g") == [
-        (c2, 5, 10), (c1, 17, 20), (c2, 25, 30)]
+
+
+def test_address_extractor_find_nearby_postal_code():
+    """WIP"""

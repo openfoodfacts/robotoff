@@ -12,6 +12,7 @@ from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import strip_accents_ascii
+from robotoff.utils.types import JSONType
 
 
 logger = get_logger(__name__)
@@ -97,8 +98,8 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_locations(self, ocr_result: OCRResult) -> List[Dict]:
-        text = self.prepare_text(ocr_result)
+    def extract_locations(self, ocr_result: OCRResult) -> List[JSONType]:
+        text = self.get_text(ocr_result)
         cities = self.find_city_names(text)
 
         locations = []
@@ -122,17 +123,13 @@ class AddressExtractor:
         return locations
 
     @staticmethod
-    def _get_ocr_result_text(ocr_result: OCRResult) -> str:
+    def get_text(ocr_result: OCRResult) -> str:
         text = ocr_result.get_full_text(lowercase=True)
         if text is None:
             # Using `OCRResult.text_annotations` directly instead of
             # `OCRResult.get_text_annotations()` because the latter contains
             # the text duplicated
             text = ocr_result.text_annotations[0].text.lower()
-        return text
-
-    def prepare_text(self, ocr_result: OCRResult) -> str:
-        text = self._get_ocr_result_text(ocr_result)
         text = strip_accents_ascii(text)
         text = text.replace("'", " ").replace("-", " ")
         return text
@@ -157,6 +154,6 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 )
 
 
-def find_locations(content: Union[OCRResult, str]) -> List[Dict]:
+def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
     location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
     return location_extractor.extract_locations(content)
