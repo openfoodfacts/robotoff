@@ -23,8 +23,8 @@ logger = get_logger(__name__)
 SPLITTER_CHAR = {"(", ")", ",", ";", "[", "]", "-", "{", "}"}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:E ?\d{3,5}[a-z]*)|(?:[_•:0-9])")
-
+BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:[_•:0-9])")
+E_BLACKLIST_RE = re.compile(r"(?<!\w)(?:E ?\d{3,5}[a-z]*)")
 OffsetType = Tuple[int, int]
 
 
@@ -114,18 +114,19 @@ class Correction:
 def normalize_ingredients(ingredient_text: str):
     normalized = ingredient_text
 
-    while True:
-        try:
-            match = next(BLACKLIST_RE.finditer(normalized))
-        except StopIteration:
-            break
+    for regex in (BLACKLIST_RE, E_BLACKLIST_RE):
+        while True:
+            try:
+                match = next(regex.finditer(normalized))
+            except StopIteration:
+                break
 
-        if match:
-            start = match.start()
-            end = match.end()
-            normalized = normalized[:start] + " " * (end - start) + normalized[end:]
-        else:
-            break
+            if match:
+                start = match.start()
+                end = match.end()
+                normalized = normalized[:start] + " " * (end - start) + normalized[end:]
+            else:
+                break
 
     return normalized
 
