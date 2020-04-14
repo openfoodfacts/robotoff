@@ -74,23 +74,6 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
     return list(set(cities))
 
 
-# TODO (alexandre.marty, 20200401): Is this the right way to extract the locale?
-def get_locale(ocr_result: OCRResult) -> Optional[str]:
-    """Extract the most likely locale from the result of an OCR request.
-
-    Args:
-        ocr_result (OCRResult): An OCR request result.
-
-    Returns:
-        str or None: The most likely locale of the OCR result's text as a two-character
-        string if found, otherwise None.
-    """
-    if len(ocr_result.text_annotations) > 0:
-        return ocr_result.text_annotations[0].locale
-    else:
-        return None
-
-
 class AddressExtractor:
     # TODO:
     #   * use city name and postal code distance
@@ -102,10 +85,6 @@ class AddressExtractor:
             self.cities_processor.add_keyword(city.name, city)
 
     def extract_location(self, ocr_result: OCRResult):
-        locale = get_locale(ocr_result)
-        if locale != "fr":
-            return {"cities": [], "full_cities": [], "addresses": []}
-
         text = self.prepare_text(ocr_result.text_annotations_str_lower)
         cities = self.find_city_names(text)
 
