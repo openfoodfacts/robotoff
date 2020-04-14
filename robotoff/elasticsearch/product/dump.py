@@ -25,16 +25,19 @@ def ingredients_iter() -> Iterator[str]:
             yield ingredient
 
 
-def product_export(extended: bool = True):
+def product_export(version: str = "product"):
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
-    product_iter = (
+    product_stream = (
         dataset.stream()
         .filter_by_country_tag("en:france")
         .filter_nonempty_text_field("ingredients_text_fr")
-        .filter_by_state_tag("en:complete")
-        .iter()
     )
+
+    if "all" not in version:
+        product_stream = product_stream.filter_by_state_tag("en:complete")
+
+    product_iter = product_stream.iter()
     product_iter = (
         p for p in product_iter if int(p.get("unknown_ingredients_n", 0)) == 0
     )
@@ -51,7 +54,7 @@ def product_export(extended: bool = True):
         for product in product_iter
     )
 
-    if extended:
+    if "extended" in version:
         ingredients = (
             (
                 "ingredient_{}".format(i),
@@ -60,11 +63,11 @@ def product_export(extended: bool = True):
             for i, ingredient in enumerate(ingredients_iter())
         )
         iterator: Iterator = itertools.chain(data, ingredients)
-        index = settings.ELASTICSEARCH_PRODUCT_EXTENDED_INDEX
+
     else:
         iterator = data
-        index = settings.ELASTICSEARCH_PRODUCT_INDEX
 
+    index = version
     es_client = get_es_client()
     logger.info("Deleting products")
     delete_products(es_client, index)
