@@ -22,8 +22,12 @@ class City:
     """A city, storing its name, postal code and GPS coordinates."""
 
     name: str
+    """The city name, lower case, no accents, with special characters replaced with 
+    spaces."""
     postal_code: str
+    """The city's postal code. The format depends on the country."""
     coordinates: Optional[Tuple[float, float]]
+    """The GPS coordinates of the city as a tuple of two floats, or None."""
 
 
 def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
@@ -75,40 +79,60 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
 
 
 class AddressExtractor:
+    """Suited for digit-only postal codes."""
     # TODO:
     #   * use city name and postal code distance
     #   * handle stop word in city names? (l, la...)
-    def __init__(self, cities: Sequence[City]):
+    def __init__(
+        self,
+        cities: Sequence[City],
+        postal_code_search_distance: int = 10,
+        text_extract_distance: int = 30
+    ):
         self.cities = cities
+        self.postal_code_search_distance = postal_code_search_distance
+        self.text_extract_distance = text_extract_distance
+
         self.cities_processor = KeywordProcessor()
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_location(self, ocr_result: OCRResult):
-        text = self.prepare_text(ocr_result.text_annotations_str_lower)
+    def extract_locations(self, ocr_result: OCRResult) -> List[Dict]:
+        text = self.prepare_text(ocr_result)
         cities = self.find_city_names(text)
 
-        surround_distance = 30
-        full_cities = []
-        addresses = []
+        locations = []
         for city, *span in cities:
             nearby_code = self.find_nearby_postal_code(text, city, span)
             if nearby_code is not None:
-                full_cities.append((nearby_code, (city.name, *span)))
-                address_start = min(span[0], nearby_code[1]) - surround_distance
-                address_end = max(span[1], nearby_code[2]) + surround_distance
-                addresses.append(
-                    text[max(0, address_start):min(len(text), address_end)]
+                address_start = (
+                    min(span[0], nearby_code[1]) - self.text_extract_distance
+                )
+                address_end = max(span[1], nearby_code[2]) + self.text_extract_distance
+                text_extract = text[max(0, address_start):min(len(text), address_end)]
+                locations.append(
+                    {
+                        "country_code": "fr",
+                        "city_name": city.name,
+                        "postal_code": city.postal_code,
+                        "text_extract": text_extract,
+                    }
                 )
 
-        return {"cities": [(c[0].name, *c[1:]) for c in cities],
-                "full_cities": full_cities,
-                "addresses": addresses
-                }
+        return locations
 
-    def prepare_text(self, text_annotations_str_lower: str) -> str:
-        text = text_annotations_str_lower
-        text = text[:text.find("||")]  # Keep only full description
+    @staticmethod
+    def _get_ocr_result_text(ocr_result: OCRResult) -> str:
+        text = ocr_result.get_full_text(lowercase=True)
+        if text is None:
+            # Using `OCRResult.text_annotations` directly instead of
+            # `OCRResult.get_text_annotations()` because the latter contains
+            # the text duplicated
+            text = ocr_result.text_annotations[0].text.lower()
+        return text
+
+    def prepare_text(self, ocr_result: OCRResult) -> str:
+        text = self._get_ocr_result_text(ocr_result)
         text = strip_accents_ascii(text)
         text = text.replace("'", " ").replace("-", " ")
         return text
@@ -117,10 +141,9 @@ class AddressExtractor:
         return self.cities_processor.extract_keywords(text, span_info=True)
 
     def find_nearby_postal_code(self, text: str, city: City, span: Tuple[int, int]):
-        max_distance = 10
         pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
-        sub_start = max(0, span[0] - max_distance)
-        sub_end = min(len(text), span[1] + max_distance)
+        sub_start = max(0, span[0] - self.postal_code_search_distance)
+        sub_end = min(len(text), span[1] + self.postal_code_search_distance)
         sub_text = text[sub_start:sub_end]
         match = re.search(pattern, sub_text)
         if match is None:
@@ -135,5 +158,5 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 
 
 def find_locations(content: Union[OCRResult, str]) -> List[Dict]:
-    location_extractor = ADDRESS_EXTRACTOR_STORE.get()
-    return [location_extractor.extract_location(content)]
+    location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
+    return location_extractor.extract_locations(content)
