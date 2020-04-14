@@ -26,8 +26,6 @@ class City:
     coordinates: Optional[Tuple[float, float]]
 
 
-# TODO (alexandre.marty, 20200401): Is there a current practice for storing data in
-#  the repo?
 def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
     """Load French cities dataset.
 
@@ -74,9 +72,6 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
 
     # Remove duplicates
     return list(set(cities))
-
-
-CITIES_FR_STORE = CachedStore(load_cities_fr, expiration_interval=None)
 
 
 # TODO (alexandre.marty, 20200401): Is this the right way to extract the locale?
@@ -155,7 +150,11 @@ class AddressExtractor:
             return match.group(), sub_start + match.start(), sub_start + match.end()
 
 
+ADDRESS_EXTRACTOR_STORE = CachedStore(
+    lambda: AddressExtractor(load_cities_fr()), expiration_interval=None
+)
+
+
 def find_locations(content: Union[OCRResult, str]) -> List[Dict]:
-    cities = CITIES_FR_STORE.get()
-    location_extractor = AddressExtractor(cities)
+    location_extractor = ADDRESS_EXTRACTOR_STORE.get()
     return [location_extractor.extract_location(content)]
