@@ -70,7 +70,8 @@ def test_address_extractor_init(mocker, cities):
 
     assert isinstance(ae.cities_processor, KeywordProcessor)
     assert m_add_keyword.call_args_list == [
-        mocker.call("paris", cities[0]), mocker.call("poya", cities[1])
+        mocker.call("paris", cities[0]),
+        mocker.call("poya", cities[1]),
     ]
 
 
@@ -104,7 +105,9 @@ def test_address_extractor_find_city_names():
     assert ae.find_city_names("with the abc city") == [(c1, 9, 12)]
     assert ae.find_city_names("with the def g city") == [(c2, 9, 14)]
     assert ae.find_city_names("with def g and abc cities") == [
-        (c2, 5, 10), (c1, 15, 18)]
+        (c2, 5, 10),
+        (c1, 15, 18),
+    ]
 
 
 def test_address_extractor_find_nearby_postal_code():

@@ -101,11 +101,12 @@ class AddressExtractor:
         text_extract_distance (int, optional, default 30): Amount of text surrounding a
             detected address to extract for returning.
     """
+
     def __init__(
         self,
         cities: Iterable[City],
         postal_code_search_distance: int = 10,
-        text_extract_distance: int = 30
+        text_extract_distance: int = 30,
     ):
         self.cities = cities
         self.postal_code_search_distance = postal_code_search_distance
@@ -138,7 +139,7 @@ class AddressExtractor:
             pc, pc_start, pc_end = pc_match
             address_start = min(city_start, pc_start) - self.text_extract_distance
             address_end = max(city_end, pc_end) + self.text_extract_distance
-            text_extract = text[max(0, address_start):min(len(text), address_end)]
+            text_extract = text[max(0, address_start) : min(len(text), address_end)]
 
             locations.append(
                 {
