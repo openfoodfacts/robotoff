@@ -111,14 +111,14 @@ def test_address_extractor_find_nearby_postal_code():
     c = City("abc", "12345", None)
     ae = AddressExtractor([c], postal_code_search_distance=8)
 
-    assert ae.find_nearby_postal_code("blah abc 12345", c, (5, 8)) == ("12345", 9, 14)
-    assert ae.find_nearby_postal_code("abc fr12345-", c, (0, 3)) == ("12345", 6, 11)
-    assert ae.find_nearby_postal_code("12345- abc fr", c, (7, 10)) == ("12345", 0, 5)
-    assert ae.find_nearby_postal_code("blah abc 123456", c, (5, 8)) is None
-    assert ae.find_nearby_postal_code("blah abc foo 12345", c, (5, 8)) is None
-    assert ae.find_nearby_postal_code("12345 blah abc foo", c, (11, 14)) is None
+    assert ae.find_nearby_postal_code("blah abc 12345", c, 5, 8) == ("12345", 9, 14)
+    assert ae.find_nearby_postal_code("abc fr12345-", c, 0, 3) == ("12345", 6, 11)
+    assert ae.find_nearby_postal_code("12345- abc fr", c, 7, 10) == ("12345", 0, 5)
+    assert ae.find_nearby_postal_code("blah abc 123456", c, 5, 8) is None
+    assert ae.find_nearby_postal_code("blah abc foo 12345", c, 5, 8) is None
+    assert ae.find_nearby_postal_code("12345 blah abc foo", c, 11, 14) is None
     # Search substring matching with postal code start
-    assert ae.find_nearby_postal_code("foo 12345fr abc", c, (12, 15)) == ("12345", 4, 9)
+    assert ae.find_nearby_postal_code("foo 12345fr abc", c, 12, 15) == ("12345", 4, 9)
 
 
 def test_address_extractor_extract_addresses(mocker, cities):
