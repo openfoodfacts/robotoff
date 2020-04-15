@@ -3,7 +3,7 @@ import gzip
 import json
 from pathlib import Path
 import re
-from typing import Union, List, Dict, Optional, Tuple, Sequence, BinaryIO
+from typing import Union, List, Optional, Tuple, BinaryIO, Set, Iterable
 
 from flashtext import KeywordProcessor
 
@@ -31,14 +31,14 @@ class City:
     """The GPS coordinates of the city as a tuple of two floats, or None."""
 
 
-def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
+def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
     """Load French cities dataset.
 
     French cities are taken from the La Poste hexasmal dataset:
     https://datanova.legroupe.laposte.fr/explore/dataset/laposte_hexasmal/. The
     source file must be a gzipped-JSON.
 
-    The returned list of cities can contain multiple items with the same name: multiple
+    The returned set of cities can contain multiple items with the same name: multiple
     cities can exist with the same name but a different postal code.
 
     Also, the original dataset may contain multiple items with are not unique with
@@ -51,7 +51,7 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
             repo will be used.
 
     Returns:
-        list of City: List of all French cities as `City` objects.
+        set of City: List of all French cities as `City` objects.
     """
     # JSON file contains a lot of repeated data. An alternative could be to use the
     # CSV file.
@@ -76,7 +76,7 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> List[City]:
         )
 
     # Remove duplicates
-    return list(set(cities))
+    return set(cities)
 
 
 class AddressExtractor:
@@ -86,7 +86,7 @@ class AddressExtractor:
     #   * handle stop word in city names? (l, la...)
     def __init__(
         self,
-        cities: Sequence[City],
+        cities: Iterable[City],
         postal_code_search_distance: int = 10,
         text_extract_distance: int = 30
     ):
@@ -98,27 +98,29 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_locations(self, ocr_result: OCRResult) -> List[JSONType]:
+    def extract_addresses(self, ocr_result: OCRResult) -> List[JSONType]:
         text = self.get_text(ocr_result)
         cities = self.find_city_names(text)
 
         locations = []
-        for city, *span in cities:
-            nearby_code = self.find_nearby_postal_code(text, city, span)
-            if nearby_code is not None:
-                address_start = (
-                    min(span[0], nearby_code[1]) - self.text_extract_distance
-                )
-                address_end = max(span[1], nearby_code[2]) + self.text_extract_distance
-                text_extract = text[max(0, address_start):min(len(text), address_end)]
-                locations.append(
-                    {
-                        "country_code": "fr",
-                        "city_name": city.name,
-                        "postal_code": city.postal_code,
-                        "text_extract": text_extract,
-                    }
-                )
+        for city, *city_span in cities:
+            pc_match = self.find_nearby_postal_code(text, city, city_span)
+            if pc_match is None:
+                continue
+
+            pc, pc_start, pc_end = pc_match
+            address_start = min(city_span[0], pc_start) - self.text_extract_distance
+            address_end = max(city_span[1], pc_end) + self.text_extract_distance
+            text_extract = text[max(0, address_start):min(len(text), address_end)]
+
+            locations.append(
+                {
+                    "country_code": "fr",
+                    "city_name": city.name,
+                    "postal_code": city.postal_code,
+                    "text_extract": text_extract,
+                }
+            )
 
         return locations
 
@@ -138,15 +140,20 @@ class AddressExtractor:
         return self.cities_processor.extract_keywords(text, span_info=True)
 
     def find_nearby_postal_code(self, text: str, city: City, span: Tuple[int, int]):
+        """Assumes digit-only postal code, allows non-digit directly next to it."""
+        if not city.postal_code.isdigit():
+            raise ValueError(f"postal code contains non-digit characters: {city}")
         pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
+
         sub_start = max(0, span[0] - self.postal_code_search_distance)
         sub_end = min(len(text), span[1] + self.postal_code_search_distance)
         sub_text = text[sub_start:sub_end]
+
         match = re.search(pattern, sub_text)
         if match is None:
             return None
         else:
-            return match.group(), sub_start + match.start(), sub_start + match.end()
+            return match.group(1), sub_start + match.start(1), sub_start + match.end(1)
 
 
 ADDRESS_EXTRACTOR_STORE = CachedStore(
@@ -156,4 +163,4 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 
 def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
     location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
-    return location_extractor.extract_locations(content)
+    return location_extractor.extract_addresses(content)
