@@ -1,6 +1,5 @@
 import re
-from typing import Dict, List
-from typing import Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -199,7 +198,7 @@ def get_logo_annotation_labels() -> Dict[str, str]:
     return labels
 
 
-def generate_label_keyword_processor(labels: Optional[List[str]] = None):
+def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
     if labels is None:
         labels = text_file_iter(settings.OCR_LABEL_FLASHTEXT_DATA_PATH)
 
