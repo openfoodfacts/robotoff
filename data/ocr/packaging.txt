@@ -3,56 +3,60 @@
 21-PAP||21-PAP
 21-PAP||21-PAP
 21-PAP||PAP-21
-Barquette en carton||barquette carton
-Barquette en plastique;Film en plastique||barquette et film plastique
-Barquette en plastique||barquette plastique
-Bocal en verre||bocal verre
-Bouchon en plastique||bouchon plastique
-Bouteille en plastique;Bouchon en plastique||bouteille et bouchon plastique
-Bouteille en plastique||bouteille plastique
-Bouteille en verre||bouteille verre
-Bouteille en verre||bouteilles verre
-Bouteille||bottled
-Bouteille||embouteillé
-Boîte en carton||boite carton
-Boîte en carton||boîte carton
-Boîte en métal||boite metal
-Boîte en métal||boite métal
-Boîte en métal||boîte metal
-Boîte en métal||boîte métal
-Boîte en plastique||boite plastique
-Boîte en plastique||boîte plastique
-Brique en carton||brique carton
-Capsule en métal||capsule metal
-Capsule en métal||capsule métal
-Capsule en métal||capsules metal
-Capsule en métal||capsules métal
-Clip en plastique;Sachet en plastique||clip et sachet plastique
-Clip en plastique||clip plastique
-Couvercle en fer||couvercle fer
-Couvercle en métal||couvercle metal
-Couvercle en métal||couvercle métal
+es:Envase en cartón||envase cartón
+es:Envase en metal||envase metal
+fr:Barquette en carton||barquette carton
+fr:Barquette;fr:Film en plastique||barquette et film plastique
+fr:Barquette en plastique||barquette plastique
+fr:Bocal en verre||bocal verre
+fr:Bouchon en plastique||bouchon plastique
+fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastique
+fr:Bouteille en plastique||bouteille plastique
+fr:Bouteille en verre||bouteille verre
+fr:Bouteille en verre||bouteilles verre
+en:Bottle||bottled
+es:Botella||embotellado
+de:Flasche||abfüller
+fr:Bouteille||embouteillé
+fr:Boîte en carton||boite carton
+fr:Boîte en carton||boîte carton
+fr:Boîte en métal||boite metal
+fr:Boîte en métal||boite métal
+fr:Boîte en métal||boîte metal
+fr:Boîte en métal||boîte métal
+fr:Boîte en plastique||boite plastique
+fr:Boîte en plastique||boîte plastique
+fr:Brique en carton||brique carton
+fr:Capsule en métal||capsule metal
+fr:Capsule en métal||capsule métal
+fr:Capsule en métal||capsules metal
+fr:Capsule en métal||capsules métal
+fr:Clip en plastique;fr:Sachet en plastique||clip et sachet plastique
+fr:Clip en plastique||clip plastique
+fr:Couvercle en fer||couvercle fer
+fr:Couvercle en métal||couvercle metal
+fr:Couvercle en métal||couvercle métal
 Elo-Cap||elo cap
 Elo-Cap||elo-cap
 Elopak||elopak
-Etui en carton||etui carton
-Feuille en carton||feuille carton
-Film en plastique;Barquette en plastique||film et barquette plastique
-Film en plastique;Sachet en plastique||film et sachet plastique
-Film en plastique||film plastique
-Flacon en plastique||flacon plastique
+fr:Etui en carton||etui carton
+fr:Feuille en carton||feuille carton
+fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
+fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
+fr:Film en plastique||film plastique
+fr:Flacon en plastique||flacon plastique
 HDPE||HDPE
-Opercule en aluminium||opercule aluminium
-Opercule en métal||opercule metal
-Opercule en métal||opercule métal
-Opercule en plastique||opercule plastique
+fr:Opercule en aluminium||opercule aluminium
+fr:Opercule en métal||opercule metal
+fr:Opercule en métal||opercule métal
+fr:Opercule en plastique||opercule plastique
 Pak-Lok||pak lok
 Pak-Lok||pak-lok
-Plaque en carton||plaque carton
-Pot en carton||pot carton
-Pot en plastique;Opercule en plastique||pot et opercule plastique
-Pot en plastique||pot plastique
-Pot en verre||pot verre
+fr:Plaque en carton||plaque carton
+fr:Pot en carton||pot carton
+fr:Pot en plastique;fr:Opercule en plastique||pot et opercule plastique
+fr:Pot en plastique||pot plastique
+fr:Pot en verre||pot verre
 Pure-Cap||pure cap
 Pure-Cap||pure-cap
 Pure-Pak Classic aseptic||pure pak classic aseptic
@@ -71,8 +75,8 @@ Pure-Pak Sense||pure pak sense
 Pure-Pak Sense||pure-pak sense
 Pure-Pak||pure pak
 Pure-Pak||pure-pak
-Quadrette en plastique||quadrette plastique
-Sachet en plastique||sachet plastique
+fr:Quadrette en plastique||quadrette plastique
+fr:Sachet en plastique||sachet plastique
 Tetra Brik Aseptic||tetra brik aseptic
 Tetra Brik||tetra brik
 Tetra Brik||tetrabrik

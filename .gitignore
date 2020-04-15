@@ -1,3 +1,5 @@
+.vscode
+robotoff.code-workspace
 __pycache__
 build
 dist

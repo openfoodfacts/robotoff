@@ -1,9 +1,10 @@
+from collections import defaultdict
 import enum
 import math
 import operator
 import re
 from collections import Counter
-from typing import Optional, Callable, Dict, List, Tuple
+from typing import Optional, Callable, Dict, List, Tuple, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -95,8 +96,8 @@ class OCRResult:
             text_annotation = OCRTextAnnotation(text_annotation_data)
             self.text_annotations.append(text_annotation)
 
-        self.text_annotations_str: Optional[str] = None
-        self.text_annotations_str_lower: Optional[str] = None
+        self.text_annotations_str: str = ""
+        self.text_annotations_str_lower: str = ""
 
         if self.text_annotations:
             self.text_annotations_str = "||".join(t.text for t in self.text_annotations)
@@ -122,34 +123,31 @@ class OCRResult:
                 data["safeSearchAnnotation"]
             )
 
-    def get_full_text(self, lowercase: bool = False) -> Optional[str]:
+    def get_full_text(self, lowercase: bool = False) -> str:
         if self.full_text_annotation is not None:
             if lowercase:
                 return self.full_text_annotation.text_lower
 
             return self.full_text_annotation.text
 
-        return None
+        return ""
 
-    def get_full_text_contiguous(self, lowercase: bool = False) -> Optional[str]:
+    def get_full_text_contiguous(self, lowercase: bool = False) -> str:
         if self.full_text_annotation is not None:
             if lowercase:
                 return self.full_text_annotation.contiguous_text_lower
 
             return self.full_text_annotation.contiguous_text
 
-        return None
+        return ""
 
-    def get_text_annotations(self, lowercase: bool = False) -> Optional[str]:
-        if self.text_annotations_str is not None:
-            if lowercase:
-                return self.text_annotations_str_lower
-            else:
-                return self.text_annotations_str
+    def get_text_annotations(self, lowercase: bool = False) -> str:
+        if lowercase:
+            return self.text_annotations_str_lower
+        else:
+            return self.text_annotations_str
 
-        return None
-
-    def _get_text(self, field: OCRField, lowercase: bool) -> Optional[str]:
+    def _get_text(self, field: OCRField, lowercase: bool) -> str:
         if field == OCRField.full_text:
             text = self.get_full_text(lowercase)
 
@@ -174,7 +172,7 @@ class OCRResult:
         else:
             raise ValueError("invalid field: {}".format(field))
 
-    def get_text(self, ocr_regex: OCRRegex) -> Optional[str]:
+    def get_text(self, ocr_regex: OCRRegex) -> str:
         return self._get_text(ocr_regex.field, ocr_regex.lowercase)
 
     def get_logo_annotations(self) -> List["LogoAnnotation"]:
@@ -213,6 +211,37 @@ class OCRResult:
         except Exception as e:
             raise OCRParsingException("error during OCR parsing") from e
 
+    def get_languages(self) -> Optional[Dict[str, int]]:
+        if self.full_text_annotation is not None:
+            return self.full_text_annotation.get_languages()
+
+        return None
+
+
+def get_text(
+    content: Union[OCRResult, str],
+    ocr_regex: Optional[OCRRegex] = None,
+    lowercase: bool = True,
+) -> str:
+    if isinstance(content, str):
+        if ocr_regex and ocr_regex.lowercase:
+            return content.lower()
+
+        return content.lower() if lowercase else content
+
+    elif isinstance(content, OCRResult):
+        if ocr_regex:
+            return content.get_text(ocr_regex)
+        else:
+            text = content.get_full_text_contiguous(lowercase=lowercase)
+
+            if not text:
+                text = content.get_text_annotations(lowercase=lowercase)
+
+            return text
+
+    raise TypeError("invalid type: {}".format(type(content)))
+
 
 class OCRFullTextAnnotation:
     __slots__ = (
@@ -235,6 +264,16 @@ class OCRFullTextAnnotation:
 
         if not lazy:
             self.load_pages()
+
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+        for page in self.pages:
+            page_counts = page.get_languages()
+
+            for key, value in page_counts.items():
+                counts[key] += value
+
+        return dict(counts)
 
     @property
     def pages(self) -> List["TextAnnotationPage"]:
@@ -263,6 +302,16 @@ class TextAnnotationPage:
         self.height = data["height"]
         self.blocks: List[Block] = [Block(d) for d in data["blocks"]]
 
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+        for block in self.blocks:
+            block_counts = block.get_languages()
+
+            for key, value in block_counts.items():
+                counts[key] += value
+
+        return dict(counts)
+
     def detect_words_orientation(self) -> List[ImageOrientation]:
         word_orientations: List[ImageOrientation] = []
 
@@ -283,6 +332,16 @@ class Block:
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
 
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+        for paragraph in self.paragraphs:
+            paragraph_counts = paragraph.get_languages()
+
+            for key, value in paragraph_counts.items():
+                counts[key] += value
+
+        return dict(counts)
+
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
 
@@ -302,6 +361,19 @@ class Paragraph:
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
+
+    def get_languages(self) -> Dict[str, int]:
+        counts: Dict[str, int] = defaultdict(int)
+
+        for word in self.words:
+            if word.languages is not None:
+                for language in word.languages:
+                    counts[language.language] += 1
+            else:
+                counts["null"] += 1
+
+        counts["words"] = len(self.words)
+        return dict(counts)
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
@@ -422,6 +494,11 @@ class DetectedLanguage:
     def __init__(self, data: JSONType):
         self.language = data["languageCode"]
         self.confidence = data.get("confidence", 0)
+
+    def __repr__(self):
+        return "<DetectedLanguage: {} (confidence: {})>".format(
+            self.language, self.confidence
+        )
 
 
 class BoundingPoly:

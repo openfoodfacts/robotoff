@@ -1,9 +1,13 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRResult, SafeSearchAnnotationLikelihood
+from robotoff.insights.ocr.dataclass import (
+    OCRResult,
+    SafeSearchAnnotationLikelihood,
+    get_text,
+)
 from robotoff.utils import text_file_iter
 
 
@@ -70,21 +74,20 @@ def extract_image_flag_flashtext(processor: KeywordProcessor, text: str):
         }
 
 
-def flag_image(ocr_result: OCRResult) -> List[Dict]:
+def flag_image(content: Union[OCRResult, str]) -> List[Dict]:
     insights: List[Dict] = []
 
-    text = ocr_result.get_full_text_contiguous()
-
-    if text is None:
-        return insights
-
+    text = get_text(content)
     insight = extract_image_flag_flashtext(PROCESSOR, text)
 
     if insight is not None:
         insights.append(insight)
 
-    safe_search_annotation = ocr_result.get_safe_search_annotation()
-    label_annotations = ocr_result.get_label_annotations()
+    if isinstance(content, str):
+        return insights
+
+    safe_search_annotation = content.get_safe_search_annotation()
+    label_annotations = content.get_label_annotations()
 
     if safe_search_annotation:
         for key in ("adult", "violence"):

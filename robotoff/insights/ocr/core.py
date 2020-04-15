@@ -3,7 +3,7 @@ import gzip
 import json
 
 import pathlib as pathlib
-from typing import List, Dict, Iterable, Optional, Tuple
+from typing import List, Dict, Iterable, Optional, Tuple, Union
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.ocr.brand import find_brands
@@ -56,39 +56,39 @@ def get_json_for_image(barcode: str, image_name: str) -> Optional[JSONType]:
     return r.json()
 
 
-def extract_insights(ocr_result: OCRResult, insight_type: str) -> List[Dict]:
+def extract_insights(content: Union[OCRResult, str], insight_type: str) -> List[Dict]:
     if insight_type == InsightType.packager_code.name:
-        return find_packager_codes(ocr_result)
+        return find_packager_codes(content)
 
     elif insight_type == InsightType.label.name:
-        return find_labels(ocr_result)
+        return find_labels(content)
 
     elif insight_type == InsightType.expiration_date.name:
-        return find_expiration_date(ocr_result)
+        return find_expiration_date(content)
 
     elif insight_type == InsightType.image_flag.name:
-        return flag_image(ocr_result)
+        return flag_image(content)
 
     elif insight_type == InsightType.image_orientation.name:
-        return find_image_orientation(ocr_result)
+        return find_image_orientation(content)
 
     elif insight_type == InsightType.product_weight.name:
-        return find_product_weight(ocr_result)
+        return find_product_weight(content)
 
     elif insight_type == InsightType.trace.name:
-        return find_traces(ocr_result)
+        return find_traces(content)
 
     elif insight_type == InsightType.nutrient.name:
-        return find_nutrient_values(ocr_result)
+        return find_nutrient_values(content)
 
     elif insight_type == InsightType.brand.name:
-        return find_brands(ocr_result)
+        return find_brands(content)
 
     elif insight_type == InsightType.store.name:
-        return find_stores(ocr_result)
+        return find_stores(content)
 
     elif insight_type == InsightType.packaging.name:
-        return find_packaging(ocr_result)
+        return find_packaging(content)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))

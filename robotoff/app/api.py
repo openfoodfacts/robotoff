@@ -16,6 +16,7 @@ from PIL import Image
 
 from robotoff import settings
 from robotoff.app.core import get_insights, save_insight
+from robotoff.app.auth import basic_decode, BasicAuthDecodeError
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
@@ -28,7 +29,7 @@ from robotoff.ml.category.neural.model import (
     filter_blacklisted_categories,
 )
 from robotoff.models import ProductInsight, UserAnnotation
-from robotoff.off import http_session
+from robotoff.off import http_session, OFFAuthentication, get_product
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
 from robotoff.utils.es import get_es_client
@@ -159,6 +160,32 @@ class RandomInsightResource:
         resp.media = response
 
 
+def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
+    session_cookie = req.get_cookie_values("session")
+
+    if session_cookie:
+        session_cookie = session_cookie[0]
+
+    authorization = req.get_header("Authorization")
+
+    username = None
+    password = None
+    if authorization is not None:
+        try:
+            username, password = basic_decode(authorization)
+        except BasicAuthDecodeError as e:
+            raise falcon.HTTPUnauthorized(
+                "Invalid authentication, Basic auth expected."
+            )
+
+    if not session_cookie and not username and not password:
+        return None
+
+    return OFFAuthentication(
+        session_cookie=session_cookie, username=username, password=password
+    )
+
+
 class AnnotateInsightResource:
     def on_post(self, req, resp):
         insight_id = req.get_param("insight_id", required=True)
@@ -168,13 +195,10 @@ class AnnotateInsightResource:
 
         update = req.get_param_as_bool("update", default=True)
 
-        session_cookie = req.get_cookie_values("session")
-
-        if session_cookie:
-            session_cookie = session_cookie[0]
+        auth: Optional[OFFAuthentication] = parse_auth(req)
 
         annotation_result = save_insight(
-            insight_id, annotation, update=update, session_cookie=session_cookie
+            insight_id, annotation, update=update, auth=auth
         )
 
         resp.media = {
@@ -184,10 +208,36 @@ class AnnotateInsightResource:
 
 
 class IngredientSpellcheckResource:
-    def on_post(self, req, resp):
-        text = req.get_param("text", required=True)
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        self.spellcheck(req, resp)
 
-        corrections = generate_corrections(es_client, text, confidence=1)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        self.spellcheck(req, resp)
+
+    def spellcheck(self, req: falcon.Request, resp: falcon.Response):
+        text = req.get_param("text")
+        barcode = req.get_param("barcode")
+        index_name = req.get_param(
+            "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
+        )
+        confidence = req.get_param_as_float("confidence", default=1.)
+
+        if text is None and barcode is None:
+            raise falcon.HTTPBadRequest("text or barcode is required.")
+
+        if not text:
+            product = get_product(barcode) or {}
+            text = product.get("ingredients_text_fr")
+
+            if not text:
+                resp.media = {
+                    "status": "not_found",
+                }
+                return
+
+        corrections = generate_corrections(
+            es_client, text, confidence=confidence, index_name=index_name
+        )
         term_corrections = list(
             itertools.chain.from_iterable((c.term_corrections for c in corrections))
         )
@@ -507,7 +557,9 @@ def get_questions_resource_on_get(
     value_tag: str = req.get_param("value_tag")
     brands = req.get_param_as_list("brands") or None
     server_domain: Optional[str] = req.get_param("server_domain")
-    reserved_barcode: Optional[bool] = req.get_param_as_bool("reserved_barcode", default=False)
+    reserved_barcode: Optional[bool] = req.get_param_as_bool(
+        "reserved_barcode", default=False
+    )
 
     if reserved_barcode:
         # Include all results, including non reserved barcodes

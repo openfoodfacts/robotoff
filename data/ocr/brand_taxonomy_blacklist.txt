@@ -1,15 +1,29 @@
+// These brands are excluded from Robotoff's detection. So these brands won't be suggested by Robotoff to users.
+// Also Hunger Game won't propose suggestions for these brands.
+//
+// Why adding brands here?
+// * avoid brands that are common words in some languages ("plus", "king", "everyday",...)
+// * avoid brands that only represent a part of a brand (mostly); examples: american, france, italia, deluxe, classic, etc.
+// * avoid mispellings such as kellog-s, kelloggs, kellog or kellogs (the right one is kellogg-s)
+//
+7-days
 ambiente
+american
 appel
 artisanal
+aucune
 avenue
+bien
 bordeaux
 bourbon
 chateau
 classic
+cocacola
 comte
 consum
 crisp
 cristal
+crunch
 cucina
 delta
 deluxe
@@ -23,18 +37,23 @@ extra
 fabrication-artisanale
 fairtrade
 familia
+fini
 france
 frigo
 fromage
 fruite
+geant
 golden
 gourmet
 granola
 grenade
 gusto
+ice-tea
 ideal
 italia
 jacques
+// king: common word in EN, many false positive
+king
 kellog-s
 kelloggs
 kellogg
@@ -51,17 +70,27 @@ organic
 origen
 pacific
 patissier
+// plus: common word in FR and EN, many false positive
+plus
+pure
 premium
 prima
+pure
+quick
+real
 royal
 salada
+sans
 sante
 schweizer
 selection
 serrano
+simply
 sommer
 sweet
+tasty
 terra
+the-coca-cola-company
 thomas
 tradition
 tropical

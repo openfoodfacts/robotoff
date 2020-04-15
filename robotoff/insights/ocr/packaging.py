@@ -1,7 +1,7 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRField, OCRResult
+from robotoff.insights.ocr.dataclass import OCRField, OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 
 from robotoff.insights.ocr.utils import get_tag
@@ -21,10 +21,10 @@ KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packaging(ocr_result: OCRResult) -> List[Dict]:
+def find_packaging(content: Union[OCRResult, str]) -> List[Dict]:
     insights = []
 
-    text = ocr_result._get_text(OCRField.full_text_contiguous, lowercase=True)
+    text = get_text(content)
 
     if not text:
         return []

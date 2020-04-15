@@ -28,6 +28,31 @@ DEFAULT_INSIGHT_TYPES = (
 )
 
 
+PRODUCT_NAME_INSIGHT_TYPES = (
+    InsightType.label.name,
+    InsightType.product_weight.name,
+    InsightType.brand.name,
+)
+
+
+def get_insights_from_product_name(barcode: str, product_name: str) -> Dict:
+    results = {}
+    for insight_type in PRODUCT_NAME_INSIGHT_TYPES:
+        insights = ocr.extract_insights(product_name, insight_type)
+
+        if insights:
+            for insight in insights:
+                insight["source"] = "product_name"
+
+            results[insight_type] = {
+                "insights": insights,
+                "barcode": barcode,
+                "type": insight_type,
+            }
+
+    return results
+
+
 def get_insights_from_image(
     barcode: str, image_url: str, ocr_url: str
 ) -> Optional[Dict]:
@@ -108,11 +133,7 @@ def extract_image_ml_insights(
 
 
 def extract_ocr_insights(ocr_url: str, insight_types: Iterable[str]) -> JSONType:
-    r = http_session.get(ocr_url)
-    r.raise_for_status()
-
-    ocr_data: Dict = r.json()
-    ocr_result = ocr.OCRResult.from_json(ocr_data)
+    ocr_result = get_ocr_result(ocr_url)
 
     if ocr_result is None:
         logger.info("Error during OCR extraction: {}".format(ocr_url))
@@ -127,6 +148,14 @@ def extract_ocr_insights(ocr_url: str, insight_types: Iterable[str]) -> JSONType
             results[insight_type] = insights
 
     return results
+
+
+def get_ocr_result(ocr_url: str) -> Optional[ocr.OCRResult]:
+    r = http_session.get(ocr_url)
+    r.raise_for_status()
+
+    ocr_data: Dict = r.json()
+    return ocr.OCRResult.from_json(ocr_data)
 
 
 def extract_nutriscore_label(

@@ -71,18 +71,52 @@ if __name__ == "__main__":
         dump_jsonl(output, predict_from_dataset(dataset))
 
     @click.command()
+    @click.argument("pattern")
+    @click.argument("correction")
+    @click.option("--country", default="fr")
+    @click.option("--username", required=True, prompt="Username")
+    @click.option("--password", required=True, prompt="Password", hide_input=True)
+    @click.option("--dry/--no-dry", default=False)
+    def spellcheck(
+        pattern: str,
+        correction: str,
+        country: str,
+        username: str,
+        password: str,
+        dry: bool,
+    ):
+        from robotoff.cli.spellcheck import correct_ingredient
+        from robotoff.insights.ocr.utils import get_tag
+        from robotoff.utils import get_logger
+        from robotoff.off import OFFAuthentication
+
+        get_logger()
+        ingredient = get_tag(pattern)
+        comment = "Fixing '{}' typo".format(pattern)
+        auth = OFFAuthentication(username=username, password=password)
+        correct_ingredient(
+            country, ingredient, pattern, correction, comment, dry_run=dry, auth=auth
+        )
+
+    @click.command()
     @click.argument("output", type=pathlib.Path)
     @click.option("--confidence", type=float, default=1)
-    def generate_spellcheck_insights(output: str, confidence: float):
+    @click.option("--max-errors", type=int)
+    def generate_spellcheck_insights(
+        output: str, confidence: float, max_errors: Optional[int] = None
+    ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
         from robotoff.ingredients import generate_insights
         from robotoff.utils import get_logger
 
-        get_logger()
+        logger = get_logger()
+        logger.info("Max errors: {}".format(max_errors))
 
         client = get_es_client()
-        insights_iter = generate_insights(client, confidence=confidence)
+        insights_iter = generate_insights(
+            client, confidence=confidence, max_errors=max_errors
+        )
         dump_jsonl(output, insights_iter)
 
     @click.command()
@@ -91,7 +125,7 @@ if __name__ == "__main__":
         from robotoff.products import has_dataset_changed, fetch_dataset
         from robotoff.utils import get_logger
 
-        logger = get_logger()
+        get_logger()
 
         if has_dataset_changed():
             fetch_dataset(minify)
@@ -137,14 +171,20 @@ if __name__ == "__main__":
         logger = get_logger()
         logger.info("Importing insights from {}".format(input_))
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
-        insights.import_insights(input_, insight_type, server_domain, batch_size)
+        imported = insights.import_insights(
+            input_, insight_type, server_domain, batch_size
+        )
+        logger.info("{} insights imported".format(imported))
 
     @click.command()
-    @click.option("--index/--no-index", default=True)
+    @click.option("--index/--no-index", default=False)
     @click.option("--data/--no-data", default=True)
-    @click.option("--product/--no-product", default=True)
-    @click.option("--category/--no-category", default=True)
-    def init_elasticsearch(index: bool, data: bool, product: bool, category: bool):
+    @click.option("--product/--no-product", default=False)
+    @click.option("--category/--no-category", default=False)
+    @click.option("--product-version", default="product")
+    def init_elasticsearch(
+        index: bool, data: bool, product: bool, category: bool, product_version: str
+    ):
         import json
         from robotoff import settings
         from robotoff.utils.es import get_es_client
@@ -161,14 +201,14 @@ if __name__ == "__main__":
             client = get_es_client()
 
             if product:
-                client.indices.create("product", product_index_config)
+                client.indices.create(product_version, product_index_config)
 
             if category:
                 client.indices.create("category", category_index_config)
 
         if data:
             if product:
-                product_export()
+                product_export(version=product_version)
 
             if category:
                 category_export()
@@ -179,6 +219,7 @@ if __name__ == "__main__":
     cli.add_command(batch_annotate)
     cli.add_command(predict_category)
     cli.add_command(init_elasticsearch)
+    cli.add_command(spellcheck)
     cli.add_command(generate_spellcheck_insights)
     cli.add_command(download_dataset)
     cli.add_command(categorize)

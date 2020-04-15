@@ -68,7 +68,30 @@ def save_brand_prefix(count_threshold: int):
         json.dump(brand_prefixes, f)
 
 
-def generate_brand_list(threshold: int) -> List[Tuple[str, str]]:
+def keep_brand_from_taxonomy(
+    brand_tag: str,
+    brand: str,
+    min_length: Optional[int] = None,
+    blacklisted_brands: Optional[Set[str]] = None,
+) -> bool:
+    if brand.isdigit():
+        return False
+
+    if min_length and len(brand) < min_length:
+        return False
+
+    if blacklisted_brands is not None and brand_tag in blacklisted_brands:
+        return False
+
+    return True
+
+
+def generate_brand_list(
+    threshold: int,
+    min_length: Optional[int] = None,
+    blacklisted_brands: Optional[Set[str]] = None,
+) -> List[Tuple[str, str]]:
+    min_length = min_length or 0
     brand_taxonomy = requests.get(settings.TAXONOMY_BRAND_URL).json()
     brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()["tags"]
 
@@ -81,16 +104,23 @@ def generate_brand_list(threshold: int) -> List[Tuple[str, str]]:
         if key.startswith("en:"):
             key = key[3:]
 
-        if brand_count.get(key, {}).get("products", 0) >= threshold:
-            brand_list.append((name, key))
+        if (
+            keep_brand_from_taxonomy(key, name, min_length, blacklisted_brands)
+            and brand_count.get(key, {}).get("products", 0) >= threshold
+        ):
+            brand_list.append((key, name))
 
-    return sorted(brand_list, key=operator.itemgetter(1))
+    return sorted(brand_list, key=operator.itemgetter(0))
 
 
-def dump_taxonomy_brands(threshold: int):
-    filtered_brands = generate_brand_list(threshold)
-    filtered_brands = ("{}||{}".format(name, key) for name, key in filtered_brands)
-    dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, filtered_brands)
+def dump_taxonomy_brands(
+    threshold: int,
+    min_length: Optional[int] = None,
+    blacklisted_brands: Optional[Set[str]] = None,
+):
+    filtered_brands = generate_brand_list(threshold, min_length, blacklisted_brands)
+    line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
+    dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 
 
 def in_barcode_range(
@@ -116,4 +146,9 @@ BRAND_BLACKLIST_STORE = CachedStore(
 )
 
 if __name__ == "__main__":
-    save_brand_prefix(count_threshold=2)
+    blacklisted_brands = get_brand_blacklist()
+    dump_taxonomy_brands(
+        threshold=settings.BRAND_MATCHING_MIN_COUNT,
+        min_length=settings.BRAND_MATCHING_MIN_LENGTH,
+        blacklisted_brands=blacklisted_brands,
+    )

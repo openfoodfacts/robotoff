@@ -38,11 +38,16 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
 TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
+INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
+INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
+FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
+
+MONGO_URI = "mongodb://localhost:27017"
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
@@ -55,6 +60,7 @@ ELASTICSEARCH_TYPE = "document"
 
 ELASTICSEARCH_CATEGORY_INDEX = "category"
 ELASTICSEARCH_PRODUCT_INDEX = "product"
+ELASTICSEARCH_PRODUCT_EXTENDED_INDEX = "product_extended"
 ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = (
     PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
 )
@@ -73,8 +79,7 @@ SLACK_OFF_NUTRISCORE_ALERT_CHANNEL = "CJZNFCSNP"
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
-OCR_BRANDS_DATA_PATH = OCR_DATA_DIR / "brand_regex.txt"
-OCR_BRANDS_NOTIFY_DATA_PATH = OCR_DATA_DIR / "brand_notify.txt"
+OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"
 OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / "brand_from_taxonomy.txt"
 OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / "brand_logo_annotation.txt"
 OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
@@ -98,6 +103,7 @@ MODELS_DIR = PROJECT_DIR / "models"
 TF_SERVING_HOST = "localhost"
 TF_SERVING_HTTP_PORT = "8501"
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
+OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
 CATEGORY_CLF_MODEL_PATH = MODELS_DIR / "category" / "checkpoint.hdf5"
 CATEGORY_CLF_CATEGORY_BLACKLIST = DATA_DIR / "clf_category_blacklist.txt"
@@ -108,4 +114,11 @@ OBJECT_DETECTION_TF_SERVING_MODELS = (
     "universal-logo-detector",
 )
 
-BRAND_MATCHING_MIN_LENGTH = os.environ.get("BRAND_MATCHING_MIN_LENGTH", 5)
+BRAND_MATCHING_MIN_LENGTH = 4
+BRAND_MATCHING_MIN_COUNT = 15
+
+INFLUXDB_HOST = "localhost"
+INFLUXDB_PORT = 8086
+INFLUXDB_DB_NAME = "off_metrics"
+INFLUXDB_USERNAME = "off_metrics"
+INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")

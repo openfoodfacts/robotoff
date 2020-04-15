@@ -1,3 +1,4 @@
+import abc
 import datetime
 import enum
 import gzip
@@ -8,11 +9,13 @@ import shutil
 import tempfile
 from typing import List, Iterable, Dict, Optional, Iterator, Union
 
+from pymongo import MongoClient
 import requests
 
 from robotoff.off import http_session
 from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
+from robotoff.mongo import MONGO_CLIENT_CACHE
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -347,7 +350,17 @@ class Product:
         }
 
 
-class ProductStore:
+class ProductStore(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def __len__(self):
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, item):
+        pass
+
+
+class MemoryProductStore(ProductStore):
     def __init__(self, store: Dict[str, Product]):
         self.store: Dict[str, Product] = store
 
@@ -370,11 +383,11 @@ class ProductStore:
 
     @classmethod
     def load_min(cls):
-        return ProductStore.load_from_path(settings.JSONL_MIN_DATASET_PATH)
+        return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH)
 
     @classmethod
     def load_full(cls):
-        return ProductStore.load_from_path(settings.JSONL_DATASET_PATH)
+        return cls.load_from_path(settings.JSONL_DATASET_PATH)
 
     def __getitem__(self, item) -> Optional[Product]:
         return self.store.get(item)
@@ -383,10 +396,36 @@ class ProductStore:
         return iter(self.store.values())
 
 
-def load_min_dataset():
-    ps = ProductStore.load_min()
+class DBProductStore(ProductStore):
+    def __init__(self, client: MongoClient):
+        self.client = client
+        self.db = self.client.off
+        self.collection = self.db.products
+
+    def __len__(self):
+        return len(self.collection.estimated_document_count())
+
+    def __getitem__(self, barcode: str) -> Optional[Product]:
+        product = self.collection.find_one({"code": barcode})
+
+        if product:
+            return Product(product)
+
+        return None
+
+    def __iter__(self):
+        raise NotImplementedError("cannot iterate over database product store")
+
+
+def load_min_dataset() -> ProductStore:
+    ps = MemoryProductStore.load_min()
     logger.info("product store loaded ({} items)".format(len(ps)))
     return ps
+
+
+def get_product_store() -> DBProductStore:
+    mongo_client = MONGO_CLIENT_CACHE.get()
+    return DBProductStore(client=mongo_client)
 
 
 CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)

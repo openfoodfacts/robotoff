@@ -22,6 +22,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     delete_invalid_insight,
 )
+from robotoff.metrics import save_facet_metrics
 from robotoff.models import ProductInsight, db
 from robotoff.products import (
     has_dataset_changed,
@@ -258,6 +259,7 @@ def run():
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
     scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
+    scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
     scheduler.add_job(
         download_product_dataset, "cron", day="*", hour="3", max_instances=1
     )
