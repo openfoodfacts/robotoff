@@ -80,10 +80,27 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
 
 
 class AddressExtractor:
-    """Suited for digit-only postal codes."""
-    # TODO:
-    #   * use city name and postal code distance
-    #   * handle stop word in city names? (l, la...)
+    """Text processor to extract French addresses based on city name and postal code.
+
+    The main entry point is the `extract_addresses()` method. An `OCRResult` is
+    searched for addresses in the following way:
+
+    * The text is prepared by taking it lower case, removing accents, and replacing
+      the characters ' and - with " " (space), as city names must follow this format.
+    * City names are searched for in the text.
+    * For each city name found, its corresponding postal code is searched for in the
+      surrounding text, at a maximum distance of `postal_code_search_distance`.
+    * If the postal code is found, the match is added to the list of returned
+      addresses, along with an extract of the text surrounding the address,
+      at a maximum distance of `text_extract_distance`.
+
+    Args:
+        cities (iterable of City): Set of cities to search for.
+        postal_code_search_distance (int, optional, default 10): Maximum distance
+            from a city name to search for a postal code.
+        text_extract_distance (int, optional, default 30): Amount of text surrounding a
+            detected address to extract for returning.
+    """
     def __init__(
         self,
         cities: Iterable[City],
@@ -99,18 +116,28 @@ class AddressExtractor:
             self.cities_processor.add_keyword(city.name, city)
 
     def extract_addresses(self, ocr_result: OCRResult) -> List[JSONType]:
+        """Extract addresses from the given OCR result.
+
+        Args:
+            ocr_result (OCRResult): The OCR result to process.
+
+        Returns:
+            list of JSONType: List of addresses extracted from the text. Each entry
+            is a dictionary with the items: country_code (always "fr"), city_name,
+            postal_code and text_extract.
+        """
         text = self.get_text(ocr_result)
-        cities = self.find_city_names(text)
+        city_matches = self.find_city_names(text)
 
         locations = []
-        for city, *city_span in cities:
-            pc_match = self.find_nearby_postal_code(text, city, city_span)
+        for city, city_start, city_end in city_matches:
+            pc_match = self.find_nearby_postal_code(text, city, city_start, city_end)
             if pc_match is None:
                 continue
 
             pc, pc_start, pc_end = pc_match
-            address_start = min(city_span[0], pc_start) - self.text_extract_distance
-            address_end = max(city_span[1], pc_end) + self.text_extract_distance
+            address_start = min(city_start, pc_start) - self.text_extract_distance
+            address_end = max(city_end, pc_end) + self.text_extract_distance
             text_extract = text[max(0, address_start):min(len(text), address_end)]
 
             locations.append(
@@ -126,6 +153,14 @@ class AddressExtractor:
 
     @staticmethod
     def get_text(ocr_result: OCRResult) -> str:
+        """Extract text from the OCR result and prepare it.
+
+        Args:
+            ocr_result (OCRResult): The OCR result to process.
+
+        Returns:
+            str: The text extracted and prepared.
+        """
         text = ocr_result.get_full_text(lowercase=True)
         if text is None:
             # Using `OCRResult.text_annotations` directly instead of
@@ -137,16 +172,47 @@ class AddressExtractor:
         return text
 
     def find_city_names(self, text: str) -> List[Tuple[City, int, int]]:
+        """Find all cities from the search set in the text.
+
+        Args:
+            text (str): Text to search city names in.
+
+        Returns:
+            list of (City, int, int): The list of `City`s which name was found in the
+            text, with the start and end indices of their names locations in the
+            text. Empty list if none found.
+        """
         return self.cities_processor.extract_keywords(text, span_info=True)
 
-    def find_nearby_postal_code(self, text: str, city: City, span: Tuple[int, int]):
-        """Assumes digit-only postal code, allows non-digit directly next to it."""
+    def find_nearby_postal_code(
+        self, text: str, city: City, city_start: int, city_end: int
+    ) -> Optional[Tuple[str, int, int]]:
+        """Search for a city's postal code close to its name in the text.
+
+        The postal code is searched at a maximum distance of
+        `postal_code_search_distance` from the city name.
+
+        Assumes digit-only postal code, allows non-digit directly next to it. For
+        example, for the city "paris" with postal code "75000", "75000 paris" and
+        "fr75000 paris" will match.
+
+        Args:
+            text (str): The OCR result text.
+            city (City): The `City` for which to search the postal code.
+            city_start (int): Start index of the city name match in `text`.
+            city_end (int): End index of the city name match in `text`.
+
+        Returns:
+            (str, int, int) or None: If the `City`'s postal code was found close to
+            the city name match, it is returned along with its start and end indices
+            in the text. If it was not found, returns None.
+        """
         if not city.postal_code.isdigit():
             raise ValueError(f"postal code contains non-digit characters: {city}")
         pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
 
-        sub_start = max(0, span[0] - self.postal_code_search_distance)
-        sub_end = min(len(text), span[1] + self.postal_code_search_distance)
+        sub_start = max(0, city_start - self.postal_code_search_distance)
+        sub_end = min(len(text), city_end + self.postal_code_search_distance)
         sub_text = text[sub_start:sub_end]
 
         match = re.search(pattern, sub_text)
@@ -162,5 +228,15 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 
 
 def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
+    """Find location insights in the text content.
+
+    See :class:`.AddressExtractor`.
+
+    Args:
+        content (OCRResult or str): The content to be searched for locations.
+
+    Returns:
+        list of JSONType: See :meth:`.AddressExtractor.extract_addresses`.
+    """
     location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
     return location_extractor.extract_addresses(content)
