@@ -29,7 +29,7 @@ from robotoff.ml.category.neural.model import (
     filter_blacklisted_categories,
 )
 from robotoff.models import ProductInsight, UserAnnotation
-from robotoff.off import http_session, OFFAuthentication
+from robotoff.off import http_session, OFFAuthentication, get_product
 from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url
 from robotoff.utils.es import get_es_client
@@ -208,10 +208,36 @@ class AnnotateInsightResource:
 
 
 class IngredientSpellcheckResource:
-    def on_post(self, req, resp):
-        text = req.get_param("text", required=True)
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        self.spellcheck(req, resp)
 
-        corrections = generate_corrections(es_client, text, confidence=1)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        self.spellcheck(req, resp)
+
+    def spellcheck(self, req: falcon.Request, resp: falcon.Response):
+        text = req.get_param("text")
+        barcode = req.get_param("barcode")
+        index_name = req.get_param(
+            "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
+        )
+        confidence = req.get_param_as_float("confidence", default=1.)
+
+        if text is None and barcode is None:
+            raise falcon.HTTPBadRequest("text or barcode is required.")
+
+        if not text:
+            product = get_product(barcode) or {}
+            text = product.get("ingredients_text_fr")
+
+            if not text:
+                resp.media = {
+                    "status": "not_found",
+                }
+                return
+
+        corrections = generate_corrections(
+            es_client, text, confidence=confidence, index_name=index_name
+        )
         term_corrections = list(
             itertools.chain.from_iterable((c.term_corrections for c in corrections))
         )

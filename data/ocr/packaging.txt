@@ -6,7 +6,7 @@
 es:Envase en cartón||envase cartón
 es:Envase en metal||envase metal
 fr:Barquette en carton||barquette carton
-fr:Barquette en plastique;fr:Film en plastique||barquette et film plastique
+fr:Barquette;fr:Film en plastique||barquette et film plastique
 fr:Barquette en plastique||barquette plastique
 fr:Bocal en verre||bocal verre
 fr:Bouchon en plastique||bouchon plastique

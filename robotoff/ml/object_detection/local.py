@@ -110,7 +110,6 @@ class ObjectDetectionModel:
                 output_dict["detection_masks"] = output_dict["detection_masks"][0]
 
         return ObjectDetectionRawResult(
-            image_size=(image.shape[0], image.shape[1]),
             num_detections=output_dict["num_detections"],
             detection_classes=output_dict["detection_classes"],
             detection_boxes=output_dict["detection_boxes"],

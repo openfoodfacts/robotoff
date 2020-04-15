@@ -25,7 +25,7 @@ LABEL_MAP_NAME = "labels.pbtxt"
 
 @dataclasses.dataclass
 class ObjectDetectionResult:
-    bounding_box: Tuple[float, float, float, float]
+    bounding_box: Tuple
     score: float
     label: str
 
@@ -36,7 +36,6 @@ class ObjectDetectionRawResult:
     detection_boxes: np.array
     detection_scores: np.array
     detection_classes: np.array
-    image_size: Tuple[int, int]
     category_index: CategoryIndex
     detection_masks: Optional[np.array] = None
     boxed_image: Optional[PIL.Image.Image] = None
@@ -51,20 +50,15 @@ class ObjectDetectionRawResult:
         selected_classes = self.detection_classes[box_masks]
 
         results = []
-        image_width, image_height = self.image_size
-        for box, score, label in zip(selected_boxes, selected_scores, selected_classes):
-            ymin, xmin, ymax, xmax = box
-            bounding_box = (
-                ymin * image_height,
-                xmin * image_width,
-                ymax * image_height,
-                xmax * image_width,
-            )
-
+        for bounding_box, score, label in zip(
+            selected_boxes, selected_scores, selected_classes
+        ):
             label_int = int(label)
             label_str = self.category_index[label_int]["name"]
             result = ObjectDetectionResult(
-                bounding_box=bounding_box, score=float(score), label=label_str
+                bounding_box=tuple(bounding_box.tolist()),
+                score=float(score),
+                label=label_str,
             )
             results.append(result)
 
@@ -98,6 +92,18 @@ def add_boxes_and_labels(image_array: np.array, raw_result: ObjectDetectionRawRe
     raw_result.boxed_image = image_with_boxes
 
 
+def resize_image(image: Image.Image, max_size: Tuple[int, int]) -> Image.Image:
+    width, height = image.size
+    max_width, max_height = max_size
+
+    if width > max_width or height > max_height:
+        new_image = image.copy()
+        new_image.thumbnail((max_width, max_height))
+        return new_image
+
+    return image
+
+
 class RemoteModel:
     def __init__(self, name: str, label_path: pathlib.Path):
         self.name: str = name
@@ -112,7 +118,8 @@ class RemoteModel:
     def detect_from_image(
         self, image: np.array, output_image: bool = False
     ) -> ObjectDetectionRawResult:
-        image_array = convert_image_to_array(image)
+        resized_image = resize_image(image, settings.OBJECT_DETECTION_IMAGE_MAX_SIZE)
+        image_array = convert_image_to_array(resized_image)
         data = {
             "signature_name": "serving_default",
             "instances": np.expand_dims(image_array, 0).tolist(),
@@ -130,7 +137,6 @@ class RemoteModel:
         detection_boxes = np.array(prediction["detection_boxes"])
 
         result = ObjectDetectionRawResult(
-            image_size=(image_array.shape[0], image_array.shape[1]),
             num_detections=num_detections,
             detection_classes=detection_classes,
             detection_boxes=detection_boxes,

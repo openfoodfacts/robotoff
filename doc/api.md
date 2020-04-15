@@ -123,9 +123,12 @@ Current question types:
 
 ## Ingredient spellcheck [/predict/ingredients/spellcheck]
 
-### Get spelling corrections [POST]
+### Get spelling corrections [GET]
 
-+ text (str, required) - the ingredient text to spellcheck
+Generate spellcheck corrections. Either the barcode or the text to correct must be supplied.
+
++ text (str, optional) - the ingredient text to spellcheck.
++ barcode (str, optional) - the barcode of the product.
 
 
 + Response 200 (application/json)

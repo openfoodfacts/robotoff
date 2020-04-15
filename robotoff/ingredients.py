@@ -4,27 +4,41 @@ import re
 
 import dataclasses
 from dataclasses import dataclass, field
-from typing import List, Tuple, Iterable, Dict, Optional
+from typing import List, Tuple, Iterable, Dict, Optional, Set
 
 from robotoff import settings
 from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import CachedStore
 from robotoff.utils.es import generate_msearch_body
+from robotoff.utils.text import FR_NLP_CACHE
+
+from spacy.util import get_lang_class
+
 
 logger = get_logger(__name__)
 
 SPLITTER_CHAR = {"(", ")", ",", ";", "[", "]", "-", "{", "}"}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:E ?\d{3,5}[a-z]*)|(?:[_•:0-9])")
-
+BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:[_•:0-9])")
+E_BLACKLIST_RE = re.compile(r"(?<!\w)(?:E ?\d{3,5}[a-z]*)")
 OffsetType = Tuple[int, int]
 
 
 class TokenLengthMismatchException(Exception):
     pass
+
+
+def get_fr_known_tokens() -> Set[str]:
+    tokens = set(text_file_iter(settings.INGREDIENT_TOKENS_PATH, comment=False))
+    tokens = tokens.union(set(text_file_iter(settings.FR_TOKENS_PATH, comment=False)))
+    return tokens
+
+
+FR_KNOWN_TOKENS = CachedStore(get_fr_known_tokens)
 
 
 def extract_ingredients_from_taxonomy(lang: str):
@@ -40,17 +54,24 @@ def extract_ingredients_from_taxonomy(lang: str):
 
 
 def extract_tokens_ingredients_from_taxonomy(lang: str):
-    from spacy.util import get_lang_class
-
     ingredients = extract_ingredients_from_taxonomy(lang)
-    nlp = get_lang_class(lang)
+    nlp_class = get_lang_class(lang)
+    nlp = nlp_class()
     tokens = set()
 
-    for doc in nlp.pipe(ingredients):
+    for doc in nlp.pipe(texts=ingredients):
         for token in doc:
-            tokens.add(token)
+            tokens.add(token.orth_)
 
     return tokens
+
+
+def dump_token_ingredients_from_taxonomy(lang: str):
+    tokens = sorted(extract_tokens_ingredients_from_taxonomy(lang))
+
+    with settings.INGREDIENT_TOKENS_PATH.open("w") as f:
+        for token in tokens:
+            f.write(token + "\n")
 
 
 @dataclass
@@ -81,6 +102,7 @@ class TermCorrection:
     correction: str
     start_offset: int
     end_offset: int
+    is_valid: bool = True
 
 
 @dataclass
@@ -92,18 +114,19 @@ class Correction:
 def normalize_ingredients(ingredient_text: str):
     normalized = ingredient_text
 
-    while True:
-        try:
-            match = next(BLACKLIST_RE.finditer(normalized))
-        except StopIteration:
-            break
+    for regex in (E_BLACKLIST_RE, BLACKLIST_RE):
+        while True:
+            try:
+                match = next(regex.finditer(normalized))
+            except StopIteration:
+                break
 
-        if match:
-            start = match.start()
-            end = match.end()
-            normalized = normalized[:start] + " " * (end - start) + normalized[end:]
-        else:
-            break
+            if match:
+                start = match.start()
+                end = match.end()
+                normalized = normalized[:start] + " " * (end - start) + normalized[end:]
+            else:
+                break
 
     return normalized
 
@@ -169,16 +192,14 @@ def generate_corrections(
         original_tokens = analyze(client, normalized_ingredient)
         suggestion_tokens = analyze(client, option["text"])
         try:
-            term_corrections = [
-                c
-                for c in format_corrections(
-                    original_tokens, suggestion_tokens, offsets[0]
-                )
-                if is_valid_correction(c)
-            ]
+            term_corrections = format_corrections(
+                original_tokens, suggestion_tokens, offsets[0]
+            )
 
-            if term_corrections:
-                corrections.append(Correction(term_corrections, option["score"]))
+            for term_correction in term_corrections:
+                term_correction.is_valid = is_valid_correction(term_correction)
+
+            corrections.append(Correction(term_corrections, option["score"]))
 
         except TokenLengthMismatchException:
             # logger.warning("The original text and the suggestions must have the same number "
@@ -188,11 +209,23 @@ def generate_corrections(
     return corrections
 
 
-def is_valid_correction(correction: TermCorrection) -> bool:
+def is_valid_correction(
+    correction: TermCorrection, plural: bool = True, original_known: bool = True
+) -> bool:
+    if plural and is_plural_correction(correction):
+        return False
+
+    if original_known and is_original_ingredient_known(correction.original):
+        return False
+
+    return True
+
+
+def is_plural_correction(correction: TermCorrection) -> bool:
     original_str = correction.original.lower()
     correction_str = correction.correction.lower()
 
-    if (
+    return (
         len(original_str) > len(correction_str)
         and original_str.endswith("s")
         and correction_str == original_str[:-1]
@@ -200,15 +233,25 @@ def is_valid_correction(correction: TermCorrection) -> bool:
         len(correction_str) > len(original_str)
         and correction_str.endswith("s")
         and original_str == correction_str[:-1]
-    ):
-        print(correction)
-        return False
+    )
+
+
+def is_original_ingredient_known(text: str):
+    nlp = FR_NLP_CACHE.get()
+    known_tokens = FR_KNOWN_TOKENS.get()
+
+    for token in nlp(text):
+        if token.lower_ not in known_tokens:
+            return False
 
     return True
 
 
 def generate_corrected_text(corrections: List[TermCorrection], text: str):
-    sorted_corrections = sorted(corrections, key=operator.attrgetter("start_offset"))
+    valid_corrections = [c for c in corrections if c.is_valid]
+    sorted_corrections = sorted(
+        valid_corrections, key=operator.attrgetter("start_offset")
+    )
     corrected_fragments = []
 
     last_correction = None
@@ -272,6 +315,19 @@ def _suggest(client, text):
     return response["suggest"][suggester_name]
 
 
+def suggest(text: str, client, confidence: float = 1) -> Dict:
+    corrections = generate_corrections(client, text, confidence=confidence)
+    term_corrections = list(
+        itertools.chain.from_iterable((c.term_corrections for c in corrections))
+    )
+
+    return {
+        "corrections": [dataclasses.asdict(c) for c in term_corrections],
+        "text": text,
+        "corrected": generate_corrected_text(term_corrections, text),
+    }
+
+
 def analyze(client, ingredient_text: str):
     r = client.indices.analyze(
         index=settings.ELASTICSEARCH_PRODUCT_INDEX,
@@ -282,10 +338,11 @@ def analyze(client, ingredient_text: str):
 
 def _suggest_batch(client, texts: Iterable[str], **kwargs) -> List[Dict]:
     suggester_name = "autocorrect"
+    index_name = kwargs.pop("index_name", settings.ELASTICSEARCH_PRODUCT_INDEX)
     queries = (
         generate_suggest_query(text, name=suggester_name, **kwargs) for text in texts
     )
-    body = generate_msearch_body(settings.ELASTICSEARCH_PRODUCT_INDEX, queries)
+    body = generate_msearch_body(index_name, queries)
     response = client.msearch(body=body, doc_type=settings.ELASTICSEARCH_TYPE)
 
     suggestions = []
@@ -310,7 +367,26 @@ def generate_suggest_query(
     min_word_length=4,
     suggest_mode="missing",
     name="autocorrect",
+    reverse: bool = True,
 ):
+    direct_generators = [
+        {
+            "field": "ingredients_text_fr.trigram",
+            "suggest_mode": suggest_mode,
+            "min_word_length": min_word_length,
+        }
+    ]
+
+    if reverse:
+        direct_generators.append(
+            {
+                "field": "ingredients_text_fr.reverse",
+                "suggest_mode": suggest_mode,
+                "min_word_length": min_word_length,
+                "pre_filter": "reverse",
+                "post_filter": "reverse",
+            },
+        )
     return {
         "suggest": {
             "text": text,
@@ -320,13 +396,7 @@ def generate_suggest_query(
                     "field": "ingredients_text_fr.trigram",
                     "size": size,
                     "gram_size": 3,
-                    "direct_generator": [
-                        {
-                            "field": "ingredients_text_fr.trigram",
-                            "suggest_mode": suggest_mode,
-                            "min_word_length": min_word_length,
-                        }
-                    ],
+                    "direct_generator": direct_generators,
                     "smoothing": {"laplace": {"alpha": 0.5}},
                 }
             },
@@ -334,7 +404,7 @@ def generate_suggest_query(
     }
 
 
-def generate_insights(client, confidence=1):
+def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_iter = (
@@ -343,6 +413,13 @@ def generate_insights(client, confidence=1):
         .filter_nonempty_text_field("ingredients_text_fr")
         .iter()
     )
+
+    if max_errors is not None:
+        product_iter = (
+            p
+            for p in product_iter
+            if int(p.get("unknown_ingredients_n", 0)) <= max_errors
+        )
 
     for product in product_iter:
         text = product["ingredients_text_fr"]

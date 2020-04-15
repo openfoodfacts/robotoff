@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="robotoff",
-    version="1.0.12",
+    version="1.0.13",
     author="Openfoodfacts Team",
     description="Real-time and batch prediction service for Openfoodfacts",
     url="https://github.com/openfoodfacts/robotoff",
@@ -34,6 +34,8 @@ setup(
         "flashtext==2.7",
         "langid==1.1.6",
         "more-itertools>=8.0.0",
+        "spacy>=2.2.0,<2.3.0",
+        "pymongo>=3.0.0<3.1.0",
     ],
     include_package_data=True,
 )
