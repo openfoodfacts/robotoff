@@ -133,11 +133,7 @@ def extract_image_ml_insights(
 
 
 def extract_ocr_insights(ocr_url: str, insight_types: Iterable[str]) -> JSONType:
-    r = http_session.get(ocr_url)
-    r.raise_for_status()
-
-    ocr_data: Dict = r.json()
-    ocr_result = ocr.OCRResult.from_json(ocr_data)
+    ocr_result = get_ocr_result(ocr_url)
 
     if ocr_result is None:
         logger.info("Error during OCR extraction: {}".format(ocr_url))
@@ -152,6 +148,14 @@ def extract_ocr_insights(ocr_url: str, insight_types: Iterable[str]) -> JSONType
             results[insight_type] = insights
 
     return results
+
+
+def get_ocr_result(ocr_url: str) -> Optional[ocr.OCRResult]:
+    r = http_session.get(ocr_url)
+    r.raise_for_status()
+
+    ocr_data: Dict = r.json()
+    return ocr.OCRResult.from_json(ocr_data)
 
 
 def extract_nutriscore_label(
