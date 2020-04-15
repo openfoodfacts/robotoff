@@ -114,7 +114,7 @@ class Correction:
 def normalize_ingredients(ingredient_text: str):
     normalized = ingredient_text
 
-    for regex in (BLACKLIST_RE, E_BLACKLIST_RE):
+    for regex in (E_BLACKLIST_RE, BLACKLIST_RE):
         while True:
             try:
                 match = next(regex.finditer(normalized))
