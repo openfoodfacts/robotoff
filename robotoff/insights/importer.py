@@ -69,9 +69,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             insight["id"] = str(uuid.uuid4())
             insight["timestamp"] = timestamp
             insight["type"] = self.get_type()
-            insight["countries"] = getattr(
-                product, "countries_tags", []
-            )
+            insight["countries"] = getattr(product, "countries_tags", [])
             insight["brands"] = getattr(product, "brands_tags", [])
             yield insight
 
@@ -263,7 +261,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        if insight["data"]["matcher_type"] in ("eu_fr", "eu_de", "fr_emb"):
+        if insight["data"]["matcher_type"] in ("eu_fr", "eu_de", "fr_emb", "fishing"):
             return False
 
         return True
