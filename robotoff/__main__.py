@@ -120,6 +120,20 @@ if __name__ == "__main__":
         dump_jsonl(output, insights_iter)
 
     @click.command()
+    @click.argument("text")
+    @click.option("--confidence", type=float, default=1)
+    def test_spellcheck(text: str, confidence: float):
+        import json
+        from robotoff.utils.es import get_es_client
+        from robotoff.ingredients import suggest
+        from robotoff.utils import get_logger
+
+        get_logger()
+        client = get_es_client()
+        result = suggest(text, client, confidence=confidence)
+        print(json.dumps(result, indent=5))
+
+    @click.command()
     @click.option("--minify/--no-minify", default=False)
     def download_dataset(minify: bool):
         from robotoff.products import has_dataset_changed, fetch_dataset
@@ -221,6 +235,7 @@ if __name__ == "__main__":
     cli.add_command(init_elasticsearch)
     cli.add_command(spellcheck)
     cli.add_command(generate_spellcheck_insights)
+    cli.add_command(test_spellcheck)
     cli.add_command(download_dataset)
     cli.add_command(categorize)
     cli.add_command(import_insights)
