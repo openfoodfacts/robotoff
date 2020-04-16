@@ -15,3 +15,4 @@ class InsightType(Enum):
     nutrient = 11
     trace = 12
     packaging = 13
+    location = 14
