@@ -30,6 +30,7 @@ def product_export(version: str = "product"):
 
     product_stream = (
         dataset.stream()
+        .filter_text_field("lang", "fr")
         .filter_by_country_tag("en:france")
         .filter_nonempty_text_field("ingredients_text_fr")
     )
