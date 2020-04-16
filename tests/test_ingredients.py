@@ -21,6 +21,10 @@ from robotoff.ingredients import process_ingredients, normalize_ingredients, Ing
         ("EPAUTRE 100 %", "EPAUTRE      "),  # Test spurious E XXX additive detection
         ("0ignons (35%)", "0ignons (   )"),
         ("2-methylcellulose", "2-methylcellulose"),
+        (
+            "_lait_ entier, _crème_ (_lait_), protéines de _lait_",
+            " lait  entier,  crème  ( lait ), protéines de  lait ",
+        ),
     ],
 )
 def test_normalize_ingredients(text, normalized):
