@@ -19,6 +19,8 @@ from robotoff.ingredients import process_ingredients, normalize_ingredients, Ing
             "Eau, céréales       (    ,       ,         ),    ",
         ),
         ("EPAUTRE 100 %", "EPAUTRE      "),  # Test spurious E XXX additive detection
+        ("0ignons (35%)", "0ignons (   )"),
+        ("2-methylcellulose", "2-methylcellulose"),
     ],
 )
 def test_normalize_ingredients(text, normalized):
