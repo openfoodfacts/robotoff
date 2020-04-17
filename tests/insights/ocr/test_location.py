@@ -156,7 +156,7 @@ def test_address_extractor_find_nearby_postal_code(mocker):
     c2 = City("abc", "12A42", None)
     assert ae.find_nearby_postal_code("foo 12A42 abc", c2, 12, 15) is None
     m_get_logger.assert_called_once_with(f"{module}.AddressExtractor")
-    m_get_logger.return_value.error.called_once_with(
+    m_get_logger.return_value.error.assert_called_once_with(
         "postal code contains non-digit characters: %s", c2
     )
 
