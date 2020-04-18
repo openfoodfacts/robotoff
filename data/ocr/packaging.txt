@@ -14,6 +14,7 @@ fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastiqu
 fr:Bouteille en plastique||bouteille plastique
 fr:Bouteille en verre||bouteille verre
 fr:Bouteille en verre||bouteilles verre
+fr:Coque en plastique||coque plastique
 en:Bottle||bottled
 es:Botella||embotellado
 de:Flasche||abfüller
