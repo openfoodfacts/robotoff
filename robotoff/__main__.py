@@ -36,7 +36,9 @@ if __name__ == "__main__":
     @click.option("--insight-type", "-t", required=True)
     @click.option("--output", "-o")
     @click.option(
-        "--keep-empty", default=False, help="keep documents with empty insight"
+        "--keep-empty/--no-keep-empty",
+        default=False,
+        help="keep documents with empty insight",
     )
     def generate_ocr_insights(
         input_: str, insight_type: str, output: str, keep_empty: bool
