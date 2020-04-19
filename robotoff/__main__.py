@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     import pathlib
+    import sys
     from typing import Optional
 
     import click
@@ -39,12 +40,16 @@ if __name__ == "__main__":
         "--keep-empty/--no-keep-empty",
         default=False,
         help="keep documents with empty insight",
+        show_default=True,
     )
     def generate_ocr_insights(
         input_: str, insight_type: str, output: str, keep_empty: bool
     ):
         from robotoff.cli import insights
         from robotoff.utils import get_logger
+
+        if input_ == "-":
+            input_ = sys.stdin
 
         get_logger()
         insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
