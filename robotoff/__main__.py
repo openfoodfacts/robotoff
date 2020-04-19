@@ -35,12 +35,17 @@ if __name__ == "__main__":
     @click.argument("input_")
     @click.option("--insight-type", "-t", required=True)
     @click.option("--output", "-o")
-    def generate_ocr_insights(input_: str, insight_type: str, output: str):
+    @click.option(
+        "--keep-empty", default=False, help="keep documents with empty insight"
+    )
+    def generate_ocr_insights(
+        input_: str, insight_type: str, output: str, keep_empty: bool
+    ):
         from robotoff.cli import insights
         from robotoff.utils import get_logger
 
         get_logger()
-        insights.run_from_ocr_archive(input_, insight_type, output)
+        insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
 
     @click.command()
     @click.option("--insight-type")
