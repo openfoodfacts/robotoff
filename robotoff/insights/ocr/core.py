@@ -119,7 +119,7 @@ def ocr_iter_jsonl(stream: TextIO) -> Iterable[Tuple[Optional[str], Dict]]:
 
 
 def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]:
-    if isinstance(source, TextIO):
+    if not isinstance(source, str):
         return ocr_iter_jsonl(source)
 
     elif is_barcode(source):
