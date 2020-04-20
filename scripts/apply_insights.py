@@ -1,13 +1,13 @@
 import argparse
 import datetime
 import pathlib
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from peewee import fn
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
-from robotoff.insights.data import AUTHORIZED_LABELS
+from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.models import ProductInsight
 from robotoff.off import get_product
 
@@ -135,6 +135,7 @@ def run(insight_type: str, max_timedelta: datetime.timedelta):
     insight: ProductInsight
 
     annotator = InsightAnnotatorFactory.get(insight_type)
+    authorized_labels: Set[str] = AUTHORIZED_LABELS_STORE.get()
 
     for insight in (
         ProductInsight.select()
@@ -149,7 +150,7 @@ def run(insight_type: str, max_timedelta: datetime.timedelta):
 
         if (
             insight_type == InsightType.label.name
-            and insight.value_tag not in AUTHORIZED_LABELS
+            and insight.value_tag not in authorized_labels
         ):
             continue
 

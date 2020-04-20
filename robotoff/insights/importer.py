@@ -6,16 +6,24 @@ from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
 from robotoff.insights._enum import InsightType
-from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
 from robotoff.products import ProductStore, Product
+from robotoff import settings
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
-from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
+from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp, text_file_iter
+from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
+
+
+def load_authorized_labels() -> Set[str]:
+    return set(text_file_iter(settings.OCR_LABEL_WHITELIST_DATA_PATH))
+
+
+AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interval=None)
 
 
 def generate_seen_set_query(insight_type: str, barcode: str, server_domain: str):
@@ -330,7 +338,9 @@ class LabelInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        if insight["value_tag"] in AUTHORIZED_LABELS:
+        authorized_labels: Set[str] = AUTHORIZED_LABELS_STORE.get()
+
+        if insight["value_tag"] in authorized_labels:
             return False
 
         return True
