@@ -21,7 +21,6 @@ from robotoff.off import (
     OFFAuthentication,
 )
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
