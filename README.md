@@ -11,13 +11,13 @@ These insights include a growing set of facts, including:
 - ingredient spellchecking
 
 Robotoff provides an API to:
-
-- import a batch of insights in JSONL format
 - Fetch insights
-- Annotate an insight (accept or reject) and send the update to Openfoodfacts if the insight was accepted
+- Annotate an insight (accept or reject) and send the update to Open Food Facts if the insight was accepted
 
 Once generated, the insights can be applied automatically, or after a manual validation if needs be.
-A scheduler takes care of regularly marking insights for automatic annotation and for sending the update to Openfoodfacts.
+A scheduler takes care of regularly marking insights for automatic annotation and for sending the update to Open Food Facts.
+
+To have further information in Robotoff architecture, see the wiki's [architecture description](https://github.com/openfoodfacts/robotoff/wiki/Architecture).
 
 The [API documentation](https://github.com/openfoodfacts/robotoff/blob/master/doc/api.md) describes the API endpoints.
 
