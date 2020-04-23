@@ -118,9 +118,4 @@ class UserAnnotation(BaseModel):
         return self.insight.completed_at
 
 
-class ProductIngredient(BaseModel):
-    barcode = peewee.CharField(max_length=100, null=False, index=True, unique=True)
-    ingredients = peewee.TextField(null=False)
-
-
-MODELS = [ProductInsight, UserAnnotation, ProductIngredient]
+MODELS = [ProductInsight, UserAnnotation]
