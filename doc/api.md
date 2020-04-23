@@ -36,6 +36,7 @@ Fetch a random insight.
 + country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
 + value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
 + server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
++ count (int, optional) - number of results to return (default: 1)
 
 + Response 200 (application/json)
 

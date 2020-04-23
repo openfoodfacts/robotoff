@@ -133,31 +133,28 @@ class InsightCollection:
 
 
 class RandomInsightResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         insight_type: Optional[str] = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
         server_domain: Optional[str] = req.get_param("server_domain")
+        count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
 
-        insights = list(
+        keep_types = [insight_type] if insight_type else None
+        insights: List[ProductInsight] = list(
             get_insights(
-                keep_types=[insight_type],
+                keep_types=keep_types,
                 country=country,
                 value_tag=value_tag,
                 order_by="random",
                 server_domain=server_domain,
-                limit=1,
+                limit=count,
             )
         )
 
-        response = {}
-        if not insights:
-            response["status"] = "no_insights"
-        else:
-            response["insight"] = insights[0].serialize()
-            response["status"] = "found"
-
-        resp.media = response
+        resp.media = {
+            "insights": [insight.serialize() for insight in insights]
+        }
 
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
