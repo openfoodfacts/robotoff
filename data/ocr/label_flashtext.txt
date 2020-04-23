@@ -5,6 +5,10 @@ en:australian-made||fabriqué en australie
 en:australian-made||geproduceerd in australie
 en:australian-made||geproduceerd in australië
 en:australian-made||made in australia
+en:fair-trade||commerce équitable
+en:fair-trade||commerce equitable
+en:fair-trade||fair trade
+en:fair-trade||fair-trade
 en:fsc-mix||fsc mixte
 en:fsc||vwww.fsc.org
 en:gluten-free||bez lepku
