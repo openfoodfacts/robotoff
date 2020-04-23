@@ -173,7 +173,7 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     if authorization is not None:
         try:
             username, password = basic_decode(authorization)
-        except BasicAuthDecodeError as e:
+        except BasicAuthDecodeError:
             raise falcon.HTTPUnauthorized(
                 "Invalid authentication, Basic auth expected."
             )
@@ -220,7 +220,7 @@ class IngredientSpellcheckResource:
         index_name = req.get_param(
             "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
         )
-        confidence = req.get_param_as_float("confidence", default=1.)
+        confidence = req.get_param_as_float("confidence", default=1.0)
 
         if text is None and barcode is None:
             raise falcon.HTTPBadRequest("text or barcode is required.")
@@ -319,7 +319,7 @@ class CategoryPredictorResource:
                 predicted = filter_blacklisted_categories(predicted)
 
             predicted = [
-                {"category": category, "confidence": confidence,}
+                {"category": category, "confidence": confidence}
                 for category, confidence in predicted
             ]
 
@@ -486,12 +486,12 @@ class WebhookProductResource:
 
         if action == "updated":
             send_ipc_event(
-                "product_updated", {"barcode": barcode, "server_domain": server_domain,}
+                "product_updated", {"barcode": barcode, "server_domain": server_domain}
             )
 
         elif action == "deleted":
             send_ipc_event(
-                "product_deleted", {"barcode": barcode, "server_domain": server_domain,}
+                "product_deleted", {"barcode": barcode, "server_domain": server_domain}
             )
 
         resp.media = {

@@ -2,7 +2,7 @@ import datetime
 import functools
 import os
 import uuid
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Optional
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
