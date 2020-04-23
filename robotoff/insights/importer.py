@@ -690,7 +690,7 @@ class StoreInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["value"],
                 "source_image": insight["source"],
-                "data": {"text": content["text"], "notify": content["notify"],},
+                "data": {"text": content["text"], "notify": content["notify"]},
             }
 
             if "automatic_processing" in content:
@@ -733,7 +733,7 @@ class PackagingInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["packaging"],
                 "source_image": insight["source"],
-                "data": {"text": content["text"], "notify": content["notify"],},
+                "data": {"text": content["text"], "notify": content["notify"]},
             }
 
             if "automatic_processing" in content:
