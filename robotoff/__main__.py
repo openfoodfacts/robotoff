@@ -99,11 +99,15 @@ if __name__ == "__main__":
         )
 
     @click.command()
-    @click.argument("output", type=pathlib.Path)
+    @click.argument("output")
+    @click.option("--index-name", default="product")
     @click.option("--confidence", type=float, default=1)
     @click.option("--max-errors", type=int)
     def generate_spellcheck_insights(
-        output: str, confidence: float, max_errors: Optional[int] = None
+        output: str,
+        index_name: str,
+        confidence: float,
+        max_errors: Optional[int] = None,
     ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client

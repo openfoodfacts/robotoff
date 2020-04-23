@@ -405,7 +405,7 @@ def generate_suggest_query(
     }
 
 
-def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
+def generate_insights(client, max_errors: Optional[int] = None, **kwargs):
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_iter = (
@@ -424,7 +424,7 @@ def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
 
     for product in product_iter:
         text = product["ingredients_text_fr"]
-        corrections = generate_corrections(client, text, confidence=confidence)
+        corrections = generate_corrections(client, text, **kwargs)
 
         if not corrections:
             continue
@@ -439,4 +439,5 @@ def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
             "corrected": generate_corrected_text(term_corrections, text),
             "barcode": product["code"],
             "lang": "fr",
+            "index_name": kwargs.get("index_name", "product"),
         }
