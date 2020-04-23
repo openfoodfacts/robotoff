@@ -41,6 +41,7 @@ Elo-Cap||elo cap
 Elo-Cap||elo-cap
 Elopak||elopak
 fr:Etui en carton||etui carton
+fr:Etui en carton||étui carton
 fr:Feuille en carton||feuille carton
 fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
 fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
