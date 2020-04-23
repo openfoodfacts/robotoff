@@ -146,6 +146,8 @@ def updated_product_update_insights(barcode: str, server_domain: str):
     if updated:
         logger.info("Product {} updated".format(barcode))
 
+    update_product_updated_ingredients(barcode, product_dict, server_domain)
+
     product = Product(product_dict)
     validators: Dict[str, Optional[InsightValidator]] = {}
 
@@ -232,6 +234,31 @@ def updated_product_predict_insights(
             updated = True
 
     return updated
+
+
+def update_product_updated_ingredients(
+    barcode: str, product: JSONType, server_domain: str
+) -> int:
+    deleted = 0
+
+    for insight in ProductInsight.select().where(
+        ProductInsight.type == InsightType.ingredient_spellcheck.name,
+        ProductInsight.annotation.is_null(True),
+        ProductInsight.barcode == barcode,
+    ):
+        lang = insight.data["lang"]
+        insight_text = insight.data["text"]
+        field_name = "ingredients_text_{}".format(lang)
+
+        if field_name not in product or product[field_name] != insight_text:
+            logger.info(
+                "Ingredients deleted or updated for product {} (lang: {}), deleting "
+                "insight".format(barcode, lang)
+            )
+            insight.delete_instance()
+            deleted += 1
+
+    return deleted
 
 
 EVENT_MAPPING: Dict[str, Callable] = {

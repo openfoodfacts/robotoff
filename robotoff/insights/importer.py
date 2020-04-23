@@ -135,31 +135,31 @@ class IngredientSpellcheckImporter(InsightImporter):
     def process_insights(
         self, data: Iterable[JSONType], server_domain: str, automatic: bool = False
     ) -> Iterable[JSONType]:
-        barcode_seen: Set[str] = set(
-            x.barcode
-            for x in ProductInsight.select(ProductInsight.barcode).where(
+        seen_set: Set[Tuple[str, str]] = set(
+            (x.barcode, x.data["lang"])
+            for x in ProductInsight.select(
+                ProductInsight.barcode, ProductInsight.data
+            ).where(
                 ProductInsight.type == self.get_type(),
                 ProductInsight.server_domain == server_domain,
+                ProductInsight.annotation.is_null(True),
             )
         )
 
         for item in data:
-            barcode = item["barcode"]
+            barcode = item.pop("barcode")
+            lang = item["lang"]
+            key = (barcode, lang)
 
-            if barcode not in barcode_seen:
-                barcode_seen.add(barcode)
+            if key not in seen_set:
+                seen_set.add(key)
             else:
                 continue
 
             yield {
                 "barcode": barcode,
                 "automatic_processing": False,
-                "data": {
-                    "corrections": item["corrections"],
-                    "text": item["text"],
-                    "corrected": item["corrected"],
-                    "lang": item["lang"],
-                },
+                "data": item,
             }
 
 
