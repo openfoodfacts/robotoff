@@ -191,6 +191,20 @@ if __name__ == "__main__":
         logger.info("{} insights imported".format(imported))
 
     @click.command()
+    @click.option("--insight-type", required=True)
+    @click.option("--delta", type=int, default=1)
+    def apply_insights(
+        insight_type: str, delta: int,
+    ):
+        import datetime
+        from robotoff.cli import insights
+        from robotoff.utils import get_logger
+
+        logger = get_logger()
+        logger.info("Applying {} insights".format(insight_type))
+        insights.apply_insights(insight_type, datetime.timedelta(days=delta))
+
+    @click.command()
     @click.option("--index/--no-index", default=False)
     @click.option("--data/--no-data", default=True)
     @click.option("--product/--no-product", default=False)
@@ -239,6 +253,7 @@ if __name__ == "__main__":
     cli.add_command(download_dataset)
     cli.add_command(categorize)
     cli.add_command(import_insights)
+    cli.add_command(apply_insights)
     cli.add_command(predict_insight)
 
     cli()
