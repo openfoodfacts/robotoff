@@ -438,4 +438,5 @@ def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
             "text": text,
             "corrected": generate_corrected_text(term_corrections, text),
             "barcode": product["code"],
+            "lang": "fr",
         }

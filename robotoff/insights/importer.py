@@ -127,6 +127,42 @@ class InsightImporter(metaclass=abc.ABCMeta):
         return query.count()
 
 
+class IngredientSpellcheckImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.ingredient_spellcheck.name
+
+    def process_insights(
+        self, data: Iterable[JSONType], server_domain: str, automatic: bool = False
+    ) -> Iterable[JSONType]:
+        barcode_seen: Set[str] = set(
+            x.barcode
+            for x in ProductInsight.select(ProductInsight.barcode).where(
+                ProductInsight.type == self.get_type(),
+                ProductInsight.server_domain == server_domain,
+            )
+        )
+
+        for item in data:
+            barcode = item["barcode"]
+
+            if barcode not in barcode_seen:
+                barcode_seen.add(barcode)
+            else:
+                continue
+
+            yield {
+                "barcode": barcode,
+                "automatic_processing": False,
+                "data": {
+                    "corrections": item["corrections"],
+                    "text": item["text"],
+                    "corrected": item["corrected"],
+                    "lang": item["lang"],
+                },
+            }
+
+
 GroupedByOCRInsights = Dict[str, List]
 
 
@@ -749,6 +785,7 @@ class PackagingInsightImporter(OCRInsightImporter):
 
 class InsightImporterFactory:
     importers: JSONType = {
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
         InsightType.label.name: LabelInsightImporter,
         InsightType.category.name: CategoryImporter,
