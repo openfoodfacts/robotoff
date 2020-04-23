@@ -447,7 +447,7 @@ def generate_insights(
 
     for product in product_iter:
         text = product["ingredients_text_fr"]
-        barcode = product["barcode"]
+        barcode = product["code"]
         insight = predict_insight(client, text, barcode=barcode, **kwargs)
 
         if insight:
