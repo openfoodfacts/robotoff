@@ -70,8 +70,8 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
         postal_code = city_data["code_postal"]
         if not len(postal_code) == 5 or not postal_code.isdigit():
             raise ValueError(
-                f"{postal_code!r}, invalid FR postal code for city {name!r}, must be "
-                f"5-digits string"
+                "{!r}, invalid FR postal code for city {!r}, must be 5-digits "
+                "string".format(postal_code, name)
             )
         coords = city_data.get("coordonnees_gps")
         if coords is not None:
@@ -212,7 +212,9 @@ class AddressExtractor:
             in the text. If it was not found, returns None.
         """
         if not city.postal_code.isdigit():
-            logger = get_logger(f"{self.__module__}.{self.__class__.__name__}")
+            logger = get_logger(
+                "{}.{}".format(self.__module__, self.__class__.__name__)
+            )
             logger.error("postal code contains non-digit characters: %s", city)
             return None
         pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
