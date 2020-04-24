@@ -152,9 +152,7 @@ class RandomInsightResource:
             )
         )
 
-        resp.media = {
-            "insights": [insight.serialize() for insight in insights]
-        }
+        resp.media = {"insights": [insight.serialize() for insight in insights]}
 
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
@@ -503,7 +501,7 @@ class ProductQuestionsResource:
         lang: str = req.get_param("lang", default="en")
         server_domain: Optional[str] = req.get_param("server_domain")
 
-        keep_types = QuestionFormatterFactory.get_available_types()
+        keep_types = QuestionFormatterFactory.get_default_types()
         insights = list(
             get_insights(
                 barcode=barcode,
@@ -563,7 +561,7 @@ def get_questions_resource_on_get(
         reserved_barcode = None
 
     if keep_types is None:
-        keep_types = QuestionFormatterFactory.get_available_types()
+        keep_types = QuestionFormatterFactory.get_default_types()
     else:
         # Limit the number of types to prevent slow SQL queries
         keep_types = keep_types[:10]
