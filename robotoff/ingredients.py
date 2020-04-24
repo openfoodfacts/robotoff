@@ -220,6 +220,10 @@ def is_valid_correction(
     if original_known and is_original_ingredient_known(correction.original):
         return False
 
+    # Tokens with numbers are tricky to correct
+    if any(x.isdigit() for x in correction.correction):
+        return False
+
     return True
 
 
