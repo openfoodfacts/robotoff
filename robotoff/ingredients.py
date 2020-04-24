@@ -312,15 +312,6 @@ def format_corrections(
     return corrections
 
 
-def _suggest(client, text):
-    suggester_name = "autocorrect"
-    body = generate_suggest_query(text, name=suggester_name)
-    response = client.search(
-        index="product", doc_type="document", body=body, _source=False
-    )
-    return response["suggest"][suggester_name]
-
-
 def suggest(text: str, client, **kwargs) -> Dict:
     corrections = generate_corrections(client, text, **kwargs)
     term_corrections = list(
