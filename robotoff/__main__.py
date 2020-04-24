@@ -1,7 +1,6 @@
 if __name__ == "__main__":
     import pathlib
     import sys
-    from textwrap import dedent
     from typing import Optional
 
     import click
@@ -34,8 +33,8 @@ if __name__ == "__main__":
         print(json.dumps(results, indent=4))
 
     @click.command(
-        help=dedent(
-            """Generate OCR insights of the requested type.
+        help="""
+            Generate OCR insights of the requested type.
             
             \b
             SOURCE can be either:
@@ -45,8 +44,7 @@ if __name__ == "__main__":
             * the '-' character: input is read from stdin and assumed to be JSONL
               
             Output is JSONL, each line containing the insights for one document.
-            """
-        ),
+        """
     )
     @click.argument("source")
     @click.option("--insight-type", "-t", required=True)
