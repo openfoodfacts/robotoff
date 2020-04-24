@@ -1,6 +1,7 @@
 if __name__ == "__main__":
     import pathlib
     import sys
+    from textwrap import dedent
     from typing import Optional
 
     import click
@@ -32,10 +33,29 @@ if __name__ == "__main__":
 
         print(json.dumps(results, indent=4))
 
-    @click.command()
-    @click.argument("input_")
+    @click.command(
+        help=dedent(
+            """Generate OCR insights of the requested type.
+            
+            \b
+            SOURCE can be either:
+            * the path to a JSON file, a (gzipped-)JSONL file, or a directory
+              containing JSON files
+            * a barcode
+            * the '-' character: input is read from stdin and assumed to be JSONL
+              
+            Output is JSONL, each line containing the insights for one document.
+            """
+        ),
+    )
+    @click.argument("source")
     @click.option("--insight-type", "-t", required=True)
-    @click.option("--output", "-o")
+    @click.option(
+        "--output",
+        "-o",
+        help="file to write output to, stdout if not specified",
+        type=click.Path(dir_okay=False, writable=True)
+    )
     @click.option(
         "--keep-empty/--no-keep-empty",
         default=False,
@@ -43,16 +63,16 @@ if __name__ == "__main__":
         show_default=True,
     )
     def generate_ocr_insights(
-        input_: str, insight_type: str, output: str, keep_empty: bool
+        source: str, insight_type: str, output: str, keep_empty: bool
     ):
         from robotoff.cli import insights
         from robotoff.utils import get_logger
 
-        if input_ == "-":
-            input_ = sys.stdin
+        if source == "-":
+            source = sys.stdin
 
         get_logger()
-        insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
+        insights.run_from_ocr_archive(source, insight_type, output, keep_empty)
 
     @click.command()
     @click.option("--insight-type")
