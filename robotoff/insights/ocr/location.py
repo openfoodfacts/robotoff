@@ -15,9 +15,6 @@ from robotoff.utils.text import strip_accents_ascii
 from robotoff.utils.types import JSONType
 
 
-logger = get_logger(__name__)
-
-
 @dataclasses.dataclass(frozen=True)
 class City:
     """A city, storing its name, postal code and GPS coordinates."""
@@ -52,6 +49,9 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
 
     Returns:
         set of City: List of all French cities as `City` objects.
+
+    Raises:
+        ValueError: if a postal code is not a valid French postal code (5 digits).
     """
     # JSON file contains a lot of repeated data. An alternative could be to use the
     # CSV file.
@@ -66,14 +66,17 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
     cities = []
     for item in json_data:
         city_data = item["fields"]
+        name = city_data["nom_de_la_commune"].lower()
+        postal_code = city_data["code_postal"]
+        if not len(postal_code) == 5 or not postal_code.isdigit():
+            raise ValueError(
+                "{!r}, invalid FR postal code for city {!r}, must be 5-digits "
+                "string".format(postal_code, name)
+            )
         coords = city_data.get("coordonnees_gps")
         if coords is not None:
             coords = tuple(coords)
-        cities.append(
-            City(
-                city_data["nom_de_la_commune"].lower(), city_data["code_postal"], coords
-            )
-        )
+        cities.append(City(name, postal_code, coords))
 
     # Remove duplicates
     return set(cities)
@@ -209,7 +212,11 @@ class AddressExtractor:
             in the text. If it was not found, returns None.
         """
         if not city.postal_code.isdigit():
-            raise ValueError(f"postal code contains non-digit characters: {city}")
+            logger = get_logger(
+                "{}.{}".format(self.__module__, self.__class__.__name__)
+            )
+            logger.error("postal code contains non-digit characters: %s", city)
+            return None
         pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
 
         sub_start = max(0, city_start - self.postal_code_search_distance)
