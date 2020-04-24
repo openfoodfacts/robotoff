@@ -52,7 +52,7 @@ if __name__ == "__main__":
         "--output",
         "-o",
         help="file to write output to, stdout if not specified",
-        type=click.Path(dir_okay=False, writable=True)
+        type=click.Path(dir_okay=False, writable=True),
     )
     @click.option(
         "--keep-empty/--no-keep-empty",
