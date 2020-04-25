@@ -19,7 +19,9 @@ from robotoff.products import CACHED_PRODUCT_STORE
 from robotoff.utils import gzip_jsonl_iter, jsonl_iter
 
 
-def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
+def run_from_ocr_archive(
+    input_: str, insight_type: str, output: Optional[str], keep_empty: bool = False
+):
     if output is not None:
         output_f = open(output, "w")
     else:
@@ -45,17 +47,20 @@ def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
 
             insights = extract_insights(ocr_result, insight_type)
 
-            if insights:
-                item = {
-                    "insights": insights,
-                    "barcode": barcode,
-                    "type": insight_type,
-                }
+            # Do not produce output if insights is empty and we don't want to keep it
+            if not keep_empty and not insights:
+                continue
 
-                if source:
-                    item["source"] = source
+            item = {
+                "insights": insights,
+                "barcode": barcode,
+                "type": insight_type,
+            }
 
-                output_f.write(json.dumps(item) + "\n")
+            if source:
+                item["source"] = source
+
+            output_f.write(json.dumps(item) + "\n")
 
 
 def import_insights(
