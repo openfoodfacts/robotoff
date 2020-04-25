@@ -18,13 +18,17 @@ gras
 grasse
 hours
 issus
+jury
 long
+loue
 mace
 mer
 ondes
+our
 place
 plats
 poissons
+rance
 ri
 riche
 ris
@@ -35,4 +39,6 @@ son
 teneur
 this
 ur
+vert
+vieux
 y

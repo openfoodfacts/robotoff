@@ -87,7 +87,7 @@ def load_city_blacklist_fr(source: Union[Path, BinaryIO, None] = None) -> List[s
         source = settings.OCR_CITY_BLACKLIST_FR_PATH
 
     with open(source, "rt") as blacklist_file:
-        return blacklist_file.readlines()
+        return [line.strip() for line in blacklist_file.readlines()]
 
 
 class AddressExtractor:
