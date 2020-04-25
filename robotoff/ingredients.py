@@ -429,6 +429,7 @@ def generate_insights(
     product_iter = (
         dataset.stream()
         .filter_by_country_tag("en:france")
+        .filter_text_field("lang", "fr")
         .filter_nonempty_text_field("ingredients_text_fr")
         .iter()
     )
