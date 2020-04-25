@@ -6,16 +6,24 @@ from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
 from robotoff.insights._enum import InsightType
-from robotoff.insights.data import AUTHORIZED_LABELS
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
 from robotoff.products import ProductStore, Product
+from robotoff import settings
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
-from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
+from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp, text_file_iter
+from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
+
+
+def load_authorized_labels() -> Set[str]:
+    return set(text_file_iter(settings.OCR_LABEL_WHITELIST_DATA_PATH))
+
+
+AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interval=None)
 
 
 def generate_seen_set_query(insight_type: str, barcode: str, server_domain: str):
@@ -117,6 +125,42 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def get_seen_count(cls, barcode: str, server_domain: str) -> int:
         query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
         return query.count()
+
+
+class IngredientSpellcheckImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> str:
+        return InsightType.ingredient_spellcheck.name
+
+    def process_insights(
+        self, data: Iterable[JSONType], server_domain: str, automatic: bool = False
+    ) -> Iterable[JSONType]:
+        seen_set: Set[Tuple[str, str]] = set(
+            (x.barcode, x.data["lang"])
+            for x in ProductInsight.select(
+                ProductInsight.barcode, ProductInsight.data
+            ).where(
+                ProductInsight.type == self.get_type(),
+                ProductInsight.server_domain == server_domain,
+                ProductInsight.annotation.is_null(True),
+            )
+        )
+
+        for item in data:
+            barcode = item.pop("barcode")
+            lang = item["lang"]
+            key = (barcode, lang)
+
+            if key not in seen_set:
+                seen_set.add(key)
+            else:
+                continue
+
+            yield {
+                "barcode": barcode,
+                "automatic_processing": False,
+                "data": item,
+            }
 
 
 GroupedByOCRInsights = Dict[str, List]
@@ -330,7 +374,9 @@ class LabelInsightImporter(OCRInsightImporter):
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
-        if insight["value_tag"] in AUTHORIZED_LABELS:
+        authorized_labels: Set[str] = AUTHORIZED_LABELS_STORE.get()
+
+        if insight["value_tag"] in authorized_labels:
             return False
 
         return True
@@ -680,7 +726,7 @@ class StoreInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["value"],
                 "source_image": insight["source"],
-                "data": {"text": content["text"], "notify": content["notify"],},
+                "data": {"text": content["text"], "notify": content["notify"]},
             }
 
             if "automatic_processing" in content:
@@ -723,7 +769,7 @@ class PackagingInsightImporter(OCRInsightImporter):
                 "value_tag": value_tag,
                 "value": content["packaging"],
                 "source_image": insight["source"],
-                "data": {"text": content["text"], "notify": content["notify"],},
+                "data": {"text": content["text"], "notify": content["notify"]},
             }
 
             if "automatic_processing" in content:
@@ -739,6 +785,7 @@ class PackagingInsightImporter(OCRInsightImporter):
 
 class InsightImporterFactory:
     importers: JSONType = {
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
         InsightType.packager_code.name: PackagerCodeInsightImporter,
         InsightType.label.name: LabelInsightImporter,
         InsightType.category.name: CategoryImporter,

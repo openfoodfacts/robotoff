@@ -2,7 +2,7 @@ import datetime
 import functools
 import os
 import uuid
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Optional
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -89,7 +89,7 @@ def refresh_insights(with_deletion: bool = False):
         logger.warn("Dataset version is not up to date, aborting insight removal job")
         return
 
-    validators: Dict[str, InsightValidator] = {}
+    validators: Dict[str, Optional[InsightValidator]] = {}
 
     with db:
         with db.atomic():
@@ -108,7 +108,7 @@ def refresh_insights(with_deletion: bool = False):
                     if with_deletion:
                         # Product has been deleted from OFF
                         logger.info(
-                            "Product with barcode {} deleted" "".format(insight.barcode)
+                            "Product with barcode {} deleted".format(insight.barcode)
                         )
                         deleted += 1
                         insight.delete_instance()
