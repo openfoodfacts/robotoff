@@ -71,10 +71,10 @@ def fetch_dataset(minify: bool = True) -> bool:
             minify_product_dataset(output_path, minify_path)
 
         logger.info("Moving file(s) to dataset directory")
-        shutil.move(output_path, settings.JSONL_DATASET_PATH)
+        shutil.move(str(output_path), settings.JSONL_DATASET_PATH)
 
         if minify:
-            shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
+            shutil.move(str(minify_path), settings.JSONL_MIN_DATASET_PATH)
 
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
