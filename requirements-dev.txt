@@ -1,0 +1,4 @@
+flake8
+black
+pytest==5.3.2
+pytest-mock==3.0.0
