@@ -145,7 +145,7 @@ class CategoryClassifier:
     def generate_insights(self, dataset: ProductDataset) -> List[JSONType]:
         self.raise_if_not_loaded()
         df = self.generate_prediction_df(dataset)
-        y_pred = self.classifier.predict(self.transformer.transform(df))
+        y_pred = self.classifier.predict(self.transformer.transform(df))  # type: ignore
 
         insights = []
         for i, row in enumerate(df.itertuples()):
@@ -175,7 +175,7 @@ class CategoryClassifier:
             "ingredients_tags": product.get("ingredients_tags", []),
         }
         df = pd.DataFrame([transformed])
-        y_pred = self.classifier.predict(self.transformer.transform(df))[0]
+        y_pred = self.classifier.predict(self.transformer.transform(df))[0]  # type: ignore
         return self.categories[y_pred]
 
     def save(self, output_dir: str) -> None:
@@ -240,9 +240,9 @@ class CategoryClassifier:
     def evaluate(self, test_df: pd.DataFrame) -> JSONType:
         self.raise_if_not_loaded()
         y_test = test_df.deepest_category_int.values
-        y_pred = self.classifier.predict(self.transformer.transform(test_df))
+        y_pred = self.classifier.predict(self.transformer.transform(test_df))  # type: ignore
         return self._evaluate(
-            self.classifier.graph_, y_test, y_pred, len(self.categories)
+            self.classifier.graph_, y_test, y_pred, len(self.categories)  # type: ignore
         )
 
     @staticmethod

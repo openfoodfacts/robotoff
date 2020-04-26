@@ -18,7 +18,7 @@
 import logging
 from typing import Dict, List
 
-from google.protobuf import text_format
+from google.protobuf import text_format  # type: ignore
 from . import string_int_label_map_pb2
 
 

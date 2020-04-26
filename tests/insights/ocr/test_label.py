@@ -23,4 +23,4 @@ def test_es_ocr_regex(input_str: str, is_match: bool, output: Optional[str]):
     assert (match is not None) == is_match
 
     if is_match:
-        assert ES_BIO_OCR_REGEX.processing_func(match) == output
+        assert ES_BIO_OCR_REGEX.processing_func(match) == output  # type: ignore
