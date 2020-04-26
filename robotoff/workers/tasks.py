@@ -21,7 +21,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
 )
 from robotoff.models import db, ProductInsight
-from robotoff.off import get_product, get_server_type, move_to, ServerType
+from robotoff.off import get_product, get_server_type, ServerType
 from robotoff.products import (
     has_dataset_changed,
     fetch_dataset,
