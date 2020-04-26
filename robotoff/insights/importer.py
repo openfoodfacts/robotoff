@@ -512,7 +512,7 @@ class ProductWeightImporter(OCRInsightImporter):
             return True
 
         if product.quantity is not None:
-            logger.debug("Product quantity field is not null, returning " "non valid")
+            logger.debug("Product quantity field is not null, returning non valid")
             return False
 
         return True
@@ -587,7 +587,7 @@ class ExpirationDateImporter(OCRInsightImporter):
 
         if product.expiration_date:
             logger.debug(
-                "Product expiration date field is not null, returning " "non valid"
+                "Product expiration date field is not null, returning non valid"
             )
             return False
 
