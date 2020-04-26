@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional, Union
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRField, OCRResult, get_text
+from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 
 from robotoff.insights.ocr.utils import get_tag

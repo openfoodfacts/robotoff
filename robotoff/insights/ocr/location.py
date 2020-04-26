@@ -20,7 +20,7 @@ class City:
     """A city, storing its name, postal code and GPS coordinates."""
 
     name: str
-    """The city name, lower case, no accents, with special characters replaced with 
+    """The city name, lower case, no accents, with special characters replaced with
     spaces."""
     postal_code: str
     """The city's postal code. The format depends on the country."""
