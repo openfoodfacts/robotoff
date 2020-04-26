@@ -119,18 +119,23 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_addresses(self, ocr_result: OCRResult) -> List[JSONType]:
+    def extract_addresses(self, content: Union[str, OCRResult]) -> List[JSONType]:
         """Extract addresses from the given OCR result.
 
         Args:
-            ocr_result (OCRResult): The OCR result to process.
+            content (OCRResult or str): a string or the OCR result to process.
 
         Returns:
             list of JSONType: List of addresses extracted from the text. Each entry
             is a dictionary with the items: country_code (always "fr"), city_name,
             postal_code and text_extract.
         """
-        text = self.get_text(ocr_result)
+        if isinstance(content, OCRResult):
+            text = self.get_text(content)
+        else:
+            text = content
+
+        text = self.normalize_text(text)
         city_matches = self.find_city_names(text)
 
         locations = []
@@ -171,9 +176,12 @@ class AddressExtractor:
             # `OCRResult.get_text_annotations()` because the latter contains
             # the text duplicated
             text = ocr_result.text_annotations[0].text.lower()
-        text = strip_accents_ascii(text)
-        text = text.replace("'", " ").replace("-", " ")
         return text
+
+    @staticmethod
+    def normalize_text(text: str) -> str:
+        text = strip_accents_ascii(text)
+        return text.replace("'", " ").replace("-", " ")
 
     def find_city_names(self, text: str) -> List[Tuple[City, int, int]]:
         """Find all cities from the search set in the text.
