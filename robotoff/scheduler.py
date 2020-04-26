@@ -180,7 +180,7 @@ def mark_insights():
             for insight in (
                 ProductInsight.select()
                 .where(
-                    ProductInsight.automatic_processing == True,
+                    ProductInsight.automatic_processing == True,  # noqa: E712
                     ProductInsight.process_after.is_null(),
                     ProductInsight.annotation.is_null(),
                 )
