@@ -26,6 +26,8 @@ The [API documentation](https://github.com/openfoodfacts/robotoff/blob/master/do
 Robotoff is made of an API web server, a scheduler, a pool of asynchronous workers and a an Elasticsearch server.
 All these services are available as docker images. A `docker-compose.yml` file is used for service orchestration.
 
+Before launching the Elasticsearch service, you may need to increase a system parameter (`vm.max_map_count=262144`), as described [here](https://stackoverflow.com/questions/51445846/elasticsearch-max-virtual-memory-areas-vm-max-map-count-65530-is-too-low-inc).
+
 To start all services, simply run:
 
 `$ docker-compose up -d`
