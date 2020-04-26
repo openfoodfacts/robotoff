@@ -20,27 +20,32 @@ class FeatureType(Enum):
     SYMBOL = 5
 
 
-def draw_boxes(image,
-               bounds: List[BoundingPoly],
-               color,
-               draw_line: bool = False):
+def draw_boxes(image, bounds: List[BoundingPoly], color, draw_line: bool = False):
     """Draw a border around the image using the hints in the vector list."""
     draw = ImageDraw.Draw(image)
 
     for bound in bounds:
-        draw.polygon([
-            bound.vertices[0][0], bound.vertices[0][1],
-            bound.vertices[1][0], bound.vertices[1][1],
-            bound.vertices[2][0], bound.vertices[2][1],
-            bound.vertices[3][0], bound.vertices[3][1]], None, color)
+        draw.polygon(
+            [
+                bound.vertices[0][0],
+                bound.vertices[0][1],
+                bound.vertices[1][0],
+                bound.vertices[1][1],
+                bound.vertices[2][0],
+                bound.vertices[2][1],
+                bound.vertices[3][0],
+                bound.vertices[3][1],
+            ],
+            None,
+            color,
+        )
 
         if draw_line:
             draw.line(bound.get_direction_vector())
     return image
 
 
-def get_document_bounds(feature: FeatureType,
-                        ocr_result: OCRResult):
+def get_document_bounds(feature: FeatureType, ocr_result: OCRResult):
     """Returns document bounds given an image."""
     bounds = []
 
@@ -78,21 +83,23 @@ def find_words():
     pass
 
 
-def render_doc_text(image_path: pathlib.Path,
-                    json_path: pathlib.Path,
-                    output_path: Optional[pathlib.Path] = None):
+def render_doc_text(
+    image_path: pathlib.Path,
+    json_path: pathlib.Path,
+    output_path: Optional[pathlib.Path] = None,
+):
     image = Image.open(image_path)
 
-    with json_path.open('r') as f:
+    with json_path.open("r") as f:
         data = json.load(f)
         ocr_result = OCRResult.from_json(data)
 
     bounds = get_document_bounds(FeatureType.PAGE, ocr_result)
-    draw_boxes(image, bounds, 'blue')
+    draw_boxes(image, bounds, "blue")
     bounds = get_document_bounds(FeatureType.PARA, ocr_result)
-    draw_boxes(image, bounds, 'red')
+    draw_boxes(image, bounds, "red")
     bounds = get_document_bounds(FeatureType.WORD, ocr_result)
-    draw_boxes(image, bounds, 'yellow', draw_line=True)
+    draw_boxes(image, bounds, "yellow", draw_line=True)
 
     if output_path is not None:
         image.save(output_path)
@@ -100,29 +107,28 @@ def render_doc_text(image_path: pathlib.Path,
         image.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('image_url', help='The image URL for text detection.')
-    parser.add_argument('--output-path', help='Optional output file', type=pathlib.Path)
+    parser.add_argument("image_url", help="The image URL for text detection.")
+    parser.add_argument("--output-path", help="Optional output file", type=pathlib.Path)
     args = parser.parse_args()
 
     image_url = args.image_url
-    json_url = image_url.replace('.jpg', '.json')
+    json_url = image_url.replace(".jpg", ".json")
 
     temp_dir = pathlib.Path(tempfile.mkdtemp())
 
-    image_path = temp_dir / 'image.jpg'
-    json_path = temp_dir / 'OCR.json'
+    image_path = temp_dir / "image.jpg"
+    json_path = temp_dir / "OCR.json"
 
     r = requests.get(image_url)
 
-    with image_path.open('wb') as f:
+    with image_path.open("wb") as f:
         f.write(r.content)
 
     r = requests.get(json_url)
 
-    with json_path.open('wb') as f:
+    with json_path.open("wb") as f:
         f.write(r.content)
 
     render_doc_text(image_path, json_path)
-

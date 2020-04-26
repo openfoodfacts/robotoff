@@ -315,7 +315,7 @@ def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
     )
 
     meta = {
-        "metrics": {"test": test_metrics,},
+        "metrics": {"test": test_metrics},
         "dataset_id": dataset_timestamp.date().isoformat(),
         "training_set_count": len(train_df),
         "test_set_count": len(test_df),

@@ -15,7 +15,5 @@ def send_ipc_event(event_type: str, meta: Dict = None):
         settings.IPC_ADDRESS, authkey=settings.IPC_AUTHKEY, family="AF_INET"
     ) as conn:
         logger.info("Sending event through IPC")
-        conn.send(
-            {"type": event_type, "meta": meta,}
-        )
+        conn.send({"type": event_type, "meta": meta})
         logger.info("IPC event sent")
