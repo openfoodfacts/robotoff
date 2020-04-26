@@ -170,16 +170,17 @@ class AddressExtractor:
         Returns:
             str: The text extracted and prepared.
         """
-        text = ocr_result.get_full_text(lowercase=True)
+        text = ocr_result.get_full_text()
         if text is None:
             # Using `OCRResult.text_annotations` directly instead of
             # `OCRResult.get_text_annotations()` because the latter contains
             # the text duplicated
-            text = ocr_result.text_annotations[0].text.lower()
+            text = ocr_result.text_annotations[0].text
         return text
 
     @staticmethod
     def normalize_text(text: str) -> str:
+        text = text.lower()
         text = strip_accents_ascii(text)
         return text.replace("'", " ").replace("-", " ")
 
