@@ -13,9 +13,9 @@ def test_check_ocr_stores():
         assert item not in items
         items.add(item)
 
-        assert '’' not in item
-        if '||' in item:
-            store, regex_str = item.split('||')
+        assert "’" not in item
+        if "||" in item:
+            store, regex_str = item.split("||")
         else:
             store = item
             regex_str = re.escape(item.lower())
