@@ -18,6 +18,7 @@ script:
 - python3 -m pytest tests
 - flake8
 - black . --check
+- mypy .
 
 jobs:
   include:
