@@ -102,7 +102,7 @@ def convert_label_map_to_categories(
       categories: a list of dictionaries representing all possible categories.
     """
     categories = []
-    list_of_ids_already_added = []
+    list_of_ids_already_added: List = []
     if not label_map:
         label_id_offset = 1
         for class_id in range(max_num_classes):
@@ -130,7 +130,7 @@ def convert_label_map_to_categories(
     return categories
 
 
-def load_labelmap(path: str) -> string_int_label_map_pb2.StringIntLabelMap:
+def load_labelmap(path: str):
     """Loads label map proto.
 
     Args:

@@ -27,7 +27,10 @@ class TaxonomyNode:
     __slots__ = ("id", "names", "parents", "children", "synonyms")
 
     def __init__(
-        self, identifier: str, names: Dict[str, str], synonyms: Optional[Dict[str, str]]
+        self,
+        identifier: str,
+        names: Dict[str, str],
+        synonyms: Optional[Dict[str, List[str]]],
     ):
         self.id: str = identifier
         self.names: Dict[str, str] = names
@@ -214,7 +217,7 @@ class Taxonomy:
 def generate_category_hierarchy(
     taxonomy: Taxonomy, category_to_index: Dict[str, int], root: int
 ):
-    categories_hierarchy = collections.defaultdict(set)
+    categories_hierarchy: Dict[int, Set] = collections.defaultdict(set)
 
     for node in taxonomy.iter_nodes():
         category_index = category_to_index[node.id]
@@ -291,4 +294,9 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
 
 def get_taxonomy(taxonomy_type: str) -> Taxonomy:
     """Returned the requested Taxonomy."""
-    return TAXONOMY_STORES.get(taxonomy_type).get()
+    taxonomy_store = TAXONOMY_STORES.get(taxonomy_type)
+
+    if taxonomy_store is None:
+        raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
+
+    return taxonomy_store.get()

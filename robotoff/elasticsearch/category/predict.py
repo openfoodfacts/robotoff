@@ -36,8 +36,8 @@ def predict(client, product: Dict) -> Optional[Dict]:
             predictions, key=operator.itemgetter(2), reverse=True
         )
 
-        prediction = sorted_predictions[0]
-        lang, category, product_name, score = prediction
+        p = sorted_predictions[0]
+        lang, category, product_name, score = p
 
         return {
             "barcode": product["code"],

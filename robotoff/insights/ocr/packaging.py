@@ -10,10 +10,12 @@ from robotoff.utils.cache import CachedStore
 
 
 def generate_packaging_keyword_processor(packaging: Optional[List[str]] = None):
-    if packaging is None:
-        packaging = text_file_iter(settings.OCR_PACKAGING_DATA_PATH)
-
-    return generate_keyword_processor(packaging)
+    p = (
+        text_file_iter(settings.OCR_PACKAGING_DATA_PATH)
+        if packaging is None
+        else packaging
+    )
+    return generate_keyword_processor(p)
 
 
 KEYWORD_PROCESSOR_STORE = CachedStore(

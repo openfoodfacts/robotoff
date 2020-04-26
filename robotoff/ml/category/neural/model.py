@@ -136,7 +136,7 @@ class LocalModel(BaseModel):
 
         if product is None:
             logger.info("Product {} not found".format(barcode))
-            return
+            return None
 
         return self.predict_from_product(product, deepest_only=deepest_only)
 
@@ -167,7 +167,7 @@ class RemoteModel(BaseModel):
 
         if product is None:
             logger.info("Product {} not found".format(barcode))
-            return
+            return None
 
         X = self.get_input_from_products([product])[0]
         X = [X[0].tolist(), X[1].tolist()]
