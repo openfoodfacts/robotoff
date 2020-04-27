@@ -35,14 +35,14 @@ if __name__ == "__main__":
     @click.command(
         help="""
             Generate OCR insights of the requested type.
-            
+
             \b
             SOURCE can be either:
             * the path to a JSON file, a (gzipped-)JSONL file, or a directory
               containing JSON files
             * a barcode
             * the '-' character: input is read from stdin and assumed to be JSONL
-              
+
             Output is JSONL, each line containing the insights for one document.
         """
     )
@@ -63,14 +63,14 @@ if __name__ == "__main__":
     def generate_ocr_insights(
         source: str, insight_type: str, output: str, keep_empty: bool
     ):
+        from typing import TextIO, Union
         from robotoff.cli import insights
         from robotoff.utils import get_logger
 
-        if source == "-":
-            source = sys.stdin
+        input_: Union[str, TextIO] = sys.stdin if source == "-" else source
 
         get_logger()
-        insights.run_from_ocr_archive(source, insight_type, output, keep_empty)
+        insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
 
     @click.command()
     @click.option("--insight-type")

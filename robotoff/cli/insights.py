@@ -3,7 +3,7 @@ import datetime
 import json
 import pathlib
 import sys
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, TextIO, Union
 
 import click
 from more_itertools import chunked
@@ -28,7 +28,10 @@ logger = get_logger(__name__)
 
 
 def run_from_ocr_archive(
-    input_: str, insight_type: str, output: Optional[str], keep_empty: bool = False
+    input_: Union[str, TextIO],
+    insight_type: str,
+    output: Optional[str],
+    keep_empty: bool = False,
 ):
     if output is not None:
         output_f = open(output, "w")
