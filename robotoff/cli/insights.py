@@ -93,7 +93,10 @@ def import_insights(
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
             imported += importer.import_insights(
-                insight_batch, server_domain=server_domain, automatic=False
+                insight_batch,
+                server_domain=server_domain,
+                automatic=False,
+                latent=False,
             )
 
     return imported

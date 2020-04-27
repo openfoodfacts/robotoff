@@ -1,12 +1,14 @@
 import abc
 import datetime
 import uuid
-from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
+from typing import Dict, Iterable, Iterator, List, Set, Optional, Tuple
+
+from more_itertools import chunked
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import batch_insert, ProductInsight
+from robotoff.models import batch_insert, LatentProductInsight, ProductInsight
 from robotoff.off import get_server_type
 from robotoff.products import ProductStore, Product
 from robotoff import settings
@@ -40,22 +42,56 @@ def is_reserved_barcode(barcode: str) -> bool:
     return barcode.startswith("2")
 
 
-class InsightImporter(metaclass=abc.ABCMeta):
+def generate_latent_insight(insight: JSONType) -> JSONType:
+    insight = insight.copy()
+    insight.pop("automatic_processing")
+    insight.pop("reserved_barcode")
+    insight.pop("countries")
+    insight.pop("brands")
+    return insight
+
+
+class BaseInsightImporter(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
     def import_insights(
-        self, data: Iterable[JSONType], server_domain: str, automatic: bool
+        self,
+        data: Iterable[JSONType],
+        server_domain: str,
+        automatic: bool,
+        latent: bool = True,
     ) -> int:
         timestamp = datetime.datetime.utcnow()
         insights = self.process_insights(data, server_domain, automatic)
         insights = self.add_fields(insights, timestamp, server_domain)
-        return batch_insert(ProductInsight, insights, 50)
+        inserted = 0
+
+        for raw_insight_batch in chunked(insights, 50):
+            insight_batch = []
+            latent_batch = []
+            for insight in raw_insight_batch:
+                # if valid field is absent, suppose all insights are valid
+                # (i.e: spellcheck)
+                valid = insight.pop("valid", True)
+
+                if valid:
+                    insight_batch.append(insight)
+                    # if insight is valid, always add it to latent insights
+                    latent_batch.append(generate_latent_insight(insight))
+                elif latent:
+                    # invalid insight, only import is as latent if latent = True
+                    latent_batch.append(generate_latent_insight(insight))
+
+            inserted += batch_insert(ProductInsight, insight_batch, 50)
+            batch_insert(LatentProductInsight, latent_batch, 50)
+
+        return inserted
 
     @abc.abstractmethod
     def process_insights(
         self, data: Iterable[JSONType], server_domain: str, automatic: bool
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         pass
 
     def add_fields(
@@ -63,7 +99,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         insights: Iterable[JSONType],
         timestamp: datetime.datetime,
         server_domain: str,
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         """Add mandatory insight fields."""
         server_type: str = get_server_type(server_domain).name
 
@@ -89,19 +125,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def need_validation(insight: JSONType) -> bool:
         return True
 
-    @staticmethod
-    def _deduplicate_insights(
-        data: Iterable[Dict], key_func: Callable
-    ) -> Iterable[Dict]:
-        seen: Set = set()
-        for item in data:
-            value = key_func(item)
-            if value in seen:
-                continue
-
-            seen.add(value)
-            yield item
-
     @classmethod
     def get_seen_set(cls, barcode: str, server_domain: str) -> Set[str]:
         seen_set: Set[str] = set()
@@ -118,14 +141,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
         return query.count()
 
 
-class IngredientSpellcheckImporter(InsightImporter):
+class IngredientSpellcheckImporter(BaseInsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.ingredient_spellcheck.name
 
     def process_insights(
         self, data: Iterable[JSONType], server_domain: str, automatic: bool = False
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         seen_set: Set[Tuple[str, str]] = set(
             (x.barcode, x.data["lang"])
             for x in ProductInsight.select(
@@ -157,23 +180,17 @@ class IngredientSpellcheckImporter(InsightImporter):
 GroupedByOCRInsights = Dict[str, List]
 
 
-class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
+class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
     def process_insights(
         self, data: Iterable[JSONType], server_domain: str, automatic: bool
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
-        inserts: List[JSONType] = []
 
         for barcode, insights in grouped_by.items():
-            insights = list(self.deduplicate_insights(insights))
-            insights = self.sort_by_priority(insights)
-            inserts += list(
-                self._process_product_insights(
-                    barcode, insights, automatic, server_domain
-                )
+            insights = self.sort_by_priority(list(insights))
+            yield from self._process_product_insights(
+                barcode, insights, automatic, server_domain
             )
-
-        return inserts
 
     def _process_product_insights(
         self,
@@ -181,7 +198,7 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
         insights: List[JSONType],
         automatic: bool,
         server_domain: str,
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         for insight in self.process_product_insights(barcode, insights, server_domain):
             insight["barcode"] = barcode
 
@@ -231,18 +248,11 @@ class OCRInsightImporter(InsightImporter, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
-        pass
-
-    @abc.abstractmethod
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         pass
 
 
-class PackagerCodeInsightImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["text"])
-
+class PackagerCodeInsightImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.packager_code.name
@@ -264,7 +274,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         seen_set: Set[str] = set()
 
         for t in (
@@ -280,10 +290,10 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
             content = insight["content"]
             emb_code = content["text"]
 
-            if not self.is_valid(barcode, emb_code, seen_set):
-                continue
+            valid = self.is_valid(barcode, emb_code, seen_set)
 
             yield {
+                "valid": valid,
                 "source_image": insight["source"],
                 "value": emb_code,
                 "data": {
@@ -302,10 +312,7 @@ class PackagerCodeInsightImporter(OCRInsightImporter):
         return True
 
 
-class LabelInsightImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["label_tag"])
-
+class LabelInsightImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.label.name
@@ -340,18 +347,17 @@ class LabelInsightImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
             content = insight["content"]
             value_tag = content.pop("label_tag")
-
-            if not self.is_valid(barcode, value_tag, seen_set):
-                continue
+            valid = self.is_valid(barcode, value_tag, seen_set)
 
             automatic_processing = content.pop("automatic_processing", None)
             insert = {
+                "valid": valid,
                 "value_tag": value_tag,
                 "source_image": insight["source"],
                 "data": {**content},
@@ -378,26 +384,19 @@ class CategoryImporter(InsightImporter):
     def get_type() -> str:
         return InsightType.category.name
 
-    def process_insights(
-        self, data: Iterable[JSONType], server_domain: str, automatic: bool
-    ) -> Iterable[JSONType]:
-        category_seen: Dict[str, Set[str]] = {}
-        for t in (
-            ProductInsight.select(
-                ProductInsight.value_tag, ProductInsight.barcode
-            ).where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.server_domain == server_domain,
-            )
-        ).iterator():
-            category_seen.setdefault(t.barcode, set())
-            category_seen[t.barcode].add(t.value_tag)
+    def process_product_insights(
+        self, barcode: str, insights: List[JSONType], server_domain: str
+    ) -> Iterator[JSONType]:
+        seen_set: Set[str] = self.get_seen_set(
+            barcode=barcode, server_domain=server_domain
+        )
 
-        for insight in data:
+        for insight in insights:
             barcode = insight["barcode"]
-            category = insight["category"]
+            content = insight["content"]
+            category = content["category"]
 
-            if not self.is_valid(barcode, category, category_seen):
+            if not self.is_valid(barcode, category, seen_set):
                 continue
 
             insert = {
@@ -423,10 +422,9 @@ class CategoryImporter(InsightImporter):
                 insert["data"]["lang"] = insight["lang"]
 
             yield insert
-            category_seen.setdefault(barcode, set())
-            category_seen[barcode].add(category)
+            seen_set.add(category)
 
-    def is_valid(self, barcode: str, category: str, category_seen: Dict[str, Set[str]]):
+    def is_valid(self, barcode: str, category: str, seen_set: Set[str]):
         product = self.product_store[barcode]
         product_categories_tags = getattr(product, "categories_tags", [])
 
@@ -437,7 +435,7 @@ class CategoryImporter(InsightImporter):
             )
             return False
 
-        if category in category_seen.get(barcode, set()):
+        if category in seen_set:
             logger.debug(
                 "An insight already exists for this product and "
                 "category, considering the insight as invalid"
@@ -451,9 +449,7 @@ class CategoryImporter(InsightImporter):
         if category in category_taxonomy:
             category_node: TaxonomyNode = category_taxonomy[category]
 
-            to_check_categories = set(product_categories_tags).union(
-                category_seen.get(barcode, set())
-            )
+            to_check_categories = set(product_categories_tags).union(seen_set)
             for other_category_node in (
                 category_taxonomy[to_check_category]
                 for to_check_category in to_check_categories
@@ -471,10 +467,7 @@ class CategoryImporter(InsightImporter):
         return True
 
 
-class ProductWeightImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["text"])
-
+class ProductWeightImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.product_weight.name
@@ -521,7 +514,7 @@ class ProductWeightImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         if not insights:
             return
 
@@ -530,6 +523,7 @@ class ProductWeightImporter(OCRInsightImporter):
         insight = insights[0]
         insight_subtype = insight["content"]["matcher_type"]
 
+        all_invalid = False
         if (
             insight_subtype != "with_mention"
             and len(insights_by_subtype[insight_subtype]) > 1
@@ -538,18 +532,17 @@ class ProductWeightImporter(OCRInsightImporter):
                 "{} distinct product weights found for product "
                 "{}, aborting import".format(len(insights), barcode)
             )
-            return
+            all_invalid = True
 
         if self.get_seen_count(barcode=barcode, server_domain=server_domain):
-            return
+            all_invalid = True
 
         content = insight["content"]
 
-        if not self.is_valid(barcode, content["value"]):
-            return
-
+        valid = self.is_valid(barcode, content["value"]) and not all_invalid
         value = content.pop("text")
         yield {
+            "valid": valid,
             "source_image": insight["source"],
             "value": value,
             "data": {"notify": content["notify"], **content},
@@ -562,10 +555,7 @@ class ProductWeightImporter(OCRInsightImporter):
         return insight["data"].get("source") == "product_name"
 
 
-class ExpirationDateImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["text"])
-
+class ExpirationDateImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.expiration_date.name
@@ -586,40 +576,36 @@ class ExpirationDateImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
+        all_invalid = False
         if len(insights) > 1:
             logger.info(
                 "{} distinct expiration dates found for product "
                 "{}, aborting import".format(len(insights), barcode)
             )
-            return
+            all_invalid = True
 
         if self.get_seen_count(barcode=barcode, server_domain=server_domain):
-            return
+            all_invalid = True
 
         for insight in insights:
             content = insight["content"]
 
-            if not self.is_valid(barcode):
-                continue
-
+            valid = self.is_valid(barcode) and not all_invalid
             value = content.pop("text")
             yield {
+                "valid": valid,
                 "source_image": insight["source"],
                 "value": value,
                 "data": {"notify": content["notify"], **content},
             }
-            break
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
         return False
 
 
-class BrandInsightImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["brand_tag"])
-
+class BrandInsightImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.brand.name
@@ -653,17 +639,16 @@ class BrandInsightImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
             content = insight["content"]
             value_tag = content["brand_tag"]
-
-            if not self.is_valid(barcode, value_tag, seen_set):
-                continue
+            valid = self.is_valid(barcode, value_tag, seen_set)
 
             insert = {
+                "valid": valid,
                 "value_tag": value_tag,
                 "value": content["brand"],
                 "source_image": insight["source"],
@@ -690,10 +675,7 @@ class BrandInsightImporter(OCRInsightImporter):
         return insight["data"].get("source") == "product_name"
 
 
-class StoreInsightImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(data, lambda x: x["content"]["value_tag"])
-
+class StoreInsightImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.store.name
@@ -703,17 +685,16 @@ class StoreInsightImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
             content = insight["content"]
             value_tag = content["value_tag"]
-
-            if not self.is_valid(value_tag, seen_set):
-                continue
+            valid = not self.is_valid(value_tag, seen_set)
 
             insert = {
+                "valid": valid,
                 "value_tag": value_tag,
                 "value": content["value"],
                 "source_image": insight["source"],
@@ -731,12 +712,7 @@ class StoreInsightImporter(OCRInsightImporter):
         return False
 
 
-class PackagingInsightImporter(OCRInsightImporter):
-    def deduplicate_insights(self, data: Iterable[JSONType]) -> Iterable[JSONType]:
-        yield from self._deduplicate_insights(
-            data, lambda x: x["content"]["packaging_tag"]
-        )
-
+class PackagingInsightImporter(InsightImporter):
     @staticmethod
     def get_type() -> str:
         return InsightType.packaging.name
@@ -746,17 +722,16 @@ class PackagingInsightImporter(OCRInsightImporter):
 
     def process_product_insights(
         self, barcode: str, insights: List[JSONType], server_domain: str
-    ) -> Iterable[JSONType]:
+    ) -> Iterator[JSONType]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
             content = insight["content"]
             value_tag = content["packaging_tag"]
-
-            if not self.is_valid(value_tag, seen_set):
-                continue
+            valid = self.is_valid(value_tag, seen_set)
 
             insert = {
+                "valid": valid,
                 "value_tag": value_tag,
                 "value": content["packaging"],
                 "source_image": insight["source"],
@@ -788,7 +763,9 @@ class InsightImporterFactory:
     }
 
     @classmethod
-    def create(cls, insight_type: str, product_store: ProductStore) -> InsightImporter:
+    def create(
+        cls, insight_type: str, product_store: ProductStore
+    ) -> BaseInsightImporter:
         if insight_type in cls.importers:
             return cls.importers[insight_type](product_store)
         else:
