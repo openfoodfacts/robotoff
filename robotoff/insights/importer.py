@@ -688,7 +688,7 @@ class StoreInsightImporter(InsightImporter):
         for insight in insights:
             content = insight["content"]
             value_tag = content["value_tag"]
-            valid = not self.is_valid(value_tag, seen_set)
+            valid = self.is_valid(value_tag, seen_set)
 
             insert = {
                 "valid": valid,
