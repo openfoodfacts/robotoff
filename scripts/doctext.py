@@ -47,7 +47,7 @@ def draw_boxes(image, bounds: List[BoundingPoly], color, draw_line: bool = False
 
 def get_document_bounds(feature: FeatureType, ocr_result: OCRResult):
     """Returns document bounds given an image."""
-    bounds = []
+    bounds: List[Optional[BoundingPoly]] = []
 
     document = ocr_result.full_text_annotation
 
@@ -93,6 +93,9 @@ def render_doc_text(
     with json_path.open("r") as f:
         data = json.load(f)
         ocr_result = OCRResult.from_json(data)
+
+    if ocr_result is None:
+        raise ValueError("invalid OCR")
 
     bounds = get_document_bounds(FeatureType.PAGE, ocr_result)
     draw_boxes(image, bounds, "blue")
