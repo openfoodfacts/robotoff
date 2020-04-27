@@ -1,6 +1,5 @@
 import abc
 import datetime
-import pathlib
 import uuid
 from typing import Dict, Iterable, List, Set, Optional, Callable, Tuple
 
@@ -12,7 +11,7 @@ from robotoff.off import get_server_type
 from robotoff.products import ProductStore, Product
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
-from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp, text_file_iter
+from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -85,14 +84,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_type() -> str:
         pass
-
-    def from_jsonl(self, file_path: pathlib.Path, server_domain: str):
-        items = jsonl_iter(file_path)
-        self.import_insights(items, server_domain=server_domain, automatic=False)
-
-    def from_jsonl_fp(self, fp, server_domain: str):
-        items = jsonl_iter_fp(fp)
-        self.import_insights(items, server_domain=server_domain, automatic=False)
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
