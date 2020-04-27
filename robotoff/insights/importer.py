@@ -116,28 +116,25 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             insight["brands"] = getattr(product, "brands_tags", [])
             yield insight
 
-    @staticmethod
     @abc.abstractmethod
-    def get_type() -> str:
+    def get_type(self) -> str:
         pass
 
     @staticmethod
     def need_validation(insight: JSONType) -> bool:
         return True
 
-    @classmethod
-    def get_seen_set(cls, barcode: str, server_domain: str) -> Set[str]:
+    def get_seen_set(self, barcode: str, server_domain: str) -> Set[str]:
         seen_set: Set[str] = set()
-        query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
+        query = generate_seen_set_query(self.get_type(), barcode, server_domain)
 
         for t in query.iterator():
             seen_set.add(t.value_tag)
 
         return seen_set
 
-    @classmethod
-    def get_seen_count(cls, barcode: str, server_domain: str) -> int:
-        query = generate_seen_set_query(cls.get_type(), barcode, server_domain)
+    def get_seen_count(self, barcode: str, server_domain: str) -> int:
+        query = generate_seen_set_query(self.get_type(), barcode, server_domain)
         return query.count()
 
 
@@ -749,6 +746,31 @@ class PackagingInsightImporter(InsightImporter):
         return False
 
 
+class GenericInsightImporter(InsightImporter):
+    def __init__(self, product_store: ProductStore, insight_type: str):
+        super().__init__(product_store)
+        self.insight_type: str = insight_type
+
+    def get_type(self) -> str:
+        return self.insight_type
+
+    def process_product_insights(
+        self, barcode: str, insights: List[JSONType], server_domain: str
+    ) -> Iterator[JSONType]:
+        for insight in insights:
+            content = insight["content"]
+            value_tag = content.pop("value_tag", None)
+            value = content.pop("value", None)
+
+            yield {
+                "valid": False,
+                "value_tag": value_tag,
+                "value": value,
+                "source_image": insight["source"],
+                "data": content,
+            }
+
+
 class InsightImporterFactory:
     importers: JSONType = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
@@ -760,6 +782,9 @@ class InsightImporterFactory:
         InsightType.brand.name: BrandInsightImporter,
         InsightType.store.name: StoreInsightImporter,
         InsightType.packaging.name: PackagingInsightImporter,
+        InsightType.image_flag.name: GenericInsightImporter,
+        InsightType.nutrient.name: GenericInsightImporter,
+        InsightType.location.name: GenericInsightImporter,
     }
 
     @classmethod
@@ -767,6 +792,11 @@ class InsightImporterFactory:
         cls, insight_type: str, product_store: ProductStore
     ) -> BaseInsightImporter:
         if insight_type in cls.importers:
-            return cls.importers[insight_type](product_store)
+            insight_cls = cls.importers[insight_type]
+
+            if insight_cls == GenericInsightImporter:
+                return insight_cls(product_store, insight_type)
+
+            return insight_cls(product_store)
         else:
             raise ValueError("unknown insight type: {}".format(insight_type))
