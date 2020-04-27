@@ -341,8 +341,10 @@ def update_product(
         if comment:
             params["comment"] = comment + " (automated edit)"
 
-    if not params.get("password"):
-        raise ValueError("a password is required to update product")
+    if cookies is None and not params.get("password"):
+        raise ValueError(
+            "a password or a session cookie is required to update a product"
+        )
 
     request_auth: Optional[Tuple[str, str]] = None
     if server_domain.endswith("openfoodfacts.net"):
