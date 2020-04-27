@@ -336,39 +336,6 @@ class UpdateDatasetResource:
         }
 
 
-class InsightImporterResource:
-    def on_post(self, req, resp):
-        logger.info("New insight import request")
-        insight_type = req.get_param("type", required=True)
-        server_domain = req.get_param("server_domain", required=True)
-
-        if insight_type not in (t.name for t in InsightType):
-            raise falcon.HTTPBadRequest(
-                description="unknown insight type: " "'{}'".format(insight_type)
-            )
-
-        content = req.get_param("file", required=True)
-
-        logger.info("Insight type: '{}'".format(insight_type))
-
-        lines = [l for l in io.TextIOWrapper(content.file)]
-
-        send_ipc_event(
-            "import_insights",
-            {
-                "insight_type": insight_type,
-                "items": lines,
-                "server_domain": server_domain,
-            },
-        )
-
-        logger.info("Import scheduled")
-
-        resp.media = {
-            "status": "scheduled",
-        }
-
-
 class ImageImporterResource:
     def on_post(self, req, resp):
         barcode = req.get_param("barcode", required=True)
@@ -684,7 +651,6 @@ api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail(
 api.add_route("/api/v1/insights", InsightCollection())
 api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
-api.add_route("/api/v1/insights/import", InsightImporterResource())
 api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
 api.add_route("/api/v1/predict/nutrient", NutrientPredictorResource())
 api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())

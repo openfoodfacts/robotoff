@@ -1,4 +1,3 @@
-import json
 import logging
 import multiprocessing
 from typing import List, Dict, Callable, Optional
@@ -54,19 +53,6 @@ def run_task(event_type: str, event_kwargs: Dict) -> None:
 def download_product_dataset():
     if has_dataset_changed():
         fetch_dataset()
-
-
-def import_insights(insight_type: str, items: List[str], server_domain: str):
-    product_store = get_product_store()
-    importer: InsightImporter = InsightImporterFactory.create(
-        insight_type, product_store
-    )
-
-    with db.atomic():
-        imported = importer.import_insights(
-            (json.loads(l) for l in items), server_domain=server_domain, automatic=False
-        )
-        logger.info("Import finished, {} insights imported".format(imported))
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
@@ -262,7 +248,6 @@ def update_product_updated_ingredients(
 
 
 EVENT_MAPPING: Dict[str, Callable] = {
-    "import_insights": import_insights,
     "import_image": import_image,
     "download_dataset": download_product_dataset,
     "product_deleted": delete_product_insights,
