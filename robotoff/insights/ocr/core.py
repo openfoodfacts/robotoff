@@ -101,7 +101,9 @@ def is_barcode(text: str):
     return text.isdigit()
 
 
-def get_source(image_name: str, json_path: str = None, barcode: Optional[str] = None):
+def get_source(
+    image_name: str, json_path: str = None, barcode: Optional[str] = None
+) -> str:
     if not barcode:
         barcode = get_barcode_from_path(str(json_path))
 
@@ -125,13 +127,14 @@ def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]
         yield from ocr_iter_jsonl(source)
 
     elif is_barcode(source):
+        barcode: str = source
         image_data = fetch_images_for_ean(source)["product"]["images"]
 
         for image_name in image_data.keys():
             if image_name.isdigit():
                 print("Getting OCR for image {}".format(image_name))
-                data = get_json_for_image(source, image_name)
-                source = get_source(image_name, barcode=source)
+                data = get_json_for_image(barcode, image_name)
+                source = get_source(image_name, barcode=barcode)
                 if data:
                     yield source, data
 
