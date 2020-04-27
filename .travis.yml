@@ -13,7 +13,12 @@ before_install:
   - cd i18n && bash compile.sh && cd ..
 install:
   - pip install -r requirements.txt
-script: python3 -m pytest tests
+script:
+- pip install -r requirements-dev.txt
+- python3 -m pytest tests
+- flake8
+- black . --check
+- mypy .
 
 jobs:
   include:

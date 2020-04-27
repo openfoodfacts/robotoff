@@ -342,8 +342,11 @@ class Block:
 
         return dict(counts)
 
-    def detect_orientation(self) -> ImageOrientation:
-        return self.bounding_poly.detect_orientation()
+    def detect_orientation(self) -> Optional[ImageOrientation]:
+        if self.bounding_poly:
+            return self.bounding_poly.detect_orientation()
+
+        return None
 
     def detect_words_orientation(self) -> List[ImageOrientation]:
         word_orientations: List[ImageOrientation] = []
@@ -375,8 +378,11 @@ class Paragraph:
         counts["words"] = len(self.words)
         return dict(counts)
 
-    def detect_orientation(self) -> ImageOrientation:
-        return self.bounding_poly.detect_orientation()
+    def detect_orientation(self) -> Optional[ImageOrientation]:
+        if self.bounding_poly:
+            return self.bounding_poly.detect_orientation()
+
+        return None
 
     def detect_words_orientation(self) -> List[ImageOrientation]:
         return [word.detect_orientation() for word in self.words]

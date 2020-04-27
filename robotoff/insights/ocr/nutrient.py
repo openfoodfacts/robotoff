@@ -49,7 +49,7 @@ NUTRIENT_VALUES_REGEX = {
     ),
     "trans_fat": OCRRegex(
         generate_nutrient_regex(
-            ["mati[èe]res? grasses? trans", "trans fat",], ["g"]  # fr  # en
+            ["mati[èe]res? grasses? trans", "trans fat"], ["g"]  # fr  # en
         ),
         field=OCRField.full_text_contiguous,
         lowercase=True,
@@ -115,7 +115,7 @@ NUTRIENT_VALUES_REGEX = {
     ),
     "salt": OCRRegex(
         generate_nutrient_regex(
-            ["sel", "salt", "zout", "salz", "sal",], ["g"]  # fr  # en  # nl  # de  # es
+            ["sel", "salt", "zout", "salz", "sal"], ["g"]  # fr  # en  # nl  # de  # es
         ),
         field=OCRField.full_text_contiguous,
         lowercase=True,
@@ -162,4 +162,4 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> List[Dict]:
     if not nutrients:
         return []
 
-    return [{"nutrients": nutrients, "notify": False,}]
+    return [{"nutrients": nutrients, "notify": False}]

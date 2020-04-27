@@ -13,4 +13,3 @@ for taxonomy_name in ("ingredient", "category", "label"):
 
             if name != node.id:
                 writer.writerow({"id": node.id, "name": name, "description": name})
-

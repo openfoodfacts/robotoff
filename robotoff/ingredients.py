@@ -14,6 +14,7 @@ from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.es import generate_msearch_body
 from robotoff.utils.text import FR_NLP_CACHE
+from robotoff.utils.types import JSONType
 
 from spacy.util import get_lang_class
 
@@ -219,6 +220,10 @@ def is_valid_correction(
     if original_known and is_original_ingredient_known(correction.original):
         return False
 
+    # Tokens with numbers are tricky to correct
+    if any(x.isdigit() for x in correction.correction):
+        return False
+
     return True
 
 
@@ -307,17 +312,8 @@ def format_corrections(
     return corrections
 
 
-def _suggest(client, text):
-    suggester_name = "autocorrect"
-    body = generate_suggest_query(text, name=suggester_name)
-    response = client.search(
-        index="product", doc_type="document", body=body, _source=False
-    )
-    return response["suggest"][suggester_name]
-
-
-def suggest(text: str, client, confidence: float = 1) -> Dict:
-    corrections = generate_corrections(client, text, confidence=confidence)
+def suggest(text: str, client, **kwargs) -> Dict:
+    corrections = generate_corrections(client, text, **kwargs)
     term_corrections = list(
         itertools.chain.from_iterable((c.term_corrections for c in corrections))
     )
@@ -405,12 +401,35 @@ def generate_suggest_query(
     }
 
 
-def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
+def predict_insight(client, text: str, barcode: str, **kwargs) -> Optional[JSONType]:
+    corrections = generate_corrections(client, text, **kwargs)
+
+    if not corrections:
+        return None
+
+    term_corrections = list(
+        itertools.chain.from_iterable((c.term_corrections for c in corrections))
+    )
+
+    return {
+        "corrections": [dataclasses.asdict(c) for c in term_corrections],
+        "text": text,
+        "corrected": generate_corrected_text(term_corrections, text),
+        "barcode": barcode,
+        "lang": "fr",
+        "index_name": kwargs.get("index_name", "product"),
+    }
+
+
+def generate_insights(
+    client, max_errors: Optional[int] = None, **kwargs
+) -> Iterable[JSONType]:
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_iter = (
         dataset.stream()
         .filter_by_country_tag("en:france")
+        .filter_text_field("lang", "fr")
         .filter_nonempty_text_field("ingredients_text_fr")
         .iter()
     )
@@ -424,18 +443,8 @@ def generate_insights(client, confidence=1, max_errors: Optional[int] = None):
 
     for product in product_iter:
         text = product["ingredients_text_fr"]
-        corrections = generate_corrections(client, text, confidence=confidence)
+        barcode = product["code"]
+        insight = predict_insight(client, text, barcode=barcode, **kwargs)
 
-        if not corrections:
-            continue
-
-        term_corrections = list(
-            itertools.chain.from_iterable((c.term_corrections for c in corrections))
-        )
-
-        yield {
-            "corrections": [dataclasses.asdict(c) for c in term_corrections],
-            "text": text,
-            "corrected": generate_corrected_text(term_corrections, text),
-            "barcode": product["code"],
-        }
+        if insight:
+            yield insight

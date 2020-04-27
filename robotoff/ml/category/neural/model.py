@@ -73,11 +73,11 @@ class BaseModel:
         return generate_data(
             ingredient_tags_iter=ingredient_tags,
             product_name_iter=product_name,
-            ingredient_to_id=self.ingredient_to_id,
-            product_name_token_to_int=self.product_name_vocabulary,
+            ingredient_to_id=self.ingredient_to_id,  # type: ignore
+            product_name_token_to_int=self.product_name_vocabulary,  # type: ignore
             nlp=self.nlp,
-            product_name_max_length=self.config.model_config.product_name_max_length,
-            product_name_preprocessing_config=self.config.product_name_preprocessing_config,
+            product_name_max_length=self.config.model_config.product_name_max_length,  # type: ignore
+            product_name_preprocessing_config=self.config.product_name_preprocessing_config,  # type: ignore
         )
 
     @staticmethod
@@ -136,7 +136,7 @@ class LocalModel(BaseModel):
 
         if product is None:
             logger.info("Product {} not found".format(barcode))
-            return
+            return None
 
         return self.predict_from_product(product, deepest_only=deepest_only)
 
@@ -152,9 +152,9 @@ class LocalModel(BaseModel):
             self.load()
 
         X = self.get_input_from_products(products)
-        y_pred = self.model.predict(X)
+        y_pred = self.model.predict(X)  # type: ignore
         return self.process_predictions(
-            y_pred, self.category_names, self.taxonomy, deepest_only=deepest_only
+            y_pred, self.category_names, self.taxonomy, deepest_only=deepest_only  # type: ignore
         )
 
 
@@ -167,7 +167,7 @@ class RemoteModel(BaseModel):
 
         if product is None:
             logger.info("Product {} not found".format(barcode))
-            return
+            return None
 
         X = self.get_input_from_products([product])[0]
         X = [X[0].tolist(), X[1].tolist()]
@@ -194,7 +194,7 @@ class ModelRegistry:
     @classmethod
     def get(cls) -> LocalModel:
         cls.load()
-        return cls.model
+        return cls.model  # type: ignore
 
 
 def fill_ancestors(
@@ -208,7 +208,7 @@ def fill_ancestors(
 
     if category_names is None:
         category_names = [
-            cat for cat, _ in sorted(category_to_id.items(), key=operator.itemgetter(1))
+            cat for cat, _ in sorted(category_to_id.items(), key=operator.itemgetter(1))  # type: ignore
         ]
     elif category_to_id is None:
         category_to_id = {cat: i for i, cat in enumerate(category_names)}
@@ -220,7 +220,7 @@ def fill_ancestors(
         if len(cat_mask):
             category_name = category_names[i]
             parents = taxonomy[category_name].get_parents_hierarchy()
-            parent_ids = [category_to_id[parent.id] for parent in parents]
+            parent_ids = [category_to_id[parent.id] for parent in parents]  # type: ignore
             for parent_id in parent_ids:
                 y_[cat_mask, parent_id] = 1
 
@@ -267,7 +267,7 @@ def predict_from_product_batch(
     batch_size: int = 32,
 ) -> Iterable[Dict]:
     model = ModelRegistry.get()
-    allowed_lang = set(allowed_lang)
+    allowed_lang = set(allowed_lang) if allowed_lang else set()
 
     filtered_product_iter = (p for p in product_iter if keep_product(p, allowed_lang))
 

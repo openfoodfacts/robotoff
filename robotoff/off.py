@@ -76,7 +76,7 @@ def get_api_product_url(server: Union[ServerType, str]) -> str:
     return "{}/api/v0/product".format(get_base_url(server))
 
 
-def get_server_type(server_domain: str) -> Optional[ServerType]:
+def get_server_type(server_domain: str) -> ServerType:
     """Return the server type (off, obf, opff, opf) associated with the server
     domain, or None if the server_domain was not recognized."""
     server_split = server_domain.split(".")
@@ -93,8 +93,7 @@ def get_server_type(server_domain: str) -> Optional[ServerType]:
         elif domain == "openproductsfacts":
             return ServerType.opf
 
-    logger.warning("unknown server domain: {}".format(server_domain))
-    return None
+    raise ValueError("unknown server domain: {}".format(server_domain))
 
 
 def split_barcode(barcode: str) -> List[str]:
@@ -341,6 +340,9 @@ def update_product(
 
         if comment:
             params["comment"] = comment + " (automated edit)"
+
+    if not params.get("password"):
+        raise ValueError("a password is required to update product")
 
     request_auth: Optional[Tuple[str, str]] = None
     if server_domain.endswith("openfoodfacts.net"):

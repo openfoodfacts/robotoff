@@ -129,11 +129,15 @@ if __name__ == "__main__":
         )
 
     @click.command()
-    @click.argument("output", type=pathlib.Path)
+    @click.argument("output")
+    @click.option("--index-name", default="product")
     @click.option("--confidence", type=float, default=1)
     @click.option("--max-errors", type=int)
     def generate_spellcheck_insights(
-        output: str, confidence: float, max_errors: Optional[int] = None
+        output: str,
+        index_name: str,
+        confidence: float,
+        max_errors: Optional[int] = None,
     ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
@@ -221,6 +225,20 @@ if __name__ == "__main__":
         logger.info("{} insights imported".format(imported))
 
     @click.command()
+    @click.option("--insight-type", required=True)
+    @click.option("--delta", type=int, default=1)
+    def apply_insights(
+        insight_type: str, delta: int,
+    ):
+        import datetime
+        from robotoff.cli import insights
+        from robotoff.utils import get_logger
+
+        logger = get_logger()
+        logger.info("Applying {} insights".format(insight_type))
+        insights.apply_insights(insight_type, datetime.timedelta(days=delta))
+
+    @click.command()
     @click.option("--index/--no-index", default=False)
     @click.option("--data/--no-data", default=True)
     @click.option("--product/--no-product", default=False)
@@ -269,6 +287,7 @@ if __name__ == "__main__":
     cli.add_command(download_dataset)
     cli.add_command(categorize)
     cli.add_command(import_insights)
+    cli.add_command(apply_insights)
     cli.add_command(predict_insight)
 
     cli()

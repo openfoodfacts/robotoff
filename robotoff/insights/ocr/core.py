@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 import gzip
 import json
 
 import pathlib as pathlib
-from typing import List, Dict, Iterable, Optional, Tuple, Union, TextIO
+from typing import Callable, List, Dict, Iterable, Optional, Tuple, Union, TextIO
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.ocr.brand import find_brands
@@ -102,9 +101,12 @@ def is_barcode(text: str):
     return text.isdigit()
 
 
-def get_source(image_name: str, json_path: str = None, barcode: str = None):
+def get_source(image_name: str, json_path: str = None, barcode: Optional[str] = None):
     if not barcode:
         barcode = get_barcode_from_path(str(json_path))
+
+        if not barcode:
+            raise ValueError("invalid JSON path: {}".format(json_path))
 
     return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
@@ -151,6 +153,7 @@ def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]
                     yield None, json.load(f)
 
             elif ".jsonl" in input_path.suffixes:
+                open_func: Callable
                 if input_path.suffix == ".gz":
                     open_func = gzip.open
                 else:

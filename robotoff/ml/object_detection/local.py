@@ -14,9 +14,6 @@ from robotoff.ml.object_detection.core import (
 )
 from robotoff.ml.object_detection.utils import ops as utils_ops
 from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
-from robotoff.ml.object_detection.utils.string_int_label_map_pb2 import (
-    StringIntLabelMap,
-)
 from robotoff.ml.object_detection.utils import label_map_util
 from robotoff.utils import get_logger
 
@@ -24,9 +21,9 @@ logger = get_logger(__name__)
 
 
 class ObjectDetectionModel:
-    def __init__(self, graph: tf.Graph, label_map: StringIntLabelMap):
+    def __init__(self, graph: tf.Graph, label_map):
         self.graph: tf.Graph = graph
-        self.label_map: StringIntLabelMap = label_map
+        self.label_map = label_map
 
         self.categories = label_map_util.convert_label_map_to_categories(
             label_map, max_num_classes=1000
@@ -141,4 +138,5 @@ def run_model(image_dir: pathlib.Path, model: ObjectDetectionModel):
         result = model.detect_from_image(image, output_image=True)
 
         with open(str(boxed_filename), "wb") as f:
-            result.boxed_image.save(f)
+            if result.boxed_image:
+                result.boxed_image.save(f)

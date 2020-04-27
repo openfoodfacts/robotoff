@@ -1,4 +1,3 @@
-import json
 import logging
 import multiprocessing
 from typing import List, Dict, Callable, Optional
@@ -21,7 +20,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
 )
 from robotoff.models import db, ProductInsight
-from robotoff.off import get_product, get_server_type, move_to, ServerType
+from robotoff.off import get_product, get_server_type, ServerType
 from robotoff.products import (
     has_dataset_changed,
     fetch_dataset,
@@ -54,19 +53,6 @@ def run_task(event_type: str, event_kwargs: Dict) -> None:
 def download_product_dataset():
     if has_dataset_changed():
         fetch_dataset()
-
-
-def import_insights(insight_type: str, items: List[str], server_domain: str):
-    product_store = get_product_store()
-    importer: InsightImporter = InsightImporterFactory.create(
-        insight_type, product_store
-    )
-
-    with db.atomic():
-        imported = importer.import_insights(
-            (json.loads(l) for l in items), server_domain=server_domain, automatic=False
-        )
-        logger.info("Import finished, {} insights imported".format(imported))
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
@@ -145,6 +131,8 @@ def updated_product_update_insights(barcode: str, server_domain: str):
 
     if updated:
         logger.info("Product {} updated".format(barcode))
+
+    update_product_updated_ingredients(barcode, product_dict, server_domain)
 
     product = Product(product_dict)
     validators: Dict[str, Optional[InsightValidator]] = {}
@@ -234,8 +222,32 @@ def updated_product_predict_insights(
     return updated
 
 
+def update_product_updated_ingredients(
+    barcode: str, product: JSONType, server_domain: str
+) -> int:
+    deleted = 0
+
+    for insight in ProductInsight.select().where(
+        ProductInsight.type == InsightType.ingredient_spellcheck.name,
+        ProductInsight.annotation.is_null(True),
+        ProductInsight.barcode == barcode,
+    ):
+        lang = insight.data["lang"]
+        insight_text = insight.data["text"]
+        field_name = "ingredients_text_{}".format(lang)
+
+        if field_name not in product or product[field_name] != insight_text:
+            logger.info(
+                "Ingredients deleted or updated for product {} (lang: {}), deleting "
+                "insight".format(barcode, lang)
+            )
+            insight.delete_instance()
+            deleted += 1
+
+    return deleted
+
+
 EVENT_MAPPING: Dict[str, Callable] = {
-    "import_insights": import_insights,
     "import_image": import_image,
     "download_dataset": download_product_dataset,
     "product_deleted": delete_product_insights,
