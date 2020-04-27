@@ -3,7 +3,7 @@ import datetime
 import json
 import pathlib
 import sys
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, TextIO, Union
 
 import click
 from more_itertools import chunked
@@ -27,7 +27,12 @@ from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
 logger = get_logger(__name__)
 
 
-def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
+def run_from_ocr_archive(
+    input_: Union[str, TextIO],
+    insight_type: str,
+    output: Optional[str],
+    keep_empty: bool = False,
+):
     if output is not None:
         output_f = open(output, "w")
     else:
@@ -53,17 +58,20 @@ def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
 
             insights = extract_insights(ocr_result, insight_type)
 
-            if insights:
-                item = {
-                    "insights": insights,
-                    "barcode": barcode,
-                    "type": insight_type,
-                }
+            # Do not produce output if insights is empty and we don't want to keep it
+            if not keep_empty and not insights:
+                continue
 
-                if source:
-                    item["source"] = source
+            item = {
+                "insights": insights,
+                "barcode": barcode,
+                "type": insight_type,
+            }
 
-                output_f.write(json.dumps(item) + "\n")
+            if source:
+                item["source"] = source
+
+            output_f.write(json.dumps(item) + "\n")
 
 
 def import_insights(

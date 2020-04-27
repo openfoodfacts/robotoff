@@ -2,7 +2,7 @@ import gzip
 import json
 
 import pathlib as pathlib
-from typing import List, Dict, Callable, Iterable, Optional, Tuple, Union
+from typing import Callable, List, Dict, Iterable, Optional, Tuple, Union, TextIO
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.ocr.brand import find_brands
@@ -101,7 +101,9 @@ def is_barcode(text: str):
     return text.isdigit()
 
 
-def get_source(image_name: str, json_path: str = None, barcode: Optional[str] = None):
+def get_source(
+    image_name: str, json_path: str = None, barcode: Optional[str] = None
+) -> str:
     if not barcode:
         barcode = get_barcode_from_path(str(json_path))
 
@@ -111,20 +113,33 @@ def get_source(image_name: str, json_path: str = None, barcode: Optional[str] = 
     return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
 
-def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
-    if is_barcode(input_str):
-        image_data = fetch_images_for_ean(input_str)["product"]["images"]
+def ocr_iter_jsonl(stream: TextIO) -> Iterable[Tuple[Optional[str], Dict]]:
+    for line in stream:
+        json_data = json.loads(line)
+
+        if "content" in json_data:
+            source = json_data["source"].replace("//", "/")
+            yield source, json_data["content"]
+
+
+def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]:
+    if not isinstance(source, str):
+        yield from ocr_iter_jsonl(source)
+
+    elif is_barcode(source):
+        barcode: str = source
+        image_data = fetch_images_for_ean(source)["product"]["images"]
 
         for image_name in image_data.keys():
             if image_name.isdigit():
                 print("Getting OCR for image {}".format(image_name))
-                data = get_json_for_image(input_str, image_name)
-                source = get_source(image_name, barcode=input_str)
+                data = get_json_for_image(barcode, image_name)
+                source = get_source(image_name, barcode=barcode)
                 if data:
                     yield source, data
 
     else:
-        input_path = pathlib.Path(input_str)
+        input_path = pathlib.Path(source)
 
         if not input_path.exists():
             print("Unrecognized input: {}".format(input_path))
@@ -148,9 +163,4 @@ def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
                     open_func = open
 
                 with open_func(input_path, mode="rt") as f:
-                    for line in f:
-                        json_data = json.loads(line)
-
-                        if "content" in json_data:
-                            source = json_data["source"].replace("//", "/")
-                            yield source, json_data["content"]
+                    yield from ocr_iter_jsonl(f)
