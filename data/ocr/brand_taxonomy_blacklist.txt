@@ -21,6 +21,7 @@ classic
 cocacola
 comte
 consum
+cook
 crisp
 cristal
 crunch
