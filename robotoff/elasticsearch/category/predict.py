@@ -45,6 +45,7 @@ def predict(client, product: Dict) -> Optional[Dict]:
             "lang": lang,
             "product_name": product_name,
             "model": "matcher",
+            "type": "category",
         }
 
     return None

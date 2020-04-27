@@ -299,6 +299,7 @@ def format_predictions(
             "lang": lang,
             "model": "neural",
             "confidence": confidence,
+            "type": "category",
         }
         formatted_predictions.append(formatted)
 
