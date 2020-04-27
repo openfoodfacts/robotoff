@@ -341,6 +341,9 @@ def update_product(
         if comment:
             params["comment"] = comment + " (automated edit)"
 
+    if not params.get("password"):
+        raise ValueError("a password is required to update product")
+
     request_auth: Optional[Tuple[str, str]] = None
     if server_domain.endswith("openfoodfacts.net"):
         # dev environment requires authentication
