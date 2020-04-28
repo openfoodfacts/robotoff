@@ -5,6 +5,9 @@ from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_t
 from robotoff.utils.types import JSONType
 
 
+EXTRACTOR_VERSION = "1"
+
+
 def generate_nutrient_regex(nutrient_names: List[str], units: List[str]):
     nutrient_names_str = "|".join(nutrient_names)
     units_str = "|".join(units)
@@ -20,6 +23,7 @@ NUTRIENT_VALUES_REGEX = {
         generate_nutrient_regex(
             [
                 "[ée]nergie",  # fr/de
+                "valeurs? [ée]nerg[ée]tiques?",  # fr
                 "energy",  # en
                 "calories",  # fr/en
                 "energia",  # es
@@ -35,6 +39,7 @@ NUTRIENT_VALUES_REGEX = {
             [
                 "mati[èe]res? grasses? satur[ée]s?",  # fr
                 "acides? gras satur[ée]s?",  # fr
+                "dont satur[ée]s?",  # fr
                 "saturated fat",  # en
                 "of which saturates",  # en
                 "verzadigde vetzuren",  # nl
@@ -58,6 +63,8 @@ NUTRIENT_VALUES_REGEX = {
         generate_nutrient_regex(
             [
                 "mati[èe]res? grasses?",  # fr
+                "graisses?",  # fr
+                "lipides?",  # fr
                 "total fat",  # en
                 "vetten",  # nl
                 "fett",  # de
@@ -124,6 +131,7 @@ NUTRIENT_VALUES_REGEX = {
         generate_nutrient_regex(
             [
                 "fibres?",  # en/fr
+                "fibers?",  # en
                 "fibres? alimentaires?",  # fr
                 "(?:voedings)?vezels?",  # nl
                 "ballaststoffe",  # de
@@ -162,4 +170,4 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> List[Dict]:
     if not nutrients:
         return []
 
-    return [{"nutrients": nutrients, "notify": False}]
+    return [{"nutrients": nutrients, "version": EXTRACTOR_VERSION}]
