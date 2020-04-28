@@ -12,7 +12,7 @@ from robotoff.insights.ocr.image_flag import flag_image
 from robotoff.insights.ocr.image_orientation import find_image_orientation
 from robotoff.insights.ocr.label import find_labels
 from robotoff.insights.ocr.location import find_locations
-from robotoff.insights.ocr.nutrient import find_nutrient_values
+from robotoff.insights.ocr.nutrient import find_nutrient_mentions, find_nutrient_values
 from robotoff.insights.ocr.packager_code import find_packager_codes
 from robotoff.insights.ocr.packaging import find_packaging
 from robotoff.insights.ocr.product_weight import find_product_weight
@@ -80,6 +80,9 @@ def extract_insights(content: Union[OCRResult, str], insight_type: str) -> List[
 
     elif insight_type == InsightType.nutrient.name:
         return find_nutrient_values(content)
+
+    elif insight_type == InsightType.nutrient_mention.name:
+        return find_nutrient_mentions(content)
 
     elif insight_type == InsightType.brand.name:
         return find_brands(content)
