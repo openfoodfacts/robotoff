@@ -175,7 +175,10 @@ def updated_product_add_category_insight(
     if insight is not None:
         insights.append(insight)
 
-    insights += predict_category_from_product_ml(product, filter_blacklisted=True)
+    insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+
+    if insight is not None:
+        insights.append(insight)
 
     if not insights:
         return False

@@ -391,34 +391,17 @@ class CategoryImporter(InsightImporter):
         for insight in insights:
             barcode = insight["barcode"]
             content = insight["content"]
-            category = content["category"]
+            category = content.pop("category")
 
             if not self.is_valid(barcode, category, seen_set):
                 continue
 
-            insert = {
+            yield {
                 "barcode": barcode,
                 "value_tag": category,
                 "automatic_processing": False,
-                "data": {},
+                "data": content,
             }
-
-            if "category_depth" in insight:
-                insert["data"]["category_depth"] = insight["category_depth"]
-
-            if "model" in insight:
-                insert["data"]["model"] = insight["model"]
-
-            if "confidence" in insight:
-                insert["data"]["confidence"] = insight["confidence"]
-
-            if "product_name" in insight:
-                insert["data"]["product_name"] = insight["product_name"]
-
-            if "lang" in insight:
-                insert["data"]["lang"] = insight["lang"]
-
-            yield insert
             seen_set.add(category)
 
     def is_valid(self, barcode: str, category: str, seen_set: Set[str]):

@@ -11,7 +11,7 @@ logger = get_logger()
 lang = "it"
 
 
-def updated_product_add_category_insight(products: Iterable[JSONType], batch_size: int):
+def generate_category_insights(products: Iterable[JSONType], batch_size: int):
     insights = predict_from_product_batch(
         products, allowed_lang={lang}, filter_blacklisted=True, batch_size=batch_size
     )
@@ -29,8 +29,7 @@ def main():
         .filter_text_field("lang", lang)
         .filter_nonempty_text_field("product_name_{}".format(lang))
     )
-
-    updated_product_add_category_insight(training_stream.iter(), batch_size=1024)
+    generate_category_insights(training_stream.iter(), batch_size=1024)
 
 
 if __name__ == "__main__":

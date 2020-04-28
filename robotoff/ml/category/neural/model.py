@@ -231,9 +231,9 @@ def predict_from_product(
     product: Dict,
     allowed_lang: Optional[Set[str]] = None,
     filter_blacklisted: bool = False,
-) -> List[Dict]:
+) -> Optional[Dict]:
     if not keep_product(product, allowed_lang):
-        return []
+        return None
 
     model = ModelRegistry.get()
     predictions = model.predict_from_product(product, deepest_only=True)
@@ -283,27 +283,25 @@ def predict_from_product_batch(
             ]
 
         for predictions, product in zip(predictions_batch, product_batch):
-            for insight in format_predictions(product, predictions, "xx"):
-                yield insight
+            yield format_predictions(product, predictions, "xx")
 
 
 def format_predictions(
     product: Dict, predictions: List[CategoryPrediction], lang: str
-) -> List[Dict]:
-    formatted_predictions = []
+) -> Dict:
+    insights = []
 
     for category, confidence in predictions:
-        formatted = {
-            "barcode": product["code"],
-            "category": category,
-            "lang": lang,
-            "model": "neural",
-            "confidence": confidence,
-            "type": "category",
-        }
-        formatted_predictions.append(formatted)
+        insights.append(
+            {
+                "category": category,
+                "lang": lang,
+                "model": "neural",
+                "confidence": confidence,
+            }
+        )
 
-    return formatted_predictions
+    return {"barcode": product["code"], "type": "category", "insights": insights}
 
 
 def filter_blacklisted_categories(
