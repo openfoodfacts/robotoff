@@ -405,13 +405,18 @@ class DBProductStore(ProductStore):
     def __len__(self):
         return len(self.collection.estimated_document_count())
 
-    def __getitem__(self, barcode: str) -> Optional[Product]:
-        product = self.collection.find_one({"code": barcode})
+    def get_product(
+        self, barcode: str, projection: Optional[List[str]] = None
+    ) -> Optional[Product]:
+        product = self.collection.find_one({"code": barcode}, projection)
 
         if product:
             return Product(product)
 
         return None
+
+    def __getitem__(self, barcode: str) -> Optional[Product]:
+        return self.get_product(barcode)
 
     def __iter__(self):
         raise NotImplementedError("cannot iterate over database product store")
