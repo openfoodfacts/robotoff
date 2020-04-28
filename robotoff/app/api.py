@@ -248,6 +248,9 @@ class NutrientPredictorResource:
     def on_get(self, req, resp):
         ocr_url = req.get_param("ocr_url", required=True)
 
+        if not ocr_url.endswith(".json"):
+            raise falcon.HTTPBadRequest("a JSON file is expected")
+
         try:
             insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
 
