@@ -769,6 +769,7 @@ class InsightImporterFactory:
         InsightType.packaging.name: PackagingInsightImporter,
         InsightType.image_flag.name: LatentInsightImporter,
         InsightType.nutrient.name: LatentInsightImporter,
+        InsightType.nutrient_mention.name: LatentInsightImporter,
         InsightType.location.name: LatentInsightImporter,
     }
 
