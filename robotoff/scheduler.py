@@ -223,6 +223,7 @@ def generate_insights():
         category_insights_iter,
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic=False,
+        latent=False,
     )
     logger.info("{} category insights imported".format(imported))
 

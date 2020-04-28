@@ -9,7 +9,7 @@ from robotoff.ml.category.neural.model import (
     predict_from_product as predict_category_from_product_ml,
 )
 from robotoff.insights._enum import InsightType
-from robotoff.insights.importer import InsightImporterFactory, InsightImporter
+from robotoff.insights.importer import InsightImporterFactory, BaseInsightImporter
 from robotoff.insights.extraction import (
     get_insights_from_image,
     get_insights_from_product_name,
@@ -71,7 +71,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
             continue
 
         logger.info("Extracting {}".format(insight_type))
-        importer: InsightImporter = InsightImporterFactory.create(
+        importer: BaseInsightImporter = InsightImporterFactory.create(
             insight_type, product_store
         )
 
@@ -175,7 +175,10 @@ def updated_product_add_category_insight(
     if insight is not None:
         insights.append(insight)
 
-    insights += predict_category_from_product_ml(product, filter_blacklisted=True)
+    insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+
+    if insight is not None:
+        insights.append(insight)
 
     if not insights:
         return False
@@ -184,7 +187,7 @@ def updated_product_add_category_insight(
     importer = InsightImporterFactory.create(InsightType.category.name, product_store)
 
     imported = importer.import_insights(
-        insights, server_domain=server_domain, automatic=False
+        insights, server_domain=server_domain, automatic=False, latent=False
     )
 
     if imported:
@@ -208,7 +211,7 @@ def updated_product_predict_insights(
     for insight_type, insights in insights_all.items():
         importer = InsightImporterFactory.create(insight_type, product_store)
         imported = importer.import_insights(
-            [insights], server_domain=server_domain, automatic=False
+            [insights], server_domain=server_domain, automatic=False, latent=False
         )
 
         if imported:

@@ -103,6 +103,27 @@ class ProductInsight(BaseModel):
             }
 
 
+class LatentProductInsight(BaseModel):
+    id = peewee.UUIDField(primary_key=True)
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    type = peewee.CharField(max_length=256)
+    data = BinaryJSONField(index=True)
+    timestamp = peewee.DateTimeField(null=True)
+    value_tag = peewee.TextField(null=True, index=True)
+    value = peewee.TextField(null=True, index=True)
+    source_image = peewee.TextField(null=True, index=True)
+    server_domain = peewee.TextField(
+        null=True, help_text="server domain linked to the insight", index=True
+    )
+    server_type = peewee.CharField(
+        null=True,
+        max_length=10,
+        help_text="project associated with the server_domain, "
+        "one of 'off', 'obf', 'opff', 'opf'",
+        index=True,
+    )
+
+
 class UserAnnotation(BaseModel):
     insight = peewee.ForeignKeyField(
         ProductInsight, primary_key=True, backref="user_annotation"
@@ -118,4 +139,4 @@ class UserAnnotation(BaseModel):
         return self.insight.completed_at
 
 
-MODELS = [ProductInsight, UserAnnotation]
+MODELS = [ProductInsight, UserAnnotation, LatentProductInsight]

@@ -41,10 +41,15 @@ def predict(client, product: Dict) -> Optional[Dict]:
 
         return {
             "barcode": product["code"],
-            "category": category,
-            "lang": lang,
-            "product_name": product_name,
-            "model": "matcher",
+            "type": "category",
+            "insights": [
+                {
+                    "category": category,
+                    "lang": lang,
+                    "product_name": product_name,
+                    "model": "matcher",
+                }
+            ],
         }
 
     return None
