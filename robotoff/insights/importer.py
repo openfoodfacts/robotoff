@@ -731,7 +731,7 @@ class PackagingInsightImporter(InsightImporter):
         return False
 
 
-class GenericInsightImporter(InsightImporter):
+class LatentInsightImporter(InsightImporter):
     def __init__(self, product_store: ProductStore, insight_type: str):
         super().__init__(product_store)
         self.insight_type: str = insight_type
@@ -767,9 +767,9 @@ class InsightImporterFactory:
         InsightType.brand.name: BrandInsightImporter,
         InsightType.store.name: StoreInsightImporter,
         InsightType.packaging.name: PackagingInsightImporter,
-        InsightType.image_flag.name: GenericInsightImporter,
-        InsightType.nutrient.name: GenericInsightImporter,
-        InsightType.location.name: GenericInsightImporter,
+        InsightType.image_flag.name: LatentInsightImporter,
+        InsightType.nutrient.name: LatentInsightImporter,
+        InsightType.location.name: LatentInsightImporter,
     }
 
     @classmethod
@@ -779,7 +779,7 @@ class InsightImporterFactory:
         if insight_type in cls.importers:
             insight_cls = cls.importers[insight_type]
 
-            if insight_cls == GenericInsightImporter:
+            if insight_cls == LatentInsightImporter:
                 return insight_cls(product_store, insight_type)
 
             return insight_cls(product_store)
