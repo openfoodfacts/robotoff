@@ -42,12 +42,14 @@ def is_reserved_barcode(barcode: str) -> bool:
     return barcode.startswith("2")
 
 
-def generate_latent_insight(insight: JSONType) -> JSONType:
+def generate_latent_insight(insight: JSONType, valid: bool) -> JSONType:
     insight = insight.copy()
     insight.pop("automatic_processing")
     insight.pop("reserved_barcode")
     insight.pop("countries")
     insight.pop("brands")
+    insight.setdefault("data", {})
+    insight["data"]["valid"] = valid
     return insight
 
 
@@ -78,10 +80,10 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
                 if valid:
                     insight_batch.append(insight)
                     # if insight is valid, always add it to latent insights
-                    latent_batch.append(generate_latent_insight(insight))
+                    latent_batch.append(generate_latent_insight(insight, valid))
                 elif latent:
                     # invalid insight, only import is as latent if latent = True
-                    latent_batch.append(generate_latent_insight(insight))
+                    latent_batch.append(generate_latent_insight(insight, valid))
 
             inserted += batch_insert(ProductInsight, insight_batch, 50)
             batch_insert(LatentProductInsight, latent_batch, 50)
