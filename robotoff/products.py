@@ -320,6 +320,7 @@ class Product:
         "brands_tags",
         "stores_tags",
         "unique_scans_n",
+        "images",
     )
 
     def __init__(self, product: JSONType):
@@ -333,6 +334,7 @@ class Product:
         self.brands_tags = product.get("brands_tags") or []
         self.stores_tags = product.get("stores_tags") or []
         self.unique_scans_n = product.get("unique_scans_n") or 0
+        self.images = product.get("images") or {}
 
     @staticmethod
     def get_fields():
@@ -347,6 +349,7 @@ class Product:
             "brands_tags",
             "stores_tags",
             "unique_scans_n",
+            "images",
         }
 
 
