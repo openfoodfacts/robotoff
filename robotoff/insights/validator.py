@@ -4,7 +4,7 @@ from typing import Optional
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
-from robotoff.products import ProductStore, Product
+from robotoff.products import is_valid_image, ProductStore, Product
 from robotoff.taxonomy import Taxonomy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -17,6 +17,18 @@ class InsightValidator(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
+    def has_invalid_image(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
+        if (
+            product
+            and insight.source_image
+            and not is_valid_image(product.images, insight.source_image)
+        ):
+            return True
+
+        return False
+
     @abc.abstractmethod
     def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
@@ -26,6 +38,12 @@ class InsightValidator(metaclass=abc.ABCMeta):
 
 class BrandValidator(InsightValidator):
     def is_valid(self, insight: ProductInsight, product: Optional[Product] = None):
+        if product is None:
+            product = self.product_store[insight.barcode]
+
+        if self.has_invalid_image(insight, product):
+            return False
+
         brand_prefix = BRAND_PREFIX_STORE.get()
         brand_tag = insight.value_tag
         barcode = insight.barcode
@@ -38,10 +56,7 @@ class BrandValidator(InsightValidator):
             return False
 
         if product is None:
-            product = self.product_store[insight.barcode]
-
-            if product is None:
-                return True
+            return True
 
         if brand_tag in product.brands_tags:
             return False
@@ -55,6 +70,9 @@ class LabelValidator(InsightValidator):
     ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
+
+        if self.has_invalid_image(insight, product):
+            return False
 
         product_labels_tags = getattr(product, "labels_tags", [])
         label_tag = insight.value_tag
@@ -81,6 +99,9 @@ class CategoryValidator(InsightValidator):
         if product is None:
             product = self.product_store[insight.barcode]
 
+        if self.has_invalid_image(insight, product):
+            return False
+
         product_categories_tags = getattr(product, "categories_tags", [])
         category_tag = insight.value_tag
 
@@ -106,9 +127,12 @@ class ProductWeightValidator(InsightValidator):
         if product is None:
             product = self.product_store[insight.barcode]
 
-            if product is None:
-                # Product is not in product store yet, keep the insight
-                return True
+        if self.has_invalid_image(insight, product):
+            return False
+
+        if product is None:
+            # Product is not in product store yet, keep the insight
+            return True
 
         if product.quantity is not None:
             return False
