@@ -140,12 +140,23 @@ class ProductWeightValidator(InsightValidator):
         return True
 
 
+class GenericValidator(InsightValidator):
+    def is_valid(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
+        return not self.has_invalid_image(insight, product)
+
+
 class InsightValidatorFactory:
     validators: JSONType = {
         InsightType.label.name: LabelValidator,
         InsightType.category.name: CategoryValidator,
         InsightType.product_weight.name: ProductWeightValidator,
         InsightType.brand.name: BrandValidator,
+        InsightType.expiration_date.name: GenericValidator,
+        InsightType.packager_code.name: GenericValidator,
+        InsightType.packaging.name: GenericValidator,
+        InsightType.store.name: GenericValidator,
     }
 
     @classmethod
