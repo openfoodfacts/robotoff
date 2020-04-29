@@ -370,6 +370,12 @@ class ProductStore(metaclass=abc.ABCMeta):
     def __getitem__(self, item):
         pass
 
+    @abc.abstractmethod
+    def is_real_time(self) -> bool:
+        """Return True if the product store return the current version of the product,
+        and not an dumped version as in MemoryProductStore."""
+        pass
+
 
 class MemoryProductStore(ProductStore):
     def __init__(self, store: Dict[str, Product]):
@@ -406,6 +412,9 @@ class MemoryProductStore(ProductStore):
     def __iter__(self) -> Iterable[Product]:
         return iter(self.store.values())
 
+    def is_real_time(self) -> bool:
+        return False
+
 
 class DBProductStore(ProductStore):
     def __init__(self, client: MongoClient):
@@ -431,6 +440,9 @@ class DBProductStore(ProductStore):
 
     def __iter__(self):
         raise NotImplementedError("cannot iterate over database product store")
+
+    def is_real_time(self) -> bool:
+        return True
 
 
 def load_min_dataset() -> ProductStore:

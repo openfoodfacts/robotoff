@@ -214,6 +214,11 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
                 )
                 continue
 
+            if not product and self.product_store.is_real_time():
+                # if product store is in real time, the product does not exist (deleted)
+                logger.info("Insight of deleted product {}".format(barcode))
+                continue
+
             insight["barcode"] = barcode
 
             if not automatic:
