@@ -210,7 +210,7 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
                 and not is_valid_image(product.images, source_image)
             ):
                 logger.info(
-                    "Invalid image for product {}: {}".format(source_image, barcode)
+                    "Invalid image for product {}: {}".format(barcode, source_image)
                 )
                 continue
 
