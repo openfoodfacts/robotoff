@@ -206,11 +206,13 @@ if __name__ == "__main__":
     @click.option("--insight-type", required=True)
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
+    @click.option("--latent", type=bool, default=False)
     def import_insights(
         input_: pathlib.Path,
         insight_type: str,
         server_domain: Optional[str],
         batch_size: int,
+        latent: bool,
     ):
         from robotoff.cli import insights
         from robotoff import settings
@@ -220,7 +222,7 @@ if __name__ == "__main__":
         logger.info("Importing insights from {}".format(input_))
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
         imported = insights.import_insights(
-            input_, insight_type, server_domain, batch_size
+            input_, insight_type, server_domain, batch_size, latent
         )
         logger.info("{} insights imported".format(imported))
 

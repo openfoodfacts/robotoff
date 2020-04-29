@@ -79,6 +79,7 @@ def import_insights(
     insight_type: str,
     server_domain: str,
     batch_size: int = 1024,
+    latent: bool = False,
 ) -> int:
     product_store = get_product_store()
     importer = InsightImporterFactory.create(insight_type, product_store)
@@ -96,7 +97,7 @@ def import_insights(
                 insight_batch,
                 server_domain=server_domain,
                 automatic=False,
-                latent=False,
+                latent=latent,
             )
 
     return imported
