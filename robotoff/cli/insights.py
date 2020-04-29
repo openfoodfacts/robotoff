@@ -20,7 +20,7 @@ from robotoff.insights.ocr import (
 )
 from robotoff.models import db, ProductInsight
 from robotoff.off import get_product
-from robotoff.products import CACHED_PRODUCT_STORE
+from robotoff.products import get_product_store
 from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
 
 
@@ -80,7 +80,7 @@ def import_insights(
     server_domain: str,
     batch_size: int = 1024,
 ) -> int:
-    product_store = CACHED_PRODUCT_STORE.get()
+    product_store = get_product_store()
     importer = InsightImporterFactory.create(insight_type, product_store)
 
     if file_path.suffix == ".gz":
