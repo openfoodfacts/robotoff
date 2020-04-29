@@ -17,12 +17,16 @@ def generate_fiber_quality_facet():
     collection = product_store.collection
     added = 0
 
-    for latent_insight in LatentProductInsight.select(
-        LatentProductInsight.barcode, LatentProductInsight.source_image
-    ).where(
-        LatentProductInsight.type == InsightType.nutrient_mention.name,
-        LatentProductInsight.data["mentions"].contains("fiber"),
-        LatentProductInsight.source_image.is_null(False),
+    for latent_insight in (
+        LatentProductInsight.select(
+            LatentProductInsight.barcode, LatentProductInsight.source_image
+        )
+        .where(
+            LatentProductInsight.type == InsightType.nutrient_mention.name,
+            LatentProductInsight.data["mentions"].contains("fiber"),
+            LatentProductInsight.source_image.is_null(False),
+        )
+        .iterator()
     ):
         barcode = latent_insight.barcode
         product = product_store.get_product(
