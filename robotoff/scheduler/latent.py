@@ -1,3 +1,5 @@
+from typing import Set
+
 from robotoff.insights._enum import InsightType
 from robotoff.models import LatentProductInsight
 from robotoff.products import is_valid_image, get_product_store, DBProductStore
@@ -16,6 +18,7 @@ def generate_fiber_quality_facet():
     product_store: DBProductStore = get_product_store()
     collection = product_store.collection
     added = 0
+    seen_set: Set[str] = set()
 
     for latent_insight in (
         LatentProductInsight.select(
@@ -29,6 +32,10 @@ def generate_fiber_quality_facet():
         .iterator()
     ):
         barcode = latent_insight.barcode
+
+        if barcode in seen_set:
+            continue
+
         product = product_store.get_product(
             barcode, ["nutriments", "data_quality_tags", "images"]
         )
@@ -43,6 +50,7 @@ def generate_fiber_quality_facet():
             continue
 
         logger.info("Adding {} facet to {}".format(FIBER_QUALITY_FACET_NAME, barcode))
+        seen_set.add(barcode)
         added += 1
         collection.update_one(
             {"code": barcode},
