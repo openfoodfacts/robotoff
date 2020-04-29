@@ -332,17 +332,17 @@ class Product:
     )
 
     def __init__(self, product: JSONType):
-        self.barcode = product.get("code")
-        self.countries_tags = product.get("countries_tags") or []
-        self.categories_tags = product.get("categories_tags") or []
-        self.emb_codes_tags = product.get("emb_codes_tags") or []
-        self.labels_tags = product.get("labels_tags") or []
-        self.quantity = product.get("quantity") or None
-        self.expiration_date = product.get("expiration_date") or None
-        self.brands_tags = product.get("brands_tags") or []
-        self.stores_tags = product.get("stores_tags") or []
-        self.unique_scans_n = product.get("unique_scans_n") or 0
-        self.images = product.get("images") or {}
+        self.barcode: Optional[str] = product.get("code")
+        self.countries_tags: List[str] = product.get("countries_tags") or []
+        self.categories_tags: List[str] = product.get("categories_tags") or []
+        self.emb_codes_tags: List[str] = product.get("emb_codes_tags") or []
+        self.labels_tags: List[str] = product.get("labels_tags") or []
+        self.quantity: Optional[str] = product.get("quantity") or None
+        self.expiration_date: Optional[str] = product.get("expiration_date") or None
+        self.brands_tags: List[str] = product.get("brands_tags") or []
+        self.stores_tags: List[str] = product.get("stores_tags") or []
+        self.unique_scans_n: int = product.get("unique_scans_n") or 0
+        self.images: JSONType = product.get("images") or {}
 
     @staticmethod
     def get_fields():
