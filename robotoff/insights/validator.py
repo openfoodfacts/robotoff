@@ -17,11 +17,6 @@ class InsightValidator(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
-    @staticmethod
-    @abc.abstractmethod
-    def get_type() -> str:
-        pass
-
     @abc.abstractmethod
     def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
@@ -30,10 +25,6 @@ class InsightValidator(metaclass=abc.ABCMeta):
 
 
 class BrandValidator(InsightValidator):
-    @staticmethod
-    def get_type() -> str:
-        return InsightType.brand.name
-
     def is_valid(self, insight: ProductInsight, product: Optional[Product] = None):
         brand_prefix = BRAND_PREFIX_STORE.get()
         brand_tag = insight.value_tag
@@ -59,10 +50,6 @@ class BrandValidator(InsightValidator):
 
 
 class LabelValidator(InsightValidator):
-    @staticmethod
-    def get_type() -> str:
-        return InsightType.label.name
-
     def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
@@ -88,10 +75,6 @@ class LabelValidator(InsightValidator):
 
 
 class CategoryValidator(InsightValidator):
-    @staticmethod
-    def get_type() -> str:
-        return InsightType.category.name
-
     def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
@@ -117,10 +100,6 @@ class CategoryValidator(InsightValidator):
 
 
 class ProductWeightValidator(InsightValidator):
-    @staticmethod
-    def get_type() -> str:
-        return InsightType.product_weight.name
-
     def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
