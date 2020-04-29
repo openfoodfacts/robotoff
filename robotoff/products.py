@@ -22,6 +22,14 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
+def is_valid_image(images: JSONType, image_path: str) -> bool:
+    image_id = pathlib.Path(image_path).stem
+    if not image_id.isdigit():
+        return False
+
+    return image_id in images
+
+
 def minify_product_dataset(dataset_path: pathlib.Path, output_path: pathlib.Path):
     if dataset_path.suffix == ".gz":
         jsonl_iter_func = gzip_jsonl_iter
