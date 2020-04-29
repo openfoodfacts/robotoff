@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 FIBER_QUALITY_FACET_NAME = "en:missing-nutrition-facts-fibers-present-on-photos"
 
 
-def generate_insights_from_latent_insights():
+def generate_quality_facets():
     generate_fiber_quality_facet()
 
 

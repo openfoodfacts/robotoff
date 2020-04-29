@@ -32,6 +32,7 @@ from robotoff.products import (
     ProductStore,
     ProductDataset,
 )
+from .latent import generate_quality_facets
 from robotoff.utils import get_logger, dump_jsonl
 
 import sentry_sdk
@@ -276,6 +277,9 @@ def run():
     )
     scheduler.add_job(
         dump_insights, "cron", day="*", hour="4", minute=45, max_instances=1
+    )
+    scheduler.add_job(
+        generate_quality_facets, "cron", day="*", hour="5", minute=25, max_instances=1,
     )
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()
