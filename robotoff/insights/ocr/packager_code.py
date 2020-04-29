@@ -18,7 +18,6 @@ def process_fr_packaging_match(match) -> str:
 
 def process_de_packaging_match(match) -> str:
     federal_state_tag, company_tag = match.group(1, 2)
-
     return "DE {}-{} EC".format(federal_state_tag, company_tag).upper()
 
 
@@ -29,12 +28,23 @@ def process_fr_emb_match(match) -> str:
     return "EMB {}{}".format(city_code, company_code).upper()
 
 
+def process_fsc_match(match) -> str:
+    fsc_code = match.group(1)
+    return "FSC-{}".format(fsc_code)
+
+
 PACKAGER_CODE: Dict[str, OCRRegex] = {
     "fr_emb": OCRRegex(
         re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
         field=OCRField.text_annotations,
         lowercase=True,
         processing_func=process_fr_emb_match,
+    ),
+    "fsc": OCRRegex(
+        re.compile(r"FSC.? (C\d{6})"),
+        field=OCRField.text_annotations,
+        lowercase=False,
+        processing_func=process_fsc_match,
     ),
     "eu_fr": OCRRegex(
         re.compile(
