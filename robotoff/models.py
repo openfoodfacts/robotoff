@@ -102,6 +102,12 @@ class ProductInsight(BaseModel):
                 **self.data,
             }
 
+    @classmethod
+    def create_from_latent(cls, latent_insight: "LatentProductInsight", **kwargs):
+        values: JSONType = list(latent_insight.dicts())[0]
+        updated_values = {**values, **kwargs}
+        return cls.create(**updated_values)
+
 
 class LatentProductInsight(BaseModel):
     id = peewee.UUIDField(primary_key=True)

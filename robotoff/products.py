@@ -36,6 +36,19 @@ def is_nutrition_image(
     return is_special_image(images, image_path, "nutrition", lang)
 
 
+def has_nutrition_image(images: JSONType, lang: Optional[str] = None) -> bool:
+    return has_special_image(images, "nutrition", lang)
+
+
+def has_special_image(images: JSONType, key: str, lang: Optional[str] = None) -> bool:
+    field_name = "{}_".format(key) if lang is None else "{}_{}".format(key, lang)
+    for image_key in images:
+        if image_key.startswith(field_name):
+            return True
+
+    return False
+
+
 def is_special_image(
     images: JSONType, image_path: str, image_type: str, lang: Optional[str] = None
 ) -> bool:
