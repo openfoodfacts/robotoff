@@ -1,27 +1,23 @@
 import gettext
-from typing import Set, Dict, Optional
+from typing import Dict, Optional
 
 from robotoff import settings
 
 
 class TranslationStore:
-    SUPPORTED_LANGUAGES: Set[str] = {
-        'fr',
-        'es',
-        'it',
-        'de',
-    }
-
     def __init__(self):
         self.translations: Dict[str, gettext.NullTranslations] = {}
 
     def load(self):
-        for lang in self.SUPPORTED_LANGUAGES:
-            t = gettext.translation('robotoff',
-                                    str(settings.I18N_DIR),
-                                    languages=[lang])
-            if t is not None:
-                self.translations[lang] = t
+        for lang_dir in settings.I18N_DIR.glob("*"):
+            if not lang_dir.is_dir():
+                continue
+
+            lang = lang_dir.name
+            t = gettext.translation(
+                "robotoff", str(settings.I18N_DIR), languages=[lang]
+            )
+            self.translations[lang] = t
 
     def get(self, lang: str) -> Optional[gettext.NullTranslations]:
         return self.translations.get(lang)

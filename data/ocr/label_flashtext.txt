@@ -1,0 +1,124 @@
+en:australian-made||australian made
+en:australian-made||fabricado en australia
+en:australian-made||fabrique en australie
+en:australian-made||fabriqué en australie
+en:australian-made||geproduceerd in australie
+en:australian-made||geproduceerd in australië
+en:australian-made||made in australia
+en:fair-trade||commerce équitable
+en:fair-trade||commerce equitable
+en:fair-trade||fair trade
+en:fair-trade||fair-trade
+en:fsc-mix||fsc mixte
+en:fsc||vwww.fsc.org
+en:gluten-free||bez lepku
+en:gluten-free||bezglutenomy
+en:gluten-free||gluten free
+en:gluten-free||gluten-free
+en:gluten-free||glutenfrei
+en:gluten-free||glutenvrij
+en:gluten-free||gluténmentes
+en:gluten-free||ni gluten
+en:gluten-free||sans gluten
+en:gluten-free||sem gluten
+en:gluten-free||senza glutine
+en:gluten-free||sin gluten
+en:gluten-free||без глютена
+en:gluten-free||не містить глютену
+en:halal||halal
+en:kosher||casher
+en:kosher||kosher
+en:made-in-belgium||fabrique en belgique
+en:made-in-belgium||fabriqué en belgique
+en:made-in-belgium||geproduceerd in belgie
+en:made-in-belgium||geproduceerd in belgië
+en:made-in-belgium||hecho en belgica
+en:made-in-belgium||hecho en bélgica
+en:made-in-belgium||hergestellt in belgien
+en:made-in-belgium||made in belgium
+en:made-in-france||fabrique en france
+en:made-in-france||fabriqué en france
+en:made-in-france||made in france
+en:made-in-germany||fabrique en allemagne
+en:made-in-germany||fabriqué en allemagne
+en:made-in-germany||fabriquée en allemagne
+en:made-in-germany||geproduceerd in duitsland
+en:made-in-germany||hecho en alemania
+en:made-in-germany||hergestellt in deutschland
+en:made-in-germany||made in germany
+en:made-in-italy||fabricado en italia
+en:made-in-italy||fabrique en italie
+en:made-in-italy||fabriqué en italie
+en:made-in-italy||fatto in italia
+en:made-in-italy||geproduceerd in italie
+en:made-in-italy||geproduceerd in italië
+en:made-in-italy||hergestellt in italien
+en:made-in-italy||made in italy
+en:made-in-spain||fabrique en espagne
+en:made-in-spain||fabriqué en espagne
+en:made-in-spain||geproduceerd in spanje
+en:made-in-spain||hecho en espana
+en:made-in-spain||hecho en españa
+en:made-in-spain||hergestellt in spanien
+en:made-in-spain||made in spain
+en:made-in-switzerland||fabrique en suisse
+en:made-in-switzerland||fabriqué en suisse
+en:made-in-switzerland||geproduceerd in zwitserland
+en:made-in-switzerland||hecho en suiza
+en:made-in-switzerland||hergestellt in der schweiz
+en:made-in-switzerland||made in switzerland
+en:made-in-the-eu||fabrique dans l'ue
+en:made-in-the-eu||fabriqué dans l'ue
+en:made-in-the-eu||geproduceerd in de eu
+en:made-in-the-eu||hecho en la ue
+en:made-in-the-eu||hergestellt in der eu
+en:made-in-the-eu||made in the eu
+en:max-havelaar||max havelaar
+en:no-added-sugar||no added sugar
+en:no-added-sugar||ohne zuckerzusatz
+en:no-added-sugar||sans sucre ajoute
+en:no-added-sugar||sans sucre ajoutes
+en:no-added-sugar||sans sucre ajouté
+en:no-added-sugar||sans sucres ajoutés
+en:no-added-sugar||sem açúcares adicionados
+en:no-added-sugar||senza zuccheri aggiunti
+en:no-added-sugar||sin azúcares añadidos
+en:no-added-sugar||zonder toegevoegde suikers
+en:no-cholesterol||no cholesterol
+en:no-cholesterol||sans cholesterol
+en:no-cholesterol||sans cholestérol
+en:no-lactose||bez laktozy
+en:no-lactose||lactose free
+en:no-lactose||lactose-free
+en:no-lactose||lactosefrei
+en:no-lactose||lactosevrij
+en:no-lactose||laktózmentes
+en:no-lactose||ni lactose
+en:no-lactose||no lactose
+en:no-lactose||sans lactose
+en:no-lactose||senza lattosio
+en:no-lactose||sin lactosa
+en:no-lactose||без лактозы
+en:palm-oil-free||ni huile de palme
+en:palm-oil-free||ohne palmöl
+en:palm-oil-free||palm oil free
+en:palm-oil-free||palm oil-free
+en:palm-oil-free||sans huile de palme
+en:palm-oil-free||senza olio di palma
+en:palm-oil-free||sin aceite de palma
+en:palm-oil-free||без пальмового масла
+en:sustainable-palm-oil||huile de palme certifiée durable
+en:sustainable-palm-oil||huile de palme certifiee durable
+en:sustainable-palm-oil||sustainable palm oil
+en:sustainable-seafood-msc||www.msc.org
+en:utz-certified||utz certified
+en:vegan||vegan
+en:vegan||veganoveganistisch
+en:vegan||vegetalien
+en:vegan||végétalien
+fr:aoc||appellation d'origine controlee
+fr:aoc||appellation d'origine contrôlée
+fr:viande-bovine-francaise||viande bovine francaise
+fr:viande-bovine-francaise||viande bovine française
+fr:viande-porcine-francaise||le porc francais
+fr:viande-porcine-francaise||le porc français

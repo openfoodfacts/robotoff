@@ -2,22 +2,28 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2019-03-13 20:01\n"
-"Last-Translator: pierreslamich <pierre.slamich@gmail.com>\n"
+"PO-Revision-Date: 2020-01-15 20:38\n"
+"Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: French\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: crowdin.com\n"
+"X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Language: fr\n"
 "X-Crowdin-File: /master/i18n/robotoff.pot\n"
 
+# Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
 msgstr "Le produit appartient-il à cette catégorie ?"
 
+# Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
 msgstr "Le produit a-t-il ce label ?"
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product belong to this brand?"
+msgstr "Le produit appartient-il à cette marque ?"
 

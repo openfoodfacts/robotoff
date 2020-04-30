@@ -12,3 +12,8 @@ class InsightType(Enum):
     brand = 8
     image_orientation = 9
     store = 10
+    nutrient = 11
+    trace = 12
+    packaging = 13
+    location = 14
+    nutrient_mention = 15

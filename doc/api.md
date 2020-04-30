@@ -4,6 +4,10 @@ FORMAT: 1A
 
 Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.
 All endpoints must be prefixed with `/api/v1` (the full URL being `https://robotoff.openfoodfacts.org/api/v1/{endpoint}`)
+Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all 
+environments (production, development, pro). The `server_domain` field should be used to specify the 
+product/environment: `api.openfoodfacts.org` for OFF-prod, `api.openfoodfacts.net` for OFF-dev, 
+`api.openbeautyfacts.org` for OBF-prod,...
 
 # Group Insights
 
@@ -16,6 +20,11 @@ Current insight types:
 - `packager_code`
 - `label`
 - `category`
+- `product_weight`
+- `expiration_date`
+- `brand`
+- `store`
+- `nutrient`
 
 ## Random insight [/insights/random]
 
@@ -25,6 +34,9 @@ Fetch a random insight.
 
 + type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.
 + country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
++ value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
++ count (int, optional) - number of results to return (default: 1)
 
 + Response 200 (application/json)
 
@@ -35,8 +47,22 @@ Fetch a random insight.
 
 Return all insights associated with a specific product.
 
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
+
 + Parameters
     + barcode: Product barcode
+
++ Response 200 (application/json)
+
+
+## Insight detail [/insights/detail/{id}]
+
+### Get a specific insight [GET]
+
+Return a specific insight.
+
++ Parameters
+    + id: ID of the insight
 
 + Response 200 (application/json)
 
@@ -70,11 +96,12 @@ Current question types:
 
 ### Get questions for a given product [GET]
 
-+ Parameters
-    + barcode: Product barcode
-   
 + lang (str, optional) - the language of the question/value. 'en' by default.
 + count (int, optional) - Number of questions to return. Default to 1.
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
+
++ Parameters
+    + barcode: Product barcode
 
 + Response 200 (application/json)
 
@@ -88,7 +115,8 @@ Current question types:
 + insight_types (list, optional) - comma-separated list, filter by insight types.
 + country (str, optional) - filter by country tag.
 + brands (str, optional) - filter by brands, comma-separated list of brand tags.
-
++ value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
 + Response 200 (application/json)
 
 
@@ -96,9 +124,12 @@ Current question types:
 
 ## Ingredient spellcheck [/predict/ingredients/spellcheck]
 
-### Get spelling corrections [POST]
+### Get spelling corrections [GET]
 
-+ text (str, required) - the ingredient text to spellcheck
+Generate spellcheck corrections. Either the barcode or the text to correct must be supplied.
+
++ text (str, optional) - the ingredient text to spellcheck.
++ barcode (str, optional) - the barcode of the product.
 
 
 + Response 200 (application/json)
@@ -119,4 +150,27 @@ Current question types:
                 }
             ],
             "text": "fqrine de blé"
+        }
+
+
+## Nutrient prediction [/predict/nutrient]
+
+### Predict nutrient from OCR JSON [GET]
+
++ ocr_url (str, required) - the url of the OCR JSON
+
+
++ Response 200 (application/json)
+
+        {
+            "nutrients": {
+                "glucid": [
+                    {
+                        "nutrient": "glucid",
+                        "raw": "glucides 53 g",
+                        "unit": "g",
+                        "value": "53"
+                    }
+                ]
+            }
         }

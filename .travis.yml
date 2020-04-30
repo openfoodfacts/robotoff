@@ -1,0 +1,32 @@
+language: python
+dist: bionic
+
+services:
+  - docker
+
+python:
+  - "3.6"
+  - "3.7"
+
+before_install:
+  - sudo apt-get install gettext
+  - cd i18n && bash compile.sh && cd ..
+install:
+  - pip install -r requirements.txt
+script:
+- pip install -r requirements-dev.txt
+- python3 -m pytest tests
+- flake8
+- black . --check
+- mypy .
+
+jobs:
+  include:
+    - stage: deploy
+      python: "3.7"
+      if: tag =~ ^v20[0-9]{2}-[01][0-9]-[0123][0-9](_[0-9]+)?
+      script:
+        - docker build -t openfoodfacts/robotoff:latest .
+        - docker tag openfoodfacts/robotoff:latest openfoodfacts/robotoff:${TRAVIS_TAG:1}
+        - echo "$DOCKER_PASSWORD" | docker login --password-stdin -u "$DOCKER_USERNAME"
+        - docker push openfoodfacts/robotoff

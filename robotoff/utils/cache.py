@@ -8,23 +8,29 @@ logger = get_logger(__name__)
 
 
 class CachedStore(metaclass=abc.ABCMeta):
-    def __init__(self,
-                 fetch_func: Callable,
-                 expiration_timedelta: Optional[datetime.timedelta] = None):
+    def __init__(self, fetch_func: Callable, expiration_interval: Optional[int] = 30):
         self.store = None
         self.expires_after: Optional[datetime.datetime] = None
         self.fetch_func: Callable = fetch_func
-        self.expiration_timedelta = (expiration_timedelta or
-                                     datetime.timedelta(minutes=30))
+        self.expiration_timedelta: Optional[datetime.timedelta]
+
+        if expiration_interval is not None:
+            self.expiration_timedelta = datetime.timedelta(minutes=expiration_interval)
+        else:
+            self.expiration_timedelta = None
 
     def get(self, **kwargs):
-        if (self.store is None or
-                datetime.datetime.utcnow() >= self.expires_after):
+        if self.store is None or (
+            self.expiration_timedelta is not None
+            and datetime.datetime.utcnow() >= self.expires_after
+        ):
             if self.store is not None:
                 logger.info("ProductStore expired, reloading...")
 
-            self.expires_after = (datetime.datetime.utcnow() +
-                                  self.expiration_timedelta)
+            if self.expiration_timedelta is not None:
+                self.expires_after = (
+                    datetime.datetime.utcnow() + self.expiration_timedelta
+                )
             self.store = self.fetch_func(**kwargs)
 
         return self.store
