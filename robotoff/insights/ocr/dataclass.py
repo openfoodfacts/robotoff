@@ -456,7 +456,10 @@ class Symbol:
     __slots__ = ("bounding_poly", "text", "confidence", "symbol_break")
 
     def __init__(self, data: JSONType):
-        self.bounding_poly = BoundingPoly(data["boundingBox"])
+        self.bounding_poly: Optional[BoundingPoly] = None
+        if "boundingBox" in data:
+            self.bounding_poly = BoundingPoly(data["boundingBox"])
+
         self.text = data["text"]
         self.confidence = data.get("confidence", None)
 
@@ -466,8 +469,10 @@ class Symbol:
         if "detectedBreak" in symbol_property:
             self.symbol_break = DetectedBreak(symbol_property["detectedBreak"])
 
-    def detect_orientation(self) -> ImageOrientation:
-        return self.bounding_poly.detect_orientation()
+    def detect_orientation(self) -> Optional[ImageOrientation]:
+        if self.bounding_poly:
+            return self.bounding_poly.detect_orientation()
+        return None
 
 
 class DetectedBreak:
