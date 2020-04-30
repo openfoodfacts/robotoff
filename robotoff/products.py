@@ -30,6 +30,34 @@ def is_valid_image(images: JSONType, image_path: str) -> bool:
     return image_id in images
 
 
+def is_nutrition_image(
+    images: JSONType, image_path: str, lang: Optional[str] = None
+) -> bool:
+    return is_special_image(images, image_path, "nutrition", lang)
+
+
+def is_special_image(
+    images: JSONType, image_path: str, image_type: str, lang: Optional[str] = None
+) -> bool:
+    if not is_valid_image(images, image_path):
+        return False
+
+    image_id = pathlib.Path(image_path).stem
+
+    for image_key, image_data in images.items():
+        if (
+            image_key.startswith(image_type)
+            and str(image_data.get("imgid")) == image_id
+        ):
+            if lang is None:
+                return True
+
+            elif image_key.endswith("_{}".format(lang)):
+                return True
+
+    return False
+
+
 def minify_product_dataset(dataset_path: pathlib.Path, output_path: pathlib.Path):
     if dataset_path.suffix == ".gz":
         jsonl_iter_func = gzip_jsonl_iter
