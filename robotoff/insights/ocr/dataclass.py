@@ -100,7 +100,7 @@ class OCRResult:
         self.text_annotations_str_lower: str = ""
 
         if self.text_annotations:
-            self.text_annotations_str = "||".join(t.text for t in self.text_annotations)
+            self.text_annotations_str = self.text_annotations[0].text
             self.text_annotations_str_lower = self.text_annotations_str.lower()
 
         full_text_annotation_data = data.get("fullTextAnnotation")
