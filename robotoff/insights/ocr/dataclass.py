@@ -4,7 +4,7 @@ import math
 import operator
 import re
 from collections import Counter
-from typing import Optional, Callable, Dict, List, Tuple, Union
+from typing import Optional, Callable, Dict, List, Pattern, Tuple, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -30,14 +30,14 @@ class OCRRegex:
 
     def __init__(
         self,
-        regex,
+        regex: Pattern,
         field: OCRField,
         lowercase: bool = False,
         processing_func: Optional[Callable] = None,
         priority: Optional[int] = None,
         notify: bool = False,
     ):
-        self.regex = regex
+        self.regex: Pattern = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
