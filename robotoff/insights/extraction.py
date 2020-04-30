@@ -38,6 +38,7 @@ IMAGE_IMPORT_INSIGHT_TYPES = (
     InsightType.packaging.name,
     InsightType.nutrient.name,
     InsightType.nutrient_mention.name,
+    InsightType.image_lang.name,
 )
 
 
