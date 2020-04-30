@@ -2,12 +2,20 @@ from typing import Set
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import LatentProductInsight
-from robotoff.products import is_valid_image, get_product_store, DBProductStore
+from robotoff.products import (
+    is_nutrition_image,
+    is_valid_image,
+    get_product_store,
+    DBProductStore,
+)
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
 
 FIBER_QUALITY_FACET_NAME = "en:missing-nutrition-facts-fibers-present-on-photos"
+FIBER_NUTRITION_QUALITY_FACET_NAME = (
+    "en:missing-nutrition-facts-fibers-present-on-nutrition-photos"
+)
 
 
 def generate_quality_facets():
@@ -40,29 +48,41 @@ def generate_fiber_quality_facet():
             barcode, ["nutriments", "data_quality_tags", "images"]
         )
         nutriments = product.get("nutriments", {})
+        data_quality_tags = product.get("data_quality_tags", {})
+        images = product.get("images", {})
+
         if (
             product is None
-            or not is_valid_image(
-                product.get("images", {}), latent_insight.source_image
-            )
+            or not is_valid_image(images, latent_insight.source_image)
             or "fiber" in nutriments
             or "fiber_prepared" in nutriments
-            or FIBER_QUALITY_FACET_NAME in product.get("data_quality_tags", [])
         ):
             continue
 
-        logger.info("Adding {} facet to {}".format(FIBER_QUALITY_FACET_NAME, barcode))
+        facets = []
+
+        if FIBER_QUALITY_FACET_NAME not in data_quality_tags:
+            facets.append(FIBER_QUALITY_FACET_NAME)
+
+        if (
+            FIBER_NUTRITION_QUALITY_FACET_NAME not in data_quality_tags
+            and is_nutrition_image(images, latent_insight.source_image)
+        ):
+            facets.append(FIBER_NUTRITION_QUALITY_FACET_NAME)
+
+        if not facets:
+            continue
+
+        logger.info("Adding facets to {}: {}".format(barcode, facets))
         seen_set.add(barcode)
         added += 1
         collection.update_one(
             {"code": barcode},
             {
                 "$push": {
-                    "data_quality_tags": FIBER_QUALITY_FACET_NAME,
-                    "data_quality_warnings_tags": FIBER_QUALITY_FACET_NAME,
+                    "data_quality_tags": {"$each": facets},
+                    "data_quality_warnings_tags": {"$each": facets},
                 }
             },
         )
-    logger.info(
-        "Quality facet {} added on {} products".format(FIBER_QUALITY_FACET_NAME, added)
-    )
+    logger.info("Fiber quality facets added on {} products".format(added))
