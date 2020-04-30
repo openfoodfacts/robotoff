@@ -11,7 +11,7 @@ from robotoff.utils.types import JSONType
     [
         ("valeurs nutritionnelles", {"nutrition_values": [{"languages": ["fr"]}]}),
         ("fibers", {"fiber": [{"languages": ["en"]}]}),
-        ("fibres: 0.5g", {"fiber": [{"languages": ["en", "fr"]}]}),
+        ("fibres: 0.5g", {"fiber": [{"languages": ["en", "fr", "it"]}]}),
         ("ballaststoffe 5g", {"fiber": [{"languages": ["de"]}]}),
         (
             " gemiddelde waarden per 100 g",
@@ -19,6 +19,10 @@ from robotoff.utils.types import JSONType
         ),
         ("calories: 252kJ", {"energy": [{"languages": ["fr", "en"]}]}),
         ("waarvan verzadigde", {"saturated_fat": [{"languages": ["nl"]}]}),
+        (
+            "Sale - Salt 0,210 g",
+            {"salt": [{"languages": ["it"]}, {"languages": ["en"]}]},
+        ),
         ("acides gras saturés", {"saturated_fat": [{"languages": ["fr"]}]}),
         (
             "acides gras saturés 3.8g waarvan verzadigde",
