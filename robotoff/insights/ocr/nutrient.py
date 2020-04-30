@@ -5,7 +5,7 @@ from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_t
 from robotoff.utils.types import JSONType
 
 
-EXTRACTOR_VERSION = "1"
+EXTRACTOR_VERSION = "2"
 
 
 NutrientMentionType = Tuple[str, List[str]]
@@ -118,9 +118,11 @@ def generate_nutrient_regex(
 
 
 def generate_nutrient_mention_regex(nutrient_mentions: List[NutrientMentionType]):
-    nutrient_names = [x[0] for x in nutrient_mentions]
-    nutrient_names_str = "|".join(nutrient_names)
-    return re.compile(r"(?<!\w)({})(?!\w)".format(nutrient_names_str))
+    sub_re = "|".join(
+        r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
+        for i, (name, lang) in enumerate(nutrient_mentions)
+    )
+    return re.compile(r"(?<!\w){}(?!\w)".format(sub_re))
 
 
 NUTRIENT_VALUES_REGEX = {
@@ -132,7 +134,7 @@ NUTRIENT_VALUES_REGEX = {
     for nutrient, units in NUTRIENT_UNITS.items()
 }
 
-NUTRIENT_MENTIONS_REGEX = {
+NUTRIENT_MENTIONS_REGEX: Dict[str, OCRRegex] = {
     nutrient: OCRRegex(
         generate_nutrient_mention_regex(NUTRIENT_MENTION[nutrient]),
         field=OCRField.full_text_contiguous,
@@ -181,8 +183,19 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Dict]:
 
         for match in ocr_regex.regex.finditer(text):
             nutrients.setdefault(regex_code, [])
+            group_dict = {k: v for k, v in match.groupdict().items() if v is not None}
+
+            languages: List[str] = []
+            if group_dict:
+                languages_raw = list(group_dict.keys())[0]
+                languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")
+
             nutrients[regex_code].append(
-                {"raw": match.group(0), "span": list(match.span())}
+                {
+                    "raw": match.group(0),
+                    "span": list(match.span()),
+                    "languages": languages,
+                }
             )
 
     if not nutrients:
