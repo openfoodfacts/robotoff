@@ -17,3 +17,4 @@ class InsightType(Enum):
     packaging = 13
     location = 14
     nutrient_mention = 15
+    image_lang = 16
