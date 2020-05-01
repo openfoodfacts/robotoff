@@ -104,8 +104,7 @@ class ProductInsight(BaseModel):
 
     @classmethod
     def create_from_latent(cls, latent_insight: "LatentProductInsight", **kwargs):
-        values: JSONType = list(latent_insight.dicts())[0]
-        updated_values = {**values, **kwargs}
+        updated_values = {**latent_insight.__data__, **kwargs}
         return cls.create(**updated_values)
 
 
