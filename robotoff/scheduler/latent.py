@@ -49,13 +49,16 @@ def generate_fiber_quality_facet():
         product = product_store.get_product(
             barcode, ["nutriments", "data_quality_tags", "images"]
         )
+
+        if product is None:
+            continue
+
         nutriments = product.get("nutriments", {})
         data_quality_tags = product.get("data_quality_tags", {})
         images = product.get("images", {})
 
         if (
-            product is None
-            or not is_valid_image(images, latent_insight.source_image)
+            not is_valid_image(images, latent_insight.source_image)
             or "fiber" in nutriments
             or "fiber_prepared" in nutriments
         ):
