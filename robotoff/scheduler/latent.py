@@ -94,7 +94,7 @@ def generate_fiber_quality_facet():
 
 
 def generate_nutrition_image_insights():
-    logger.info("Startin nutrition image insight generation")
+    logger.info("Starting nutrition image insight generation")
     product_store: DBProductStore = get_product_store()
     added = 0
     seen_set: Set[str] = set()
