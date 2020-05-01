@@ -1,4 +1,5 @@
 from typing import Dict, List, Set
+import uuid
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import LatentProductInsight, ProductInsight
@@ -136,7 +137,14 @@ def generate_nutrition_image_insights():
                     .count()
                 ):
                     ProductInsight.create_from_latent(
-                        latent_insight, type=InsightType.nutrition_image, value_tag=lang
+                        latent_insight,
+                        type=InsightType.nutrition_image.name,
+                        value_tag=lang,
+                        data={
+                            "from_latent": str(latent_insight.id),
+                            "languages": nutrition_image_langs,
+                        },
+                        id=str(uuid.uuid4()),
                     )
                     added += 1
 
