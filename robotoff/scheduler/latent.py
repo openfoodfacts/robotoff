@@ -111,15 +111,18 @@ def generate_nutrition_image_insights():
         if barcode in seen_set:
             continue
 
+        mentions = latent_insight.data["mentions"]
+        nutrition_image_langs = find_nutrition_image_lang(mentions)
+
+        if not nutrition_image_langs:
+            continue
+
         product = product_store.get_product(barcode, ["images"])
 
         if product is None:
             continue
 
-        mentions = latent_insight.data["mentions"]
         images = product.get("images", {})
-
-        nutrition_image_langs = find_nutrition_image_lang(mentions)
 
         if not has_nutrition_image(images):
             for lang in nutrition_image_langs:
