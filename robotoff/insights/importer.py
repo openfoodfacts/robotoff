@@ -87,14 +87,18 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
                 # if valid field is absent, suppose all insights are valid
                 # (i.e: spellcheck)
                 valid = insight.pop("valid", True)
+                latent_insight = generate_latent_insight(insight, valid)
+                latent_exist = exist_latent(latent_insight)
 
                 if valid:
                     insight_batch.append(insight)
                     # if insight is valid, always add it to latent insights
-                    latent_batch.append(generate_latent_insight(insight, valid))
-                elif latent:
+                    if not latent_exist:
+                        latent_batch.append(latent_insight)
+
+                elif latent and not latent_exist:
                     # invalid insight, only import is as latent if latent = True
-                    latent_batch.append(generate_latent_insight(insight, valid))
+                    latent_batch.append(latent_insight)
 
             inserted += batch_insert(ProductInsight, insight_batch, 50)
             batch_insert(LatentProductInsight, latent_batch, 50)
