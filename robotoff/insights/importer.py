@@ -53,6 +53,17 @@ def generate_latent_insight(insight: JSONType, valid: bool) -> JSONType:
     return insight
 
 
+def exist_latent(latent_insight: JSONType) -> bool:
+    return LatentProductInsight.exists(
+        barcode=latent_insight["barcode"],
+        insight_type=latent_insight["type"],
+        server_domain=latent_insight["server_domain"],
+        value_tag=latent_insight.get("value_tag"),
+        value=latent_insight.get("value"),
+        source_image=latent_insight.get("source_image"),
+    )
+
+
 class BaseInsightImporter(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store

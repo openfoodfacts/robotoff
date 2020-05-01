@@ -128,6 +128,29 @@ class LatentProductInsight(BaseModel):
         index=True,
     )
 
+    @classmethod
+    def exists(
+        cls,
+        barcode: str,
+        insight_type: str,
+        server_domain: str,
+        value_tag: Optional[str] = None,
+        value: Optional[str] = None,
+        source_image: Optional[str] = None,
+    ) -> bool:
+        return bool(
+            LatentProductInsight.select()
+            .where(
+                LatentProductInsight.barcode == barcode,
+                LatentProductInsight.type == insight_type,
+                LatentProductInsight.server_domain == server_domain,
+                LatentProductInsight.value_tag == value_tag,
+                LatentProductInsight.value == value,
+                LatentProductInsight.source_image == source_image,
+            )
+            .count()
+        )
+
 
 class UserAnnotation(BaseModel):
     insight = peewee.ForeignKeyField(
