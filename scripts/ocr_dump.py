@@ -1,6 +1,12 @@
 import gzip
 import json
+import os
 import pathlib
+
+
+def is_valid_dir(product_dir: pathlib.Path) -> bool:
+    return str(product_dir).replace("/", "").isdigit()
+
 
 ROOT_DIR = pathlib.Path("/srv2/off/html/images/products")
 MISSING_JSON_PATH = pathlib.Path("~/missing_json.txt").expanduser()
@@ -11,7 +17,7 @@ added = 0
 
 with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
     for i, image_path in enumerate(ROOT_DIR.glob("**/*.json")):
-        if not image_path.stem.isdigit():
+        if not is_valid_dir(image_path.parent) or not image_path.stem.isdigit():
             continue
 
         json_path = image_path.with_suffix(".json")
@@ -40,6 +46,7 @@ with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
         output_json = {
             "source": str(image_path)[30:],
             "content": data,
+            "created_at": os.path.getmtime(str(image_path)),
         }
         output_f.write(json.dumps(output_json) + "\n")
         added += 1
