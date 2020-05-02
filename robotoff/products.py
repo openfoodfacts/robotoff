@@ -22,6 +22,15 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
+def get_image_id(image_path: str) -> Optional[str]:
+    image_id = pathlib.Path(image_path).stem
+
+    if image_id.isdigit():
+        return image_id
+
+    return None
+
+
 def is_valid_image(images: JSONType, image_path: str) -> bool:
     image_id = pathlib.Path(image_path).stem
     if not image_id.isdigit():

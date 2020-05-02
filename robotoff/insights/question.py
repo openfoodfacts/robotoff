@@ -255,6 +255,26 @@ class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
         return None
 
 
+class NutritionImageQuestionFormatter(QuestionFormatter):
+    question = "Is this image a nutrition image for this language?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
 def get_display_image(source_image: str) -> str:
     image_path = pathlib.Path(source_image)
 
@@ -272,6 +292,7 @@ class QuestionFormatterFactory:
         InsightType.product_weight.name: ProductWeightQuestionFormatter,
         InsightType.brand.name: BrandQuestionFormatter,
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
+        InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
     }
 
     @classmethod

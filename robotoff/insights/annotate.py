@@ -19,8 +19,10 @@ from robotoff.off import (
     add_store,
     add_packaging,
     save_ingredients,
+    select_rotate_image,
     OFFAuthentication,
 )
+from robotoff.products import get_image_id
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -360,6 +362,32 @@ class PackagingAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class NutritionImageAnnotator(InsightAnnotator):
+    def update_product(
+        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+    ) -> AnnotationResult:
+        product = get_product(insight.barcode, ["code"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        image_id = get_image_id(insight.source_image or "")
+
+        if not image_id:
+            return AnnotationResult(
+                status="error_invalid_image", description="the image is invalid",
+            )
+        image_key = "nutrition_{}".format(insight.value_tag)
+        select_rotate_image(
+            barcode=insight.barcode,
+            image_id=image_id,
+            image_key=image_key,
+            server_domain=insight.server_domain,
+            auth=auth,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+
 class InsightAnnotatorFactory:
     mapping = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator(),
@@ -371,6 +399,7 @@ class InsightAnnotatorFactory:
         InsightType.brand.name: BrandAnnotator(),
         InsightType.store.name: StoreAnnotator(),
         InsightType.packaging.name: PackagingAnnotator(),
+        InsightType.nutrition_image.name: NutritionImageAnnotator(),
     }
 
     @classmethod
