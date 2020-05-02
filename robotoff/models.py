@@ -99,6 +99,7 @@ class ProductInsight(BaseModel):
                 "type": self.type,
                 "barcode": self.barcode,
                 "countries": self.countries,
+                "source_image": self.source_image,
                 **self.data,
             }
 
