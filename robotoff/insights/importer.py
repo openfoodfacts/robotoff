@@ -79,6 +79,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         insights = self.process_insights(data, server_domain, automatic)
         insights = self.add_fields(insights, timestamp, server_domain)
         inserted = 0
+        latent_inserted = 0
 
         for raw_insight_batch in chunked(insights, 50):
             insight_batch = []
@@ -101,8 +102,9 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
                     latent_batch.append(latent_insight)
 
             inserted += batch_insert(ProductInsight, insight_batch, 50)
-            batch_insert(LatentProductInsight, latent_batch, 50)
+            latent_inserted += batch_insert(LatentProductInsight, latent_batch, 50)
 
+        logger.info("Latent insight inserted: {}".format(latent_inserted))
         return inserted
 
     @abc.abstractmethod
