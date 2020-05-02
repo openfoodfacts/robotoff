@@ -125,7 +125,7 @@ def ocr_iter_jsonl(stream: TextIO) -> Iterable[Tuple[Optional[str], Dict]]:
         json_data = json.loads(line)
 
         if "content" in json_data:
-            source = json_data["source"].replace("//", "/")
+            source = json_data["source"].replace("//", "/").replace(".json", ".jpg")
             yield source, json_data["content"]
 
 

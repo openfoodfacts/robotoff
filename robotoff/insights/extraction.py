@@ -39,6 +39,7 @@ IMAGE_IMPORT_INSIGHT_TYPES = (
     InsightType.nutrient.name,
     InsightType.nutrient_mention.name,
     InsightType.image_lang.name,
+    InsightType.image_orientation.name,
 )
 
 

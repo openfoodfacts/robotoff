@@ -1,15 +1,17 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 import uuid
 
 from robotoff.insights._enum import InsightType
 from robotoff.models import LatentProductInsight, ProductInsight
 from robotoff.products import (
+    get_image_id,
     has_nutrition_image,
     is_nutrition_image,
     is_valid_image,
     get_product_store,
     DBProductStore,
 )
+from robotoff import settings
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -94,8 +96,40 @@ def generate_fiber_quality_facet():
     logger.info("Fiber quality facets added on {} products".format(added))
 
 
+def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
+    for insight in (
+        LatentProductInsight.select(
+            LatentProductInsight.data, LatentProductInsight.source_image
+        )
+        .where(
+            LatentProductInsight.barcode == barcode,
+            LatentProductInsight.type == InsightType.image_orientation.name,
+            LatentProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
+            LatentProductInsight.source_image.is_null(False),
+        )
+        .iterator()
+    ):
+        insight_image_id = get_image_id(insight.source_image)  # type: ignore
+
+        if image_id is not None and insight_image_id == image_id:
+            return insight.data.get("rotation", 0)
+
+    return None
+
+
 def generate_nutrition_image_insights():
     logger.info("Starting nutrition image insight generation")
+    logger.info("Deleting previous nutrition image insights...")
+    deleted = (
+        ProductInsight.delete()
+        .where(
+            ProductInsight.annotation.is_null(),
+            ProductInsight.annotation.type == InsightType.nutrition_image.name,
+            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
+        )
+        .execute()
+    )
+    logger.info("{} insights deleted".format(deleted))
     product_store: DBProductStore = get_product_store()
     added = 0
     seen_set: Set[str] = set()
@@ -126,6 +160,9 @@ def generate_nutrition_image_insights():
         images = product.get("images", {})
 
         if not has_nutrition_image(images):
+            image_id = get_image_id(latent_insight.source_image)
+            rotation = get_image_orientation(barcode, image_id)
+
             for lang in nutrition_image_langs:
                 if not (
                     ProductInsight.select()
@@ -133,6 +170,7 @@ def generate_nutrition_image_insights():
                         ProductInsight.type == InsightType.nutrition_image.name,
                         ProductInsight.barcode == barcode,
                         ProductInsight.value_tag == lang,
+                        ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
                     )
                     .count()
                 ):
@@ -143,6 +181,7 @@ def generate_nutrition_image_insights():
                         data={
                             "from_latent": str(latent_insight.id),
                             "languages": nutrition_image_langs,
+                            "rotation": rotation or None,
                         },
                         id=str(uuid.uuid4()),
                     )

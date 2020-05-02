@@ -104,7 +104,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             inserted += batch_insert(ProductInsight, insight_batch, 50)
             latent_inserted += batch_insert(LatentProductInsight, latent_batch, 50)
 
-        logger.info("Latent insight inserted: {}".format(latent_insight))
+        logger.info("Latent insight inserted: {}".format(latent_inserted))
         return inserted
 
     @abc.abstractmethod
@@ -862,6 +862,7 @@ class InsightImporterFactory:
         InsightType.nutrient_mention.name: LatentInsightImporter,
         InsightType.location.name: LatentInsightImporter,
         InsightType.image_lang.name: LatentInsightImporter,
+        InsightType.image_orientation.name: LatentInsightImporter,
     }
 
     @classmethod
