@@ -124,7 +124,7 @@ def generate_nutrition_image_insights():
         ProductInsight.delete()
         .where(
             ProductInsight.annotation.is_null(),
-            ProductInsight.annotation.type == InsightType.nutrition_image.name,
+            ProductInsight.type == InsightType.nutrition_image.name,
             ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
         )
         .execute()
