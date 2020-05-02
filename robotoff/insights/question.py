@@ -5,7 +5,8 @@ from typing import Dict, List, Optional
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
-from robotoff.off import get_product
+from robotoff.mongo import MONGO_CLIENT_CACHE
+from robotoff.off import generate_image_url, get_product
 from robotoff.taxonomy import TaxonomyType, Taxonomy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
@@ -73,6 +74,38 @@ class AddBinaryQuestion(Question):
 
         if self.source_image_url:
             serial["source_image_url"] = self.source_image_url
+
+        return serial
+
+
+class IngredientSpellcheckQuestion(Question):
+    def __init__(self, insight: ProductInsight, image_url: Optional[str]):
+        self.insight_id: str = str(insight.id)
+        self.insight_type: str = str(insight.type)
+        self.barcode: str = insight.barcode
+        self.corrected: str = insight.data["corrected"]
+        self.text: str = insight.data["text"]
+        self.corrections: List[JSONType] = insight.data["corrections"]
+        self.lang: str = insight.data["lang"]
+        self.image_url: Optional[str] = image_url
+
+    def get_type(self):
+        return "ingredient-spellcheck"
+
+    def serialize(self) -> JSONType:
+        serial = {
+            "barcode": self.barcode,
+            "type": self.get_type(),
+            "insight_id": self.insight_id,
+            "insight_type": self.insight_type,
+            "text": self.text,
+            "corrected": self.corrected,
+            "corrections": self.corrections,
+            "lang": self.lang,
+        }
+
+        if self.image_url:
+            serial["image_url"] = self.image_url
 
         return serial
 
@@ -198,6 +231,50 @@ class BrandQuestionFormatter(QuestionFormatter):
         )
 
 
+class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        image_url = self.get_ingredient_image_url(insight.barcode, lang)
+        return IngredientSpellcheckQuestion(insight=insight, image_url=image_url)
+
+    def get_ingredient_image_url(self, barcode: str, lang: str) -> Optional[str]:
+        mongo_client = MONGO_CLIENT_CACHE.get()
+        collection = mongo_client.off.products
+        product = collection.find_one({"code": barcode}, ["images"])
+
+        if product is None:
+            return None
+
+        images = product.get("images", {})
+        field_name = "ingredients_{}".format(lang)
+
+        if field_name in images:
+            image = images[field_name]
+            image_name = "ingredients_{}.{}.full".format(lang, image["rev"])
+            return generate_image_url(barcode, image_name)
+
+        return None
+
+
+class NutritionImageQuestionFormatter(QuestionFormatter):
+    question = "Is this image a nutrition image for this language?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
 def get_display_image(source_image: str) -> str:
     image_path = pathlib.Path(source_image)
 
@@ -214,6 +291,8 @@ class QuestionFormatterFactory:
         InsightType.label.name: LabelQuestionFormatter,
         InsightType.product_weight.name: ProductWeightQuestionFormatter,
         InsightType.brand.name: BrandQuestionFormatter,
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
+        InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
     }
 
     @classmethod
@@ -223,3 +302,12 @@ class QuestionFormatterFactory:
     @classmethod
     def get_available_types(cls) -> List[str]:
         return list(cls.formatters.keys())
+
+    @classmethod
+    def get_default_types(cls) -> List[str]:
+        return [
+            InsightType.category.name,
+            InsightType.label.name,
+            InsightType.product_weight.name,
+            InsightType.brand.name,
+        ]

@@ -23,3 +23,11 @@ msgstr ""
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
 msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does this weight match the weight displayed on the product?"
+msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image a nutrition image for this language?"
+msgstr ""

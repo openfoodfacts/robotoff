@@ -1,6 +1,7 @@
-from enum import Enum
+from enum import Enum, unique
 
 
+@unique
 class InsightType(Enum):
     ingredient_spellcheck = 1
     packager_code = 2
@@ -16,3 +17,6 @@ class InsightType(Enum):
     trace = 12
     packaging = 13
     location = 14
+    nutrient_mention = 15
+    image_lang = 16
+    nutrition_image = 17

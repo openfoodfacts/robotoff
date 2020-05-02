@@ -12,8 +12,7 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Crowdin-Project: openfoodfacts\n"
-"X-Crowdin-Language: zh-TW\n"
-"X-Crowdin-File: /master/i18n/robotoff.pot\n"
+"X-Crowdin-Language: zh-HK\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"

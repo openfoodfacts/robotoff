@@ -27,6 +27,7 @@ def correct_ingredient(
 
         if product is None:
             print("Product not found: {}".format(barcode))
+            continue
 
         ingredients = product[ingredient_field]
 

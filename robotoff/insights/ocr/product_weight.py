@@ -56,7 +56,7 @@ def is_valid_weight(weight_value) -> bool:
     try:
         weight_value_float = float(weight_value)
     except ValueError:
-        logger.warn("Weight value is not a float: {}" "".format(weight_value))
+        logger.warning("Weight value is not a float: {}" "".format(weight_value))
         return False
 
     if weight_value_float <= 0:

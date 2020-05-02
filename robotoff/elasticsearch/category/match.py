@@ -42,7 +42,7 @@ def match(client, query: str, lang: str):
 
 def generate_request(query: str, lang: str):
     return {
-        "query": {"match_phrase": {"{}:name.stemmed".format(lang): {"query": query,}}}
+        "query": {"match_phrase": {"{}:name.stemmed".format(lang): {"query": query}}}
     }
 
 

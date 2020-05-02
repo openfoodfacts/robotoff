@@ -57,13 +57,21 @@ logger = get_logger(__name__)
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 
-def get_product_update_url(server_domain: str) -> str:
-    server_domain = server_domain.replace("api", "world")
-    return "https://{}/cgi/product_jqm2.pl".format(server_domain)
+def get_product_update_url(server: Union[ServerType, str]) -> str:
+    return "{}/cgi/product_jqm2.pl".format(get_base_url(server))
+
+
+def get_product_image_select(server: Union[ServerType, str]) -> str:
+    return "{}/cgi/product_image_crop.pl".format(get_base_url(server))
+
+
+def get_api_product_url(server: Union[ServerType, str]) -> str:
+    return "{}/api/v0/product".format(get_base_url(server))
 
 
 def get_base_url(server: Union[ServerType, str]) -> str:
     if isinstance(server, str):
+        server = server.replace("api", "world")
         return "https://{}".format(server)
     else:
         if server not in API_URLS:
@@ -72,11 +80,7 @@ def get_base_url(server: Union[ServerType, str]) -> str:
         return API_URLS[server]
 
 
-def get_api_product_url(server: Union[ServerType, str]) -> str:
-    return "{}/api/v0/product".format(get_base_url(server))
-
-
-def get_server_type(server_domain: str) -> Optional[ServerType]:
+def get_server_type(server_domain: str) -> ServerType:
     """Return the server type (off, obf, opff, opf) associated with the server
     domain, or None if the server_domain was not recognized."""
     server_split = server_domain.split(".")
@@ -93,8 +97,7 @@ def get_server_type(server_domain: str) -> Optional[ServerType]:
         elif domain == "openproductsfacts":
             return ServerType.opf
 
-    logger.warning("unknown server domain: {}".format(server_domain))
-    return None
+    raise ValueError("unknown server domain: {}".format(server_domain))
 
 
 def split_barcode(barcode: str) -> List[str]:
@@ -342,6 +345,11 @@ def update_product(
         if comment:
             params["comment"] = comment + " (automated edit)"
 
+    if cookies is None and not params.get("password"):
+        raise ValueError(
+            "a password or a session cookie is required to update a product"
+        )
+
     request_auth: Optional[Tuple[str, str]] = None
     if server_domain.endswith("openfoodfacts.net"):
         # dev environment requires authentication
@@ -372,3 +380,57 @@ def move_to(barcode: str, to: ServerType) -> bool:
     r = http_session.get(url, params=params)
     data = r.json()
     return data["status"] == 1
+
+
+def select_rotate_image(
+    barcode: str,
+    image_id: str,
+    image_key: Optional[str] = None,
+    rotate: Optional[int] = None,
+    server_domain: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+):
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    url = get_product_image_select(server_domain)
+    cookies = None
+    params = {
+        "code": barcode,
+        "imgid": image_id,
+    }
+
+    if rotate is not None:
+        if rotate not in (90,):
+            raise ValueError("invalid value for rotation angle: {}".format(rotate))
+
+        params["angle"] = str(rotate)
+
+    if image_key is not None:
+        params["id"] = image_key
+
+    if auth is not None:
+        if auth.session_cookie:
+            cookies = {
+                "session": auth.session_cookie,
+            }
+        elif auth.username and auth.password:
+            params["user_id"] = auth.username
+            params["password"] = auth.password
+    else:
+        params.update(AUTH_DICT)
+
+    if cookies is None and not params.get("password"):
+        raise ValueError(
+            "a password or a session cookie is required to select an image"
+        )
+
+    request_auth: Optional[Tuple[str, str]] = None
+    if server_domain.endswith("openfoodfacts.net"):
+        # dev environment requires authentication
+        request_auth = ("off", "off")
+
+    r = http_session.post(url, data=params, auth=request_auth, cookies=cookies)
+
+    r.raise_for_status()
+    return r

@@ -18,10 +18,12 @@ from robotoff.off import (
     add_brand,
     add_store,
     add_packaging,
+    save_ingredients,
+    select_rotate_image,
     OFFAuthentication,
 )
+from robotoff.products import get_image_id
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -184,6 +186,38 @@ class LabelAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class IngredientSpellcheckAnnotator(InsightAnnotator):
+    def update_product(
+        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+    ) -> AnnotationResult:
+        barcode = insight.barcode
+        lang = insight.data["lang"]
+        field_name = "ingredients_text_{}".format(lang)
+        product = get_product(barcode, fields=[field_name])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        original_ingredients = insight.data["text"]
+        corrected = insight.data["corrected"]
+        expected_ingredients = product.get(field_name)
+
+        if expected_ingredients != original_ingredients:
+            logger.warning(
+                "ingredients have changed since spellcheck insight "
+                "creation (product {})".format(barcode)
+            )
+            return AnnotationResult(
+                status=AnnotationStatus.error_updated_product.name,
+                description="the ingredient list has been updated since spellcheck",
+            )
+
+        save_ingredients(
+            barcode, corrected, lang=lang, insight_id=insight.id, auth=auth,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+
 class CategoryAnnotator(InsightAnnotator):
     def update_product(
         self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
@@ -328,8 +362,35 @@ class PackagingAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class NutritionImageAnnotator(InsightAnnotator):
+    def update_product(
+        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+    ) -> AnnotationResult:
+        product = get_product(insight.barcode, ["code"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        image_id = get_image_id(insight.source_image or "")
+
+        if not image_id:
+            return AnnotationResult(
+                status="error_invalid_image", description="the image is invalid",
+            )
+        image_key = "nutrition_{}".format(insight.value_tag)
+        select_rotate_image(
+            barcode=insight.barcode,
+            image_id=image_id,
+            image_key=image_key,
+            server_domain=insight.server_domain,
+            auth=auth,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+
 class InsightAnnotatorFactory:
     mapping = {
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator(),
         InsightType.packager_code.name: PackagerCodeAnnotator(),
         InsightType.label.name: LabelAnnotator(),
         InsightType.category.name: CategoryAnnotator(),
@@ -338,6 +399,7 @@ class InsightAnnotatorFactory:
         InsightType.brand.name: BrandAnnotator(),
         InsightType.store.name: StoreAnnotator(),
         InsightType.packaging.name: PackagingAnnotator(),
+        InsightType.nutrition_image.name: NutritionImageAnnotator(),
     }
 
     @classmethod

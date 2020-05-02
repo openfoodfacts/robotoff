@@ -15,15 +15,12 @@ from robotoff.utils.text import strip_accents_ascii
 from robotoff.utils.types import JSONType
 
 
-logger = get_logger(__name__)
-
-
 @dataclasses.dataclass(frozen=True)
 class City:
     """A city, storing its name, postal code and GPS coordinates."""
 
     name: str
-    """The city name, lower case, no accents, with special characters replaced with 
+    """The city name, lower case, no accents, with special characters replaced with
     spaces."""
     postal_code: str
     """The city's postal code. The format depends on the country."""
@@ -52,6 +49,9 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
 
     Returns:
         set of City: List of all French cities as `City` objects.
+
+    Raises:
+        ValueError: if a postal code is not a valid French postal code (5 digits).
     """
     # JSON file contains a lot of repeated data. An alternative could be to use the
     # CSV file.
@@ -66,14 +66,17 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
     cities = []
     for item in json_data:
         city_data = item["fields"]
+        name = city_data["nom_de_la_commune"].lower()
+        postal_code = city_data["code_postal"]
+        if not len(postal_code) == 5 or not postal_code.isdigit():
+            raise ValueError(
+                "{!r}, invalid FR postal code for city {!r}, must be 5-digits "
+                "string".format(postal_code, name)
+            )
         coords = city_data.get("coordonnees_gps")
         if coords is not None:
             coords = tuple(coords)
-        cities.append(
-            City(
-                city_data["nom_de_la_commune"].lower(), city_data["code_postal"], coords
-            )
-        )
+        cities.append(City(name, postal_code, coords))
 
     # Remove duplicates
     return set(cities)
@@ -116,18 +119,23 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_addresses(self, ocr_result: OCRResult) -> List[JSONType]:
+    def extract_addresses(self, content: Union[str, OCRResult]) -> List[JSONType]:
         """Extract addresses from the given OCR result.
 
         Args:
-            ocr_result (OCRResult): The OCR result to process.
+            content (OCRResult or str): a string or the OCR result to process.
 
         Returns:
             list of JSONType: List of addresses extracted from the text. Each entry
             is a dictionary with the items: country_code (always "fr"), city_name,
             postal_code and text_extract.
         """
-        text = self.get_text(ocr_result)
+        if isinstance(content, OCRResult):
+            text = self.get_text(content)
+        else:
+            text = content
+
+        text = self.normalize_text(text)
         city_matches = self.find_city_names(text)
 
         locations = []
@@ -162,15 +170,19 @@ class AddressExtractor:
         Returns:
             str: The text extracted and prepared.
         """
-        text = ocr_result.get_full_text(lowercase=True)
+        text = ocr_result.get_full_text()
         if text is None:
             # Using `OCRResult.text_annotations` directly instead of
             # `OCRResult.get_text_annotations()` because the latter contains
             # the text duplicated
-            text = ocr_result.text_annotations[0].text.lower()
-        text = strip_accents_ascii(text)
-        text = text.replace("'", " ").replace("-", " ")
+            text = ocr_result.text_annotations[0].text
         return text
+
+    @staticmethod
+    def normalize_text(text: str) -> str:
+        text = text.lower()
+        text = strip_accents_ascii(text)
+        return text.replace("'", " ").replace("-", " ")
 
     def find_city_names(self, text: str) -> List[Tuple[City, int, int]]:
         """Find all cities from the search set in the text.
@@ -209,7 +221,11 @@ class AddressExtractor:
             in the text. If it was not found, returns None.
         """
         if not city.postal_code.isdigit():
-            raise ValueError(f"postal code contains non-digit characters: {city}")
+            logger = get_logger(
+                "{}.{}".format(self.__module__, self.__class__.__name__)
+            )
+            logger.error("postal code contains non-digit characters: %s", city)
+            return None
         pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
 
         sub_start = max(0, city_start - self.postal_code_search_distance)

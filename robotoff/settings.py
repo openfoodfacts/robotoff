@@ -86,6 +86,7 @@ OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
+OCR_LABEL_WHITELIST_DATA_PATH = OCR_DATA_DIR / "label_whitelist.txt"
 OCR_FISHING_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_flashtext.txt"
 OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / "brand_taxonomy_blacklist.txt"
 OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / "image_flag_beauty.txt"
@@ -124,3 +125,6 @@ INFLUXDB_PORT = 8086
 INFLUXDB_DB_NAME = "off_metrics"
 INFLUXDB_USERNAME = "off_metrics"
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
+
+TEST_DIR = PROJECT_DIR / "tests"
+TEST_DATA_DIR = TEST_DIR / "data"

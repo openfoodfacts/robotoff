@@ -1,5 +1,6 @@
 if __name__ == "__main__":
     import pathlib
+    import sys
     from typing import Optional
 
     import click
@@ -31,19 +32,48 @@ if __name__ == "__main__":
 
         print(json.dumps(results, indent=4))
 
-    @click.command()
-    @click.argument("input_")
+    @click.command(
+        help="""
+            Generate OCR insights of the requested type.
+
+            \b
+            SOURCE can be either:
+            * the path to a JSON file, a (gzipped-)JSONL file, or a directory
+              containing JSON files
+            * a barcode
+            * the '-' character: input is read from stdin and assumed to be JSONL
+
+            Output is JSONL, each line containing the insights for one document.
+        """
+    )
+    @click.argument("source")
     @click.option("--insight-type", "-t", required=True)
-    @click.option("--output", "-o")
-    def generate_ocr_insights(input_: str, insight_type: str, output: str):
+    @click.option(
+        "--output",
+        "-o",
+        help="file to write output to, stdout if not specified",
+        type=click.Path(dir_okay=False, writable=True),
+    )
+    @click.option(
+        "--keep-empty/--no-keep-empty",
+        default=False,
+        help="keep documents with empty insight",
+        show_default=True,
+    )
+    def generate_ocr_insights(
+        source: str, insight_type: str, output: str, keep_empty: bool
+    ):
+        from typing import TextIO, Union
         from robotoff.cli import insights
         from robotoff.utils import get_logger
 
+        input_: Union[str, TextIO] = sys.stdin if source == "-" else source
+
         get_logger()
-        insights.run_from_ocr_archive(input_, insight_type, output)
+        insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
 
     @click.command()
-    @click.option("--insight-type")
+    @click.option("--insight-type", "-t")
     @click.option("--country")
     def annotate(insight_type: Optional[str], country: Optional[str]):
         from robotoff.cli import annotate as annotate_
@@ -51,7 +81,7 @@ if __name__ == "__main__":
         annotate_.run(insight_type, country)
 
     @click.command()
-    @click.option("--insight-type", required=True)
+    @click.option("--insight-type", "-t", required=True)
     @click.option("--dry/--no-dry", default=True)
     @click.option("-f", "--filter", "filter_clause")
     def batch_annotate(insight_type: str, dry: bool, filter_clause: str):
@@ -99,11 +129,15 @@ if __name__ == "__main__":
         )
 
     @click.command()
-    @click.argument("output", type=pathlib.Path)
+    @click.argument("output")
+    @click.option("--index-name", default="product")
     @click.option("--confidence", type=float, default=1)
     @click.option("--max-errors", type=int)
     def generate_spellcheck_insights(
-        output: str, confidence: float, max_errors: Optional[int] = None
+        output: str,
+        index_name: str,
+        confidence: float,
+        max_errors: Optional[int] = None,
     ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
@@ -169,14 +203,16 @@ if __name__ == "__main__":
 
     @click.command()
     @click.argument("input_", type=pathlib.Path)
-    @click.option("--insight-type", required=True)
+    @click.option("--insight-type", "-t", required=True)
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
+    @click.option("--latent", is_flag=True)
     def import_insights(
         input_: pathlib.Path,
         insight_type: str,
         server_domain: Optional[str],
         batch_size: int,
+        latent: bool,
     ):
         from robotoff.cli import insights
         from robotoff import settings
@@ -186,9 +222,23 @@ if __name__ == "__main__":
         logger.info("Importing insights from {}".format(input_))
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
         imported = insights.import_insights(
-            input_, insight_type, server_domain, batch_size
+            input_, insight_type, server_domain, batch_size, latent
         )
         logger.info("{} insights imported".format(imported))
+
+    @click.command()
+    @click.option("--insight-type", "-t", required=True)
+    @click.option("--delta", type=int, default=1)
+    def apply_insights(
+        insight_type: str, delta: int,
+    ):
+        import datetime
+        from robotoff.cli import insights
+        from robotoff.utils import get_logger
+
+        logger = get_logger()
+        logger.info("Applying {} insights".format(insight_type))
+        insights.apply_insights(insight_type, datetime.timedelta(days=delta))
 
     @click.command()
     @click.option("--index/--no-index", default=False)
@@ -239,6 +289,7 @@ if __name__ == "__main__":
     cli.add_command(download_dataset)
     cli.add_command(categorize)
     cli.add_command(import_insights)
+    cli.add_command(apply_insights)
     cli.add_command(predict_insight)
 
     cli()

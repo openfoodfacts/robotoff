@@ -27,6 +27,20 @@ DEFAULT_INSIGHT_TYPES = (
     InsightType.packaging.name,
 )
 
+IMAGE_IMPORT_INSIGHT_TYPES = (
+    InsightType.label.name,
+    InsightType.packager_code.name,
+    InsightType.product_weight.name,
+    InsightType.image_flag.name,
+    InsightType.expiration_date.name,
+    InsightType.brand.name,
+    InsightType.store.name,
+    InsightType.packaging.name,
+    InsightType.nutrient.name,
+    InsightType.nutrient_mention.name,
+    InsightType.image_lang.name,
+)
+
 
 PRODUCT_NAME_INSIGHT_TYPES = (
     InsightType.label.name,
@@ -57,7 +71,7 @@ def get_insights_from_image(
     barcode: str, image_url: str, ocr_url: str
 ) -> Optional[Dict]:
     try:
-        ocr_insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+        ocr_insights = extract_ocr_insights(ocr_url, IMAGE_IMPORT_INSIGHT_TYPES)
     except requests.exceptions.RequestException as e:
         logger.info("error during OCR JSON download", exc_info=e)
         return None
