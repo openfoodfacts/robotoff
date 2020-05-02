@@ -382,6 +382,7 @@ class NutritionImageAnnotator(InsightAnnotator):
             barcode=insight.barcode,
             image_id=image_id,
             image_key=image_key,
+            rotate=insight.data.get("rotation"),
             server_domain=insight.server_domain,
             auth=auth,
         )
