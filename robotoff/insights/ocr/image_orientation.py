@@ -6,6 +6,8 @@ from robotoff.insights.ocr.dataclass import OCRResult, ImageOrientation
 def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> int:
     if image_orientation == ImageOrientation.up:
         return 0
+    elif image_orientation == ImageOrientation.unknown:
+        return 0
     elif image_orientation == ImageOrientation.left:
         return 90
     elif image_orientation == ImageOrientation.right:
