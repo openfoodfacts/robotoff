@@ -862,6 +862,7 @@ class InsightImporterFactory:
         InsightType.nutrient_mention.name: LatentInsightImporter,
         InsightType.location.name: LatentInsightImporter,
         InsightType.image_lang.name: LatentInsightImporter,
+        InsightType.image_orientation.name: LatentInsightImporter,
     }
 
     @classmethod
