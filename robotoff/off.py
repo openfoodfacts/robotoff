@@ -401,7 +401,7 @@ def select_rotate_image(
     }
 
     if rotate is not None:
-        if rotate not in (90,):
+        if rotate not in (90, 180, 270):
             raise ValueError("invalid value for rotation angle: {}".format(rotate))
 
         params["angle"] = str(rotate)
