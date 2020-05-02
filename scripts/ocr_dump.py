@@ -12,7 +12,7 @@ ROOT_DIR = pathlib.Path("/srv2/off/html/images/products")
 MISSING_JSON_PATH = pathlib.Path("~/missing_json.txt").expanduser()
 JSON_ERROR_PATH = pathlib.Path("~/error_json.txt").expanduser()
 OCR_ERROR_PATH = pathlib.Path("~/ocr_error.txt").expanduser()
-OUTPUT_PATH = pathlib.Path("~/ocr.jsonl.gz").expanduser()
+OUTPUT_PATH = pathlib.Path("/srv2/off/html/data/ocr.jsonl.gz")
 added = 0
 
 with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
