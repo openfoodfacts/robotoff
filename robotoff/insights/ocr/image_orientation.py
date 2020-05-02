@@ -22,10 +22,7 @@ def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[Dict]:
 
     orientation_result = ocr_result.get_orientation()
 
-    if (
-        orientation_result is None
-        or orientation_result.orientation == ImageOrientation.up
-    ):
+    if orientation_result is None:
         return []
 
     insight = orientation_result.to_json()
