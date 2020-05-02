@@ -73,7 +73,7 @@ if __name__ == "__main__":
         insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
 
     @click.command()
-    @click.option("--insight-type")
+    @click.option("--insight-type", "-t")
     @click.option("--country")
     def annotate(insight_type: Optional[str], country: Optional[str]):
         from robotoff.cli import annotate as annotate_
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         annotate_.run(insight_type, country)
 
     @click.command()
-    @click.option("--insight-type", required=True)
+    @click.option("--insight-type", "-t", required=True)
     @click.option("--dry/--no-dry", default=True)
     @click.option("-f", "--filter", "filter_clause")
     def batch_annotate(insight_type: str, dry: bool, filter_clause: str):
@@ -203,10 +203,10 @@ if __name__ == "__main__":
 
     @click.command()
     @click.argument("input_", type=pathlib.Path)
-    @click.option("--insight-type", required=True)
+    @click.option("--insight-type", "-t", required=True)
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
-    @click.option("--latent", type=bool, default=False)
+    @click.option("--latent", is_flag=True)
     def import_insights(
         input_: pathlib.Path,
         insight_type: str,
@@ -227,7 +227,7 @@ if __name__ == "__main__":
         logger.info("{} insights imported".format(imported))
 
     @click.command()
-    @click.option("--insight-type", required=True)
+    @click.option("--insight-type", "-t", required=True)
     @click.option("--delta", type=int, default=1)
     def apply_insights(
         insight_type: str, delta: int,
