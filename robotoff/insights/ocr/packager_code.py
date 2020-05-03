@@ -30,7 +30,7 @@ def process_fr_emb_match(match) -> str:
 
 def process_fsc_match(match) -> str:
     fsc_code = match.group(1)
-    return "FSC-{}".format(fsc_code)
+    return "FSC-{}".format(fsc_code).upper()
 
 
 PACKAGER_CODE: Dict[str, OCRRegex] = {
@@ -41,9 +41,9 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
         processing_func=process_fr_emb_match,
     ),
     "fsc": OCRRegex(
-        re.compile(r"FSC.? (C\d{6})"),
+        re.compile(r"fsc.? ?(c\d{6})"),
         field=OCRField.text_annotations,
-        lowercase=False,
+        lowercase=True,
         processing_func=process_fsc_match,
     ),
     "eu_fr": OCRRegex(
