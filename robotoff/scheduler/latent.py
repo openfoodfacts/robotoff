@@ -112,7 +112,7 @@ def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
         insight_image_id = get_image_id(insight.source_image)  # type: ignore
 
         if image_id is not None and insight_image_id == image_id:
-            return insight.data.get("rotation", 0)
+            return insight.data.get("rotation")
 
     return None
 
@@ -152,6 +152,12 @@ def generate_nutrition_image_insights():
         if not nutrition_image_langs:
             continue
 
+        image_id = get_image_id(latent_insight.source_image)
+        rotation = get_image_orientation(barcode, image_id)
+
+        if rotation is None:
+            continue
+
         product = product_store.get_product(barcode, ["images"])
 
         if product is None:
@@ -160,9 +166,6 @@ def generate_nutrition_image_insights():
         images = product.get("images", {})
 
         if not has_nutrition_image(images):
-            image_id = get_image_id(latent_insight.source_image)
-            rotation = get_image_orientation(barcode, image_id)
-
             for lang in nutrition_image_langs:
                 if not (
                     ProductInsight.select()
