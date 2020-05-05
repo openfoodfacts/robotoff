@@ -17,3 +17,5 @@ docker-compose.production.yml
 *.mo
 .DS_Store
 images
+
+.venv/
