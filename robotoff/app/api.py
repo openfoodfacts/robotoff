@@ -133,31 +133,26 @@ class InsightCollection:
 
 
 class RandomInsightResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         insight_type: Optional[str] = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
         server_domain: Optional[str] = req.get_param("server_domain")
+        count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
 
-        insights = list(
+        keep_types = [insight_type] if insight_type else None
+        insights: List[ProductInsight] = list(
             get_insights(
-                keep_types=[insight_type],
+                keep_types=keep_types,
                 country=country,
                 value_tag=value_tag,
                 order_by="random",
                 server_domain=server_domain,
-                limit=1,
+                limit=count,
             )
         )
 
-        response = {}
-        if not insights:
-            response["status"] = "no_insights"
-        else:
-            response["insight"] = insights[0].serialize()
-            response["status"] = "found"
-
-        resp.media = response
+        resp.media = {"insights": [insight.serialize() for insight in insights]}
 
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
@@ -173,7 +168,7 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     if authorization is not None:
         try:
             username, password = basic_decode(authorization)
-        except BasicAuthDecodeError as e:
+        except BasicAuthDecodeError:
             raise falcon.HTTPUnauthorized(
                 "Invalid authentication, Basic auth expected."
             )
@@ -217,6 +212,10 @@ class IngredientSpellcheckResource:
     def spellcheck(self, req: falcon.Request, resp: falcon.Response):
         text = req.get_param("text")
         barcode = req.get_param("barcode")
+        index_name = req.get_param(
+            "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
+        )
+        confidence = req.get_param_as_float("confidence", default=1.0)
 
         if text is None and barcode is None:
             raise falcon.HTTPBadRequest("text or barcode is required.")
@@ -225,13 +224,15 @@ class IngredientSpellcheckResource:
             product = get_product(barcode) or {}
             text = product.get("ingredients_text_fr")
 
-            if text is None:
+            if not text:
                 resp.media = {
                     "status": "not_found",
                 }
                 return
 
-        corrections = generate_corrections(es_client, text, confidence=1)
+        corrections = generate_corrections(
+            es_client, text, confidence=confidence, index_name=index_name
+        )
         term_corrections = list(
             itertools.chain.from_iterable((c.term_corrections for c in corrections))
         )
@@ -246,6 +247,9 @@ class IngredientSpellcheckResource:
 class NutrientPredictorResource:
     def on_get(self, req, resp):
         ocr_url = req.get_param("ocr_url", required=True)
+
+        if not ocr_url.endswith(".json"):
+            raise falcon.HTTPBadRequest("a JSON file is expected")
 
         try:
             insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
@@ -313,7 +317,7 @@ class CategoryPredictorResource:
                 predicted = filter_blacklisted_categories(predicted)
 
             predicted = [
-                {"category": category, "confidence": confidence,}
+                {"category": category, "confidence": confidence}
                 for category, confidence in predicted
             ]
 
@@ -332,39 +336,6 @@ class UpdateDatasetResource:
     def on_get(self, req, resp):
         resp.media = {
             "etag": get_product_dataset_etag(),
-        }
-
-
-class InsightImporterResource:
-    def on_post(self, req, resp):
-        logger.info("New insight import request")
-        insight_type = req.get_param("type", required=True)
-        server_domain = req.get_param("server_domain", required=True)
-
-        if insight_type not in (t.name for t in InsightType):
-            raise falcon.HTTPBadRequest(
-                description="unknown insight type: " "'{}'".format(insight_type)
-            )
-
-        content = req.get_param("file", required=True)
-
-        logger.info("Insight type: '{}'".format(insight_type))
-
-        lines = [l for l in io.TextIOWrapper(content.file)]
-
-        send_ipc_event(
-            "import_insights",
-            {
-                "insight_type": insight_type,
-                "items": lines,
-                "server_domain": server_domain,
-            },
-        )
-
-        logger.info("Import scheduled")
-
-        resp.media = {
-            "status": "scheduled",
         }
 
 
@@ -480,12 +451,12 @@ class WebhookProductResource:
 
         if action == "updated":
             send_ipc_event(
-                "product_updated", {"barcode": barcode, "server_domain": server_domain,}
+                "product_updated", {"barcode": barcode, "server_domain": server_domain}
             )
 
         elif action == "deleted":
             send_ipc_event(
-                "product_deleted", {"barcode": barcode, "server_domain": server_domain,}
+                "product_deleted", {"barcode": barcode, "server_domain": server_domain}
             )
 
         resp.media = {
@@ -500,7 +471,7 @@ class ProductQuestionsResource:
         lang: str = req.get_param("lang", default="en")
         server_domain: Optional[str] = req.get_param("server_domain")
 
-        keep_types = QuestionFormatterFactory.get_available_types()
+        keep_types = QuestionFormatterFactory.get_default_types()
         insights = list(
             get_insights(
                 barcode=barcode,
@@ -560,7 +531,7 @@ def get_questions_resource_on_get(
         reserved_barcode = None
 
     if keep_types is None:
-        keep_types = QuestionFormatterFactory.get_available_types()
+        keep_types = QuestionFormatterFactory.get_default_types()
     else:
         # Limit the number of types to prevent slow SQL queries
         keep_types = keep_types[:10]
@@ -683,7 +654,6 @@ api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail(
 api.add_route("/api/v1/insights", InsightCollection())
 api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
-api.add_route("/api/v1/insights/import", InsightImporterResource())
 api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
 api.add_route("/api/v1/predict/nutrient", NutrientPredictorResource())
 api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())

@@ -4,7 +4,7 @@ import math
 import operator
 import re
 from collections import Counter
-from typing import Optional, Callable, Dict, List, Tuple, Union
+from typing import Optional, Callable, Dict, List, Pattern, Tuple, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -30,14 +30,14 @@ class OCRRegex:
 
     def __init__(
         self,
-        regex,
+        regex: Pattern,
         field: OCRField,
         lowercase: bool = False,
         processing_func: Optional[Callable] = None,
         priority: Optional[int] = None,
         notify: bool = False,
     ):
-        self.regex = regex
+        self.regex: Pattern = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
@@ -100,7 +100,7 @@ class OCRResult:
         self.text_annotations_str_lower: str = ""
 
         if self.text_annotations:
-            self.text_annotations_str = "||".join(t.text for t in self.text_annotations)
+            self.text_annotations_str = self.text_annotations[0].text
             self.text_annotations_str_lower = self.text_annotations_str.lower()
 
         full_text_annotation_data = data.get("fullTextAnnotation")
@@ -342,8 +342,11 @@ class Block:
 
         return dict(counts)
 
-    def detect_orientation(self) -> ImageOrientation:
-        return self.bounding_poly.detect_orientation()
+    def detect_orientation(self) -> Optional[ImageOrientation]:
+        if self.bounding_poly:
+            return self.bounding_poly.detect_orientation()
+
+        return None
 
     def detect_words_orientation(self) -> List[ImageOrientation]:
         word_orientations: List[ImageOrientation] = []
@@ -375,8 +378,11 @@ class Paragraph:
         counts["words"] = len(self.words)
         return dict(counts)
 
-    def detect_orientation(self) -> ImageOrientation:
-        return self.bounding_poly.detect_orientation()
+    def detect_orientation(self) -> Optional[ImageOrientation]:
+        if self.bounding_poly:
+            return self.bounding_poly.detect_orientation()
+
+        return None
 
     def detect_words_orientation(self) -> List[ImageOrientation]:
         return [word.detect_orientation() for word in self.words]
@@ -450,7 +456,10 @@ class Symbol:
     __slots__ = ("bounding_poly", "text", "confidence", "symbol_break")
 
     def __init__(self, data: JSONType):
-        self.bounding_poly = BoundingPoly(data["boundingBox"])
+        self.bounding_poly: Optional[BoundingPoly] = None
+        if "boundingBox" in data:
+            self.bounding_poly = BoundingPoly(data["boundingBox"])
+
         self.text = data["text"]
         self.confidence = data.get("confidence", None)
 
@@ -460,8 +469,10 @@ class Symbol:
         if "detectedBreak" in symbol_property:
             self.symbol_break = DetectedBreak(symbol_property["detectedBreak"])
 
-    def detect_orientation(self) -> ImageOrientation:
-        return self.bounding_poly.detect_orientation()
+    def detect_orientation(self) -> Optional[ImageOrientation]:
+        if self.bounding_poly:
+            return self.bounding_poly.detect_orientation()
+        return None
 
 
 class DetectedBreak:

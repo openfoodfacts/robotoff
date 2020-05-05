@@ -1,4 +1,3 @@
-import re
 from typing import Set
 
 import pytest
@@ -8,7 +7,6 @@ from robotoff.insights.ocr.brand import (
     generate_brand_keyword_processor,
     extract_brands,
 )
-from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter
 
 

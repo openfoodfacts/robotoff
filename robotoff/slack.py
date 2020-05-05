@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -141,7 +141,7 @@ def notify_automatic_processing(insight: ProductInsight):
         return
 
     text += " " + metadata_text
-    slack_kwargs = {
+    slack_kwargs: Dict[str, Any] = {
         "unfurl_links": False,
         "unfurl_media": False,
     }

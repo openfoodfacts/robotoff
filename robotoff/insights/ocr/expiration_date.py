@@ -73,7 +73,7 @@ def find_expiration_date(content: Union[OCRResult, str]) -> List[Dict]:
             value = date.strftime("%Y-%m-%d")
 
             results.append(
-                {"raw": raw, "text": value, "type": type_, "notify": ocr_regex.notify,}
+                {"raw": raw, "text": value, "type": type_, "notify": ocr_regex.notify}
             )
 
     return results

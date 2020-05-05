@@ -38,4 +38,5 @@ setup(
         "pymongo>=3.0.0<3.1.0",
     ],
     include_package_data=True,
+    tests_require=["pytest", "pytest-mock"],
 )

@@ -1,11 +1,10 @@
 import functools
-import re
-from typing import Iterable, List, Dict, Tuple, Set, Optional, Union
+from typing import Iterable, List, Dict, Set, Optional, Union
 
 from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
+from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor, get_tag
 from robotoff.utils import text_file_iter, get_logger
 from robotoff.utils.types import JSONType

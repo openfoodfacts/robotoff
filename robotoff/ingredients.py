@@ -14,6 +14,7 @@ from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.es import generate_msearch_body
 from robotoff.utils.text import FR_NLP_CACHE
+from robotoff.utils.types import JSONType
 
 from spacy.util import get_lang_class
 
@@ -23,8 +24,9 @@ logger = get_logger(__name__)
 SPLITTER_CHAR = {"(", ")", ",", ";", "[", "]", "-", "{", "}"}
 
 # Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
-BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:E ?\d{3,5}[a-z]*)|(?:[_•:0-9])")
-
+BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:[0-9])(?![\w-])")
+PUNCTUATION_BLACKLIST_RE = re.compile(r"[_•:]")
+E_BLACKLIST_RE = re.compile(r"(?<!\w)(?:E ?\d{3,5}[a-z]*)")
 OffsetType = Tuple[int, int]
 
 
@@ -114,18 +116,19 @@ class Correction:
 def normalize_ingredients(ingredient_text: str):
     normalized = ingredient_text
 
-    while True:
-        try:
-            match = next(BLACKLIST_RE.finditer(normalized))
-        except StopIteration:
-            break
+    for regex in (E_BLACKLIST_RE, BLACKLIST_RE, PUNCTUATION_BLACKLIST_RE):
+        while True:
+            try:
+                match = next(regex.finditer(normalized))
+            except StopIteration:
+                break
 
-        if match:
-            start = match.start()
-            end = match.end()
-            normalized = normalized[:start] + " " * (end - start) + normalized[end:]
-        else:
-            break
+            if match:
+                start = match.start()
+                end = match.end()
+                normalized = normalized[:start] + " " * (end - start) + normalized[end:]
+            else:
+                break
 
     return normalized
 
@@ -217,6 +220,10 @@ def is_valid_correction(
     if original_known and is_original_ingredient_known(correction.original):
         return False
 
+    # Tokens with numbers are tricky to correct
+    if any(x.isdigit() for x in correction.correction):
+        return False
+
     return True
 
 
@@ -305,17 +312,8 @@ def format_corrections(
     return corrections
 
 
-def _suggest(client, text):
-    suggester_name = "autocorrect"
-    body = generate_suggest_query(text, name=suggester_name)
-    response = client.search(
-        index="product", doc_type="document", body=body, _source=False
-    )
-    return response["suggest"][suggester_name]
-
-
-def suggest(text: str, client, confidence: float = 1) -> Dict:
-    corrections = generate_corrections(client, text, confidence=confidence)
+def suggest(text: str, client, **kwargs) -> Dict:
+    corrections = generate_corrections(client, text, **kwargs)
     term_corrections = list(
         itertools.chain.from_iterable((c.term_corrections for c in corrections))
     )
@@ -337,10 +335,11 @@ def analyze(client, ingredient_text: str):
 
 def _suggest_batch(client, texts: Iterable[str], **kwargs) -> List[Dict]:
     suggester_name = "autocorrect"
+    index_name = kwargs.pop("index_name", settings.ELASTICSEARCH_PRODUCT_INDEX)
     queries = (
         generate_suggest_query(text, name=suggester_name, **kwargs) for text in texts
     )
-    body = generate_msearch_body(settings.ELASTICSEARCH_PRODUCT_INDEX, queries)
+    body = generate_msearch_body(index_name, queries)
     response = client.msearch(body=body, doc_type=settings.ELASTICSEARCH_TYPE)
 
     suggestions = []
@@ -402,30 +401,50 @@ def generate_suggest_query(
     }
 
 
-def generate_insights(client, confidence=1):
+def predict_insight(client, text: str, barcode: str, **kwargs) -> Optional[JSONType]:
+    corrections = generate_corrections(client, text, **kwargs)
+
+    if not corrections:
+        return None
+
+    term_corrections = list(
+        itertools.chain.from_iterable((c.term_corrections for c in corrections))
+    )
+
+    return {
+        "corrections": [dataclasses.asdict(c) for c in term_corrections],
+        "text": text,
+        "corrected": generate_corrected_text(term_corrections, text),
+        "barcode": barcode,
+        "lang": "fr",
+        "index_name": kwargs.get("index_name", "product"),
+    }
+
+
+def generate_insights(
+    client, max_errors: Optional[int] = None, **kwargs
+) -> Iterable[JSONType]:
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_iter = (
         dataset.stream()
         .filter_by_country_tag("en:france")
+        .filter_text_field("lang", "fr")
         .filter_nonempty_text_field("ingredients_text_fr")
         .iter()
     )
 
-    for product in product_iter:
-        text = product["ingredients_text_fr"]
-        corrections = generate_corrections(client, text, confidence=confidence)
-
-        if not corrections:
-            continue
-
-        term_corrections = list(
-            itertools.chain.from_iterable((c.term_corrections for c in corrections))
+    if max_errors is not None:
+        product_iter = (
+            p
+            for p in product_iter
+            if int(p.get("unknown_ingredients_n", 0)) <= max_errors
         )
 
-        yield {
-            "corrections": [dataclasses.asdict(c) for c in term_corrections],
-            "text": text,
-            "corrected": generate_corrected_text(term_corrections, text),
-            "barcode": product["code"],
-        }
+    for product in product_iter:
+        text = product["ingredients_text_fr"]
+        barcode = product["code"]
+        insight = predict_insight(client, text, barcode=barcode, **kwargs)
+
+        if insight:
+            yield insight

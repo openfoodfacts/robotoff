@@ -21,6 +21,7 @@ classic
 cocacola
 comte
 consum
+cook
 crisp
 cristal
 crunch
@@ -97,3 +98,4 @@ tropical
 valor
 vegan
 veritas
+ice tea
