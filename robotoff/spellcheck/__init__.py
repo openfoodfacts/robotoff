@@ -39,7 +39,7 @@ class BaseSpellchecker:
         )
         return item
 
-    def correct(self, txt: str) -> str:
+    def correct(self, text: str) -> str:
         raise NotImplementedError
 
     @property

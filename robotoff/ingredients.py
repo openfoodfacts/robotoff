@@ -113,7 +113,7 @@ class Correction:
     score: int
 
 
-def normalize_ingredients(ingredient_text: str):
+def normalize_ingredients(ingredient_text: str) -> str:
     normalized = ingredient_text
 
     for regex in (E_BLACKLIST_RE, BLACKLIST_RE, PUNCTUATION_BLACKLIST_RE):

@@ -10,14 +10,14 @@ ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
 
 
 class PercentagesSpellchecker(BaseSpellchecker):
-    def correct(self, txt: str) -> str:
-        return self.format_percentages(txt)
+    def correct(self, text: str) -> str:
+        return self.format_percentages(text)
 
     @staticmethod
-    def format_percentages(txt: str) -> str:
-        formatted_txt_list: List[str] = []
+    def format_percentages(text: str) -> str:
+        formatted_text_list: List[str] = []
         last_index: int = 0
-        for match in PERCENTAGE_REGEX.finditer(txt):
+        for match in PERCENTAGE_REGEX.finditer(text):
             first_char, first_digits, sep, last_digits = match.groups()
 
             start = match.start() + len(first_char)
@@ -29,13 +29,13 @@ class PercentagesSpellchecker(BaseSpellchecker):
             pad_before = False
             pad_after = False
 
-            if ADDITIVES_REGEX.match(txt[match.start() : match.end()]):
+            if ADDITIVES_REGEX.match(text[match.start() : match.end()]):
                 # Very conservative rule
-                formatted_match = txt[start:end]
+                formatted_match = text[start:end]
 
             elif nb_first_digits == 0 and nb_last_digits == 0:
                 # Not a good match
-                formatted_match = txt[start:end]
+                formatted_match = text[start:end]
 
             elif nb_first_digits == 0:
                 formatted_match = f"{sep}{last_digits}%"
@@ -68,19 +68,19 @@ class PercentagesSpellchecker(BaseSpellchecker):
 
             if pad_before:
                 if start > 0:
-                    previous_char = txt[start - 1]
+                    previous_char = text[start - 1]
                     if previous_char.isalnum() or previous_char in ["*", ")", "]", "}"]:
                         formatted_match = " " + formatted_match.lstrip(" ")
 
             if pad_after:
-                if end < len(txt):
-                    next_char = txt[end]
+                if end < len(text):
+                    next_char = text[end]
                     if next_char.isalnum() or next_char in ["*", "(", "[", "{"]:
                         formatted_match = formatted_match.rstrip(" ") + " "
 
-            formatted_txt_list.append(txt[last_index:start])
-            formatted_txt_list.append(formatted_match)
+            formatted_text_list.append(text[last_index:start])
+            formatted_text_list.append(formatted_match)
             last_index = end
-        formatted_txt_list.append(txt[last_index:])
+        formatted_text_list.append(text[last_index:])
 
-        return "".join(formatted_txt_list)
+        return "".join(formatted_text_list)

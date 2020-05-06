@@ -12,11 +12,11 @@ class VocabularySpellchecker(BaseSpellchecker):
             "ingredients_fr"
         )
 
-    def correct(self, txt: str) -> str:
-        for token in tokenize_ingredients(txt, remove_additives=True):
+    def correct(self, text: str) -> str:
+        for token in tokenize_ingredients(text, remove_additives=True):
             if all(c.isalpha() for c in token):
                 if not token in self.wikipedia_voc:
                     suggestion: Optional[str] = self.ingredients_voc.suggest(token)
                     if suggestion is not None:
-                        txt = txt.replace(token, suggestion)
-        return txt
+                        text = text.replace(token, suggestion)
+        return text
