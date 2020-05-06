@@ -32,7 +32,7 @@ class PatternsSpellchecker(BaseSpellchecker):
     def name(self):
         return super(PatternsSpellchecker, self).name + "__" + self.lang
 
-    def correct(self, txt: str) -> str:
+    def correct(self, text: str) -> str:
         for key, value in self.patterns.items():
-            txt = txt.replace(key, value)
-        return txt
+            text = text.replace(key, value)
+        return text
