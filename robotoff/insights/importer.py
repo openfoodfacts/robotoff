@@ -1,4 +1,5 @@
 import abc
+import copy
 import datetime
 import uuid
 from typing import Dict, Iterable, Iterator, List, Set, Optional, Tuple, Type
@@ -52,7 +53,7 @@ def generate_insight_dict(insight: Insight) -> JSONType:
 
 
 def generate_latent_insight(insight: JSONType, valid: bool) -> JSONType:
-    insight = insight.copy()
+    insight = copy.deepcopy(insight)
     insight.pop("automatic_processing")
     insight.pop("reserved_barcode")
     insight.pop("countries")
