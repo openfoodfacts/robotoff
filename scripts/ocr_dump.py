@@ -4,8 +4,9 @@ import os
 import pathlib
 
 
-def is_valid_dir(product_dir: pathlib.Path) -> bool:
-    return str(product_dir).replace("/", "").isdigit()
+def is_valid_dir(product_dir: str) -> bool:
+    product_dir = product_dir[len("/srv2/off/html/images/products") :]
+    return product_dir.replace("/", "").isdigit()
 
 
 ROOT_DIR = pathlib.Path("/srv2/off/html/images/products")
@@ -17,7 +18,7 @@ added = 0
 
 with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
     for i, image_path in enumerate(ROOT_DIR.glob("**/*.json")):
-        if not is_valid_dir(image_path.parent) or not image_path.stem.isdigit():
+        if not is_valid_dir(str(image_path.parent)) or not image_path.stem.isdigit():
             continue
 
         json_path = image_path.with_suffix(".json")
