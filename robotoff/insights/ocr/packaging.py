@@ -1,6 +1,8 @@
-from typing import List, Dict, Optional, Union
+from typing import List, Optional, Union
 
 from robotoff import settings
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 
@@ -23,7 +25,7 @@ KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packaging(content: Union[OCRResult, str]) -> List[Dict]:
+def find_packaging(content: Union[OCRResult, str]) -> List[RawInsight]:
     insights = []
 
     text = get_text(content)
@@ -41,13 +43,13 @@ def find_packaging(content: Union[OCRResult, str]) -> List[Dict]:
         for packaging in packagings:
             match_str = text[span_start:span_end]
             insights.append(
-                {
-                    "packaging_tag": get_tag(packaging),
-                    "packaging": packaging,
-                    "text": match_str,
-                    "notify": True,
-                    "automatic_processing": True,
-                }
+                RawInsight(
+                    type=InsightType.packaging,
+                    value_tag=get_tag(packaging),
+                    value=packaging,
+                    data={"text": match_str, "notify": True},
+                    automatic_processing=True,
+                )
             )
 
     return insights

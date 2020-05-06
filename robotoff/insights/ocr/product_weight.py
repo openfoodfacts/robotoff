@@ -4,6 +4,8 @@ from typing import Dict, List, Tuple, Optional, Union
 
 import pint
 
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
 from robotoff.utils import get_logger
 
@@ -233,7 +235,7 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_product_weight(content: Union[OCRResult, str]) -> List[Dict]:
+def find_product_weight(content: Union[OCRResult, str]) -> List[RawInsight]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
@@ -254,6 +256,15 @@ def find_product_weight(content: Union[OCRResult, str]) -> List[Dict]:
             result["matcher_type"] = type_
             result["priority"] = ocr_regex.priority
             result["notify"] = ocr_regex.notify
-            results.append(result)
+            value = result.pop("text")
+            automatic_processing = result.pop("automatic_processing", None)
+            results.append(
+                RawInsight(
+                    value=value,
+                    type=InsightType.product_weight,
+                    automatic_processing=automatic_processing,
+                    data=result,
+                )
+            )
 
     return results

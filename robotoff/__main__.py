@@ -65,12 +65,15 @@ if __name__ == "__main__":
     ):
         from typing import TextIO, Union
         from robotoff.cli import insights
+        from robotoff.insights._enum import InsightType
         from robotoff.utils import get_logger
 
         input_: Union[str, TextIO] = sys.stdin if source == "-" else source
 
         get_logger()
-        insights.run_from_ocr_archive(input_, insight_type, output, keep_empty)
+        insights.run_from_ocr_archive(
+            input_, InsightType[insight_type], output, keep_empty
+        )
 
     @click.command()
     @click.option("--insight-type", "-t")
@@ -98,7 +101,9 @@ if __name__ == "__main__":
         from robotoff import settings
 
         dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-        dump_jsonl(output, predict_from_dataset(dataset))
+        insights = predict_from_dataset(dataset)
+        dict_insights = (i.to_dict() for i in insights)
+        dump_jsonl(output, dict_insights)
 
     @click.command()
     @click.argument("pattern")
@@ -217,12 +222,13 @@ if __name__ == "__main__":
         from robotoff.cli import insights
         from robotoff import settings
         from robotoff.utils import get_logger
+        from robotoff.insights._enum import InsightType
 
         logger = get_logger()
         logger.info("Importing insights from {}".format(input_))
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
         imported = insights.import_insights(
-            input_, insight_type, server_domain, batch_size, latent
+            input_, InsightType[insight_type], server_domain, batch_size, latent
         )
         logger.info("{} insights imported".format(imported))
 

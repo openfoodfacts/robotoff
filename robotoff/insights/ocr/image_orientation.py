@@ -1,5 +1,7 @@
-from typing import List, Dict, Union
+from typing import List, Union
 
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult, ImageOrientation
 
 
@@ -18,7 +20,7 @@ def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> 
         raise ValueError("unknown image orientation: {}".format(image_orientation))
 
 
-def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[Dict]:
+def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:
     if isinstance(ocr_result, str):
         return []
 
@@ -31,4 +33,4 @@ def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[Dict]:
     insight["rotation"] = get_rotation_angle_from_orientation(
         orientation_result.orientation
     )
-    return [insight]
+    return [RawInsight(type=InsightType.image_orientation, data=insight)]

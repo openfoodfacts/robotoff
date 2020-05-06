@@ -7,6 +7,8 @@ from more_itertools import chunked
 from tensorflow import keras
 
 from robotoff import settings
+from robotoff.insights.dataclass import RawInsight, ProductInsights
+from robotoff.insights._enum import InsightType
 from robotoff.ml.category.neural.data_utils import generate_data
 from robotoff.ml.category.neural.io import (
     load_config,
@@ -231,7 +233,7 @@ def predict_from_product(
     product: Dict,
     allowed_lang: Optional[Set[str]] = None,
     filter_blacklisted: bool = False,
-) -> Optional[Dict]:
+) -> Optional[ProductInsights]:
     if not keep_product(product, allowed_lang):
         return None
 
@@ -265,7 +267,7 @@ def predict_from_product_batch(
     allowed_lang: Optional[Iterable[str]] = None,
     filter_blacklisted: bool = False,
     batch_size: int = 32,
-) -> Iterable[Dict]:
+) -> Iterable[ProductInsights]:
     model = ModelRegistry.get()
     allowed_lang = set(allowed_lang) if allowed_lang else set()
 
@@ -288,20 +290,21 @@ def predict_from_product_batch(
 
 def format_predictions(
     product: Dict, predictions: List[CategoryPrediction], lang: str
-) -> Dict:
+) -> ProductInsights:
     insights = []
 
     for category, confidence in predictions:
         insights.append(
-            {
-                "category": category,
-                "lang": lang,
-                "model": "neural",
-                "confidence": confidence,
-            }
+            RawInsight(
+                type=InsightType.category,
+                value_tag=category,
+                data={"lang": lang, "model": "neural", "confidence": confidence},
+            )
         )
 
-    return {"barcode": product["code"], "type": "category", "insights": insights}
+    return ProductInsights(
+        barcode=product["code"], type=InsightType.category, insights=insights
+    )
 
 
 def filter_blacklisted_categories(

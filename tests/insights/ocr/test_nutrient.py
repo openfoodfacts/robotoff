@@ -33,9 +33,9 @@ from robotoff.utils.types import JSONType
 def test_find_nutrient_mentions(text: str, nutrients: Dict[str, List[JSONType]]):
     results = find_nutrient_mentions(text)
     assert len(results) == 1
-    result = results[0]
-    assert "mentions" in result
-    mentions = result["mentions"]
+    insight = results[0]
+    assert "mentions" in insight.data
+    mentions = insight.data["mentions"]
 
     for nutrient in nutrients:
         assert nutrient in mentions

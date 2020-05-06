@@ -5,14 +5,15 @@ from typing import Iterable, Dict, Optional
 from robotoff.products import ProductDataset
 from robotoff.utils import get_logger
 
-from robotoff.utils.es import get_es_client
 from robotoff.elasticsearch.category.match import predict_category
-from robotoff.utils.types import JSONType
+from robotoff.insights.dataclass import RawInsight, ProductInsights
+from robotoff.insights._enum import InsightType
+from robotoff.utils.es import get_es_client
 
 logger = get_logger(__name__)
 
 
-def predict(client, product: Dict) -> Optional[Dict]:
+def predict(client, product: Dict) -> Optional[ProductInsights]:
     predictions = []
 
     for lang in product.get("languages_codes", []):
@@ -39,28 +40,33 @@ def predict(client, product: Dict) -> Optional[Dict]:
         p = sorted_predictions[0]
         lang, category, product_name, score = p
 
-        return {
-            "barcode": product["code"],
-            "type": "category",
-            "insights": [
-                {
-                    "category": category,
-                    "lang": lang,
-                    "product_name": product_name,
-                    "model": "matcher",
-                }
+        return ProductInsights(
+            barcode=product["code"],
+            type=InsightType.category,
+            insights=[
+                RawInsight(
+                    type=InsightType.category,
+                    value_tag=category,
+                    data={
+                        "lang": lang,
+                        "product_name": product_name,
+                        "model": "matcher",
+                    },
+                )
             ],
-        }
+        )
 
     return None
 
 
-def predict_from_product(product: Dict) -> Optional[Dict]:
+def predict_from_product(product: Dict) -> Optional[ProductInsights]:
     client = get_es_client()
     return predict(client, product)
 
 
-def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
+def predict_from_iterable(
+    client, products: Iterable[Dict]
+) -> Iterable[ProductInsights]:
     for product in products:
         prediction = predict(client, product)
 
@@ -70,7 +76,7 @@ def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
 
 def predict_from_dataset(
     dataset: ProductDataset, from_datetime: Optional[datetime.datetime] = None
-) -> Iterable[JSONType]:
+) -> Iterable[ProductInsights]:
     """Return an iterable of category insights, using the provided dataset.
 
     Args:

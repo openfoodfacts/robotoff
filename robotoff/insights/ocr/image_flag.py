@@ -1,8 +1,10 @@
-from typing import List, Dict, Union
+from typing import List, Optional, Union
 
 from flashtext import KeywordProcessor
 
 from robotoff import settings
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import (
     OCRResult,
     SafeSearchAnnotationLikelihood,
@@ -62,20 +64,23 @@ def generate_image_flag_keyword_processor() -> KeywordProcessor:
 PROCESSOR = generate_image_flag_keyword_processor()
 
 
-def extract_image_flag_flashtext(processor: KeywordProcessor, text: str):
+def extract_image_flag_flashtext(
+    processor: KeywordProcessor, text: str
+) -> Optional[RawInsight]:
     for (_, key), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        return {
-            "text": match_str,
-            "type": "text",
-            "label": key,
-        }
+        return RawInsight(
+            type=InsightType.image_flag,
+            data={"text": match_str, "type": "text", "label": key},
+        )
+
+    return None
 
 
-def flag_image(content: Union[OCRResult, str]) -> List[Dict]:
-    insights: List[Dict] = []
+def flag_image(content: Union[OCRResult, str]) -> List[RawInsight]:
+    insights: List[RawInsight] = []
 
     text = get_text(content)
     insight = extract_image_flag_flashtext(PROCESSOR, text)
@@ -94,11 +99,14 @@ def flag_image(content: Union[OCRResult, str]) -> List[Dict]:
             value: SafeSearchAnnotationLikelihood = getattr(safe_search_annotation, key)
             if value >= SafeSearchAnnotationLikelihood.VERY_LIKELY:
                 insights.append(
-                    {
-                        "type": "safe_search_annotation",
-                        "label": key,
-                        "likelihood": value.name,
-                    }
+                    RawInsight(
+                        type=InsightType.image_flag,
+                        data={
+                            "type": "safe_search_annotation",
+                            "label": key,
+                            "likelihood": value.name,
+                        },
+                    )
                 )
 
     for label_annotation in label_annotations:
@@ -107,11 +115,14 @@ def flag_image(content: Union[OCRResult, str]) -> List[Dict]:
             and label_annotation.score >= 0.6
         ):
             insights.append(
-                {
-                    "type": "label_annotation",
-                    "label": label_annotation.description.lower(),
-                    "likelihood": label_annotation.score,
-                }
+                RawInsight(
+                    type=InsightType.image_flag,
+                    data={
+                        "type": "label_annotation",
+                        "label": label_annotation.description.lower(),
+                        "likelihood": label_annotation.score,
+                    },
+                )
             )
             break
 

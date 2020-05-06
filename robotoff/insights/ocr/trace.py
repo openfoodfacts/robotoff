@@ -1,7 +1,9 @@
 import re
-from typing import List, Dict, Optional, Union
+from typing import List, Optional, Union
 
 from robotoff import settings
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import text_file_iter
@@ -28,7 +30,7 @@ TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_traces(content: Union[OCRResult, str]) -> List[Dict]:
+def find_traces(content: Union[OCRResult, str]) -> List[RawInsight]:
     insights = []
 
     text = get_text(content, TRACES_REGEX)
@@ -48,12 +50,11 @@ def find_traces(content: Union[OCRResult, str]) -> List[Dict]:
         ):
             match_str = captured[span_start:span_end]
             insights.append(
-                {
-                    "trace_tag": trace_tag,
-                    "text": match_str,
-                    "prompt": prompt,
-                    "notify": False,
-                }
+                RawInsight(
+                    type=InsightType.trace,
+                    value_tag=trace_tag,
+                    data={"text": match_str, "prompt": prompt, "notify": False},
+                )
             )
 
     return insights

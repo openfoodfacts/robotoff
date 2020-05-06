@@ -3,13 +3,14 @@ import datetime
 import json
 import pathlib
 import sys
-from typing import Dict, Optional, Set, TextIO, Union
+from typing import Dict, Iterable, List, Optional, Set, TextIO, Union
 
 import click
 from more_itertools import chunked
 from peewee import fn
 
 from robotoff.insights.annotate import InsightAnnotatorFactory
+from robotoff.insights.dataclass import ProductInsights
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, AUTHORIZED_LABELS_STORE
 from robotoff.insights.ocr import (
@@ -21,15 +22,14 @@ from robotoff.insights.ocr import (
 from robotoff.models import db, ProductInsight
 from robotoff.off import get_product
 from robotoff.products import get_product_store
-from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
-
+from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
 
 
 def run_from_ocr_archive(
     input_: Union[str, TextIO],
-    insight_type: str,
+    insight_type: InsightType,
     output: Optional[str],
     keep_empty: bool = False,
 ):
@@ -39,15 +39,16 @@ def run_from_ocr_archive(
         output_f = sys.stdout
 
     with contextlib.closing(output_f):
-        for source, ocr_json in ocr_iter(input_):
-            if source is None:
+        for source_image, ocr_json in ocr_iter(input_):
+            if source_image is None:
                 continue
 
-            barcode: Optional[str] = get_barcode_from_path(source)
+            barcode: Optional[str] = get_barcode_from_path(source_image)
 
             if barcode is None:
                 click.echo(
-                    "cannot extract barcode from source " "{}".format(source), err=True
+                    "cannot extract barcode from source " "{}".format(source_image),
+                    err=True,
                 )
                 continue
 
@@ -62,21 +63,24 @@ def run_from_ocr_archive(
             if not keep_empty and not insights:
                 continue
 
-            item = {
-                "insights": insights,
-                "barcode": barcode,
-                "type": insight_type,
-            }
+            item = ProductInsights(
+                insights=insights,
+                barcode=barcode,
+                type=insight_type,
+                source_image=source_image,
+            )
 
-            if source:
-                item["source"] = source
+            output_f.write(json.dumps(item.to_dict()) + "\n")
 
-            output_f.write(json.dumps(item) + "\n")
+
+def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
+    for insight in jsonl_iter(file_path):
+        yield ProductInsights.from_dict(insight)
 
 
 def import_insights(
     file_path: pathlib.Path,
-    insight_type: str,
+    insight_type: InsightType,
     server_domain: str,
     batch_size: int = 1024,
     latent: bool = False,
@@ -84,13 +88,10 @@ def import_insights(
     product_store = get_product_store()
     importer = InsightImporterFactory.create(insight_type, product_store)
 
-    if file_path.suffix == ".gz":
-        insights = gzip_jsonl_iter(file_path)
-    else:
-        insights = jsonl_iter(file_path)
-
+    insights = insights_iter(file_path)
     imported: int = 0
 
+    insight_batch: List[ProductInsight]
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
             imported += importer.import_insights(

@@ -5,6 +5,7 @@ import pathlib as pathlib
 from typing import Callable, List, Dict, Iterable, Optional, Tuple, Union, TextIO
 
 from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.brand import find_brands
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.expiration_date import find_expiration_date
@@ -57,47 +58,49 @@ def get_json_for_image(barcode: str, image_name: str) -> Optional[JSONType]:
     return r.json()
 
 
-def extract_insights(content: Union[OCRResult, str], insight_type: str) -> List[Dict]:
-    if insight_type == InsightType.packager_code.name:
+def extract_insights(
+    content: Union[OCRResult, str], insight_type: InsightType
+) -> List[RawInsight]:
+    if insight_type == InsightType.packager_code:
         return find_packager_codes(content)
 
-    elif insight_type == InsightType.label.name:
+    elif insight_type == InsightType.label:
         return find_labels(content)
 
-    elif insight_type == InsightType.expiration_date.name:
+    elif insight_type == InsightType.expiration_date:
         return find_expiration_date(content)
 
-    elif insight_type == InsightType.image_flag.name:
+    elif insight_type == InsightType.image_flag:
         return flag_image(content)
 
-    elif insight_type == InsightType.image_orientation.name:
+    elif insight_type == InsightType.image_orientation:
         return find_image_orientation(content)
 
-    elif insight_type == InsightType.product_weight.name:
+    elif insight_type == InsightType.product_weight:
         return find_product_weight(content)
 
-    elif insight_type == InsightType.trace.name:
+    elif insight_type == InsightType.trace:
         return find_traces(content)
 
-    elif insight_type == InsightType.nutrient.name:
+    elif insight_type == InsightType.nutrient:
         return find_nutrient_values(content)
 
-    elif insight_type == InsightType.nutrient_mention.name:
+    elif insight_type == InsightType.nutrient_mention:
         return find_nutrient_mentions(content)
 
-    elif insight_type == InsightType.brand.name:
+    elif insight_type == InsightType.brand:
         return find_brands(content)
 
-    elif insight_type == InsightType.store.name:
+    elif insight_type == InsightType.store:
         return find_stores(content)
 
-    elif insight_type == InsightType.packaging.name:
+    elif insight_type == InsightType.packaging:
         return find_packaging(content)
 
-    elif insight_type == InsightType.location.name:
+    elif insight_type == InsightType.location:
         return find_locations(content)
 
-    elif insight_type == InsightType.image_lang.name:
+    elif insight_type == InsightType.image_lang:
         return get_image_lang(content)
 
     else:

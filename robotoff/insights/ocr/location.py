@@ -8,11 +8,12 @@ from typing import Union, List, Optional, Tuple, BinaryIO, Set, Iterable
 from flashtext import KeywordProcessor
 
 from robotoff import settings
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import strip_accents_ascii
-from robotoff.utils.types import JSONType
 
 
 @dataclasses.dataclass(frozen=True)
@@ -119,14 +120,14 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_addresses(self, content: Union[str, OCRResult]) -> List[JSONType]:
+    def extract_addresses(self, content: Union[str, OCRResult]) -> List[RawInsight]:
         """Extract addresses from the given OCR result.
 
         Args:
             content (OCRResult or str): a string or the OCR result to process.
 
         Returns:
-            list of JSONType: List of addresses extracted from the text. Each entry
+            list of RawInsight: List of addresses extracted from the text. Each entry
             is a dictionary with the items: country_code (always "fr"), city_name,
             postal_code and text_extract.
         """
@@ -150,12 +151,15 @@ class AddressExtractor:
             text_extract = text[max(0, address_start) : min(len(text), address_end)]
 
             locations.append(
-                {
-                    "country_code": "fr",
-                    "city_name": city.name,
-                    "postal_code": city.postal_code,
-                    "text_extract": text_extract,
-                }
+                RawInsight(
+                    type=InsightType.location,
+                    data={
+                        "country_code": "fr",
+                        "city_name": city.name,
+                        "postal_code": city.postal_code,
+                        "text_extract": text_extract,
+                    },
+                )
             )
 
         return locations
@@ -244,7 +248,7 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 )
 
 
-def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
+def find_locations(content: Union[OCRResult, str]) -> List[RawInsight]:
     """Find location insights in the text content.
 
     See :class:`.AddressExtractor`.
@@ -253,7 +257,7 @@ def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
         content (OCRResult or str): The content to be searched for locations.
 
     Returns:
-        list of JSONType: See :meth:`.AddressExtractor.extract_addresses`.
+        list of RawInsight: See :meth:`.AddressExtractor.extract_addresses`.
     """
     location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
     return location_extractor.extract_addresses(content)

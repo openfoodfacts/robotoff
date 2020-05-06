@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from robotoff import settings
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.utils import get_logger
@@ -51,13 +52,13 @@ PRIVATE_MODERATION_LABELS = {
 }
 
 
-def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
+def notify_image_flag(insights: List[RawInsight], source: str, barcode: str):
     text = ""
     slack_channel: str = settings.SLACK_OFF_ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 
     for insight in insights:
-        flag_type = insight["type"]
-        label = insight["label"]
+        flag_type = insight.data["type"]
+        label = insight.data["label"]
 
         if flag_type in ("safe_search_annotation", "label_annotation"):
             if (
@@ -65,17 +66,15 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
             ) or flag_type == "safe_search_annotation":
                 slack_channel = settings.SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL
 
-            likelihood = insight["likelihood"]
+            likelihood = insight.data["likelihood"]
             text += "type: {}, label: {}, score: {}\n".format(
                 flag_type, label, likelihood
             )
         else:
-            match_text = insight["text"]
+            match_text = insight.data["text"]
             text += "type: {}, label: {}, match: {}\n".format(
                 flag_type, label, match_text
             )
-            if "moved" in insight:
-                text += "Product moved to {}\n".format(insight["moved"])
 
     url = settings.OFF_IMAGE_BASE_URL + source
     edit_url = "{}/cgi/product.pl?type=edit&code={}" "".format(

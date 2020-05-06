@@ -1,6 +1,8 @@
 import re
 from typing import List, Dict, Tuple, Union
 
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
 from robotoff.utils.types import JSONType
 
@@ -151,7 +153,7 @@ NUTRIENT_MENTIONS_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_nutrient_values(content: Union[OCRResult, str]) -> List[Dict]:
+def find_nutrient_values(content: Union[OCRResult, str]) -> List[RawInsight]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
@@ -176,10 +178,15 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> List[Dict]:
     if not nutrients:
         return []
 
-    return [{"nutrients": nutrients, "version": EXTRACTOR_VERSION}]
+    return [
+        RawInsight(
+            type=InsightType.nutrient,
+            data={"nutrients": nutrients, "version": EXTRACTOR_VERSION},
+        )
+    ]
 
 
-def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Dict]:
+def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[RawInsight]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
@@ -208,4 +215,9 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Dict]:
     if not nutrients:
         return []
 
-    return [{"mentions": nutrients, "version": EXTRACTOR_VERSION}]
+    return [
+        RawInsight(
+            type=InsightType.nutrient_mention,
+            data={"mentions": nutrients, "version": EXTRACTOR_VERSION},
+        )
+    ]

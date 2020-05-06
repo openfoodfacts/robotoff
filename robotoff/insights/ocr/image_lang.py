@@ -1,8 +1,10 @@
 from typing import Dict, List, Optional, Union
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult
 
 
-def get_image_lang(ocr_result: Union[OCRResult, str]) -> List[Dict]:
+def get_image_lang(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:
     if isinstance(ocr_result, str):
         return []
 
@@ -19,4 +21,8 @@ def get_image_lang(ocr_result: Union[OCRResult, str]) -> List[Dict]:
 
         percents[key] = count * 100 / words
 
-    return [{"count": image_lang, "percent": percents}]
+    return [
+        RawInsight(
+            type=InsightType.image_lang, data={"count": image_lang, "percent": percents}
+        )
+    ]

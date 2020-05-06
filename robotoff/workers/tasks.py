@@ -1,6 +1,6 @@
 import logging
 import multiprocessing
-from typing import List, Dict, Callable, Optional
+from typing import Dict, Callable, Optional
 
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
@@ -62,12 +62,13 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
     product_store = get_product_store()
     insights_all = get_insights_from_image(barcode, image_url, ocr_url)
 
-    if insights_all is None:
-        return
-
     for insight_type, insights in insights_all.items():
-        if insight_type == InsightType.image_flag.name:
-            handle_image_flag_insights(insights)
+        if insight_type == InsightType.image_flag:
+            notify_image_flag(
+                insights.insights,
+                insights.source_image,  # type: ignore
+                insights.barcode,
+            )
             continue
 
         logger.info("Extracting {}".format(insight_type))
@@ -80,26 +81,6 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
                 [insights], server_domain=server_domain, automatic=True
             )
             logger.info("Import finished, {} insights imported".format(imported))
-
-
-def handle_image_flag_insights(insights: JSONType):
-    source = insights["source"]
-    barcode = insights["barcode"]
-    insights_: List[JSONType] = insights["insights"]
-
-    for insight in insights_:
-        insight_subtype = insight["type"]
-
-        if insight_subtype == "text":
-            if insight["label"] == "beauty":
-                moved = False
-                # moved = move_to(barcode, ServerType.obf)
-
-                if moved:
-                    insight["moved"] = "obf"
-                    logger.info("Product {} moved to OBF".format(barcode))
-
-    notify_image_flag(insights_, source, barcode)
 
 
 def delete_product_insights(barcode: str, server_domain: str):
@@ -169,25 +150,29 @@ def updated_product_add_category_insight(
     if get_server_type(server_domain) != ServerType.off:
         return False
 
-    insights = []
-    insight = predict_category_from_product_es(product)
+    product_insights = []
+    product_insight = predict_category_from_product_es(product)
 
-    if insight is not None:
-        insights.append(insight)
+    if product_insight is not None:
+        product_insights.append(product_insight)
 
-    insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+    product_insight = predict_category_from_product_ml(product, filter_blacklisted=True)
 
-    if insight is not None:
-        insights.append(insight)
+    if product_insight is not None:
+        product_insights.append(product_insight)
 
-    if not insights:
+    if not product_insights:
         return False
 
+    merged_product_insight = ProductInsight.merge(product_insights)
     product_store = get_product_store()
-    importer = InsightImporterFactory.create(InsightType.category.name, product_store)
+    importer = InsightImporterFactory.create(InsightType.category, product_store)
 
     imported = importer.import_insights(
-        insights, server_domain=server_domain, automatic=False, latent=False
+        merged_product_insight,
+        server_domain=server_domain,
+        automatic=False,
+        latent=False,
     )
 
     if imported:

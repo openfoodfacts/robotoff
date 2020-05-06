@@ -174,49 +174,48 @@ def test_address_extractor_extract_addresses(mocker, cities):
         cities, postal_code_search_distance=8, text_extract_distance=3
     )
     text = "blah paris 75000 poya foo"
-    assert ae.extract_addresses(text) == [
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "ah paris 75000 po",
-        },
-    ]
+    insights = ae.extract_addresses(text)
+    assert len(insights) == 0
+    assert insights[0].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "ah paris 75000 po",
+    }
 
     text = "paris 75000 bar 98827fr poya foo"
-    assert ae.extract_addresses(text) == [
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "paris 75000 ba",
-        },
-        {
-            "country_code": "fr",
-            "city_name": "poya",
-            "postal_code": "98827",
-            "text_extract": "ar 98827fr poya fo",
-        },
-    ]
+    insights = ae.extract_addresses(text)
+    assert len(insights) == 2
+    assert insights[0].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "paris 75000 ba",
+    }
+    assert insights[1].data == {
+        "country_code": "fr",
+        "city_name": "poya",
+        "postal_code": "98827",
+        "text_extract": "ar 98827fr poya fo",
+    }
 
     text = "blah paris foo 75000 bar"
     assert ae.extract_addresses(text) == []
 
     text = "blah paris 75000 paris foo"
-    assert ae.extract_addresses(text) == [
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "ah paris 75000 pa",
-        },
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "is 75000 paris fo",
-        },
-    ]
+    insights = ae.extract_addresses(text)
+    assert insights[0].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "ah paris 75000 pa",
+    }
+    insights[1].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "is 75000 paris fo",
+    }
 
 
 def test_find_locations(mocker):

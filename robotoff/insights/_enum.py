@@ -3,20 +3,20 @@ from enum import Enum, unique
 
 @unique
 class InsightType(Enum):
-    ingredient_spellcheck = 1
-    packager_code = 2
-    label = 3
-    category = 4
-    image_flag = 5
-    product_weight = 6
-    expiration_date = 7
-    brand = 8
-    image_orientation = 9
-    store = 10
-    nutrient = 11
-    trace = 12
-    packaging = 13
-    location = 14
-    nutrient_mention = 15
-    image_lang = 16
-    nutrition_image = 17
+    ingredient_spellcheck = "ingredient_spellcheck"
+    packager_code = "packager_code"
+    label = "label"
+    category = "category"
+    image_flag = "image_flag"
+    product_weight = "product_weight"
+    expiration_date = "expiration_date"
+    brand = "brand"
+    image_orientation = "image_orientation"
+    store = "store"
+    nutrient = "nutrient"
+    trace = "trace"
+    packaging = "packaging"
+    location = "location"
+    nutrient_mention = "nutrient_mention"
+    image_lang = "image_lang"
+    nutrition_image = "nutrition_image"

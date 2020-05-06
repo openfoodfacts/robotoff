@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Dict, Set
 
 import pytest
 
@@ -37,10 +37,9 @@ def brand_keyword_processor():
         (
             "Le comptoir de Mathilde bon vous propose",
             {
-                "brand": "Le Comptoir de Mathilde",
-                "brand_tag": "le-comptoir-de-mathilde",
-                "text": "Le comptoir de Mathilde",
-                "data_source": "test",
+                "value": "Le Comptoir de Mathilde",
+                "value_tag": "le-comptoir-de-mathilde",
+                "data": {"text": "Le comptoir de Mathilde", "data_source": "test"},
             },
         ),
         ("Netto gewitch: 450 g", None),
@@ -48,15 +47,16 @@ def brand_keyword_processor():
         (
             "Notre marque Alpina savoie est bien positionnée",
             {
-                "brand": "Alpina Savoie",
-                "brand_tag": "alpina-savoie",
-                "text": "Alpina savoie",
-                "data_source": "test",
+                "value": "Alpina Savoie",
+                "value_tag": "alpina-savoie",
+                "data": {"text": "Alpina savoie", "data_source": "test"},
             },
         ),
     ],
 )
-def test_extract_brand_taxonomy(brand_taxonomy_keyword_processor, text: str, expected):
+def test_extract_brand_taxonomy(
+    brand_taxonomy_keyword_processor, text: str, expected: Dict
+):
     insights = extract_brands(brand_taxonomy_keyword_processor, text, "test")
 
     if not expected:
@@ -64,8 +64,7 @@ def test_extract_brand_taxonomy(brand_taxonomy_keyword_processor, text: str, exp
     else:
         insight = insights[0]
         for expected_key, expected_value in expected.items():
-            assert expected_key in insight
-            assert insight[expected_key] == expected_value
+            assert getattr(insight, expected_key) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -74,10 +73,9 @@ def test_extract_brand_taxonomy(brand_taxonomy_keyword_processor, text: str, exp
         (
             "le nouveau cocacola",
             {
-                "brand": "Coca-Cola",
-                "brand_tag": "coca-cola",
-                "text": "cocacola",
-                "data_source": "test",
+                "value": "Coca-Cola",
+                "value_tag": "coca-cola",
+                "data": {"text": "cocacola", "data_source": "test"},
             },
         ),
     ],
@@ -90,5 +88,4 @@ def test_extract_brand(brand_keyword_processor, text: str, expected):
     else:
         insight = insights[0]
         for expected_key, expected_value in expected.items():
-            assert expected_key in insight
-            assert insight[expected_key] == expected_value
+            assert getattr(insight, expected_key) == expected_value

@@ -1,11 +1,12 @@
 import abc
 import datetime
 import uuid
-from typing import Dict, Iterable, Iterator, List, Set, Optional, Tuple
+from typing import Dict, Iterable, Iterator, List, Set, Optional, Tuple, Type
 
 from more_itertools import chunked
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
+from robotoff.insights.dataclass import Insight, ProductInsights
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, LatentProductInsight, ProductInsight
@@ -27,9 +28,11 @@ def load_authorized_labels() -> Set[str]:
 AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interval=None)
 
 
-def generate_seen_set_query(insight_type: str, barcode: str, server_domain: str):
+def generate_seen_set_query(
+    insight_type: InsightType, barcode: str, server_domain: str
+):
     return ProductInsight.select(ProductInsight.value_tag).where(
-        ProductInsight.type == insight_type,
+        ProductInsight.type == insight_type.name,
         ProductInsight.barcode == barcode,
         ProductInsight.server_domain == server_domain,
     )
@@ -40,6 +43,12 @@ def is_reserved_barcode(barcode: str) -> bool:
         barcode = barcode[1:]
 
     return barcode.startswith("2")
+
+
+def generate_insight_dict(insight: Insight) -> JSONType:
+    insight_dict = insight.to_dict()
+    insight_dict.pop("valid")
+    return insight_dict
 
 
 def generate_latent_insight(insight: JSONType, valid: bool) -> JSONType:
@@ -70,29 +79,34 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
 
     def import_insights(
         self,
-        data: Iterable[JSONType],
+        data: Iterable[ProductInsights],
         server_domain: str,
         automatic: bool,
         latent: bool = True,
     ) -> int:
         timestamp = datetime.datetime.utcnow()
-        insights = self.process_insights(data, server_domain, automatic)
-        insights = self.add_fields(insights, timestamp, server_domain)
+        processed_insights: Iterator[Insight] = self.process_insights(
+            data, server_domain, automatic
+        )
+        full_insights = self.add_fields(processed_insights, timestamp, server_domain)
         inserted = 0
         latent_inserted = 0
 
-        for raw_insight_batch in chunked(insights, 50):
-            insight_batch = []
-            latent_batch = []
+        for raw_insight_batch in chunked(full_insights, 50):
+            insight_batch: List[JSONType] = []
+            latent_batch: List[JSONType] = []
+            insight: Insight
+
             for insight in raw_insight_batch:
                 # if valid field is absent, suppose all insights are valid
                 # (i.e: spellcheck)
-                valid = insight.pop("valid", True)
-                latent_insight = generate_latent_insight(insight, valid)
+                valid = insight.valid
+                insight_dict = generate_insight_dict(insight)
+                latent_insight = generate_latent_insight(insight_dict, valid)
                 latent_exist = exist_latent(latent_insight)
 
                 if valid:
-                    insight_batch.append(insight)
+                    insight_batch.append(insight_dict)
                     # if insight is valid, always add it to latent insights
                     if not latent_exist:
                         latent_batch.append(latent_insight)
@@ -109,38 +123,37 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def process_insights(
-        self, data: Iterable[JSONType], server_domain: str, automatic: bool
-    ) -> Iterator[JSONType]:
+        self, data: Iterable[ProductInsights], server_domain: str, automatic: bool
+    ) -> Iterator[Insight]:
         pass
 
     def add_fields(
         self,
-        insights: Iterable[JSONType],
+        insights: Iterator[Insight],
         timestamp: datetime.datetime,
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         """Add mandatory insight fields."""
         server_type: str = get_server_type(server_domain).name
 
         for insight in insights:
-            barcode = insight["barcode"]
+            barcode = insight.barcode
             product = self.product_store[barcode]
-            insight["reserved_barcode"] = is_reserved_barcode(barcode)
-            insight["server_domain"] = server_domain
-            insight["server_type"] = server_type
-            insight["id"] = str(uuid.uuid4())
-            insight["timestamp"] = timestamp
-            insight["type"] = self.get_type()
-            insight["countries"] = getattr(product, "countries_tags", [])
-            insight["brands"] = getattr(product, "brands_tags", [])
+            insight.reserved_barcode = is_reserved_barcode(barcode)
+            insight.server_domain = server_domain
+            insight.server_type = server_type
+            insight.id = str(uuid.uuid4())
+            insight.timestamp = timestamp
+            insight.countries = getattr(product, "countries_tags", [])
+            insight.brands = getattr(product, "brands_tags", [])
             yield insight
 
     @abc.abstractmethod
-    def get_type(self) -> str:
+    def get_type(self) -> InsightType:
         pass
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         return True
 
     def get_seen_set(self, barcode: str, server_domain: str) -> Set[str]:
@@ -159,12 +172,15 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
 
 class IngredientSpellcheckImporter(BaseInsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.ingredient_spellcheck.name
+    def get_type() -> InsightType:
+        return InsightType.ingredient_spellcheck
 
     def process_insights(
-        self, data: Iterable[JSONType], server_domain: str, automatic: bool = False
-    ) -> Iterator[JSONType]:
+        self,
+        data: Iterable[ProductInsights],
+        server_domain: str,
+        automatic: bool = False,
+    ) -> Iterator[Insight]:
         seen_set: Set[Tuple[str, str]] = set(
             (x.barcode, x.data["lang"])
             for x in ProductInsight.select(
@@ -176,34 +192,32 @@ class IngredientSpellcheckImporter(BaseInsightImporter):
             )
         )
 
-        for item in data:
-            barcode = item.pop("barcode")
-            lang = item["lang"]
-            key = (barcode, lang)
+        for product_insights in data:
+            barcode = product_insights.barcode
 
-            if key not in seen_set:
-                seen_set.add(key)
-            else:
-                continue
+            for insight in product_insights.insights:
+                lang = insight.data["lang"]
+                key = (barcode, lang)
 
-            yield {
-                "barcode": barcode,
-                "automatic_processing": False,
-                "data": item,
-            }
+                if key not in seen_set:
+                    seen_set.add(key)
+                else:
+                    continue
+
+                yield Insight.from_raw_insight(insight, product_insights, valid=True)
 
 
-GroupedByOCRInsights = Dict[str, List]
+GroupedByOCRInsights = Dict[str, List[Insight]]
 
 
 class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
     def process_insights(
-        self, data: Iterable[JSONType], server_domain: str, automatic: bool
-    ) -> Iterator[JSONType]:
+        self, data: Iterable[ProductInsights], server_domain: str, automatic: bool
+    ) -> Iterator[Insight]:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
 
         for barcode, insights in grouped_by.items():
-            insights = self.sort_by_priority(list(insights))
+            insights = self.sort_by_priority(insights)
             product = self.product_store[barcode]
             yield from self._process_product_insights(
                 product, barcode, insights, automatic, server_domain
@@ -213,14 +227,14 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         automatic: bool,
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         for insight in self.process_product_insights(
             product, barcode, insights, server_domain
         ):
-            source_image: Optional[str] = insight.get("source_image")
+            source_image: Optional[str] = insight.source_image
             if (
                 product
                 and source_image
@@ -236,66 +250,58 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
                 logger.info("Insight of deleted product {}".format(barcode))
                 continue
 
-            insight["barcode"] = barcode
-
             if not automatic:
-                insight["automatic_processing"] = False
+                insight.automatic_processing = False
 
-            elif "automatic_processing" not in insights:
-                insight["automatic_processing"] = not self.need_validation(insight)
+            elif insight.automatic_processing is None:
+                insight.automatic_processing = not self.need_validation(insight)
 
             yield insight
 
-    def group_by_barcode(self, data: Iterable[Dict]) -> GroupedByOCRInsights:
+    def group_by_barcode(self, data: Iterable[ProductInsights]) -> GroupedByOCRInsights:
         grouped_by: GroupedByOCRInsights = {}
         insight_type = self.get_type()
 
         for item in data:
-            barcode = item["barcode"]
-            source = item.get("source")
+            barcode = item.barcode
 
-            if item["type"] != insight_type:
+            if item.type != insight_type:
                 raise ValueError(
                     "unexpected insight type: " "'{}'".format(insight_type)
                 )
 
-            insights = item["insights"]
+            raw_insights = item.insights
 
-            if not insights:
+            if not raw_insights:
                 continue
 
             grouped_by.setdefault(barcode, [])
-            grouped_by[barcode] += [
-                {
-                    "source": source,
-                    "barcode": barcode,
-                    "type": insight_type,
-                    "content": i,
-                }
-                for i in insights
-            ]
+
+            for raw_insight in raw_insights:
+                insights = Insight.from_raw_insight(raw_insight, item, valid=False)
+                grouped_by[barcode].append(insights)
 
         return grouped_by
 
     @staticmethod
-    def sort_by_priority(insights: List[JSONType]) -> List[JSONType]:
-        return sorted(insights, key=lambda insight: insight.get("priority", 1))
+    def sort_by_priority(insights: List[Insight]) -> List[Insight]:
+        return sorted(insights, key=lambda insight: insight.data.get("priority", 1))
 
     @abc.abstractmethod
     def process_product_insights(
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         pass
 
 
 class PackagerCodeInsightImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.packager_code.name
+    def get_type() -> InsightType:
+        return InsightType.packager_code
 
     def is_valid(
         self,
@@ -321,9 +327,9 @@ class PackagerCodeInsightImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         seen_set: Set[str] = set()
 
         for t in (
@@ -336,26 +342,14 @@ class PackagerCodeInsightImporter(InsightImporter):
             seen_set.add(t.value)
 
         for insight in insights:
-            content = insight["content"]
-            emb_code = content["text"]
-
-            valid = self.is_valid(product, barcode, emb_code, seen_set)
-
-            yield {
-                "valid": valid,
-                "source_image": insight["source"],
-                "value": emb_code,
-                "data": {
-                    "matcher_type": content["type"],
-                    "raw": content["raw"],
-                    "notify": content["notify"],
-                },
-            }
-            seen_set.add(emb_code)
+            value: str = insight.value  # type: ignore
+            insight.valid = self.is_valid(product, insight.barcode, value, seen_set)
+            yield insight
+            seen_set.add(value)
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
-        if insight["data"]["matcher_type"] in ("eu_fr", "eu_de", "fr_emb", "fishing"):
+    def need_validation(insight: Insight) -> bool:
+        if insight.data["matcher_type"] in ("eu_fr", "eu_de", "fr_emb", "fishing"):
             return False
 
         return True
@@ -363,8 +357,8 @@ class PackagerCodeInsightImporter(InsightImporter):
 
 class LabelInsightImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.label.name
+    def get_type() -> InsightType:
+        return InsightType.label
 
     def is_valid(
         self, product: Optional[Product], barcode: str, tag: str, seen_set: Set[str]
@@ -399,35 +393,22 @@ class LabelInsightImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
-            content = insight["content"]
-            value_tag = content.pop("label_tag")
-            valid = self.is_valid(product, barcode, value_tag, seen_set)
-
-            automatic_processing = content.pop("automatic_processing", None)
-            insert = {
-                "valid": valid,
-                "value_tag": value_tag,
-                "source_image": insight["source"],
-                "data": {**content},
-            }
-
-            if automatic_processing is not None:
-                insert["automatic_processing"] = automatic_processing
-
-            yield insert
+            value_tag: str = insight.value_tag  # type: ignore
+            insight.valid = self.is_valid(product, barcode, value_tag, seen_set)
+            yield insight
             seen_set.add(value_tag)
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         authorized_labels: Set[str] = AUTHORIZED_LABELS_STORE.get()
 
-        if insight["value_tag"] in authorized_labels:
+        if insight.value_tag in authorized_labels:
             return False
 
         return True
@@ -435,35 +416,31 @@ class LabelInsightImporter(InsightImporter):
 
 class CategoryImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.category.name
+    def get_type() -> InsightType:
+        return InsightType.category
 
     def process_product_insights(
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         seen_set: Set[str] = self.get_seen_set(
             barcode=barcode, server_domain=server_domain
         )
 
         for insight in insights:
-            barcode = insight["barcode"]
-            content = insight["content"]
-            category = content.pop("category")
+            barcode = insight.barcode
+            value_tag: str = insight.value_tag  # type: ignore
 
-            if not self.is_valid(product, barcode, category, seen_set):
+            insight.valid = self.is_valid(product, barcode, value_tag, seen_set)
+
+            if not insight.valid:
                 continue
 
-            yield {
-                "barcode": barcode,
-                "value_tag": category,
-                "automatic_processing": False,
-                "data": content,
-            }
-            seen_set.add(category)
+            yield insight
+            seen_set.add(value_tag)
 
     def is_valid(
         self,
@@ -515,8 +492,8 @@ class CategoryImporter(InsightImporter):
 
 class ProductWeightImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.product_weight.name
+    def get_type() -> InsightType:
+        return InsightType.product_weight
 
     def is_valid(
         self, product: Optional[Product], barcode: str, weight_value_str: str
@@ -548,11 +525,11 @@ class ProductWeightImporter(InsightImporter):
         return True
 
     @staticmethod
-    def group_by_subtype(insights: List[JSONType]) -> Dict[str, List[JSONType]]:
-        insights_by_subtype: Dict[str, List[JSONType]] = {}
+    def group_by_subtype(insights: List[Insight],) -> Dict[str, List[Insight]]:
+        insights_by_subtype: Dict[str, List[Insight]] = {}
 
         for insight in insights:
-            matcher_type = insight["content"]["matcher_type"]
+            matcher_type = insight.data["matcher_type"]
             insights_by_subtype.setdefault(matcher_type, [])
             insights_by_subtype[matcher_type].append(insight)
 
@@ -562,16 +539,16 @@ class ProductWeightImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         if not insights:
             return
 
         insights_by_subtype = self.group_by_subtype(insights)
 
         insight = insights[0]
-        insight_subtype = insight["content"]["matcher_type"]
+        insight_subtype = insight.data["matcher_type"]
 
         all_invalid = False
         if (
@@ -587,28 +564,22 @@ class ProductWeightImporter(InsightImporter):
         if self.get_seen_count(barcode=barcode, server_domain=server_domain):
             all_invalid = True
 
-        content = insight["content"]
-
-        valid = self.is_valid(product, barcode, content["value"]) and not all_invalid
-        value = content.pop("text")
-        yield {
-            "valid": valid,
-            "source_image": insight["source"],
-            "value": value,
-            "data": {"notify": content["notify"], **content},
-        }
+        insight.valid = (
+            self.is_valid(product, barcode, insight.data["value"]) and not all_invalid
+        )
+        yield insight
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         # Validation is needed if the weight was extracted from the product name
         # (not as trustworthy as OCR)
-        return insight["data"].get("source") == "product_name"
+        return insight.data.get("source") == "product_name"
 
 
 class ExpirationDateImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.expiration_date.name
+    def get_type() -> InsightType:
+        return InsightType.expiration_date
 
     def is_valid(self, product: Optional[Product], barcode: str) -> bool:
         if not product:
@@ -626,9 +597,9 @@ class ExpirationDateImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         all_invalid = False
         if len(insights) > 1:
             logger.info(
@@ -641,26 +612,18 @@ class ExpirationDateImporter(InsightImporter):
             all_invalid = True
 
         for insight in insights:
-            content = insight["content"]
-
-            valid = self.is_valid(product, barcode) and not all_invalid
-            value = content.pop("text")
-            yield {
-                "valid": valid,
-                "source_image": insight["source"],
-                "value": value,
-                "data": {"notify": content["notify"], **content},
-            }
+            insight.valid = self.is_valid(product, barcode) and not all_invalid
+            yield insight
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         return False
 
 
 class BrandInsightImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.brand.name
+    def get_type() -> InsightType:
+        return InsightType.brand
 
     def is_valid(
         self, product: Optional[Product], barcode: str, tag: str, seen_set: Set[str]
@@ -693,48 +656,28 @@ class BrandInsightImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
-            content = insight["content"]
-            value_tag = content["brand_tag"]
-            valid = self.is_valid(product, barcode, value_tag, seen_set)
-
-            insert = {
-                "valid": valid,
-                "value_tag": value_tag,
-                "value": content["brand"],
-                "source_image": insight["source"],
-                "data": {
-                    "text": content.get("text"),
-                    "data_source": content.get("data_source"),
-                    "notify": content["notify"],
-                },
-            }
-
-            if "source" in content:
-                insert["data"]["source"] = content["source"]
-
-            if "automatic_processing" in content:
-                insert["automatic_processing"] = content["automatic_processing"]
-
-            yield insert
+            value_tag: str = insight.value_tag  # type: ignore
+            insight.valid = self.is_valid(product, barcode, value_tag, seen_set)
+            yield insight
             seen_set.add(value_tag)
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         # Validation is needed if the weight was extracted from the product name
         # (not as trustworthy as OCR)
-        return insight["data"].get("source") == "product_name"
+        return insight.data.get("source") == "product_name"
 
 
 class StoreInsightImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.store.name
+    def get_type() -> InsightType:
+        return InsightType.store
 
     def is_valid(
         self, product: Optional[Product], tag: str, seen_set: Set[str]
@@ -745,39 +688,26 @@ class StoreInsightImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
-            content = insight["content"]
-            value_tag = content["value_tag"]
-            valid = self.is_valid(product, value_tag, seen_set)
-
-            insert = {
-                "valid": valid,
-                "value_tag": value_tag,
-                "value": content["value"],
-                "source_image": insight["source"],
-                "data": {"text": content["text"], "notify": content["notify"]},
-            }
-
-            if "automatic_processing" in content:
-                insert["automatic_processing"] = content["automatic_processing"]
-
-            yield insert
+            value_tag: str = insight.value_tag  # type: ignore
+            insight.valid = self.is_valid(product, value_tag, seen_set)
+            yield insight
             seen_set.add(value_tag)
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         return False
 
 
 class PackagingInsightImporter(InsightImporter):
     @staticmethod
-    def get_type() -> str:
-        return InsightType.packaging.name
+    def get_type() -> InsightType:
+        return InsightType.packaging
 
     def is_valid(
         self, product: Optional[Product], tag: str, seen_set: Set[str]
@@ -788,92 +718,70 @@ class PackagingInsightImporter(InsightImporter):
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         seen_set = self.get_seen_set(barcode=barcode, server_domain=server_domain)
 
         for insight in insights:
-            content = insight["content"]
-            value_tag = content["packaging_tag"]
-            valid = self.is_valid(product, value_tag, seen_set)
-
-            insert = {
-                "valid": valid,
-                "value_tag": value_tag,
-                "value": content["packaging"],
-                "source_image": insight["source"],
-                "data": {"text": content["text"], "notify": content["notify"]},
-            }
-
-            if "automatic_processing" in content:
-                insert["automatic_processing"] = content["automatic_processing"]
-
-            yield insert
+            value_tag: str = insight.value_tag  # type: ignore
+            insight.valid = self.is_valid(product, value_tag, seen_set)
+            yield insight
             seen_set.add(value_tag)
 
     @staticmethod
-    def need_validation(insight: JSONType) -> bool:
+    def need_validation(insight: Insight) -> bool:
         return False
 
 
 class LatentInsightImporter(InsightImporter):
-    def __init__(self, product_store: ProductStore, insight_type: str):
+    def __init__(self, product_store: ProductStore, insight_type: InsightType):
         super().__init__(product_store)
-        self.insight_type: str = insight_type
+        self.insight_type: InsightType = insight_type
 
-    def get_type(self) -> str:
+    def get_type(self) -> InsightType:
         return self.insight_type
 
     def process_product_insights(
         self,
         product: Optional[Product],
         barcode: str,
-        insights: List[JSONType],
+        insights: List[Insight],
         server_domain: str,
-    ) -> Iterator[JSONType]:
+    ) -> Iterator[Insight]:
         for insight in insights:
-            content = insight["content"]
-            value_tag = content.pop("value_tag", None)
-            value = content.pop("value", None)
-
-            yield {
-                "valid": False,
-                "value_tag": value_tag,
-                "value": value,
-                "source_image": insight["source"],
-                "data": content,
-            }
+            insight.valid = False
+            yield insight
 
 
 class InsightImporterFactory:
-    importers: JSONType = {
-        InsightType.ingredient_spellcheck.name: IngredientSpellcheckImporter,
-        InsightType.packager_code.name: PackagerCodeInsightImporter,
-        InsightType.label.name: LabelInsightImporter,
-        InsightType.category.name: CategoryImporter,
-        InsightType.product_weight.name: ProductWeightImporter,
-        InsightType.expiration_date.name: ExpirationDateImporter,
-        InsightType.brand.name: BrandInsightImporter,
-        InsightType.store.name: StoreInsightImporter,
-        InsightType.packaging.name: PackagingInsightImporter,
-        InsightType.image_flag.name: LatentInsightImporter,
-        InsightType.nutrient.name: LatentInsightImporter,
-        InsightType.nutrient_mention.name: LatentInsightImporter,
-        InsightType.location.name: LatentInsightImporter,
-        InsightType.image_lang.name: LatentInsightImporter,
-        InsightType.image_orientation.name: LatentInsightImporter,
+    importers: Dict[InsightType, Type[BaseInsightImporter]] = {
+        InsightType.ingredient_spellcheck: IngredientSpellcheckImporter,
+        InsightType.packager_code: PackagerCodeInsightImporter,
+        InsightType.label: LabelInsightImporter,
+        InsightType.category: CategoryImporter,
+        InsightType.product_weight: ProductWeightImporter,
+        InsightType.expiration_date: ExpirationDateImporter,
+        InsightType.brand: BrandInsightImporter,
+        InsightType.store: StoreInsightImporter,
+        InsightType.packaging: PackagingInsightImporter,
+        InsightType.image_flag: LatentInsightImporter,
+        InsightType.nutrient: LatentInsightImporter,
+        InsightType.nutrient_mention: LatentInsightImporter,
+        InsightType.location: LatentInsightImporter,
+        InsightType.image_lang: LatentInsightImporter,
+        InsightType.image_orientation: LatentInsightImporter,
     }
 
     @classmethod
     def create(
-        cls, insight_type: str, product_store: ProductStore
+        cls, insight_type: InsightType, product_store: ProductStore
     ) -> BaseInsightImporter:
         if insight_type in cls.importers:
             insight_cls = cls.importers[insight_type]
 
             if insight_cls == LatentInsightImporter:
-                return insight_cls(product_store, insight_type)
+                return insight_cls(product_store, insight_type)  # type: ignore
 
             return insight_cls(product_store)
         else:
