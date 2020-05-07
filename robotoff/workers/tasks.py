@@ -8,6 +8,7 @@ from robotoff.elasticsearch.category.predict import (
 from robotoff.ml.category.neural.model import (
     predict_from_product as predict_category_from_product_ml,
 )
+from robotoff.insights.dataclass import ProductInsights
 from robotoff.insights._enum import InsightType
 from robotoff.insights.importer import InsightImporterFactory, BaseInsightImporter
 from robotoff.insights.extraction import (
@@ -164,12 +165,12 @@ def updated_product_add_category_insight(
     if not product_insights:
         return False
 
-    merged_product_insight = ProductInsight.merge(product_insights)
+    merged_product_insight = ProductInsights.merge(product_insights)
     product_store = get_product_store()
     importer = InsightImporterFactory.create(InsightType.category, product_store)
 
     imported = importer.import_insights(
-        merged_product_insight,
+        [merged_product_insight],
         server_domain=server_domain,
         automatic=False,
         latent=False,
