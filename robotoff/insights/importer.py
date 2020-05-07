@@ -99,8 +99,6 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             insight: Insight
 
             for insight in raw_insight_batch:
-                # if valid field is absent, suppose all insights are valid
-                # (i.e: spellcheck)
                 valid = insight.valid
                 insight_dict = generate_insight_dict(insight)
                 latent_insight = generate_latent_insight(insight_dict, valid)
