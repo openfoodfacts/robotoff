@@ -108,7 +108,7 @@ def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[RawInsi
         insights.append(
             RawInsight(
                 type=InsightType.packager_code,
-                value=text,
+                value=key,
                 data={
                     "type": "fishing",
                     "data_source": "flashtext",
