@@ -350,7 +350,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def need_validation(insight: Insight) -> bool:
-        if insight.data["matcher_type"] in ("eu_fr", "eu_de", "fr_emb", "fishing"):
+        if insight.data["type"] in ("eu_fr", "eu_de", "fr_emb", "fishing"):
             return False
 
         return True
