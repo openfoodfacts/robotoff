@@ -91,6 +91,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         annotation: int,
         update=True,
         auth: Optional[OFFAuthentication] = None,
+        automatic: bool = False,
     ) -> AnnotationResult:
         username: Optional[str] = None
         if auth is not None:
@@ -102,6 +103,10 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         with db.atomic():
             insight.annotation = annotation
             insight.completed_at = datetime.datetime.utcnow()
+
+            if automatic:
+                insight.automatic_processing = True
+
             insight.save()
 
             if username:

@@ -265,7 +265,7 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
                     insight.value_tag, insight.barcode
                 )
             )
-            annotator.annotate(insight, 1, update=True)
+            annotator.annotate(insight, 1, update=True, automatic=True)
             count += 1
 
     logger.info("Annotated insights: {}".format(count))
