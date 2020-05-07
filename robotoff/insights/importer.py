@@ -545,8 +545,7 @@ class ProductWeightImporter(InsightImporter):
 
         insights_by_subtype = self.group_by_subtype(insights)
 
-        insight = insights[0]
-        insight_subtype = insight.data["matcher_type"]
+        insight_subtype = insights[0].data["matcher_type"]
 
         all_invalid = False
         if (
@@ -562,10 +561,18 @@ class ProductWeightImporter(InsightImporter):
         if self.get_seen_count(barcode=barcode, server_domain=server_domain):
             all_invalid = True
 
-        insight.valid = (
-            self.is_valid(product, barcode, insight.data["value"]) and not all_invalid
-        )
-        yield insight
+        for i, insight in enumerate(insights):
+            if i == 0:
+                # Only one product weight can be imported as insight
+                insight.valid = (
+                    self.is_valid(product, barcode, insight.data["value"])
+                    and not all_invalid
+                )
+            else:
+                # Not imported as insight, but imported as latent insight
+                insight.valid = False
+
+            yield insight
 
     @staticmethod
     def need_validation(insight: Insight) -> bool:
