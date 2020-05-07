@@ -91,7 +91,7 @@ def import_insights(
     insights = insights_iter(file_path)
     imported: int = 0
 
-    insight_batch: List[ProductInsight]
+    insight_batch: List[ProductInsights]
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
             imported += importer.import_insights(
