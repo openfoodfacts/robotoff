@@ -207,28 +207,47 @@ if __name__ == "__main__":
                 print("{}: {}".format(cat, confidence))
 
     @click.command()
-    @click.argument("input_", type=pathlib.Path)
     @click.option("--insight-type", "-t", required=True)
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
     @click.option("--latent", is_flag=True)
+    @click.option("--input", "input_", type=pathlib.Path, default=None)
+    @click.option("--generate-from", type=pathlib.Path, default=None)
     def import_insights(
-        input_: pathlib.Path,
         insight_type: str,
         server_domain: Optional[str],
         batch_size: int,
         latent: bool,
+        input_: Optional[pathlib.Path],
+        generate_from: Optional[pathlib.Path],
     ):
-        from robotoff.cli import insights
+        from robotoff.cli.insights import (
+            generate_from_ocr_archive,
+            import_insights as import_insights_,
+            insights_iter,
+        )
         from robotoff import settings
         from robotoff.utils import get_logger
         from robotoff.insights._enum import InsightType
 
         logger = get_logger()
-        logger.info("Importing insights from {}".format(input_))
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
-        imported = insights.import_insights(
-            input_, InsightType[insight_type], server_domain, batch_size, latent
+
+        if generate_from is not None:
+            logger.info(
+                "Generating and importing insights from {}".format(generate_from)
+            )
+            insights = generate_from_ocr_archive(
+                generate_from, InsightType[insight_type]
+            )
+        elif input_ is not None:
+            logger.info("Importing insights from {}".format(input_))
+            insights = insights_iter(input_)
+        else:
+            raise ValueError("--generate-from or --input must be provided")
+
+        imported = import_insights_(
+            insights, InsightType[insight_type], server_domain, batch_size, latent
         )
         logger.info("{} insights imported".format(imported))
 

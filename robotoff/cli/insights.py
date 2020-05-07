@@ -30,47 +30,56 @@ logger = get_logger(__name__)
 def run_from_ocr_archive(
     input_: Union[str, TextIO],
     insight_type: InsightType,
-    output: Optional[str],
+    output: Optional[str] = None,
     keep_empty: bool = False,
 ):
+    insights = generate_from_ocr_archive(input_, insight_type, keep_empty)
+
     if output is not None:
         output_f = open(output, "w")
     else:
         output_f = sys.stdout
 
     with contextlib.closing(output_f):
-        for source_image, ocr_json in ocr_iter(input_):
-            if source_image is None:
-                continue
+        for insight in insights:
+            output_f.write(json.dumps(insight.to_dict()) + "\n")
 
-            barcode: Optional[str] = get_barcode_from_path(source_image)
 
-            if barcode is None:
-                click.echo(
-                    "cannot extract barcode from source " "{}".format(source_image),
-                    err=True,
-                )
-                continue
+def generate_from_ocr_archive(
+    input_: Union[str, TextIO, pathlib.Path],
+    insight_type: InsightType,
+    keep_empty: bool = False,
+) -> Iterable[ProductInsights]:
+    for source_image, ocr_json in ocr_iter(input_):
+        if source_image is None:
+            continue
 
-            ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
+        barcode: Optional[str] = get_barcode_from_path(source_image)
 
-            if ocr_result is None:
-                continue
-
-            insights = extract_insights(ocr_result, insight_type)
-
-            # Do not produce output if insights is empty and we don't want to keep it
-            if not keep_empty and not insights:
-                continue
-
-            item = ProductInsights(
-                insights=insights,
-                barcode=barcode,
-                type=insight_type,
-                source_image=source_image,
+        if barcode is None:
+            click.echo(
+                "cannot extract barcode from source " "{}".format(source_image),
+                err=True,
             )
+            continue
 
-            output_f.write(json.dumps(item.to_dict()) + "\n")
+        ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
+
+        if ocr_result is None:
+            continue
+
+        insights = extract_insights(ocr_result, insight_type)
+
+        # Do not produce output if insights is empty and we don't want to keep it
+        if not keep_empty and not insights:
+            continue
+
+        yield ProductInsights(
+            insights=insights,
+            barcode=barcode,
+            type=insight_type,
+            source_image=source_image,
+        )
 
 
 def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
@@ -79,7 +88,7 @@ def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
 
 
 def import_insights(
-    file_path: pathlib.Path,
+    insights: Iterable[ProductInsights],
     insight_type: InsightType,
     server_domain: str,
     batch_size: int = 1024,
@@ -87,8 +96,6 @@ def import_insights(
 ) -> int:
     product_store = get_product_store()
     importer = InsightImporterFactory.create(insight_type, product_store)
-
-    insights = insights_iter(file_path)
     imported: int = 0
 
     insight_batch: List[ProductInsights]

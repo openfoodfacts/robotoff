@@ -1,8 +1,7 @@
-import gzip
 import json
 
 import pathlib as pathlib
-from typing import Callable, List, Dict, Iterable, Optional, Tuple, Union, TextIO
+from typing import List, Dict, Iterable, Optional, Tuple, Union, TextIO
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
@@ -21,7 +20,7 @@ from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
 from robotoff.off import generate_json_ocr_url, split_barcode, http_session
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -123,18 +122,23 @@ def get_source(
     return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
 
-def ocr_iter_jsonl(stream: TextIO) -> Iterable[Tuple[Optional[str], Dict]]:
-    for line in stream:
-        json_data = json.loads(line)
-
-        if "content" in json_data:
-            source = json_data["source"].replace("//", "/").replace(".json", ".jpg")
-            yield source, json_data["content"]
+def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[Tuple[Optional[str], Dict]]:
+    for item in items:
+        if "content" in item:
+            source = item["source"].replace("//", "/").replace(".json", ".jpg")
+            yield source, item["content"]
 
 
-def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]:
-    if not isinstance(source, str):
-        yield from ocr_iter_jsonl(source)
+def ocr_iter(
+    source: Union[str, TextIO, pathlib.Path]
+) -> Iterable[Tuple[Optional[str], Dict]]:
+    if isinstance(source, pathlib.Path):
+        items = jsonl_iter(source)
+        yield from ocr_content_iter(items)
+
+    elif not isinstance(source, str):
+        items = jsonl_iter_fp(source)
+        yield from ocr_content_iter(items)
 
     elif is_barcode(source):
         barcode: str = source
@@ -166,11 +170,5 @@ def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]
                     yield None, json.load(f)
 
             elif ".jsonl" in input_path.suffixes:
-                open_func: Callable
-                if input_path.suffix == ".gz":
-                    open_func = gzip.open
-                else:
-                    open_func = open
-
-                with open_func(input_path, mode="rt") as f:
-                    yield from ocr_iter_jsonl(f)
+                items = jsonl_iter(input_path)
+                yield from ocr_content_iter(items)
