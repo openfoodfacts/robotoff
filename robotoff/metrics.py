@@ -75,7 +75,7 @@ def get_product_count(country_tag: str) -> int:
     r = requests.get(
         "https://{}.openfoodfacts.org/3.json?fields=null".format(country_tag)
     ).json()
-    return r["count"]
+    return int(r["count"])
 
 
 def save_facet_metrics():
