@@ -61,7 +61,7 @@ def get_product_update_url(server: Union[ServerType, str]) -> str:
     return "{}/cgi/product_jqm2.pl".format(get_base_url(server))
 
 
-def get_product_image_select(server: Union[ServerType, str]) -> str:
+def get_product_image_select_url(server: Union[ServerType, str]) -> str:
     return "{}/cgi/product_image_crop.pl".format(get_base_url(server))
 
 
@@ -139,6 +139,7 @@ def get_product(
     barcode: str,
     fields: List[str] = None,
     server: Optional[Union[ServerType, str]] = None,
+    timeout: Optional[int] = 10,
 ) -> Optional[Dict]:
     fields = fields or []
 
@@ -153,7 +154,7 @@ def get_product(
         # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
         url += "?fields={}".format(",".join(fields))
 
-    r = http_session.get(url)
+    r = http_session.get(url, timeout=timeout)
 
     if r.status_code != 200:
         return None
@@ -322,6 +323,7 @@ def update_product(
     params: Dict,
     server_domain: Optional[str] = None,
     auth: Optional[OFFAuthentication] = None,
+    timeout: Optional[int] = 10,
 ):
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -355,7 +357,9 @@ def update_product(
         # dev environment requires authentication
         request_auth = ("off", "off")
 
-    r = http_session.get(url, params=params, auth=request_auth, cookies=cookies)
+    r = http_session.get(
+        url, params=params, auth=request_auth, cookies=cookies, timeout=timeout
+    )
 
     r.raise_for_status()
     json = r.json()
@@ -366,7 +370,7 @@ def update_product(
         logger.warn("Unexpected status during product update: {}".format(status))
 
 
-def move_to(barcode: str, to: ServerType) -> bool:
+def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     if get_product(barcode, server=to) is not None:
         return False
 
@@ -377,7 +381,7 @@ def move_to(barcode: str, to: ServerType) -> bool:
         "new_code": to,
         **AUTH_DICT,
     }
-    r = http_session.get(url, params=params)
+    r = http_session.get(url, params=params, timeout=timeout)
     data = r.json()
     return data["status"] == 1
 
@@ -389,11 +393,12 @@ def select_rotate_image(
     rotate: Optional[int] = None,
     server_domain: Optional[str] = None,
     auth: Optional[OFFAuthentication] = None,
+    timeout: Optional[int] = 10,
 ):
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
 
-    url = get_product_image_select(server_domain)
+    url = get_product_image_select_url(server_domain)
     cookies = None
     params = {
         "code": barcode,
@@ -430,7 +435,9 @@ def select_rotate_image(
         # dev environment requires authentication
         request_auth = ("off", "off")
 
-    r = http_session.post(url, data=params, auth=request_auth, cookies=cookies)
+    r = http_session.post(
+        url, data=params, auth=request_auth, cookies=cookies, timeout=timeout
+    )
 
     r.raise_for_status()
     return r
