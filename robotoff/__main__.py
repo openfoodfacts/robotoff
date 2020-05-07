@@ -246,10 +246,14 @@ if __name__ == "__main__":
         else:
             raise ValueError("--generate-from or --input must be provided")
 
-        imported = import_insights_(
+        imported, latent_imported = import_insights_(
             insights, InsightType[insight_type], server_domain, batch_size, latent
         )
-        logger.info("{} insights imported".format(imported))
+        logger.info(
+            "{} insights imported, {} latent insights imported".format(
+                imported, latent_imported
+            )
+        )
 
     @click.command()
     @click.option("--insight-type", "-t", required=True)

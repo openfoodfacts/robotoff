@@ -221,7 +221,7 @@ def generate_insights():
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
     category_insights_iter = predict_from_dataset(dataset, datetime_threshold)
 
-    imported = importer.import_insights(
+    imported, _ = importer.import_insights(
         category_insights_iter,
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic=False,

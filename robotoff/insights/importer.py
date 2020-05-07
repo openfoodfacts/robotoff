@@ -84,7 +84,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
         latent: bool = True,
-    ) -> int:
+    ) -> Tuple[int, int]:
         timestamp = datetime.datetime.utcnow()
         processed_insights: Iterator[Insight] = self.process_insights(
             data, server_domain, automatic
@@ -119,8 +119,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             inserted += batch_insert(ProductInsight, insight_batch, 50)
             latent_inserted += batch_insert(LatentProductInsight, latent_batch, 50)
 
-        logger.info("Latent insight inserted: {}".format(latent_inserted))
-        return inserted
+        return inserted, latent_inserted
 
     @abc.abstractmethod
     def process_insights(
