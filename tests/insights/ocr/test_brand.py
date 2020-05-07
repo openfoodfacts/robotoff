@@ -39,7 +39,11 @@ def brand_keyword_processor():
             {
                 "value": "Le Comptoir de Mathilde",
                 "value_tag": "le-comptoir-de-mathilde",
-                "data": {"text": "Le comptoir de Mathilde", "data_source": "test"},
+                "data": {
+                    "text": "Le comptoir de Mathilde",
+                    "data_source": "test",
+                    "notify": False,
+                },
             },
         ),
         ("Netto gewitch: 450 g", None),
@@ -49,7 +53,11 @@ def brand_keyword_processor():
             {
                 "value": "Alpina Savoie",
                 "value_tag": "alpina-savoie",
-                "data": {"text": "Alpina savoie", "data_source": "test"},
+                "data": {
+                    "text": "Alpina savoie",
+                    "data_source": "test",
+                    "notify": False,
+                },
             },
         ),
     ],
@@ -75,7 +83,7 @@ def test_extract_brand_taxonomy(
             {
                 "value": "Coca-Cola",
                 "value_tag": "coca-cola",
-                "data": {"text": "cocacola", "data_source": "test"},
+                "data": {"text": "cocacola", "data_source": "test", "notify": False},
             },
         ),
     ],

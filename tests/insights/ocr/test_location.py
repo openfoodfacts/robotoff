@@ -175,7 +175,7 @@ def test_address_extractor_extract_addresses(mocker, cities):
     )
     text = "blah paris 75000 poya foo"
     insights = ae.extract_addresses(text)
-    assert len(insights) == 0
+    assert len(insights) == 1
     assert insights[0].data == {
         "country_code": "fr",
         "city_name": "paris",
