@@ -210,7 +210,7 @@ if __name__ == "__main__":
     @click.option("--insight-type", "-t", required=True)
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
-    @click.option("--latent", is_flag=True)
+    @click.option("--latent/--no-latent", default=True)
     @click.option("--input", "input_", type=pathlib.Path, default=None)
     @click.option("--generate-from", type=pathlib.Path, default=None)
     def import_insights(
