@@ -262,7 +262,7 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
         if is_processable:
             logger.info(
                 "Annotating insight {} (barcode: {})".format(
-                    insight.value_tag, insight.barcode
+                    insight.value_tag or insight.value, insight.barcode
                 )
             )
             annotator.annotate(insight, 1, update=True, automatic=True)
