@@ -1,5 +1,6 @@
 import logging
 import multiprocessing
+import time
 from typing import Dict, Callable, Optional
 
 from robotoff.elasticsearch.category.predict import (
@@ -107,6 +108,9 @@ def delete_product_insights(barcode: str, server_domain: str):
 
 
 def updated_product_update_insights(barcode: str, server_domain: str):
+    # Sleep 5s to let the OFF update request that triggered the webhook call
+    # to finish
+    time.sleep(5)
     product_dict = get_product(barcode)
 
     if product_dict is None:
