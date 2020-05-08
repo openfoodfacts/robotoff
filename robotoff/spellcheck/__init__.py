@@ -1,32 +1,5 @@
-import dataclasses
 from typing import List
-
-
-@dataclasses.dataclass
-class SpellcheckIteration:
-    model: str
-    original: str
-    correction: str
-
-
-class SpellcheckItem:
-    def __init__(self, original: str):
-        self.original = original
-        self.iterations = []
-
-    @property
-    def latest_correction(self) -> str:
-        if len(self.iterations) > 0:
-            return self.iterations[-1].correction
-        else:
-            return self.original
-
-    def update_correction(self, correction: str, model: str = "UNK"):
-        self.iterations.append(
-            SpellcheckIteration(
-                original=self.latest_correction, correction=correction, model=model,
-            )
-        )
+from robotoff.spellcheck.data_utils import SpellcheckItem
 
 
 class BaseSpellchecker:

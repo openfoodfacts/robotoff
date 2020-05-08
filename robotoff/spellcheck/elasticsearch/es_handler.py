@@ -1,6 +1,8 @@
 from robotoff import settings
 from typing import List, Iterable, Dict
 
+from robotoff.utils.es import generate_msearch_body
+
 
 class ElasticsearchHandler:
     def __init__(
@@ -19,7 +21,7 @@ class ElasticsearchHandler:
         self.size = size
         self.min_word_length = min_word_length
         self.suggest_mode = suggest_mode
-        self.suggester_name = name
+        self.suggester_name = suggester_name
         self.reverse = reverse
         self.index_name = index_name
 

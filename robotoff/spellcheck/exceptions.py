@@ -1,0 +1,2 @@
+class TokenLengthMismatchException(Exception):
+    pass

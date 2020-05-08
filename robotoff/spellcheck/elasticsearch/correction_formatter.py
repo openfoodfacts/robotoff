@@ -1,11 +1,7 @@
 from typing import List, Dict
 
-from robotoff.spellcheck.data_utils import (
-    TermCorrection,
-    Correction,
-    Offset,
-    TokenLengthMismatchException,
-)
+from robotoff.spellcheck.data_utils import AtomicCorrection, Offset
+from robotoff.spellcheck.exceptions import TokenLengthMismatchException
 
 
 class CorrectionFormatter:
@@ -15,12 +11,11 @@ class CorrectionFormatter:
         suggestion_tokens: List[Dict],
         offset: int,
         score: int,
-    ) -> Correction:
+    ) -> List[AtomicCorrection]:
         if len(original_tokens) != len(suggestion_tokens):
             raise TokenLengthMismatchException()
 
-        correction = Correction(term_corrections=[], score=score)
-
+        atomic_corrections = []
         for original_token, suggestion_token in zip(original_tokens, suggestion_tokens):
             original_token_str = original_token["token"]
             suggestion_token_str = suggestion_token["token"]
@@ -33,13 +28,15 @@ class CorrectionFormatter:
                 else:
                     token_str = suggestion_token_str
 
-                correction.add_term(
-                    original=original_token_str,
-                    correction=token_str,
-                    offset=Offset(
-                        offset.start + original_token["start_offset"],
-                        offset.start + original_token["end_offset"],
-                    ),
+                atomic_corrections.append(
+                    AtomicCorrection(
+                        original=original_token_str,
+                        correction=token_str,
+                        offset=Offset(
+                            offset.start + original_token["start_offset"],
+                            offset.start + original_token["end_offset"],
+                        ),
+                        score=score,
+                    )
                 )
-
-        return correction
+        return atomic_corrections
