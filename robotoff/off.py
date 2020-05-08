@@ -323,7 +323,7 @@ def update_product(
     params: Dict,
     server_domain: Optional[str] = None,
     auth: Optional[OFFAuthentication] = None,
-    timeout: Optional[int] = 10,
+    timeout: Optional[int] = 15,
 ):
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -393,7 +393,7 @@ def select_rotate_image(
     rotate: Optional[int] = None,
     server_domain: Optional[str] = None,
     auth: Optional[OFFAuthentication] = None,
-    timeout: Optional[int] = 10,
+    timeout: Optional[int] = 15,
 ):
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
