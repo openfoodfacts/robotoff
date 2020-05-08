@@ -92,6 +92,21 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
+        with db.atomic() as transaction:
+            try:
+                return self._annotate(insight, annotation, update, auth, automatic)
+            except Exception as e:
+                transaction.rollback()
+                raise e
+
+    def _annotate(
+        self,
+        insight: ProductInsight,
+        annotation: int,
+        update=True,
+        auth: Optional[OFFAuthentication] = None,
+        automatic: bool = False,
+    ) -> AnnotationResult:
         username: Optional[str] = None
         if auth is not None:
             username = auth.username
@@ -99,20 +114,19 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             if auth.session_cookie:
                 username = extract_username(auth.session_cookie)
 
-        with db.atomic():
-            insight.annotation = annotation
-            insight.completed_at = datetime.datetime.utcnow()
+        insight.annotation = annotation
+        insight.completed_at = datetime.datetime.utcnow()
 
-            if automatic:
-                insight.automatic_processing = True
+        if automatic:
+            insight.automatic_processing = True
 
-            insight.save()
+        insight.save()
 
-            if username:
-                UserAnnotation.create(insight=insight, username=username)
+        if username:
+            UserAnnotation.create(insight=insight, username=username)
 
-            if annotation == 1 and update:
-                return self.update_product(insight, auth=auth)
+        if annotation == 1 and update:
+            return self.update_product(insight, auth=auth)
 
         return SAVED_ANNOTATION_RESULT
 
