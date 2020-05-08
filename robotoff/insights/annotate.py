@@ -111,8 +111,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             if username:
                 UserAnnotation.create(insight=insight, username=username)
 
-        if annotation == 1 and update:
-            return self.update_product(insight, auth=auth)
+            if annotation == 1 and update:
+                return self.update_product(insight, auth=auth)
 
         return SAVED_ANNOTATION_RESULT
 
