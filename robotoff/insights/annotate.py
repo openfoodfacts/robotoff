@@ -9,7 +9,6 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import db, ProductInsight, UserAnnotation
 from robotoff.off import (
-    get_product,
     update_emb_codes,
     add_label_tag,
     add_category,
@@ -22,7 +21,7 @@ from robotoff.off import (
     select_rotate_image,
     OFFAuthentication,
 )
-from robotoff.products import get_image_id
+from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -198,7 +197,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         barcode = insight.barcode
         lang = insight.data["lang"]
         field_name = "ingredients_text_{}".format(lang)
-        product = get_product(barcode, fields=[field_name])
+        product = get_product(barcode, [field_name])
 
         if product is None:
             return MISSING_PRODUCT_RESULT

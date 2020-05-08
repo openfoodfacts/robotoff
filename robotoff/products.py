@@ -459,7 +459,7 @@ class MemoryProductStore(ProductStore):
     def __getitem__(self, item) -> Optional[Product]:
         return self.store.get(item)
 
-    def __iter__(self) -> Iterable[Product]:
+    def __iter__(self) -> Iterator[Product]:
         return iter(self.store.values())
 
     def is_real_time(self) -> bool:
@@ -504,6 +504,13 @@ def load_min_dataset() -> ProductStore:
 def get_product_store() -> DBProductStore:
     mongo_client = MONGO_CLIENT_CACHE.get()
     return DBProductStore(client=mongo_client)
+
+
+def get_product(
+    barcode: str, projection: Optional[List[str]] = None
+) -> Optional[JSONType]:
+    mongo_client = MONGO_CLIENT_CACHE.get()
+    return mongo_client.off.products.find_one({"code": barcode}, projection)
 
 
 CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)
