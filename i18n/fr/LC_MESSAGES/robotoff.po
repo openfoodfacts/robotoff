@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-05-03 08:31\n"
+"PO-Revision-Date: 2020-05-09 23:03\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -33,5 +33,5 @@ msgstr "Ce poids correspond-il au poids affiché sur le produit ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Cette image est-elle une image nutritionnelle pour cette langue?"
 
