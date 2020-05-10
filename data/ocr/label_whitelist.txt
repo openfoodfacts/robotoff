@@ -102,3 +102,4 @@ en:vegan
 en:sustainable-seafood-msc
 en:halal
 en:utz-certified
+en:pefc
