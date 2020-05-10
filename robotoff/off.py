@@ -7,6 +7,8 @@ import requests
 from robotoff import settings
 from robotoff.utils import get_logger
 
+logger = get_logger(__name__)
+
 
 class OFFAuthentication:
     def __init__(
@@ -23,6 +25,33 @@ class OFFAuthentication:
         self.session_cookie = session_cookie
         self.username = username
         self.password = password
+
+    def get_username(self) -> Optional[str]:
+        if self.username is not None:
+            return self.username
+
+        elif self.session_cookie is not None:
+            splitted = self.session_cookie.split("&")
+
+            if splitted:
+                is_next = False
+                for split in splitted:
+                    if split == "user_id":
+                        is_next = True
+                        continue
+                    elif is_next:
+                        if split:
+                            return split
+                        else:
+                            break
+
+            logger.warning(
+                "Unable to extract username from session cookie: {}".format(
+                    self.session_cookie
+                )
+            )
+
+        return None
 
 
 class ServerType(enum.Enum):
@@ -50,8 +79,6 @@ API_URLS: Dict[ServerType, str] = {
     ServerType.opf: "https://world.openproductfacts.org",
     ServerType.opff: "https://world.openpetfoodfacts.org",
 }
-
-logger = get_logger(__name__)
 
 
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")

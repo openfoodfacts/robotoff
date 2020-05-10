@@ -192,6 +192,13 @@ class AnnotateInsightResource:
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
 
+        username = auth.get_username() if auth else "unknown annotator"
+        logger.info(
+            "New annotation received from {} (annotation: {}, insight: {})".format(
+                username, annotation, insight_id
+            )
+        )
+
         annotation_result = save_insight(
             insight_id, annotation, update=update, auth=auth
         )

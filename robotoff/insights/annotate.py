@@ -62,27 +62,6 @@ UNKNOWN_INSIGHT_RESULT = AnnotationResult(
 )
 
 
-def extract_username(session_cookie: str) -> Optional[str]:
-    splitted = session_cookie.split("&")
-
-    if splitted:
-        is_next = False
-        for split in splitted:
-            if split == "user_id":
-                is_next = True
-                continue
-            elif is_next:
-                if split:
-                    return split
-                else:
-                    break
-
-    logger.warning(
-        "Unable to extract username from session cookie: {}".format(session_cookie)
-    )
-    return None
-
-
 class InsightAnnotator(metaclass=abc.ABCMeta):
     def annotate(
         self,
@@ -109,10 +88,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     ) -> AnnotationResult:
         username: Optional[str] = None
         if auth is not None:
-            username = auth.username
-
-            if auth.session_cookie:
-                username = extract_username(auth.session_cookie)
+            username = auth.get_username()
 
         insight.annotation = annotation
         insight.completed_at = datetime.datetime.utcnow()
