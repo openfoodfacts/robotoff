@@ -345,13 +345,6 @@ class PackagerCodeInsightImporter(InsightImporter):
             yield insight
             seen_set.add(value)
 
-    @staticmethod
-    def need_validation(insight: Insight) -> bool:
-        if insight.data["type"] in ("eu_fr", "eu_de", "fr_emb", "fishing"):
-            return False
-
-        return True
-
 
 class LabelInsightImporter(InsightImporter):
     @staticmethod

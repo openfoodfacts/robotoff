@@ -87,6 +87,7 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[RawInsi
                             "notify": ocr_regex.notify,
                         },
                         type=InsightType.packager_code,
+                        automatic_processing=True,
                     )
                 )
 
@@ -115,6 +116,7 @@ def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[RawInsi
                     "raw": match_str,
                     "notify": True,
                 },
+                automatic_processing=True,
             )
         )
 
