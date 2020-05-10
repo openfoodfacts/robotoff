@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-01-15 20:35\n"
+"PO-Revision-Date: 2020-05-02 11:39\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Sardinian\n"
 "Language: sc\n"
@@ -25,5 +25,13 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
+msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does this weight match the weight displayed on the product?"
+msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image a nutrition image for this language?"
 msgstr ""
 
