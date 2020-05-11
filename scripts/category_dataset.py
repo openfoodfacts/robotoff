@@ -3,8 +3,11 @@ from typing import List, Iterator, Set, Optional
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
 from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyNode
-from robotoff.utils import dump_jsonl
+from robotoff.utils import dump_jsonl, get_logger
 from robotoff.utils.types import JSONType
+
+
+logger = get_logger()
 
 
 def infer_category_tags(
@@ -54,6 +57,8 @@ def generate_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSO
             )
             yield {
                 "code": product["code"],
+                "nutriments": product.get("nutriments") or None,
+                "images": product.get("images", {}) or None,
                 "product_name": product[product_name_field],
                 "categories_tags": [x.id for x in inferred_categories_tags],
                 "ingredient_tags": ingredient_tags,
@@ -64,6 +69,7 @@ def generate_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSO
 
 
 def run(lang: Optional[str] = None):
+    logger.info("Generating category dataset for lang {}".format(lang or "xx"))
     dataset = ProductDataset.load()
     training_stream = dataset.stream().filter_nonempty_tag_field("categories_tags")
 
@@ -82,8 +88,9 @@ def run(lang: Optional[str] = None):
         / "category_{}.jsonl".format(lang or "xx"),
         dataset_iter,
     )
-    print(count)
+    logger.info("{} items for lang {}".format(count, lang or "xx"))
 
 
 if __name__ == "__main__":
-    run(lang="pt")
+    for lang in (None, "fr", "it", "en", "de", "es"):
+        run(lang=lang)
