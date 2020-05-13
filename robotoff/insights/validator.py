@@ -138,10 +138,28 @@ class ProductWeightValidator(InsightValidator):
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
-            # Product is not in product store yet, keep the insight
+            product = self.product_store[insight.barcode]
+
+        if product is None:
             return False
 
         if product.quantity is not None:
+            return True
+
+        return False
+
+
+class ExpirationDateValidator(InsightValidator):
+    def is_latent(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
+        if product is None:
+            product = self.product_store[insight.barcode]
+
+        if not product:
+            return False
+
+        if product.expiration_date:
             return True
 
         return False
@@ -160,7 +178,7 @@ class InsightValidatorFactory:
         InsightType.category.name: CategoryValidator,
         InsightType.product_weight.name: ProductWeightValidator,
         InsightType.brand.name: BrandValidator,
-        InsightType.expiration_date.name: GenericValidator,
+        InsightType.expiration_date.name: ExpirationDateValidator,
         InsightType.packager_code.name: GenericValidator,
         InsightType.packaging.name: GenericValidator,
         InsightType.store.name: GenericValidator,
