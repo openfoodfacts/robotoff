@@ -46,12 +46,6 @@ def is_reserved_barcode(barcode: str) -> bool:
     return barcode.startswith("2")
 
 
-def generate_insight_dict(insight: Insight) -> JSONType:
-    insight_dict = insight.to_dict()
-    insight_dict.pop("valid")
-    return insight_dict
-
-
 def exist_latent(latent_insight: JSONType) -> bool:
     return ProductInsight.exists(
         latent=True,
@@ -87,7 +81,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             insight: Insight
 
             for insight in raw_insight_batch:
-                insight_dict = generate_insight_dict(insight)
+                insight_dict = insight.to_dict()
 
                 if not insight.latent or not exist_latent(insight_dict):
                     insight_batch.append(insight_dict)
