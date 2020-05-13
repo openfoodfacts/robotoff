@@ -507,13 +507,17 @@ class ProductWeightImporter(InsightImporter):
             )
             multiple_weights = True
 
+        already_seen = False
         if self.get_seen_count(barcode=barcode, server_domain=server_domain):
+            already_seen = True
             multiple_weights = True
 
         for i, insight in enumerate(insights):
             if i == 0:
                 # Only one product weight can be imported as non-latent insight
-                insight.latent = self.is_latent(product, barcode, insight.data["value"])
+                insight.latent = already_seen or self.is_latent(
+                    product, barcode, insight.data["value"]
+                )
 
                 if multiple_weights:
                     # Multiple candidates, don't process automatically
