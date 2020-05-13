@@ -4,6 +4,7 @@ from typing import Optional
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights._enum import InsightType
+from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight
 from robotoff.products import is_valid_image, ProductStore, Product
 from robotoff.taxonomy import Taxonomy, get_taxonomy
@@ -165,6 +166,24 @@ class ExpirationDateValidator(InsightValidator):
         return False
 
 
+class PackagerCodeValidator(InsightValidator):
+    def is_latent(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
+        if product is None:
+            product = self.product_store[insight.barcode]
+
+        product_emb_codes_tags = getattr(product, "emb_codes_tags", [])
+
+        normalized_emb_code = normalize_emb_code(insight.value)
+        normalized_emb_codes = [normalize_emb_code(c) for c in product_emb_codes_tags]
+
+        if normalized_emb_code in normalized_emb_codes:
+            return True
+
+        return False
+
+
 class GenericValidator(InsightValidator):
     def is_latent(
         self, insight: ProductInsight, product: Optional[Product] = None
@@ -179,7 +198,7 @@ class InsightValidatorFactory:
         InsightType.product_weight.name: ProductWeightValidator,
         InsightType.brand.name: BrandValidator,
         InsightType.expiration_date.name: ExpirationDateValidator,
-        InsightType.packager_code.name: GenericValidator,
+        InsightType.packager_code.name: PackagerCodeValidator,
         InsightType.packaging.name: GenericValidator,
         InsightType.store.name: GenericValidator,
     }
