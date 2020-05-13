@@ -271,6 +271,15 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
 
 
 class PackagerCodeInsightImporter(InsightImporter):
+    def get_seen_set(self, barcode: str, server_domain: str) -> Set[str]:
+        seen_set: Set[str] = set()
+        query = generate_seen_set_query(self.get_type(), barcode, server_domain)
+
+        for t in query.iterator():
+            seen_set.add(t.value)
+
+        return seen_set
+
     @staticmethod
     def get_type() -> InsightType:
         return InsightType.packager_code
@@ -299,17 +308,7 @@ class PackagerCodeInsightImporter(InsightImporter):
         insights: List[Insight],
         server_domain: str,
     ) -> Iterator[Insight]:
-        seen_set: Set[str] = set()
-
-        for t in (
-            ProductInsight.select(ProductInsight.value).where(
-                ProductInsight.latent == False,  # noqa: E712
-                ProductInsight.type == self.get_type(),
-                ProductInsight.barcode == barcode,
-                ProductInsight.server_domain == server_domain,
-            )
-        ).iterator():
-            seen_set.add(t.value)
+        seen_set: Set[str] = self.get_seen_set(barcode, server_domain)
 
         for insight in insights:
             value: str = insight.value  # type: ignore
