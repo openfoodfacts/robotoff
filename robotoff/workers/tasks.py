@@ -74,7 +74,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
             )
             continue
 
-        logger.info("Extracting {}".format(insight_type))
+        logger.info("Extracting {}".format(insight_type.name))
         importer: BaseInsightImporter = InsightImporterFactory.create(
             insight_type, product_store
         )
