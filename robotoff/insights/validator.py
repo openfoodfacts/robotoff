@@ -110,7 +110,7 @@ class LabelValidator(InsightValidator):
 
 
 class CategoryValidator(InsightValidator):
-    def is_latent(
+    def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
@@ -120,7 +120,7 @@ class CategoryValidator(InsightValidator):
         category_tag = insight.value_tag
 
         if category_tag in product_categories_tags:
-            return True
+            return False
 
         # Check that the predicted category is not a parent of a
         # current/already predicted category
@@ -129,9 +129,14 @@ class CategoryValidator(InsightValidator):
         if category_tag in category_taxonomy and category_taxonomy.is_parent_of_any(
             category_tag, product_categories_tags
         ):
-            return True
+            return False
 
-        return False
+        return True
+
+    def is_latent(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> None:
+        return None
 
 
 class ProductWeightValidator(InsightValidator):
