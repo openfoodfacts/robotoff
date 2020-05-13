@@ -584,9 +584,15 @@ class ExpirationDateImporter(InsightImporter):
                 "{}".format(date_count, barcode)
             )
 
+        selected = False
         for insight in insights:
             value: str = insight.value  # type: ignore
-            insight.latent = self.is_latent(product, barcode, value, seen_set)
+            insight.latent = (
+                self.is_latent(product, barcode, value, seen_set) and not selected
+            )
+
+            if insight.latent:
+                selected = True
 
             if not insight.latent and multiple_dates:
                 insight.automatic_processing = False
