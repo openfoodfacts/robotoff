@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Set
 import uuid
 
 from robotoff.insights._enum import InsightType
-from robotoff.models import LatentProductInsight, ProductInsight
+from robotoff.models import ProductInsight
 from robotoff.products import (
     get_image_id,
     has_nutrition_image,
@@ -33,18 +33,16 @@ def generate_fiber_quality_facet():
     added = 0
     seen_set: Set[str] = set()
 
-    for latent_insight in (
-        LatentProductInsight.select(
-            LatentProductInsight.barcode, LatentProductInsight.source_image
-        )
+    for insight in (
+        ProductInsight.select(ProductInsight.barcode, ProductInsight.source_image)
         .where(
-            LatentProductInsight.type == InsightType.nutrient_mention.name,
-            LatentProductInsight.data["mentions"].contains("fiber"),
-            LatentProductInsight.source_image.is_null(False),
+            ProductInsight.type == InsightType.nutrient_mention.name,
+            ProductInsight.data["mentions"].contains("fiber"),
+            ProductInsight.source_image.is_null(False),
         )
         .iterator()
     ):
-        barcode = latent_insight.barcode
+        barcode = insight.barcode
 
         if barcode in seen_set:
             continue
@@ -61,7 +59,7 @@ def generate_fiber_quality_facet():
         images = product.get("images", {})
 
         if (
-            not is_valid_image(images, latent_insight.source_image)
+            not is_valid_image(images, insight.source_image)
             or "fiber" in nutriments
             or "fiber_prepared" in nutriments
         ):
@@ -74,7 +72,7 @@ def generate_fiber_quality_facet():
 
         if (
             FIBER_NUTRITION_QUALITY_FACET_NAME not in data_quality_tags
-            and is_nutrition_image(images, latent_insight.source_image)
+            and is_nutrition_image(images, insight.source_image)
         ):
             facets.append(FIBER_NUTRITION_QUALITY_FACET_NAME)
 
@@ -98,14 +96,12 @@ def generate_fiber_quality_facet():
 
 def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
     for insight in (
-        LatentProductInsight.select(
-            LatentProductInsight.data, LatentProductInsight.source_image
-        )
+        ProductInsight.select(ProductInsight.data, ProductInsight.source_image)
         .where(
-            LatentProductInsight.barcode == barcode,
-            LatentProductInsight.type == InsightType.image_orientation.name,
-            LatentProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-            LatentProductInsight.source_image.is_null(False),
+            ProductInsight.barcode == barcode,
+            ProductInsight.type == InsightType.image_orientation.name,
+            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
+            ProductInsight.source_image.is_null(False),
         )
         .iterator()
     ):
@@ -134,11 +130,11 @@ def generate_nutrition_image_insights():
     added = 0
     seen_set: Set[str] = set()
 
-    latent_insight: LatentProductInsight
+    latent_insight: ProductInsight
     for latent_insight in (
-        LatentProductInsight.select()
-        .where(LatentProductInsight.type == InsightType.nutrient_mention.name)
-        .order_by(LatentProductInsight.source_image.desc())
+        ProductInsight.select()
+        .where(ProductInsight.type == InsightType.nutrient_mention.name)
+        .order_by(ProductInsight.source_image.desc())
         .iterator()
     ):
         barcode = latent_insight.barcode

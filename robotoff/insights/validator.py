@@ -1,4 +1,5 @@
 import abc
+import enum
 from typing import Optional
 
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
@@ -29,10 +30,18 @@ class InsightValidator(metaclass=abc.ABCMeta):
 
         return False
 
-    @abc.abstractmethod
     def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> bool:
+    ) -> Optional[bool]:
+        if product is None:
+            product = self.product_store[insight.barcode]
+
+        return not self.has_invalid_image(insight, product)
+
+    @abc.abstractmethod
+    def is_latent(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> Optional[bool]:
         pass
 
 
@@ -55,30 +64,37 @@ class BrandValidator(InsightValidator):
             )
             return False
 
-        if product is None:
-            return True
-
-        if brand_tag in product.brands_tags:
-            return False
-
         return True
 
-
-class LabelValidator(InsightValidator):
-    def is_valid(
+    def is_latent(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
-        if self.has_invalid_image(insight, product):
+        brand_tag = insight.value_tag
+
+        if product is None:
             return False
+
+        if brand_tag in product.brands_tags:
+            return True
+
+        return False
+
+
+class LabelValidator(InsightValidator):
+    def is_latent(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
+        if product is None:
+            product = self.product_store[insight.barcode]
 
         product_labels_tags = getattr(product, "labels_tags", [])
         label_tag = insight.value_tag
 
         if label_tag in product_labels_tags:
-            return False
+            return True
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
@@ -87,26 +103,23 @@ class LabelValidator(InsightValidator):
         if label_tag in label_taxonomy and label_taxonomy.is_parent_of_any(
             label_tag, product_labels_tags
         ):
-            return False
+            return True
 
-        return True
+        return False
 
 
 class CategoryValidator(InsightValidator):
-    def is_valid(
+    def is_latent(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
-        if self.has_invalid_image(insight, product):
-            return False
-
         product_categories_tags = getattr(product, "categories_tags", [])
         category_tag = insight.value_tag
 
         if category_tag in product_categories_tags:
-            return False
+            return True
 
         # Check that the predicted category is not a parent of a
         # current/already predicted category
@@ -115,36 +128,30 @@ class CategoryValidator(InsightValidator):
         if category_tag in category_taxonomy and category_taxonomy.is_parent_of_any(
             category_tag, product_categories_tags
         ):
-            return False
+            return True
 
-        return True
+        return False
 
 
 class ProductWeightValidator(InsightValidator):
-    def is_valid(
+    def is_latent(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
-            product = self.product_store[insight.barcode]
-
-        if self.has_invalid_image(insight, product):
-            return False
-
-        if product is None:
             # Product is not in product store yet, keep the insight
-            return True
+            return False
 
         if product.quantity is not None:
-            return False
+            return True
 
-        return True
+        return False
 
 
 class GenericValidator(InsightValidator):
-    def is_valid(
+    def is_latent(
         self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> bool:
-        return not self.has_invalid_image(insight, product)
+    ) -> None:
+        return None
 
 
 class InsightValidatorFactory:
@@ -169,16 +176,32 @@ class InsightValidatorFactory:
             return None
 
 
-def delete_invalid_insight(
+@enum.unique
+class InsightValidationResult(enum.IntEnum):
+    unchanged = 0
+    deleted = 1
+    updated = 2
+
+
+def validate_insight(
     insight: ProductInsight,
     validator: Optional[InsightValidator],
     product: Optional[Product] = None,
-) -> bool:
+) -> InsightValidationResult:
     if validator is None:
-        return False
+        return InsightValidationResult.unchanged
 
     if not validator.is_valid(insight, product=product):
         insight.delete_instance()
-        return True
+        return InsightValidationResult.deleted
 
-    return False
+    if not insight.latent:
+        latent = validator.is_latent(insight, product)
+
+        if latent is not None and latent:
+            insight.latent = True
+            insight.process_after = None
+            insight.save()
+            return InsightValidationResult.updated
+
+    return InsightValidationResult.unchanged

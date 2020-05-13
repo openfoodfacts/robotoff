@@ -48,6 +48,7 @@ class ProductInsight(BaseModel):
     timestamp = peewee.DateTimeField(null=True)
     completed_at = peewee.DateTimeField(null=True)
     annotation = peewee.IntegerField(null=True)
+    latent = peewee.BooleanField(null=False, index=True, default=False)
     countries = BinaryJSONField(null=True, index=True)
     brands = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)
@@ -92,6 +93,7 @@ class ProductInsight(BaseModel):
                 "server_domain": self.server_domain,
                 "server_type": self.server_type,
                 "unique_scans_n": self.unique_scans_n,
+                "latent": self.latent,
             }
         else:
             return {
@@ -104,35 +106,15 @@ class ProductInsight(BaseModel):
             }
 
     @classmethod
-    def create_from_latent(cls, latent_insight: "LatentProductInsight", **kwargs):
+    def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):
         updated_values = {**latent_insight.__data__, **kwargs}
         return cls.create(**updated_values)
-
-
-class LatentProductInsight(BaseModel):
-    id = peewee.UUIDField(primary_key=True)
-    barcode = peewee.CharField(max_length=100, null=False, index=True)
-    type = peewee.CharField(max_length=256)
-    data = BinaryJSONField(index=True)
-    timestamp = peewee.DateTimeField(null=True)
-    value_tag = peewee.TextField(null=True, index=True)
-    value = peewee.TextField(null=True, index=True)
-    source_image = peewee.TextField(null=True, index=True)
-    server_domain = peewee.TextField(
-        null=True, help_text="server domain linked to the insight", index=True
-    )
-    server_type = peewee.CharField(
-        null=True,
-        max_length=10,
-        help_text="project associated with the server_domain, "
-        "one of 'off', 'obf', 'opff', 'opf'",
-        index=True,
-    )
 
     @classmethod
     def exists(
         cls,
         barcode: str,
+        latent: bool,
         insight_type: str,
         server_domain: str,
         value_tag: Optional[str] = None,
@@ -140,14 +122,15 @@ class LatentProductInsight(BaseModel):
         source_image: Optional[str] = None,
     ) -> bool:
         return bool(
-            LatentProductInsight.select()
+            cls.select()
             .where(
-                LatentProductInsight.barcode == barcode,
-                LatentProductInsight.type == insight_type,
-                LatentProductInsight.server_domain == server_domain,
-                LatentProductInsight.value_tag == value_tag,
-                LatentProductInsight.value == value,
-                LatentProductInsight.source_image == source_image,
+                cls.latent == latent,
+                cls.barcode == barcode,
+                cls.type == insight_type,
+                cls.server_domain == server_domain,
+                cls.value_tag == value_tag,
+                cls.value == value,
+                cls.source_image == source_image,
             )
             .count()
         )
@@ -168,4 +151,4 @@ class UserAnnotation(BaseModel):
         return self.insight.completed_at
 
 
-MODELS = [ProductInsight, UserAnnotation, LatentProductInsight]
+MODELS = [ProductInsight, UserAnnotation]

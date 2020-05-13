@@ -1,16 +1,15 @@
 import abc
-import copy
 import datetime
 import uuid
 from typing import Dict, Iterable, Iterator, List, Set, Optional, Tuple, Type
 
 from more_itertools import chunked
 
-from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range, BRAND_BLACKLIST_STORE
+from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights.dataclass import Insight, ProductInsights
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import batch_insert, LatentProductInsight, ProductInsight
+from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
 from robotoff.products import is_valid_image, ProductStore, Product
 from robotoff import settings
@@ -34,6 +33,7 @@ def generate_seen_set_query(
 ):
     return ProductInsight.select(ProductInsight.value_tag).where(
         ProductInsight.type == insight_type.name,
+        ProductInsight.latent == False,  # noqa: E712
         ProductInsight.barcode == barcode,
         ProductInsight.server_domain == server_domain,
     )
@@ -52,19 +52,9 @@ def generate_insight_dict(insight: Insight) -> JSONType:
     return insight_dict
 
 
-def generate_latent_insight(insight: JSONType, valid: bool) -> JSONType:
-    insight = copy.deepcopy(insight)
-    insight.pop("automatic_processing")
-    insight.pop("reserved_barcode")
-    insight.pop("countries")
-    insight.pop("brands")
-    insight.setdefault("data", {})
-    insight["data"]["valid"] = valid
-    return insight
-
-
 def exist_latent(latent_insight: JSONType) -> bool:
-    return LatentProductInsight.exists(
+    return ProductInsight.exists(
+        latent=True,
         barcode=latent_insight["barcode"],
         insight_type=latent_insight["type"],
         server_domain=latent_insight["server_domain"],
@@ -84,40 +74,27 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
         latent: bool = True,
-    ) -> Tuple[int, int]:
+    ) -> int:
         timestamp = datetime.datetime.utcnow()
         processed_insights: Iterator[Insight] = self.process_insights(
             data, server_domain, automatic
         )
         full_insights = self.add_fields(processed_insights, timestamp, server_domain)
         inserted = 0
-        latent_inserted = 0
 
         for raw_insight_batch in chunked(full_insights, 50):
             insight_batch: List[JSONType] = []
-            latent_batch: List[JSONType] = []
             insight: Insight
 
             for insight in raw_insight_batch:
-                valid = insight.valid
                 insight_dict = generate_insight_dict(insight)
-                latent_insight = generate_latent_insight(insight_dict, valid)
-                latent_exist = exist_latent(latent_insight)
 
-                if valid:
+                if not insight.latent or not exist_latent(insight_dict):
                     insight_batch.append(insight_dict)
-                    # if insight is valid, always add it to latent insights
-                    if not latent_exist:
-                        latent_batch.append(latent_insight)
-
-                elif latent and not latent_exist:
-                    # invalid insight, only import is as latent if latent = True
-                    latent_batch.append(latent_insight)
 
             inserted += batch_insert(ProductInsight, insight_batch, 50)
-            latent_inserted += batch_insert(LatentProductInsight, latent_batch, 50)
 
-        return inserted, latent_inserted
+        return inserted
 
     @abc.abstractmethod
     def process_insights(
@@ -202,7 +179,7 @@ class IngredientSpellcheckImporter(BaseInsightImporter):
                 else:
                     continue
 
-                yield Insight.from_raw_insight(insight, product_insights, valid=True)
+                yield Insight.from_raw_insight(insight, product_insights, latent=False)
 
 
 GroupedByOCRInsights = Dict[str, List[Insight]]
@@ -276,7 +253,7 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
             grouped_by.setdefault(barcode, [])
 
             for raw_insight in raw_insights:
-                insights = Insight.from_raw_insight(raw_insight, item, valid=False)
+                insights = Insight.from_raw_insight(raw_insight, item, latent=False)
                 grouped_by[barcode].append(insights)
 
         return grouped_by
@@ -301,12 +278,9 @@ class PackagerCodeInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.packager_code
 
-    def is_valid(
-        self,
-        product: Optional[Product],
-        barcode: str,
-        emb_code: str,
-        code_seen: Set[str],
+    @staticmethod
+    def is_latent(
+        product: Optional[Product], barcode: str, emb_code: str, code_seen: Set[str],
     ) -> bool:
         product_emb_codes_tags = getattr(product, "emb_codes_tags", [])
 
@@ -314,12 +288,12 @@ class PackagerCodeInsightImporter(InsightImporter):
         normalized_emb_codes = [normalize_emb_code(c) for c in product_emb_codes_tags]
 
         if normalized_emb_code in normalized_emb_codes:
-            return False
+            return True
 
         if emb_code in code_seen:
-            return False
+            return True
 
-        return True
+        return False
 
     def process_product_insights(
         self,
@@ -332,6 +306,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
         for t in (
             ProductInsight.select(ProductInsight.value).where(
+                ProductInsight.latent == False,  # noqa: E712
                 ProductInsight.type == self.get_type(),
                 ProductInsight.barcode == barcode,
                 ProductInsight.server_domain == server_domain,
@@ -341,7 +316,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
         for insight in insights:
             value: str = insight.value  # type: ignore
-            insight.valid = self.is_valid(product, insight.barcode, value, seen_set)
+            insight.latent = self.is_latent(product, insight.barcode, value, seen_set)
             yield insight
             seen_set.add(value)
 
@@ -351,16 +326,17 @@ class LabelInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.label
 
-    def is_valid(
-        self, product: Optional[Product], barcode: str, tag: str, seen_set: Set[str]
+    @staticmethod
+    def is_latent(
+        product: Optional[Product], barcode: str, tag: str, seen_set: Set[str]
     ) -> bool:
         product_labels_tags = getattr(product, "labels_tags", [])
 
         if tag in product_labels_tags:
-            return False
+            return True
 
         if tag in seen_set:
-            return False
+            return True
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
@@ -376,9 +352,9 @@ class LabelInsightImporter(InsightImporter):
                 if other_label_node is not None and other_label_node.is_child_of(
                     label_node
                 ):
-                    return False
+                    return True
 
-        return True
+        return False
 
     def process_product_insights(
         self,
@@ -391,7 +367,7 @@ class LabelInsightImporter(InsightImporter):
 
         for insight in insights:
             value_tag: str = insight.value_tag  # type: ignore
-            insight.valid = self.is_valid(product, barcode, value_tag, seen_set)
+            insight.latent = self.is_latent(product, barcode, value_tag, seen_set)
             yield insight
             seen_set.add(value_tag)
 
@@ -422,12 +398,11 @@ class CategoryImporter(InsightImporter):
         )
 
         for insight in insights:
+            insight.latent = False
             barcode = insight.barcode
             value_tag: str = insight.value_tag  # type: ignore
 
-            insight.valid = self.is_valid(product, barcode, value_tag, seen_set)
-
-            if not insight.valid:
+            if not self.is_valid(product, barcode, value_tag, seen_set):
                 continue
 
             yield insight
@@ -486,34 +461,18 @@ class ProductWeightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.product_weight
 
-    def is_valid(
-        self, product: Optional[Product], barcode: str, weight_value_str: str
+    @staticmethod
+    def is_latent(
+        product: Optional[Product], barcode: str, weight_value_str: str
     ) -> bool:
-        try:
-            weight_value = float(weight_value_str)
-        except ValueError:
-            logger.warn("Weight value is not a float: {}" "".format(weight_value_str))
-            return False
-
-        if weight_value <= 0:
-            logger.debug("Weight value is <= 0")
-            return False
-
-        if float(int(weight_value)) != weight_value:
-            logger.info(
-                "Weight value is not an integer ({}), "
-                "returning non valid".format(weight_value)
-            )
-            return False
-
         if not product:
-            return True
+            return False
 
         if product.quantity is not None:
-            logger.debug("Product quantity field is not null, returning non valid")
-            return False
+            logger.debug("Product quantity field is not null")
+            return True
 
-        return True
+        return False
 
     @staticmethod
     def group_by_subtype(insights: List[Insight],) -> Dict[str, List[Insight]]:
@@ -540,7 +499,7 @@ class ProductWeightImporter(InsightImporter):
 
         insight_subtype = insights[0].data["matcher_type"]
 
-        all_invalid = False
+        multiple_weights = False
         if (
             insight_subtype != "with_mention"
             and len(insights_by_subtype[insight_subtype]) > 1
@@ -549,21 +508,22 @@ class ProductWeightImporter(InsightImporter):
                 "{} distinct product weights found for product "
                 "{}, aborting import".format(len(insights), barcode)
             )
-            all_invalid = True
+            multiple_weights = True
 
         if self.get_seen_count(barcode=barcode, server_domain=server_domain):
-            all_invalid = True
+            multiple_weights = True
 
         for i, insight in enumerate(insights):
             if i == 0:
-                # Only one product weight can be imported as insight
-                insight.valid = (
-                    self.is_valid(product, barcode, insight.data["value"])
-                    and not all_invalid
-                )
+                # Only one product weight can be imported as non-latent insight
+                insight.latent = self.is_latent(product, barcode, insight.data["value"])
+
+                if multiple_weights:
+                    # Multiple candidates, don't process automatically
+                    insight.automatic_processing = False
             else:
                 # Not imported as insight, but imported as latent insight
-                insight.valid = False
+                insight.latent = True
 
             yield insight
 
@@ -579,17 +539,18 @@ class ExpirationDateImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.expiration_date
 
-    def is_valid(self, product: Optional[Product], barcode: str) -> bool:
+    @staticmethod
+    def is_latent(product: Optional[Product], barcode: str) -> bool:
         if not product:
-            return True
+            return False
 
         if product.expiration_date:
             logger.debug(
                 "Product expiration date field is not null, returning non valid"
             )
-            return False
+            return True
 
-        return True
+        return False
 
     def process_product_insights(
         self,
@@ -598,19 +559,23 @@ class ExpirationDateImporter(InsightImporter):
         insights: List[Insight],
         server_domain: str,
     ) -> Iterator[Insight]:
-        all_invalid = False
-        if len(insights) > 1:
+        multiple_dates = len(insights) > 1
+        if multiple_dates:
             logger.info(
                 "{} distinct expiration dates found for product "
-                "{}, aborting import".format(len(insights), barcode)
+                "{}".format(len(insights), barcode)
             )
-            all_invalid = True
 
-        if self.get_seen_count(barcode=barcode, server_domain=server_domain):
-            all_invalid = True
+        seen = bool(self.get_seen_count(barcode=barcode, server_domain=server_domain))
 
-        for insight in insights:
-            insight.valid = self.is_valid(product, barcode) and not all_invalid
+        for i, insight in enumerate(insights):
+            if i == 0:
+                insight.latent = (
+                    seen or multiple_dates or self.is_latent(product, barcode)
+                )
+            else:
+                insight.latent = True
+
             yield insight
 
     @staticmethod
@@ -627,13 +592,6 @@ class BrandInsightImporter(InsightImporter):
         self, product: Optional[Product], barcode: str, tag: str, seen_set: Set[str]
     ) -> bool:
         brand_prefix: Set[Tuple[str, str]] = BRAND_PREFIX_STORE.get()
-        brand_blacklist: Set[str] = BRAND_BLACKLIST_STORE.get()
-
-        if tag in seen_set:
-            return False
-
-        if tag in brand_blacklist:
-            return False
 
         if not in_barcode_range(brand_prefix, tag, barcode):
             logger.warn(
@@ -641,14 +599,21 @@ class BrandInsightImporter(InsightImporter):
             )
             return False
 
-        if not product:
+        return True
+
+    @staticmethod
+    def is_latent(product: Optional[Product], tag: str, seen_set: Set[str]) -> bool:
+        if tag in seen_set:
             return True
+
+        if not product:
+            return False
 
         if product.brands_tags:
             # For now, don't annotate if a brand has already been provided
-            return False
+            return True
 
-        return True
+        return False
 
     def process_product_insights(
         self,
@@ -661,7 +626,11 @@ class BrandInsightImporter(InsightImporter):
 
         for insight in insights:
             value_tag: str = insight.value_tag  # type: ignore
-            insight.valid = self.is_valid(product, barcode, value_tag, seen_set)
+
+            if not self.is_valid(product, barcode, value_tag, seen_set):
+                continue
+
+            insight.latent = self.is_latent(product, value_tag, seen_set)
             yield insight
             seen_set.add(value_tag)
 
@@ -677,10 +646,9 @@ class StoreInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.store
 
-    def is_valid(
-        self, product: Optional[Product], tag: str, seen_set: Set[str]
-    ) -> bool:
-        return tag not in seen_set
+    @staticmethod
+    def is_latent(product: Optional[Product], tag: str, seen_set: Set[str]) -> bool:
+        return tag in seen_set
 
     def process_product_insights(
         self,
@@ -693,7 +661,7 @@ class StoreInsightImporter(InsightImporter):
 
         for insight in insights:
             value_tag: str = insight.value_tag  # type: ignore
-            insight.valid = self.is_valid(product, value_tag, seen_set)
+            insight.latent = self.is_latent(product, value_tag, seen_set)
             yield insight
             seen_set.add(value_tag)
 
@@ -707,10 +675,9 @@ class PackagingInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.packaging
 
-    def is_valid(
-        self, product: Optional[Product], tag: str, seen_set: Set[str]
-    ) -> bool:
-        return tag not in seen_set
+    @staticmethod
+    def is_latent(product: Optional[Product], tag: str, seen_set: Set[str]) -> bool:
+        return tag in seen_set
 
     def process_product_insights(
         self,
@@ -723,7 +690,7 @@ class PackagingInsightImporter(InsightImporter):
 
         for insight in insights:
             value_tag: str = insight.value_tag  # type: ignore
-            insight.valid = self.is_valid(product, value_tag, seen_set)
+            insight.latent = self.is_latent(product, value_tag, seen_set)
             yield insight
             seen_set.add(value_tag)
 
@@ -748,7 +715,7 @@ class LatentInsightImporter(InsightImporter):
         server_domain: str,
     ) -> Iterator[Insight]:
         for insight in insights:
-            insight.valid = False
+            insight.latent = True
             yield insight
 
 

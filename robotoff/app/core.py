@@ -32,11 +32,15 @@ def get_insights(
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
+    latent: Optional[bool] = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
 
     where_clauses = [ProductInsight.server_domain == server_domain]
+
+    if latent is not None:
+        where_clauses.append(ProductInsight.latent == latent)
 
     if annotated is not None:
         where_clauses.append(ProductInsight.annotation.is_null(not annotated))

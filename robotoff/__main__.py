@@ -210,14 +210,12 @@ if __name__ == "__main__":
     @click.option("--insight-type", "-t", required=True)
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
-    @click.option("--latent/--no-latent", default=True)
     @click.option("--input", "input_", type=pathlib.Path, default=None)
     @click.option("--generate-from", type=pathlib.Path, default=None)
     def import_insights(
         insight_type: str,
         server_domain: Optional[str],
         batch_size: int,
-        latent: bool,
         input_: Optional[pathlib.Path],
         generate_from: Optional[pathlib.Path],
     ):
@@ -246,14 +244,10 @@ if __name__ == "__main__":
         else:
             raise ValueError("--generate-from or --input must be provided")
 
-        imported, latent_imported = import_insights_(
-            insights, InsightType[insight_type], server_domain, batch_size, latent
+        imported = import_insights_(
+            insights, InsightType[insight_type], server_domain, batch_size
         )
-        logger.info(
-            "{} insights imported, {} latent insights imported".format(
-                imported, latent_imported
-            )
-        )
+        logger.info("{} insights imported".format(imported))
 
     @click.command()
     @click.option("--insight-type", "-t", required=True)

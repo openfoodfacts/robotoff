@@ -18,14 +18,14 @@ from robotoff.insights.annotate import (
 )
 from robotoff.insights.importer import CategoryImporter
 from robotoff.insights.validator import (
+    InsightValidationResult,
     InsightValidator,
     InsightValidatorFactory,
-    delete_invalid_insight,
+    validate_insight,
 )
 from robotoff.metrics import save_facet_metrics
-from robotoff.models import db, LatentProductInsight, ProductInsight
+from robotoff.models import db, ProductInsight
 from robotoff.products import (
-    is_valid_image,
     has_dataset_changed,
     fetch_dataset,
     CACHED_PRODUCT_STORE,
@@ -55,6 +55,7 @@ def process_insights():
                 ProductInsight.annotation.is_null(),
                 ProductInsight.process_after.is_null(False),
                 ProductInsight.process_after <= datetime.datetime.utcnow(),
+                ProductInsight.latent == False,  # noqa: E712
             )
             .iterator()
         ):
@@ -121,15 +122,21 @@ def refresh_insights(with_deletion: bool = False):
                         )
 
                     validator = validators[insight.type]
-                    insight_deleted = delete_invalid_insight(insight, validator)
+                    result = validate_insight(insight, validator)
 
-                    if insight_deleted:
+                    if result == InsightValidationResult.deleted:
                         deleted += 1
                         logger.info(
                             "invalid insight {} (type: {}), deleting..."
                             "".format(insight.id, insight.type)
                         )
                         continue
+
+                    elif result == InsightValidationResult.updated:
+                        logger.info(
+                            "converting insight {} (type: {}) to latent"
+                            "".format(insight.id, insight.type)
+                        )
 
                     insight_updated = update_insight_attributes(product, insight)
 
@@ -183,6 +190,7 @@ def mark_insights():
                 ProductInsight.select()
                 .where(
                     ProductInsight.automatic_processing == True,  # noqa: E712
+                    ProductInsight.latent == False,  # noqa: E712
                     ProductInsight.process_after.is_null(),
                     ProductInsight.annotation.is_null(),
                 )
@@ -221,11 +229,10 @@ def generate_insights():
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
     category_insights_iter = predict_from_dataset(dataset, datetime_threshold)
 
-    imported, _ = importer.import_insights(
+    imported = importer.import_insights(
         category_insights_iter,
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic=False,
-        latent=False,
     )
     logger.info("{} category insights imported".format(imported))
 
@@ -247,61 +254,6 @@ def dump_insights():
     insights_iter = transform_insight_iter(insights_iter)
     dumped = dump_jsonl(settings.INSIGHT_DUMP_PATH, insights_iter)
     logger.info("Dump finished, {} insights dumped".format(dumped))
-
-
-def delete_invalid_latent_insights():
-    logger.info("Deleting invalid latent insights...")
-
-    product_store = CACHED_PRODUCT_STORE.get()
-    datetime_threshold = datetime.datetime.utcnow().replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    dataset_datetime = datetime.datetime.fromtimestamp(
-        os.path.getmtime(settings.JSONL_MIN_DATASET_PATH)
-    )
-
-    if dataset_datetime.date() != datetime_threshold.date():
-        logger.warn(
-            "Dataset version is not up to date, aborting latent insight removal job"
-        )
-        return
-
-    deleted = 0
-    for insight in (
-        LatentProductInsight.select(
-            LatentProductInsight.id,
-            LatentProductInsight.barcode,
-            LatentProductInsight.source_image,
-        )
-        .where(
-            LatentProductInsight.source_image.is_null(False),
-            LatentProductInsight.timestamp <= datetime_threshold,
-            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-        )
-        .iterator()
-    ):
-        product = product_store[insight.barcode]
-        barcode = insight.barcode
-        source_image = insight.source_image
-
-        if not product:
-            deleted += 1
-            logger.info("Deleted product: {}".format(barcode))
-            insight.delete_instance()
-        elif (
-            product
-            and source_image
-            and not is_valid_image(product.images, source_image)
-        ):
-            logger.info(
-                "Invalid image for product {}: {} (insight: {})".format(
-                    barcode, source_image, insight.id
-                )
-            )
-            deleted += 1
-            insight.delete_instance()
-
-    logger.info("Deleted: {}".format(deleted))
 
 
 def exception_listener(event):
@@ -333,14 +285,6 @@ def run():
     )
     scheduler.add_job(
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
-    )
-    scheduler.add_job(
-        delete_invalid_latent_insights,
-        "cron",
-        day="*",
-        hour=4,
-        minute=45,
-        max_instances=1,
     )
     scheduler.add_job(
         generate_quality_facets, "cron", day="*", hour="5", minute=25, max_instances=1,

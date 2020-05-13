@@ -3,7 +3,7 @@ import datetime
 import json
 import pathlib
 import sys
-from typing import Dict, Iterable, List, Optional, Set, TextIO, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, TextIO, Union
 
 import click
 from more_itertools import chunked
@@ -92,26 +92,19 @@ def import_insights(
     insight_type: InsightType,
     server_domain: str,
     batch_size: int = 1024,
-    latent: bool = False,
-) -> Tuple[int, int]:
+) -> int:
     product_store = get_product_store()
     importer = InsightImporterFactory.create(insight_type, product_store)
     imported: int = 0
-    latent_imported: int = 0
 
     insight_batch: List[ProductInsights]
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
-            batch_imported, batch_latent_imported = importer.import_insights(
-                insight_batch,
-                server_domain=server_domain,
-                automatic=False,
-                latent=latent,
+            imported += importer.import_insights(
+                insight_batch, server_domain=server_domain, automatic=False,
             )
-            imported += batch_imported
-            latent_imported += batch_latent_imported
 
-    return imported, latent_imported
+    return imported
 
 
 class InvalidInsight(Exception):
@@ -237,7 +230,11 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
 
     for insight in (
         ProductInsight.select()
-        .where(ProductInsight.type == insight_type, ProductInsight.annotation.is_null())
+        .where(
+            ProductInsight.type == insight_type,
+            ProductInsight.annotation.is_null(),
+            ProductInsight.latent == False,  # noqa: E712
+        )
         .order_by(fn.Random())
     ):
         if (

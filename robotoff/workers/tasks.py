@@ -17,9 +17,10 @@ from robotoff.insights.extraction import (
     get_insights_from_product_name,
 )
 from robotoff.insights.validator import (
-    delete_invalid_insight,
+    InsightValidationResult,
     InsightValidator,
     InsightValidatorFactory,
+    validate_insight,
 )
 from robotoff.models import db, ProductInsight
 from robotoff.off import get_product, get_server_type, ServerType
@@ -79,14 +80,10 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
         )
 
         with db.atomic():
-            imported, latent_imported = importer.import_insights(
+            imported = importer.import_insights(
                 [insights], server_domain=server_domain, automatic=True
             )
-            logger.info(
-                "Import finished, {} insights imported, {} latent insights imported".format(
-                    imported, latent_imported
-                )
-            )
+            logger.info("Import finished, {} insights imported".format(imported))
 
 
 def delete_product_insights(barcode: str, server_domain: str):
@@ -144,12 +141,16 @@ def updated_product_update_insights(barcode: str, server_domain: str):
         validator = validators[insight.type]
 
         if validator is not None:
-            insight_deleted = delete_invalid_insight(
-                insight, validator=validator, product=product
-            )
-            if insight_deleted:
+            result = validate_insight(insight, validator=validator, product=product)
+            if result == InsightValidationResult.deleted:
                 logger.info(
                     "Insight {} deleted (type: {})".format(insight.id, insight.type)
+                )
+            elif result == InsightValidationResult.updated:
+                logger.info(
+                    "Insight {} converted to latent (type: {})".format(
+                        insight.id, insight.type
+                    )
                 )
 
 
@@ -177,11 +178,8 @@ def updated_product_add_category_insight(
     product_store = get_product_store()
     importer = InsightImporterFactory.create(InsightType.category, product_store)
 
-    imported, _ = importer.import_insights(
-        [merged_product_insight],
-        server_domain=server_domain,
-        automatic=False,
-        latent=False,
+    imported = importer.import_insights(
+        [merged_product_insight], server_domain=server_domain, automatic=False,
     )
 
     if imported:
@@ -204,8 +202,8 @@ def updated_product_predict_insights(
 
     for insight_type, insights in insights_all.items():
         importer = InsightImporterFactory.create(insight_type, product_store)
-        imported, _ = importer.import_insights(
-            [insights], server_domain=server_domain, automatic=False, latent=False
+        imported = importer.import_insights(
+            [insights], server_domain=server_domain, automatic=False
         )
 
         if imported:

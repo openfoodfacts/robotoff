@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Match, Optional, Union
 
 import pint
 
@@ -42,7 +42,7 @@ def normalize_weight(value: str, unit: str) -> Tuple[float, str]:
     return normalized_quantity.magnitude, normalized_unit
 
 
-def is_valid_weight(weight_value) -> bool:
+def is_valid_weight(weight_value: str) -> bool:
     """Weight values are considered invalid if one of the following rules
     is met:
     - value is not convertible to a float
@@ -105,7 +105,7 @@ def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
 
 
 def process_product_weight(
-    match, prompt: bool, ending_prompt: bool = False
+    match: Match, prompt: bool, ending_prompt: bool = False
 ) -> Optional[Dict]:
     raw = match.group()
 

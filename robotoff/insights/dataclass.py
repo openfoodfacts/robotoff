@@ -68,7 +68,7 @@ class Insight:
     barcode: str
     type: InsightType
     data: Dict[str, Any]
-    valid: bool
+    latent: bool
     value_tag: Optional[str] = None
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
@@ -86,11 +86,11 @@ class Insight:
 
     @classmethod
     def from_raw_insight(
-        cls, insight: RawInsight, product_insights: ProductInsights, valid: bool
+        cls, insight: RawInsight, product_insights: ProductInsights, latent: bool
     ) -> "Insight":
         type: InsightType
         return cls(
-            valid=valid,
+            latent=latent,
             type=insight.type,
             data=insight.data,
             value_tag=insight.value_tag,
