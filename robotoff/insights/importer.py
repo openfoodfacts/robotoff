@@ -31,7 +31,7 @@ AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interva
 def generate_seen_set_query(
     insight_type: InsightType, barcode: str, server_domain: str
 ):
-    return ProductInsight.select(ProductInsight.value_tag).where(
+    return ProductInsight.select(ProductInsight.value, ProductInsight.value_tag).where(
         ProductInsight.type == insight_type.name,
         ProductInsight.latent == False,  # noqa: E712
         ProductInsight.barcode == barcode,
@@ -536,12 +536,26 @@ class ProductWeightImporter(InsightImporter):
 
 
 class ExpirationDateImporter(InsightImporter):
+    def get_seen_set(self, barcode: str, server_domain: str) -> Set[str]:
+        seen_set: Set[str] = set()
+        query = generate_seen_set_query(self.get_type(), barcode, server_domain)
+
+        for t in query.iterator():
+            seen_set.add(t.value)
+
+        return seen_set
+
     @staticmethod
     def get_type() -> InsightType:
         return InsightType.expiration_date
 
     @staticmethod
-    def is_latent(product: Optional[Product], barcode: str) -> bool:
+    def is_latent(
+        product: Optional[Product], barcode: str, value: str, seen_set: Set[str]
+    ) -> bool:
+        if value in seen_set:
+            return True
+
         if not product:
             return False
 
@@ -560,24 +574,26 @@ class ExpirationDateImporter(InsightImporter):
         insights: List[Insight],
         server_domain: str,
     ) -> Iterator[Insight]:
-        multiple_dates = len(insights) > 1
+        seen_set: Set[str] = self.get_seen_set(
+            barcode=barcode, server_domain=server_domain
+        )
+        date_count = len(set((insight.value for insight in insights)))
+        multiple_dates = date_count > 1
         if multiple_dates:
             logger.info(
                 "{} distinct expiration dates found for product "
-                "{}".format(len(insights), barcode)
+                "{}".format(date_count, barcode)
             )
 
-        seen = bool(self.get_seen_count(barcode=barcode, server_domain=server_domain))
+        for insight in insights:
+            value: str = insight.value  # type: ignore
+            insight.latent = self.is_latent(product, barcode, value, seen_set)
 
-        for i, insight in enumerate(insights):
-            if i == 0:
-                insight.latent = (
-                    seen or multiple_dates or self.is_latent(product, barcode)
-                )
-            else:
-                insight.latent = True
+            if not insight.latent and multiple_dates:
+                insight.automatic_processing = False
 
             yield insight
+            seen_set.add(value)
 
     @staticmethod
     def need_validation(insight: Insight) -> bool:
