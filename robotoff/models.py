@@ -110,31 +110,6 @@ class ProductInsight(BaseModel):
         updated_values = {**latent_insight.__data__, **kwargs}
         return cls.create(**updated_values)
 
-    @classmethod
-    def exists(
-        cls,
-        barcode: str,
-        latent: bool,
-        insight_type: str,
-        server_domain: str,
-        value_tag: Optional[str] = None,
-        value: Optional[str] = None,
-        source_image: Optional[str] = None,
-    ) -> bool:
-        return bool(
-            cls.select()
-            .where(
-                cls.latent == latent,
-                cls.barcode == barcode,
-                cls.type == insight_type,
-                cls.server_domain == server_domain,
-                cls.value_tag == value_tag,
-                cls.value == value,
-                cls.source_image == source_image,
-            )
-            .count()
-        )
-
 
 class UserAnnotation(BaseModel):
     insight = peewee.ForeignKeyField(

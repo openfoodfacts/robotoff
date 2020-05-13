@@ -47,14 +47,17 @@ def is_reserved_barcode(barcode: str) -> bool:
 
 
 def exist_latent(latent_insight: JSONType) -> bool:
-    return ProductInsight.exists(
-        latent=True,
-        barcode=latent_insight["barcode"],
-        insight_type=latent_insight["type"],
-        server_domain=latent_insight["server_domain"],
-        value_tag=latent_insight.get("value_tag"),
-        value=latent_insight.get("value"),
-        source_image=latent_insight.get("source_image"),
+    return bool(
+        ProductInsight.select()
+        .where(
+            ProductInsight.barcode == latent_insight["barcode"],
+            ProductInsight.type == latent_insight["type"],
+            ProductInsight.server_domain == latent_insight["server_domain"],
+            ProductInsight.value_tag == latent_insight.get("value_tag"),
+            ProductInsight.value == latent_insight.get("value"),
+            ProductInsight.source_image == latent_insight.get("source_image"),
+        )
+        .count()
     )
 
 
