@@ -9,7 +9,7 @@ TODO : GRACEFULLY DOWNLOAD AND LOAD TOKENS
 /!\ /!\
 """
 TAXONOMIES_PATH = (
-    Path(__file__).parent / "../../../../openfoodfacts-ai/spellcheck/vocabulary"
+    Path(__file__).parent / "../../../../../openfoodfacts-ai/spellcheck/vocabulary"
 )
 
 

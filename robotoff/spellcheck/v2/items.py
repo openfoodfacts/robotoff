@@ -19,8 +19,9 @@ class AtomicCorrection:
     original: str
     correction: str
     offset: Offset
-    force_valid: bool
+    force_valid: bool = False
     score: int = None
+    model: str = None
 
     def is_valid(self, plural: bool = True, original_known: bool = True) -> bool:
         if self.force_valid:
@@ -112,6 +113,7 @@ class SpellcheckIteration:
                 correction=correction,
                 offset=offset,
                 score=score,
+                model=self.model,
             )
         )
 
@@ -123,6 +125,7 @@ class SpellcheckIteration:
                 correction=correction,
                 offset=Offset(0, len(self.original)),
                 force_valid=True,
+                model=self.model,
             )
         ]
 
@@ -138,6 +141,14 @@ class SpellcheckItem:
             return self.iterations[-1].corrected_text
         else:
             return self.original
+
+    @property
+    def all_atomic_corrections(self) -> List[AtomicCorrection]:
+        return [
+            atomic_correction
+            for iteration in self.iterations
+            for atomic_correction in iteration.atomic_corrections
+        ]
 
     def update_correction(self, correction: str, model: str = "UNK"):
         self.iterations.append(

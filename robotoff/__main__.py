@@ -146,7 +146,7 @@ if __name__ == "__main__":
     ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
-        from robotoff.ingredients import generate_insights
+        from robotoff.spellcheck.v1.ingredients import generate_insights
         from robotoff.utils import get_logger
 
         logger = get_logger()
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     def test_spellcheck(text: str, confidence: float):
         import json
         from robotoff.utils.es import get_es_client
-        from robotoff.ingredients import suggest
+        from robotoff.spellcheck.v1.ingredients import suggest
         from robotoff.utils import get_logger
 
         get_logger()

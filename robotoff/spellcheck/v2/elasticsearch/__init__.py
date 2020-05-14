@@ -1,17 +1,21 @@
 from typing import Dict, List
 
-from robotoff.spellcheck import BaseSpellchecker
-from robotoff.spellcheck.exceptions import TokenLengthMismatchException
-from robotoff.spellcheck.data_utils import (
+from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.v2.exceptions import TokenLengthMismatchException
+from robotoff.spellcheck.v2.items import (
     Ingredients,
     AtomicCorrection,
     SpellcheckIteration,
     SpellcheckItem,
 )
 
-from robotoff.spellcheck.elasticsearch.ingredients_splitter import IngredientsSplitter
-from robotoff.spellcheck.elasticsearch.correction_formatter import CorrectionFormatter
-from robotoff.spellcheck.elasticsearch.es_handler import ElasticsearchHandler
+from robotoff.spellcheck.v2.elasticsearch.ingredients_splitter import (
+    IngredientsSplitter,
+)
+from robotoff.spellcheck.v2.elasticsearch.correction_formatter import (
+    CorrectionFormatter,
+)
+from robotoff.spellcheck.v2.elasticsearch.es_handler import ElasticsearchHandler
 
 
 class ElasticSearchSpellchecker(BaseSpellchecker):
@@ -30,7 +34,7 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
 
     def predict_one(self, item: SpellcheckItem) -> SpellcheckItem:
         original = item.latest_correction
-        atomic_corrections = self.process(original)
+        atomic_corrections = self._process(original)
         item.iterations.append(
             SpellcheckIteration(
                 model=self.name,
@@ -42,10 +46,10 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
 
     def correct(self, text: str) -> str:
         return SpellcheckIteration(
-            original=text, atomic_corrections=self.process(text)
+            original=text, atomic_corrections=self._process(text)
         ).corrected_text
 
-    def process(self, text: str) -> List[AtomicCorrection]:
+    def _process(self, text: str) -> List[AtomicCorrection]:
         es_handler = ElasticsearchHandler(self.client, **self.kwargs)
         correction_formatter = CorrectionFormatter()
 
@@ -71,5 +75,8 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
                 )
             except TokenLengthMismatchException:
                 continue
+
+        for correction in corrections:
+            correction.model = self.name
 
         return corrections
