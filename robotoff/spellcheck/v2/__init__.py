@@ -8,3 +8,12 @@ from robotoff.spellcheck.v2.items import (
     SpellcheckItem,
     Ingredients,
 )
+
+
+class SpellcheckerV2(PipelineSpellchecker):
+    def __init__(self, client, **es_kwargs):
+        super(SpellcheckerV2, self).__init__()
+        self.add_spellchecker("patterns")
+        self.add_spellchecker("percentages")
+        self.add_spellchecker("elasticsearch", client=client, **es_kwargs)
+        self.add_spellchecker("vocabulary")

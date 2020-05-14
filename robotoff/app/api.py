@@ -18,7 +18,11 @@ from robotoff import settings
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.auth import basic_decode, BasicAuthDecodeError
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.spellcheck.v1.ingredients import generate_corrections, generate_corrected_text
+from robotoff.spellcheck.v1.ingredients import (
+    generate_corrections,
+    generate_corrected_text,
+)
+from robotoff.spellcheck.v2 import SpellcheckerV2
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import extract_ocr_insights, DEFAULT_INSIGHT_TYPES
 from robotoff.insights.ocr.dataclass import OCRParsingException
@@ -203,6 +207,10 @@ class AnnotateInsightResource:
 
 
 class IngredientSpellcheckResource:
+    def __init__(self, version: str):
+        assert self.version in ["v1", "v2"]
+        self.version = version
+
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         self.spellcheck(req, resp)
 
@@ -210,25 +218,22 @@ class IngredientSpellcheckResource:
         self.spellcheck(req, resp)
 
     def spellcheck(self, req: falcon.Request, resp: falcon.Response):
-        text = req.get_param("text")
-        barcode = req.get_param("barcode")
+        if self.version == "v1":
+            return self.spellcheck_v1(req=req, resp=resp)
+        elif self.version == "v2":
+            return self.spellcheck_v2(req=req, resp=resp)
+        else:
+            raise ValueError(f"Unknown spellcheck version : {self.version}")
+
+    def spellcheck_v1(self, req: falcon.Request, resp: falcon.Response):
+        text = self.__get_text(req, resp)
+        if text is None:
+            return
+
         index_name = req.get_param(
             "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
         )
         confidence = req.get_param_as_float("confidence", default=1.0)
-
-        if text is None and barcode is None:
-            raise falcon.HTTPBadRequest("text or barcode is required.")
-
-        if not text:
-            product = get_product(barcode) or {}
-            text = product.get("ingredients_text_fr")
-
-            if not text:
-                resp.media = {
-                    "status": "not_found",
-                }
-                return
 
         corrections = generate_corrections(
             es_client, text, confidence=confidence, index_name=index_name
@@ -242,6 +247,40 @@ class IngredientSpellcheckResource:
             "text": text,
             "corrected": generate_corrected_text(term_corrections, text),
         }
+
+    def spellcheck_v2(self, req: falcon.Request, resp: falcon.Response):
+        text = self.__get_text(req, resp)
+        if text is None:
+            return
+
+        index_name = req.get_param(
+            "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
+        )
+        confidence = req.get_param_as_float("confidence", default=1.0)
+        spellchecker = SpellcheckerV2(
+            client=es_client, index_name=index_name, confidence=confidence
+        )
+
+        resp.media = {}
+        resp.media["status"] = "success"
+        resp.media["text"] = text
+        resp.media["corrected"] = spellchecker.correct(text)
+        resp.media["corrections"] = spellchecker.get_corrections()
+
+    def __get_text(self, req: falcon.Request, resp: falcon.Response) -> Optional[str]:
+        text = req.get_param("text")
+        if text is not None:
+            return text
+
+        barcode = req.get_param("barcode")
+        if barcode is None:
+            raise falcon.HTTPBadRequest("text or barcode is required.")
+
+        product = get_product(barcode) or {}
+        text = product.get("ingredients_text_fr")
+        if text is None:
+            resp.media = {"status": "not_found"}
+        return text
 
 
 class NutrientPredictorResource:
@@ -654,7 +693,9 @@ api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail(
 api.add_route("/api/v1/insights", InsightCollection())
 api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
-api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
+api.add_route(
+    "/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource("v1")
+)
 api.add_route("/api/v1/predict/nutrient", NutrientPredictorResource())
 api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
@@ -668,3 +709,7 @@ api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
+
+api.add_route(
+    "/api/v2/predict/ingredients/spellcheck", IngredientSpellcheckResource("v2")
+)

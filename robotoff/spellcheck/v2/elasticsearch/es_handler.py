@@ -80,12 +80,10 @@ class ElasticsearchHandler:
         suggestions = []
         for r in response["responses"]:
             if r["status"] != 200:
-                root_cause = response["error"]["root_cause"][0]
+                root_cause = r["error"]["root_cause"][0]
                 error_type = root_cause["type"]
                 error_reason = root_cause["reason"]
-                print(
-                    "Elasticsearch error: {} [{}]" "".format(error_reason, error_type)
-                )
+                print(f"Elasticsearch error: {error_reason} [{error_type}]")
                 continue
             suggestions.append(r["suggest"][self.suggester_name][0])
         return suggestions
