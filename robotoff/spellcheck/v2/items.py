@@ -3,6 +3,10 @@ from typing import List, Iterable
 from dataclasses import dataclass, field, InitVar
 
 from robotoff.utils.text import FR_NLP_CACHE, FR_KNOWN_TOKENS_CACHE
+from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
+
+LANGUAGE_ALLOWED = "fr"
+LANGUAGE_IDENTIFIER: LanguageIdentifier = DEFAULT_LANGUAGE_IDENTIFIER.get()
 
 
 @dataclass
@@ -132,8 +136,9 @@ class SpellcheckIteration:
 
 class SpellcheckItem:
     def __init__(self, original: str):
-        self.original = original
         self.iterations = []
+        self.original = original
+        self.is_lang_allowed = self.__is_lang_allowed()
 
     @property
     def latest_correction(self) -> str:
@@ -149,6 +154,12 @@ class SpellcheckItem:
             for iteration in self.iterations
             for atomic_correction in iteration.atomic_corrections
         ]
+
+    def __is_lang_allowed(self):
+        languages = LANGUAGE_IDENTIFIER.predict(self.original.lower(), threshold=0.5)
+        if len(languages) == 0:
+            return True
+        return languages[0].lang == LANGUAGE_ALLOWED
 
     def update_correction(self, correction: str, model: str = "UNK"):
         self.iterations.append(
