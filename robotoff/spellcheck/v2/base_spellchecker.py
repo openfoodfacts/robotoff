@@ -9,9 +9,10 @@ class BaseSpellchecker:
         return [self.predict_one(item) for item in items]
 
     def predict_one(self, item: SpellcheckItem) -> SpellcheckItem:
-        item.update_correction(
-            correction=self.correct(item.latest_correction), model=self.name
-        )
+        if item.is_lang_allowed:
+            item.update_correction(
+                correction=self.correct(item.latest_correction), model=self.name
+            )
         return item
 
     def correct(self, text: str) -> str:

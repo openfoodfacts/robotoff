@@ -35,8 +35,9 @@ class PipelineSpellchecker:
 
     def correct(self, text: str) -> str:
         self.item = SpellcheckItem(text)
-        for spellcheck in self.spellcheckers:
-            spellcheck.predict([self.item])
+        if self.item.is_lang_allowed:
+            for spellcheck in self.spellcheckers:
+                spellcheck.predict([self.item])
         return self.item.latest_correction
 
     def get_corrections(self) -> List[Dict]:

@@ -29,19 +29,20 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
     @property
     def name(self) -> str:
         return super(ElasticSearchSpellchecker, self).name + "".join(
-            [f"__{kw}_{value}" for kw, value in self.kwargs]
+            [f"__{kw}_{value}" for kw, value in self.kwargs.items()]
         )
 
     def predict_one(self, item: SpellcheckItem) -> SpellcheckItem:
-        original = item.latest_correction
-        atomic_corrections = self._process(original)
-        item.iterations.append(
-            SpellcheckIteration(
-                model=self.name,
-                original=original,
-                atomic_corrections=atomic_corrections,
+        if item.is_lang_allowed:
+            original = item.latest_correction
+            atomic_corrections = self._process(original)
+            item.iterations.append(
+                SpellcheckIteration(
+                    model=self.name,
+                    original=original,
+                    atomic_corrections=atomic_corrections,
+                )
             )
-        )
         return item
 
     def correct(self, text: str) -> str:
