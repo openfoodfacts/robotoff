@@ -1,9 +1,11 @@
+import datetime
 import gzip
 import json
 import logging
 import os
 import pathlib
 import tempfile
+import uuid
 
 import requests
 import sys
@@ -126,3 +128,13 @@ def get_image_from_url(
         image = Image.open(f.name)
 
     return image
+
+
+def transform_model_instance(item):
+    for field, value in item.items():
+        if isinstance(value, uuid.UUID):
+            item[field] = str(value)
+        elif isinstance(value, datetime.datetime):
+            item[field] = value.isoformat()
+
+    return item

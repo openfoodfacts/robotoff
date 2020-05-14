@@ -1,22 +1,27 @@
 import csv
+import datetime
 import io
 import itertools
 import functools
 import tempfile
 from typing import List, Optional
+import uuid
 
 import dataclasses
 
 import falcon
-import requests
+from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
-
+import peewee
 from PIL import Image
+import requests
+
 
 from robotoff import settings
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.auth import basic_decode, BasicAuthDecodeError
+from robotoff.app.schema import IMAGE_PREDICTION_IMPORTER_SCHEMA
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
@@ -28,10 +33,21 @@ from robotoff.ml.category.neural.model import (
     ModelRegistry,
     filter_blacklisted_categories,
 )
-from robotoff.models import ProductInsight, UserAnnotation
-from robotoff.off import http_session, OFFAuthentication, get_product
+from robotoff.models import (
+    ProductInsight,
+    UserAnnotation,
+    ImagePrediction,
+    batch_insert,
+)
+from robotoff.off import (
+    http_session,
+    OFFAuthentication,
+    generate_image_path,
+    get_product,
+    get_server_type,
+)
 from robotoff.products import get_product_dataset_etag
-from robotoff.utils import get_logger, get_image_from_url
+from robotoff.utils import get_logger, get_image_from_url, transform_model_instance
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
@@ -375,6 +391,79 @@ class ImageImporterResource:
         }
 
 
+class ImagePredictionImporterResource:
+    @jsonschema.validate(IMAGE_PREDICTION_IMPORTER_SCHEMA)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        timestamp = datetime.datetime.utcnow()
+        inserts = []
+
+        for prediction in req.media["predictions"]:
+            server_domain: str = prediction.get(
+                "server_domain", settings.OFF_SERVER_DOMAIN
+            )
+            server_type: str = get_server_type(server_domain).name
+            source_image = generate_image_path(
+                prediction["barcode"], prediction.pop("image_id")
+            )
+            inserts.append(
+                {
+                    "id": str(uuid.uuid4()),
+                    "timestamp": timestamp,
+                    "server_domain": server_domain,
+                    "server_type": server_type,
+                    "source_image": source_image,
+                    **prediction,
+                }
+            )
+
+        inserted = batch_insert(ImagePrediction, inserts)
+        logger.info("{} image predictions inserted".format(inserted))
+
+
+class ImagePredictionFetchResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        model_name: Optional[str] = req.get_param("model_name")
+        type_: Optional[str] = req.get_param("type")
+        model_version: Optional[str] = req.get_param("model_version")
+        server_domain: Optional[str] = req.get_param("server_domain")
+        barcode: Optional[str] = req.get_param("barcode")
+        min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
+        random: bool = req.get_param_as_bool("random", default=True)
+
+        where_clauses = []
+
+        if model_name is not None:
+            where_clauses.append(ImagePrediction.model_name == model_name)
+
+        if model_version is not None:
+            where_clauses.append(ImagePrediction.model_version == model_version)
+
+        if type_ is not None:
+            where_clauses.append(ImagePrediction.type == type_)
+
+        if server_domain:
+            where_clauses.append(ImagePrediction.server_domain == server_domain)
+
+        if min_confidence is not None:
+            where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
+
+        if barcode is not None:
+            where_clauses.append(ImagePrediction.barcode == barcode)
+
+        query = ImagePrediction.select()
+
+        if where_clauses:
+            query = query.where(*where_clauses)
+
+        if random:
+            query = query.order_by(peewee.fn.Random())
+
+        query = query.limit(count)
+        items = [transform_model_instance(item.__data__) for item in query.iterator()]
+        resp.media = {"predictions": items}
+
+
 class ImagePredictorResource:
     def on_get(self, req, resp):
         image_url = req.get_param("image_url", required=True)
@@ -668,6 +757,8 @@ api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images/import", ImageImporterResource())
+api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResource())
+api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())

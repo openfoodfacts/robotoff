@@ -126,4 +126,34 @@ class UserAnnotation(BaseModel):
         return self.insight.completed_at
 
 
-MODELS = [ProductInsight, UserAnnotation]
+class ImagePrediction(BaseModel):
+    """Table to store computer vision predictions (object detection,
+    image segmentation,...) made by custom models."""
+
+    id = peewee.UUIDField(primary_key=True)
+    type = peewee.CharField(max_length=256)
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    model_name = peewee.CharField(max_length=100, null=False, index=True)
+    model_version = peewee.CharField(max_length=256, null=False, index=True)
+    data = BinaryJSONField(index=True)
+    timestamp = peewee.DateTimeField(null=True)
+    source_image = peewee.TextField(null=False, index=True)
+    max_confidence = peewee.FloatField(
+        null=True,
+        index=True,
+        help_text="for object detection models, confidence of the highest confident"
+        "object detected, null if no object was detected",
+    )
+    server_domain = peewee.TextField(
+        null=True, help_text="server domain linked to the insight", index=True
+    )
+    server_type = peewee.CharField(
+        null=True,
+        max_length=10,
+        help_text="project associated with the server_domain, "
+        "one of 'off', 'obf', 'opff', 'opf'",
+        index=True,
+    )
+
+
+MODELS = [ProductInsight, UserAnnotation, ImagePrediction]
