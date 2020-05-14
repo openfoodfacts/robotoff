@@ -1,5 +1,7 @@
 from typing import List
-from robotoff.spellcheck.data_utils import SpellcheckItem
+from dataclasses import asdict
+
+from robotoff.spellcheck.v2.items import SpellcheckItem
 
 
 class BaseSpellchecker:

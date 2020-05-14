@@ -2,7 +2,7 @@ import itertools
 import re
 from typing import Dict, Iterator, List
 
-from robotoff.ingredients import process_ingredients, FR_KNOWN_TOKENS
+from robotoff.spellcheck.v1.ingredients import process_ingredients, FR_KNOWN_TOKENS
 from robotoff.products import ProductDataset
 from robotoff import settings
 from robotoff.utils import get_logger, text_file_iter

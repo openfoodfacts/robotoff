@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from robotoff.spellcheck import BaseSpellchecker
+from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
 
 PERCENTAGE_REGEX = re.compile(
     r"(\A|.)([0-9]{0,2})([ ]{0,1}?[,|.|;|/]{0,1}[ ]{0,1})([0-9]{0,2})[ ]?(?:%|(?:[\?|/|\\](?:\D|\Z)))"

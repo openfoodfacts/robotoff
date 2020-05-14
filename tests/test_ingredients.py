@@ -1,6 +1,6 @@
 import pytest
 
-from robotoff.ingredients import process_ingredients, normalize_ingredients, Ingredients
+from robotoff.spellcheck.v1.ingredients import process_ingredients, normalize_ingredients, Ingredients
 
 
 @pytest.mark.parametrize(

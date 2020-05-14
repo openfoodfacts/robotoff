@@ -18,7 +18,7 @@ from robotoff import settings
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.auth import basic_decode, BasicAuthDecodeError
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.ingredients import generate_corrections, generate_corrected_text
+from robotoff.spellcheck.v1.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import extract_ocr_insights, DEFAULT_INSIGHT_TYPES
 from robotoff.insights.ocr.dataclass import OCRParsingException
