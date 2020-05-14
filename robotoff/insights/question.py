@@ -249,8 +249,8 @@ class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
 
         if field_name in images:
             image = images[field_name]
-            image_name = "ingredients_{}.{}.full".format(lang, image["rev"])
-            return generate_image_url(barcode, image_name)
+            image_id = "ingredients_{}.{}.full".format(lang, image["rev"])
+            return generate_image_url(barcode, image_id)
 
         return None
 

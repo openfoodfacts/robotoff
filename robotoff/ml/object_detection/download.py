@@ -31,14 +31,14 @@ def load_seen_set() -> Set[str]:
 def save_image(
     directory: pathlib.Path, image_meta: JSONType, barcode: str, override: bool = False
 ):
-    image_name = image_meta["imgid"]
-    image_full_name = "{}_{}.jpg".format(barcode, image_name)
-    image_path = directory / image_full_name
+    image_id = image_meta["imgid"]
+    image_name = "{}_{}.jpg".format(barcode, image_id)
+    image_path = directory / image_name
 
     if image_path.exists() and not override:
         return
 
-    image_url = generate_image_url(barcode, image_name)
+    image_url = generate_image_url(barcode, image_id)
     logger.info("Downloading image {}".format(image_url))
     r = http_session.get(image_url)
 

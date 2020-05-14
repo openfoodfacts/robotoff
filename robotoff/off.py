@@ -139,16 +139,22 @@ def split_barcode(barcode: str) -> List[str]:
     return [barcode]
 
 
-def generate_json_ocr_url(barcode: str, image_name: str) -> str:
+def generate_image_path(barcode: str, image_id: str) -> str:
     splitted_barcode = split_barcode(barcode)
-    path = "/{}/{}.json".format("/".join(splitted_barcode), image_name)
-    return settings.OFF_IMAGE_BASE_URL + path
+    return "/{}/{}.jpg".format("/".join(splitted_barcode), image_id)
 
 
-def generate_image_url(barcode: str, image_name: str) -> str:
+def generate_json_path(barcode: str, image_id: str) -> str:
     splitted_barcode = split_barcode(barcode)
-    path = "/{}/{}.jpg".format("/".join(splitted_barcode), image_name)
-    return settings.OFF_IMAGE_BASE_URL + path
+    return "/{}/{}.json".format("/".join(splitted_barcode), image_id)
+
+
+def generate_json_ocr_url(barcode: str, image_id: str) -> str:
+    return settings.OFF_IMAGE_BASE_URL + generate_json_path(barcode, image_id)
+
+
+def generate_image_url(barcode: str, image_id: str) -> str:
+    return settings.OFF_IMAGE_BASE_URL + generate_image_path(barcode, image_id)
 
 
 def is_valid_image(barcode: str, image_id: str) -> bool:

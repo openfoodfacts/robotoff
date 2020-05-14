@@ -47,8 +47,8 @@ def fetch_images_for_ean(ean: str):
     return images
 
 
-def get_json_for_image(barcode: str, image_name: str) -> Optional[JSONType]:
-    url = generate_json_ocr_url(barcode, image_name)
+def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
+    url = generate_json_ocr_url(barcode, image_id)
     r = http_session.get(url)
 
     if r.status_code == 404:
@@ -144,11 +144,11 @@ def ocr_iter(
         barcode: str = source
         image_data = fetch_images_for_ean(source)["product"]["images"]
 
-        for image_name in image_data.keys():
-            if image_name.isdigit():
-                print("Getting OCR for image {}".format(image_name))
-                data = get_json_for_image(barcode, image_name)
-                source = get_source(image_name, barcode=barcode)
+        for image_id in image_data.keys():
+            if image_id.isdigit():
+                print("Getting OCR for image {}".format(image_id))
+                data = get_json_for_image(barcode, image_id)
+                source = get_source(image_id, barcode=barcode)
                 if data:
                     yield source, data
 
