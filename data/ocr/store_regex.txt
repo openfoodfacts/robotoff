@@ -7,11 +7,15 @@ Aldi||sprengel
 Alnatura
 Auchan
 Biocoop
+Coop||Betty Bossi
+Coop||Coop Naturaplan
+Coop||Naturaplan
 Carrefour
 Carrefour||grand jury
 Casino
 Colruyt
 Delhaize
+Denner
 Edeka
 Edeka||gut[- \n]g[uü]nstig
 Eroski
