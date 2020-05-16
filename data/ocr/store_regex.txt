@@ -5,8 +5,11 @@ Aldi||gutbio
 Aldi||milsani
 Aldi||sprengel
 Alnatura
+Alteza
 Auchan
 Biocoop
+bonÀrea||bonarea
+Bonpreu
 Coop||Betty Bossi
 Coop||Coop Naturaplan
 Coop||Naturaplan
@@ -20,6 +23,7 @@ Edeka
 Edeka||gut[- \n]g[uü]nstig
 Eroski
 Franprix
+Hacendado
 Intermarché
 Intermarché||bouton d'or
 Intermarché||capitaine cook
