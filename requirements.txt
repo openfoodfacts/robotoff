@@ -6,7 +6,7 @@ falcon==2.0.0
 falcon-cors==1.1.7
 falcon-multipart==0.2.0
 elasticsearch==6.3.1
-Click==7.0
+Click==7.1.2
 apscheduler==3.6.3
 sentry-sdk[falcon]==0.14.3
 Pillow==6.2.2
