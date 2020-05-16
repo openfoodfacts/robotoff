@@ -172,8 +172,8 @@ Migros
 Monoprix
 Morrisson's
 Picard
-Cora||Patrimoine gourmand
-Match||Patrimoine gourmand
+Cora||patrimoine gourmand
+Match||patrimoine gourmand
 REWE
 Sainsbury's
 Tesco
