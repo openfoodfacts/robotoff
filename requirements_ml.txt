@@ -3,4 +3,4 @@ pandas==0.23.4
 more_itertools==4.3.0
 spacy==2.0.18
 sklearn_hierarchical_classification==1.0.0
-matplotlib==3.0.3
+matplotlib==3.2.1
