@@ -25,6 +25,7 @@ class Spellchecker(PipelineSpellchecker):
 
     def generate_insights(
         self,
+        detailed: bool = False,
         max_errors: Optional[int] = None,
         lang: str = "fr",
         limit: Optional[int] = None,
@@ -42,7 +43,9 @@ class Spellchecker(PipelineSpellchecker):
         insights_count = 0
         for product in product_iter:
             if self.is_product_valid(product, max_errors=max_errors):
-                insight = self.predict_insight(product["ingredients_text_fr"])
+                insight = self.predict_insight(
+                    product["ingredients_text_fr"], detailed=detailed,
+                )
                 if insight is not None:
                     insight["lang"] = lang
                     insight["barcode"] = product["code"]
@@ -52,17 +55,19 @@ class Spellchecker(PipelineSpellchecker):
                     if limit is not None and insights_count >= limit:
                         break
 
-    def predict_insight(self, text: str) -> Optional[JSONType]:
+    def predict_insight(self, text: str, detailed: bool) -> Optional[JSONType]:
         corrected_text = self.correct(text)
         if corrected_text != text:
-            return {
+            insight = {
                 "text": text,
                 "corrected": corrected_text,
-                "corrections": self.get_corrections(),
                 "index_name": self.es_kwargs.get(
                     "index_name", settings.ELASTICSEARCH_PRODUCT_INDEX
                 ),
             }
+            if detailed:
+                insight["corrections"] = self.get_corrections()
+            return insight
 
     @staticmethod
     def is_product_valid(product: JSONType, max_errors: Optional[int] = None) -> bool:
