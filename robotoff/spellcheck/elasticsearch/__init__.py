@@ -9,19 +9,11 @@ from robotoff.spellcheck.items import (
     SpellcheckItem,
 )
 
-from robotoff.spellcheck.elasticsearch.ingredients_splitter import (
-    IngredientsSplitter,
-)
-from robotoff.spellcheck.elasticsearch.correction_formatter import (
-    CorrectionFormatter,
-)
+from robotoff.spellcheck.elasticsearch.correction_formatter import CorrectionFormatter
 from robotoff.spellcheck.elasticsearch.es_handler import ElasticsearchHandler
 
 
 class ElasticSearchSpellchecker(BaseSpellchecker):
-
-    SPLITTER = IngredientsSplitter()
-
     def __init__(self, client, **kwargs):
         self.client = client
         self.kwargs = kwargs
@@ -54,7 +46,7 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
         es_handler = ElasticsearchHandler(self.client, **self.kwargs)
         correction_formatter = CorrectionFormatter()
 
-        ingredients: Ingredients = self.SPLITTER.split(text)
+        ingredients: Ingredients = Ingredients.from_text(text)
         suggestions = es_handler.suggest_batch(iter(ingredients))
 
         corrections = []

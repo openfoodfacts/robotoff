@@ -138,24 +138,27 @@ if __name__ == "__main__":
     @click.option("--index-name", default="product")
     @click.option("--confidence", type=float, default=1)
     @click.option("--max-errors", type=int)
+    @click.option("--limit", type=int)
     def generate_spellcheck_insights(
         output: str,
         index_name: str,
         confidence: float,
         max_errors: Optional[int] = None,
+        limit: Optional[int] = None,
     ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
-        from robotoff.spellcheck.v1.ingredients import generate_insights
+        from robotoff.spellcheck import Spellchecker
         from robotoff.utils import get_logger
 
         logger = get_logger()
         logger.info("Max errors: {}".format(max_errors))
 
         client = get_es_client()
-        insights_iter = generate_insights(
-            client, confidence=confidence, max_errors=max_errors
-        )
+        insights_iter = Spellchecker(
+            client=client, confidence=confidence, index_name=index_name
+        ).generate_insights(max_errors=max_errors, limit=limit)
+
         dump_jsonl(output, insights_iter)
 
     @click.command()

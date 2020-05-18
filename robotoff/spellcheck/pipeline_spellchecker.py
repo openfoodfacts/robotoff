@@ -1,5 +1,5 @@
-from typing import List, Dict
 from dataclasses import asdict
+from typing import List, Dict, Optional
 
 from robotoff.spellcheck.items import SpellcheckItem
 from robotoff.spellcheck.patterns import PatternsSpellchecker
@@ -33,19 +33,26 @@ class PipelineSpellchecker:
     def reset(self) -> None:
         self.item = None
 
-    def correct(self, text: str) -> str:
+    def correct(self, text: Optional[str] = None) -> str:
+        if text is not None:
+            self._process(text)
+        if self.item is None:
+            raise PipelineSpellcheckerException("No text processed.")
+        return self.item.latest_correction
+
+    def get_corrections(self, text: Optional[str] = None) -> List[Dict]:
+        if text is not None:
+            self._process(text)
+        if self.item is None:
+            raise PipelineSpellcheckerException("No text processed.")
+        return [
+            dict(asdict(atomic_correction), is_valid=atomic_correction.is_valid())
+            for atomic_correction in self.item.all_atomic_corrections
+            if atomic_correction.has_difference()
+        ]
+
+    def _process(self, text: str) -> None:
         self.item = SpellcheckItem(text)
         if self.item.is_lang_allowed:
             for spellcheck in self.spellcheckers:
                 spellcheck.predict([self.item])
-        return self.item.latest_correction
-
-    def get_corrections(self) -> List[Dict]:
-        if self.item is None:
-            raise PipelineSpellcheckerException(
-                "You must process an item using 'correct' before attempting to run 'get_corrections'"
-            )
-        return [
-            dict(asdict(atomic_correction), is_valid=atomic_correction.is_valid())
-            for atomic_correction in self.item.all_atomic_corrections
-        ]
