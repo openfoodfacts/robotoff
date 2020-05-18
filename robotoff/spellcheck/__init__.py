@@ -1,7 +1,7 @@
 from typing import List
-from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
-from robotoff.spellcheck.v2.pipeline_spellchecker import PipelineSpellchecker
-from robotoff.spellcheck.v2.items import (
+from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.pipeline_spellchecker import PipelineSpellchecker
+from robotoff.spellcheck.items import (
     Offset,
     AtomicCorrection,
     SpellcheckIteration,

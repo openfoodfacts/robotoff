@@ -1,6 +1,6 @@
 import re
 
-from robotoff.spellcheck.v2.items import Offset, Ingredients
+from robotoff.spellcheck.items import Offset, Ingredients
 
 
 class IngredientsSplitter:

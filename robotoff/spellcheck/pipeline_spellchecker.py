@@ -1,13 +1,13 @@
 from typing import List, Dict
 from dataclasses import asdict
 
-from robotoff.spellcheck.v2.items import SpellcheckItem
-from robotoff.spellcheck.v2.patterns import PatternsSpellchecker
-from robotoff.spellcheck.v2.percentages import PercentagesSpellchecker
-from robotoff.spellcheck.v2.vocabulary import VocabularySpellchecker
-from robotoff.spellcheck.v2.elasticsearch import ElasticSearchSpellchecker
+from robotoff.spellcheck.items import SpellcheckItem
+from robotoff.spellcheck.patterns import PatternsSpellchecker
+from robotoff.spellcheck.percentages import PercentagesSpellchecker
+from robotoff.spellcheck.vocabulary import VocabularySpellchecker
+from robotoff.spellcheck.elasticsearch import ElasticSearchSpellchecker
 
-from robotoff.spellcheck.v2.exceptions import PipelineSpellcheckerException
+from robotoff.spellcheck.exceptions import PipelineSpellcheckerException
 
 
 class PipelineSpellchecker:

@@ -2,8 +2,8 @@ import re
 from typing import Optional, List
 
 from robotoff.utils.text import FR_NLP_CACHE
-from robotoff.spellcheck.v2.vocabulary.utils import Vocabulary
-from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.vocabulary.utils import Vocabulary
+from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 
 TOKENS = List[str]
 ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)

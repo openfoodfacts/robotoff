@@ -1,7 +1,7 @@
 from typing import List, Dict
 
-from robotoff.spellcheck.v2.items import AtomicCorrection, Offset
-from robotoff.spellcheck.v2.exceptions import TokenLengthMismatchException
+from robotoff.spellcheck.items import AtomicCorrection, Offset
+from robotoff.spellcheck.exceptions import TokenLengthMismatchException
 
 
 class CorrectionFormatter:

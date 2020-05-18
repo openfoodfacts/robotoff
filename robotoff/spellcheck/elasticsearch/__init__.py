@@ -1,21 +1,21 @@
 from typing import Dict, List
 
-from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
-from robotoff.spellcheck.v2.exceptions import TokenLengthMismatchException
-from robotoff.spellcheck.v2.items import (
+from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.exceptions import TokenLengthMismatchException
+from robotoff.spellcheck.items import (
     Ingredients,
     AtomicCorrection,
     SpellcheckIteration,
     SpellcheckItem,
 )
 
-from robotoff.spellcheck.v2.elasticsearch.ingredients_splitter import (
+from robotoff.spellcheck.elasticsearch.ingredients_splitter import (
     IngredientsSplitter,
 )
-from robotoff.spellcheck.v2.elasticsearch.correction_formatter import (
+from robotoff.spellcheck.elasticsearch.correction_formatter import (
     CorrectionFormatter,
 )
-from robotoff.spellcheck.v2.elasticsearch.es_handler import ElasticsearchHandler
+from robotoff.spellcheck.elasticsearch.es_handler import ElasticsearchHandler
 
 
 class ElasticSearchSpellchecker(BaseSpellchecker):

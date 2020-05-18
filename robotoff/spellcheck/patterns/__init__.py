@@ -1,7 +1,7 @@
 from typing import Dict
 from pathlib import Path
 
-from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 
 Patterns = Dict[str, str]
 
