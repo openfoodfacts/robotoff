@@ -169,12 +169,14 @@ if __name__ == "__main__":
     def test_spellcheck(text: str, confidence: float):
         import json
         from robotoff.utils.es import get_es_client
-        from robotoff.spellcheck.v1.ingredients import suggest
+        from robotoff.spellcheck import Spellchecker
         from robotoff.utils import get_logger
 
         get_logger()
         client = get_es_client()
-        result = suggest(text, client, confidence=confidence)
+        result = Spellchecker(client=client, confidence=confidence).predict_insight(
+            text, detailed=True
+        )
         print(json.dumps(result, indent=5))
 
     @click.command()
