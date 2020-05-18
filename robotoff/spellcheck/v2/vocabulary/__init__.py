@@ -6,7 +6,7 @@ from robotoff.spellcheck.v2.vocabulary.utils import Vocabulary
 from robotoff.spellcheck.v2.base_spellchecker import BaseSpellchecker
 
 TOKENS = List[str]
-ADDITIVES_REGEX = re.compile("(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
+ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
 
 
 class VocabularySpellchecker(BaseSpellchecker):
