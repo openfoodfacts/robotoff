@@ -11,7 +11,10 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights import ocr
 from robotoff.insights.ocr.core import get_barcode_from_path
 from robotoff.insights.ocr.dataclass import OCRParsingException
-from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.ml.object_detection import (
+    ObjectDetectionModelRegistry,
+    ObjectDetectionRawResult,
+)
 from robotoff.off import http_session
 from robotoff.utils import get_image_from_url, get_logger
 
@@ -243,3 +246,22 @@ def extract_nutriscore_label(
             "notify": True,
         },
     )
+
+
+def predict_objects(
+    barcode: str, image_url: str, server_domain: str
+) -> Dict[str, ObjectDetectionRawResult]:
+    image = get_image_from_url(image_url, error_raise=True, session=http_session)
+    results: Dict[str, ObjectDetectionRawResult] = {}
+
+    if image is None:
+        logger.warning("Invalid image: {}".format(image_url))
+        return results
+
+    image.load()
+
+    for model_name in ("universal-logo-detector",):
+        model = ObjectDetectionModelRegistry.get(model_name)
+        results[model_name] = model.detect_from_image(image, output_image=False)
+
+    return results
