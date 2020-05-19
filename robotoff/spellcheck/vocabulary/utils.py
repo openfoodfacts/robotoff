@@ -58,7 +58,8 @@ class Vocabulary(object):
             if len(suggestions) == 1:
                 return suggestions[0]
             elif len(suggestions) > 1:
-                return
+                return None
+        return None
 
         suggestions = self._suggest_split(token)
         if len(suggestions) == 1:
@@ -66,10 +67,11 @@ class Vocabulary(object):
 
     def _suggest_deaccent(self, token: str) -> Optional[str]:
         if token in self:
-            return
+            return None
         deaccented_token = self.deaccent(token)
         if deaccented_token in self.deaccented_tokens:
             return self.deaccented_tokens[deaccented_token]
+        return None
 
     def _suggest_split(self, token: str) -> List[Tuple[str, str]]:
         if token in self:

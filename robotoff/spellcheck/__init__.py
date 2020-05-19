@@ -1,17 +1,9 @@
-from typing import List, Optional, Iterable
+from typing import Optional, Iterable
 
 from robotoff import settings
 from robotoff.utils.types import JSONType
 from robotoff.products import ProductDataset
-from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.pipeline_spellchecker import PipelineSpellchecker
-from robotoff.spellcheck.items import (
-    Offset,
-    AtomicCorrection,
-    SpellcheckIteration,
-    SpellcheckItem,
-    Ingredients,
-)
 
 
 class Spellchecker(PipelineSpellchecker):
@@ -68,6 +60,7 @@ class Spellchecker(PipelineSpellchecker):
             if detailed:
                 insight["corrections"] = self.get_corrections()
             return insight
+        return None
 
     @staticmethod
     def is_product_valid(product: JSONType, max_errors: Optional[int] = None) -> bool:

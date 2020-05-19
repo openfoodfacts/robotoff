@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.exceptions import TokenLengthMismatchException
@@ -47,7 +47,7 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
         correction_formatter = CorrectionFormatter()
 
         ingredients: Ingredients = Ingredients.from_text(text)
-        suggestions = es_handler.suggest_batch(iter(ingredients))
+        suggestions = es_handler.suggest_batch(ingredients.get_iter())
 
         corrections = []
         for idx, suggestion in enumerate(suggestions):

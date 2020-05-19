@@ -1,7 +1,7 @@
 import functools
 import re
 import unicodedata
-from typing import List, Set
+from typing import Set
 
 from spacy.lang.en import English
 from spacy.lang.fr import French

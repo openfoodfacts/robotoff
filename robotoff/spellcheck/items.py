@@ -1,6 +1,6 @@
 import re
 import operator
-from typing import List, Iterable
+from typing import List, Iterable, Optional
 from dataclasses import dataclass, field, InitVar
 
 from robotoff.utils.text import FR_NLP_CACHE, FR_KNOWN_TOKENS_CACHE
@@ -31,8 +31,8 @@ class AtomicCorrection:
     correction: str
     offset: Offset
     force_valid: bool = False
-    score: int = None
-    model: str = None
+    score: Optional[int] = None
+    model: Optional[str] = None
 
     def is_valid(self, plural: bool = True, original_known: bool = True) -> bool:
         if self.force_valid:
@@ -76,8 +76,8 @@ class AtomicCorrection:
 @dataclass
 class SpellcheckIteration:
     original: str
-    model: str = None
-    correction: InitVar[str] = None
+    model: Optional[str] = None
+    correction: InitVar[Optional[str]] = None
     atomic_corrections: List[AtomicCorrection] = field(default_factory=list)
 
     def __post_init__(self, correction: str):
@@ -114,7 +114,9 @@ class SpellcheckIteration:
                 )
             corrected_fragments.append(atomic_correction.correction)
             last_correction = atomic_correction
-        corrected_fragments.append(self.original[last_correction.offset.end :])
+
+        if last_correction is not None:
+            corrected_fragments.append(self.original[last_correction.offset.end :])
 
         return "".join(corrected_fragments)
 
@@ -146,9 +148,9 @@ class SpellcheckIteration:
 
 class SpellcheckItem:
     def __init__(self, original: str):
-        self.iterations = []
-        self.original = original
-        self.is_lang_allowed = self.__is_lang_allowed()
+        self.iterations: List[SpellcheckIteration] = []
+        self.original: str = original
+        self.is_lang_allowed: bool = self.__is_lang_allowed()
 
     @property
     def latest_correction(self) -> str:
@@ -165,7 +167,7 @@ class SpellcheckItem:
             for atomic_correction in iteration.atomic_corrections
         ]
 
-    def __is_lang_allowed(self):
+    def __is_lang_allowed(self) -> bool:
         languages = LANGUAGE_IDENTIFIER.predict(self.original.lower(), threshold=0.5)
         if len(languages) == 0:
             return True
@@ -186,6 +188,9 @@ class Ingredients:
     offsets: List[Offset] = field(default_factory=list)
 
     def __iter__(self) -> Iterable[str]:
+        yield from self.get_iter()
+
+    def get_iter(self) -> Iterable[str]:
         for index, _ in enumerate(self.offsets):
             yield self.get_normalized_ingredient_text(index)
 

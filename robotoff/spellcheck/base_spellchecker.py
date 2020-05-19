@@ -1,5 +1,4 @@
 from typing import List
-from dataclasses import asdict
 
 from robotoff.spellcheck.items import SpellcheckItem
 

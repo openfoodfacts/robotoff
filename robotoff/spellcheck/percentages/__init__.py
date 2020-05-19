@@ -25,7 +25,6 @@ class PercentagesSpellchecker(BaseSpellchecker):
             nb_first_digits = len(first_digits)
             nb_last_digits = len(last_digits)
 
-            valid_match = False
             pad_before = False
             pad_after = False
 

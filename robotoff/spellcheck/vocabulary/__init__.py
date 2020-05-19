@@ -19,7 +19,7 @@ class VocabularySpellchecker(BaseSpellchecker):
     def correct(self, text: str) -> str:
         for token in self.tokenize(text, remove_additives=True):
             if all(c.isalpha() for c in token):
-                if not token in self.wikipedia_voc:
+                if token not in self.wikipedia_voc:
                     suggestion: Optional[str] = self.ingredients_voc.suggest(token)
                     if suggestion is not None:
                         text = text.replace(token, suggestion)

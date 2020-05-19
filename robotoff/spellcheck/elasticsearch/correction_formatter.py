@@ -9,7 +9,7 @@ class CorrectionFormatter:
         self,
         original_tokens: List[Dict],
         suggestion_tokens: List[Dict],
-        offset: int,
+        offset: Offset,
         score: int,
     ) -> List[AtomicCorrection]:
         if len(original_tokens) != len(suggestion_tokens):

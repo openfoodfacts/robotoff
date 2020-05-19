@@ -144,7 +144,7 @@ if __name__ == "__main__":
         output: str,
         index_name: str,
         confidence: float,
-        detailed: Optional[bool],
+        detailed: bool,
         max_errors: Optional[int] = None,
         limit: Optional[int] = None,
     ):
