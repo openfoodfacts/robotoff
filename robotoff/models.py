@@ -126,6 +126,21 @@ class UserAnnotation(BaseModel):
         return self.insight.completed_at
 
 
+class ImageModel(BaseModel):
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    uploaded_at = peewee.DateTimeField(null=True, index=True)
+    image_id = peewee.CharField(max_length=50, null=False, index=True)
+    source_image = peewee.TextField(null=False, index=True)
+    width = peewee.IntegerField(null=False, index=True)
+    height = peewee.IntegerField(null=False, index=True)
+    deleted = peewee.BooleanField(null=False, index=True, default=False)
+    server_domain = peewee.TextField(null=True, index=True)
+    server_type = peewee.CharField(null=True, max_length=10, index=True)
+
+    class Meta:
+        table_name = "image"
+
+
 class ImagePrediction(BaseModel):
     """Table to store computer vision predictions (object detection,
     image segmentation,...) made by custom models."""
@@ -138,6 +153,7 @@ class ImagePrediction(BaseModel):
     data = BinaryJSONField(index=True)
     timestamp = peewee.DateTimeField(null=True)
     source_image = peewee.TextField(null=False, index=True)
+    image = peewee.ForeignKeyField(ImageModel, null=True, backref="predictions")
     max_confidence = peewee.FloatField(
         null=True,
         index=True,
@@ -156,4 +172,4 @@ class ImagePrediction(BaseModel):
     )
 
 
-MODELS = [ProductInsight, UserAnnotation, ImagePrediction]
+MODELS = [ProductInsight, UserAnnotation, ImagePrediction, ImageModel]
