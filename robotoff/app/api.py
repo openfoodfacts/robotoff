@@ -35,6 +35,7 @@ from robotoff.ml.category.neural.model import (
 from robotoff.models import (
     ProductInsight,
     UserAnnotation,
+    ImageModel,
     ImagePrediction,
     batch_insert,
 )
@@ -441,15 +442,15 @@ class ImagePredictionFetchResource:
             where_clauses.append(ImagePrediction.type == type_)
 
         if server_domain:
-            where_clauses.append(ImagePrediction.server_domain == server_domain)
+            where_clauses.append(ImageModel.server_domain == server_domain)
 
         if min_confidence is not None:
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
 
         if barcode is not None:
-            where_clauses.append(ImagePrediction.barcode == barcode)
+            where_clauses.append(ImageModel.barcode == barcode)
 
-        query = ImagePrediction.select()
+        query = ImagePrediction.select().join(ImageModel)
 
         if where_clauses:
             query = query.where(*where_clauses)

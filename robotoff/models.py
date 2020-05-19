@@ -146,28 +146,16 @@ class ImagePrediction(BaseModel):
     image segmentation,...) made by custom models."""
 
     type = peewee.CharField(max_length=256)
-    barcode = peewee.CharField(max_length=100, null=False, index=True)
     model_name = peewee.CharField(max_length=100, null=False, index=True)
     model_version = peewee.CharField(max_length=256, null=False, index=True)
     data = BinaryJSONField(index=True)
     timestamp = peewee.DateTimeField(null=True)
-    source_image = peewee.TextField(null=False, index=True)
-    image = peewee.ForeignKeyField(ImageModel, null=True, backref="predictions")
+    image = peewee.ForeignKeyField(ImageModel, null=False, backref="predictions")
     max_confidence = peewee.FloatField(
         null=True,
         index=True,
         help_text="for object detection models, confidence of the highest confident"
         "object detected, null if no object was detected",
-    )
-    server_domain = peewee.TextField(
-        null=True, help_text="server domain linked to the insight", index=True
-    )
-    server_type = peewee.CharField(
-        null=True,
-        max_length=10,
-        help_text="project associated with the server_domain, "
-        "one of 'off', 'obf', 'opff', 'opf'",
-        index=True,
     )
 
 
