@@ -20,9 +20,9 @@ Diagonal||les delices de belle france
 Biocoop
 bonÀrea||bonarea
 Bonpreu
-Coop||Betty Bossi
-Coop||Coop Naturaplan
-Coop||Naturaplan
+Coop||betty bossi
+Coop||coop naturaplan
+Coop||naturaplan
 Carrefour
 Carrefour||grand jury
 Casino
