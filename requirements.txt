@@ -9,7 +9,7 @@ elasticsearch==6.3.1
 Click==7.1.2
 apscheduler==3.6.3
 sentry-sdk[falcon]==0.14.3
-Pillow==6.2.2
+Pillow==7.1.2
 more-itertools==8.2.0
 numpy==1.18.4
 protobuf==3.7.1
