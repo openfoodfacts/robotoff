@@ -1,5 +1,5 @@
 requests==2.23.0
-peewee==3.10.0
+peewee==3.13.3
 psycopg2-binary==2.8.5
 gunicorn==19.9.0
 falcon==2.0.0
