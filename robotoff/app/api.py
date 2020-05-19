@@ -5,7 +5,6 @@ import itertools
 import functools
 import tempfile
 from typing import List, Optional
-import uuid
 
 import dataclasses
 
@@ -407,7 +406,6 @@ class ImagePredictionImporterResource:
             )
             inserts.append(
                 {
-                    "id": str(uuid.uuid4()),
                     "timestamp": timestamp,
                     "server_domain": server_domain,
                     "server_type": server_type,

@@ -1,6 +1,5 @@
 import datetime
 import pathlib
-import uuid
 from typing import Set, Tuple
 
 from robotoff.models import db, ImagePrediction, batch_insert
@@ -48,7 +47,6 @@ def iter_insert(data_path: pathlib.Path, model_name: str, model_version: str):
         max_confidence = max([r["score"] for r in results], default=None)
 
         yield {
-            "id": str(uuid.uuid4()),
             "type": TYPE,
             "barcode": item["barcode"],
             "timestamp": timestamp,

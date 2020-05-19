@@ -145,7 +145,6 @@ class ImagePrediction(BaseModel):
     """Table to store computer vision predictions (object detection,
     image segmentation,...) made by custom models."""
 
-    id = peewee.UUIDField(primary_key=True)
     type = peewee.CharField(max_length=256)
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     model_name = peewee.CharField(max_length=100, null=False, index=True)
