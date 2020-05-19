@@ -1,4 +1,4 @@
-scikit-learn==0.20.1
+scikit-learn==0.23.0
 pandas==0.23.4
 more_itertools==4.3.0
 spacy==2.0.18
