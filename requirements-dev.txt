@@ -3,4 +3,4 @@ black
 mypy
 pre-commit==2.4.0
 pytest==5.4.2
-pytest-mock==3.0.0
+pytest-mock==3.1.0
