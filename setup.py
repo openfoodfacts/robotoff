@@ -21,10 +21,10 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests>=2.13.0,<3.0.0",
-        "peewee==3.10.0",
+        "peewee==3.13.3",
         "psycopg2-binary>=2.8,<2.9",
         "elasticsearch==6.3.1",
-        "Click==7.0",
+        "Click==7.1.2",
         "Pillow>=5.0.0",
         "numpy>=1.16.0",
         "protobuf>=3.5.1",
