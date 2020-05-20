@@ -274,7 +274,7 @@ class NutrientPredictorResource:
             raise falcon.HTTPBadRequest("a JSON file is expected")
 
         try:
-            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient.name])
+            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient])
 
         except requests.exceptions.RequestException:
             resp.media = {
@@ -296,7 +296,8 @@ class NutrientPredictorResource:
                 "nutrients": {},
             }
         else:
-            resp.media = {"nutrients": insights["nutrient"][0]["nutrients"]}
+            nutrient_insights = insights[InsightType.nutrient]
+            resp.media = nutrient_insights.to_dict()
 
 
 class OCRInsightsPredictorResource:
@@ -338,13 +339,13 @@ class CategoryPredictorResource:
             if blacklist:
                 predicted = filter_blacklisted_categories(predicted)
 
-            predicted = [
+            categories = [
                 {"category": category, "confidence": confidence}
                 for category, confidence in predicted
             ]
 
-        predicted = predicted or []
-        resp.media = {"categories": predicted}
+        categories = categories or []
+        resp.media = {"categories": categories}
 
 
 class UpdateDatasetResource:
