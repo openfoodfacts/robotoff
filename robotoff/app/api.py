@@ -197,7 +197,7 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
 
 
 class AnnotateInsightResource:
-    def on_post(self, req, resp):
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
         insight_id = req.get_param("insight_id", required=True)
         annotation = req.get_param_as_int(
             "annotation", required=True, min_value=-1, max_value=1
@@ -267,7 +267,7 @@ class IngredientSpellcheckResource:
 
 
 class NutrientPredictorResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
 
         if not ocr_url.endswith(".json"):
@@ -300,7 +300,7 @@ class NutrientPredictorResource:
 
 
 class OCRInsightsPredictorResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
 
         try:
@@ -327,7 +327,7 @@ class OCRInsightsPredictorResource:
 
 
 class CategoryPredictorResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         deepest_only = req.get_param_as_bool("deepest_only", default=False)
         blacklist = req.get_param_as_bool("blacklist", default=False)
@@ -348,21 +348,21 @@ class CategoryPredictorResource:
 
 
 class UpdateDatasetResource:
-    def on_post(self, req, resp):
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
         send_ipc_event("download_dataset")
 
         resp.media = {
             "status": "scheduled",
         }
 
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         resp.media = {
             "etag": get_product_dataset_etag(),
         }
 
 
 class ImageImporterResource:
-    def on_post(self, req, resp):
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         image_url = req.get_param("image_url", required=True)
         ocr_url = req.get_param("ocr_url", required=True)
@@ -463,7 +463,7 @@ class ImagePredictionFetchResource:
 
 
 class ImagePredictorResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         image_url = req.get_param("image_url", required=True)
         models: List[str] = req.get_param_as_list("models", required=True)
 
@@ -520,7 +520,7 @@ class ImagePredictorResource:
 
 
 class WebhookProductResource:
-    def on_post(self, req, resp):
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         action = req.get_param("action", required=True)
         server_domain = req.get_param("server_domain", required=True)
@@ -671,7 +671,7 @@ def get_questions_resource_on_get(
 
 
 class StatusResource:
-    def on_get(self, req, resp):
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         resp.media = {
             "status": "running",
         }
