@@ -73,41 +73,15 @@ class ProductInsight(BaseModel):
     unique_scans_n = peewee.IntegerField(default=0, index=True)
     reserved_barcode = peewee.BooleanField(default=False, index=True)
 
-    def serialize(self, full: bool = False) -> JSONType:
-        if full:
-            return {
-                "id": str(self.id),
-                "barcode": self.barcode,
-                "type": self.type,
-                "data": self.data,
-                "timestamp": self.timestamp.isoformat() if self.timestamp else None,
-                "completed_at": self.completed_at.isoformat()
-                if self.completed_at
-                else None,
-                "annotation": self.annotation,
-                "countries": self.countries,
-                "brands": self.brands,
-                "process_after": self.process_after.isoformat()
-                if self.process_after
-                else None,
-                "value_tag": self.value_tag,
-                "value": self.value,
-                "source_image": self.source_image,
-                "automatic_processing": self.automatic_processing,
-                "server_domain": self.server_domain,
-                "server_type": self.server_type,
-                "unique_scans_n": self.unique_scans_n,
-                "latent": self.latent,
-            }
-        else:
-            return {
-                "id": str(self.id),
-                "type": self.type,
-                "barcode": self.barcode,
-                "countries": self.countries,
-                "source_image": self.source_image,
-                **self.data,
-            }
+    def serialize(self) -> JSONType:
+        return {
+            "id": str(self.id),
+            "type": self.type,
+            "barcode": self.barcode,
+            "countries": self.countries,
+            "source_image": self.source_image,
+            **self.data,
+        }
 
     @classmethod
     def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):

@@ -94,7 +94,7 @@ class ProductInsightDetail:
         except ProductInsight.DoesNotExist:
             raise falcon.HTTPNotFound()
 
-        resp.media = insight.serialize(full=True)
+        resp.media = insight.to_dict()
 
 
 class InsightCollection:
@@ -134,9 +134,7 @@ class InsightCollection:
         )
 
         offset: int = (page - 1) * count
-        insights = [
-            i.serialize(full=True) for i in get_insights_(limit=count, offset=offset)
-        ]
+        insights = [i.to_dict() for i in get_insights_(limit=count, offset=offset)]
         response["count"] = get_insights_(count=True)
 
         if not insights:
@@ -704,7 +702,9 @@ class DumpResource:
 
         with tempfile.TemporaryFile("w+", newline="") as temp_f:
             for insight in insights_iter:
-                serial = insight.serialize(full=True)
+                serial = json.loads(
+                    json.dumps(insight.to_dict(), cls=ExtendedJSONEncoder)
+                )
 
                 if writer is None:
                     writer = csv.DictWriter(temp_f, fieldnames=serial.keys())
