@@ -3,6 +3,7 @@ from typing import Iterable, Dict, Optional
 
 import peewee
 from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
+from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
 from robotoff.utils.types import JSONType
@@ -38,6 +39,9 @@ class BaseModel(peewee.Model):
     class Meta:
         database = db
         legacy_table_names = False
+
+    def to_dict(self, **kwargs):
+        return model_to_dict(self, **kwargs)
 
 
 class ProductInsight(BaseModel):

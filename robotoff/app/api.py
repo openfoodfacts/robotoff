@@ -2,6 +2,7 @@ import csv
 import datetime
 import io
 import itertools
+import json
 import functools
 import tempfile
 from typing import List, Optional
@@ -47,7 +48,7 @@ from robotoff.off import (
     get_server_type,
 )
 from robotoff.products import get_product_dataset_etag
-from robotoff.utils import get_logger, get_image_from_url, transform_model_instance
+from robotoff.utils import get_logger, get_image_from_url, ExtendedJSONEncoder
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
@@ -459,7 +460,7 @@ class ImagePredictionFetchResource:
             query = query.order_by(peewee.fn.Random())
 
         query = query.limit(count)
-        items = [transform_model_instance(item.__data__) for item in query.iterator()]
+        items = [item.to_dict() for item in query.iterator()]
         resp.media = {"predictions": items}
 
 
@@ -740,6 +741,16 @@ cors = CORS(
 api = falcon.API(
     middleware=[cors.middleware, MultipartMiddleware(), DBConnectionMiddleware()]
 )
+
+json_handler = falcon.media.JSONHandler(
+    dumps=functools.partial(json.dumps, cls=ExtendedJSONEncoder), loads=json.loads,
+)
+extra_handlers = {
+    "application/json": json_handler,
+}
+
+api.resp_options.media_handlers.update(extra_handlers)
+
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
 api.req_options.strip_url_path_trailing_slash = True

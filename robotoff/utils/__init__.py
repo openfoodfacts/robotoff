@@ -130,11 +130,11 @@ def get_image_from_url(
     return image
 
 
-def transform_model_instance(item):
-    for field, value in item.items():
-        if isinstance(value, uuid.UUID):
-            item[field] = str(value)
-        elif isinstance(value, datetime.datetime):
-            item[field] = value.isoformat()
+class ExtendedJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        elif isinstance(obj, datetime.datetime):
+            return obj.isoformat()
 
-    return item
+        return json.JSONEncoder.default(self, obj)
