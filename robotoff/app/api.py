@@ -34,11 +34,12 @@ from robotoff.ml.category.neural.model import (
     filter_blacklisted_categories,
 )
 from robotoff.models import (
-    ProductInsight,
-    UserAnnotation,
+    batch_insert,
     ImageModel,
     ImagePrediction,
-    batch_insert,
+    LogoAnnotation,
+    ProductInsight,
+    UserAnnotation,
 )
 from robotoff.off import (
     http_session,
@@ -520,6 +521,58 @@ class ImagePredictorResource:
         resp.stream = fp
 
 
+class ImageLogoResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        barcode: Optional[str] = req.get_param("barcode")
+        min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
+        random: bool = req.get_param_as_bool("random", default=True)
+        server_domain: Optional[str] = req.get_param("server_domain")
+        annotated: bool = req.get_param_as_bool("annotated", default=False)
+
+        where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
+
+        if server_domain:
+            where_clauses.append(ImageModel.server_domain == server_domain)
+
+        if min_confidence is not None:
+            where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
+
+        if barcode is not None:
+            where_clauses.append(ImageModel.barcode == barcode)
+
+        query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+
+        if where_clauses:
+            query = query.where(*where_clauses)
+
+        if random:
+            query = query.order_by(peewee.fn.Random())
+
+        query = query.limit(count)
+        items = [item.to_dict() for item in query.iterator()]
+        resp.media = {"logos": items}
+
+
+class ImageLogoAnnotateResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        annotations = req.media["annotations"]
+        auth = parse_auth(req)
+        username = None if auth is None else auth.get_username()
+        completed_at = datetime.datetime.utcnow()
+
+        for annotation in annotations:
+            logo_id = annotation["logo_id"]
+            value = annotation["value"]
+            type_ = annotation["type"]
+            logo = LogoAnnotation.get_by_id(logo_id)
+            logo.annotation_value = value
+            logo.annotation_type = type_
+            logo.username = username
+            logo.completed_at = completed_at
+            logo.save()
+
+
 class WebhookProductResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
@@ -771,6 +824,8 @@ api.add_route("/api/v1/images/import", ImageImporterResource())
 api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResource())
 api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
+api.add_route("/api/v1/images/logos", ImageLogoResource())
+api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
