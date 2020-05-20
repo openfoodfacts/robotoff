@@ -53,7 +53,7 @@ IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
-WORKER_COUNT = os.environ.get("WORKER_COUNT", 4)
+WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 REAL_TIME_IMAGE_PREDICTION = bool(os.environ.get("REAL_TIME_IMAGE_PREDICTION", False))
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
