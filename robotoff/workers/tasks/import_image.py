@@ -92,7 +92,15 @@ def save_image(
         logger.warning("Missing uploaded_t field: {}".format(image.keys()))
         return None
 
-    uploaded_at = datetime.datetime.utcfromtimestamp(image["uploaded_t"])
+    uploaded_t = image["uploaded_t"]
+    if isinstance(uploaded_t, str):
+        if not uploaded_t.isdigit():
+            logger.warning("Non digit uploaded_t value: {}".format(uploaded_t))
+            return None
+
+        uploaded_t = int(uploaded_t)
+
+    uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
     return ImageModel.create(
         barcode=barcode,
         image_id=image_id,
