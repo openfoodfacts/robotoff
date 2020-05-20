@@ -153,4 +153,4 @@ class LogoAnnotation(BaseModel):
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
 
 
-MODELS = [ProductInsight, UserAnnotation, ImagePrediction, ImageModel, LogoAnnotation]
+MODELS = [ProductInsight, UserAnnotation, ImageModel, ImagePrediction, LogoAnnotation]
