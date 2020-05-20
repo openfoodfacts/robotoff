@@ -45,7 +45,7 @@ class ProductInsight(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256)
     data = BinaryJSONField(index=True)
-    timestamp = peewee.DateTimeField(null=True)
+    timestamp = peewee.DateTimeField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True)
     annotation = peewee.IntegerField(null=True)
     latent = peewee.BooleanField(null=False, index=True, default=False)
