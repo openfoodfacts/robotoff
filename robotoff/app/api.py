@@ -560,8 +560,8 @@ class WebhookProductResource:
 
 
 class ProductQuestionsResource:
-    def on_get(self, req, resp, barcode):
-        response = {}
+    def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
+        response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1) or 1
         lang: str = req.get_param("lang", default="en")
         server_domain: Optional[str] = req.get_param("server_domain")
