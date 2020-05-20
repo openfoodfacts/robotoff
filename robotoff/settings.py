@@ -54,6 +54,7 @@ IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = os.environ.get("WORKER_COUNT", 4)
+REAL_TIME_IMAGE_PREDICTION = bool(os.environ.get("REAL_TIME_IMAGE_PREDICTION", False))
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
@@ -116,6 +117,13 @@ OBJECT_DETECTION_TF_SERVING_MODELS = (
     "nutrition-table",
     "universal-logo-detector",
 )
+
+OBJECT_DETECTION_MODEL_VERSION = {
+    "nutriscore": "tf-nutriscore-1.0",
+    "nutrition-table": "tf-nutrition-table-1.0",
+    "universal-logo-detector": "tf-universal-logo-detector-1.0",
+}
+
 
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15

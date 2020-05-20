@@ -7,15 +7,19 @@ from robotoff.insights.importer import InsightImporterFactory, BaseInsightImport
 from robotoff.insights.extraction import (
     get_insights_from_image,
     get_source_from_image_url,
+    predict_objects,
 )
-from robotoff.models import db, ImageModel
+from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
 from robotoff.off import get_server_type
 from robotoff.products import (
     get_product_store,
     Product,
 )
 from robotoff.slack import notify_image_flag
+from robotoff import settings
 from robotoff.utils import get_logger
+from robotoff.workers.client import send_ipc_event
+
 
 logger = get_logger(__name__)
 
@@ -27,6 +31,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
     product_store = get_product_store()
     product = product_store[barcode]
     save_image(barcode, image_url, product, server_domain)
+    launch_object_detection_job(barcode, image_url, server_domain)
     insights_all = get_insights_from_image(barcode, image_url, ocr_url)
 
     for insight_type, insights in insights_all.items():
@@ -98,3 +103,43 @@ def save_image(
         server_domain=server_domain,
         server_type=get_server_type(server_domain).name,
     )
+
+
+def launch_object_detection_job(barcode: str, image_url: str, server_domain: str):
+    send_ipc_event(
+        "object_detection",
+        {"barcode": barcode, "image_url": image_url, "server_domain": server_domain},
+    )
+
+
+def run_object_detection(barcode: str, image_url: str, server_domain: str):
+    source_image = get_source_from_image_url(image_url)
+    image_instance = ImageModel.get_or_none(source_image=source_image)
+
+    if image_instance is None:
+        logger.warning("Missing image in DB for image {}".format(image_url))
+        return
+
+    timestamp = datetime.datetime.utcnow()
+    results = predict_objects(barcode, image_url, server_domain)
+
+    for model_name, result in results.items():
+        data = result.to_json(threshold=0.1)
+        max_confidence = max([item["score"] for item in data], default=None)
+        image_prediction = ImagePrediction.create(
+            image=image_instance,
+            type="object_detection",
+            model_name=model_name,
+            model_version=settings.OBJECT_DETECTION_MODEL_VERSION[model_name],
+            data={"objects": data},
+            timestamp=timestamp,
+            max_confidence=max_confidence,
+        )
+        for i, item in enumerate(data):
+            if item["score"] >= 0.5:
+                LogoAnnotation.create(
+                    image_prediction=image_prediction,
+                    index=i,
+                    score=item["score"],
+                    bounding_box=item["bounding_box"],
+                )

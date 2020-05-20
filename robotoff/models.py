@@ -164,9 +164,11 @@ class LogoAnnotation(BaseModel):
         ImagePrediction, null=False, backref="logo_detections"
     )
     index = peewee.IntegerField(null=False, constraints=[peewee.Check("index >= 0")])
-    annotation_value = peewee.CharField(null=False, index=True)
-    annotation_type = peewee.CharField(null=False, index=True)
-    username = peewee.TextField(index=True)
+    bounding_box = BinaryJSONField(null=False)
+    score = peewee.FloatField(null=False)
+    annotation_value = peewee.CharField(null=True, index=True)
+    annotation_type = peewee.CharField(null=True, index=True)
+    username = peewee.TextField(null=True, index=True)
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]

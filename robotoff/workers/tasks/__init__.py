@@ -9,7 +9,7 @@ from robotoff.products import (
 )
 from robotoff.utils import get_logger, configure_root_logger
 
-from .import_image import import_image
+from .import_image import import_image, run_object_detection
 from .product_updated import update_insights
 
 logger = get_logger(__name__)
@@ -59,4 +59,5 @@ EVENT_MAPPING: Dict[str, Callable] = {
     "download_dataset": download_product_dataset,
     "product_deleted": delete_product_insights,
     "product_updated": update_insights,
+    "object_detection": run_object_detection,
 }
