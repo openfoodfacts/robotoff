@@ -307,6 +307,37 @@ if __name__ == "__main__":
             if category:
                 category_export()
 
+    @click.command()
+    @click.argument("output", type=pathlib.Path)
+    @click.option("--server-domain")
+    @click.option("--annotated", type=bool)
+    def export_logo_annotation(
+        output: pathlib.Path,
+        server_domain: Optional[str] = None,
+        annotated: Optional[bool] = None,
+    ):
+        from robotoff.models import db, LogoAnnotation, ImageModel, ImagePrediction
+        from robotoff.utils import dump_jsonl, ExtendedJSONEncoder
+
+        with db:
+            where_clauses = []
+
+            if server_domain is not None:
+                where_clauses.append(ImageModel.server_domain == server_domain)
+
+            if annotated is not None:
+                where_clauses.append(
+                    LogoAnnotation.annotation_value.is_null(not annotated)
+                )
+
+            query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+            if where_clauses:
+                query = query.where(*where_clauses)
+
+            logo_iter = query.iterator()
+            dict_iter = (l.to_dict() for l in logo_iter)
+            dump_jsonl(output, dict_iter, serializer=ExtendedJSONEncoder)
+
     cli.add_command(run)
     cli.add_command(generate_ocr_insights)
     cli.add_command(annotate)
@@ -321,5 +352,6 @@ if __name__ == "__main__":
     cli.add_command(import_insights)
     cli.add_command(apply_insights)
     cli.add_command(predict_insight)
+    cli.add_command(export_logo_annotation)
 
     cli()

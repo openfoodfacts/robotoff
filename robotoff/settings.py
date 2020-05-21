@@ -53,7 +53,7 @@ IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
-WORKER_COUNT = os.environ.get("WORKER_COUNT", 4)
+WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
@@ -103,7 +103,7 @@ ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 
 MODELS_DIR = PROJECT_DIR / "models"
 
-TF_SERVING_HOST = "localhost"
+TF_SERVING_HOST = "49.12.34.189"
 TF_SERVING_HTTP_PORT = "8501"
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
@@ -116,6 +116,13 @@ OBJECT_DETECTION_TF_SERVING_MODELS = (
     "nutrition-table",
     "universal-logo-detector",
 )
+
+OBJECT_DETECTION_MODEL_VERSION = {
+    "nutriscore": "tf-nutriscore-1.0",
+    "nutrition-table": "tf-nutrition-table-1.0",
+    "universal-logo-detector": "tf-universal-logo-detector-1.0",
+}
+
 
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15

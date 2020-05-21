@@ -9,7 +9,7 @@ import uuid
 
 import requests
 import sys
-from typing import Callable, Union, Iterable, Dict, Optional
+from typing import Callable, Union, Iterable, Dict, Optional, Type
 
 from PIL import Image
 
@@ -65,13 +65,17 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
             yield json.loads(line)
 
 
-def dump_jsonl(filepath: Union[str, pathlib.Path], json_iter: Iterable[Dict]) -> int:
+def dump_jsonl(
+    filepath: Union[str, pathlib.Path],
+    json_iter: Iterable[Dict],
+    serializer: Optional[Type] = None,
+) -> int:
     count = 0
     open_fn = get_open_fn(filepath)
 
     with open_fn(str(filepath), "wt") as f:
         for item in json_iter:
-            f.write(json.dumps(item) + "\n")
+            f.write(json.dumps(item, cls=serializer) + "\n")
             count += 1
 
     return count
@@ -130,11 +134,11 @@ def get_image_from_url(
     return image
 
 
-def transform_model_instance(item):
-    for field, value in item.items():
-        if isinstance(value, uuid.UUID):
-            item[field] = str(value)
-        elif isinstance(value, datetime.datetime):
-            item[field] = value.isoformat()
+class ExtendedJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        elif isinstance(obj, datetime.datetime):
+            return obj.isoformat()
 
-    return item
+        return json.JSONEncoder.default(self, obj)
