@@ -16,7 +16,7 @@ import tqdm
 logger = get_logger()
 
 
-DATA_PATH = settings.PROJECT_DIR / "output.jsonl.gz"
+DATA_PATH = settings.DATASET_DIR / "output.jsonl.gz"
 MODEL_NAME = "universal-logo-detector"
 MODEL_VERSION = "tf-universal-logo-detector-1.0"
 TYPE = "object_detection"
@@ -29,7 +29,7 @@ def get_seen_set() -> Set[Tuple[str, str]]:
         .join(ImageModel)
         .iterator()
     ):
-        seen_set.add((prediction.model_name, prediction.source_image))
+        seen_set.add((prediction.model_name, prediction.image.source_image))
 
     return seen_set
 
@@ -81,7 +81,6 @@ def insert_batch(data_path: pathlib.Path, model_name: str, model_version: str):
 logger.info("Starting image prediction import...")
 
 with db:
-    with db.atomic():
-        inserted = insert_batch(DATA_PATH, MODEL_NAME, MODEL_VERSION)
+    inserted = insert_batch(DATA_PATH, MODEL_NAME, MODEL_VERSION)
 
 logger.info("{} image predictions inserted".format(inserted))
