@@ -559,6 +559,20 @@ class ImageLogoResource:
         resp.media = {"logos": items}
 
 
+class ImageLogoDetailResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        logo = LogoAnnotation.get_or_none(id=logo_id)
+
+        if logo is None:
+            resp.status = falcon.HTTP_404
+            return
+
+        logo_dict = logo.to_dict()
+        image_prediction = logo_dict.pop("image_prediction")
+        logo_dict["image"] = image_prediction["image"]
+        resp.media = logo_dict
+
+
 class ImageLogoAnnotateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         annotations = req.media["annotations"]
@@ -830,6 +844,7 @@ api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResour
 api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
+api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
