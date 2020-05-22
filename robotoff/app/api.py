@@ -392,6 +392,28 @@ class ImageImporterResource:
         }
 
 
+class ImageCropResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        image_url = req.get_param("image_url", required=True)
+        y_min = req.get_param_as_float("y_min", required=True)
+        x_min = req.get_param_as_float("x_min", required=True)
+        y_max = req.get_param_as_float("y_max", required=True)
+        x_max = req.get_param_as_float("x_max", required=True)
+        image = get_image_from_url(image_url)
+
+        if image is None:
+            raise falcon.HTTPBadRequest("invalid image")
+
+        (left, right, top, bottom) = (
+            x_min * image.width,
+            x_max * image.width,
+            y_min * image.height,
+            y_max * image.height,
+        )
+        cropped_image = image.crop((left, top, right, bottom))
+        image_response(cropped_image, resp)
+
+
 class ImagePredictionImporterResource:
     @jsonschema.validate(IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
@@ -504,21 +526,21 @@ class ImagePredictorResource:
             result = model.detect_from_image(image, output_image=output_image)
 
             if output_image:
-                self.image_response(result.boxed_image, resp)
+                image_response(result.boxed_image, resp)
                 return
             else:
                 predictions[model_name] = result.to_json()
 
         resp.media = {"predictions": predictions}
 
-    @staticmethod
-    def image_response(image: Image.Image, resp: falcon.Response) -> None:
-        resp.content_type = "image/jpeg"
-        fp = io.BytesIO()
-        image.save(fp, "JPEG")
-        resp.stream_len = fp.tell()
-        fp.seek(0)
-        resp.stream = fp
+
+def image_response(image: Image.Image, resp: falcon.Response) -> None:
+    resp.content_type = "image/jpeg"
+    fp = io.BytesIO()
+    image.save(fp, "JPEG")
+    resp.stream_len = fp.tell()
+    fp.seek(0)
+    resp.stream = fp
 
 
 class ImageLogoResource:
@@ -840,6 +862,7 @@ api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images/import", ImageImporterResource())
+api.add_route("/api/v1/images/crop", ImageCropResource())
 api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResource())
 api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
