@@ -53,19 +53,19 @@ class Vocabulary(object):
         )
 
     def suggest(self, token: str) -> Optional[str]:
-        suggestions = self._suggest_deaccent(token)
-        if suggestions is not None:
-            if len(suggestions) == 1:
-                return suggestions[0]
-            elif len(suggestions) > 1:
+        deaccent_suggestions: Optional[List[str]] = self._suggest_deaccent(token)
+        if deaccent_suggestions is not None:
+            if len(deaccent_suggestions) == 1:
+                return deaccent_suggestions[0]
+            elif len(deaccent_suggestions) > 1:
                 return None
+
+        split_suggestions: List[Tuple[str, str]] = self._suggest_split(token)
+        if len(split_suggestions) == 1:
+            return split_suggestions[0][0] + " " + split_suggestions[0][1]
         return None
 
-        suggestions = self._suggest_split(token)
-        if len(suggestions) == 1:
-            return suggestions[0][0] + " " + suggestions[0][1]
-
-    def _suggest_deaccent(self, token: str) -> Optional[str]:
+    def _suggest_deaccent(self, token: str) -> Optional[List[str]]:
         if token in self:
             return None
         deaccented_token = self.deaccent(token)
