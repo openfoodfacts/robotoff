@@ -551,6 +551,11 @@ class ImageLogoResource:
 
         query = query.limit(count)
         items = [item.to_dict() for item in query.iterator()]
+
+        for item in items:
+            image_prediction = item.pop("image_prediction")
+            item["image"] = image_prediction["image"]
+
         resp.media = {"logos": items}
 
 
