@@ -1,5 +1,6 @@
+import random
 import pathlib
-from typing import List
+from typing import List, Optional
 
 import annoy
 import falcon
@@ -32,8 +33,13 @@ KEY_TO_ANN_ID = {x: i for i, x in enumerate(KEYS)}
 
 
 class ANNResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
-        if logo_id not in KEY_TO_ANN_ID:
+    def on_get(
+        self, req: falcon.Request, resp: falcon.Response, logo_id: Optional[int] = None
+    ):
+        if logo_id is None:
+            logo_id = KEYS[random.randint(0, len(KEYS) - 1)]
+
+        elif logo_id not in KEY_TO_ANN_ID:
             resp.status = falcon.HTTP_404
             return
 
@@ -99,4 +105,5 @@ api.req_options.auto_parse_form_urlencoded = True
 api.req_options.strip_url_path_trailing_slash = True
 api.req_options.auto_parse_qs_csv = True
 api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
+api.add_route("/api/v1/ann/random", ANNResource())
 api.add_route("/api/v1/ann", ANNEmbeddingResource())
