@@ -5,6 +5,7 @@ workers = 4
 preload_app = True
 timeout = 60
 
+
 def on_starting(server):
     """Gunicorn server hook."""
     with models.db:
