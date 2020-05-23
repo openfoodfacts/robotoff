@@ -47,13 +47,8 @@ class ANNResource:
         item_index = KEY_TO_ANN_ID[logo_id]
 
         indexes, distances = INDEX.get_nns_by_item(
-            item_index, count + 1, include_distances=True
+            item_index, count, include_distances=True
         )
-
-        if indexes.pop(0) != item_index:
-            logger.warning("Most similar logo is not provided logo")
-
-        distances.pop(0)
 
         logo_ids = [KEYS[index] for index in indexes]
         results = []
