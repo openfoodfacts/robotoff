@@ -145,6 +145,7 @@ class LogoAnnotation(BaseModel):
     bounding_box = BinaryJSONField(null=False)
     score = peewee.FloatField(null=False)
     annotation_value = peewee.CharField(null=True, index=True)
+    annotation_value_tag = peewee.CharField(null=True, index=True)
     annotation_type = peewee.CharField(null=True, index=True)
     username = peewee.TextField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True, index=True)
