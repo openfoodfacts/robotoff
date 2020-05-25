@@ -121,7 +121,7 @@ if __name__ == "__main__":
         dry: bool,
     ):
         from robotoff.cli.spellcheck import correct_ingredient
-        from robotoff.insights.ocr.utils import get_tag
+        from robotoff.utils.text import get_tag
         from robotoff.utils import get_logger
         from robotoff.off import OFFAuthentication
 

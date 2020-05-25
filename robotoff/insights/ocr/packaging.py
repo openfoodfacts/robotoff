@@ -6,9 +6,9 @@ from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 
-from robotoff.insights.ocr.utils import get_tag
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
+from robotoff.utils.text import get_tag
 
 
 def generate_packaging_keyword_processor(packaging: Optional[List[str]] = None):

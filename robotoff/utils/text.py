@@ -44,6 +44,11 @@ def get_nlp(lang: str):
         raise ValueError("unknown lang: {}".format(lang))
 
 
+def get_tag(text: str) -> str:
+    text = strip_accents_ascii(text)
+    return text.lower().replace(" & ", "-").replace(" ", "-").replace("'", "-")
+
+
 FR_NLP_CACHE = cache.CachedStore(
     functools.partial(get_nlp, lang="fr"), expiration_interval=None
 )
