@@ -2,7 +2,7 @@ import dataclasses
 from typing import Dict, Iterable, List
 
 import numpy as np
-from sklearn.preprocessing import MultiLabelBinarizer
+from .binarizer import MultiLabelBinarizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 from .dataclass import TextPreprocessingConfig
