@@ -52,6 +52,7 @@ from robotoff.products import get_product_dataset_etag
 from robotoff.utils import get_logger, get_image_from_url, ExtendedJSONEncoder
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
+from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
 
@@ -608,6 +609,7 @@ class ImageLogoAnnotateResource:
             type_ = annotation["type"]
             logo = LogoAnnotation.get_by_id(logo_id)
             logo.annotation_value = value
+            logo.annotation_value_tag = get_tag(value)
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at
