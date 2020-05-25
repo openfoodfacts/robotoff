@@ -51,7 +51,7 @@ class ProductInsight(BaseModel):
     data = BinaryJSONField(index=True)
     timestamp = peewee.DateTimeField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True)
-    annotation = peewee.IntegerField(null=True)
+    annotation = peewee.IntegerField(null=True, index=True)
     latent = peewee.BooleanField(null=False, index=True, default=False)
     countries = BinaryJSONField(null=True, index=True)
     brands = BinaryJSONField(null=True, index=True)
