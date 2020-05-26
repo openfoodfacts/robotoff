@@ -49,6 +49,7 @@ from robotoff.off import (
     get_server_type,
 )
 from robotoff.products import get_product_dataset_etag
+from robotoff.taxonomy import match_unprefixed_value
 from robotoff.utils import get_logger, get_image_from_url, ExtendedJSONEncoder
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -607,9 +608,11 @@ class ImageLogoAnnotateResource:
             logo_id = annotation["logo_id"]
             value = annotation["value"]
             type_ = annotation["type"]
+            value_tag = get_tag(value)
             logo = LogoAnnotation.get_by_id(logo_id)
             logo.annotation_value = value
-            logo.annotation_value_tag = get_tag(value)
+            logo.annotation_value_tag = value_tag
+            logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at
