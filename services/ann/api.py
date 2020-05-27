@@ -1,6 +1,6 @@
 import random
 import pathlib
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import annoy
 import falcon
@@ -27,30 +27,52 @@ def load_keys(file_path: pathlib.Path) -> List[int]:
     return [int(x) for x in text_file_iter(file_path)]
 
 
-INDEX = load_index(settings.INDEX_PATH)
-KEYS = load_keys(settings.KEYS_PATH)
-KEY_TO_ANN_ID = {x: i for i, x in enumerate(KEYS)}
+class ANNIndex:
+    def __init__(self, index: annoy.AnnoyIndex, keys: List[int]):
+        self.index = index
+        self.keys = keys
+        self.key_to_ann_id = {x: i for i, x in enumerate(self.keys)}
+
+    @classmethod
+    def load(cls, index_dir: pathlib.Path) -> "ANNIndex":
+        index = load_index(index_dir / settings.INDEX_FILE_NAME)
+        keys = load_keys(index_dir / settings.KEYS_FILE_NAME)
+        return cls(index, keys)
+
+
+INDEXES: Dict[str, ANNIndex] = {
+    index_dir.name: ANNIndex.load(index_dir)
+    for index_dir in settings.DATA_DIR.iterdir()
+    if index_dir.is_dir()
+}
 
 
 class ANNResource:
     def on_get(
         self, req: falcon.Request, resp: falcon.Response, logo_id: Optional[int] = None
     ):
-        if logo_id is None:
-            logo_id = KEYS[random.randint(0, len(KEYS) - 1)]
+        index_name = req.get_param("index", default=settings.DEFAULT_INDEX)
 
-        elif logo_id not in KEY_TO_ANN_ID:
+        if index_name not in INDEXES:
+            raise falcon.HTTPBadRequest("unknown index: {}".format(index_name))
+
+        ann_index = INDEXES[index_name]
+
+        if logo_id is None:
+            logo_id = ann_index.keys[random.randint(0, len(ann_index.keys) - 1)]
+
+        elif logo_id not in ann_index.key_to_ann_id:
             resp.status = falcon.HTTP_404
             return
 
         count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
-        item_index = KEY_TO_ANN_ID[logo_id]
+        item_index = ann_index.key_to_ann_id[logo_id]
 
-        indexes, distances = INDEX.get_nns_by_item(
+        indexes, distances = ann_index.index.get_nns_by_item(
             item_index, count, include_distances=True
         )
 
-        logo_ids = [KEYS[index] for index in indexes]
+        logo_ids = [ann_index.keys[index] for index in indexes]
         results = []
 
         for ann_logo_id, distance in zip(logo_ids, distances):
@@ -61,6 +83,13 @@ class ANNResource:
 
 class ANNEmbeddingResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        index_name = req.get_param("index", default=settings.DEFAULT_INDEX)
+
+        if index_name not in INDEXES:
+            raise falcon.HTTPBadRequest("unknown index: {}".format(index_name))
+
+        ann_index = INDEXES[index_name]
+
         count = req.media.get("count", 1)
         embedding = req.media["embedding"]
 
@@ -72,11 +101,11 @@ class ANNEmbeddingResource:
                 ),
             )
 
-        indexes, distances = INDEX.get_nns_by_vector(
+        indexes, distances = ann_index.index.get_nns_by_vector(
             embedding, count, include_distances=True
         )
 
-        logo_ids = [KEYS[index] for index in indexes]
+        logo_ids = [ann_index.keys[index] for index in indexes]
         results = []
 
         for ann_logo_id, distance in zip(logo_ids, distances):
