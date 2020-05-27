@@ -620,6 +620,10 @@ class ImageLogoDetailResource:
             updated = True
 
         if updated:
+            auth = parse_auth(req)
+            username = None if auth is None else auth.get_username()
+            logo.username = username
+            logo.completed_at = datetime.datetime.utcnow()
             logo.save()
 
         resp.status = falcon.HTTP_204
