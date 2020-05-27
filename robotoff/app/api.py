@@ -609,9 +609,8 @@ class ImageLogoDetailResource:
             resp.status = falcon.HTTP_404
             return
 
-        updated_logo = req.media["logo"]
-        type_ = updated_logo.get["type"]
-        value = updated_logo.get["value"] or None
+        type_ = req.media["type"]
+        value = req.media["value"] or None
         updated = False
 
         if type_ != logo.annotation_type:

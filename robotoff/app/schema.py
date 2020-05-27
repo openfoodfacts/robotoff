@@ -35,14 +35,8 @@ UPDATE_LOGO_SCHEMA: Dict[str, Any] = {
     "title": "Update Logo",
     "type": "object",
     "properties": {
-        "logo": {
-            "type": "object",
-            "properties": {
-                "value": {"type": ["string", "null"]},
-                "type": {"type": "string", "minLength": 1},
-            },
-            "required": ["value", "type"],
-        }
+        "value": {"type": ["string", "null"]},
+        "type": {"type": "string", "minLength": 1},
     },
-    "required": ["logo"],
+    "required": ["value", "type"],
 }
