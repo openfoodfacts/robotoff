@@ -21,7 +21,7 @@ import requests
 from robotoff import settings
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.auth import basic_decode, BasicAuthDecodeError
-from robotoff.app.schema import IMAGE_PREDICTION_IMPORTER_SCHEMA
+from robotoff.app import schema
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.ingredients import generate_corrections, generate_corrected_text
 from robotoff.insights._enum import InsightType
@@ -417,7 +417,7 @@ class ImageCropResource:
 
 
 class ImagePredictionImporterResource:
-    @jsonschema.validate(IMAGE_PREDICTION_IMPORTER_SCHEMA)
+    @jsonschema.validate(schema.IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         timestamp = datetime.datetime.utcnow()
         inserts = []
@@ -595,6 +595,34 @@ class ImageLogoDetailResource:
         image_prediction = logo_dict.pop("image_prediction")
         logo_dict["image"] = image_prediction["image"]
         resp.media = logo_dict
+
+    @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
+    def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        logo = LogoAnnotation.get_or_none(id=logo_id)
+
+        if logo is None:
+            resp.status = falcon.HTTP_404
+            return
+
+        updated_logo = req.media["logo"]
+        annotation_type = updated_logo.get["annotation_type"]
+        annotation_value = updated_logo.get["annotation_value"]
+        updated = False
+
+        if annotation_type != logo.annotation_type:
+            logo.annotation_type = annotation_type
+            updated = True
+        if annotation_value != logo.annotation_value:
+            logo.annotation_value = annotation_value
+            value_tag = get_tag(annotation_value)
+            logo.annotation_value_tag = value_tag
+            logo.taxonomy_value = match_unprefixed_value(value_tag, annotation_type)
+            updated = True
+
+        if updated:
+            logo.save()
+
+        resp.status = falcon.HTTP_204
 
 
 class ImageLogoAnnotateResource:

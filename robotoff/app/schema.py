@@ -29,3 +29,20 @@ IMAGE_PREDICTION_IMPORTER_SCHEMA: Dict[str, Any] = {
     },
     "required": ["predictions"],
 }
+
+UPDATE_LOGO_SCHEMA: Dict[str, Any] = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Update Logo",
+    "type": "object",
+    "properties": {
+        "logo": {
+            "type": "object",
+            "properties": {
+                "annotation_value": {"type": "string", "minLength": 1},
+                "annotation_type": {"type": "string", "minLength": 1},
+            },
+            "required": ["annotation_value", "annotation_type"],
+        }
+    },
+    "required": ["logo"],
+}
