@@ -549,8 +549,9 @@ class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         barcode: Optional[str] = req.get_param("barcode")
+        value: Optional[str] = req.get_param("value")
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
-        random: bool = req.get_param_as_bool("random", default=True)
+        random: bool = req.get_param_as_bool("random", default=False)
         server_domain: Optional[str] = req.get_param("server_domain")
         annotated: bool = req.get_param_as_bool("annotated", default=False)
 
@@ -564,6 +565,10 @@ class ImageLogoResource:
 
         if barcode is not None:
             where_clauses.append(ImageModel.barcode == barcode)
+
+        if value is not None:
+            value_tag = get_tag(value)
+            where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
 
         query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 
