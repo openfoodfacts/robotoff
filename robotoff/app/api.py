@@ -548,6 +548,7 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int("count", min_value=1, default=25)
+        type_: Optional[str] = req.get_param("type")
         barcode: Optional[str] = req.get_param("barcode")
         value: Optional[str] = req.get_param("value")
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
@@ -565,6 +566,9 @@ class ImageLogoResource:
 
         if barcode is not None:
             where_clauses.append(ImageModel.barcode == barcode)
+
+        if type_ is not None:
+            where_clauses.append(LogoAnnotation.annotation_type == type_)
 
         if value is not None:
             value_tag = get_tag(value)
