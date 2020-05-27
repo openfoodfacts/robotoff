@@ -605,18 +605,25 @@ class ImageLogoDetailResource:
             return
 
         updated_logo = req.media["logo"]
-        annotation_type = updated_logo.get["annotation_type"]
-        annotation_value = updated_logo.get["annotation_value"]
+        type_ = updated_logo.get["type"]
+        value = updated_logo.get["value"] or None
         updated = False
 
-        if annotation_type != logo.annotation_type:
-            logo.annotation_type = annotation_type
+        if type_ != logo.annotation_type:
+            logo.annotation_type = type_
             updated = True
-        if annotation_value != logo.annotation_value:
-            logo.annotation_value = annotation_value
-            value_tag = get_tag(annotation_value)
-            logo.annotation_value_tag = value_tag
-            logo.taxonomy_value = match_unprefixed_value(value_tag, annotation_type)
+
+        if value != logo.annotation_value:
+            logo.annotation_value = value
+
+            if value is not None:
+                value_tag = get_tag(value)
+                logo.annotation_value_tag = value_tag
+                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+            else:
+                logo.annotation_value_tag = None
+                logo.taxonomy_value = None
+
             updated = True
 
         if updated:
@@ -638,13 +645,16 @@ class ImageLogoAnnotateResource:
 
         for annotation in annotations:
             logo_id = annotation["logo_id"]
-            value = annotation["value"]
             type_ = annotation["type"]
-            value_tag = get_tag(value)
+            value = annotation["value"] or None
             logo = LogoAnnotation.get_by_id(logo_id)
-            logo.annotation_value = value
-            logo.annotation_value_tag = value_tag
-            logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+
+            if value is not None:
+                logo.annotation_value = value
+                value_tag = get_tag(value)
+                logo.annotation_value_tag = value_tag
+                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at

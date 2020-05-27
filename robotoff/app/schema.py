@@ -38,10 +38,10 @@ UPDATE_LOGO_SCHEMA: Dict[str, Any] = {
         "logo": {
             "type": "object",
             "properties": {
-                "annotation_value": {"type": "string", "minLength": 1},
-                "annotation_type": {"type": "string", "minLength": 1},
+                "value": {"type": ["string", "null"]},
+                "type": {"type": "string", "minLength": 1},
             },
-            "required": ["annotation_value", "annotation_type"],
+            "required": ["value", "type"],
         }
     },
     "required": ["logo"],
