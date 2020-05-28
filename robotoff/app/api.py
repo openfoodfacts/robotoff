@@ -685,6 +685,37 @@ class ImageLogoAnnotateResource:
             logo.save()
 
 
+class ImageLogoUpdateResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        source_value = req.get_param("source_value", required=True)
+        source_type = req.get_param("source_type", required=True)
+        target_value = req.get_param("target_value", required=True)
+        target_type = req.get_param("target_type", required=True)
+
+        auth = parse_auth(req)
+        username = None if auth is None else auth.get_username()
+        completed_at = datetime.datetime.utcnow()
+
+        target_value_tag = get_tag(target_value)
+        source_value_tag = get_tag(source_value)
+        taxonomy_value = match_unprefixed_value(target_value_tag, target_type)
+
+        query = LogoAnnotation.update(
+            {
+                LogoAnnotation.annotation_type: target_type,
+                LogoAnnotation.annotation_value_tag: target_value_tag,
+                LogoAnnotation.taxonomy_value: taxonomy_value,
+                LogoAnnotation.username: username,
+                LogoAnnotation.completed_at: completed_at,
+            }
+        ).where(
+            LogoAnnotation.annotation_type == source_type,
+            LogoAnnotation.annotation_value_tag == source_value_tag,
+        )
+        updated = query.execute()
+        resp.media = {"updated": updated}
+
+
 class WebhookProductResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
@@ -940,6 +971,7 @@ api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
+api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
