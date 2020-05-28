@@ -12,7 +12,7 @@ sentry-sdk[falcon]==0.14.4
 Pillow==7.1.2
 more-itertools==8.3.0
 numpy==1.18.4
-protobuf==3.7.1
+protobuf==3.12.2
 Pint==0.9
 dataclasses>=0.6;python_version<"3.7"
 dacite==1.5.0
