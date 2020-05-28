@@ -31,9 +31,9 @@ logger = get_logger(__name__)
 
 
 def update_insights(barcode: str, server_domain: str):
-    # Sleep 5s to let the OFF update request that triggered the webhook call
+    # Sleep 10s to let the OFF update request that triggered the webhook call
     # to finish
-    time.sleep(5)
+    time.sleep(10)
     product_dict = get_product(barcode)
 
     if product_dict is None:
