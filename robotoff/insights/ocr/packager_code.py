@@ -114,7 +114,7 @@ def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[RawInsi
                     "type": "fishing",
                     "data_source": "flashtext",
                     "raw": match_str,
-                    "notify": True,
+                    "notify": False,
                 },
                 automatic_processing=True,
             )

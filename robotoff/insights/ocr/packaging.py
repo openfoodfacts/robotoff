@@ -47,7 +47,7 @@ def find_packaging(content: Union[OCRResult, str]) -> List[RawInsight]:
                     type=InsightType.packaging,
                     value_tag=get_tag(packaging),
                     value=packaging,
-                    data={"text": match_str, "notify": True},
+                    data={"text": match_str, "notify": False},
                     automatic_processing=True,
                 )
             )
