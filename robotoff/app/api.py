@@ -164,7 +164,7 @@ class RandomInsightResource:
                 keep_types=keep_types,
                 country=country,
                 value_tag=value_tag,
-                order_by="random",
+                order_by=None,  # disable random ordering until the slow SQL query is fixed
                 server_domain=server_domain,
                 limit=count,
             )
