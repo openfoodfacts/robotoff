@@ -547,7 +547,9 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        count: int = req.get_param_as_int(
+            "count", min_value=1, max_value=2000, default=25
+        )
         type_: Optional[str] = req.get_param("type")
         barcode: Optional[str] = req.get_param("barcode")
         value: Optional[str] = req.get_param("value")
@@ -557,15 +559,20 @@ class ImageLogoResource:
         annotated: bool = req.get_param_as_bool("annotated", default=False)
 
         where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
+        join_image_prediction = False
+        join_image_model = False
 
         if server_domain:
             where_clauses.append(ImageModel.server_domain == server_domain)
+            join_image_model = True
 
         if min_confidence is not None:
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
+            join_image_prediction = True
 
         if barcode is not None:
             where_clauses.append(ImageModel.barcode == barcode)
+            join_image_model = True
 
         if type_ is not None:
             where_clauses.append(LogoAnnotation.annotation_type == type_)
@@ -574,10 +581,19 @@ class ImageLogoResource:
             value_tag = get_tag(value)
             where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
 
-        query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+        query = LogoAnnotation.select()
+        join_image_prediction = join_image_prediction or join_image_model
+
+        if join_image_prediction:
+            query = query.join(ImagePrediction)
+
+            if join_image_model:
+                query = query.join(ImageModel)
 
         if where_clauses:
             query = query.where(*where_clauses)
+
+        query_count = query.count()
 
         if random:
             query = query.order_by(peewee.fn.Random())
@@ -589,7 +605,7 @@ class ImageLogoResource:
             image_prediction = item.pop("image_prediction")
             item["image"] = image_prediction["image"]
 
-        resp.media = {"logos": items}
+        resp.media = {"logos": items, "count": query_count}
 
 
 class ImageLogoDetailResource:
