@@ -18,8 +18,9 @@ from robotoff.insights.validator import (
     validate_insight,
 )
 from robotoff.models import ProductInsight
-from robotoff.off import get_product, get_server_type, ServerType
+from robotoff.off import get_server_type, ServerType
 from robotoff.products import (
+    get_product,
     get_product_store,
     Product,
 )
