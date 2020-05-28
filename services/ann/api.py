@@ -17,8 +17,8 @@ logger = get_logger()
 sentry_sdk.init(dsn=settings.SENTRY_DSN, integrations=[FalconIntegration()])
 
 
-def load_index(file_path: pathlib.Path) -> annoy.AnnoyIndex:
-    index = annoy.AnnoyIndex(settings.INDEX_DIM, "euclidean")
+def load_index(file_path: pathlib.Path, dimension: int) -> annoy.AnnoyIndex:
+    index = annoy.AnnoyIndex(dimension, "euclidean")
     index.load(str(file_path), prefault=True)
     return index
 
@@ -35,7 +35,8 @@ class ANNIndex:
 
     @classmethod
     def load(cls, index_dir: pathlib.Path) -> "ANNIndex":
-        index = load_index(index_dir / settings.INDEX_FILE_NAME)
+        dimension = settings.INDEX_DIM[index_dir.name]
+        index = load_index(index_dir / settings.INDEX_FILE_NAME, dimension)
         keys = load_keys(index_dir / settings.KEYS_FILE_NAME)
         return cls(index, keys)
 
