@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-05-02 11:40\n"
+"PO-Revision-Date: 2020-05-30 10:21\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Korean\n"
 "Language: ko\n"
@@ -17,21 +17,21 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "이 카테고리에 제품이 속합니까?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "제품에 이 레이블이 있습니까?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "이 브랜드에 제품이 속합니까?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "이 무게가 제품에 표시된 무게와 일치합니까?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "이 이미지가 이 언어의 영양 이미지입니까?"
 
