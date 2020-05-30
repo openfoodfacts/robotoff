@@ -304,3 +304,44 @@ def get_taxonomy(taxonomy_type: str) -> Taxonomy:
         raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
 
     return taxonomy_store.get()
+
+
+def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:
+    taxonomy = get_taxonomy(taxonomy_type)
+    ids: Dict[str, str] = {}
+
+    for key in taxonomy.keys():
+        unprefixed_key = key
+        if len(key) > 3 and key[2] == ":":
+            unprefixed_key = key[3:]
+
+        if taxonomy_type == TaxonomyType.brand.name:
+            ids[unprefixed_key] = taxonomy[key].names["en"]
+        else:
+            ids[unprefixed_key] = key
+
+    return ids
+
+
+UNPREFIXED_MAPPING_STORE: Dict[str, CachedStore] = {
+    TaxonomyType.label.name: CachedStore(
+        functools.partial(
+            get_unprefixed_mapping, taxonomy_type=TaxonomyType.label.name,
+        )
+    ),
+    TaxonomyType.brand.name: CachedStore(
+        functools.partial(
+            get_unprefixed_mapping, taxonomy_type=TaxonomyType.brand.name,
+        )
+    ),
+}
+
+
+def match_unprefixed_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
+    unprefixed_mapping_cache = UNPREFIXED_MAPPING_STORE.get(taxonomy_type)
+
+    if unprefixed_mapping_cache is None:
+        return None
+
+    unprefixed_mapping = unprefixed_mapping_cache.get()
+    return unprefixed_mapping.get(value_tag)

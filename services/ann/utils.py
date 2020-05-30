@@ -1,17 +1,11 @@
-import datetime
 import gzip
 import json
 import logging
 import os
 import pathlib
-import tempfile
-import uuid
 
-import requests
 import sys
-from typing import Callable, Union, Iterable, Dict, Optional, Type
-
-from PIL import Image
+from typing import Callable, Union, Iterable, Dict
 
 
 def get_logger(name=None, level: str = "INFO"):
@@ -65,17 +59,13 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
             yield json.loads(line)
 
 
-def dump_jsonl(
-    filepath: Union[str, pathlib.Path],
-    json_iter: Iterable[Dict],
-    serializer: Optional[Type] = None,
-) -> int:
+def dump_jsonl(filepath: Union[str, pathlib.Path], json_iter: Iterable[Dict]) -> int:
     count = 0
     open_fn = get_open_fn(filepath)
 
     with open_fn(str(filepath), "wt") as f:
         for item in json_iter:
-            f.write(json.dumps(item, cls=serializer) + "\n")
+            f.write(json.dumps(item) + "\n")
             count += 1
 
     return count
@@ -89,9 +79,7 @@ def get_open_fn(filepath: Union[str, pathlib.Path]) -> Callable:
         return open
 
 
-def text_file_iter(
-    filepath: Union[str, pathlib.Path], comment: bool = True
-) -> Iterable[str]:
+def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
     open_fn = get_open_fn(filepath)
 
     with open_fn(str(filepath), "rt") as f:
@@ -99,46 +87,4 @@ def text_file_iter(
             item = item.strip("\n")
 
             if item:
-                # commented lines start with '//'
-                if not comment or not item.startswith("//"):
-                    yield item
-
-
-def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):
-    with open(str(filepath), "w") as f:
-        for item in text_iter:
-            item = item.strip("\n")
-            f.write(item + "\n")
-
-
-def get_image_from_url(
-    image_url: str,
-    error_raise: bool = False,
-    session: Optional[requests.Session] = None,
-) -> Optional[Image.Image]:
-    if session:
-        r = session.get(image_url)
-    else:
-        r = requests.get(image_url)
-
-    if error_raise:
-        r.raise_for_status()
-
-    if r.status_code != 200:
-        return None
-
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(r.content)
-        image = Image.open(f.name)
-
-    return image
-
-
-class ExtendedJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, uuid.UUID):
-            return str(obj)
-        elif isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-
-        return json.JSONEncoder.default(self, obj)
+                yield item

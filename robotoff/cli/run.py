@@ -10,7 +10,7 @@ def run(service: str):
             [
                 "gunicorn",
                 "--config",
-                str(settings.PROJECT_DIR / "gunicorn.conf"),
+                str(settings.PROJECT_DIR / "gunicorn.py"),
                 "robotoff.app.api:api",
             ]
         )
