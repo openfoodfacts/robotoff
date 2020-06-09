@@ -4,12 +4,16 @@ from typing import Dict, List, Optional
 
 import annoy
 import falcon
+from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
+import numpy as np
 import sentry_sdk
 from sentry_sdk.integrations.falcon import FalconIntegration
 
-from utils import get_logger, text_file_iter
+from embeddings import add_logos, get_embedding
+from utils import get_image_from_url, get_logger, text_file_iter
+import schema
 import settings
 
 logger = get_logger()
@@ -29,7 +33,7 @@ def load_keys(file_path: pathlib.Path) -> List[int]:
 
 class ANNIndex:
     def __init__(self, index: annoy.AnnoyIndex, keys: List[int]):
-        self.index = index
+        self.index: annoy.AnnoyIndex = index
         self.keys = keys
         self.key_to_ann_id = {x: i for i, x in enumerate(self.keys)}
 
@@ -53,6 +57,7 @@ class ANNResource:
         self, req: falcon.Request, resp: falcon.Response, logo_id: Optional[int] = None
     ):
         index_name = req.get_param("index", default=settings.DEFAULT_INDEX)
+        count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
 
         if index_name not in INDEXES:
             raise falcon.HTTPBadRequest("unknown index: {}".format(index_name))
@@ -63,15 +68,21 @@ class ANNResource:
             logo_id = ann_index.keys[random.randint(0, len(ann_index.keys) - 1)]
 
         elif logo_id not in ann_index.key_to_ann_id:
-            resp.status = falcon.HTTP_404
-            return
+            embedding = get_embedding(logo_id)
 
-        count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
-        item_index = ann_index.key_to_ann_id[logo_id]
+            if embedding is None:
+                resp.status = falcon.HTTP_404
+                return
 
-        indexes, distances = ann_index.index.get_nns_by_item(
-            item_index, count, include_distances=True
-        )
+            indexes, distances = ann_index.index.get_nns_by_vector(
+                embedding, count, include_distance=True
+            )
+
+        else:
+            item_index = ann_index.key_to_ann_id[logo_id]
+            indexes, distances = ann_index.index.get_nns_by_item(
+                item_index, count, include_distances=True
+            )
 
         logo_ids = [ann_index.keys[index] for index in indexes]
         results = []
@@ -115,6 +126,28 @@ class ANNEmbeddingResource:
         resp.media = {"results": results, "count": len(results)}
 
 
+class AddLogoResource:
+    @jsonschema.validate(schema.ADD_LOGO_SCHEMA)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        image_url = req.media["image_url"]
+        logos = req.media["logos"]
+        logo_ids = [logo["id"] for logo in logos]
+        bounding_boxes = [logo["bounding_box"] for logo in logos]
+
+        image = get_image_from_url(image_url)
+
+        if image is None:
+            raise falcon.HTTPBadRequest("invalid image")
+
+        if np.array(image).shape[-1] != 3:
+            image = image.convert("RGB")
+
+        added = add_logos(image, logo_ids, bounding_boxes)
+        resp.media = {
+            "added": added,
+        }
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -132,3 +165,4 @@ api.req_options.auto_parse_qs_csv = True
 api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
 api.add_route("/api/v1/ann/random", ANNResource())
 api.add_route("/api/v1/ann", ANNEmbeddingResource())
+api.add_route("/api/v1/ann/add", AddLogoResource())

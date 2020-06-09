@@ -3,9 +3,12 @@ import json
 import logging
 import os
 import pathlib
-
 import sys
-from typing import Callable, Union, Iterable, Dict
+import tempfile
+from typing import Callable, Dict, Optional, Union, Iterable, Tuple
+
+from PIL import Image
+import requests
 
 
 def get_logger(name=None, level: str = "INFO"):
@@ -88,3 +91,39 @@ def text_file_iter(filepath: Union[str, pathlib.Path]) -> Iterable[str]:
 
             if item:
                 yield item
+
+
+def crop_image(
+    image: Image.Image, bounding_box: Tuple[float, float, float, float]
+) -> Image.Image:
+    y_min, x_min, y_max, x_max = bounding_box
+    (left, right, top, bottom) = (
+        x_min * image.width,
+        x_max * image.width,
+        y_min * image.height,
+        y_max * image.height,
+    )
+    return image.crop((left, top, right, bottom))
+
+
+def get_image_from_url(
+    image_url: str,
+    error_raise: bool = False,
+    session: Optional[requests.Session] = None,
+) -> Optional[Image.Image]:
+    if session:
+        r = session.get(image_url)
+    else:
+        r = requests.get(image_url)
+
+    if error_raise:
+        r.raise_for_status()
+
+    if r.status_code != 200:
+        return None
+
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(r.content)
+        image = Image.open(f.name)
+
+    return image
