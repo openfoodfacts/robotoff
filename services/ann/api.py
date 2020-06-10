@@ -1,5 +1,5 @@
-import random
 import pathlib
+import random
 from typing import Dict, List, Optional
 
 import annoy
