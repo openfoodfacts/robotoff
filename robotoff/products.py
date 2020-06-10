@@ -354,7 +354,7 @@ class ProductDataset:
 
     def count(self) -> int:
         count = 0
-        for product in self.stream():
+        for _ in self.stream():
             count += 1
 
         return count
