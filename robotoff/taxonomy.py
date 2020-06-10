@@ -1,15 +1,15 @@
 import collections
+from enum import Enum
 import functools
 import json
 import pathlib
-from enum import Enum
-from typing import List, Dict, Iterable, Optional, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 
 from robotoff import settings
 from robotoff.off import http_session
+from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
-from robotoff.utils import get_logger
 
 try:
     import networkx

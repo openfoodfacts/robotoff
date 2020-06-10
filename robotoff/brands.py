@@ -1,6 +1,6 @@
 import json
 import operator
-from typing import Tuple, Dict, Optional, List, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import requests
 

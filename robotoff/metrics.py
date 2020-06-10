@@ -1,7 +1,7 @@
 import datetime
 import json
-from urllib.parse import urlparse
 from typing import List, Optional
+from urllib.parse import urlparse
 
 from influxdb import InfluxDBClient
 import requests

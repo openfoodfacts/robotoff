@@ -1,8 +1,10 @@
-import json
 from difflib import SequenceMatcher
-from typing import Optional, Dict
+import json
+from typing import Dict, Optional
+
 import click
 import requests
+
 from robotoff.utils.types import JSONType
 
 http_session = requests.Session()

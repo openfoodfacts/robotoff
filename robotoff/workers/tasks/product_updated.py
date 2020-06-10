@@ -4,29 +4,24 @@ from typing import Dict, Optional
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
-from robotoff.ml.category.neural.model import (
-    predict_from_product as predict_category_from_product_ml,
-)
-from robotoff.insights.dataclass import ProductInsights
 from robotoff.insights._enum import InsightType
-from robotoff.insights.importer import InsightImporterFactory
+from robotoff.insights.dataclass import ProductInsights
 from robotoff.insights.extraction import get_insights_from_product_name
+from robotoff.insights.importer import InsightImporterFactory
 from robotoff.insights.validator import (
     InsightValidationResult,
     InsightValidator,
     InsightValidatorFactory,
     validate_insight,
 )
+from robotoff.ml.category.neural.model import (
+    predict_from_product as predict_category_from_product_ml,
+)
 from robotoff.models import ProductInsight
 from robotoff.off import get_server_type, ServerType
-from robotoff.products import (
-    get_product,
-    get_product_store,
-    Product,
-)
+from robotoff.products import get_product, get_product_store, Product
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
-
 
 logger = get_logger(__name__)
 
