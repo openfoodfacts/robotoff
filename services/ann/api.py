@@ -64,10 +64,15 @@ class ANNResource:
 
         ann_index = INDEXES[index_name]
 
-        if logo_id is None:
-            logo_id = ann_index.keys[random.randint(0, len(ann_index.keys) - 1)]
+        if logo_id is None or logo_id in ann_index.key_to_ann_id:
+            if logo_id is None:
+                logo_id = ann_index.keys[random.randint(0, len(ann_index.keys) - 1)]
 
-        elif logo_id not in ann_index.key_to_ann_id:
+            item_index = ann_index.key_to_ann_id[logo_id]
+            indexes, distances = ann_index.index.get_nns_by_item(
+                item_index, count, include_distances=True
+            )
+        else:
             embedding = get_embedding(logo_id)
 
             if embedding is None:
@@ -76,12 +81,6 @@ class ANNResource:
 
             indexes, distances = ann_index.index.get_nns_by_vector(
                 embedding, count, include_distance=True
-            )
-
-        else:
-            item_index = ann_index.key_to_ann_id[logo_id]
-            indexes, distances = ann_index.index.get_nns_by_item(
-                item_index, count, include_distances=True
             )
 
         logo_ids = [ann_index.keys[index] for index in indexes]
@@ -170,6 +169,6 @@ api.req_options.auto_parse_form_urlencoded = True
 api.req_options.strip_url_path_trailing_slash = True
 api.req_options.auto_parse_qs_csv = True
 api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
-api.add_route("/api/v1/ann/random", ANNResource())
-api.add_route("/api/v1/ann", ANNEmbeddingResource())
+api.add_route("/api/v1/ann", ANNResource())
+api.add_route("/api/v1/ann/from_embedding", ANNEmbeddingResource())
 api.add_route("/api/v1/ann/add", AddLogoResource())
