@@ -11,7 +11,7 @@ import numpy as np
 import sentry_sdk
 from sentry_sdk.integrations.falcon import FalconIntegration
 
-from embeddings import add_logos, get_embedding
+from embeddings import add_logos, get_embedding, EMBEDDING_STORE
 from utils import get_image_from_url, get_logger, text_file_iter
 import schema
 import settings
@@ -132,6 +132,13 @@ class AddLogoResource:
         image_url = req.media["image_url"]
         logos = req.media["logos"]
         logo_ids = [logo["id"] for logo in logos]
+
+        if all(logo_id in EMBEDDING_STORE for logo_id in logo_ids):
+            resp.media = {
+                "added": 0,
+            }
+            return
+
         bounding_boxes = [logo["bounding_box"] for logo in logos]
 
         image = get_image_from_url(image_url)
