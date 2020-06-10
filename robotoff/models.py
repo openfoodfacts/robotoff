@@ -1,8 +1,8 @@
 import datetime
-from typing import Iterable, Dict, Optional
+from typing import Dict, Iterable, Optional
 
 import peewee
-from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
+from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
