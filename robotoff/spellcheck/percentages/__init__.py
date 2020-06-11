@@ -15,6 +15,25 @@ class PercentagesSpellchecker(BaseSpellchecker):
 
     @staticmethod
     def format_percentages(text: str) -> str:
+        """
+        Rule-based formatting of the percentages in a string.
+        Related to this repository : https://github.com/openfoodfacts/openfoodfacts-ai/tree/master/spellcheck
+        In particular, please read Readme + tests implemented.
+
+        Rules applied :
+            - Match substrings following this pattern :
+                [0 to 2 digits][(optionally) a whitespace][a separator][0 to 2 digits][(optionally) a whitespace][a % or similar symbol].
+            - If the match contains/is part of an additive (e.g. Exxx), we drop it and to nothing.
+            - Depending on whether the first or last digits are present or not, we format the match accordingly (e.g XX,XX% or XX%).
+            - If no separator is found (only a whitespace), we concatenate the digits (example : 4 0% -> 40%). Just as a guarantee, we make sure that the value is below (or equals) to 100.
+            - In addition to these rules, we pad the match with whitespaces if context needs it. Pad is added if previous or next char is an alphanumerical character (raisin7% -> raisin 7%) or an opening/closing parenthesis (19%(lait -> 19% (lait).
+
+        Some examples :
+            - "AOP (lait) 3 ,5%, sirop de" -> "AOP (lait) 3,5%, sirop de"
+            - "100 % Coco sucre"           -> "100% Coco sucre"
+            - "fumée 17.1% [viande de"     -> "fumée 17,1% [viande de"
+            - "concentré 13 %, acidifiant" -> "concentré 13%, acidifiant"
+        """
         formatted_text_list: List[str] = []
         last_index: int = 0
         for match in PERCENTAGE_REGEX.finditer(text):
