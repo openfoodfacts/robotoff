@@ -1,3 +1,4 @@
+import re
 from typing import Dict
 from pathlib import Path
 
@@ -21,9 +22,6 @@ class PatternsSpellchecker(BaseSpellchecker):
                 elif current_pattern is None:
                     current_pattern = line
                 else:
-                    self.patterns[line.lower()] = current_pattern.lower()
-                    self.patterns[line.upper()] = current_pattern.upper()
-                    self.patterns[line.capitalize()] = current_pattern.capitalize()
                     self.patterns[line] = current_pattern
 
     @property
@@ -31,6 +29,25 @@ class PatternsSpellchecker(BaseSpellchecker):
         return super(PatternsSpellchecker, self).name + "__" + self.lang
 
     def correct(self, text: str) -> str:
-        for key, value in self.patterns.items():
-            text = text.replace(key, value)
+        for pattern, replacement in self.patterns.items():
+            text = replace_keep_case(pattern, replacement, text)
         return text
+
+
+def replace_keep_case(word, replacement, text):
+    """
+    Taken from https://stackoverflow.com/a/24894475/5333945
+    Replace a word in a text while preserving the case.
+    """
+
+    def func(match):
+        g = match.group()
+        if g.islower():
+            return replacement.lower()
+        if g.istitle():
+            return replacement.title()
+        if g.isupper():
+            return replacement.upper()
+        return replacement
+
+    return re.sub(word, func, text, flags=re.IGNORECASE)
