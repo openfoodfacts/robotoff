@@ -1,9 +1,10 @@
+import abc
 from typing import List
 
 from robotoff.spellcheck.items import SpellcheckItem
 
 
-class BaseSpellchecker:
+class BaseSpellchecker(metaclass=abc.ABCMeta):
     def predict(self, items: List[SpellcheckItem]) -> List[SpellcheckItem]:
         return [self.predict_one(item) for item in items]
 
@@ -14,8 +15,9 @@ class BaseSpellchecker:
             )
         return item
 
+    @abc.abstractmethod
     def correct(self, text: str) -> str:
-        raise NotImplementedError
+        pass
 
     @property
     def name(self) -> str:
