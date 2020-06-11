@@ -4,6 +4,7 @@ from pathlib import Path
 
 from robotoff.settings import SPELLCHECK_PATTERNS_PATHS
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.exceptions import LanguageNotAllowedException
 
 Patterns = Dict[str, str]
 
@@ -13,7 +14,15 @@ class PatternsSpellchecker(BaseSpellchecker):
         self.lang = lang
         self.patterns: Patterns = {}
 
-        with SPELLCHECK_PATTERNS_PATHS[lang].open() as f:
+        try:
+            patterns_path = SPELLCHECK_PATTERNS_PATHS[lang]
+        except KeyError:
+            raise LanguageNotAllowedException(
+                f"Lang {lang} is not supported in PatternsSpellchecker."
+                f" Allowed : {list(SPELLCHECK_PATTERNS_PATHS.keys())}."
+            )
+
+        with patterns_path.open() as f:
             current_pattern = None
             for line in f:
                 line = line.strip().split("#")[0]

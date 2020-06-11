@@ -1,6 +1,14 @@
-class TokenLengthMismatchException(Exception):
+class SpellcheckerException(Exception):
     pass
 
 
-class PipelineSpellcheckerException(Exception):
+class TokenLengthMismatchException(SpellcheckerException):
+    pass
+
+
+class PipelineSpellcheckerException(SpellcheckerException):
+    pass
+
+
+class LanguageNotAllowedException(SpellcheckerException):
     pass
