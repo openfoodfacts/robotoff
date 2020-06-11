@@ -1,13 +1,11 @@
 import functools
 import re
 import unicodedata
-from typing import Set
 
 from spacy.lang.en import English
 from spacy.lang.fr import French
 
-from robotoff import settings
-from robotoff.utils import text_file_iter, cache
+from robotoff.utils import cache
 
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 

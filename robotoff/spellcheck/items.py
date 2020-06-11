@@ -1,7 +1,7 @@
 import re
 import operator
-from typing import List, Iterable, Optional
-from dataclasses import dataclass, field, InitVar
+from typing import Dict, List, Iterable, Optional
+from dataclasses import dataclass, field, InitVar, asdict
 
 from robotoff.utils.text import FR_NLP_CACHE
 from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
@@ -159,6 +159,14 @@ class SpellcheckItem:
             return self.iterations[-1].corrected_text
         else:
             return self.original
+
+    @property
+    def corrections(self) -> List[Dict]:
+        return [
+            dict(asdict(atomic_correction), is_valid=atomic_correction.is_valid())
+            for atomic_correction in self.all_atomic_corrections
+            if atomic_correction.has_difference()
+        ]
 
     @property
     def all_atomic_corrections(self) -> List[AtomicCorrection]:

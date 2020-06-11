@@ -1,6 +1,5 @@
 import re
 from typing import Dict
-from pathlib import Path
 
 from robotoff.settings import SPELLCHECK_PATTERNS_PATHS
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker

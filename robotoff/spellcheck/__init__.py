@@ -48,7 +48,8 @@ class Spellchecker(PipelineSpellchecker):
                         break
 
     def predict_insight(self, text: str, detailed: bool) -> Optional[JSONType]:
-        corrected_text = self.correct(text)
+        correction_item = self.correct(text)
+        corrected_text = correction_item.latest_correction
         if corrected_text != text:
             insight = {
                 "text": text,
@@ -58,7 +59,7 @@ class Spellchecker(PipelineSpellchecker):
                 ),
             }
             if detailed:
-                insight["corrections"] = self.get_corrections()
+                insight["corrections"] = correction_item.corrections
             return insight
         return None
 

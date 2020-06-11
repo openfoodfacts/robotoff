@@ -249,12 +249,13 @@ class IngredientSpellcheckResource:
         spellchecker = Spellchecker(
             client=es_client, index_name=index_name, confidence=confidence
         )
+        correction_item = spellchecker.correct(text)
 
         resp.media = {
             "status": "success",
             "text": text,
-            "corrected": spellchecker.correct(text),
-            "corrections": spellchecker.get_corrections(),
+            "corrected": correction_item.latest_correction,
+            "corrections": correction_item.corrections,
         }
 
 
