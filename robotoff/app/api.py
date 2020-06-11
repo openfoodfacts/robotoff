@@ -250,11 +250,12 @@ class IngredientSpellcheckResource:
             client=es_client, index_name=index_name, confidence=confidence
         )
 
-        resp.media = {}
-        resp.media["status"] = "success"
-        resp.media["text"] = text
-        resp.media["corrected"] = spellchecker.correct(text)
-        resp.media["corrections"] = spellchecker.get_corrections()
+        resp.media = {
+            "status": "success",
+            "text": text,
+            "corrected": spellchecker.correct(text),
+            "corrections": spellchecker.get_corrections(),
+        }
 
 
 class NutrientPredictorResource:
