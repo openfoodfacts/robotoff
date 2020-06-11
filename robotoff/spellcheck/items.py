@@ -3,7 +3,8 @@ import operator
 from typing import List, Iterable, Optional
 from dataclasses import dataclass, field, InitVar
 
-from robotoff.utils.text import FR_NLP_CACHE, FR_KNOWN_TOKENS_CACHE
+from robotoff.utils.text import FR_NLP_CACHE
+from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
 from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 
 LANGUAGE_ALLOWED = "fr"

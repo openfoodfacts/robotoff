@@ -6,9 +6,10 @@ from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.es import get_es_client, perform_export
-from robotoff.utils.text import FR_NLP_CACHE, FR_KNOWN_TOKENS_CACHE
+from robotoff.utils.text import FR_NLP_CACHE
 
 from robotoff.spellcheck.items import Ingredients
+from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
 
 logger = get_logger(__name__)
 
