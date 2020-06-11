@@ -42,6 +42,11 @@ INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 
+SPELLCHECK_DIR = DATA_DIR / "spellcheck"
+SPELLCHECK_PATTERNS_PATHS = {
+    "fr": SPELLCHECK_DIR / "patterns_fr.txt",
+}
+
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")

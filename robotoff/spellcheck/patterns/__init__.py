@@ -1,20 +1,18 @@
 from typing import Dict
 from pathlib import Path
 
+from robotoff.settings import SPELLCHECK_PATTERNS_PATHS
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 
 Patterns = Dict[str, str]
 
 
 class PatternsSpellchecker(BaseSpellchecker):
-
-    PATTERNS_PATHS = {"fr": Path(__file__).parent / "patterns_fr.txt"}
-
     def __init__(self, lang: str = "fr"):
         self.lang = lang
         self.patterns: Patterns = {}
 
-        with self.PATTERNS_PATHS[lang].open() as f:
+        with SPELLCHECK_PATTERNS_PATHS[lang].open() as f:
             current_pattern = None
             for line in f.readlines():
                 line = line.strip().split("#")[0]
