@@ -2,14 +2,13 @@ name: Robotoff unit tests and deployments
 
 on:
   push:
-    branches:
-      - master
     paths:
       - 'robotoff/**'
   pull_request:
-    - 'robotoff/**'
-    - '**.pot'
-    - '**.po'
+    paths:
+      - 'robotoff/**'
+      - '**.pot'
+      - '**.po'
 
 jobs:
   unit-test:
