@@ -14,7 +14,7 @@ class PatternsSpellchecker(BaseSpellchecker):
 
         with SPELLCHECK_PATTERNS_PATHS[lang].open() as f:
             current_pattern = None
-            for line in f.readlines():
+            for line in f:
                 line = line.strip().split("#")[0]
                 if len(line) == 0:
                     current_pattern = None
