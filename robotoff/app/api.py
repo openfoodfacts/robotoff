@@ -230,9 +230,17 @@ class IngredientSpellcheckResource:
         self.spellcheck(req, resp)
 
     def spellcheck(self, req: falcon.Request, resp: falcon.Response):
-        text = self.__get_text(req, resp)
+        text = req.get_param("text")
         if text is None:
-            return
+            barcode = req.get_param("barcode")
+            if barcode is None:
+                raise falcon.HTTPBadRequest("text or barcode is required.")
+
+            product = get_product(barcode) or {}
+            text = product.get("ingredients_text_fr")
+            if text is None:
+                resp.media = {"status": "not_found"}
+                return
 
         index_name = req.get_param(
             "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
@@ -247,21 +255,6 @@ class IngredientSpellcheckResource:
         resp.media["text"] = text
         resp.media["corrected"] = spellchecker.correct(text)
         resp.media["corrections"] = spellchecker.get_corrections()
-
-    def __get_text(self, req: falcon.Request, resp: falcon.Response) -> Optional[str]:
-        text = req.get_param("text")
-        if text is not None:
-            return text
-
-        barcode = req.get_param("barcode")
-        if barcode is None:
-            raise falcon.HTTPBadRequest("text or barcode is required.")
-
-        product = get_product(barcode) or {}
-        text = product.get("ingredients_text_fr")
-        if text is None:
-            resp.media = {"status": "not_found"}
-        return text
 
 
 class NutrientPredictorResource:
