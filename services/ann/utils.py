@@ -5,14 +5,26 @@ import os
 import pathlib
 import sys
 import tempfile
-from typing import Callable, Dict, Optional, Union, Iterable, Tuple
+from typing import Callable, Dict, Iterable, Optional, Tuple, Union
 
 from PIL import Image
 import requests
 
 
-def get_logger(name=None, level: str = "INFO"):
+def get_logger(name=None, level: Optional[int] = None):
     logger = logging.getLogger(name)
+
+    if level is None:
+        log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+        level = logging.getLevelName(log_level)
+
+        if not isinstance(level, int):
+            print(
+                "Unknown log level: {}, fallback to INFO".format(log_level),
+                file=sys.stderr,
+            )
+            level = 20
+
     logger.setLevel(level)
 
     if name is None:
@@ -21,17 +33,8 @@ def get_logger(name=None, level: str = "INFO"):
     return logger
 
 
-def configure_root_logger(logger, level: str = "INFO"):
-    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-
-    if log_level not in ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "CRITICAL"):
-        print(
-            "Unknown log level: {}, fallback " "to INFO".format(log_level),
-            file=sys.stderr,
-        )
-        log_level = level
-
-    logger.setLevel(log_level)
+def configure_root_logger(logger, level: int = 20):
+    logger.setLevel(level)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
         "%(asctime)s :: %(processName)s :: "
@@ -39,7 +42,7 @@ def configure_root_logger(logger, level: str = "INFO"):
         "%(message)s"
     )
     handler.setFormatter(formatter)
-    handler.setLevel(log_level)
+    handler.setLevel(level)
     logger.addHandler(handler)
 
 
