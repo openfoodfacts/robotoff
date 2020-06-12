@@ -1,10 +1,8 @@
 from typing import List
 
-import requests
-
 from robotoff import settings
 from robotoff.models import ImageModel, LogoAnnotation
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 
 
 logger = get_logger(__name__)
@@ -20,7 +18,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
         "image_url": image_url,
         "logos": [{"bounding_box": logo.bounding_box, "id": logo.id} for logo in logos],
     }
-    r = requests.post(
+    r = http_session.post(
         "https://robotoff.openfoodfacts.org/api/v1/ann/add", json=data, timeout=30
     )
 
@@ -33,7 +31,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
 
 def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     logo_ids_params = ",".join((str(logo.id) for logo in logos))
-    r = requests.get(
+    r = http_session.get(
         f"https://robotoff.openfoodfacts.org/api/v1/ann/batch?logo_ids={logo_ids_params}",
         timeout=30,
     )
