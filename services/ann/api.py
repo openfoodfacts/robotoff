@@ -45,11 +45,13 @@ class ANNIndex:
         return cls(index, keys)
 
 
+logger.info("Loading ANN indexes...")
 INDEXES: Dict[str, ANNIndex] = {
     index_dir.name: ANNIndex.load(index_dir)
     for index_dir in settings.DATA_DIR.iterdir()
     if index_dir.is_dir()
 }
+logger.info("Index loaded")
 
 
 class ANNResource:
