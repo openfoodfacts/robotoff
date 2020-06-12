@@ -152,8 +152,9 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
                 )
                 logos.append(logo)
 
-    add_logos_to_ann(image_instance, logos)
-    save_nearest_neighbors(logos)
+    if logos:
+        add_logos_to_ann(image_instance, logos)
+        save_nearest_neighbors(logos)
 
 
 def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
