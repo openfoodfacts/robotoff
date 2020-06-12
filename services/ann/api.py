@@ -115,7 +115,7 @@ def get_nearest_neighbors(
             return None
 
         indexes, distances = ann_index.index.get_nns_by_vector(
-            embedding, count, include_distance=True
+            embedding, count, include_distances=True
         )
 
     logo_ids = [ann_index.keys[index] for index in indexes]
