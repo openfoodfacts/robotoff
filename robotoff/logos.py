@@ -187,6 +187,11 @@ def predict_logo_label(logo: LogoAnnotation):
     if not probs:
         return
 
+    max_prob = max((prob for label, prob in probs.items() if label != UNKNOWN_LABEL))
+
+    if max_prob < 0.1:
+        return
+
     crop_url = logo.get_crop_image_url()
     prob_text = "\n".join(
         (f"{label[0]} - {label[1]}: {prob:.2g}" for label, prob in probs.items())
