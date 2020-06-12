@@ -150,6 +150,7 @@ class LogoAnnotation(BaseModel):
     annotation_type = peewee.CharField(null=True, index=True)
     username = peewee.TextField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True, index=True)
+    nearest_neighbors = BinaryJSONField(null=True)
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
