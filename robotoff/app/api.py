@@ -1,13 +1,12 @@
 import csv
+import dataclasses
 import datetime
+import functools
 import io
 import itertools
 import json
-import functools
 import tempfile
 from typing import List, Optional
-
-import dataclasses
 
 import falcon
 from falcon.media.validators import jsonschema
@@ -16,23 +15,24 @@ from falcon_multipart.middleware import MultipartMiddleware
 import peewee
 from PIL import Image
 import requests
-
+import sentry_sdk
+from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
-from robotoff.app.core import get_insights, save_insight
-from robotoff.app.auth import basic_decode, BasicAuthDecodeError
 from robotoff.app import schema
+from robotoff.app.auth import basic_decode, BasicAuthDecodeError
+from robotoff.app.core import get_insights, save_insight
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.ingredients import generate_corrections, generate_corrected_text
+from robotoff.ingredients import generate_corrected_text, generate_corrections
 from robotoff.insights._enum import InsightType
-from robotoff.insights.extraction import extract_ocr_insights, DEFAULT_INSIGHT_TYPES
+from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
 from robotoff.insights.ocr.dataclass import OCRParsingException
-from robotoff.insights.question import QuestionFormatterFactory, QuestionFormatter
-from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.ml.category.neural.model import (
-    ModelRegistry,
     filter_blacklisted_categories,
+    ModelRegistry,
 )
+from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.models import (
     batch_insert,
     ImageModel,
@@ -42,23 +42,20 @@ from robotoff.models import (
     UserAnnotation,
 )
 from robotoff.off import (
-    http_session,
-    OFFAuthentication,
     generate_image_path,
     get_product,
     get_server_type,
+    http_session,
+    OFFAuthentication,
 )
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import match_unprefixed_value
-from robotoff.utils import get_logger, get_image_from_url, ExtendedJSONEncoder
+from robotoff.utils import ExtendedJSONEncoder, get_image_from_url, get_logger
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
-
-import sentry_sdk
-from sentry_sdk.integrations.falcon import FalconIntegration
 
 logger = get_logger()
 
