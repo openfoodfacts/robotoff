@@ -12,6 +12,8 @@ import uuid
 from PIL import Image
 import requests
 
+from robotoff import settings
+
 
 def get_logger(name=None, level: Optional[int] = None):
     logger = logging.getLogger(name)
@@ -144,3 +146,10 @@ class ExtendedJSONEncoder(json.JSONEncoder):
             return obj.isoformat()
 
         return json.JSONEncoder.default(self, obj)
+
+
+http_session = requests.Session()
+USER_AGENT_HEADERS = {
+    "User-Agent": settings.ROBOTOFF_USER_AGENT,
+}
+http_session.headers.update(USER_AGENT_HEADERS)

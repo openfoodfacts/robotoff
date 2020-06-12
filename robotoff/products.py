@@ -14,8 +14,7 @@ import requests
 
 from robotoff import settings
 from robotoff.mongo import MONGO_CLIENT_CACHE
-from robotoff.off import http_session
-from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
+from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 

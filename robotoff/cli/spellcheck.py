@@ -1,6 +1,8 @@
 import re
 from typing import List
-from robotoff.off import http_session, save_ingredients, OFFAuthentication, get_product
+
+from robotoff.off import get_product, OFFAuthentication, save_ingredients
+from robotoff.utils import http_session
 
 
 def correct_ingredient(

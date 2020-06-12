@@ -45,12 +45,16 @@ from robotoff.off import (
     generate_image_path,
     get_product,
     get_server_type,
-    http_session,
     OFFAuthentication,
 )
 from robotoff.products import get_product_dataset_etag
 from robotoff.taxonomy import match_unprefixed_value
-from robotoff.utils import ExtendedJSONEncoder, get_image_from_url, get_logger
+from robotoff.utils import (
+    ExtendedJSONEncoder,
+    get_image_from_url,
+    get_logger,
+    http_session,
+)
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag

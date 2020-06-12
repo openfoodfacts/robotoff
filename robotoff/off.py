@@ -2,10 +2,8 @@ import enum
 import re
 from typing import Dict, List, Optional, Tuple, Union
 
-import requests
-
 from robotoff import settings
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
 
@@ -60,12 +58,6 @@ class ServerType(enum.Enum):
     opff = 3
     opf = 4
 
-
-http_session = requests.Session()
-USER_AGENT_HEADERS = {
-    "User-Agent": settings.ROBOTOFF_USER_AGENT,
-}
-http_session.headers.update(USER_AGENT_HEADERS)
 
 AUTH = ("roboto-app", settings.OFF_PASSWORD)
 AUTH_DICT = {

@@ -7,11 +7,10 @@ import PIL
 from PIL import Image
 
 from robotoff import settings
-from robotoff.ml.networking import http_session, TF_SERVING_BASE_URL
 from robotoff.ml.object_detection.utils import label_map_util
 from robotoff.ml.object_detection.utils import visualization_utils as vis_util
 from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -122,7 +121,7 @@ class RemoteModel:
         }
 
         r = http_session.post(
-            "{}/{}:predict".format(TF_SERVING_BASE_URL, self.name), json=data
+            "{}/{}:predict".format(settings.TF_SERVING_BASE_URL, self.name), json=data
         )
         r.raise_for_status()
         response = r.json()

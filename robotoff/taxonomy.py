@@ -6,8 +6,7 @@ import pathlib
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 from robotoff import settings
-from robotoff.off import http_session
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 

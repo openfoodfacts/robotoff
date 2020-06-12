@@ -3,11 +3,9 @@ import json
 from typing import Dict, Optional
 
 import click
-import requests
 
+from robotoff.utils import http_session
 from robotoff.utils.types import JSONType
-
-http_session = requests.Session()
 
 LOCAL = False
 

@@ -1,27 +1,26 @@
 import operator
 import pathlib
-from typing import List, Optional, Tuple, Dict, Set, Iterable
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
-import numpy as np
 from more_itertools import chunked
+import numpy as np
 from tensorflow import keras
 
 from robotoff import settings
-from robotoff.insights.dataclass import RawInsight, ProductInsights
 from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.ml.category.neural.data_utils import generate_data
 from robotoff.ml.category.neural.io import (
-    load_config,
-    load_taxonomy,
-    load_ingredient_vocabulary,
-    load_category_vocabulary,
-    load_product_name_vocabulary,
     load_category_blacklist,
+    load_category_vocabulary,
+    load_config,
+    load_ingredient_vocabulary,
+    load_product_name_vocabulary,
+    load_taxonomy,
 )
-from robotoff.ml.networking import http_session, TF_SERVING_BASE_URL
 from robotoff.off import get_product
 from robotoff.taxonomy import Taxonomy
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_nlp
 
@@ -177,7 +176,7 @@ class RemoteModel(BaseModel):
         data = {"signature_name": "serving_default", "instances": [X]}
 
         r = http_session.post(
-            "{}/{}:predict".format(TF_SERVING_BASE_URL, self.NAME), json=data
+            "{}/{}:predict".format(settings.TF_SERVING_BASE_URL, self.NAME), json=data
         )
         r.raise_for_status()
         response = r.json()

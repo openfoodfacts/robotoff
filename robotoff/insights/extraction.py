@@ -1,22 +1,20 @@
 import pathlib
+from typing import Dict, Iterable, List, Optional
 from urllib.parse import urlparse
 
-from typing import Optional, Dict, List, Iterable
-
-import requests
 from PIL import Image
+import requests
 
-from robotoff.insights.dataclass import RawInsight, ProductInsights
-from robotoff.insights._enum import InsightType
 from robotoff.insights import ocr
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.ocr.core import get_barcode_from_path
 from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.ml.object_detection import (
     ObjectDetectionModelRegistry,
     ObjectDetectionRawResult,
 )
-from robotoff.off import http_session
-from robotoff.utils import get_image_from_url, get_logger
+from robotoff.utils import get_image_from_url, get_logger, http_session
 
 logger = get_logger(__name__)
 

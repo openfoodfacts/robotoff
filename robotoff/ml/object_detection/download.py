@@ -2,9 +2,9 @@ import pathlib
 from typing import Set
 
 from robotoff import settings
-from robotoff.off import generate_image_url, http_session
+from robotoff.off import generate_image_url
 from robotoff.products import ProductDataset
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
 
 logger = get_logger()
