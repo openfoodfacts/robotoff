@@ -1,17 +1,17 @@
-from typing import Union, Optional, List, Iterable
+from typing import Iterable, List, Optional, Union
+
+import peewee
 
 from robotoff import settings
 from robotoff.insights.annotate import (
-    InsightAnnotatorFactory,
-    AnnotationResult,
     ALREADY_ANNOTATED_RESULT,
+    AnnotationResult,
+    InsightAnnotatorFactory,
     UNKNOWN_INSIGHT_RESULT,
 )
 from robotoff.models import ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
-
-import peewee
 
 
 logger = get_logger(__name__)
