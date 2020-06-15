@@ -303,8 +303,10 @@ def send_logo_notification(logo: LogoAnnotation, probs: Dict[LogoLabelType, floa
             )
         )
     )
+    barcode = logo.image_prediction.image.barcode
     text = (
         f"Prediction for <{crop_url}|image> "
-        f"(<https://hunger.openfoodfacts.org/logos/{logo.id}|annotate>):\n{prob_text}"
+        f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "
+        f"<https://world.openfoodfacts.org/product/{barcode}|product>):\n{prob_text}"
     )
     post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
