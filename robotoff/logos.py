@@ -187,7 +187,9 @@ def predict_logo_label(logo: LogoAnnotation):
     if not probs:
         return
 
-    max_prob = max((prob for label, prob in probs.items() if label != UNKNOWN_LABEL))
+    max_prob = max(
+        (prob for label, prob in probs.items() if label != UNKNOWN_LABEL), default=0.0
+    )
 
     if max_prob < 0.1:
         return
