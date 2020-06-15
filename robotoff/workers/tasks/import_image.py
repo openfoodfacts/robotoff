@@ -10,7 +10,11 @@ from robotoff.insights.extraction import (
     predict_objects,
 )
 from robotoff.insights.importer import BaseInsightImporter, InsightImporterFactory
-from robotoff.logos import add_logos_to_ann, predict_logo_label, save_nearest_neighbors
+from robotoff.logos import (
+    add_logos_to_ann,
+    import_logo_insights,
+    save_nearest_neighbors,
+)
 from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
 from robotoff.off import get_server_type
 from robotoff.products import get_product_store, Product
@@ -154,6 +158,4 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
     if logos:
         add_logos_to_ann(image_instance, logos)
         save_nearest_neighbors(logos)
-
-        for logo in logos:
-            predict_logo_label(logo)
+        import_logo_insights(logos, threshold=0.1, server_domain=server_domain)

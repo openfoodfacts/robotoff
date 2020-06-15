@@ -1,5 +1,7 @@
 import abc
 import datetime
+import itertools
+import operator
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 import uuid
 
@@ -12,7 +14,7 @@ from robotoff.insights.dataclass import Insight, ProductInsights
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
-from robotoff.products import is_valid_image, Product, ProductStore
+from robotoff.products import get_product_store, is_valid_image, Product, ProductStore
 from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyNode
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
@@ -773,3 +775,36 @@ class InsightImporterFactory:
             return insight_cls(product_store)
         else:
             raise ValueError("unknown insight type: {}".format(insight_type))
+
+
+def import_insights(
+    insights: Iterable[ProductInsights],
+    server_domain: str,
+    automatic: bool,
+    latent: bool = True,
+    product_store: Optional[ProductStore] = None,
+) -> int:
+    if product_store is None:
+        product_store = get_product_store()
+
+    importers: Dict[InsightType, BaseInsightImporter] = {}
+    insights = sorted(insights, key=operator.attrgetter("type"))
+
+    insight_type: InsightType
+    insight_group: Iterable[ProductInsights]
+    imported = 0
+
+    for insight_type, insight_group in itertools.groupby(
+        insights, operator.attrgetter("type")
+    ):
+        if insight_type not in importers:
+            importers[insight_type] = InsightImporterFactory.create(
+                insight_type, product_store
+            )
+
+        importer = importers[insight_type]
+        imported += importer.import_insights(
+            insight_group, server_domain, automatic, latent
+        )
+
+    return imported

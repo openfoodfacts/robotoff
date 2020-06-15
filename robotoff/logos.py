@@ -4,6 +4,9 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 from robotoff import settings
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
+from robotoff.insights.importer import import_insights
 from robotoff.models import ImageModel, LogoAnnotation
 from robotoff.slack import post_message
 from robotoff.utils import get_logger, http_session
@@ -11,6 +14,12 @@ from robotoff.utils.cache import CachedStore
 
 
 logger = get_logger(__name__)
+
+
+LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
+    "brand": InsightType.brand,
+    "label": InsightType.label,
+}
 
 
 def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
@@ -181,22 +190,121 @@ def get_weights(dist: np.ndarray, weights: str = "uniform"):
         )
 
 
-def predict_logo_label(logo: LogoAnnotation):
-    probs = predict_proba(logo)
+def import_logo_insights(
+    logos: List[LogoAnnotation], server_domain: str, threshold: float = 0.0
+):
+    selected_logos = []
+    logo_probs = []
+    for logo in logos:
+        probs = predict_proba(logo)
 
-    if not probs:
-        return
+        if not probs:
+            continue
 
-    max_prob = max(
-        (prob for label, prob in probs.items() if label != UNKNOWN_LABEL), default=0.0
+        label, max_prob = max(
+            ((label, prob) for label, prob in probs.items() if label != UNKNOWN_LABEL),
+            default=(UNKNOWN_LABEL, 0.0),
+            key=operator.itemgetter(1),
+        )
+
+        if label == UNKNOWN_LABEL or max_prob < threshold:
+            continue
+
+        selected_logos.append(logo)
+        logo_probs.append(probs)
+
+    product_insights = predict_logo_insights(selected_logos, logo_probs)
+    imported = import_insights(product_insights, server_domain, automatic=True)
+
+    for logo, probs in zip(selected_logos, logo_probs):
+        send_logo_notification(logo, probs)
+
+    return imported
+
+
+def predict_logo_insights(
+    logos: List[LogoAnnotation], logo_probs: List[Dict[LogoLabelType, float]],
+) -> List[ProductInsights]:
+    grouped_insights: Dict[Tuple[str, str, InsightType], List[RawInsight]] = {}
+
+    for logo, probs in zip(logos, logo_probs):
+        if not probs:
+            continue
+
+        label, max_prob = max(
+            ((label, prob) for label, prob in probs.items() if label != UNKNOWN_LABEL),
+            default=(UNKNOWN_LABEL, 0.0),
+            key=operator.itemgetter(1),
+        )
+
+        if label == UNKNOWN_LABEL:
+            continue
+
+        raw_insight = generate_raw_insight(label, max_prob)
+
+        if raw_insight is not None:
+            image = logo.image_prediction.image
+            source_image = image.source_image
+            barcode = image.barcode
+            key = (barcode, source_image, raw_insight.type)
+            grouped_insights.setdefault(key, [])
+            grouped_insights[key].append(raw_insight)
+
+    insights: List[ProductInsights] = []
+
+    for (barcode, source_image, insight_type), raw_insights in grouped_insights.items():
+        insights.append(
+            ProductInsights(
+                insights=raw_insights,
+                type=insight_type,
+                barcode=barcode,
+                source_image=source_image,
+            )
+        )
+
+    return insights
+
+
+def generate_raw_insight(
+    label: LogoLabelType, confidence: float
+) -> Optional[RawInsight]:
+    logo_type = label[0]
+    logo_value = label[1]
+
+    if logo_type not in LOGO_TYPE_MAPPING:
+        return None
+
+    insight_type = LOGO_TYPE_MAPPING[logo_type]
+
+    value_tag = None
+    value = None
+
+    if insight_type == InsightType.brand:
+        value = logo_value
+    elif insight_type == InsightType.label:
+        value_tag = logo_value
+
+    return RawInsight(
+        type=insight_type,
+        value_tag=value_tag,
+        value=value,
+        automatic_processing=False,
+        data={"confidence": confidence, "data_source": "universal-logo-detector"},
     )
 
-    if max_prob < 0.1:
-        return
 
+def send_logo_notification(logo: LogoAnnotation, probs: Dict[LogoLabelType, float]):
     crop_url = logo.get_crop_image_url()
     prob_text = "\n".join(
-        (f"{label[0]} - {label[1]}: {prob:.2g}" for label, prob in probs.items())
+        (
+            f"{label[0]} - {label[1]}: {prob:.2g}"
+            for label, prob in sorted(
+                probs.items(), key=operator.itemgetter(1), reverse=True
+            )
+        )
     )
-    text = f"Logo prediction for {crop_url}:\n{prob_text}"
+    text = (
+        f"Prediction for <{crop_url}|image> "
+        f"(<https://hunger.openfoodfacts.org/logos/{logo.id}|annotate>):\n{prob_text}"
+    )
     post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
