@@ -58,6 +58,7 @@ COUNTRY_TAGS = [
     "no",
     "in",
     "tn",
+    "dk",
 ]
 
 
