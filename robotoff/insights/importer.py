@@ -1,7 +1,7 @@
 import abc
 import datetime
-import uuid
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
+import uuid
 
 from more_itertools import chunked
 
@@ -12,8 +12,8 @@ from robotoff.insights.dataclass import Insight, ProductInsights
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import batch_insert, ProductInsight
 from robotoff.off import get_server_type
-from robotoff.products import Product, ProductStore, is_valid_image
-from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
+from robotoff.products import is_valid_image, Product, ProductStore
+from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyNode
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
