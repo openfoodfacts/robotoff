@@ -68,11 +68,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         self.product_store: ProductStore = product_store
 
     def import_insights(
-        self,
-        data: Iterable[ProductInsights],
-        server_domain: str,
-        automatic: bool,
-        latent: bool = True,
+        self, data: Iterable[ProductInsights], server_domain: str, automatic: bool,
     ) -> int:
         timestamp = datetime.datetime.utcnow()
         processed_insights: Iterator[Insight] = self.process_insights(
@@ -781,7 +777,6 @@ def import_insights(
     insights: Iterable[ProductInsights],
     server_domain: str,
     automatic: bool,
-    latent: bool = True,
     product_store: Optional[ProductStore] = None,
 ) -> int:
     if product_store is None:
@@ -803,8 +798,6 @@ def import_insights(
             )
 
         importer = importers[insight_type]
-        imported += importer.import_insights(
-            insight_group, server_domain, automatic, latent
-        )
+        imported += importer.import_insights(insight_group, server_domain, automatic)
 
     return imported
