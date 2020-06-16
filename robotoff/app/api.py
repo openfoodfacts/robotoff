@@ -1,8 +1,8 @@
 import csv
 import datetime
+import functools
 import io
 import json
-import functools
 import tempfile
 from typing import List, Optional
 
@@ -13,23 +13,24 @@ from falcon_multipart.middleware import MultipartMiddleware
 import peewee
 from PIL import Image
 import requests
-
+import sentry_sdk
+from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
-from robotoff.app.core import get_insights, save_insight
+from robotoff.app import schema
 from robotoff.app.auth import basic_decode, BasicAuthDecodeError
-from robotoff.app.schema import IMAGE_PREDICTION_IMPORTER_SCHEMA
+from robotoff.app.core import get_insights, save_insight
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.spellcheck import Spellchecker
 from robotoff.insights._enum import InsightType
-from robotoff.insights.extraction import extract_ocr_insights, DEFAULT_INSIGHT_TYPES
+from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
 from robotoff.insights.ocr.dataclass import OCRParsingException
-from robotoff.insights.question import QuestionFormatterFactory, QuestionFormatter
-from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
+from robotoff.logos import generate_insights_from_annotated_logos
 from robotoff.ml.category.neural.model import (
-    ModelRegistry,
     filter_blacklisted_categories,
+    ModelRegistry,
 )
+from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.models import (
     batch_insert,
     ImageModel,
@@ -39,21 +40,25 @@ from robotoff.models import (
     UserAnnotation,
 )
 from robotoff.off import (
-    http_session,
-    OFFAuthentication,
     generate_image_path,
     get_product,
     get_server_type,
+    OFFAuthentication,
 )
 from robotoff.products import get_product_dataset_etag
-from robotoff.utils import get_logger, get_image_from_url, ExtendedJSONEncoder
+from robotoff.spellcheck import Spellchecker
+from robotoff.taxonomy import match_unprefixed_value
+from robotoff.utils import (
+    ExtendedJSONEncoder,
+    get_image_from_url,
+    get_logger,
+    http_session,
+)
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
+from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
-
-import sentry_sdk
-from sentry_sdk.integrations.falcon import FalconIntegration
 
 logger = get_logger()
 
@@ -159,7 +164,7 @@ class RandomInsightResource:
                 keep_types=keep_types,
                 country=country,
                 value_tag=value_tag,
-                order_by="random",
+                order_by=None,  # disable random ordering until the slow SQL query is fixed
                 server_domain=server_domain,
                 limit=count,
             )
@@ -384,8 +389,30 @@ class ImageImporterResource:
         }
 
 
+class ImageCropResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        image_url = req.get_param("image_url", required=True)
+        y_min = req.get_param_as_float("y_min", required=True)
+        x_min = req.get_param_as_float("x_min", required=True)
+        y_max = req.get_param_as_float("y_max", required=True)
+        x_max = req.get_param_as_float("x_max", required=True)
+        image = get_image_from_url(image_url)
+
+        if image is None:
+            raise falcon.HTTPBadRequest("invalid image")
+
+        (left, right, top, bottom) = (
+            x_min * image.width,
+            x_max * image.width,
+            y_min * image.height,
+            y_max * image.height,
+        )
+        cropped_image = image.crop((left, top, right, bottom))
+        image_response(cropped_image, resp)
+
+
 class ImagePredictionImporterResource:
-    @jsonschema.validate(IMAGE_PREDICTION_IMPORTER_SCHEMA)
+    @jsonschema.validate(schema.IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         timestamp = datetime.datetime.utcnow()
         inserts = []
@@ -496,73 +523,197 @@ class ImagePredictorResource:
             result = model.detect_from_image(image, output_image=output_image)
 
             if output_image:
-                self.image_response(result.boxed_image, resp)
+                image_response(result.boxed_image, resp)
                 return
             else:
                 predictions[model_name] = result.to_json()
 
         resp.media = {"predictions": predictions}
 
-    @staticmethod
-    def image_response(image: Image.Image, resp: falcon.Response) -> None:
-        resp.content_type = "image/jpeg"
-        fp = io.BytesIO()
-        image.save(fp, "JPEG")
-        resp.stream_len = fp.tell()
-        fp.seek(0)
-        resp.stream = fp
+
+def image_response(image: Image.Image, resp: falcon.Response) -> None:
+    resp.content_type = "image/jpeg"
+    fp = io.BytesIO()
+    image.save(fp, "JPEG")
+    resp.stream_len = fp.tell()
+    fp.seek(0)
+    resp.stream = fp
 
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        count: int = req.get_param_as_int(
+            "count", min_value=1, max_value=2000, default=25
+        )
+        type_: Optional[str] = req.get_param("type")
         barcode: Optional[str] = req.get_param("barcode")
+        value: Optional[str] = req.get_param("value")
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
-        random: bool = req.get_param_as_bool("random", default=True)
+        random: bool = req.get_param_as_bool("random", default=False)
         server_domain: Optional[str] = req.get_param("server_domain")
         annotated: bool = req.get_param_as_bool("annotated", default=False)
 
         where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
+        join_image_prediction = False
+        join_image_model = False
 
         if server_domain:
             where_clauses.append(ImageModel.server_domain == server_domain)
+            join_image_model = True
 
         if min_confidence is not None:
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
+            join_image_prediction = True
 
         if barcode is not None:
             where_clauses.append(ImageModel.barcode == barcode)
+            join_image_model = True
 
-        query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+        if type_ is not None:
+            where_clauses.append(LogoAnnotation.annotation_type == type_)
+
+        if value is not None:
+            value_tag = get_tag(value)
+            where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
+
+        query = LogoAnnotation.select()
+        join_image_prediction = join_image_prediction or join_image_model
+
+        if join_image_prediction:
+            query = query.join(ImagePrediction)
+
+            if join_image_model:
+                query = query.join(ImageModel)
 
         if where_clauses:
             query = query.where(*where_clauses)
+
+        query_count = query.count()
 
         if random:
             query = query.order_by(peewee.fn.Random())
 
         query = query.limit(count)
         items = [item.to_dict() for item in query.iterator()]
-        resp.media = {"logos": items}
+
+        for item in items:
+            image_prediction = item.pop("image_prediction")
+            item["image"] = image_prediction["image"]
+
+        resp.media = {"logos": items, "count": query_count}
+
+
+class ImageLogoDetailResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        logo = LogoAnnotation.get_or_none(id=logo_id)
+
+        if logo is None:
+            resp.status = falcon.HTTP_404
+            return
+
+        logo_dict = logo.to_dict()
+        image_prediction = logo_dict.pop("image_prediction")
+        logo_dict["image"] = image_prediction["image"]
+        resp.media = logo_dict
+
+    @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
+    def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        logo = LogoAnnotation.get_or_none(id=logo_id)
+
+        if logo is None:
+            resp.status = falcon.HTTP_404
+            return
+
+        type_ = req.media["type"]
+        value = req.media["value"] or None
+        updated = False
+
+        if type_ != logo.annotation_type:
+            logo.annotation_type = type_
+            updated = True
+
+        if value != logo.annotation_value:
+            logo.annotation_value = value
+
+            if value is not None:
+                value_tag = get_tag(value)
+                logo.annotation_value_tag = value_tag
+                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+            else:
+                logo.annotation_value_tag = None
+                logo.taxonomy_value = None
+
+            updated = True
+
+        if updated:
+            auth = parse_auth(req)
+            username = None if auth is None else auth.get_username()
+            logo.username = username
+            logo.completed_at = datetime.datetime.utcnow()
+            logo.save()
+
+        resp.status = falcon.HTTP_204
 
 
 class ImageLogoAnnotateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
         auth = parse_auth(req)
         username = None if auth is None else auth.get_username()
         completed_at = datetime.datetime.utcnow()
+        annotated_logos = []
 
         for annotation in annotations:
             logo_id = annotation["logo_id"]
-            value = annotation["value"]
             type_ = annotation["type"]
+            value = annotation["value"] or None
             logo = LogoAnnotation.get_by_id(logo_id)
-            logo.annotation_value = value
+
+            if value is not None:
+                logo.annotation_value = value
+                value_tag = get_tag(value)
+                logo.annotation_value_tag = value_tag
+                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at
             logo.save()
+            annotated_logos.append(logo)
+
+        generate_insights_from_annotated_logos(annotated_logos, server_domain)
+
+
+class ImageLogoUpdateResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        source_value = req.get_param("source_value", required=True)
+        source_type = req.get_param("source_type", required=True)
+        target_value = req.get_param("target_value", required=True)
+        target_type = req.get_param("target_type", required=True)
+
+        auth = parse_auth(req)
+        username = None if auth is None else auth.get_username()
+        completed_at = datetime.datetime.utcnow()
+
+        target_value_tag = get_tag(target_value)
+        source_value_tag = get_tag(source_value)
+        taxonomy_value = match_unprefixed_value(target_value_tag, target_type)
+
+        query = LogoAnnotation.update(
+            {
+                LogoAnnotation.annotation_type: target_type,
+                LogoAnnotation.annotation_value_tag: target_value_tag,
+                LogoAnnotation.taxonomy_value: taxonomy_value,
+                LogoAnnotation.username: username,
+                LogoAnnotation.completed_at: completed_at,
+            }
+        ).where(
+            LogoAnnotation.annotation_type == source_type,
+            LogoAnnotation.annotation_value_tag == source_value_tag,
+        )
+        updated = query.execute()
+        resp.media = {"updated": updated}
 
 
 class WebhookProductResource:
@@ -813,11 +964,14 @@ api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images/import", ImageImporterResource())
+api.add_route("/api/v1/images/crop", ImageCropResource())
 api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResource())
 api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
+api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
+api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())

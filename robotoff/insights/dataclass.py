@@ -1,11 +1,11 @@
 import dataclasses
 import datetime
 import itertools
-
 from typing import Any, Dict, Iterable, List, Optional
-from ._enum import InsightType
 
 import dacite
+
+from ._enum import InsightType
 
 
 @dataclasses.dataclass

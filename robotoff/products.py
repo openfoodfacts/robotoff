@@ -7,15 +7,14 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import List, Iterable, Dict, Optional, Iterator, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Union
 
 from pymongo import MongoClient
 import requests
 
-from robotoff.off import http_session
-from robotoff.utils import jsonl_iter, gzip_jsonl_iter, get_logger
 from robotoff import settings
 from robotoff.mongo import MONGO_CLIENT_CACHE
+from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -354,7 +353,7 @@ class ProductDataset:
 
     def count(self) -> int:
         count = 0
-        for product in self.stream():
+        for _ in self.stream():
             count += 1
 
         return count

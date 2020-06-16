@@ -3,24 +3,21 @@ import json
 import os
 import pathlib
 import re
-from typing import List, Optional, Dict, Set
+from typing import Dict, List, Optional, Set
 
 import networkx
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.externals import joblib
 from sklearn.feature_extraction.text import (
-    TfidfTransformer,
     CountVectorizer,
     strip_accents_ascii,
+    TfidfTransformer,
 )
-
 from sklearn.linear_model import LogisticRegression
-
 from sklearn.model_selection import train_test_split
-from sklearn.externals import joblib
 from sklearn.pipeline import Pipeline
-
 from sklearn_hierarchical_classification.classifier import HierarchicalClassifier
 from sklearn_hierarchical_classification.constants import ROOT
 from sklearn_hierarchical_classification.metrics import fill_ancestors
@@ -28,11 +25,11 @@ from sklearn_hierarchical_classification.metrics import fill_ancestors
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import (
-    Taxonomy,
-    TaxonomyType,
     generate_category_hierarchy,
     get_taxonomy,
+    Taxonomy,
     TaxonomyNode,
+    TaxonomyType,
 )
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -148,7 +145,7 @@ class CategoryClassifier:
         y_pred = self.classifier.predict(self.transformer.transform(df))  # type: ignore
 
         insights = []
-        for i, row in enumerate(df.itertuples()):
+        for row in df.itertuples():
             category = self.categories[y_pred]
 
             insights.append(

@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 from typing import Tuple
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -110,6 +110,10 @@ MODELS_DIR = PROJECT_DIR / "models"
 
 TF_SERVING_HOST = "49.12.34.189"
 TF_SERVING_HTTP_PORT = "8501"
+TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
+    TF_SERVING_HOST, TF_SERVING_HTTP_PORT
+)
+
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 

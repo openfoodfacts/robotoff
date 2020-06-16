@@ -1,7 +1,6 @@
 import json
-
-import pathlib as pathlib
-from typing import List, Dict, Iterable, Optional, Tuple, Union, TextIO
+import pathlib
+from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
@@ -19,8 +18,8 @@ from robotoff.insights.ocr.packaging import find_packaging
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
-from robotoff.off import generate_json_ocr_url, split_barcode, http_session
-from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
+from robotoff.off import generate_json_ocr_url, split_barcode
+from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)

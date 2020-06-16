@@ -1,12 +1,12 @@
 import functools
 import re
-from typing import Dict, List, Tuple, Match, Optional, Union
+from typing import Dict, List, Match, Optional, Tuple, Union
 
 import pint
 
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
+from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)

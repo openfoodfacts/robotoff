@@ -1,8 +1,6 @@
-from typing import Iterable, Optional, Callable
+from typing import Callable, Iterable, Optional
 
 from flashtext import KeywordProcessor
-
-from robotoff.utils.text import strip_accents_ascii
 
 
 def generate_keyword_processor(
@@ -27,8 +25,3 @@ def generate_keyword_processor(
         processor.add_keyword(pattern, clean_name=(key, name))
 
     return processor
-
-
-def get_tag(brand: str) -> str:
-    brand = strip_accents_ascii(brand)
-    return brand.lower().replace(" & ", "-").replace(" ", "-").replace("'", "-")

@@ -3,13 +3,11 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from robotoff import settings
-from robotoff.insights.dataclass import RawInsight
 from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.models import ProductInsight
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
-
-http_session = requests.Session()
 
 BASE_URL = "https://slack.com/api"
 POST_MESSAGE_URL = BASE_URL + "/chat.postMessage"

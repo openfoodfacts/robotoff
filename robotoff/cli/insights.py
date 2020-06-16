@@ -9,15 +9,15 @@ import click
 from more_itertools import chunked
 from peewee import fn
 
+from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.dataclass import ProductInsights
-from robotoff.insights._enum import InsightType
-from robotoff.insights.importer import InsightImporterFactory, AUTHORIZED_LABELS_STORE
+from robotoff.insights.importer import AUTHORIZED_LABELS_STORE, InsightImporterFactory
 from robotoff.insights.ocr import (
-    ocr_iter,
-    OCRResult,
     extract_insights,
     get_barcode_from_path,
+    ocr_iter,
+    OCRResult,
 )
 from robotoff.models import db, ProductInsight
 from robotoff.off import get_product

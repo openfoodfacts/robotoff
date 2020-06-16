@@ -1,13 +1,12 @@
 import datetime
 import operator
-from typing import Iterable, Dict, Optional
-
-from robotoff.products import ProductDataset
-from robotoff.utils import get_logger
+from typing import Dict, Iterable, Optional
 
 from robotoff.elasticsearch.category.match import predict_category
-from robotoff.insights.dataclass import RawInsight, ProductInsights
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
+from robotoff.products import ProductDataset
+from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
 
 logger = get_logger(__name__)

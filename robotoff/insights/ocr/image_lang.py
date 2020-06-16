@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Union
-from robotoff.insights._enum import InsightType
+
+from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult
 

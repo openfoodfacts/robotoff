@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
-from robotoff.utils.cache import CachedStore
 from robotoff import settings
+from robotoff.utils.cache import CachedStore
 
 
 def get_mongo_client() -> MongoClient:

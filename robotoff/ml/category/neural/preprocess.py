@@ -1,6 +1,6 @@
 import re
 
-from sklearn.feature_extraction.text import strip_accents_ascii
+from robotoff.utils.text import strip_accents_ascii
 
 
 PUNCTUATION_REGEX = re.compile(r"""[:,;.&~"'|`_\\={}%()\[\]]+""")

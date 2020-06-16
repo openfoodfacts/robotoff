@@ -18,8 +18,9 @@ dataclasses>=0.6;python_version<"3.7"
 dacite==1.5.0
 tensorflow==2.0.1
 spacy==2.2.4
-scikit-learn==0.23.0
+scipy==1.2.3
 flashtext==2.7
 langid==1.1.6
 pymongo==3.10.1
 influxdb==5.2.3
+jsonschema==3.2.0

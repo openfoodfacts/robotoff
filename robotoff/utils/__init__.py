@@ -4,18 +4,31 @@ import json
 import logging
 import os
 import pathlib
+import sys
 import tempfile
+from typing import Callable, Dict, Iterable, Optional, Type, Union
 import uuid
 
-import requests
-import sys
-from typing import Callable, Union, Iterable, Dict, Optional, Type
-
 from PIL import Image
+import requests
+
+from robotoff import settings
 
 
-def get_logger(name=None, level: str = "INFO"):
+def get_logger(name=None, level: Optional[int] = None):
     logger = logging.getLogger(name)
+
+    if level is None:
+        log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+        level = logging.getLevelName(log_level)
+
+        if not isinstance(level, int):
+            print(
+                "Unknown log level: {}, fallback to INFO".format(log_level),
+                file=sys.stderr,
+            )
+            level = 20
+
     logger.setLevel(level)
 
     if name is None:
@@ -24,17 +37,8 @@ def get_logger(name=None, level: str = "INFO"):
     return logger
 
 
-def configure_root_logger(logger, level: str = "INFO"):
-    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-
-    if log_level not in ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL", "CRITICAL"):
-        print(
-            "Unknown log level: {}, fallback " "to INFO".format(log_level),
-            file=sys.stderr,
-        )
-        log_level = level
-
-    logger.setLevel(log_level)
+def configure_root_logger(logger, level: int = 20):
+    logger.setLevel(level)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
         "%(asctime)s :: %(processName)s :: "
@@ -42,7 +46,7 @@ def configure_root_logger(logger, level: str = "INFO"):
         "%(message)s"
     )
     handler.setFormatter(formatter)
-    handler.setLevel(log_level)
+    handler.setLevel(level)
     logger.addHandler(handler)
 
 
@@ -142,3 +146,10 @@ class ExtendedJSONEncoder(json.JSONEncoder):
             return obj.isoformat()
 
         return json.JSONEncoder.default(self, obj)
+
+
+http_session = requests.Session()
+USER_AGENT_HEADERS = {
+    "User-Agent": settings.ROBOTOFF_USER_AGENT,
+}
+http_session.headers.update(USER_AGENT_HEADERS)

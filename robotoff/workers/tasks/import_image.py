@@ -2,24 +2,25 @@ import datetime
 import pathlib
 from typing import Optional
 
+from robotoff import settings
 from robotoff.insights._enum import InsightType
-from robotoff.insights.importer import InsightImporterFactory, BaseInsightImporter
 from robotoff.insights.extraction import (
     get_insights_from_image,
     get_source_from_image_url,
     predict_objects,
 )
+from robotoff.insights.importer import BaseInsightImporter, InsightImporterFactory
+from robotoff.logos import (
+    add_logos_to_ann,
+    import_logo_insights,
+    save_nearest_neighbors,
+)
 from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
 from robotoff.off import get_server_type
-from robotoff.products import (
-    get_product_store,
-    Product,
-)
+from robotoff.products import get_product_store, Product
 from robotoff.slack import notify_image_flag
-from robotoff import settings
 from robotoff.utils import get_logger
 from robotoff.workers.client import send_ipc_event
-
 
 logger = get_logger(__name__)
 
@@ -131,6 +132,7 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
     timestamp = datetime.datetime.utcnow()
     results = predict_objects(barcode, image_url, server_domain)
 
+    logos = []
     for model_name, result in results.items():
         data = result.to_json(threshold=0.1)
         max_confidence = max([item["score"] for item in data], default=None)
@@ -145,9 +147,15 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
         )
         for i, item in enumerate(data):
             if item["score"] >= 0.5:
-                LogoAnnotation.create(
+                logo = LogoAnnotation.create(
                     image_prediction=image_prediction,
                     index=i,
                     score=item["score"],
                     bounding_box=item["bounding_box"],
                 )
+                logos.append(logo)
+
+    if logos:
+        add_logos_to_ann(image_instance, logos)
+        save_nearest_neighbors(logos)
+        import_logo_insights(logos, threshold=0.1, server_domain=server_domain)

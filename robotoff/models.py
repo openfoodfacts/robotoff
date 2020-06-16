@@ -1,8 +1,8 @@
 import datetime
-from typing import Iterable, Dict, Optional
+from typing import Dict, Iterable, Optional
 
 import peewee
-from playhouse.postgres_ext import PostgresqlExtDatabase, BinaryJSONField
+from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
@@ -51,7 +51,7 @@ class ProductInsight(BaseModel):
     data = BinaryJSONField(index=True)
     timestamp = peewee.DateTimeField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True)
-    annotation = peewee.IntegerField(null=True)
+    annotation = peewee.IntegerField(null=True, index=True)
     latent = peewee.BooleanField(null=False, index=True, default=False)
     countries = BinaryJSONField(null=True, index=True)
     brands = BinaryJSONField(null=True, index=True)
@@ -145,12 +145,22 @@ class LogoAnnotation(BaseModel):
     bounding_box = BinaryJSONField(null=False)
     score = peewee.FloatField(null=False)
     annotation_value = peewee.CharField(null=True, index=True)
+    annotation_value_tag = peewee.CharField(null=True, index=True)
+    taxonomy_value = peewee.CharField(null=True, index=True)
     annotation_type = peewee.CharField(null=True, index=True)
     username = peewee.TextField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True, index=True)
+    nearest_neighbors = BinaryJSONField(null=True)
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
+
+    def get_crop_image_url(self) -> str:
+        base_url = (
+            settings.OFF_IMAGE_BASE_URL + self.image_prediction.image.source_image
+        )
+        y_min, x_min, y_max, x_max = self.bounding_box
+        return f"https://robotoff.openfoodfacts.org/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
 MODELS = [ProductInsight, UserAnnotation, ImageModel, ImagePrediction, LogoAnnotation]

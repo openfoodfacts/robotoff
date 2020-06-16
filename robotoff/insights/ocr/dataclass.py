@@ -1,10 +1,9 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 import enum
 import math
 import operator
 import re
-from collections import Counter
-from typing import Optional, Callable, Dict, List, Pattern, Tuple, Union
+from typing import Callable, Dict, List, Optional, Pattern, Tuple, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
