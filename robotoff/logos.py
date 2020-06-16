@@ -1,3 +1,4 @@
+import datetime
 import operator
 from typing import Dict, List, Optional, Tuple
 
@@ -5,6 +6,7 @@ import numpy as np
 
 from robotoff import settings
 from robotoff.insights import InsightType
+from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
 from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import import_insights
 from robotoff.models import ImageModel, LogoAnnotation
@@ -222,6 +224,45 @@ def import_logo_insights(
     return imported
 
 
+def generate_insights_from_annotated_logos(
+    logos: List[LogoAnnotation], server_domain: str
+):
+    product_insights: List[ProductInsights] = []
+    for logo in logos:
+        raw_insight = generate_raw_insight(
+            logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
+        )
+
+        if raw_insight is None:
+            return
+
+        image = logo.image_prediction.image
+
+        try:
+            raw_insight.automatic_processing = is_automatically_processable(
+                image.barcode, image.source_image, datetime.timedelta(days=30)
+            )
+        except InvalidInsight:
+            return
+
+        if raw_insight.automatic_processing:
+            raw_insight.data["notify"] = True
+
+        product_insights.append(
+            ProductInsights(
+                insights=[raw_insight],
+                type=raw_insight.type,
+                barcode=image.barcode,
+                source_image=image.source_image,
+            )
+        )
+
+    imported = import_insights(product_insights, server_domain, automatic=True)
+
+    if imported:
+        logger.info(f"{imported} logo insights imported after annotation")
+
+
 def predict_logo_insights(
     logos: List[LogoAnnotation], logo_probs: List[Dict[LogoLabelType, float]],
 ) -> List[ProductInsights]:
@@ -240,7 +281,9 @@ def predict_logo_insights(
         if label == UNKNOWN_LABEL:
             continue
 
-        raw_insight = generate_raw_insight(label, max_prob)
+        raw_insight = generate_raw_insight(
+            label[0], label[1], confidence=max_prob, logo_id=logo.id
+        )
 
         if raw_insight is not None:
             image = logo.image_prediction.image
@@ -266,11 +309,8 @@ def predict_logo_insights(
 
 
 def generate_raw_insight(
-    label: LogoLabelType, confidence: float
+    logo_type: str, logo_value: Optional[str], **kwargs
 ) -> Optional[RawInsight]:
-    logo_type = label[0]
-    logo_value = label[1]
-
     if logo_type not in LOGO_TYPE_MAPPING:
         return None
 
@@ -289,7 +329,7 @@ def generate_raw_insight(
         value_tag=value_tag,
         value=value,
         automatic_processing=False,
-        data={"confidence": confidence, "data_source": "universal-logo-detector"},
+        data={"data_source": "universal-logo-detector", **kwargs},
     )
 
 

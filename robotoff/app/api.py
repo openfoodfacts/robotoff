@@ -28,6 +28,7 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
 from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
+from robotoff.logos import generate_insights_from_annotated_logos
 from robotoff.ml.category.neural.model import (
     filter_blacklisted_categories,
     ModelRegistry,
@@ -663,10 +664,12 @@ class ImageLogoDetailResource:
 
 class ImageLogoAnnotateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
         auth = parse_auth(req)
         username = None if auth is None else auth.get_username()
         completed_at = datetime.datetime.utcnow()
+        annotated_logos = []
 
         for annotation in annotations:
             logo_id = annotation["logo_id"]
@@ -684,6 +687,9 @@ class ImageLogoAnnotateResource:
             logo.username = username
             logo.completed_at = completed_at
             logo.save()
+            annotated_logos.append(logo)
+
+        generate_insights_from_annotated_logos(annotated_logos, server_domain)
 
 
 class ImageLogoUpdateResource:
