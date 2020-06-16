@@ -1,8 +1,12 @@
 from enum import Enum, unique
 
 
+class StrEnum(str, Enum):
+    pass
+
+
 @unique
-class InsightType(Enum):
+class InsightType(StrEnum):
     ingredient_spellcheck = "ingredient_spellcheck"
     packager_code = "packager_code"
     label = "label"
