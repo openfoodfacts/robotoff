@@ -321,8 +321,13 @@ def generate_raw_insight(
 
     if insight_type == InsightType.brand:
         value = logo_value
+        if value is None:
+            return None
+
     elif insight_type == InsightType.label:
         value_tag = logo_value
+        if value_tag is None:
+            return None
 
     return RawInsight(
         type=insight_type,
