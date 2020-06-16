@@ -3,11 +3,11 @@ import pathlib
 from typing import Dict, List, Optional
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
 from robotoff.mongo import MONGO_CLIENT_CACHE
 from robotoff.off import generate_image_url, get_product
-from robotoff.taxonomy import TaxonomyType, Taxonomy, get_taxonomy
+from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyType
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType

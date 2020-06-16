@@ -4,11 +4,11 @@ from typing import Dict, Iterable, List, Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
+from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
 from robotoff.insights.ocr.utils import generate_keyword_processor
-from robotoff.utils import text_file_iter, get_logger
+from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
 logger = get_logger(__name__)
@@ -209,7 +209,7 @@ def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
 def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[RawInsight]:
     insights = []
 
-    for (label_tag, label), span_start, span_end in processor.extract_keywords(
+    for (label_tag, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]

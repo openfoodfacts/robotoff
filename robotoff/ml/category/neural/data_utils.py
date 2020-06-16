@@ -2,11 +2,11 @@ import dataclasses
 from typing import Dict, Iterable, List
 
 import numpy as np
-from .binarizer import MultiLabelBinarizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+from .binarizer import MultiLabelBinarizer
 from .dataclass import TextPreprocessingConfig
-from .preprocess import tokenize, preprocess_product_name
+from .preprocess import preprocess_product_name, tokenize
 
 UNK_TOKEN = "<UNK>"
 

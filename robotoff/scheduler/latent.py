@@ -1,17 +1,17 @@
 from typing import Dict, List, Optional, Set
 import uuid
 
+from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.products import (
+    DBProductStore,
     get_image_id,
+    get_product_store,
     has_nutrition_image,
     is_nutrition_image,
     is_valid_image,
-    get_product_store,
-    DBProductStore,
 )
-from robotoff import settings
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 

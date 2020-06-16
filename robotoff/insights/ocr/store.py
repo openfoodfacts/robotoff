@@ -1,10 +1,10 @@
 import re
-from typing import List, Dict, Tuple, Set, Union
+from typing import Dict, List, Set, Tuple, Union
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
+from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
 from robotoff.utils import text_file_iter
 
 

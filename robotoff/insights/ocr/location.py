@@ -3,7 +3,7 @@ import gzip
 import json
 from pathlib import Path
 import re
-from typing import Union, List, Optional, Tuple, BinaryIO, Set, Iterable
+from typing import BinaryIO, Iterable, List, Optional, Set, Tuple, Union
 
 from flashtext import KeywordProcessor
 

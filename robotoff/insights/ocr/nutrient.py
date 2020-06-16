@@ -1,9 +1,9 @@
 import re
-from typing import List, Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
+from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
 from robotoff.utils.types import JSONType
 
 

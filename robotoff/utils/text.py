@@ -6,7 +6,6 @@ from spacy.lang.en import English
 from spacy.lang.fr import French
 
 from robotoff.utils import cache
-
 from .fold_to_ascii import fold
 
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")

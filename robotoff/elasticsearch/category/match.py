@@ -1,10 +1,10 @@
-import json
 import argparse
-from typing import Tuple, Optional
+import json
+from typing import Optional, Tuple
 
+from robotoff import settings
 from robotoff.elasticsearch.category.preprocessing import preprocess_name
 from robotoff.utils.es import get_es_client
-from robotoff import settings
 
 SUPPORTED_LANG = {
     "fr",

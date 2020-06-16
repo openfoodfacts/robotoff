@@ -1,6 +1,7 @@
 import subprocess
 
 import click
+
 from robotoff import settings
 
 

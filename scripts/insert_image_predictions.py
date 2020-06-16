@@ -2,6 +2,9 @@ import datetime
 import pathlib
 from typing import Set, Tuple
 
+import tqdm
+
+from robotoff import settings
 from robotoff.models import (
     db,
     ImageModel,
@@ -9,14 +12,12 @@ from robotoff.models import (
     LogoAnnotation,
 )
 from robotoff.off import generate_image_path
-from robotoff.utils import jsonl_iter, get_logger
-from robotoff import settings
-import tqdm
+from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger()
 
 
-DATA_PATH = settings.DATASET_DIR / "output.jsonl.gz"
+DATA_PATH = settings.DATASET_DIR / "logos-paperspace.jsonl.gz"
 MODEL_NAME = "universal-logo-detector"
 MODEL_VERSION = "tf-universal-logo-detector-1.0"
 TYPE = "object_detection"
@@ -34,11 +35,12 @@ def get_seen_set() -> Set[Tuple[str, str]]:
     return seen_set
 
 
-def insert_batch(data_path: pathlib.Path, model_name: str, model_version: str):
+def insert_batch(data_path: pathlib.Path, model_name: str, model_version: str) -> int:
     timestamp = datetime.datetime.utcnow()
     logger.info("Loading seen set...")
     seen_set = get_seen_set()
     logger.info("Seen set loaded")
+    inserted = 0
 
     for item in tqdm.tqdm(jsonl_iter(data_path)):
         barcode = item["barcode"]
@@ -58,6 +60,7 @@ def insert_batch(data_path: pathlib.Path, model_name: str, model_version: str):
         data = {"objects": results}
         max_confidence = max([r["score"] for r in results], default=None)
 
+        inserted += 1
         image_prediction = ImagePrediction.create(
             type=TYPE,
             image=image_instance,
@@ -77,10 +80,17 @@ def insert_batch(data_path: pathlib.Path, model_name: str, model_version: str):
                 )
         seen_set.add(key)
 
+    return inserted
 
-logger.info("Starting image prediction import...")
 
-with db:
-    inserted = insert_batch(DATA_PATH, MODEL_NAME, MODEL_VERSION)
+def main():
+    logger.info("Starting image prediction import...")
 
-logger.info("{} image predictions inserted".format(inserted))
+    with db:
+        inserted = insert_batch(DATA_PATH, MODEL_NAME, MODEL_VERSION)
+
+    logger.info("{} image predictions inserted".format(inserted))
+
+
+if __name__ == "__main__":
+    main()

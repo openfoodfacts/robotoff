@@ -1,5 +1,5 @@
 import json
-from typing import Iterable, Dict, Tuple
+from typing import Dict, Iterable, Tuple
 
 import elasticsearch
 

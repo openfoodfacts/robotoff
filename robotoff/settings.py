@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 from typing import Tuple
 
 PROJECT_DIR = Path(__file__).parent.parent

@@ -1,11 +1,10 @@
 from typing import List, Optional, Union
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult, get_text
+from robotoff.insights.ocr.dataclass import get_text, OCRResult
 from robotoff.insights.ocr.utils import generate_keyword_processor
-
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_tag

@@ -1,6 +1,6 @@
 import abc
 import datetime
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from robotoff.utils import get_logger
 
