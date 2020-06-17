@@ -218,7 +218,8 @@ def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[RawI
                 type=InsightType.label,
                 value_tag=label_tag,
                 automatic_processing=False,
-                data={"text": match_str, "data_source": "flashtext", "notify": False},
+                predictor="flashtext",
+                data={"text": match_str, "notify": False},
             )
         )
 
@@ -255,11 +256,8 @@ def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
                     RawInsight(
                         type=InsightType.label,
                         value_tag=label_value,
-                        data={
-                            "text": match.group(),
-                            "data_source": "regex",
-                            "notify": ocr_regex.notify,
-                        },
+                        predictor="regex",
+                        data={"text": match.group(), "notify": ocr_regex.notify},
                     )
                 )
 
@@ -278,10 +276,8 @@ def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
                         type=InsightType.label,
                         value_tag=label_tag,
                         automatic_processing=False,
-                        data={
-                            "confidence": logo_annotation.score,
-                            "data_source": "google-cloud-vision",
-                        },
+                        predictor="google-cloud-vision",
+                        data={"confidence": logo_annotation.score},
                     )
                 )
 

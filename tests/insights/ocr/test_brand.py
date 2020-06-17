@@ -4,8 +4,8 @@ import pytest
 
 from robotoff import settings
 from robotoff.insights.ocr.brand import (
-    generate_brand_keyword_processor,
     extract_brands,
+    generate_brand_keyword_processor,
 )
 from robotoff.utils import text_file_iter
 
@@ -39,11 +39,8 @@ def brand_keyword_processor():
             {
                 "value": "Le Comptoir de Mathilde",
                 "value_tag": "le-comptoir-de-mathilde",
-                "data": {
-                    "text": "Le comptoir de Mathilde",
-                    "data_source": "test",
-                    "notify": False,
-                },
+                "predictor": "test",
+                "data": {"text": "Le comptoir de Mathilde", "notify": False},
             },
         ),
         ("Netto gewitch: 450 g", None),
@@ -53,11 +50,8 @@ def brand_keyword_processor():
             {
                 "value": "Alpina Savoie",
                 "value_tag": "alpina-savoie",
-                "data": {
-                    "text": "Alpina savoie",
-                    "data_source": "test",
-                    "notify": False,
-                },
+                "predictor": "test",
+                "data": {"text": "Alpina savoie", "notify": False},
             },
         ),
     ],
@@ -83,7 +77,8 @@ def test_extract_brand_taxonomy(
             {
                 "value": "Coca-Cola",
                 "value_tag": "coca-cola",
-                "data": {"text": "cocacola", "data_source": "test", "notify": False},
+                "predictor": "test",
+                "data": {"text": "cocacola", "notify": False},
             },
         ),
     ],

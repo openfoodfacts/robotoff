@@ -334,7 +334,8 @@ def generate_raw_insight(
         value_tag=value_tag,
         value=value,
         automatic_processing=False,
-        data={"data_source": "universal-logo-detector", **kwargs},
+        predictor="universal-logo-detector",
+        data=kwargs,
     )
 
 

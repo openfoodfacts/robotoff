@@ -67,11 +67,8 @@ def extract_brands(
                 value=brand,
                 value_tag=brand_tag,
                 automatic_processing=False,
-                data={
-                    "text": match_str,
-                    "data_source": data_source_name,
-                    "notify": False,
-                },
+                predictor=data_source_name,
+                data={"text": match_str, "notify": False},
             )
         )
 
@@ -90,11 +87,8 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[RawInsight
                     value=brand,
                     value_tag=get_tag(brand),
                     automatic_processing=False,
-                    data={
-                        "confidence": logo_annotation.score,
-                        "data_source": "google-cloud-vision",
-                        "notify": False,
-                    },
+                    predictor="google-cloud-vision",
+                    data={"confidence": logo_annotation.score, "notify": False},
                 )
             )
 

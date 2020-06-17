@@ -15,6 +15,7 @@ class RawInsight:
     value_tag: Optional[str] = None
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
+    predictor: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)
@@ -79,6 +80,7 @@ class Insight:
     id: str = ""
     timestamp: Optional[datetime.datetime] = None
     process_after: Optional[datetime.datetime] = None
+    predictor: Optional[str] = None
     countries: List[str] = dataclasses.field(default_factory=list)
     brands: List[str] = dataclasses.field(default_factory=list)
 
@@ -89,7 +91,6 @@ class Insight:
     def from_raw_insight(
         cls, insight: RawInsight, product_insights: ProductInsights, latent: bool
     ) -> "Insight":
-        type: InsightType
         return cls(
             latent=latent,
             type=insight.type,
@@ -99,6 +100,7 @@ class Insight:
             automatic_processing=insight.automatic_processing,
             barcode=product_insights.barcode,
             source_image=product_insights.source_image,
+            predictor=insight.predictor,
         )
 
 
