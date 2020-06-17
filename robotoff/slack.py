@@ -13,11 +13,11 @@ BASE_URL = "https://slack.com/api"
 POST_MESSAGE_URL = BASE_URL + "/chat.postMessage"
 NUTRISCORE_LABELS = {
     "en:nutriscore",
-    "en:nutriscore-a",
-    "en:nutriscore-b",
-    "en:nutriscore-c",
-    "en:nutriscore-d",
-    "en:nutriscore-e",
+    "en:nutriscore-grade-a",
+    "en:nutriscore-grade-b",
+    "en:nutriscore-grade-c",
+    "en:nutriscore-grade-d",
+    "en:nutriscore-grade-e",
 }
 
 logger = get_logger(__name__)

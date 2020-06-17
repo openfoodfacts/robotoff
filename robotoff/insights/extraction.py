@@ -213,6 +213,15 @@ def get_ocr_result(ocr_url: str) -> Optional[ocr.OCRResult]:
     return ocr.OCRResult.from_json(ocr_data)
 
 
+NUTRISCORE_LABELS: Dict[str, str] = {
+    "nutriscore-a": "en:nutriscore-grade-a",
+    "nutriscore-b": "en:nutriscore-grade-b",
+    "nutriscore-c": "en:nutriscore-grade-c",
+    "nutriscore-d": "en:nutriscore-grade-d",
+    "nutriscore-e": "en:nutriscore-grade-e",
+}
+
+
 def extract_nutriscore_label(
     image: Image.Image, manual_threshold: float, automatic_threshold: float
 ) -> Optional[RawInsight]:
@@ -231,7 +240,7 @@ def extract_nutriscore_label(
     score = result.score
 
     automatic_processing = score >= automatic_threshold
-    label_tag = "en:{}".format(result.label)
+    label_tag = NUTRISCORE_LABELS[result.label]
 
     return RawInsight(
         type=InsightType.label,
