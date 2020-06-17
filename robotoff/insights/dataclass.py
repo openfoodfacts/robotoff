@@ -78,6 +78,7 @@ class Insight:
     server_type: str = ""
     id: str = ""
     timestamp: Optional[datetime.datetime] = None
+    process_after: Optional[datetime.datetime] = None
     countries: List[str] = dataclasses.field(default_factory=list)
     brands: List[str] = dataclasses.field(default_factory=list)
 

@@ -116,6 +116,10 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             insight.timestamp = timestamp
             insight.countries = getattr(product, "countries_tags", [])
             insight.brands = getattr(product, "brands_tags", [])
+
+            if insight.automatic_processing and not insight.latent:
+                insight.process_after = timestamp + datetime.timedelta(minutes=10)
+
             yield insight
 
     @abc.abstractmethod
