@@ -23,7 +23,7 @@ setup(
         "requests>=2.13.0,<3.0.0",
         "peewee==3.13.3",
         "psycopg2-binary>=2.8,<2.9",
-        "elasticsearch==6.3.1",
+        "elasticsearch==7.8.0",
         "Click==7.1.2",
         "Pillow>=5.0.0",
         "numpy>=1.16.0",
