@@ -40,7 +40,6 @@ from robotoff.models import (
     ImagePrediction,
     LogoAnnotation,
     ProductInsight,
-    UserAnnotation,
 )
 from robotoff.off import (
     generate_image_path,
@@ -929,7 +928,7 @@ class DumpResource:
 class UserStatisticsResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, username: str):
         annotation_count = (
-            UserAnnotation.select().where(UserAnnotation.username == username).count()
+            ProductInsight.select().where(ProductInsight.username == username).count()
         )
         resp.media = {"count": {"annotations": annotation_count}}
 

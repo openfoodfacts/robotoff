@@ -1,5 +1,4 @@
-import datetime
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable
 
 import peewee
 from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
@@ -73,6 +72,7 @@ class ProductInsight(BaseModel):
     unique_scans_n = peewee.IntegerField(default=0, index=True)
     reserved_barcode = peewee.BooleanField(default=False, index=True)
     predictor = peewee.CharField(max_length=100, null=True, index=True)
+    username = peewee.TextField(index=True)
 
     def serialize(self) -> JSONType:
         return {
@@ -88,21 +88,6 @@ class ProductInsight(BaseModel):
     def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):
         updated_values = {**latent_insight.__data__, **kwargs}
         return cls.create(**updated_values)
-
-
-class UserAnnotation(BaseModel):
-    insight = peewee.ForeignKeyField(
-        ProductInsight, primary_key=True, backref="user_annotation"
-    )
-    username = peewee.TextField(index=True)
-
-    @property
-    def annotation(self) -> Optional[int]:
-        return self.insight.annotation
-
-    @property
-    def completed_at(self) -> Optional[datetime.datetime]:
-        return self.insight.completed_at
 
 
 class ImageModel(BaseModel):
@@ -164,4 +149,4 @@ class LogoAnnotation(BaseModel):
         return f"https://robotoff.openfoodfacts.org/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
-MODELS = [ProductInsight, UserAnnotation, ImageModel, ImagePrediction, LogoAnnotation]
+MODELS = [ProductInsight, ImageModel, ImagePrediction, LogoAnnotation]

@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import db, ProductInsight, UserAnnotation
+from robotoff.models import db, ProductInsight
 from robotoff.off import (
     add_brand,
     add_category,
@@ -100,6 +100,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if auth is not None:
             username = auth.get_username()
 
+        insight.username = username
         insight.annotation = annotation
         insight.completed_at = datetime.datetime.utcnow()
 
@@ -107,9 +108,6 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             insight.automatic_processing = True
 
         insight.save()
-
-        if username:
-            UserAnnotation.create(insight=insight, username=username)
 
         if annotation == 1 and update:
             return self.update_product(insight, auth=auth)
