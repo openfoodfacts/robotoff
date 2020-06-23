@@ -74,9 +74,6 @@ class ProductInsight(BaseModel):
     reserved_barcode = peewee.BooleanField(default=False, index=True)
     predictor = peewee.CharField(max_length=100, null=True, index=True)
 
-    class Meta:
-        table_name = "insight"
-
     def serialize(self) -> JSONType:
         return {
             "id": str(self.id),
