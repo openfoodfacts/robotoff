@@ -548,6 +548,16 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
+        logo_ids: Optional[List[str]] = req.get_param_as_list(
+            "logo_ids", required=False
+        )
+
+        if logo_ids is not None:
+            self.fetch_logos(logo_ids, resp)
+        else:
+            self.search(req, resp)
+
+    def search(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int(
             "count", min_value=1, max_value=2000, default=25
         )
@@ -607,6 +617,18 @@ class ImageLogoResource:
             item["image"] = image_prediction["image"]
 
         resp.media = {"logos": items, "count": query_count}
+
+    def fetch_logos(self, logo_ids: List[str], resp: falcon.Response):
+        logos = []
+        for logo in (
+            LogoAnnotation.select().where(LogoAnnotation.id.in_(logo_ids)).iterator()
+        ):
+            logo_dict = logo.to_dict()
+            image_prediction = logo_dict.pop("image_prediction")
+            logo_dict["image"] = image_prediction["image"]
+            logos.append(logo_dict)
+
+        resp.media = {"logos": logos, "count": len(logos)}
 
 
 class ImageLogoDetailResource:
