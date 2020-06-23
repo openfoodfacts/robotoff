@@ -103,8 +103,8 @@ ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 
 MODELS_DIR = PROJECT_DIR / "models"
 
-TF_SERVING_HOST = "49.12.34.189"
-TF_SERVING_HTTP_PORT = "8501"
+TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
+TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
 TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
     TF_SERVING_HOST, TF_SERVING_HTTP_PORT
 )
