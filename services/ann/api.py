@@ -191,6 +191,11 @@ class AddLogoResource:
         }
 
 
+class ANNCountResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        req.media = {"count": len(EMBEDDING_STORE)}
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -210,3 +215,4 @@ api.add_route("/api/v1/ann", ANNResource())
 api.add_route("/api/v1/ann/batch", ANNBatchResource())
 api.add_route("/api/v1/ann/from_embedding", ANNEmbeddingResource())
 api.add_route("/api/v1/ann/add", AddLogoResource())
+api.add_route("/api/v1/ann/count", ANNCountResource())

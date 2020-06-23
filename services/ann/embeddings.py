@@ -19,6 +19,9 @@ class EmbeddingStore:
             max(self.logo_id_to_idx.values()) + 1 if self.logo_id_to_idx else 0
         )
 
+    def __len__(self):
+        return len(self.logo_id_to_idx)
+
     def __contains__(self, logo_id: int) -> bool:
         return self.get_index(logo_id) is not None
 
