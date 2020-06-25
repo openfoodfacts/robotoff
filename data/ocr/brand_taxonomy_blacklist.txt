@@ -87,6 +87,7 @@ schweizer
 selection
 serrano
 simply
+specially selected
 sommer
 sweet
 tasty
