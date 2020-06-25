@@ -735,6 +735,7 @@ class ImageLogoUpdateResource:
         query = LogoAnnotation.update(
             {
                 LogoAnnotation.annotation_type: target_type,
+                LogoAnnotation.annotation_value: target_value,
                 LogoAnnotation.annotation_value_tag: target_value_tag,
                 LogoAnnotation.taxonomy_value: taxonomy_value,
                 LogoAnnotation.username: username,
