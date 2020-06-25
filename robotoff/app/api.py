@@ -621,7 +621,11 @@ class ImageLogoResource:
     def fetch_logos(self, logo_ids: List[str], resp: falcon.Response):
         logos = []
         for logo in (
-            LogoAnnotation.select().where(LogoAnnotation.id.in_(logo_ids)).iterator()
+            LogoAnnotation.select()
+            .join(ImagePrediction)
+            .join(ImageModel)
+            .where(LogoAnnotation.id.in_(logo_ids))
+            .iterator()
         ):
             logo_dict = logo.to_dict()
             image_prediction = logo_dict.pop("image_prediction")
