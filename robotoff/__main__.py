@@ -308,11 +308,12 @@ if __name__ == "__main__":
 
         import tqdm
 
-        from robotoff.logos import add_logos_to_ann
+        from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
         from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
         from robotoff.utils import get_logger
 
         logger = get_logger()
+        seen = get_stored_logo_ids()
 
         with db:
             logos_iter = tqdm.tqdm(
@@ -327,6 +328,10 @@ if __name__ == "__main__":
                 logos_iter, lambda x: x.image_prediction.image.id
             ):
                 logos = list(logo_batch)
+
+                if all(l.id in seen for l in logos):
+                    continue
+
                 image = logos[0].image_prediction.image
                 logger.info(f"Adding logos of image {image.id}")
                 added = add_logos_to_ann(image, logos)

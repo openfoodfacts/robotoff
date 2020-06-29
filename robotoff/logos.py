@@ -1,6 +1,6 @@
 import datetime
 import operator
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -22,6 +22,20 @@ LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
     "brand": InsightType.brand,
     "label": InsightType.label,
 }
+
+
+def get_stored_logo_ids() -> Set[int]:
+    r = http_session.post(
+        "https://robotoff.openfoodfacts.org/api/v1/ann/stored", timeout=30
+    )
+
+    if not r.ok:
+        logger.warning(
+            f"error while fetching stored logo IDs ({r.status_code}): {r.text}"
+        )
+        return set()
+
+    return set(r.json()["stored"])
 
 
 def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
