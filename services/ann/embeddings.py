@@ -1,3 +1,4 @@
+import operator
 import pathlib
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -54,6 +55,21 @@ class EmbeddingStore:
                 return {int(x): i for i, x in enumerate(array)}
 
         return {}
+
+    def iter_embeddings(self) -> Iterable[Tuple[int, np.ndarray]]:
+        if not self.hdf5_path.is_file():
+            return
+
+        idx_logo_id = sorted(
+            ((idx, logo_id) for logo_id, idx in self.logo_id_to_idx.items()),
+            key=operator.itemgetter(0),
+        )
+
+        with h5py.File(self.hdf5_path, "r") as f:
+            embedding_dset = f["embedding"]
+            for idx, logo_id in idx_logo_id:
+                embedding = embedding_dset[idx]
+                yield logo_id, embedding
 
     def save_embeddings(
         self, embeddings: np.ndarray, external_ids: np.ndarray,
