@@ -1,5 +1,5 @@
 import pathlib
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import h5py
 import numpy as np
@@ -24,6 +24,9 @@ class EmbeddingStore:
 
     def __contains__(self, logo_id: int) -> bool:
         return self.get_index(logo_id) is not None
+
+    def get_logo_ids(self) -> Iterable[int]:
+        return self.logo_id_to_idx.keys()
 
     def get_index(self, logo_id: int) -> Optional[int]:
         return self.logo_id_to_idx.get(logo_id)
