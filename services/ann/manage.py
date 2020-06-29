@@ -11,29 +11,38 @@ if __name__ == "__main__":
     @click.argument("output", type=pathlib.Path)
     @click.option("--tree-count", type=int, default=100)
     def generate_index(output: pathlib.Path, tree_count: int):
+        import shutil
+        import tempfile
+
         from annoy import AnnoyIndex
-        from embeddings import EMBEDDING_STORE
+        from embeddings import EmbeddingStore
+        import settings
 
-        index = None
-        offset: int = 0
-        keys = []
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            embedding_path = pathlib.Path(tmp_dir) / "embeddings.hdf5"
+            shutil.copy(str(settings.EMBEDDINGS_HDF5_PATH), str(embedding_path))
+            embedding_store = EmbeddingStore(embedding_path)
 
-        for logo_id, embedding in EMBEDDING_STORE.iter_embeddings():
-            if index is None:
-                output_dim = embedding.shape[-1]
-                index = AnnoyIndex(output_dim, "euclidean")
+            index = None
+            offset: int = 0
+            keys = []
 
-            index.add_item(offset, embedding)
-            keys.append(int(logo_id))
-            offset += 1
+            for logo_id, embedding in embedding_store.iter_embeddings():
+                if index is None:
+                    output_dim = embedding.shape[-1]
+                    index = AnnoyIndex(output_dim, "euclidean")
 
-        if index is not None:
-            index.build(tree_count)
-            index.save(str(output))
+                index.add_item(offset, embedding)
+                keys.append(int(logo_id))
+                offset += 1
 
-            with output.with_suffix(".txt").open("w") as f:
-                for key in keys:
-                    f.write(str(key) + "\n")
+            if index is not None:
+                index.build(tree_count)
+                index.save(str(output))
 
-    cli.add_command(generate_index)
-    cli()
+                with output.with_suffix(".txt").open("w") as f:
+                    for key in keys:
+                        f.write(str(key) + "\n")
+
+        cli.add_command(generate_index)
+        cli()
