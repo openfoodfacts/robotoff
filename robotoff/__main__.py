@@ -301,7 +301,8 @@ if __name__ == "__main__":
                 category_export()
 
     @click.command()
-    def add_logo_to_ann(sleep_time: float = 0.5):
+    @click.option("--sleep-time", type=float, default=0.5)
+    def add_logo_to_ann(sleep_time: float):
         from itertools import groupby
         import time
 
