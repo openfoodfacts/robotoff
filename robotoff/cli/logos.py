@@ -12,7 +12,7 @@ from robotoff.models import (
 from robotoff.off import generate_image_path
 from robotoff.utils import get_logger, jsonl_iter
 
-logger = get_logger()
+logger = get_logger(__name__)
 
 
 TYPE = "object_detection"
