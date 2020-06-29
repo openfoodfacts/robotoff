@@ -341,6 +341,23 @@ if __name__ == "__main__":
                     time.sleep(sleep_time)
 
     @click.command()
+    @click.argument("data-path", type=pathlib.Path)
+    @click.option("--model-name", default="universal-logo-detector")
+    @click.option("--model-version", default="tf-universal-logo-detector-1.0")
+    def import_logos(data_path: pathlib.Path, model_name: str, model_version: str):
+        from robotoff.cli.logos import insert_batch
+        from robotoff.models import db
+        from robotoff.utils import get_logger
+
+        logger = get_logger()
+        logger.info("Starting image prediction import...")
+
+        with db:
+            inserted = insert_batch(data_path, model_name, model_version)
+
+        logger.info("{} image predictions inserted".format(inserted))
+
+    @click.command()
     @click.argument("output", type=pathlib.Path)
     @click.option("--server-domain")
     @click.option("--annotated", type=bool)
@@ -387,5 +404,6 @@ if __name__ == "__main__":
     cli.add_command(predict_insight)
     cli.add_command(export_logo_annotation)
     cli.add_command(add_logo_to_ann)
+    cli.add_command(import_logos)
 
     cli()
