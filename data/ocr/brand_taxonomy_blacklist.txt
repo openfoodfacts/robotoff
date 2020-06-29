@@ -12,6 +12,8 @@ american
 appel
 artisanal
 aucune
+// 'auchan' is the brand to use
+auchan production
 avenue
 bien
 bordeaux
