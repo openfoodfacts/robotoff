@@ -193,12 +193,12 @@ class AddLogoResource:
 
 class ANNCountResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        req.media = {"count": len(EMBEDDING_STORE)}
+        resp.media = {"count": len(EMBEDDING_STORE)}
 
 
 class ANNStoredLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        req.media = {"stored": list(EMBEDDING_STORE.get_logo_ids())}
+        resp.media = {"stored": list(EMBEDDING_STORE.get_logo_ids())}
 
 
 cors = CORS(
