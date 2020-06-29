@@ -25,7 +25,7 @@ LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
 
 
 def get_stored_logo_ids() -> Set[int]:
-    r = http_session.post(
+    r = http_session.get(
         "https://robotoff.openfoodfacts.org/api/v1/ann/stored", timeout=30
     )
 
