@@ -123,3 +123,5 @@ fr:viande-bovine-francaise||viande bovine francaise
 fr:viande-bovine-francaise||viande bovine française
 fr:viande-porcine-francaise||le porc francais
 fr:viande-porcine-francaise||le porc français
+en:small-producers-symbol||symbole des producteurs paysans
+en:small-producers-symbol||www.spp.coop
