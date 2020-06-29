@@ -301,6 +301,40 @@ if __name__ == "__main__":
                 category_export()
 
     @click.command()
+    def add_logo_to_ann(sleep_time: float = 0.5):
+        from itertools import groupby
+        import time
+
+        import tqdm
+
+        from robotoff.logos import add_logos_to_ann
+        from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
+        from robotoff.utils import get_logger
+
+        logger = get_logger()
+
+        with db:
+            logos_iter = tqdm.tqdm(
+                LogoAnnotation.select()
+                .join(ImagePrediction)
+                .join(ImageModel)
+                .where(LogoAnnotation.nearest_neighbors.is_null())
+                .order_by(ImageModel.id)
+                .iterator()
+            )
+            for _, logo_batch in groupby(
+                logos_iter, lambda x: x.image_prediction.image.id
+            ):
+                logos = list(logo_batch)
+                image = logos[0].image_prediction.image
+                logger.info(f"Adding logos of image {image.id}")
+                added = add_logos_to_ann(image, logos)
+                logger.info(f"Added: {added}")
+
+                if sleep_time:
+                    time.sleep(sleep_time)
+
+    @click.command()
     @click.argument("output", type=pathlib.Path)
     @click.option("--server-domain")
     @click.option("--annotated", type=bool)
@@ -346,5 +380,6 @@ if __name__ == "__main__":
     cli.add_command(apply_insights)
     cli.add_command(predict_insight)
     cli.add_command(export_logo_annotation)
+    cli.add_command(add_logo_to_ann)
 
     cli()
