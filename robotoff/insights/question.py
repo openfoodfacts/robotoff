@@ -19,7 +19,7 @@ LABEL_IMG_BASE_URL = "https://static.openfoodfacts.org/images/lang"
 
 LABEL_IMAGES = {
     "en:eu-organic": LABEL_IMG_BASE_URL + "en/labels/eu-organic.135x90.svg",
-    "fr:ab-agriculture-biologique": LABEL_IMG_BASE_URL
+    "en:ab-agriculture-biologique": LABEL_IMG_BASE_URL
     + "/fr/labels/ab-agriculture-biologique.74x90.svg",
     "en:european-vegetarian-union": LABEL_IMG_BASE_URL
     + "/en/labels/european-vegetarian-union.90x90.svg",
