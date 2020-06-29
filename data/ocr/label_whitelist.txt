@@ -103,3 +103,4 @@ en:sustainable-seafood-msc
 en:halal
 en:utz-certified
 en:pefc
+en:small-producers-symbols
