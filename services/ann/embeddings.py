@@ -85,7 +85,7 @@ class EmbeddingStore:
             for external_id, idx in zip(
                 external_ids, range(self.offset, self.offset + len(embeddings))
             ):
-                self.logo_id_to_idx[external_id] = idx
+                self.logo_id_to_idx[int(external_id)] = idx
 
             self.offset += len(embeddings)
 
