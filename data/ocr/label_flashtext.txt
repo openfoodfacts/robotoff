@@ -112,6 +112,7 @@ en:sustainable-palm-oil||huile de palme certifiée durable
 en:sustainable-palm-oil||huile de palme certifiee durable
 en:sustainable-palm-oil||sustainable palm oil
 en:sustainable-seafood-msc||www.msc.org
+en:sustainable-seafood-msc||pêche durable msc
 en:utz-certified||utz certified
 en:vegan||vegan
 en:vegan||veganoveganistisch

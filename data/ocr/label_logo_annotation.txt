@@ -5,3 +5,4 @@ label rouge||en:label-rouge
 produit en bretagne||en:produced-in-bretagne
 demeter||en:demeter
 Bio Equitable||fr:bio-equitable
+UTZ Certified||en:utz-certified
