@@ -313,6 +313,7 @@ if __name__ == "__main__":
         from itertools import groupby
         import time
 
+        import requests
         import tqdm
 
         from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
@@ -341,7 +342,12 @@ if __name__ == "__main__":
 
                 image = logos[0].image_prediction.image
                 logger.info(f"Adding logos of image {image.id}")
-                added = add_logos_to_ann(image, logos)
+                try:
+                    added = add_logos_to_ann(image, logos)
+                except requests.exceptions.ReadTimeout:
+                    logger.warn("Request timed-out during logo addition")
+                    continue
+
                 logger.info(f"Added: {added}")
 
                 if sleep_time:
