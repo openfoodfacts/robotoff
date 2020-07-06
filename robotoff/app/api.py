@@ -1,9 +1,7 @@
 import csv
-import dataclasses
 import datetime
 import functools
 import io
-import itertools
 import json
 import tempfile
 from typing import List, Optional
@@ -23,7 +21,6 @@ from robotoff.app import schema
 from robotoff.app.auth import basic_decode, BasicAuthDecodeError
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.ingredients import generate_corrected_text, generate_corrections
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
 from robotoff.insights.ocr.dataclass import OCRParsingException
@@ -48,6 +45,7 @@ from robotoff.off import (
     OFFAuthentication,
 )
 from robotoff.products import get_product_dataset_etag
+from robotoff.spellcheck import Spellchecker
 from robotoff.taxonomy import match_unprefixed_value
 from robotoff.utils import (
     ExtendedJSONEncoder,
@@ -237,36 +235,31 @@ class IngredientSpellcheckResource:
 
     def spellcheck(self, req: falcon.Request, resp: falcon.Response):
         text = req.get_param("text")
-        barcode = req.get_param("barcode")
+        if text is None:
+            barcode = req.get_param("barcode")
+            if barcode is None:
+                raise falcon.HTTPBadRequest("text or barcode is required.")
+
+            product = get_product(barcode) or {}
+            text = product.get("ingredients_text_fr")
+            if text is None:
+                resp.media = {"status": "not_found"}
+                return
+
         index_name = req.get_param(
             "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
         )
         confidence = req.get_param_as_float("confidence", default=1.0)
-
-        if text is None and barcode is None:
-            raise falcon.HTTPBadRequest("text or barcode is required.")
-
-        if not text:
-            product = get_product(barcode) or {}
-            text = product.get("ingredients_text_fr")
-
-            if not text:
-                resp.media = {
-                    "status": "not_found",
-                }
-                return
-
-        corrections = generate_corrections(
-            es_client, text, confidence=confidence, index_name=index_name
+        spellchecker = Spellchecker(
+            client=es_client, index_name=index_name, confidence=confidence
         )
-        term_corrections = list(
-            itertools.chain.from_iterable((c.term_corrections for c in corrections))
-        )
+        correction_item = spellchecker.correct(text)
 
         resp.media = {
-            "corrections": [dataclasses.asdict(c) for c in corrections],
+            "status": "success",
             "text": text,
-            "corrected": generate_corrected_text(term_corrections, text),
+            "corrected": correction_item.latest_correction,
+            "corrections": correction_item.corrections,
         }
 
 

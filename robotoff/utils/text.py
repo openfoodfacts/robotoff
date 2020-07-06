@@ -11,7 +11,7 @@ from .fold_to_ascii import fold
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 
 
-def strip_accents_ascii(s):
+def strip_accents_ascii(s: str) -> str:
     """Transform accentuated unicode symbols into ascii or nothing
 
     Warning: this solution is only suited for languages that have a direct

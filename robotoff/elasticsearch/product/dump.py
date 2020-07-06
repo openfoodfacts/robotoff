@@ -3,12 +3,12 @@ import re
 from typing import Dict, Iterator, List
 
 from robotoff import settings
-from robotoff.ingredients import FR_KNOWN_TOKENS, process_ingredients
 from robotoff.products import ProductDataset
+from robotoff.spellcheck.items import Ingredients
+from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.es import get_es_client, perform_export
 from robotoff.utils.text import FR_NLP_CACHE
-
 
 logger = get_logger(__name__)
 
@@ -17,7 +17,7 @@ MULTIPLE_SPACES_RE = re.compile(r"\s{2,}")
 
 
 def ingredients_iter() -> Iterator[str]:
-    known_tokens = FR_KNOWN_TOKENS.get()
+    known_tokens = FR_KNOWN_TOKENS_CACHE.get()
     nlp = FR_NLP_CACHE.get()
 
     for ingredient in text_file_iter(settings.INGREDIENTS_FR_PATH):
@@ -82,7 +82,7 @@ def empty_ingredient(ingredient: str) -> bool:
 
 
 def normalize_ingredient_list(ingredient_text: str) -> List[str]:
-    ingredients = process_ingredients(ingredient_text)
+    ingredients = Ingredients.from_text(ingredient_text)
 
     normalized = []
 
