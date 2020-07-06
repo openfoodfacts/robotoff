@@ -137,25 +137,30 @@ if __name__ == "__main__":
     @click.argument("output")
     @click.option("--index-name", default="product")
     @click.option("--confidence", type=float, default=1)
+    @click.option("--detailed/--shallow", default=False)
     @click.option("--max-errors", type=int)
+    @click.option("--limit", type=int)
     def generate_spellcheck_insights(
         output: str,
         index_name: str,
         confidence: float,
+        detailed: bool,
         max_errors: Optional[int] = None,
+        limit: Optional[int] = None,
     ):
         from robotoff.utils import dump_jsonl
         from robotoff.utils.es import get_es_client
-        from robotoff.ingredients import generate_insights
+        from robotoff.spellcheck import Spellchecker
         from robotoff.utils import get_logger
 
         logger = get_logger()
         logger.info("Max errors: {}".format(max_errors))
 
         client = get_es_client()
-        insights_iter = generate_insights(
-            client, confidence=confidence, max_errors=max_errors
-        )
+        insights_iter = Spellchecker(
+            client=client, confidence=confidence, index_name=index_name
+        ).generate_insights(max_errors=max_errors, limit=limit, detailed=detailed)
+
         dump_jsonl(output, insights_iter)
 
     @click.command()
@@ -164,12 +169,14 @@ if __name__ == "__main__":
     def test_spellcheck(text: str, confidence: float):
         import json
         from robotoff.utils.es import get_es_client
-        from robotoff.ingredients import suggest
+        from robotoff.spellcheck import Spellchecker
         from robotoff.utils import get_logger
 
         get_logger()
         client = get_es_client()
-        result = suggest(text, client, confidence=confidence)
+        result = Spellchecker(client=client, confidence=confidence).predict_insight(
+            text, detailed=True
+        )
         print(json.dumps(result, indent=5))
 
     @click.command()
