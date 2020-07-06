@@ -271,7 +271,6 @@ class IngredientSpellcheckResource:
         correction_item = spellchecker.correct(text)
 
         resp.media = {
-            "status": "success",
             "text": text,
             "corrected": correction_item.latest_correction,
             "corrections": correction_item.corrections,
