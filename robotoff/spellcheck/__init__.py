@@ -12,7 +12,6 @@ class Spellchecker(PipelineSpellchecker):
         super(Spellchecker, self).__init__()
         self.es_kwargs = es_kwargs
         self.add_spellchecker("patterns")
-        self.add_spellchecker("percentages")
         self.add_spellchecker("elasticsearch", client=client, **es_kwargs)
         self.add_spellchecker("vocabulary")
 
