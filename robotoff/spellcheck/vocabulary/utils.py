@@ -1,10 +1,11 @@
-from pathlib import Path
 from collections import defaultdict
-from typing import Dict, Tuple, List, Optional, AbstractSet, Callable
+from pathlib import Path
+from typing import AbstractSet, Callable, Dict, List, Optional, Tuple
+
 from robotoff.settings import (
-    INGREDIENTS_FR_PATH,
-    INGREDIENT_TOKENS_PATH,
     FR_TOKENS_PATH,
+    INGREDIENT_TOKENS_PATH,
+    INGREDIENTS_FR_PATH,
 )
 
 from robotoff.utils import text_file_iter
