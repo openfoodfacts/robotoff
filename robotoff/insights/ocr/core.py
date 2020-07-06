@@ -1,6 +1,7 @@
-import json
 import pathlib
 from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
+
+import orjson
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
@@ -160,13 +161,13 @@ def ocr_iter(
 
         if input_path.is_dir():
             for json_path in input_path.glob("**/*.json"):
-                with open(str(json_path), "r") as f:
+                with open(str(json_path), "rb") as f:
                     source = get_source(json_path.stem, json_path=str(json_path))
-                    yield source, json.load(f)
+                    yield source, orjson.loads(f.read())
         else:
             if ".json" in input_path.suffixes:
-                with open(str(input_path), "r") as f:
-                    yield None, json.load(f)
+                with open(str(input_path), "rb") as f:
+                    yield None, orjson.loads(f.read())
 
             elif ".jsonl" in input_path.suffixes:
                 items = jsonl_iter(input_path)

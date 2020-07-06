@@ -1,15 +1,13 @@
-import datetime
 import gzip
-import json
 import logging
 import os
 import pathlib
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, Optional, Type, Union
-import uuid
+from typing import Callable, Dict, Iterable, Optional, Union
 
 from PIL import Image
+import orjson
 import requests
 
 from robotoff import settings
@@ -66,20 +64,16 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
     for line in fp:
         line = line.strip("\n")
         if line:
-            yield json.loads(line)
+            yield orjson.loads(line)
 
 
-def dump_jsonl(
-    filepath: Union[str, pathlib.Path],
-    json_iter: Iterable[Dict],
-    serializer: Optional[Type] = None,
-) -> int:
+def dump_jsonl(filepath: Union[str, pathlib.Path], json_iter: Iterable[Dict]) -> int:
     count = 0
     open_fn = get_open_fn(filepath)
 
-    with open_fn(str(filepath), "wt") as f:
+    with open_fn(str(filepath), "wb") as f:
         for item in json_iter:
-            f.write(json.dumps(item, cls=serializer) + "\n")
+            f.write(orjson.dumps(item) + b"\n")
             count += 1
 
     return count
@@ -136,16 +130,6 @@ def get_image_from_url(
         image = Image.open(f.name)
 
     return image
-
-
-class ExtendedJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, uuid.UUID):
-            return str(obj)
-        elif isinstance(obj, datetime.datetime):
-            return obj.isoformat()
-
-        return json.JSONEncoder.default(self, obj)
 
 
 http_session = requests.Session()

@@ -279,18 +279,19 @@ if __name__ == "__main__":
     def init_elasticsearch(
         index: bool, data: bool, product: bool, category: bool, product_version: str
     ):
-        import json
+        import orjson
+
         from robotoff import settings
         from robotoff.utils.es import get_es_client
         from robotoff.elasticsearch.product.dump import product_export
         from robotoff.elasticsearch.category.dump import category_export
 
         if index:
-            with settings.ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH.open("r") as f:
-                product_index_config = json.load(f)
+            with settings.ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH.open("rb") as f:
+                product_index_config = orjson.loads(f.read())
 
-            with settings.ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH.open("r") as f:
-                category_index_config = json.load(f)
+            with settings.ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH.open("rb") as f:
+                category_index_config = orjson.loads(f.read())
 
             client = get_es_client()
 
@@ -374,7 +375,7 @@ if __name__ == "__main__":
         annotated: Optional[bool] = None,
     ):
         from robotoff.models import db, LogoAnnotation, ImageModel, ImagePrediction
-        from robotoff.utils import dump_jsonl, ExtendedJSONEncoder
+        from robotoff.utils import dump_jsonl
 
         with db:
             where_clauses = []
@@ -393,7 +394,7 @@ if __name__ == "__main__":
 
             logo_iter = query.iterator()
             dict_iter = (l.to_dict() for l in logo_iter)
-            dump_jsonl(output, dict_iter, serializer=ExtendedJSONEncoder)
+            dump_jsonl(output, dict_iter)
 
     cli.add_command(run)
     cli.add_command(generate_ocr_insights)

@@ -1,9 +1,10 @@
 import collections
 from enum import Enum
 import functools
-import json
 import pathlib
 from typing import Dict, Iterable, List, Optional, Set, Union
+
+import orjson
 
 from robotoff import settings
 from robotoff.utils import get_logger, http_session
@@ -200,8 +201,8 @@ class Taxonomy:
 
     @classmethod
     def from_json(cls, file_path: Union[str, pathlib.Path]):
-        with open(str(file_path), "r") as f:
-            data = json.load(f)
+        with open(str(file_path), "rb") as f:
+            data = orjson.loads(f.read())
             return cls.from_dict(data)
 
     def to_graph(self):

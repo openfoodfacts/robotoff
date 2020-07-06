@@ -2,7 +2,6 @@ import csv
 import datetime
 import functools
 import io
-import json
 import tempfile
 from typing import List, Optional
 
@@ -10,6 +9,7 @@ import falcon
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
+import orjson
 import peewee
 from PIL import Image
 import requests
@@ -48,7 +48,6 @@ from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import Spellchecker
 from robotoff.taxonomy import match_unprefixed_value
 from robotoff.utils import (
-    ExtendedJSONEncoder,
     get_image_from_url,
     get_logger,
     http_session,
@@ -925,9 +924,7 @@ class DumpResource:
 
         with tempfile.TemporaryFile("w+", newline="") as temp_f:
             for insight in insights_iter:
-                serial = json.loads(
-                    json.dumps(insight.to_dict(), cls=ExtendedJSONEncoder)
-                )
+                serial = orjson.loads(orjson.dumps(insight.to_dict()))
 
                 if writer is None:
                     writer = csv.DictWriter(temp_f, fieldnames=serial.keys())
@@ -965,9 +962,7 @@ api = falcon.API(
     middleware=[cors.middleware, MultipartMiddleware(), DBConnectionMiddleware()]
 )
 
-json_handler = falcon.media.JSONHandler(
-    dumps=functools.partial(json.dumps, cls=ExtendedJSONEncoder), loads=json.loads,
-)
+json_handler = falcon.media.JSONHandler(dumps=orjson.dumps, loads=orjson.loads)
 extra_handlers = {
     "application/json": json_handler,
 }

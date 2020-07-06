@@ -2,6 +2,7 @@ import json
 import operator
 from typing import Dict, List, Optional, Set, Tuple
 
+import orjson
 import requests
 
 from robotoff import settings
@@ -11,8 +12,8 @@ from robotoff.utils.cache import CachedStore
 
 
 def get_brand_prefix() -> Set:
-    with settings.BRAND_PREFIX_PATH.open("r") as f:
-        return set(tuple(x) for x in json.load(f))
+    with settings.BRAND_PREFIX_PATH.open("rb") as f:
+        return set(tuple(x) for x in orjson.loads(f.read()))
 
 
 def get_brand_blacklist() -> Set[str]:
