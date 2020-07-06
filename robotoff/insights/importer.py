@@ -157,13 +157,13 @@ class IngredientSpellcheckImporter(BaseInsightImporter):
     ) -> Iterator[Insight]:
         seen_set: Set[Tuple[str, str]] = set(
             (x.barcode, x.data["lang"])
-            for x in ProductInsight.select(
-                ProductInsight.barcode, ProductInsight.data
-            ).where(
+            for x in ProductInsight.select(ProductInsight.barcode, ProductInsight.data)
+            .where(
                 ProductInsight.type == self.get_type(),
                 ProductInsight.server_domain == server_domain,
                 ProductInsight.annotation.is_null(True),
             )
+            .iterator()
         )
 
         for product_insights in data:
