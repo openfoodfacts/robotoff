@@ -12,6 +12,8 @@ from robotoff.spellcheck.items import (
 from robotoff.spellcheck.elasticsearch.correction_formatter import CorrectionFormatter
 from robotoff.spellcheck.elasticsearch.es_handler import ElasticsearchHandler
 
+VERSION = "1"
+
 
 class ElasticSearchSpellchecker(BaseSpellchecker):
     def __init__(self, client, **kwargs):
@@ -73,3 +75,10 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
             correction.model = self.name
 
         return corrections
+
+    def get_config(self):
+        return {
+            "version": VERSION,
+            "name": self.__class__.__name__,
+            **self.kwargs,
+        }

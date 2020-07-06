@@ -7,6 +7,8 @@ from robotoff.spellcheck.exceptions import LanguageNotAllowedException
 
 Patterns = Dict[str, str]
 
+VERSION = "1"
+
 
 class PatternsSpellchecker(BaseSpellchecker):
     def __init__(self, lang: str = "fr"):
@@ -40,6 +42,12 @@ class PatternsSpellchecker(BaseSpellchecker):
         for pattern, replacement in self.patterns.items():
             text = replace_keep_case(pattern, replacement, text)
         return text
+
+    def get_config(self):
+        return {
+            "version": VERSION,
+            "name": self.__class__.__name__,
+        }
 
 
 def replace_keep_case(word, replacement, text):

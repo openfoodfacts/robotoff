@@ -45,7 +45,7 @@ from robotoff.off import (
     OFFAuthentication,
 )
 from robotoff.products import get_product_dataset_etag
-from robotoff.spellcheck import Spellchecker
+from robotoff.spellcheck import Spellchecker, SPELLCHECKERS
 from robotoff.taxonomy import match_unprefixed_value
 from robotoff.utils import (
     get_image_from_url,
@@ -245,12 +245,28 @@ class IngredientSpellcheckResource:
                 resp.media = {"status": "not_found"}
                 return
 
-        index_name = req.get_param(
-            "index", default=settings.ELASTICSEARCH_PRODUCT_INDEX
-        )
-        confidence = req.get_param_as_float("confidence", default=1.0)
-        spellchecker = Spellchecker(
-            client=es_client, index_name=index_name, confidence=confidence
+        index_name = req.get_param("index", default="product_all")
+        confidence = req.get_param_as_float("confidence", default=0.5)
+        pipeline = req.get_param_as_list("pipeline") or None
+        safe = req.get_param_as_bool("safe", blank_as_true=False)
+
+        if safe is not None and pipeline:
+            raise falcon.HTTPBadRequest(
+                "pipeline and safe parameters cannot be used together"
+            )
+
+        if pipeline:
+            for item in pipeline:
+                if item not in SPELLCHECKERS:
+                    raise falcon.HTTPBadRequest(f"unknown pipeline item: {item}")
+        elif safe:
+            pipeline = ["patterns", "percentages", "vocabulary"]
+
+        spellchecker = Spellchecker.load(
+            client=es_client,
+            pipeline=pipeline,
+            index_name=index_name,
+            confidence=confidence,
         )
         correction_item = spellchecker.correct(text)
 

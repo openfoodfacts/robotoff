@@ -1,23 +1,64 @@
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional, Union
 
 from robotoff import settings
 from robotoff.insights import InsightType, ProductInsights, RawInsight
 from robotoff.products import ProductDataset
-from robotoff.spellcheck.pipeline_spellchecker import PipelineSpellchecker
+from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
+from robotoff.spellcheck.elasticsearch import ElasticSearchSpellchecker
+from robotoff.spellcheck.items import SpellcheckItem
+from robotoff.spellcheck.patterns import PatternsSpellchecker
+from robotoff.spellcheck.percentages import PercentagesSpellchecker
+from robotoff.spellcheck.vocabulary import VocabularySpellchecker
 from robotoff.utils.types import JSONType
 
+SPELLCHECKERS = {
+    "elasticsearch": ElasticSearchSpellchecker,
+    "patterns": PatternsSpellchecker,
+    "percentages": PercentagesSpellchecker,
+    "vocabulary": VocabularySpellchecker,
+}
 
-class Spellchecker(PipelineSpellchecker):
-    def __init__(self, client, **es_kwargs):
-        super(Spellchecker, self).__init__()
-        self.es_kwargs = es_kwargs
-        self.add_spellchecker("patterns")
-        self.add_spellchecker("elasticsearch", client=client, **es_kwargs)
-        self.add_spellchecker("vocabulary")
+
+class Spellchecker:
+    def __init__(self, pipeline: List[BaseSpellchecker]):
+        self.spellcheckers: List[BaseSpellchecker] = pipeline
+
+    @classmethod
+    def load(
+        cls,
+        client,
+        pipeline: Optional[List[Union[str, BaseSpellchecker]]] = None,
+        **es_kwargs,
+    ):
+        pipeline_: List[BaseSpellchecker] = []
+
+        if pipeline is None:
+            pipeline = ["patterns", "elasticsearch", "vocabulary"]
+
+        for item in pipeline:
+            if isinstance(item, str):
+                if item not in SPELLCHECKERS:
+                    raise ValueError(
+                        f"Spellchecker {item} not found. Available : {list(SPELLCHECKERS.keys())}"
+                    )
+
+                if item == "elasticsearch":
+                    base_spellchecker = ElasticSearchSpellchecker(client, **es_kwargs)
+                else:
+                    base_spellchecker = SPELLCHECKERS[item]()
+
+                pipeline_.append(base_spellchecker)
+
+            elif not isinstance(item, BaseSpellchecker):
+                raise TypeError(
+                    f"invalid item in pipeline: {item}, expected str or BaseSpellchecker"
+                )
+                pipeline_.append(item)
+
+        return cls(pipeline_)
 
     def generate_insights(
         self,
-        detailed: bool = False,
         max_errors: Optional[int] = None,
         lang: str = "fr",
         limit: Optional[int] = None,
@@ -34,9 +75,7 @@ class Spellchecker(PipelineSpellchecker):
         insights_count = 0
         for product in product_iter:
             if self.is_product_valid(product, max_errors=max_errors):
-                insight = self.predict_insight(
-                    product["ingredients_text_fr"], detailed=detailed,
-                )
+                insight = self.predict_insight(product["ingredients_text_fr"])
                 if insight is not None:
                     insight["lang"] = lang
                     yield ProductInsights(
@@ -53,20 +92,18 @@ class Spellchecker(PipelineSpellchecker):
                     if limit is not None and insights_count >= limit:
                         break
 
-    def predict_insight(self, text: str, detailed: bool) -> Optional[JSONType]:
+    def predict_insight(self, text: str) -> Optional[JSONType]:
         correction_item = self.correct(text)
         corrected_text = correction_item.latest_correction
         if corrected_text != text:
-            insight = {
+            insight: JSONType = {
                 "text": text,
                 "corrected": corrected_text,
-                "index_name": self.es_kwargs.get(
-                    "index_name", settings.ELASTICSEARCH_PRODUCT_INDEX
-                ),
             }
-            if detailed:
-                insight["corrections"] = correction_item.corrections
+            insight["corrections"] = correction_item.corrections
+            insight["config"] = [s.get_config() for s in self.spellcheckers]
             return insight
+
         return None
 
     @staticmethod
@@ -75,3 +112,10 @@ class Spellchecker(PipelineSpellchecker):
             return True
         else:
             return int(product.get("unknown_ingredients_n", 0)) <= max_errors
+
+    def correct(self, text: str) -> SpellcheckItem:
+        item = SpellcheckItem(text)
+        if item.is_lang_allowed:
+            for spellcheck in self.spellcheckers:
+                spellcheck.predict([item])
+        return item

@@ -135,16 +135,14 @@ if __name__ == "__main__":
 
     @click.command()
     @click.argument("output")
-    @click.option("--index-name", default="product")
-    @click.option("--confidence", type=float, default=1)
-    @click.option("--detailed/--shallow", default=False)
+    @click.option("--index-name", default="product_all")
+    @click.option("--confidence", type=float, default=0.5)
     @click.option("--max-errors", type=int)
     @click.option("--limit", type=int)
     def generate_spellcheck_insights(
         output: str,
         index_name: str,
         confidence: float,
-        detailed: bool,
         max_errors: Optional[int] = None,
         limit: Optional[int] = None,
     ):
@@ -157,9 +155,9 @@ if __name__ == "__main__":
         logger.info("Max errors: {}".format(max_errors))
 
         client = get_es_client()
-        insights_iter = Spellchecker(
+        insights_iter = Spellchecker.load(
             client=client, confidence=confidence, index_name=index_name
-        ).generate_insights(max_errors=max_errors, limit=limit, detailed=detailed)
+        ).generate_insights(max_errors=max_errors, limit=limit)
 
         dump_jsonl(output, insights_iter)
 
@@ -174,9 +172,9 @@ if __name__ == "__main__":
 
         get_logger()
         client = get_es_client()
-        result = Spellchecker(client=client, confidence=confidence).predict_insight(
-            text, detailed=True
-        )
+        result = Spellchecker.load(
+            client=client, confidence=confidence
+        ).predict_insight(text, detailed=True)
         print(json.dumps(result, indent=5))
 
     @click.command()

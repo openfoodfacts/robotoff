@@ -7,6 +7,7 @@ PERCENTAGE_REGEX = re.compile(
     r"(\A|.)([0-9]{0,2})([ ]{0,1}?[,|.|;|/]{0,1}[ ]{0,1})([0-9]{0,2})[ ]?(?:%|(?:[\?|/|\\](?:\D|\Z)))"
 )
 ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
+VERSION = "1"
 
 
 class PercentagesSpellchecker(BaseSpellchecker):
@@ -102,3 +103,9 @@ class PercentagesSpellchecker(BaseSpellchecker):
         formatted_text_list.append(text[last_index:])
 
         return "".join(formatted_text_list)
+
+    def get_config(self):
+        return {
+            "version": VERSION,
+            "name": self.__class__.__name__,
+        }

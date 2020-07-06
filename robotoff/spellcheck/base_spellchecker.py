@@ -19,6 +19,10 @@ class BaseSpellchecker(metaclass=abc.ABCMeta):
     def correct(self, text: str) -> str:
         pass
 
+    @abc.abstractmethod
+    def get_config(self):
+        pass
+
     @property
     def name(self) -> str:
         return self.__class__.__name__

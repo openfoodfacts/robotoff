@@ -7,6 +7,7 @@ from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 
 TOKENS = List[str]
 ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
+VERSION = "1"
 
 
 class VocabularySpellchecker(BaseSpellchecker):
@@ -36,3 +37,9 @@ class VocabularySpellchecker(BaseSpellchecker):
         if remove_additives:
             tokens = [token for token in tokens if ADDITIVES_REGEX.match(token) is None]
         return tokens
+
+    def get_config(self):
+        return {
+            "version": VERSION,
+            "name": self.__class__.__name__,
+        }
