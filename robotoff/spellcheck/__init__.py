@@ -1,9 +1,10 @@
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from robotoff import settings
-from robotoff.utils.types import JSONType
+from robotoff.insights import InsightType, ProductInsights, RawInsight
 from robotoff.products import ProductDataset
 from robotoff.spellcheck.pipeline_spellchecker import PipelineSpellchecker
+from robotoff.utils.types import JSONType
 
 
 class Spellchecker(PipelineSpellchecker):
@@ -21,8 +22,7 @@ class Spellchecker(PipelineSpellchecker):
         max_errors: Optional[int] = None,
         lang: str = "fr",
         limit: Optional[int] = None,
-    ) -> Iterable[JSONType]:
-
+    ) -> Iterable[ProductInsights]:
         dataset = ProductDataset(settings.JSONL_DATASET_PATH)
         product_iter = (
             dataset.stream()
@@ -40,8 +40,15 @@ class Spellchecker(PipelineSpellchecker):
                 )
                 if insight is not None:
                     insight["lang"] = lang
-                    insight["barcode"] = product["code"]
-                    yield insight
+                    yield ProductInsights(
+                        insights=[
+                            RawInsight(
+                                type=InsightType.ingredient_spellcheck, data=insight,
+                            )
+                        ],
+                        barcode=product["code"],
+                        type=InsightType.ingredient_spellcheck,
+                    )
 
                     insights_count += 1
                     if limit is not None and insights_count >= limit:
