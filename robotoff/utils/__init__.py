@@ -4,10 +4,10 @@ import os
 import pathlib
 import sys
 import tempfile
-from typing import Callable, Dict, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
-from PIL import Image
 import orjson
+from PIL import Image
 import requests
 
 from robotoff import settings
@@ -67,7 +67,9 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
             yield orjson.loads(line)
 
 
-def dump_jsonl(filepath: Union[str, pathlib.Path], json_iter: Iterable[Dict]) -> int:
+def dump_jsonl(
+    filepath: Union[str, pathlib.Path], json_iter: Iterable[Union[Any]],
+) -> int:
     count = 0
     open_fn = get_open_fn(filepath)
 

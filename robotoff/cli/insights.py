@@ -12,7 +12,10 @@ from peewee import fn
 from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.dataclass import ProductInsights
-from robotoff.insights.importer import AUTHORIZED_LABELS_STORE, InsightImporterFactory
+from robotoff.insights.importer import (
+    AUTHORIZED_LABELS_STORE,
+    import_insights as import_insights_,
+)
 from robotoff.insights.ocr import (
     extract_insights,
     get_barcode_from_path,
@@ -88,20 +91,19 @@ def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
 
 
 def import_insights(
-    insights: Iterable[ProductInsights],
-    insight_type: InsightType,
-    server_domain: str,
-    batch_size: int = 1024,
+    insights: Iterable[ProductInsights], server_domain: str, batch_size: int = 1024,
 ) -> int:
     product_store = get_product_store()
-    importer = InsightImporterFactory.create(insight_type, product_store)
     imported: int = 0
 
     insight_batch: List[ProductInsights]
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
-            imported += importer.import_insights(
-                insight_batch, server_domain=server_domain, automatic=False,
+            imported += import_insights_(
+                insight_batch,
+                server_domain,
+                automatic=False,
+                product_store=product_store,
             )
 
     return imported

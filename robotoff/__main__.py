@@ -214,13 +214,13 @@ if __name__ == "__main__":
                 print("{}: {}".format(cat, confidence))
 
     @click.command()
-    @click.option("--insight-type", "-t", required=True)
+    @click.option("--insight-type", "-t")
     @click.option("--server-domain", default=None)
     @click.option("--batch-size", type=int, default=1024)
     @click.option("--input", "input_", type=pathlib.Path, default=None)
     @click.option("--generate-from", type=pathlib.Path, default=None)
     def import_insights(
-        insight_type: str,
+        insight_type: Optional[str],
         server_domain: Optional[str],
         batch_size: int,
         input_: Optional[pathlib.Path],
@@ -242,6 +242,9 @@ if __name__ == "__main__":
             logger.info(
                 "Generating and importing insights from {}".format(generate_from)
             )
+            if insight_type is None:
+                sys.exit("Required option: --insight-type")
+
             insights = generate_from_ocr_archive(
                 generate_from, InsightType[insight_type]
             )
@@ -251,9 +254,7 @@ if __name__ == "__main__":
         else:
             raise ValueError("--generate-from or --input must be provided")
 
-        imported = import_insights_(
-            insights, InsightType[insight_type], server_domain, batch_size
-        )
+        imported = import_insights_(insights, server_domain, batch_size)
         logger.info("{} insights imported".format(imported))
 
     @click.command()
