@@ -16,9 +16,6 @@ spellchecker = PatternsSpellchecker()
         ("baton decanelle", "baton decannelle"),
         ("Viande de bceuf", "Viande de bœuf"),
         ("Viande de Bceuf", "Viande de Bœuf"),
-        ("oeuf de poule", "œuf de poule"),
-        ("Oeuf de poule", "Œuf de poule"),
-        ("OEUF de poule", "ŒUF de poule"),
     ],
 )
 def test_patterns(text: str, correction: str):
