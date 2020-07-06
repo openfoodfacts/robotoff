@@ -13,11 +13,9 @@ canelle
 # This is a comment
 
 œuf
-oeuf
 ceuf
 
 bœuf
-boeuf
 bceuf
 
 fi
