@@ -22,6 +22,6 @@ scipy==1.2.3
 flashtext==2.7
 langid==1.1.6
 pymongo==3.10.1
-influxdb==5.2.3
+influxdb==5.3.0
 jsonschema==3.2.0
 orjson==3.2.0
