@@ -1,7 +1,8 @@
 import gzip
-import json
 import os
 import pathlib
+
+import orjson
 
 
 def is_valid_dir(product_dir: str) -> bool:
@@ -16,7 +17,7 @@ OCR_ERROR_PATH = pathlib.Path("~/ocr_error.txt").expanduser()
 OUTPUT_PATH = pathlib.Path("/srv2/off/html/data/ocr.jsonl.gz")
 added = 0
 
-with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
+with gzip.open(str(OUTPUT_PATH), "w") as output_f:
     for i, image_path in enumerate(ROOT_DIR.glob("**/*.json")):
         if not is_valid_dir(str(image_path.parent)) or not image_path.stem.isdigit():
             continue
@@ -26,17 +27,17 @@ with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
         if not json_path.is_file():
             continue
 
-        with json_path.open("r", encoding="utf-8") as f:
+        with json_path.open("rb") as f:
             try:
-                data = json.load(f)
-            except json.JSONDecodeError:
+                data = orjson.loads(f.read())
+            except orjson.JSONDecodeError:
                 continue
 
         has_error = False
         for response in data["responses"]:
             if "error" in response:
-                with OCR_ERROR_PATH.open("a", encoding="utf-8") as f:
-                    f.write("{}\n".format(json_path))
+                with OCR_ERROR_PATH.open("a", encoding="utf-8") as g:
+                    g.write("{}\n".format(json_path))
 
                 has_error = True
                 break
@@ -49,7 +50,7 @@ with gzip.open(str(OUTPUT_PATH), "wt", encoding="utf-8") as output_f:
             "content": data,
             "created_at": os.path.getmtime(str(image_path)),
         }
-        output_f.write(json.dumps(output_json) + "\n")
+        output_f.write(orjson.dumps(output_json) + b"\n")
         added += 1
 
         if i % 1000 == 0:
