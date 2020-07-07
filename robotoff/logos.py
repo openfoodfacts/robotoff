@@ -9,7 +9,7 @@ from robotoff.insights import InsightType
 from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
 from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import import_insights
-from robotoff.models import ImageModel, LogoAnnotation
+from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
 from robotoff.slack import post_message
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
@@ -22,6 +22,24 @@ LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
     "brand": InsightType.brand,
     "label": InsightType.label,
 }
+
+
+LogoLabelType = Tuple[str, Optional[str]]
+UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
+
+
+def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
+    thresholds = {}
+
+    for item in LogoConfidenceThreshold.select().iterator():
+        thresholds[(item.type, item.value)] = item.threshold
+
+    return thresholds
+
+
+LOGO_CONFIDENCE_THRESHOLDS = CachedStore(
+    get_logo_confidence_thresholds, expiration_interval=10
+)
 
 
 def get_stored_logo_ids() -> Set[int]:
@@ -89,10 +107,6 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
             saved += 1
 
     return saved
-
-
-LogoLabelType = Tuple[str, Optional[str]]
-UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
 
 
 def get_logo_annotations() -> Dict[int, LogoLabelType]:
@@ -207,7 +221,10 @@ def get_weights(dist: np.ndarray, weights: str = "uniform"):
 
 
 def import_logo_insights(
-    logos: List[LogoAnnotation], server_domain: str, threshold: float = 0.0
+    logos: List[LogoAnnotation],
+    server_domain: str,
+    thresholds: Dict[LogoLabelType, float],
+    default_threshold: float = 0.1,
 ):
     selected_logos = []
     logo_probs = []
@@ -222,6 +239,7 @@ def import_logo_insights(
             default=(UNKNOWN_LABEL, 0.0),
             key=operator.itemgetter(1),
         )
+        threshold = thresholds[label] if label in thresholds else default_threshold
 
         if label == UNKNOWN_LABEL or max_prob < threshold:
             continue

@@ -13,6 +13,7 @@ from robotoff.insights.importer import BaseInsightImporter, InsightImporterFacto
 from robotoff.logos import (
     add_logos_to_ann,
     import_logo_insights,
+    LOGO_CONFIDENCE_THRESHOLDS,
     save_nearest_neighbors,
 )
 from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
@@ -158,4 +159,5 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
     if logos:
         add_logos_to_ann(image_instance, logos)
         save_nearest_neighbors(logos)
-        import_logo_insights(logos, threshold=0.1, server_domain=server_domain)
+        thresholds = LOGO_CONFIDENCE_THRESHOLDS.get()
+        import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)

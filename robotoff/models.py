@@ -149,4 +149,16 @@ class LogoAnnotation(BaseModel):
         return f"https://robotoff.openfoodfacts.org/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
-MODELS = [ProductInsight, ImageModel, ImagePrediction, LogoAnnotation]
+class LogoConfidenceThreshold(BaseModel):
+    type = peewee.CharField(null=True, index=True)
+    value = peewee.CharField(null=True, index=True)
+    threshold = peewee.FloatField(null=False)
+
+
+MODELS = [
+    ProductInsight,
+    ImageModel,
+    ImagePrediction,
+    LogoAnnotation,
+    LogoConfidenceThreshold,
+]
