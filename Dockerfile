@@ -8,7 +8,15 @@ COPY i18n /opt/robotoff/i18n
 COPY requirements.txt /opt/robotoff/
 COPY gunicorn.py /opt/robotoff/
 
-RUN pip3 install -r /opt/robotoff/requirements.txt && apt-get update && apt-get install -y gettext && cd /opt/robotoff/i18n && bash compile.sh
+RUN apt-get update && \
+    apt-get install -y gettext && \
+    apt-get autoremove --purge && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    cd /opt/robotoff/i18n && \
+    bash compile.sh
+
+RUN pip3 install --no-cache-dir -r /opt/robotoff/requirements.txt
 
 WORKDIR /opt/robotoff
 ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/opt/robotoff/gunicorn.py", "robotoff.app.api:api"]
