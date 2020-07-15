@@ -2,7 +2,7 @@ import abc
 import enum
 from typing import Optional
 
-from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
+from robotoff.brands import BRAND_BLACKLIST_STORE, BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight
@@ -62,6 +62,9 @@ class BrandValidator(InsightValidator):
                 "Barcode {} of brand {} not in barcode "
                 "range".format(barcode, brand_tag)
             )
+            return False
+
+        if brand_tag in BRAND_BLACKLIST_STORE.get():
             return False
 
         return True
