@@ -1,6 +1,6 @@
 # Robotoff
 
-[![Build Status](https://travis-ci.org/openfoodfacts/robotoff.svg?branch=master)](https://travis-ci.org/openfoodfacts/robotoff)
+![Build Status](https://github.com/openfoodfacts/robotoff/workflows/Robotoff%20unit%20tests%20and%20deployments/badge.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Robotoff is a service managing potential Open Food Facts updates (also known as _insights_).
