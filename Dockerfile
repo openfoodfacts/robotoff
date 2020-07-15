@@ -9,7 +9,7 @@ COPY requirements.txt /opt/robotoff/
 COPY gunicorn.py /opt/robotoff/
 
 RUN apt-get update && \
-    apt-get install -y gettext && \
+    apt-get install --no-install-suggests --no-install-recommends -y gettext && \
     apt-get autoremove --purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
