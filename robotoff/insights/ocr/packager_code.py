@@ -63,6 +63,11 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
         lowercase=True,
         processing_func=process_de_packaging_match,
     ),
+    "rspo": OCRRegex(
+        re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)"),
+        field=OCRField.full_text_contiguous,
+        lowercase=False,
+    ),
 }
 
 
@@ -70,26 +75,29 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[RawInsi
     results: List[RawInsight] = []
 
     for regex_code, ocr_regex in PACKAGER_CODE.items():
-        text = get_text(ocr_result, ocr_regex)
+        text = get_text(ocr_result, ocr_regex, ocr_regex.lowercase)
 
         if not text:
             continue
 
         for match in ocr_regex.regex.finditer(text):
-            if ocr_regex.processing_func is not None:
+            if ocr_regex.processing_func is None:
+                value = match.group(0)
+            else:
                 value = ocr_regex.processing_func(match)
-                results.append(
-                    RawInsight(
-                        value=value,
-                        data={
-                            "raw": match.group(0),
-                            "type": regex_code,
-                            "notify": ocr_regex.notify,
-                        },
-                        type=InsightType.packager_code,
-                        automatic_processing=True,
-                    )
+
+            results.append(
+                RawInsight(
+                    value=value,
+                    data={
+                        "raw": match.group(0),
+                        "type": regex_code,
+                        "notify": ocr_regex.notify,
+                    },
+                    type=InsightType.packager_code,
+                    automatic_processing=True,
                 )
+            )
 
     return results
 
