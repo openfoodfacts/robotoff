@@ -12,7 +12,6 @@ import sentry_sdk
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
-from robotoff.app.core import get_insights
 from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.insights.annotate import (
     InsightAnnotatorFactory,
@@ -35,7 +34,8 @@ from robotoff.products import (
     ProductDataset,
     ProductStore,
 )
-from robotoff.utils import dump_jsonl, get_logger
+from robotoff.utils import get_logger
+
 from .latent import generate_quality_facets
 
 
@@ -248,14 +248,6 @@ def transform_insight_iter(insights_iter: Iterable[Dict]):
         yield insight
 
 
-def dump_insights():
-    logger.info("Dumping insights...")
-    insights_iter = get_insights(as_dict=True, annotated=None, limit=None)
-    insights_iter = transform_insight_iter(insights_iter)
-    dumped = dump_jsonl(settings.INSIGHT_DUMP_PATH, insights_iter)
-    logger.info("Dump finished, {} insights dumped".format(dumped))
-
-
 def exception_listener(event):
     if event.exception:
         capture_exception(event.exception)
@@ -269,9 +261,6 @@ def run():
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
     scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
-    scheduler.add_job(
-        dump_insights, "cron", day="*", hour=0, minute=15, max_instances=1
-    )
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
     scheduler.add_job(
         download_product_dataset, "cron", day="*", hour="3", max_instances=1
