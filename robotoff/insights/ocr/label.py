@@ -85,6 +85,18 @@ LABELS_REGEX = {
             lowercase=False,
         ),
     ],
+    "en:label-rouge": [
+        OCRRegex(
+            re.compile(r"d[ée]cret du 0?5[./]01[./]07"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
+        OCRRegex(
+            re.compile(r"(?<!\w)homologation(?: n°?)? ?la ?\d{2}\/\d{2}(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
+    ],
     "en:pdo": [
         OCRRegex(
             re.compile(r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
