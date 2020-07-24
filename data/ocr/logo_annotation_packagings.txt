@@ -1,2 +1,2 @@
-alu 41||en:Aluminium
-Acier Recyclable||en:Recyclable steel
+en:Aluminium||alu 41
+en:Recyclable steel||Acier Recyclable
