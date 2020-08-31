@@ -1,6 +1,6 @@
 scikit-learn==0.23.1
 pandas==0.23.4
-more_itertools==8.3.0
+more_itertools==8.5.0
 spacy==2.2.4
 sklearn_hierarchical_classification==1.0.0
 matplotlib==3.2.1
