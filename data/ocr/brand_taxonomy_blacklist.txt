@@ -94,6 +94,8 @@ sommer
 sweet
 tasty
 terra
+// terrasuisse: it's a label (from Migros brand), but not a brand
+terrasuisse
 the-coca-cola-company
 thomas
 tradition
