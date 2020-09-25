@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 import peewee
 
@@ -94,6 +94,7 @@ def save_insight(
     insight_id: str,
     annotation: int,
     update: bool = True,
+    data: Optional[Dict] = None,
     auth: Optional[OFFAuthentication] = None,
 ) -> AnnotationResult:
     try:
@@ -108,4 +109,4 @@ def save_insight(
         return ALREADY_ANNOTATED_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(insight, annotation, update, auth=auth)
+    return annotator.annotate(insight, annotation, update, data=data, auth=auth)

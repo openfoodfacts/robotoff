@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import datetime
 from enum import Enum
 import pathlib
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
@@ -74,7 +74,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         self,
         insight: ProductInsight,
         annotation: int,
-        update=True,
+        update: bool = True,
+        data: Optional[Dict] = None,
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
@@ -83,7 +84,9 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 
         with db.atomic() as transaction:
             try:
-                return self._annotate(insight, annotation, update, auth, automatic)
+                return self._annotate(
+                    insight, annotation, update, data, auth, automatic
+                )
             except Exception as e:
                 transaction.rollback()
                 raise e
@@ -92,7 +95,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         self,
         insight: ProductInsight,
         annotation: int,
-        update=True,
+        update: bool = True,
+        data: Optional[Dict] = None,
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
@@ -110,20 +114,26 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.save()
 
         if annotation == 1 and update:
-            return self.update_product(insight, auth=auth)
+            return self.update_product(insight, data=data, auth=auth)
 
         return SAVED_ANNOTATION_RESULT
 
     @abc.abstractmethod
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         pass
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         emb_code: str = insight.value
 
@@ -165,7 +175,10 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 class LabelAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["labels_tags"])
 
@@ -190,7 +203,10 @@ class LabelAnnotator(InsightAnnotator):
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         barcode = insight.barcode
         lang = insight.data["lang"]
@@ -222,7 +238,10 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 class CategoryAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["categories_tags"])
 
@@ -248,7 +267,10 @@ class CategoryAnnotator(InsightAnnotator):
 
 class ProductWeightAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["quantity"])
 
@@ -273,7 +295,10 @@ class ProductWeightAnnotator(InsightAnnotator):
 
 class ExpirationDateAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["expiration_date"])
 
@@ -297,7 +322,10 @@ class ExpirationDateAnnotator(InsightAnnotator):
 
 class BrandAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["brands_tags"])
 
@@ -316,7 +344,10 @@ class BrandAnnotator(InsightAnnotator):
 
 class StoreAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["stores_tags"])
 
@@ -340,7 +371,10 @@ class StoreAnnotator(InsightAnnotator):
 
 class PackagingAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         packaging_tag: str = insight.value_tag
 
@@ -366,7 +400,10 @@ class PackagingAnnotator(InsightAnnotator):
 
 class NutritionImageAnnotator(InsightAnnotator):
     def update_product(
-        self, insight: ProductInsight, auth: Optional[OFFAuthentication] = None
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["code"])
 

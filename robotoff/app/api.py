@@ -205,6 +205,7 @@ class AnnotateInsightResource:
         )
 
         update = req.get_param_as_bool("update", default=True)
+        data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
 
@@ -216,7 +217,7 @@ class AnnotateInsightResource:
         )
 
         annotation_result = save_insight(
-            insight_id, annotation, update=update, auth=auth
+            insight_id, annotation, update=update, data=data, auth=auth
         )
 
         resp.media = {
