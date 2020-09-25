@@ -114,12 +114,12 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.save()
 
         if annotation == 1 and update:
-            return self.update_product(insight, data=data, auth=auth)
+            return self.process_annotation(insight, data=data, auth=auth)
 
         return SAVED_ANNOTATION_RESULT
 
     @abc.abstractmethod
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -129,7 +129,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -174,7 +174,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 
 class LabelAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -202,7 +202,7 @@ class LabelAnnotator(InsightAnnotator):
 
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -237,7 +237,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 
 class CategoryAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -266,7 +266,7 @@ class CategoryAnnotator(InsightAnnotator):
 
 
 class ProductWeightAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -294,7 +294,7 @@ class ProductWeightAnnotator(InsightAnnotator):
 
 
 class ExpirationDateAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -321,7 +321,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
 
 
 class BrandAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -343,7 +343,7 @@ class BrandAnnotator(InsightAnnotator):
 
 
 class StoreAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -370,7 +370,7 @@ class StoreAnnotator(InsightAnnotator):
 
 
 class PackagingAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
@@ -399,7 +399,7 @@ class PackagingAnnotator(InsightAnnotator):
 
 
 class NutritionImageAnnotator(InsightAnnotator):
-    def update_product(
+    def process_annotation(
         self,
         insight: ProductInsight,
         data: Optional[Dict] = None,
