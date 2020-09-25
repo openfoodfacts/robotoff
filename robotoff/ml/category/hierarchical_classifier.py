@@ -105,9 +105,9 @@ class CategoryClassifier:
                 if c in self.category_taxonomy
             ]
 
-            deepest_categories: List[TaxonomyNode] = (
-                self.category_taxonomy.find_deepest_nodes(category_nodes)
-            )
+            deepest_categories: List[
+                TaxonomyNode
+            ] = self.category_taxonomy.find_deepest_nodes(category_nodes)
 
             if deepest_categories is not None:
                 deepest_category = deepest_categories[0].id

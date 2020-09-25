@@ -259,7 +259,8 @@ if __name__ == "__main__":
     @click.option("--insight-type", "-t", required=True)
     @click.option("--delta", type=int, default=1)
     def apply_insights(
-        insight_type: str, delta: int,
+        insight_type: str,
+        delta: int,
     ):
         import datetime
         from robotoff.cli import insights

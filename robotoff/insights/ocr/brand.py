@@ -16,14 +16,16 @@ logger = get_logger(__name__)
 
 
 def generate_brand_keyword_processor(
-    brands: Iterable[str], blacklist: bool = True,
+    brands: Iterable[str],
+    blacklist: bool = True,
 ):
     blacklisted_brands: Optional[Set[str]] = None
     if blacklist:
         blacklisted_brands = BRAND_BLACKLIST_STORE.get()
 
     keep_func = functools.partial(
-        keep_brand_from_taxonomy, blacklisted_brands=blacklisted_brands,
+        keep_brand_from_taxonomy,
+        blacklisted_brands=blacklisted_brands,
     )
     return generate_keyword_processor(brands, keep_func=keep_func)
 

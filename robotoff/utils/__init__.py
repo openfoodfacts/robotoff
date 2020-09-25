@@ -68,7 +68,8 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
 
 
 def dump_jsonl(
-    filepath: Union[str, pathlib.Path], json_iter: Iterable[Union[Any]],
+    filepath: Union[str, pathlib.Path],
+    json_iter: Iterable[Union[Any]],
 ) -> int:
     count = 0
     open_fn = get_open_fn(filepath)

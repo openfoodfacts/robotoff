@@ -6,8 +6,8 @@ from robotoff.utils import jsonl_iter, dump_jsonl
 
 
 lang = "pt"
-input_path: pathlib.Path = settings.DATASET_DIR / "category" / "category_{}.jsonl".format(
-    lang
+input_path: pathlib.Path = (
+    settings.DATASET_DIR / "category" / "category_{}.jsonl".format(lang)
 )
 
 items = list(jsonl_iter(input_path))

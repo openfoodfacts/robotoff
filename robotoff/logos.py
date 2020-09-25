@@ -296,7 +296,8 @@ def generate_insights_from_annotated_logos(
 
 
 def predict_logo_insights(
-    logos: List[LogoAnnotation], logo_probs: List[Dict[LogoLabelType, float]],
+    logos: List[LogoAnnotation],
+    logo_probs: List[Dict[LogoLabelType, float]],
 ) -> List[ProductInsights]:
     grouped_insights: Dict[Tuple[str, str, InsightType], List[RawInsight]] = {}
 

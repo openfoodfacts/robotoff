@@ -81,7 +81,8 @@ class Spellchecker:
                     yield ProductInsights(
                         insights=[
                             RawInsight(
-                                type=InsightType.ingredient_spellcheck, data=insight,
+                                type=InsightType.ingredient_spellcheck,
+                                data=insight,
                             )
                         ],
                         barcode=product["code"],

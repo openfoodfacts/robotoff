@@ -99,7 +99,9 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     importer = InsightImporterFactory.create(InsightType.category, product_store)
 
     imported = importer.import_insights(
-        [merged_product_insight], server_domain=server_domain, automatic=False,
+        [merged_product_insight],
+        server_domain=server_domain,
+        automatic=False,
     )
 
     if imported:

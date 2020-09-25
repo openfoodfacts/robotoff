@@ -72,7 +72,9 @@ class EmbeddingStore:
                 yield logo_id, embedding
 
     def save_embeddings(
-        self, embeddings: np.ndarray, external_ids: np.ndarray,
+        self,
+        embeddings: np.ndarray,
+        external_ids: np.ndarray,
     ):
         file_exists = self.hdf5_path.is_file()
 

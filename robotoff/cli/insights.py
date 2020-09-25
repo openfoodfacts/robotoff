@@ -91,7 +91,9 @@ def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
 
 
 def import_insights(
-    insights: Iterable[ProductInsights], server_domain: str, batch_size: int = 1024,
+    insights: Iterable[ProductInsights],
+    server_domain: str,
+    batch_size: int = 1024,
 ) -> int:
     product_store = get_product_store()
     imported: int = 0

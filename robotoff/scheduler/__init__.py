@@ -276,7 +276,12 @@ def run():
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
     )
     scheduler.add_job(
-        generate_quality_facets, "cron", day="*", hour="5", minute=25, max_instances=1,
+        generate_quality_facets,
+        "cron",
+        day="*",
+        hour="5",
+        minute=25,
+        max_instances=1,
     )
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()

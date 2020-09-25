@@ -68,7 +68,10 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         self.product_store: ProductStore = product_store
 
     def import_insights(
-        self, data: Iterable[ProductInsights], server_domain: str, automatic: bool,
+        self,
+        data: Iterable[ProductInsights],
+        server_domain: str,
+        automatic: bool,
     ) -> int:
         timestamp = datetime.datetime.utcnow()
         processed_insights: Iterator[Insight] = self.process_insights(
@@ -288,7 +291,10 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_latent(
-        product: Optional[Product], barcode: str, emb_code: str, code_seen: Set[str],
+        product: Optional[Product],
+        barcode: str,
+        emb_code: str,
+        code_seen: Set[str],
     ) -> bool:
         product_emb_codes_tags = getattr(product, "emb_codes_tags", [])
 
@@ -473,7 +479,9 @@ class ProductWeightImporter(InsightImporter):
         return False
 
     @staticmethod
-    def group_by_subtype(insights: List[Insight],) -> Dict[str, List[Insight]]:
+    def group_by_subtype(
+        insights: List[Insight],
+    ) -> Dict[str, List[Insight]]:
         insights_by_subtype: Dict[str, List[Insight]] = {}
 
         for insight in insights:

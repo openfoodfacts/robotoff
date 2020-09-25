@@ -65,7 +65,9 @@ def get_insights_from_product_name(
                 insight.data["source"] = "product_name"
 
             results[insight_type] = ProductInsights(
-                insights=insights, barcode=barcode, type=insight_type,
+                insights=insights,
+                barcode=barcode,
+                type=insight_type,
             )
 
     return results

@@ -1393,11 +1393,11 @@ default_translate_table = defaultdict(none_factory, translate_table)
 def fold(str, replacement=""):
     """Fold string to ASCII.
 
-Unmapped characters should be replaced with empty string by default, or other
-replacement if provided.
+    Unmapped characters should be replaced with empty string by default, or other
+    replacement if provided.
 
-All astral plane characters are always removed, even if a replacement is
-provided.
+    All astral plane characters are always removed, even if a replacement is
+    provided.
     """
 
     if str is None:

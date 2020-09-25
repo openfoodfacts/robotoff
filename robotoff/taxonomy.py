@@ -326,12 +326,14 @@ def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:
 UNPREFIXED_MAPPING_STORE: Dict[str, CachedStore] = {
     TaxonomyType.label.name: CachedStore(
         functools.partial(
-            get_unprefixed_mapping, taxonomy_type=TaxonomyType.label.name,
+            get_unprefixed_mapping,
+            taxonomy_type=TaxonomyType.label.name,
         )
     ),
     TaxonomyType.brand.name: CachedStore(
         functools.partial(
-            get_unprefixed_mapping, taxonomy_type=TaxonomyType.brand.name,
+            get_unprefixed_mapping,
+            taxonomy_type=TaxonomyType.brand.name,
         )
     ),
 }

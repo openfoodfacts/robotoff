@@ -13,4 +13,4 @@ COPY requirements.txt /opt/ann/
 RUN pip3 install --no-cache-dir -r /opt/ann/requirements.txt
 
 WORKDIR /opt/ann
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/opt/ann/gunicorn.py", "api:api"]
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/opt/ann/gunicorn_conf.py", "api:api"]

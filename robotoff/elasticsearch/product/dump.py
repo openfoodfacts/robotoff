@@ -100,5 +100,7 @@ def normalize_ingredient_list(ingredient_text: str) -> List[str]:
 def delete_products(client, index_name: str):
     body: Dict = {"query": {"match_all": {}}}
     client.delete_by_query(
-        body=body, index=index_name, doc_type=settings.ELASTICSEARCH_TYPE,
+        body=body,
+        index=index_name,
+        doc_type=settings.ELASTICSEARCH_TYPE,
     )

@@ -46,6 +46,8 @@ def test_is_special_image(
     ],
 )
 def test_is_valid_image(
-    images: JSONType, image_path: str, output: bool,
+    images: JSONType,
+    image_path: str,
+    output: bool,
 ):
     assert is_valid_image(images, image_path) is output

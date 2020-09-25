@@ -26,8 +26,8 @@ class ObjectDetectionModel:
         self.categories = label_map_util.convert_label_map_to_categories(
             label_map, max_num_classes=1000
         )
-        self.category_index: CategoryIndex = (
-            label_map_util.create_category_index(self.categories)
+        self.category_index: CategoryIndex = label_map_util.create_category_index(
+            self.categories
         )
 
     @classmethod
