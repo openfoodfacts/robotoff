@@ -24,3 +24,4 @@ class InsightType(StrEnum):
     nutrient_mention = "nutrient_mention"
     image_lang = "image_lang"
     nutrition_image = "nutrition_image"
+    nutrition_table_structure = "nutrition_table_structure"

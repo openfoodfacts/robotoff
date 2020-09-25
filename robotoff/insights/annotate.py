@@ -42,6 +42,7 @@ class AnnotationStatus(Enum):
     error_already_annotated = 5
     error_unknown_insight = 6
     error_latent_insight = 7
+    error_missing_data = 8
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -62,10 +63,13 @@ ALREADY_ANNOTATED_RESULT = AnnotationResult(
 UNKNOWN_INSIGHT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_unknown_insight.name, description="unknown insight ID"
 )
-
 LATENT_INSIGHT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_latent_insight.name,
     description="cannot annotate a latent insight",
+)
+DATA_REQUIRED_RESULT = AnnotationResult(
+    status=AnnotationStatus.error_missing_data.name,
+    description="annotation data is required as JSON in `data` field",
 )
 
 
@@ -100,6 +104,9 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
+        if self.is_data_required() and data is None:
+            return DATA_REQUIRED_RESULT
+
         username: Optional[str] = None
         if auth is not None:
             username = auth.get_username()
@@ -126,6 +133,9 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         pass
+
+    def is_data_required(self) -> bool:
+        return False
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
@@ -428,6 +438,22 @@ class NutritionImageAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class NutritionTableStructureAnnotator(InsightAnnotator):
+    def process_annotation(
+        self,
+        insight: ProductInsight,
+        data: Optional[Dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+    ) -> AnnotationResult:
+        insight.data["annotation"] = data
+        insight.save()
+
+        return SAVED_ANNOTATION_RESULT
+
+    def is_data_required(self):
+        return True
+
+
 class InsightAnnotatorFactory:
     mapping = {
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator(),
@@ -440,6 +466,7 @@ class InsightAnnotatorFactory:
         InsightType.store.name: StoreAnnotator(),
         InsightType.packaging.name: PackagingAnnotator(),
         InsightType.nutrition_image.name: NutritionImageAnnotator(),
+        InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator(),
     }
 
     @classmethod
