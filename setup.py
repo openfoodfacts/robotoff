@@ -35,7 +35,7 @@ setup(
         "more-itertools>=8.0.0,<9.0.0",
         "spacy>=2.2.0,<2.3.0",
         "pymongo>=3.0.0<3.1.0",
-        "dacite==1.5.0",
+        "dacite==1.5.1",
         "orjson==3.2.0",
     ],
     include_package_data=True,
