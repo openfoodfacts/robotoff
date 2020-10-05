@@ -28,7 +28,7 @@ setup(
         "Pillow>=5.0.0",
         "numpy>=1.16.0",
         "protobuf>=3.5.1",
-        "Pint==0.9",
+        "Pint==0.16.1",
         'dataclasses>=0.6;python_version<"3.7"',
         "flashtext==2.7",
         "langid==1.1.6",
