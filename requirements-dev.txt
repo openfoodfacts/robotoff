@@ -1,4 +1,4 @@
-flake8==3.8.3
+flake8==3.8.4
 black==20.8b1
 mypy==0.782
 pre-commit==2.6.0
