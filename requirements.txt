@@ -17,7 +17,7 @@ Pint==0.9
 dataclasses>=0.6;python_version<"3.7"
 dacite==1.5.0
 tensorflow==2.0.3
-spacy==2.2.4
+spacy==2.3.3
 scipy==1.2.3
 flashtext==2.7
 langid==1.1.6
