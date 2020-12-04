@@ -24,4 +24,4 @@ langid==1.1.6
 pymongo==3.10.1
 influxdb==5.3.0
 jsonschema==3.2.0
-orjson==3.4.0
+orjson==3.4.5
