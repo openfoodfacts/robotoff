@@ -7,6 +7,7 @@ from robotoff.products import fetch_dataset, has_dataset_changed
 from robotoff.utils import configure_root_logger, get_logger
 from .import_image import import_image, run_object_detection
 from .product_updated import update_insights
+from .update_recycle import update_recycling
 
 logger = get_logger(__name__)
 root_logger = multiprocessing.get_logger()
@@ -56,4 +57,5 @@ EVENT_MAPPING: Dict[str, Callable] = {
     "product_deleted": delete_product_insights,
     "product_updated": update_insights,
     "object_detection": run_object_detection,
+    "update_recycling": update_recycling,
 }
