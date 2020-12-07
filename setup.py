@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests>=2.13.0,<3.0.0",
-        "peewee==3.13.3",
+        "peewee==3.14.0",
         "psycopg2-binary>=2.8,<2.9",
         "elasticsearch==6.3.1",
         "Click==7.1.2",
@@ -36,7 +36,7 @@ setup(
         "spacy>=2.2.0,<2.3.0",
         "pymongo>=3.0.0<3.1.0",
         "dacite==1.5.0",
-        "orjson==3.4.0",
+        "orjson==3.4.5",
     ],
     include_package_data=True,
     tests_require=["pytest", "pytest-mock"],
