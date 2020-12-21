@@ -1,16 +1,17 @@
 import datetime
 import functools
 import os
-import uuid
 from typing import Dict, Iterable, Optional
+import uuid
 
 from apscheduler.events import EVENT_JOB_ERROR
-from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.blocking import BlockingScheduler
+import sentry_sdk
+from sentry_sdk import capture_exception
 
-from robotoff import slack, settings
-from robotoff.app.core import get_insights
+from robotoff import settings, slack
 from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.insights.annotate import (
     InsightAnnotatorFactory,
@@ -18,24 +19,25 @@ from robotoff.insights.annotate import (
 )
 from robotoff.insights.importer import CategoryImporter
 from robotoff.insights.validator import (
+    InsightValidationResult,
     InsightValidator,
     InsightValidatorFactory,
-    delete_invalid_insight,
+    validate_insight,
 )
 from robotoff.metrics import save_facet_metrics
-from robotoff.models import ProductInsight, db
+from robotoff.models import db, ProductInsight
 from robotoff.products import (
-    has_dataset_changed,
-    fetch_dataset,
     CACHED_PRODUCT_STORE,
+    fetch_dataset,
+    has_dataset_changed,
     Product,
-    ProductStore,
     ProductDataset,
+    ProductStore,
 )
-from robotoff.utils import get_logger, dump_jsonl
+from robotoff.utils import get_logger
 
-import sentry_sdk
-from sentry_sdk import capture_exception
+from .latent import generate_quality_facets
+
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(settings.SENTRY_DSN)
@@ -53,6 +55,7 @@ def process_insights():
                 ProductInsight.annotation.is_null(),
                 ProductInsight.process_after.is_null(False),
                 ProductInsight.process_after <= datetime.datetime.utcnow(),
+                ProductInsight.latent == False,  # noqa: E712
             )
             .iterator()
         ):
@@ -119,15 +122,21 @@ def refresh_insights(with_deletion: bool = False):
                         )
 
                     validator = validators[insight.type]
-                    insight_deleted = delete_invalid_insight(insight, validator)
+                    result = validate_insight(insight, validator)
 
-                    if insight_deleted:
+                    if result == InsightValidationResult.deleted:
                         deleted += 1
                         logger.info(
                             "invalid insight {} (type: {}), deleting..."
                             "".format(insight.id, insight.type)
                         )
                         continue
+
+                    elif result == InsightValidationResult.updated:
+                        logger.info(
+                            "converting insight {} (type: {}) to latent"
+                            "".format(insight.id, insight.type)
+                        )
 
                     insight_updated = update_insight_attributes(product, insight)
 
@@ -180,7 +189,8 @@ def mark_insights():
             for insight in (
                 ProductInsight.select()
                 .where(
-                    ProductInsight.automatic_processing == True,
+                    ProductInsight.automatic_processing == True,  # noqa: E712
+                    ProductInsight.latent == False,  # noqa: E712
                     ProductInsight.process_after.is_null(),
                     ProductInsight.annotation.is_null(),
                 )
@@ -238,14 +248,6 @@ def transform_insight_iter(insights_iter: Iterable[Dict]):
         yield insight
 
 
-def dump_insights():
-    logger.info("Dumping insights...")
-    insights_iter = get_insights(as_dict=True, annotated=None, limit=None)
-    insights_iter = transform_insight_iter(insights_iter)
-    dumped = dump_jsonl(settings.INSIGHT_DUMP_PATH, insights_iter)
-    logger.info("Dump finished, {} insights dumped".format(dumped))
-
-
 def exception_listener(event):
     if event.exception:
         capture_exception(event.exception)
@@ -274,7 +276,12 @@ def run():
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
     )
     scheduler.add_job(
-        dump_insights, "cron", day="*", hour="4", minute=45, max_instances=1
+        generate_quality_facets,
+        "cron",
+        day="*",
+        hour="5",
+        minute=25,
+        max_instances=1,
     )
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()

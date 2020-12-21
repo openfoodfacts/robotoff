@@ -110,8 +110,8 @@ def test_address_extractor_get_text(mocker):
         text_annotations=[mocker.Mock(text="TEXT É'-č"), "yolo"],
     )
 
-    assert AddressExtractor.get_text(m_ocr_result) == "full text l ile aE$"
-    m_ocr_result.get_full_text.assert_called_once_with(lowercase=True)
+    assert AddressExtractor.get_text(m_ocr_result) == "full text l'île-àÉ$"
+    m_ocr_result.get_full_text.assert_called_once_with()
 
     # OCRResult instance without a full_text_annotation
     m_ocr_result = mocker.Mock(
@@ -119,8 +119,16 @@ def test_address_extractor_get_text(mocker):
         text_annotations=[mocker.Mock(text="TEXT É'-č"), "yolo"],
     )
 
-    assert AddressExtractor.get_text(m_ocr_result) == "text e  c"
-    m_ocr_result.get_full_text.assert_called_once_with(lowercase=True)
+    assert AddressExtractor.get_text(m_ocr_result) == "TEXT É'-č"
+    m_ocr_result.get_full_text.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "text,output",
+    [("full text l'île-àÉ$", "full text l ile ae$"), ("TEXT É'-č", "text e  c")],
+)
+def test_address_extractor_normalize(text: str, output: str):
+    assert AddressExtractor.normalize_text(text) == output
 
 
 def test_address_extractor_find_city_names():
@@ -165,53 +173,49 @@ def test_address_extractor_extract_addresses(mocker, cities):
     ae = AddressExtractor(
         cities, postal_code_search_distance=8, text_extract_distance=3
     )
-    m_get_full_text = mocker.Mock()
-    m_ocr_result = mocker.Mock(get_full_text=m_get_full_text)
+    text = "blah paris 75000 poya foo"
+    insights = ae.extract_addresses(text)
+    assert len(insights) == 1
+    assert insights[0].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "ah paris 75000 po",
+    }
 
-    m_get_full_text.return_value = "blah paris 75000 poya foo"
-    assert ae.extract_addresses(m_ocr_result) == [
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "ah paris 75000 po",
-        },
-    ]
+    text = "paris 75000 bar 98827fr poya foo"
+    insights = ae.extract_addresses(text)
+    assert len(insights) == 2
+    assert insights[0].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "paris 75000 ba",
+    }
+    assert insights[1].data == {
+        "country_code": "fr",
+        "city_name": "poya",
+        "postal_code": "98827",
+        "text_extract": "ar 98827fr poya fo",
+    }
 
-    m_get_full_text.return_value = "paris 75000 bar 98827fr poya foo"
-    assert ae.extract_addresses(m_ocr_result) == [
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "paris 75000 ba",
-        },
-        {
-            "country_code": "fr",
-            "city_name": "poya",
-            "postal_code": "98827",
-            "text_extract": "ar 98827fr poya fo",
-        },
-    ]
+    text = "blah paris foo 75000 bar"
+    assert ae.extract_addresses(text) == []
 
-    m_get_full_text.return_value = "blah paris foo 75000 bar"
-    assert ae.extract_addresses(m_ocr_result) == []
-
-    m_get_full_text.return_value = "blah paris 75000 paris foo"
-    assert ae.extract_addresses(m_ocr_result) == [
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "ah paris 75000 pa",
-        },
-        {
-            "country_code": "fr",
-            "city_name": "paris",
-            "postal_code": "75000",
-            "text_extract": "is 75000 paris fo",
-        },
-    ]
+    text = "blah paris 75000 paris foo"
+    insights = ae.extract_addresses(text)
+    assert insights[0].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "ah paris 75000 pa",
+    }
+    insights[1].data == {
+        "country_code": "fr",
+        "city_name": "paris",
+        "postal_code": "75000",
+        "text_extract": "is 75000 paris fo",
+    }
 
 
 def test_find_locations(mocker):

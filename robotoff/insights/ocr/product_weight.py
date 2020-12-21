@@ -1,10 +1,12 @@
 import functools
 import re
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Match, Optional, Tuple, Union
 
 import pint
 
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -40,7 +42,7 @@ def normalize_weight(value: str, unit: str) -> Tuple[float, str]:
     return normalized_quantity.magnitude, normalized_unit
 
 
-def is_valid_weight(weight_value) -> bool:
+def is_valid_weight(weight_value: str) -> bool:
     """Weight values are considered invalid if one of the following rules
     is met:
     - value is not convertible to a float
@@ -56,7 +58,7 @@ def is_valid_weight(weight_value) -> bool:
     try:
         weight_value_float = float(weight_value)
     except ValueError:
-        logger.warn("Weight value is not a float: {}" "".format(weight_value))
+        logger.warning("Weight value is not a float: {}" "".format(weight_value))
         return False
 
     if weight_value_float <= 0:
@@ -103,7 +105,7 @@ def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
 
 
 def process_product_weight(
-    match, prompt: bool, ending_prompt: bool = False
+    match: Match, prompt: bool, ending_prompt: bool = False
 ) -> Optional[Dict]:
     raw = match.group()
 
@@ -233,7 +235,7 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_product_weight(content: Union[OCRResult, str]) -> List[Dict]:
+def find_product_weight(content: Union[OCRResult, str]) -> List[RawInsight]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
@@ -254,6 +256,15 @@ def find_product_weight(content: Union[OCRResult, str]) -> List[Dict]:
             result["matcher_type"] = type_
             result["priority"] = ocr_regex.priority
             result["notify"] = ocr_regex.notify
-            results.append(result)
+            value = result.pop("text")
+            automatic_processing = result.pop("automatic_processing", None)
+            results.append(
+                RawInsight(
+                    value=value,
+                    type=InsightType.product_weight,
+                    automatic_processing=automatic_processing,
+                    data=result,
+                )
+            )
 
     return results

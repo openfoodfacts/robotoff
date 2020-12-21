@@ -25,6 +25,7 @@ def batch_annotate(
     where_clauses = [
         ProductInsight.type == insight_type,
         ProductInsight.annotation.is_null(),
+        ProductInsight.annotation.latent == False,  # noqa: E712
     ]
 
     if json_contains is not None:

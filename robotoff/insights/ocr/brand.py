@@ -1,27 +1,31 @@
 import functools
-import re
-from typing import Iterable, List, Dict, Tuple, Set, Optional, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 
 from flashtext import KeywordProcessor
+
 from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField, get_text
-from robotoff.insights.ocr.utils import generate_keyword_processor, get_tag
-from robotoff.utils import text_file_iter, get_logger
-from robotoff.utils.types import JSONType
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import get_text, OCRResult
+from robotoff.insights.ocr.utils import generate_keyword_processor
+from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
 
 
 def generate_brand_keyword_processor(
-    brands: Iterable[str], blacklist: bool = True,
+    brands: Iterable[str],
+    blacklist: bool = True,
 ):
     blacklisted_brands: Optional[Set[str]] = None
     if blacklist:
         blacklisted_brands = BRAND_BLACKLIST_STORE.get()
 
     keep_func = functools.partial(
-        keep_brand_from_taxonomy, blacklisted_brands=blacklisted_brands,
+        keep_brand_from_taxonomy,
+        blacklisted_brands=blacklisted_brands,
     )
     return generate_keyword_processor(brands, keep_func=keep_func)
 
@@ -52,7 +56,7 @@ BRAND_PROCESSOR = generate_brand_keyword_processor(
 
 def extract_brands(
     processor: KeywordProcessor, text: str, data_source_name: str
-) -> List[JSONType]:
+) -> List[RawInsight]:
     insights = []
 
     for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
@@ -60,41 +64,41 @@ def extract_brands(
     ):
         match_str = text[span_start:span_end]
         insights.append(
-            {
-                "brand": brand,
-                "brand_tag": brand_tag,
-                "automatic_processing": False,
-                "text": match_str,
-                "data_source": data_source_name,
-                "notify": False,
-            }
+            RawInsight(
+                type=InsightType.brand,
+                value=brand,
+                value_tag=brand_tag,
+                automatic_processing=False,
+                predictor=data_source_name,
+                data={"text": match_str, "notify": False},
+            )
         )
 
     return insights
 
 
-def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[JSONType]:
+def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[RawInsight]:
     insights = []
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
             brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
 
             insights.append(
-                {
-                    "brand": brand,
-                    "brand_tag": get_tag(brand),
-                    "automatic_processing": False,
-                    "confidence": logo_annotation.score,
-                    "data_source": "google-cloud-vision",
-                    "notify": False,
-                }
+                RawInsight(
+                    type=InsightType.brand,
+                    value=brand,
+                    value_tag=get_tag(brand),
+                    automatic_processing=False,
+                    predictor="google-cloud-vision",
+                    data={"confidence": logo_annotation.score, "notify": False},
+                )
             )
 
     return insights
 
 
-def find_brands(content: Union[OCRResult, str]) -> List[Dict]:
-    insights: List[Dict] = []
+def find_brands(content: Union[OCRResult, str]) -> List[RawInsight]:
+    insights: List[RawInsight] = []
     text = get_text(content)
 
     if text:

@@ -47,10 +47,10 @@ Fetch a random insight.
 
 Return all insights associated with a specific product.
 
++ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
+
 + Parameters
     + barcode: Product barcode
-
-+ server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
 
 + Response 200 (application/json)
 
@@ -62,7 +62,7 @@ Return all insights associated with a specific product.
 Return a specific insight.
 
 + Parameters
-    + insight_id: ID of the insight
+    + id: ID of the insight
 
 + Response 200 (application/json)
 
@@ -96,12 +96,12 @@ Current question types:
 
 ### Get questions for a given product [GET]
 
-+ Parameters
-    + barcode: Product barcode
-
 + lang (str, optional) - the language of the question/value. 'en' by default.
 + count (int, optional) - Number of questions to return. Default to 1.
 + server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
+
++ Parameters
+    + barcode: Product barcode
 
 + Response 200 (application/json)
 

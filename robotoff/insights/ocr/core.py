@@ -1,26 +1,26 @@
-# -*- coding: utf-8 -*-
-import gzip
-import json
+import pathlib
+from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
-import pathlib as pathlib
-from typing import List, Dict, Iterable, Optional, Tuple, Union, TextIO
+import orjson
 
 from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.brand import find_brands
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.expiration_date import find_expiration_date
 from robotoff.insights.ocr.image_flag import flag_image
+from robotoff.insights.ocr.image_lang import get_image_lang
 from robotoff.insights.ocr.image_orientation import find_image_orientation
 from robotoff.insights.ocr.label import find_labels
 from robotoff.insights.ocr.location import find_locations
-from robotoff.insights.ocr.nutrient import find_nutrient_values
+from robotoff.insights.ocr.nutrient import find_nutrient_mentions, find_nutrient_values
 from robotoff.insights.ocr.packager_code import find_packager_codes
 from robotoff.insights.ocr.packaging import find_packaging
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
-from robotoff.off import generate_json_ocr_url, split_barcode, http_session
-from robotoff.utils import get_logger
+from robotoff.off import generate_json_ocr_url, split_barcode
+from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -47,8 +47,8 @@ def fetch_images_for_ean(ean: str):
     return images
 
 
-def get_json_for_image(barcode: str, image_name: str) -> Optional[JSONType]:
-    url = generate_json_ocr_url(barcode, image_name)
+def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
+    url = generate_json_ocr_url(barcode, image_id)
     r = http_session.get(url)
 
     if r.status_code == 404:
@@ -57,42 +57,50 @@ def get_json_for_image(barcode: str, image_name: str) -> Optional[JSONType]:
     return r.json()
 
 
-def extract_insights(content: Union[OCRResult, str], insight_type: str) -> List[Dict]:
-    if insight_type == InsightType.packager_code.name:
+def extract_insights(
+    content: Union[OCRResult, str], insight_type: InsightType
+) -> List[RawInsight]:
+    if insight_type == InsightType.packager_code:
         return find_packager_codes(content)
 
-    elif insight_type == InsightType.label.name:
+    elif insight_type == InsightType.label:
         return find_labels(content)
 
-    elif insight_type == InsightType.expiration_date.name:
+    elif insight_type == InsightType.expiration_date:
         return find_expiration_date(content)
 
-    elif insight_type == InsightType.image_flag.name:
+    elif insight_type == InsightType.image_flag:
         return flag_image(content)
 
-    elif insight_type == InsightType.image_orientation.name:
+    elif insight_type == InsightType.image_orientation:
         return find_image_orientation(content)
 
-    elif insight_type == InsightType.product_weight.name:
+    elif insight_type == InsightType.product_weight:
         return find_product_weight(content)
 
-    elif insight_type == InsightType.trace.name:
+    elif insight_type == InsightType.trace:
         return find_traces(content)
 
-    elif insight_type == InsightType.nutrient.name:
+    elif insight_type == InsightType.nutrient:
         return find_nutrient_values(content)
 
-    elif insight_type == InsightType.brand.name:
+    elif insight_type == InsightType.nutrient_mention:
+        return find_nutrient_mentions(content)
+
+    elif insight_type == InsightType.brand:
         return find_brands(content)
 
-    elif insight_type == InsightType.store.name:
+    elif insight_type == InsightType.store:
         return find_stores(content)
 
-    elif insight_type == InsightType.packaging.name:
+    elif insight_type == InsightType.packaging:
         return find_packaging(content)
 
-    elif insight_type == InsightType.location.name:
+    elif insight_type == InsightType.location:
         return find_locations(content)
+
+    elif insight_type == InsightType.image_lang:
+        return get_image_lang(content)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
@@ -102,34 +110,45 @@ def is_barcode(text: str):
     return text.isdigit()
 
 
-def get_source(image_name: str, json_path: str = None, barcode: str = None):
+def get_source(
+    image_name: str, json_path: str = None, barcode: Optional[str] = None
+) -> str:
     if not barcode:
         barcode = get_barcode_from_path(str(json_path))
+
+        if not barcode:
+            raise ValueError("invalid JSON path: {}".format(json_path))
 
     return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
 
-def ocr_iter_jsonl(stream: TextIO) -> Iterable[Tuple[Optional[str], Dict]]:
-    for line in stream:
-        json_data = json.loads(line)
-
-        if "content" in json_data:
-            source = json_data["source"].replace("//", "/")
-            yield source, json_data["content"]
+def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[Tuple[Optional[str], Dict]]:
+    for item in items:
+        if "content" in item:
+            source = item["source"].replace("//", "/").replace(".json", ".jpg")
+            yield source, item["content"]
 
 
-def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]:
-    if not isinstance(source, str):
-        yield from ocr_iter_jsonl(source)
+def ocr_iter(
+    source: Union[str, TextIO, pathlib.Path]
+) -> Iterable[Tuple[Optional[str], Dict]]:
+    if isinstance(source, pathlib.Path):
+        items = jsonl_iter(source)
+        yield from ocr_content_iter(items)
+
+    elif not isinstance(source, str):
+        items = jsonl_iter_fp(source)
+        yield from ocr_content_iter(items)
 
     elif is_barcode(source):
+        barcode: str = source
         image_data = fetch_images_for_ean(source)["product"]["images"]
 
-        for image_name in image_data.keys():
-            if image_name.isdigit():
-                print("Getting OCR for image {}".format(image_name))
-                data = get_json_for_image(source, image_name)
-                source = get_source(image_name, barcode=source)
+        for image_id in image_data.keys():
+            if image_id.isdigit():
+                print("Getting OCR for image {}".format(image_id))
+                data = get_json_for_image(barcode, image_id)
+                source = get_source(image_id, barcode=barcode)
                 if data:
                     yield source, data
 
@@ -142,19 +161,14 @@ def ocr_iter(source: Union[str, TextIO]) -> Iterable[Tuple[Optional[str], Dict]]
 
         if input_path.is_dir():
             for json_path in input_path.glob("**/*.json"):
-                with open(str(json_path), "r") as f:
+                with open(str(json_path), "rb") as f:
                     source = get_source(json_path.stem, json_path=str(json_path))
-                    yield source, json.load(f)
+                    yield source, orjson.loads(f.read())
         else:
             if ".json" in input_path.suffixes:
-                with open(str(input_path), "r") as f:
-                    yield None, json.load(f)
+                with open(str(input_path), "rb") as f:
+                    yield None, orjson.loads(f.read())
 
             elif ".jsonl" in input_path.suffixes:
-                if input_path.suffix == ".gz":
-                    open_func = gzip.open
-                else:
-                    open_func = open
-
-                with open_func(input_path, mode="rt") as f:
-                    yield from ocr_iter_jsonl(f)
+                items = jsonl_iter(input_path)
+                yield from ocr_content_iter(items)

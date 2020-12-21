@@ -4,11 +4,12 @@ from typing import Dict, Iterable, List, Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult, get_text
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
 from robotoff.insights.ocr.utils import generate_keyword_processor
-from robotoff.utils import text_file_iter, get_logger
+from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -63,7 +64,7 @@ LABELS_REGEX = {
             processing_func=process_es_bio_label_code,
         ),
     ],
-    "fr:ab-agriculture-biologique": [
+    "en:ab-agriculture-biologique": [
         OCRRegex(
             re.compile(r"certifi[ée] ab[\s.,)]"),
             field=OCRField.full_text_contiguous,
@@ -82,6 +83,18 @@ LABELS_REGEX = {
             re.compile(r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
             field=OCRField.full_text_contiguous,
             lowercase=False,
+        ),
+    ],
+    "en:label-rouge": [
+        OCRRegex(
+            re.compile(r"d[ée]cret du 0?5[./]01[./]07"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+        ),
+        OCRRegex(
+            re.compile(r"(?<!\w)homologation(?: n°?)? ?la ?\d{2}\/\d{2}(?!\w)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
         ),
     ],
     "en:pdo": [
@@ -205,20 +218,21 @@ def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
     return generate_keyword_processor(labels)
 
 
-def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[JSONType]:
+def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[RawInsight]:
     insights = []
 
-    for (label_tag, label), span_start, span_end in processor.extract_keywords(
+    for (label_tag, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
         insights.append(
-            {
-                "label_tag": label_tag,
-                "text": match_str,
-                "data_source": "flashtext",
-                "notify": False,
-            }
+            RawInsight(
+                type=InsightType.label,
+                value_tag=label_tag,
+                automatic_processing=False,
+                predictor="flashtext",
+                data={"text": match_str, "notify": False},
+            )
         )
 
     return insights
@@ -230,7 +244,7 @@ LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_labels(content: Union[OCRResult, str]) -> List[Dict]:
+def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
     insights = []
 
     for label_tag, regex_list in LABELS_REGEX.items():
@@ -251,12 +265,12 @@ def find_labels(content: Union[OCRResult, str]) -> List[Dict]:
                     label_value = label_tag
 
                 insights.append(
-                    {
-                        "label_tag": label_value,
-                        "text": match.group(),
-                        "notify": ocr_regex.notify,
-                        "data_source": "regex",
-                    }
+                    RawInsight(
+                        type=InsightType.label,
+                        value_tag=label_value,
+                        predictor="regex",
+                        data={"text": match.group(), "notify": ocr_regex.notify},
+                    )
                 )
 
     processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
@@ -270,12 +284,13 @@ def find_labels(content: Union[OCRResult, str]) -> List[Dict]:
                 label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
 
                 insights.append(
-                    {
-                        "label_tag": label_tag,
-                        "automatic_processing": False,
-                        "confidence": logo_annotation.score,
-                        "data_source": "google-cloud-vision",
-                    }
+                    RawInsight(
+                        type=InsightType.label,
+                        value_tag=label_tag,
+                        automatic_processing=False,
+                        predictor="google-cloud-vision",
+                        data={"confidence": logo_annotation.score},
+                    )
                 )
 
     return insights

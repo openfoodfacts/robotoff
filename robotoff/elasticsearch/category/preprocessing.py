@@ -15,6 +15,10 @@ LABELS_REGEX = {
     "it": re.compile(r"biologica"),
 }
 
+EXTRAWORDS_REGEX = {
+    "fr": re.compile(r"gourmand"),
+    "en": re.compile(r"delicious"),
+}
 BRANDS_REGEX = re.compile(r"k bio|ja!|coop|belvita|carrefour|auchan|danone")
 
 
@@ -29,6 +33,7 @@ def preprocess_name(name: str, lang: str) -> str:
     name = remove_weights(name)
     name = remove_brands(name)
     name = remove_labels(name, lang)
+    name = remove_marketing_words(name, lang)
     name = strip_consecutive_spaces(name)
     name = name.strip()
     return name
@@ -40,6 +45,13 @@ def remove_weights(name: str) -> str:
 
 def remove_brands(name: str) -> str:
     return BRANDS_REGEX.sub("", name)
+
+
+def remove_marketing_words(name: str, lang: str) -> str:
+    if lang in EXTRAWORDS_REGEX:
+        name = EXTRAWORDS_REGEX[lang].sub("", name)
+
+    return name
 
 
 def remove_labels(name: str, lang: str) -> str:

@@ -3,24 +3,21 @@ import json
 import os
 import pathlib
 import re
-from typing import List, Optional, Dict, Set
+from typing import Dict, List, Optional, Set
 
 import networkx
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.externals import joblib
 from sklearn.feature_extraction.text import (
-    TfidfTransformer,
     CountVectorizer,
     strip_accents_ascii,
+    TfidfTransformer,
 )
-
 from sklearn.linear_model import LogisticRegression
-
 from sklearn.model_selection import train_test_split
-from sklearn.externals import joblib
 from sklearn.pipeline import Pipeline
-
 from sklearn_hierarchical_classification.classifier import HierarchicalClassifier
 from sklearn_hierarchical_classification.constants import ROOT
 from sklearn_hierarchical_classification.metrics import fill_ancestors
@@ -28,11 +25,11 @@ from sklearn_hierarchical_classification.metrics import fill_ancestors
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import (
-    Taxonomy,
-    TaxonomyType,
     generate_category_hierarchy,
     get_taxonomy,
+    Taxonomy,
     TaxonomyNode,
+    TaxonomyType,
 )
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -108,9 +105,9 @@ class CategoryClassifier:
                 if c in self.category_taxonomy
             ]
 
-            deepest_categories: List[TaxonomyNode] = (
-                self.category_taxonomy.find_deepest_nodes(category_nodes)
-            )
+            deepest_categories: List[
+                TaxonomyNode
+            ] = self.category_taxonomy.find_deepest_nodes(category_nodes)
 
             if deepest_categories is not None:
                 deepest_category = deepest_categories[0].id
@@ -145,10 +142,10 @@ class CategoryClassifier:
     def generate_insights(self, dataset: ProductDataset) -> List[JSONType]:
         self.raise_if_not_loaded()
         df = self.generate_prediction_df(dataset)
-        y_pred = self.classifier.predict(self.transformer.transform(df))
+        y_pred = self.classifier.predict(self.transformer.transform(df))  # type: ignore
 
         insights = []
-        for i, row in enumerate(df.itertuples()):
+        for row in df.itertuples():
             category = self.categories[y_pred]
 
             insights.append(
@@ -175,7 +172,7 @@ class CategoryClassifier:
             "ingredients_tags": product.get("ingredients_tags", []),
         }
         df = pd.DataFrame([transformed])
-        y_pred = self.classifier.predict(self.transformer.transform(df))[0]
+        y_pred = self.classifier.predict(self.transformer.transform(df))[0]  # type: ignore
         return self.categories[y_pred]
 
     def save(self, output_dir: str) -> None:
@@ -240,9 +237,9 @@ class CategoryClassifier:
     def evaluate(self, test_df: pd.DataFrame) -> JSONType:
         self.raise_if_not_loaded()
         y_test = test_df.deepest_category_int.values
-        y_pred = self.classifier.predict(self.transformer.transform(test_df))
+        y_pred = self.classifier.predict(self.transformer.transform(test_df))  # type: ignore
         return self._evaluate(
-            self.classifier.graph_, y_test, y_pred, len(self.categories)
+            self.classifier.graph_, y_test, y_pred, len(self.categories)  # type: ignore
         )
 
     @staticmethod
@@ -315,7 +312,7 @@ def train(model_output_dir: pathlib.Path, comment: Optional[str] = None):
     )
 
     meta = {
-        "metrics": {"test": test_metrics,},
+        "metrics": {"test": test_metrics},
         "dataset_id": dataset_timestamp.date().isoformat(),
         "training_set_count": len(train_df),
         "test_set_count": len(test_df),

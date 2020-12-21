@@ -1,24 +1,23 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
 from robotoff import settings
 from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.models import ProductInsight
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
-
-http_session = requests.Session()
 
 BASE_URL = "https://slack.com/api"
 POST_MESSAGE_URL = BASE_URL + "/chat.postMessage"
 NUTRISCORE_LABELS = {
     "en:nutriscore",
-    "en:nutriscore-a",
-    "en:nutriscore-b",
-    "en:nutriscore-c",
-    "en:nutriscore-d",
-    "en:nutriscore-e",
+    "en:nutriscore-grade-a",
+    "en:nutriscore-grade-b",
+    "en:nutriscore-grade-c",
+    "en:nutriscore-grade-d",
+    "en:nutriscore-grade-e",
 }
 
 logger = get_logger(__name__)
@@ -51,13 +50,13 @@ PRIVATE_MODERATION_LABELS = {
 }
 
 
-def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
+def notify_image_flag(insights: List[RawInsight], source: str, barcode: str):
     text = ""
     slack_channel: str = settings.SLACK_OFF_ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 
     for insight in insights:
-        flag_type = insight["type"]
-        label = insight["label"]
+        flag_type = insight.data["type"]
+        label = insight.data["label"]
 
         if flag_type in ("safe_search_annotation", "label_annotation"):
             if (
@@ -65,17 +64,15 @@ def notify_image_flag(insights: List[JSONType], source: str, barcode: str):
             ) or flag_type == "safe_search_annotation":
                 slack_channel = settings.SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL
 
-            likelihood = insight["likelihood"]
+            likelihood = insight.data["likelihood"]
             text += "type: {}, label: {}, score: {}\n".format(
                 flag_type, label, likelihood
             )
         else:
-            match_text = insight["text"]
+            match_text = insight.data["text"]
             text += "type: {}, label: {}, match: {}\n".format(
                 flag_type, label, match_text
             )
-            if "moved" in insight:
-                text += "Product moved to {}\n".format(insight["moved"])
 
     url = settings.OFF_IMAGE_BASE_URL + source
     edit_url = "{}/cgi/product.pl?type=edit&code={}" "".format(
@@ -141,7 +138,7 @@ def notify_automatic_processing(insight: ProductInsight):
         return
 
     text += " " + metadata_text
-    slack_kwargs = {
+    slack_kwargs: Dict[str, Any] = {
         "unfurl_links": False,
         "unfurl_media": False,
     }

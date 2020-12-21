@@ -1,19 +1,22 @@
-from typing import List, Dict, Optional, Union
+from typing import List, Optional, Union
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRField, OCRResult, get_text
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import get_text, OCRResult
 from robotoff.insights.ocr.utils import generate_keyword_processor
-
-from robotoff.insights.ocr.utils import get_tag
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
+from robotoff.utils.text import get_tag
 
 
 def generate_packaging_keyword_processor(packaging: Optional[List[str]] = None):
-    if packaging is None:
-        packaging = text_file_iter(settings.OCR_PACKAGING_DATA_PATH)
-
-    return generate_keyword_processor(packaging)
+    p = (
+        text_file_iter(settings.OCR_PACKAGING_DATA_PATH)
+        if packaging is None
+        else packaging
+    )
+    return generate_keyword_processor(p)
 
 
 KEYWORD_PROCESSOR_STORE = CachedStore(
@@ -21,7 +24,7 @@ KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packaging(content: Union[OCRResult, str]) -> List[Dict]:
+def find_packaging(content: Union[OCRResult, str]) -> List[RawInsight]:
     insights = []
 
     text = get_text(content)
@@ -39,13 +42,13 @@ def find_packaging(content: Union[OCRResult, str]) -> List[Dict]:
         for packaging in packagings:
             match_str = text[span_start:span_end]
             insights.append(
-                {
-                    "packaging_tag": get_tag(packaging),
-                    "packaging": packaging,
-                    "text": match_str,
-                    "notify": True,
-                    "automatic_processing": True,
-                }
+                RawInsight(
+                    type=InsightType.packaging,
+                    value_tag=get_tag(packaging),
+                    value=packaging,
+                    data={"text": match_str, "notify": False},
+                    automatic_processing=True,
+                )
             )
 
     return insights

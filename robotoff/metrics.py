@@ -1,7 +1,7 @@
 import datetime
 import json
-from urllib.parse import urlparse
 from typing import List, Optional
+from urllib.parse import urlparse
 
 from influxdb import InfluxDBClient
 import requests
@@ -58,6 +58,7 @@ COUNTRY_TAGS = [
     "no",
     "in",
     "tn",
+    "dk",
 ]
 
 
@@ -75,7 +76,7 @@ def get_product_count(country_tag: str) -> int:
     r = requests.get(
         "https://{}.openfoodfacts.org/3.json?fields=null".format(country_tag)
     ).json()
-    return r["count"]
+    return int(r["count"])
 
 
 def save_facet_metrics():

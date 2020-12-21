@@ -107,10 +107,12 @@ en:palm-oil-free||sans huile de palme
 en:palm-oil-free||senza olio di palma
 en:palm-oil-free||sin aceite de palma
 en:palm-oil-free||без пальмового масла
+en:pefc||pefc
 en:sustainable-palm-oil||huile de palme certifiée durable
 en:sustainable-palm-oil||huile de palme certifiee durable
 en:sustainable-palm-oil||sustainable palm oil
 en:sustainable-seafood-msc||www.msc.org
+en:sustainable-seafood-msc||pêche durable msc
 en:utz-certified||utz certified
 en:vegan||vegan
 en:vegan||veganoveganistisch
@@ -122,3 +124,5 @@ fr:viande-bovine-francaise||viande bovine francaise
 fr:viande-bovine-francaise||viande bovine française
 fr:viande-porcine-francaise||le porc francais
 fr:viande-porcine-francaise||le porc français
+en:small-producers-symbol||symbole des producteurs paysans
+en:small-producers-symbol||www.spp.coop

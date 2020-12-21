@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-01-15 20:38\n"
+"PO-Revision-Date: 2020-08-02 21:27\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Latvian\n"
 "Language: lv\n"
@@ -12,8 +12,10 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=3; plural=(n==0 ? 0 : n%10==1 && n%100!=11 ? 1 : 2);\n"
 "X-Crowdin-Project: openfoodfacts\n"
+"X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: lv\n"
 "X-Crowdin-File: /master/i18n/robotoff.pot\n"
+"X-Crowdin-File-ID: 1326\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
@@ -25,5 +27,13 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
+msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does this weight match the weight displayed on the product?"
+msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image a nutrition image for this language?"
 msgstr ""
 

@@ -1,5 +1,5 @@
-from pathlib import Path
 import os
+from pathlib import Path
 from typing import Tuple
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -42,6 +42,11 @@ INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 
+SPELLCHECK_DIR = DATA_DIR / "spellcheck"
+SPELLCHECK_PATTERNS_PATHS = {
+    "fr": SPELLCHECK_DIR / "patterns_fr.txt",
+}
+
 DB_NAME = os.environ.get("DB_NAME", "postgres")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
@@ -53,7 +58,7 @@ IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
-WORKER_COUNT = os.environ.get("WORKER_COUNT", 4)
+WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
@@ -104,8 +109,12 @@ ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 
 MODELS_DIR = PROJECT_DIR / "models"
 
-TF_SERVING_HOST = "localhost"
-TF_SERVING_HTTP_PORT = "8501"
+TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
+TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
+TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
+    TF_SERVING_HOST, TF_SERVING_HTTP_PORT
+)
+
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
@@ -118,6 +127,13 @@ OBJECT_DETECTION_TF_SERVING_MODELS = (
     "universal-logo-detector",
 )
 
+OBJECT_DETECTION_MODEL_VERSION = {
+    "nutriscore": "tf-nutriscore-1.0",
+    "nutrition-table": "tf-nutrition-table-1.0",
+    "universal-logo-detector": "tf-universal-logo-detector-1.0",
+}
+
+
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15
 
@@ -126,3 +142,6 @@ INFLUXDB_PORT = 8086
 INFLUXDB_DB_NAME = "off_metrics"
 INFLUXDB_USERNAME = "off_metrics"
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
+
+TEST_DIR = PROJECT_DIR / "tests"
+TEST_DATA_DIR = TEST_DIR / "data"

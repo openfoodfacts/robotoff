@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-01-15 20:37\n"
+"PO-Revision-Date: 2020-08-31 18:50\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Arabic\n"
 "Language: ar\n"
@@ -12,18 +12,28 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
 "X-Crowdin-Project: openfoodfacts\n"
+"X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: ar\n"
 "X-Crowdin-File: /master/i18n/robotoff.pot\n"
+"X-Crowdin-File-ID: 1326\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "هل المنتج ينتمي الى هذه الفئة؟"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "هل المنتج لديه علامة تجارية؟ "
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
 msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does this weight match the weight displayed on the product?"
+msgstr "هل يتطابق هذا الوزن مع الوزن المعروض على المنتج؟"
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image a nutrition image for this language?"
+msgstr "هل هذه الصورة صورة غذائية لهذه اللغة؟"
 

@@ -3,16 +3,17 @@ import gzip
 import json
 from pathlib import Path
 import re
-from typing import Union, List, Optional, Tuple, BinaryIO, Set, Iterable
+from typing import BinaryIO, Iterable, List, Optional, Set, Tuple, Union
 
 from flashtext import KeywordProcessor
 
 from robotoff import settings
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import strip_accents_ascii
-from robotoff.utils.types import JSONType
 
 
 @dataclasses.dataclass(frozen=True)
@@ -20,7 +21,7 @@ class City:
     """A city, storing its name, postal code and GPS coordinates."""
 
     name: str
-    """The city name, lower case, no accents, with special characters replaced with 
+    """The city name, lower case, no accents, with special characters replaced with
     spaces."""
     postal_code: str
     """The city's postal code. The format depends on the country."""
@@ -136,25 +137,30 @@ class AddressExtractor:
         self.marker_processor = KeywordProcessor()
         self.marker_processor.add_keywords_from_list(self.marker_words)
 
-    def extract_addresses(self, ocr_result: OCRResult) -> List[JSONType]:
+    def extract_addresses(self, content: Union[str, OCRResult]) -> List[RawInsight]:
         """Extract addresses from the given OCR result.
 
         Args:
-            ocr_result (OCRResult): The OCR result to process.
+            content (OCRResult or str): a string or the OCR result to process.
 
         Returns:
-            list of JSONType: List of addresses extracted from the text. Each entry
+            list of RawInsight: List of addresses extracted from the text. Each entry
             is a dictionary with the items: country_code (always "fr"), city_name,
             postal_code and text_extract.
         """
-        text = self.get_text(ocr_result)
+        if isinstance(content, OCRResult):
+            text = self.get_text(content)
+        else:
+            text = content
+
+        text = self.normalize_text(text)
         city_matches = self.find_city_names(text)
-        language = self.get_language(ocr_result)
+        # language = self.get_language(ocr_result)
 
         locations = []
         for city, blacklisted, city_start, city_end in city_matches:
             location = {
-                "language": language,
+                # "language": language,
                 "country_code": "fr",
                 "city": {
                     "name": city.name,
@@ -186,7 +192,7 @@ class AddressExtractor:
                 : min(len(text), location_end + self.text_extract_distance)
             ]
             location["text_extract"] = text_extract
-            locations.append(location)
+            locations.append(RawInsight(type=InsightType.location, data=location))
 
         return locations
 
@@ -200,15 +206,19 @@ class AddressExtractor:
         Returns:
             str: The text extracted and prepared.
         """
-        text = ocr_result.get_full_text(lowercase=True)
+        text = ocr_result.get_full_text()
         if text is None:
             # Using `OCRResult.text_annotations` directly instead of
             # `OCRResult.get_text_annotations()` because the latter contains
             # the text duplicated
-            text = ocr_result.text_annotations[0].text.lower()
-        text = strip_accents_ascii(text)
-        text = text.replace("'", " ").replace("-", " ")
+            text = ocr_result.text_annotations[0].text
         return text
+
+    @staticmethod
+    def normalize_text(text: str) -> str:
+        text = text.lower()
+        text = strip_accents_ascii(text)
+        return text.replace("'", " ").replace("-", " ")
 
     @staticmethod
     def get_language(ocr_result: OCRResult) -> Optional[str]:
@@ -353,7 +363,7 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 )
 
 
-def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
+def find_locations(content: Union[OCRResult, str]) -> List[RawInsight]:
     """Find location insights in the text content.
 
     See :class:`.AddressExtractor`.
@@ -362,7 +372,7 @@ def find_locations(content: Union[OCRResult, str]) -> List[JSONType]:
         content (OCRResult or str): The content to be searched for locations.
 
     Returns:
-        list of JSONType: See :meth:`.AddressExtractor.extract_addresses`.
+        list of RawInsight: See :meth:`.AddressExtractor.extract_addresses`.
     """
     location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
     return location_extractor.extract_addresses(content)

@@ -7,6 +7,7 @@ es:Envase en cartón||envase cartón
 es:Envase en metal||envase metal
 fr:Barquette en carton||barquette carton
 fr:Barquette;fr:Film en plastique||barquette et film plastique
+fr:Barquette;fr:Opercule en plastique||barquette et opercule plastique
 fr:Barquette en plastique||barquette plastique
 fr:Bocal en verre||bocal verre
 fr:Bouchon en plastique||bouchon plastique
@@ -14,6 +15,7 @@ fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastiqu
 fr:Bouteille en plastique||bouteille plastique
 fr:Bouteille en verre||bouteille verre
 fr:Bouteille en verre||bouteilles verre
+fr:Bouteille en verre;fr:Bouchon||bouteille verre et son bouchon
 fr:Coque en plastique||coque plastique
 en:Bottle||bottled
 es:Botella||embotellado
@@ -43,6 +45,8 @@ Elopak||elopak
 fr:Etui en carton||etui carton
 fr:Etui en carton||étui carton
 fr:Feuille en carton||feuille carton
+fr:Feuille en métal||feuille métal
+fr:Feuille en métal||feuille metal
 fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
 fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
 fr:Film en plastique||film plastique

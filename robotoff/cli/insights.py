@@ -3,94 +3,109 @@ import datetime
 import json
 import pathlib
 import sys
-from typing import Dict, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set, TextIO, Union
 
 import click
 from more_itertools import chunked
 from peewee import fn
 
+from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
-from robotoff.insights._enum import InsightType
-from robotoff.insights.importer import InsightImporterFactory, AUTHORIZED_LABELS_STORE
+from robotoff.insights.dataclass import ProductInsights
+from robotoff.insights.importer import (
+    AUTHORIZED_LABELS_STORE,
+    import_insights as import_insights_,
+)
 from robotoff.insights.ocr import (
-    ocr_iter,
-    OCRResult,
     extract_insights,
     get_barcode_from_path,
+    ocr_iter,
+    OCRResult,
 )
 from robotoff.models import db, ProductInsight
 from robotoff.off import get_product
-from robotoff.products import CACHED_PRODUCT_STORE
-from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
-
+from robotoff.products import get_product_store
+from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
 
 
 def run_from_ocr_archive(
-    input_: str, insight_type: str, output: Optional[str], keep_empty: bool = False
+    input_: Union[str, TextIO],
+    insight_type: InsightType,
+    output: Optional[str] = None,
+    keep_empty: bool = False,
 ):
+    insights = generate_from_ocr_archive(input_, insight_type, keep_empty)
+
     if output is not None:
         output_f = open(output, "w")
     else:
         output_f = sys.stdout
 
     with contextlib.closing(output_f):
-        for source, ocr_json in ocr_iter(input_):
-            if source is None:
-                continue
+        for insight in insights:
+            output_f.write(json.dumps(insight.to_dict()) + "\n")
 
-            barcode: Optional[str] = get_barcode_from_path(source)
 
-            if barcode is None:
-                click.echo(
-                    "cannot extract barcode from source " "{}".format(source), err=True
-                )
-                continue
+def generate_from_ocr_archive(
+    input_: Union[str, TextIO, pathlib.Path],
+    insight_type: InsightType,
+    keep_empty: bool = False,
+) -> Iterable[ProductInsights]:
+    for source_image, ocr_json in ocr_iter(input_):
+        if source_image is None:
+            continue
 
-            ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
+        barcode: Optional[str] = get_barcode_from_path(source_image)
 
-            if ocr_result is None:
-                continue
+        if barcode is None:
+            click.echo(
+                "cannot extract barcode from source " "{}".format(source_image),
+                err=True,
+            )
+            continue
 
-            insights = extract_insights(ocr_result, insight_type)
+        ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
 
-            # Do not produce output if insights is empty and we don't want to keep it
-            if not keep_empty and not insights:
-                continue
+        if ocr_result is None:
+            continue
 
-            item = {
-                "insights": insights,
-                "barcode": barcode,
-                "type": insight_type,
-            }
+        insights = extract_insights(ocr_result, insight_type)
 
-            if source:
-                item["source"] = source
+        # Do not produce output if insights is empty and we don't want to keep it
+        if not keep_empty and not insights:
+            continue
 
-            output_f.write(json.dumps(item) + "\n")
+        yield ProductInsights(
+            insights=insights,
+            barcode=barcode,
+            type=insight_type,
+            source_image=source_image,
+        )
+
+
+def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
+    for insight in jsonl_iter(file_path):
+        yield ProductInsights.from_dict(insight)
 
 
 def import_insights(
-    file_path: pathlib.Path,
-    insight_type: str,
+    insights: Iterable[ProductInsights],
     server_domain: str,
     batch_size: int = 1024,
 ) -> int:
-    product_store = CACHED_PRODUCT_STORE.get()
-    importer = InsightImporterFactory.create(insight_type, product_store)
-
-    if file_path.suffix == ".gz":
-        insights = gzip_jsonl_iter(file_path)
-    else:
-        insights = jsonl_iter(file_path)
-
+    product_store = get_product_store()
     imported: int = 0
 
+    insight_batch: List[ProductInsights]
     for insight_batch in chunked(insights, batch_size):
         with db.atomic():
-            imported += importer.import_insights(
-                insight_batch, server_domain=server_domain, automatic=False
+            imported += import_insights_(
+                insight_batch,
+                server_domain,
+                automatic=False,
+                product_store=product_store,
             )
 
     return imported
@@ -219,7 +234,11 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
 
     for insight in (
         ProductInsight.select()
-        .where(ProductInsight.type == insight_type, ProductInsight.annotation.is_null())
+        .where(
+            ProductInsight.type == insight_type,
+            ProductInsight.annotation.is_null(),
+            ProductInsight.latent == False,  # noqa: E712
+        )
         .order_by(fn.Random())
     ):
         if (
@@ -244,10 +263,10 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
         if is_processable:
             logger.info(
                 "Annotating insight {} (barcode: {})".format(
-                    insight.value_tag, insight.barcode
+                    insight.value_tag or insight.value, insight.barcode
                 )
             )
-            annotator.annotate(insight, 1, update=True)
+            annotator.annotate(insight, 1, update=True, automatic=True)
             count += 1
 
     logger.info("Annotated insights: {}".format(count))

@@ -5,17 +5,35 @@ Aldi||gutbio
 Aldi||milsani
 Aldi||sprengel
 Alnatura
+Alteza
 Auchan
+Coccimarket||belle france
+Coccinelle||belle france
+Eurêka ma maison||belle france
+G20||belle france
+Diagonal||belle france
+Coccimarket||les delices de belle france
+Coccinelle||les delices de belle france
+Eurêka ma maison||les delices de belle france
+G20||les delices de belle france
+Diagonal||les delices de belle france
 Biocoop
+bonÀrea||bonarea
+Bonpreu
+Coop||betty bossi
+Coop||coop naturaplan
+Coop||naturaplan
 Carrefour
 Carrefour||grand jury
 Casino
 Colruyt
 Delhaize
+Denner
 Edeka
 Edeka||gut[- \n]g[uü]nstig
 Eroski
 Franprix
+Hacendado
 Intermarché
 Intermarché||bouton d'or
 Intermarché||capitaine cook
@@ -172,6 +190,8 @@ Migros
 Monoprix
 Morrisson's
 Picard
+Cora||patrimoine gourmand
+Match||patrimoine gourmand
 REWE
 Sainsbury's
 Tesco

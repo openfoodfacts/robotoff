@@ -1,6 +1,6 @@
 import abc
 import datetime
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from robotoff.utils import get_logger
 
@@ -12,6 +12,7 @@ class CachedStore(metaclass=abc.ABCMeta):
         self.store = None
         self.expires_after: Optional[datetime.datetime] = None
         self.fetch_func: Callable = fetch_func
+        self.expiration_timedelta: Optional[datetime.timedelta]
 
         if expiration_interval is not None:
             self.expiration_timedelta = datetime.timedelta(minutes=expiration_interval)

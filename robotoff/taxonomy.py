@@ -1,12 +1,13 @@
 import collections
-import functools
-import json
-import pathlib
 from enum import Enum
-from typing import List, Dict, Iterable, Optional, Set, Union
+import functools
+import pathlib
+from typing import Dict, Iterable, List, Optional, Set, Union
+
+import orjson
 
 from robotoff import settings
-from robotoff.off import http_session
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -14,6 +15,8 @@ try:
     import networkx
 except ImportError:
     networkx = None
+
+logger = get_logger(__name__)
 
 
 class TaxonomyType(Enum):
@@ -27,7 +30,10 @@ class TaxonomyNode:
     __slots__ = ("id", "names", "parents", "children", "synonyms")
 
     def __init__(
-        self, identifier: str, names: Dict[str, str], synonyms: Optional[Dict[str, str]]
+        self,
+        identifier: str,
+        names: Dict[str, str],
+        synonyms: Optional[Dict[str, List[str]]],
     ):
         self.id: str = identifier
         self.names: Dict[str, str] = names
@@ -195,8 +201,8 @@ class Taxonomy:
 
     @classmethod
     def from_json(cls, file_path: Union[str, pathlib.Path]):
-        with open(str(file_path), "r") as f:
-            data = json.load(f)
+        with open(str(file_path), "rb") as f:
+            data = orjson.loads(f.read())
             return cls.from_dict(data)
 
     def to_graph(self):
@@ -214,7 +220,7 @@ class Taxonomy:
 def generate_category_hierarchy(
     taxonomy: Taxonomy, category_to_index: Dict[str, int], root: int
 ):
-    categories_hierarchy = collections.defaultdict(set)
+    categories_hierarchy: Dict[int, Set] = collections.defaultdict(set)
 
     for node in taxonomy.iter_nodes():
         category_index = category_to_index[node.id]
@@ -249,6 +255,7 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) -> Optional[Taxo
         r = http_session.get(url, timeout=5)
         data = r.json()
     except Exception:
+        logger.warning("Timeout while fetching '{}' taxonomy".format(url))
         if fallback_path:
             return Taxonomy.from_json(fallback_path)
         else:
@@ -291,4 +298,52 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
 
 def get_taxonomy(taxonomy_type: str) -> Taxonomy:
     """Returned the requested Taxonomy."""
-    return TAXONOMY_STORES.get(taxonomy_type).get()
+    taxonomy_store = TAXONOMY_STORES.get(taxonomy_type)
+
+    if taxonomy_store is None:
+        raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
+
+    return taxonomy_store.get()
+
+
+def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:
+    taxonomy = get_taxonomy(taxonomy_type)
+    ids: Dict[str, str] = {}
+
+    for key in taxonomy.keys():
+        unprefixed_key = key
+        if len(key) > 3 and key[2] == ":":
+            unprefixed_key = key[3:]
+
+        if taxonomy_type == TaxonomyType.brand.name:
+            ids[unprefixed_key] = taxonomy[key].names["en"]
+        else:
+            ids[unprefixed_key] = key
+
+    return ids
+
+
+UNPREFIXED_MAPPING_STORE: Dict[str, CachedStore] = {
+    TaxonomyType.label.name: CachedStore(
+        functools.partial(
+            get_unprefixed_mapping,
+            taxonomy_type=TaxonomyType.label.name,
+        )
+    ),
+    TaxonomyType.brand.name: CachedStore(
+        functools.partial(
+            get_unprefixed_mapping,
+            taxonomy_type=TaxonomyType.brand.name,
+        )
+    ),
+}
+
+
+def match_unprefixed_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
+    unprefixed_mapping_cache = UNPREFIXED_MAPPING_STORE.get(taxonomy_type)
+
+    if unprefixed_mapping_cache is None:
+        return None
+
+    unprefixed_mapping = unprefixed_mapping_cache.get()
+    return unprefixed_mapping.get(value_tag)

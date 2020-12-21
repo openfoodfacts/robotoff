@@ -3,11 +3,11 @@ import pathlib
 from typing import Dict, List, Optional
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
 from robotoff.mongo import MONGO_CLIENT_CACHE
 from robotoff.off import generate_image_url, get_product
-from robotoff.taxonomy import TaxonomyType, Taxonomy, get_taxonomy
+from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyType
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
@@ -19,7 +19,7 @@ LABEL_IMG_BASE_URL = "https://static.openfoodfacts.org/images/lang"
 
 LABEL_IMAGES = {
     "en:eu-organic": LABEL_IMG_BASE_URL + "en/labels/eu-organic.135x90.svg",
-    "fr:ab-agriculture-biologique": LABEL_IMG_BASE_URL
+    "en:ab-agriculture-biologique": LABEL_IMG_BASE_URL
     + "/fr/labels/ab-agriculture-biologique.74x90.svg",
     "en:european-vegetarian-union": LABEL_IMG_BASE_URL
     + "/en/labels/european-vegetarian-union.90x90.svg",
@@ -249,10 +249,30 @@ class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
 
         if field_name in images:
             image = images[field_name]
-            image_name = "ingredients_{}.{}.full".format(lang, image["rev"])
-            return generate_image_url(barcode, image_name)
+            image_id = "ingredients_{}.{}.full".format(lang, image["rev"])
+            return generate_image_url(barcode, image_id)
 
         return None
+
+
+class NutritionImageQuestionFormatter(QuestionFormatter):
+    question = "Is this image a nutrition image for this language?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
 
 
 def get_display_image(source_image: str) -> str:
@@ -272,6 +292,7 @@ class QuestionFormatterFactory:
         InsightType.product_weight.name: ProductWeightQuestionFormatter,
         InsightType.brand.name: BrandQuestionFormatter,
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
+        InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
     }
 
     @classmethod

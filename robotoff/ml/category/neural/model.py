@@ -1,25 +1,26 @@
 import operator
 import pathlib
-from typing import List, Optional, Tuple, Dict, Set, Iterable
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
-import numpy as np
 from more_itertools import chunked
+import numpy as np
 from tensorflow import keras
 
 from robotoff import settings
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.ml.category.neural.data_utils import generate_data
 from robotoff.ml.category.neural.io import (
-    load_config,
-    load_taxonomy,
-    load_ingredient_vocabulary,
-    load_category_vocabulary,
-    load_product_name_vocabulary,
     load_category_blacklist,
+    load_category_vocabulary,
+    load_config,
+    load_ingredient_vocabulary,
+    load_product_name_vocabulary,
+    load_taxonomy,
 )
-from robotoff.ml.networking import http_session, TF_SERVING_BASE_URL
 from robotoff.off import get_product
 from robotoff.taxonomy import Taxonomy
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_nlp
 
@@ -73,11 +74,11 @@ class BaseModel:
         return generate_data(
             ingredient_tags_iter=ingredient_tags,
             product_name_iter=product_name,
-            ingredient_to_id=self.ingredient_to_id,
-            product_name_token_to_int=self.product_name_vocabulary,
+            ingredient_to_id=self.ingredient_to_id,  # type: ignore
+            product_name_token_to_int=self.product_name_vocabulary,  # type: ignore
             nlp=self.nlp,
-            product_name_max_length=self.config.model_config.product_name_max_length,
-            product_name_preprocessing_config=self.config.product_name_preprocessing_config,
+            product_name_max_length=self.config.model_config.product_name_max_length,  # type: ignore
+            product_name_preprocessing_config=self.config.product_name_preprocessing_config,  # type: ignore
         )
 
     @staticmethod
@@ -136,7 +137,7 @@ class LocalModel(BaseModel):
 
         if product is None:
             logger.info("Product {} not found".format(barcode))
-            return
+            return None
 
         return self.predict_from_product(product, deepest_only=deepest_only)
 
@@ -152,9 +153,9 @@ class LocalModel(BaseModel):
             self.load()
 
         X = self.get_input_from_products(products)
-        y_pred = self.model.predict(X)
+        y_pred = self.model.predict(X)  # type: ignore
         return self.process_predictions(
-            y_pred, self.category_names, self.taxonomy, deepest_only=deepest_only
+            y_pred, self.category_names, self.taxonomy, deepest_only=deepest_only  # type: ignore
         )
 
 
@@ -167,7 +168,7 @@ class RemoteModel(BaseModel):
 
         if product is None:
             logger.info("Product {} not found".format(barcode))
-            return
+            return None
 
         X = self.get_input_from_products([product])[0]
         X = [X[0].tolist(), X[1].tolist()]
@@ -175,7 +176,7 @@ class RemoteModel(BaseModel):
         data = {"signature_name": "serving_default", "instances": [X]}
 
         r = http_session.post(
-            "{}/{}:predict".format(TF_SERVING_BASE_URL, self.NAME), json=data
+            "{}/{}:predict".format(settings.TF_SERVING_BASE_URL, self.NAME), json=data
         )
         r.raise_for_status()
         response = r.json()
@@ -194,7 +195,7 @@ class ModelRegistry:
     @classmethod
     def get(cls) -> LocalModel:
         cls.load()
-        return cls.model
+        return cls.model  # type: ignore
 
 
 def fill_ancestors(
@@ -208,7 +209,7 @@ def fill_ancestors(
 
     if category_names is None:
         category_names = [
-            cat for cat, _ in sorted(category_to_id.items(), key=operator.itemgetter(1))
+            cat for cat, _ in sorted(category_to_id.items(), key=operator.itemgetter(1))  # type: ignore
         ]
     elif category_to_id is None:
         category_to_id = {cat: i for i, cat in enumerate(category_names)}
@@ -220,7 +221,7 @@ def fill_ancestors(
         if len(cat_mask):
             category_name = category_names[i]
             parents = taxonomy[category_name].get_parents_hierarchy()
-            parent_ids = [category_to_id[parent.id] for parent in parents]
+            parent_ids = [category_to_id[parent.id] for parent in parents]  # type: ignore
             for parent_id in parent_ids:
                 y_[cat_mask, parent_id] = 1
 
@@ -231,9 +232,9 @@ def predict_from_product(
     product: Dict,
     allowed_lang: Optional[Set[str]] = None,
     filter_blacklisted: bool = False,
-) -> List[Dict]:
+) -> Optional[ProductInsights]:
     if not keep_product(product, allowed_lang):
-        return []
+        return None
 
     model = ModelRegistry.get()
     predictions = model.predict_from_product(product, deepest_only=True)
@@ -265,9 +266,9 @@ def predict_from_product_batch(
     allowed_lang: Optional[Iterable[str]] = None,
     filter_blacklisted: bool = False,
     batch_size: int = 32,
-) -> Iterable[Dict]:
+) -> Iterable[ProductInsights]:
     model = ModelRegistry.get()
-    allowed_lang = set(allowed_lang)
+    allowed_lang = set(allowed_lang) if allowed_lang else set()
 
     filtered_product_iter = (p for p in product_iter if keep_product(p, allowed_lang))
 
@@ -283,26 +284,26 @@ def predict_from_product_batch(
             ]
 
         for predictions, product in zip(predictions_batch, product_batch):
-            for insight in format_predictions(product, predictions, "xx"):
-                yield insight
+            yield format_predictions(product, predictions, "xx")
 
 
 def format_predictions(
     product: Dict, predictions: List[CategoryPrediction], lang: str
-) -> List[Dict]:
-    formatted_predictions = []
+) -> ProductInsights:
+    insights = []
 
     for category, confidence in predictions:
-        formatted = {
-            "barcode": product["code"],
-            "category": category,
-            "lang": lang,
-            "model": "neural",
-            "confidence": confidence,
-        }
-        formatted_predictions.append(formatted)
+        insights.append(
+            RawInsight(
+                type=InsightType.category,
+                value_tag=category,
+                data={"lang": lang, "model": "neural", "confidence": confidence},
+            )
+        )
 
-    return formatted_predictions
+    return ProductInsights(
+        barcode=product["code"], type=InsightType.category, insights=insights
+    )
 
 
 def filter_blacklisted_categories(
