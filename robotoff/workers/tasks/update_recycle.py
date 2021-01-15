@@ -1,18 +1,15 @@
-from robotoff.robotoff.products import ProductDataset
-from robotoff.robotoff.insights.extraction import get_logger, requests
-from robotoff.robotoff.insights.ocr.core import get_json_for_image
+from robotoff.products import ProductDataset
+from robotoff.insights.extraction import get_logger, requests
+from robotoff.insights.ocr.core import get_json_for_image
+from typing import Dict
+
 
 logger = get_logger(__name__)
 
 
-def update_recycling(username, password):
+def update_recycling(username: str, password: str) -> None:
     """
-    Function to update "Recycle" image for the product
-    based on triggers
-
-    :param username:
-    :param password:
-    :return:
+    Function to update "Recycle" image for the product based on triggers
     """
 
     recycling_triggers = {
@@ -24,130 +21,111 @@ def update_recycling(username, password):
 
     # iterate products
     for product in dataset.stream().filter_nonempty_text_field("code"):
+        if "packaging-photo-to-be-selected" not in product.get("states", ""):
+            continue
 
-        if "packaging-photo-to-be-selected" in product.get("states", ""):
-            images = get_images(product.get("code"))
-            if images:
-                images_ids = [
-                    i
-                    for i, j in images.get("product", {}).get("images", {}).items()
-                    if not j.get("imgid")
-                ]
-                pack_images = {
-                    i: j
-                    for i, j in images.get("product", {}).get("images", {}).items()
-                    if "packaging" in i
-                }
-                images_ids = list(set(images_ids))
+        product_code = product.get("code")
+        if not product_code:
+            continue
 
-                for i in images_ids:
-                    # imageid - i, product
-                    for lang in recycling_triggers.keys():
+        images = get_images(product_code)
+        if not images:
+            continue
 
-                        if check_image_in_pack(i, lang, pack_images):
-                            continue
+        product_images_items = images.get("product", {}).get("images", {}).items()
+        images_ids = {i for i, j in product_images_items if not j.get("imgid")}
+        pack_images = {i: j for i, j in product_images_items if "packaging" in i}
 
-                        select_image(
-                            product.get("code"),
-                            i,
-                            product,
-                            lang,
-                            recycling_triggers[lang],
-                            pack_images,
-                            username,
-                            password,
-                        )
+        for i in images_ids:
+            # imageid - i, product
+            for lang in recycling_triggers.keys():
+                field = "packaging_{}".format(lang)
+
+                if check_image_in_pack(i, field, pack_images):
+                    continue
+
+                if not check_trigger_in_text(product_code, i, recycling_triggers[lang]):
+                    continue
+
+                select_image(product_code, i, field, pack_images, username, password)
 
 
-def get_images(ean):
+def get_images(ean: str) -> Dict:
     """
     Get images for the product
-
-    :param ean:
-    :return:
     """
+
     url = (
         "https://world.openfoodfacts.org/api/v0/product/" + ean + ".json?fields=images"
     )
     try:
-        r = requests.get(url)
-        if r.ok:
-            return r.json()
-    except Exception:
-        pass
+        result = requests.get(url)
+        if result.ok:
+            return result.json()
+    except requests.RequestException:
+        logger.warning("Exception in get_images: ean - %s", ean)
     return {}
 
 
 def select_image(
-    ean, image, product, lang, recycling_triggers, pack_images, username, password
-):
+    ean: str, img_id: str, field: str, pack_images: dict, username: str, password: str
+) -> None:
     """
     Find "Recycle" image and select for the product
-
-    :param ean:
-    :param image: imgid
-    :param product: object from dataset
-    :param lang: en/fr/...
-    :param recycling_triggers: ["throw away", "recycle"]
-    :param pack_images_keys: dict_keys to check if unselect is needed
-    :param username:
-    :param password:
-    :return:
     """
-    field = "packaging_{}".format(lang)
 
-    data = get_json_for_image(product.get("code"), image)
-    image_text = data.get("responses", [])
-    if image_text:
-        image_text = image_text[0].get("fullTextAnnotation", {}).get("text", "")
+    result_unselect_image = None
 
-        if any([1 if i in image_text.lower() else 0 for i in recycling_triggers]):
-            ru = None
-            if field in pack_images.keys():
-                ru = unselect_image(ean, field, username, password)
+    if field in pack_images:
+        result_unselect_image = unselect_image(ean, field, username, password)
 
-            r = reselect_image(ean, field, image, username, password)
+    result_reselect_image = reselect_image(ean, field, img_id, username, password)
 
-            if r:
-                if ru:
-                    logger.info(
-                        "Recycle image(changed): ",
-                        ean,
-                        field,
-                        pack_images[field].get("imgid"),
-                        "->",
-                        image,
-                    )
-                else:
-                    logger.info("Recycle image(selected): ", ean, field, "->", image)
+    if result_reselect_image and result_unselect_image:
+        logger.info(
+            "Recycle image(changed): %s %s %s %s %s",
+            ean,
+            field,
+            pack_images[field].get("imgid"),
+            "->",
+            img_id,
+        )
+    elif result_reselect_image:
+        logger.info("Recycle image(selected): %s %s %s %s", ean, field, "->", img_id)
 
 
-def check_image_in_pack(image, lang, pack_images):
+def check_trigger_in_text(ean: str, img_id: str, recycling_triggers: list) -> bool:
     """
-    Check if image has been already selected
-
-    :param image: imgid
-    :param lang: en/fr/...
-    :param pack_images: image ids [packaging_en, front_en]
-    :return:
+    Check "recycle" trigger from list of triggers in text annotation
     """
-    if "packaging_{}".format(lang) in pack_images:
-        current_id = pack_images.get("packaging_{}".format(lang), {}).get("imgid")
-        if current_id == image:
-            return True
+
+    data = get_json_for_image(ean, img_id)
+    if data:
+        image_text = data.get("responses", [])
+        if image_text:
+            image_text = image_text[0].get("fullTextAnnotation", {}).get("text", "")
+
+            if any(trigger in image_text.lower() for trigger in recycling_triggers):
+                return True
 
     return False
 
 
-def unselect_image(barcode, field_name, username, password):
+def check_image_in_pack(img_id: str, field: str, pack_images: dict) -> bool:
+    """
+    Check if image has been already selected
+    """
+
+    current_id = pack_images.get(field, {}).get("imgid")
+    if current_id == img_id:
+        return True
+
+    return False
+
+
+def unselect_image(barcode: str, field_name: str, username: str, password: str) -> bool:
     """
     Unselect image for product
-
-    :param barcode: ean
-    :param field_name: packaging_en
-    :param username:
-    :param password:
-    :return:
     """
 
     url = "https://world.openfoodfacts.org/cgi/product_image_unselect.pl"
@@ -158,49 +136,38 @@ def unselect_image(barcode, field_name, username, password):
         "password": password,
     }
     try:
-        r = requests.post(url, data=data)
-        if r.ok:
-            return True
-    except Exception:
-        logger.warn(
-            "Exception in unselect_image: barcode - {}, id - {}".format(
-                barcode, field_name
-            )
+        result = requests.post(url, data=data)
+        return result.ok
+    except requests.RequestException:
+        logger.warning(
+            "Exception in unselect_image: barcode - %s, id - %s", barcode, field_name
         )
-
     return False
 
 
-def reselect_image(barcode, field_name, img_id, username, password):
+def reselect_image(
+    barcode: str, field_name: str, img_id: str, username: str, password: str
+) -> bool:
     """
     Select image for product
-
-    :param barcode: ean
-    :param field_name: packaging_en
-    :param img_id: imgid=[0, 1, 2]
-    :param username:
-    :param password:
-    :return:
     """
 
-    if img_id:
-        url = "https://world.openfoodfacts.org/cgi/product_image_crop.pl"
-        data = {
-            "code": barcode,
-            "imgid": img_id,
-            "id": field_name,
-            "user_id": username,
-            "password": password,
-        }
-        try:
-            r = requests.post(url, data=data)
-            if r.ok:
-                return True
-        except Exception:
-            logger.warn(
-                "Exception in reselect_image: barcode - {}, id - {}, imgid - {}".format(
-                    barcode, field_name, img_id
-                )
-            )
-
+    url = "https://world.openfoodfacts.org/cgi/product_image_crop.pl"
+    data = {
+        "code": barcode,
+        "imgid": img_id,
+        "id": field_name,
+        "user_id": username,
+        "password": password,
+    }
+    try:
+        result = requests.post(url, data=data)
+        return result.ok
+    except requests.RequestException:
+        logger.warning(
+            "Exception in reselect_image: barcode - %s, id - %s, imgid - %s",
+            barcode,
+            field_name,
+            img_id,
+        )
     return False
