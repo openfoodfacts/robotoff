@@ -7,16 +7,17 @@ WEIGHT_REGEX = re.compile(
 )
 
 LABELS_REGEX = {
-    "fr": re.compile(r"agriculture biologique|biologique|bio|igp|aop|aoc|label rouge"),
+    "fr": re.compile(r"agriculture biologique|biologique|bio|igp|aop|aoc|label rouge|commerce équitable"),
     "en": re.compile(r"organic|pgi"),
-    "es": re.compile(r"ecológico|extra"),
+    "es": re.compile(r"ecológico|ecológica|extra|comercio justo"),
     "de": re.compile(r"bio"),
     "nl": re.compile(r"bio"),
-    "it": re.compile(r"biologica"),
+    "it": re.compile(r"biologica|biologico|commercio solidale|commercio equo e solidale"),
 }
 
 EXTRAWORDS_REGEX = {
     "fr": re.compile(r"gourmand"),
+    "fr": re.compile(r"délicieux"),
     "en": re.compile(r"delicious"),
 }
 BRANDS_REGEX = re.compile(r"k bio|ja!|coop|belvita|carrefour|auchan|danone")
