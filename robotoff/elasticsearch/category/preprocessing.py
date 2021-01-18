@@ -12,7 +12,7 @@ LABELS_REGEX = {
     "es": re.compile(r"ecológico|ecológica|extra|comercio justo"),
     "de": re.compile(r"bio"),
     "nl": re.compile(r"bio"),
-    "it": re.compile(r"biologica|biologico|commercio solidale|commercio equo e solidale"),
+    "it": re.compile(r"biologica|biologico|commercio solidale|commercio equo e solidale|da agricoltura biologica"),
 }
 
 EXTRAWORDS_REGEX = {
