@@ -16,8 +16,7 @@ LABELS_REGEX = {
 }
 
 EXTRAWORDS_REGEX = {
-    "fr": re.compile(r"gourmand"),
-    "fr": re.compile(r"délicieux"),
+    "fr": re.compile(r"gourmand|délicieux"),
     "en": re.compile(r"delicious"),
 }
 BRANDS_REGEX = re.compile(r"k bio|ja!|coop|belvita|carrefour|auchan|danone")
