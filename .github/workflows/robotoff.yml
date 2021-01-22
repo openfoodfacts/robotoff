@@ -88,4 +88,4 @@ jobs:
       # Launch tests
       #----------------------------------------------
       - name: Launch tests
-        run: python -m pytest tests
+        run: poetry run python -m pytest tests
