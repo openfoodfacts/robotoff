@@ -1,4 +1,4 @@
-name: Robotoff unit tests and deployments
+name: Robotoff code quality checks and unit tests
 
 on:
   push:
