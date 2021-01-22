@@ -9,8 +9,8 @@ import shutil
 import tempfile
 from typing import Dict, Iterable, Iterator, List, Optional, Union
 
-from pymongo import MongoClient
 import requests
+from pymongo import MongoClient
 
 from robotoff import settings
 from robotoff.mongo import MONGO_CLIENT_CACHE

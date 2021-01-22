@@ -1,11 +1,11 @@
 import json
 from typing import Optional
 
+import pytest
+
 from robotoff.products import is_special_image, is_valid_image
 from robotoff.settings import TEST_DATA_DIR
 from robotoff.utils.types import JSONType
-
-import pytest
 
 with (TEST_DATA_DIR / "images.json").open("r") as f:
     IMAGE_DATA = json.load(f)

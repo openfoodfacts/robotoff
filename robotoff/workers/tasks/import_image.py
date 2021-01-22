@@ -11,14 +11,14 @@ from robotoff.insights.extraction import (
 )
 from robotoff.insights.importer import BaseInsightImporter, InsightImporterFactory
 from robotoff.logos import (
+    LOGO_CONFIDENCE_THRESHOLDS,
     add_logos_to_ann,
     import_logo_insights,
-    LOGO_CONFIDENCE_THRESHOLDS,
     save_nearest_neighbors,
 )
-from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import get_server_type
-from robotoff.products import get_product_store, Product
+from robotoff.products import Product, get_product_store
 from robotoff.slack import notify_image_flag
 from robotoff.utils import get_logger
 from robotoff.workers.client import send_ipc_event

@@ -6,12 +6,11 @@ from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import (
-    get_text,
     OCRResult,
     SafeSearchAnnotationLikelihood,
+    get_text,
 )
 from robotoff.utils import text_file_iter
-
 
 LABELS_TO_FLAG = {
     "Face",

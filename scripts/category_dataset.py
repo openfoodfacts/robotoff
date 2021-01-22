@@ -1,11 +1,10 @@
-from typing import List, Iterator, Set, Optional
+from typing import Iterator, List, Optional, Set
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
-from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyNode
+from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
 from robotoff.utils import dump_jsonl, get_logger
 from robotoff.utils.types import JSONType
-
 
 logger = get_logger()
 

@@ -2,9 +2,10 @@ import logging
 import multiprocessing
 from typing import Callable, Dict
 
-from robotoff.models import db, ProductInsight
+from robotoff.models import ProductInsight, db
 from robotoff.products import fetch_dataset, has_dataset_changed
 from robotoff.utils import configure_root_logger, get_logger
+
 from .import_image import import_image, run_object_detection
 from .product_updated import update_insights
 

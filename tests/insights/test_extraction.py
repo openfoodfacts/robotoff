@@ -1,7 +1,8 @@
 from typing import Optional
-from robotoff.insights.extraction import get_barcode_from_url, get_source_from_ocr_url
 
 import pytest
+
+from robotoff.insights.extraction import get_barcode_from_url, get_source_from_ocr_url
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from robotoff.off import get_product, OFFAuthentication, save_ingredients
+from robotoff.off import OFFAuthentication, get_product, save_ingredients
 from robotoff.utils import http_session
 
 

@@ -1,7 +1,7 @@
-from robotoff.insights.dataclass import ProductInsights, RawInsight
-from robotoff.insights._enum import InsightType
-
 import pytest
+
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
 
 
 def test_product_insights_merge():

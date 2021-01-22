@@ -1,6 +1,6 @@
-from robotoff import settings
-from typing import List, Iterable, Dict
+from typing import Dict, Iterable, List
 
+from robotoff import settings
 from robotoff.utils.es import generate_msearch_body
 
 

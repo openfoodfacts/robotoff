@@ -2,8 +2,8 @@ import operator
 import pathlib
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
-from more_itertools import chunked
 import numpy as np
+from more_itertools import chunked
 from tensorflow import keras
 
 from robotoff import settings
@@ -23,7 +23,6 @@ from robotoff.taxonomy import Taxonomy
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_nlp
-
 
 logger = get_logger(__name__)
 

@@ -6,8 +6,8 @@ from robotoff.brands import BRAND_BLACKLIST_STORE, BRAND_PREFIX_STORE, in_barcod
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight
-from robotoff.products import is_valid_image, Product, ProductStore
-from robotoff.taxonomy import get_taxonomy, Taxonomy
+from robotoff.products import Product, ProductStore, is_valid_image
+from robotoff.taxonomy import Taxonomy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 

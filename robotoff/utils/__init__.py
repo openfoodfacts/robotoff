@@ -7,8 +7,8 @@ import tempfile
 from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 import orjson
-from PIL import Image
 import requests
+from PIL import Image
 
 from robotoff import settings
 

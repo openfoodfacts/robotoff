@@ -61,7 +61,7 @@ jobs:
       # Run linters
       #----------------------------------------------
       - name: Toml config file quality
-        run: poetry run toml-sort --check pyproject.toml poetry.toml
+        run: poetry run toml-sort --check **/*.toml
 
       - name: Code Quality Black
         run: poetry run black . --check

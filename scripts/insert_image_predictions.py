@@ -5,12 +5,7 @@ from typing import Set, Tuple
 import tqdm
 
 from robotoff import settings
-from robotoff.models import (
-    db,
-    ImageModel,
-    ImagePrediction,
-    LogoAnnotation,
-)
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import generate_image_path
 from robotoff.utils import get_logger, jsonl_iter
 

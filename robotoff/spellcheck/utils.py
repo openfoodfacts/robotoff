@@ -1,7 +1,7 @@
 from typing import Set
 
-from robotoff.settings import INGREDIENT_TOKENS_PATH, FR_TOKENS_PATH
-from robotoff.utils import text_file_iter, cache
+from robotoff.settings import FR_TOKENS_PATH, INGREDIENT_TOKENS_PATH
+from robotoff.utils import cache, text_file_iter
 
 
 def get_fr_known_tokens() -> Set[str]:

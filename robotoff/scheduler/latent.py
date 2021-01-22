@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional, Set
 import uuid
+from typing import Dict, List, Optional, Set
 
 from robotoff import settings
 from robotoff.insights._enum import InsightType
