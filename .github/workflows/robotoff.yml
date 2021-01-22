@@ -2,9 +2,8 @@ name: Robotoff code quality checks and unit tests
 
 on:
   push:
-    paths:
-      - "robotoff/**"
-      - "add-poetry"
+  # paths:
+  #   - "robotoff/**"
   pull_request:
     paths:
       - "robotoff/**"
