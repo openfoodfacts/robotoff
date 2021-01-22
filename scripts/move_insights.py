@@ -1,8 +1,9 @@
-from robotoff.insights._enum import InsightType
-from robotoff.models import BaseModel, ProductInsight
-from playhouse.postgres_ext import BinaryJSONField
 import peewee
 import tqdm
+from playhouse.postgres_ext import BinaryJSONField
+
+from robotoff.insights._enum import InsightType
+from robotoff.models import BaseModel, ProductInsight
 
 
 class LatentProductInsight(BaseModel):

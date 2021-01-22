@@ -7,7 +7,7 @@ from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import get_text, OCRResult
+from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.text import get_tag

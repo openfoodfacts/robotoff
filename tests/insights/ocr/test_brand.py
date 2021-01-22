@@ -3,10 +3,7 @@ from typing import Dict, Set
 import pytest
 
 from robotoff import settings
-from robotoff.insights.ocr.brand import (
-    extract_brands,
-    generate_brand_keyword_processor,
-)
+from robotoff.insights.ocr.brand import extract_brands, generate_brand_keyword_processor
 from robotoff.utils import text_file_iter
 
 

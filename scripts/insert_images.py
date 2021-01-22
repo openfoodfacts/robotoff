@@ -1,7 +1,7 @@
 import tqdm
 
 from robotoff import settings
-from robotoff.models import db, ImageModel
+from robotoff.models import ImageModel, db
 from robotoff.off import generate_image_url
 from robotoff.products import Product, ProductDataset
 from robotoff.utils import get_logger

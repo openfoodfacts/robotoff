@@ -3,8 +3,8 @@ import json
 from typing import List, Optional
 from urllib.parse import urlparse
 
-from influxdb import InfluxDBClient
 import requests
+from influxdb import InfluxDBClient
 
 from robotoff import settings
 from robotoff.utils import get_logger

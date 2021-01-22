@@ -5,14 +5,13 @@ import peewee
 from robotoff import settings
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
+    UNKNOWN_INSIGHT_RESULT,
     AnnotationResult,
     InsightAnnotatorFactory,
-    UNKNOWN_INSIGHT_RESULT,
 )
 from robotoff.models import ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
-
 
 logger = get_logger(__name__)
 

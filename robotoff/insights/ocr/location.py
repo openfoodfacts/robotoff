@@ -1,8 +1,8 @@
 import dataclasses
 import gzip
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import BinaryIO, Iterable, List, Optional, Set, Tuple, Union
 
 from flashtext import KeywordProcessor

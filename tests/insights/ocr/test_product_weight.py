@@ -5,10 +5,10 @@ import pytest
 from robotoff.insights.ocr.dataclass import OCRRegex
 from robotoff.insights.ocr.product_weight import (
     PRODUCT_WEIGHT_REGEX,
-    normalize_weight,
-    is_valid_weight,
     is_extreme_weight,
     is_suspicious_weight,
+    is_valid_weight,
+    normalize_weight,
 )
 
 

@@ -1,11 +1,10 @@
 import array
-from collections import defaultdict
 import itertools
 import warnings
+from collections import defaultdict
 
 import numpy as np
 import scipy.sparse as sp
-
 
 """Copied from the scikit-learn project (BSD-licenced)."""
 

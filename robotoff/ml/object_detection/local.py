@@ -2,13 +2,13 @@ import pathlib
 
 import numpy as np
 import PIL
-from PIL import Image
 import tensorflow as tf
+from PIL import Image
 
 from robotoff.ml.object_detection.core import (
+    ObjectDetectionRawResult,
     add_boxes_and_labels,
     convert_image_to_array,
-    ObjectDetectionRawResult,
 )
 from robotoff.ml.object_detection.utils import label_map_util
 from robotoff.ml.object_detection.utils import ops as utils_ops

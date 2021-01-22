@@ -2,8 +2,8 @@ import pathlib
 from typing import Dict, Iterable, List, Optional
 from urllib.parse import urlparse
 
-from PIL import Image
 import requests
+from PIL import Image
 
 from robotoff.insights import ocr
 from robotoff.insights._enum import InsightType

@@ -1,21 +1,21 @@
 import datetime
 import functools
 import os
-from typing import Dict, Iterable, Optional
 import uuid
+from typing import Dict, Iterable, Optional
 
+import sentry_sdk
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.blocking import BlockingScheduler
-import sentry_sdk
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
 from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.insights.annotate import (
-    InsightAnnotatorFactory,
     UPDATED_ANNOTATION_RESULT,
+    InsightAnnotatorFactory,
 )
 from robotoff.insights.importer import CategoryImporter
 from robotoff.insights.validator import (
@@ -25,19 +25,18 @@ from robotoff.insights.validator import (
     validate_insight,
 )
 from robotoff.metrics import save_facet_metrics
-from robotoff.models import db, ProductInsight
+from robotoff.models import ProductInsight, db
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
-    fetch_dataset,
-    has_dataset_changed,
     Product,
     ProductDataset,
     ProductStore,
+    fetch_dataset,
+    has_dataset_changed,
 )
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
-
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(settings.SENTRY_DSN)

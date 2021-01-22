@@ -1,7 +1,7 @@
 import collections
-from enum import Enum
 import functools
 import pathlib
+from enum import Enum
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 import orjson

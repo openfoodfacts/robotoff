@@ -1,13 +1,12 @@
-from collections import Counter, defaultdict
 import enum
 import math
 import operator
 import re
+from collections import Counter, defaultdict
 from typing import Callable, Dict, List, Optional, Pattern, Tuple, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
-
 
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 

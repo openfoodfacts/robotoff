@@ -18,8 +18,8 @@ from robotoff.ml.category.neural.model import (
     predict_from_product as predict_category_from_product_ml,
 )
 from robotoff.models import ProductInsight
-from robotoff.off import get_server_type, ServerType
-from robotoff.products import get_product, get_product_store, Product
+from robotoff.off import ServerType, get_server_type
+from robotoff.products import Product, get_product, get_product_store
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 

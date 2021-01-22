@@ -7,7 +7,6 @@ from robotoff.settings import (
     INGREDIENT_TOKENS_PATH,
     INGREDIENTS_FR_PATH,
 )
-
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 

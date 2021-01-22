@@ -14,7 +14,6 @@ from robotoff.slack import post_message
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 
-
 logger = get_logger(__name__)
 
 

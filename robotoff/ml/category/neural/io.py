@@ -7,6 +7,7 @@ import dacite
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy
 from robotoff.utils import text_file_iter
+
 from .dataclass import Config
 
 PRODUCT_NAME_VOC_NAME = "product_name_voc.json"
