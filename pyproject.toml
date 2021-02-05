@@ -29,9 +29,9 @@ line_length = 88
 [tool.poetry]
 name = "robotoff"
 version = "1.0.13"
-description = "Real-time and batch prediction service for Openfoodfacts"
+description = "Real-time and batch prediction service for Openfoodfacts."
 authors = ["Openfoodfacts Team"]
-license = "License :: OSI Approved :: GNU Affero General Public License v3"
+license = "GNU Affero General Public License v3"
 
 [tool.poetry.dependencies]
 python = "^3.7"
