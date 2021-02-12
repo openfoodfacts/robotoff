@@ -20,3 +20,5 @@ docker-compose.production.yml
 images
 
 .venv/
+
+tf_models/nutriscore
