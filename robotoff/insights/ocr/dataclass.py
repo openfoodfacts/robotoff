@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 import enum
 import math
 import operator
+from robotoff.utils.text import get_tag
 import re
 from typing import Callable, Dict, List, Optional, Pattern, Tuple, Union
 

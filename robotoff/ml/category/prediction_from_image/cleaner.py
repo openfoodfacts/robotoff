@@ -1,12 +1,9 @@
-from sklearn.base import TransformerMixin, BaseEstimator
 from spellchecker import SpellChecker
 import re
 import string
 import unicodedata
-import pandas as pd
-import nltk
 
-# Transformer with SpellCheck
+
 class Cleaner():
 
 

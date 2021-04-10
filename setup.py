@@ -37,6 +37,7 @@ setup(
         "pymongo>=3.0.0<3.1.0",
         "dacite==1.5.0",
         "orjson==3.4.5",
+        "pyspellchecker==0.6.1"
     ],
     include_package_data=True,
     tests_require=["pytest", "pytest-mock"],

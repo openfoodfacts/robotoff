@@ -19,6 +19,7 @@ from robotoff.insights.ocr.packaging import find_packaging
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
+from robotoff.insights.ocr.category import find_category
 from robotoff.off import generate_json_ocr_url, split_barcode
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
@@ -101,6 +102,9 @@ def extract_insights(
 
     elif insight_type == InsightType.image_lang:
         return get_image_lang(content)
+
+    elif insight_type == InsightType.category:
+        return find_category(content)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
