@@ -47,5 +47,5 @@ def find_category(content: Union[OCRResult, str])-> List[RawInsight]:
             )
     return results
 
-#if __name__ == '__main__':
-    #print(find_category())
+if __name__ == '__main__':
+    print(find_category())

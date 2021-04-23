@@ -42,3 +42,5 @@ def test_find_labels(text: str, value_tags: List[str]):
     insights = find_labels(text)
     detected_value_tags = set(i.value_tag for i in insights)
     assert detected_value_tags == set(value_tags)
+
+
