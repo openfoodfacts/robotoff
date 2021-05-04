@@ -215,6 +215,25 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "domdf-python-tools"
+version = "2.9.0"
+description = "Helpful functions for Python 🐍 🛠️"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+importlib-metadata = {version = ">=1.5.0", markers = "python_version < \"3.9\""}
+natsort = ">=7.1.0"
+pydash = ">=4.7.4"
+typing-extensions = ">=3.7.4.3"
+
+[package.extras]
+all = ["pytest (>=6.2.0)", "pytest-regressions (>=2.0.2)", "pytz (>=2019.1)"]
+dates = ["pytz (>=2019.1)"]
+testing = ["pytest (>=6.2.0)", "pytest-regressions (>=2.0.2)"]
+
+[[package]]
 name = "elasticsearch"
 version = "7.10.1"
 description = "Python client for Elasticsearch"
@@ -302,6 +321,18 @@ flake8 = ">=3.0.0"
 
 [package.extras]
 dev = ["coverage", "black", "hypothesis", "hypothesmith"]
+
+[[package]]
+name = "flake8-github-actions"
+version = "0.1.1"
+description = "GitHub Actions integration for flake8."
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+domdf-python-tools = ">=2.0.0"
+flake8 = ">=3.8.4"
 
 [[package]]
 name = "flashtext"
@@ -633,6 +664,18 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "natsort"
+version = "7.1.1"
+description = "Simple yet flexible natural sorting in Python."
+category = "dev"
+optional = false
+python-versions = ">=3.4"
+
+[package.extras]
+fast = ["fastnumbers (>=2.0.0)"]
+icu = ["PyICU (>=1.0.0)"]
+
+[[package]]
 name = "networkx"
 version = "2.5"
 description = "Python package for creating and manipulating graphs and networks"
@@ -855,6 +898,17 @@ description = "Python style guide checker"
 category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
+name = "pydash"
+version = "5.0.0"
+description = "The kitchen sink of Python utility libraries for doing \"stuff\" in a functional way. Based on the Lo-Dash Javascript library."
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+dev = ["black", "coverage", "docformatter", "flake8", "flake8-black", "flake8-bugbear", "flake8-isort", "invoke", "isort", "pylint", "pytest", "pytest-cov", "pytest-flake8", "pytest-pylint", "sphinx", "sphinx-rtd-theme", "tox", "twine", "wheel"]
 
 [[package]]
 name = "pyflakes"
@@ -1398,7 +1452,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "ccb9a8e5bcf66de11008f3d869d983208fe7fcf1ba19d49591cfeedcad7c4014"
+content-hash = "d8e6b9a943921169334785c750d6fa8ad073d3ea4713d58c1ef01dab90f23e5a"
 
 [metadata.files]
 absl-py = [
@@ -1502,6 +1556,10 @@ distlib = [
     {file = "distlib-0.3.1-py2.py3-none-any.whl", hash = "sha256:8c09de2c67b3e7deef7184574fc060ab8a793e7adbb183d942c389c8b13c52fb"},
     {file = "distlib-0.3.1.zip", hash = "sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1"},
 ]
+domdf-python-tools = [
+    {file = "domdf_python_tools-2.9.0-py3-none-any.whl", hash = "sha256:6d6a5ad6033d67965f8602497415ef40971fa4d8d1a98db2437a5ecc34f3e40d"},
+    {file = "domdf_python_tools-2.9.0.tar.gz", hash = "sha256:6af5d43b3de99882af3f61a5b1a85332d106aeaf2a7ef11698e452b3cd230a83"},
+]
 elasticsearch = [
     {file = "elasticsearch-7.10.1-py2.py3-none-any.whl", hash = "sha256:4ebd34fd223b31c99d9f3b6b6236d3ac18b3046191a37231e8235b06ae7db955"},
     {file = "elasticsearch-7.10.1.tar.gz", hash = "sha256:a725dd923d349ca0652cf95d6ce23d952e2153740cf4ab6daf4a2d804feeed48"},
@@ -1540,6 +1598,10 @@ flake8 = [
 flake8-bugbear = [
     {file = "flake8-bugbear-21.4.3.tar.gz", hash = "sha256:2346c81f889955b39e4a368eb7d508de723d9de05716c287dc860a4073dc57e7"},
     {file = "flake8_bugbear-21.4.3-py36.py37.py38-none-any.whl", hash = "sha256:4f305dca96be62bf732a218fe6f1825472a621d3452c5b994d8f89dae21dbafa"},
+]
+flake8-github-actions = [
+    {file = "flake8-github-actions-0.1.1.tar.gz", hash = "sha256:d9a2f134c3ce00ba66e75491f28b3106b7290f6505609e1c9c6ecf17aa1fe525"},
+    {file = "flake8_github_actions-0.1.1-py3-none-any.whl", hash = "sha256:5d569ac09364d4b8351d7c21868f05fa45962983a797745575d5194e3ddd4cbc"},
 ]
 flashtext = [
     {file = "flashtext-2.7.tar.gz", hash = "sha256:a1be2b93e09d4f0deee4aad72b91a7127b61fb8b8034ca9a9c78ea745d8b05cf"},
@@ -1822,6 +1884,10 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
+natsort = [
+    {file = "natsort-7.1.1-py3-none-any.whl", hash = "sha256:d0f4fc06ca163fa4a5ef638d9bf111c67f65eedcc7920f98dec08e489045b67e"},
+    {file = "natsort-7.1.1.tar.gz", hash = "sha256:00c603a42365830c4722a2eb7663a25919551217ec09a243d3399fa8dd4ac403"},
+]
 networkx = [
     {file = "networkx-2.5-py3-none-any.whl", hash = "sha256:8c5812e9f798d37c50570d15c4a69d5710a18d77bafc903ee9c5fba7454c616c"},
     {file = "networkx-2.5.tar.gz", hash = "sha256:7978955423fbc9639c10498878be59caf99b44dc304c2286162fd24b458c1602"},
@@ -2069,6 +2135,10 @@ pyasn1-modules = [
 pycodestyle = [
     {file = "pycodestyle-2.6.0-py2.py3-none-any.whl", hash = "sha256:2295e7b2f6b5bd100585ebcb1f616591b652db8a741695b3d8f5d28bdc934367"},
     {file = "pycodestyle-2.6.0.tar.gz", hash = "sha256:c58a7d2815e0e8d7972bf1803331fb0152f867bd89adf8a01dfd55085434192e"},
+]
+pydash = [
+    {file = "pydash-5.0.0-py3-none-any.whl", hash = "sha256:0d87f879a3df4ad9389ab6d63c69eea078517d41541ddd5744cfcff3396e8543"},
+    {file = "pydash-5.0.0.tar.gz", hash = "sha256:845262df83b5411742e5f7f7dbfa5ed4d0ddac6d7d0a13c4375c6a3c40d4e8f4"},
 ]
 pyflakes = [
     {file = "pyflakes-2.2.0-py2.py3-none-any.whl", hash = "sha256:0d94e0e05a19e57a99444b6ddcf9a6eb2e5c68d3ca1e98e90707af8152c90a92"},

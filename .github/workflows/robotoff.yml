@@ -68,7 +68,7 @@ jobs:
         run: poetry run black . --check
 
       - name: Code quality Flake8
-        run: poetry run flake8 .
+        run: poetry run flake8 --format github
 
       - name: Code quality isort
         run: poetry run isort . --check
