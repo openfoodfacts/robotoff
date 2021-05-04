@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-08-02 21:27\n"
+"PO-Revision-Date: 2021-02-19 16:23\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Catalan\n"
 "Language: ca\n"
@@ -14,20 +14,20 @@ msgstr ""
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: ca\n"
-"X-Crowdin-File: /master/i18n/robotoff.pot\n"
-"X-Crowdin-File-ID: 1326\n"
+"X-Crowdin-File: robotoff.pot\n"
+"X-Crowdin-File-ID: 1674\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr "Aquest producte pertany a la categoria indicada?"
+msgstr "El producte pertany a aquesta categoria?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr "El producte té l'etiqueta indicada?"
+msgstr "El producte té aquesta etiqueta?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr "El producte pertany a la marca indicada?"
+msgstr "El producte pertany a aquesta marca?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
@@ -35,5 +35,5 @@ msgstr "Aquest pes coincideix amb el que es mostra al producte?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr "És aquesta una imatge nutricional d’aquesta llengua?"
+msgstr "És aquesta una imatge nutricional per aquest idioma?"
 

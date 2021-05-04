@@ -63,6 +63,7 @@ sklearn-hierarchical-classification = "^1.3.2"
 matplotlib = "^3.3.3"
 tensorflow = "^2.4.1"
 scipy = "^1.6.0"
+h5py = "2.10.0"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "^0.19.5"
