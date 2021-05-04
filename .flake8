@@ -1,5 +1,7 @@
 [flake8]
-ignore = E203, E266, E501, W503, W504, E741, Q000
+ignore = E203, E501, W503
 max-line-length = 88
 application-package-names=robotoff
 exclude = .git,__pycache__,build,dist,*_pb2.py,.venv
+per-file-ignores =
+    robotoff/cli/main.py:B008

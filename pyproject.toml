@@ -43,7 +43,6 @@ falcon = "^2.0.0"
 falcon-cors = "^1.1.7"
 falcon-multipart = "^0.2.0"
 elasticsearch = "^7.10.1"
-click = "^7.1.2"
 pymongo = "^3.11.2"
 spacy = "^2.3.5"
 dacite = "^1.6.0"
@@ -64,6 +63,7 @@ matplotlib = "^3.3.3"
 tensorflow = "^2.4.1"
 scipy = "^1.6.0"
 h5py = "2.10.0"
+typer = "^0.3.2"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "^0.19.5"
@@ -80,3 +80,6 @@ toml-sort = "^0.18.0"
 isort = "^5.7.0"
 flake8-bugbear = "^21.4.3"
 flake8-github-actions = "^0.1.1"
+
+[tool.poetry.scripts]
+robotoff-cli = 'robotoff.cli.main:main'

@@ -1382,14 +1382,7 @@ codepoint_to_replacement = [
 translate_table = codepoint_to_self + codepoint_to_replacement
 
 
-def none_factory():
-    return None
-
-
-default_translate_table = defaultdict(none_factory, translate_table)
-
-
-def fold(str, replacement=""):
+def fold(string: str, replacement: str = "") -> str:
     """Fold string to ASCII.
 
     Unmapped characters should be replaced with empty string by default, or other
@@ -1399,23 +1392,19 @@ def fold(str, replacement=""):
     provided.
     """
 
-    if str is None:
+    if string is None:
         return ""
 
     try:
         # If string contains only ASCII characters, return it.
-        str.encode("ascii")
-        return str
+        string.encode("ascii")
+        return string
     except UnicodeEncodeError:
         pass
 
     if replacement:
-
-        def replacement_factory():
-            return replacement
-
-        t = defaultdict(replacement_factory, translate_table)
+        t = defaultdict(lambda: replacement, translate_table)
     else:
-        t = default_translate_table
+        t = defaultdict(lambda: None, translate_table)  # type: ignore
 
-    return str.translate(t)
+    return string.translate(t)
