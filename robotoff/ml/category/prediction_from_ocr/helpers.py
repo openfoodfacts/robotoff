@@ -36,6 +36,3 @@ list_categories = ['appetizers',
                     'unsweetened beverages',
                     'vegetables',
                     'waters and flavored waters']
-
-if __name__ == "__main__":
-    print(list_categories)
