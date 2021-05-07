@@ -53,5 +53,6 @@ if __name__ == "__main__":
             file_id=RIDGE_PREDICTOR_GOOGLE_DRIVE_ID,
             destination=RIDGE_PREDICTOR_FILEPATH,
         )
+        print("Download complete.")
     else:
         print("File already exist. Skip.")
