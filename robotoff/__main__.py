@@ -20,9 +20,10 @@ if __name__ == "__main__":
     @click.argument("ocr_url")
     def predict_insight(ocr_url: str):
         import json
+
         from robotoff.insights.extraction import (
-            extract_ocr_insights,
             DEFAULT_INSIGHT_TYPES,
+            extract_ocr_insights,
         )
         from robotoff.utils import get_logger
 
@@ -64,6 +65,7 @@ if __name__ == "__main__":
         source: str, insight_type: str, output: str, keep_empty: bool
     ):
         from typing import TextIO, Union
+
         from robotoff.cli import insights
         from robotoff.insights._enum import InsightType
         from robotoff.utils import get_logger
@@ -95,10 +97,10 @@ if __name__ == "__main__":
     @click.command()
     @click.argument("output")
     def predict_category(output: str):
-        from robotoff.elasticsearch.category.predict import predict_from_dataset
-        from robotoff.utils import dump_jsonl
-        from robotoff.products import ProductDataset
         from robotoff import settings
+        from robotoff.elasticsearch.category.predict import predict_from_dataset
+        from robotoff.products import ProductDataset
+        from robotoff.utils import dump_jsonl
 
         dataset = ProductDataset(settings.JSONL_DATASET_PATH)
         insights = predict_from_dataset(dataset)
@@ -121,9 +123,9 @@ if __name__ == "__main__":
         dry: bool,
     ):
         from robotoff.cli.spellcheck import correct_ingredient
-        from robotoff.utils.text import get_tag
-        from robotoff.utils import get_logger
         from robotoff.off import OFFAuthentication
+        from robotoff.utils import get_logger
+        from robotoff.utils.text import get_tag
 
         get_logger()
         ingredient = get_tag(pattern)
@@ -146,10 +148,9 @@ if __name__ == "__main__":
         max_errors: Optional[int] = None,
         limit: Optional[int] = None,
     ):
-        from robotoff.utils import dump_jsonl
-        from robotoff.utils.es import get_es_client
         from robotoff.spellcheck import Spellchecker
-        from robotoff.utils import get_logger
+        from robotoff.utils import dump_jsonl, get_logger
+        from robotoff.utils.es import get_es_client
 
         logger = get_logger()
         logger.info("Max errors: {}".format(max_errors))
@@ -166,9 +167,10 @@ if __name__ == "__main__":
     @click.option("--confidence", type=float, default=1)
     def test_spellcheck(text: str, confidence: float):
         import json
-        from robotoff.utils.es import get_es_client
+
         from robotoff.spellcheck import Spellchecker
         from robotoff.utils import get_logger
+        from robotoff.utils.es import get_es_client
 
         get_logger()
         client = get_es_client()
@@ -180,7 +182,7 @@ if __name__ == "__main__":
     @click.command()
     @click.option("--minify/--no-minify", default=False)
     def download_dataset(minify: bool):
-        from robotoff.products import has_dataset_changed, fetch_dataset
+        from robotoff.products import fetch_dataset, has_dataset_changed
         from robotoff.utils import get_logger
 
         get_logger()
@@ -189,15 +191,40 @@ if __name__ == "__main__":
             fetch_dataset(minify)
 
     @click.command()
+    @click.option("--force/--no-force", default=False)
+    def download_models(force: bool) -> None:
+        """Download model weights from remote URLs.
+
+        If models have already been downloaded, the command is skipped unless
+        --force option is used.
+
+        TODO: add all models to this CLI.
+        """
+        from robotoff.cli.file import download_file
+        from robotoff.ml.category.prediction_from_ocr.constants import (
+            RIDGE_PREDICTOR_FILEPATH,
+            RIDGE_PREDICTOR_URL,
+        )
+        from robotoff.utils import get_logger
+
+        get_logger()
+
+        download_file(
+            url=RIDGE_PREDICTOR_URL,
+            destination=RIDGE_PREDICTOR_FILEPATH,
+            force=force,
+        )
+
+    @click.command()
     @click.argument("barcode")
     @click.option("--deepest-only/--all-categories", default=False)
     @click.option("--blacklist/--no-blacklist", default=False)
     def categorize(barcode: str, deepest_only: bool, blacklist: bool):
+        from robotoff import settings
         from robotoff.ml.category.neural.model import (
             LocalModel,
             filter_blacklisted_categories,
         )
-        from robotoff import settings
         from robotoff.utils import get_logger
 
         get_logger()
@@ -224,14 +251,12 @@ if __name__ == "__main__":
         input_: Optional[pathlib.Path],
         generate_from: Optional[pathlib.Path],
     ):
-        from robotoff.cli.insights import (
-            generate_from_ocr_archive,
-            import_insights as import_insights_,
-            insights_iter,
-        )
         from robotoff import settings
-        from robotoff.utils import get_logger
+        from robotoff.cli.insights import generate_from_ocr_archive
+        from robotoff.cli.insights import import_insights as import_insights_
+        from robotoff.cli.insights import insights_iter
         from robotoff.insights._enum import InsightType
+        from robotoff.utils import get_logger
 
         logger = get_logger()
         server_domain = server_domain or settings.OFF_SERVER_DOMAIN
@@ -263,6 +288,7 @@ if __name__ == "__main__":
         delta: int,
     ):
         import datetime
+
         from robotoff.cli import insights
         from robotoff.utils import get_logger
 
@@ -282,9 +308,9 @@ if __name__ == "__main__":
         import orjson
 
         from robotoff import settings
-        from robotoff.utils.es import get_es_client
-        from robotoff.elasticsearch.product.dump import product_export
         from robotoff.elasticsearch.category.dump import category_export
+        from robotoff.elasticsearch.product.dump import product_export
+        from robotoff.utils.es import get_es_client
 
         if index:
             with settings.ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH.open("rb") as f:
@@ -311,14 +337,14 @@ if __name__ == "__main__":
     @click.command()
     @click.option("--sleep-time", type=float, default=0.5)
     def add_logo_to_ann(sleep_time: float):
-        from itertools import groupby
         import time
+        from itertools import groupby
 
         import requests
         import tqdm
 
         from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
-        from robotoff.models import db, ImageModel, ImagePrediction, LogoAnnotation
+        from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
         from robotoff.utils import get_logger
 
         logger = get_logger()
@@ -380,7 +406,7 @@ if __name__ == "__main__":
         server_domain: Optional[str] = None,
         annotated: Optional[bool] = None,
     ):
-        from robotoff.models import db, LogoAnnotation, ImageModel, ImagePrediction
+        from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
         from robotoff.utils import dump_jsonl
 
         with db:
@@ -412,6 +438,7 @@ if __name__ == "__main__":
     cli.add_command(generate_spellcheck_insights)
     cli.add_command(test_spellcheck)
     cli.add_command(download_dataset)
+    cli.add_command(download_models)
     cli.add_command(categorize)
     cli.add_command(import_insights)
     cli.add_command(apply_insights)

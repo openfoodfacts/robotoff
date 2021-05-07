@@ -1,5 +1,9 @@
-RIDGE_PREDICTOR_GOOGLE_DRIVE_ID = "1TTzoKQ_G_NxOeU742DyJ8eQwNZbwn3mD"
-RIDGE_PREDICTOR_FILEPATH = "bestridge.joblib"
+from pathlib import Path
+
+# TODO: move all weights file paths definition in the same place.
+# Model an be downloaded from the CLI.
+RIDGE_PREDICTOR_URL = "https://github.com/openfoodfacts/robotoff-models/releases/latest/download/bestridge_compressed.joblib"
+RIDGE_PREDICTOR_FILEPATH = Path("weights/bestridge_compressed.joblib")
 
 LIST_CATEGORIES = [
     "appetizers",

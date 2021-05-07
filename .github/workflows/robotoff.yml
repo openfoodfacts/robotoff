@@ -31,10 +31,11 @@ jobs:
       - name: Load cache OCR predictor weight file
         uses: actions/cache@v2
         with:
-          path: bestridge.joblib
+          path: weights/
           key: ${{ runner.os }}-${{ hashFiles('**/robotoff/ml/category/prediction_from_ocr/constants.py') }}
+
       - name: Download OCR predictor weight file if not cached
-        run: python -m robotoff.ml.category.prediction_from_ocr.get_model_from_drive
+        run: python -m robotoff download-models
 
       - name: Launch tests
         run: python -m pytest tests
