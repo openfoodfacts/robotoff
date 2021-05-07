@@ -4,6 +4,8 @@ from google drive directly in the app. It can take several minutes.
 
 The model size should be 1,44 Go.
 """
+from pathlib import Path
+
 import requests
 
 URL = "https://docs.google.com/uc?export=download"
@@ -42,9 +44,14 @@ def _save_response_content(response, destination):
 
 
 if __name__ == "__main__":
+    # Used in github action
     from .constants import RIDGE_PREDICTOR_FILEPATH, RIDGE_PREDICTOR_GOOGLE_DRIVE_ID
 
-    download_file_from_google_drive(
-        file_id=RIDGE_PREDICTOR_GOOGLE_DRIVE_ID,
-        destination=RIDGE_PREDICTOR_FILEPATH,
-    )
+    if not Path(RIDGE_PREDICTOR_FILEPATH).is_file():
+        print("Download file from GDrive.")
+        download_file_from_google_drive(
+            file_id=RIDGE_PREDICTOR_GOOGLE_DRIVE_ID,
+            destination=RIDGE_PREDICTOR_FILEPATH,
+        )
+    else:
+        print("File already exist. Skip.")
