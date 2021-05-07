@@ -2,13 +2,12 @@ import pathlib
 
 import numpy as np
 import PIL
-from PIL import Image
 import tensorflow as tf
-
+from PIL import Image
 from robotoff.ml.object_detection.core import (
+    ObjectDetectionRawResult,
     add_boxes_and_labels,
     convert_image_to_array,
-    ObjectDetectionRawResult,
 )
 from robotoff.ml.object_detection.utils import label_map_util
 from robotoff.ml.object_detection.utils import ops as utils_ops
@@ -46,7 +45,7 @@ class ObjectDetectionModel:
         return cls(graph=detection_graph, label_map=label_map)
 
     def _run_inference_for_single_image(
-        self, image: np.array
+        self, image: np.ndarray
     ) -> ObjectDetectionRawResult:
         with tf.Session(graph=self.graph) as sess:
             # Get handles to input and output tensors

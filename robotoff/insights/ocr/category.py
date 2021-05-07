@@ -1,51 +1,50 @@
+from typing import List, Union
 
-import joblib
 import numpy as np
-from robotoff.ml.category.prediction_from_ocr.helpers import list_categories
-from robotoff.ml.category.prediction_from_ocr.predictor import Predictor
-from robotoff.ml.category.prediction_from_ocr.cleaner import clean_ocr_text
-from typing import Dict, List, Optional, Union
-from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import OCRResult, get_text
+from robotoff.ml.category.prediction_from_ocr.constants import LIST_CATEGORIES
+from robotoff.ml.category.prediction_from_ocr.predictor import Predictor
+
+HESITATION_THRESHOLD = 0.012
 
 
-def _get_raw_insight(probabilities:np.ndarray, index:int)->RawInsight:
-    return RawInsight(
-        type=InsightType.category,
-        value_tag= list_categories[index],
-        data={
-            "proba": list_categories[index],
-            "max_confidence": round(probabilities[index], 4),
-        },
-        predictor="ridge_model-ml",
-    )
+def predict_ocr_categories(content: Union[OCRResult, str]) -> List[RawInsight]:
+    """Run prediction on a given OCR and return insights.
 
-
-def find_category(content: Union[OCRResult, str])-> List[RawInsight]:
-    """ This function returns the prediction for a given OCR. If > thresold, it
-        returns directly the category. If not, the model returns the two categories
-        between which it hesitates"""
-
+    If the model hesitates between 2 categories, both are returned as insights.
+    Otherwise, only 1 category is returned. We consider the model to be
+    "hesitating" if the probability of the top 2 categories are separated by
+    less than `HESITATION_THRESHOLD` percent.
+    """
     text = get_text(content)
     if not text:
         return []
 
-    results: List[RawInsight] = []
+    probabilities = Predictor(text=text).run()
+    indices_max = np.argsort(probabilities)
 
-    predictor = Predictor(text=text)
-    predictor.load_model()
-    predictor.preprocess()
-    proba = predictor.predict()
-    threshold=0.012
-    list_cat = list_categories
+    # Select top 2 categories
+    best_index = indices_max[-1]
+    best_proba = probabilities[best_index]
 
-    indices_max = np.argsort([-x for x in proba])
-    if (proba[indices_max[0]] - proba[indices_max[1]]) > threshold:
-        results.append(_get_raw_insight(proba, indices_max[0]))
-    else:
-        results.append(_get_raw_insight(proba, indices_max[0]))
-        results.append(_get_raw_insight(proba, indices_max[1]))
+    second_index = indices_max[-2]
+    second_proba = probabilities[second_index]
+
+    # Return either top category only or both, depending on the gap
+    results = [_get_raw_insight(best_proba, best_index)]
+    if (best_proba - second_proba) <= HESITATION_THRESHOLD:
+        results.append(_get_raw_insight(second_proba, second_index))
     return results
 
 
+def _get_raw_insight(probabilily: float, index: int) -> RawInsight:
+    return RawInsight(
+        type=InsightType.category,
+        value_tag=LIST_CATEGORIES[index],
+        data={
+            "confidence": round(probabilily, 4),
+        },
+        predictor="ridge_model-ml",
+    )

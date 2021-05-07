@@ -2,10 +2,10 @@ import pathlib
 from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
-
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.brand import find_brands
+from robotoff.insights.ocr.category import predict_ocr_categories
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.expiration_date import find_expiration_date
 from robotoff.insights.ocr.image_flag import flag_image
@@ -19,7 +19,6 @@ from robotoff.insights.ocr.packaging import find_packaging
 from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
-from robotoff.insights.ocr.category import find_category
 from robotoff.off import generate_json_ocr_url, split_barcode
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
@@ -104,7 +103,7 @@ def extract_insights(
         return get_image_lang(content)
 
     elif insight_type == InsightType.category:
-        return find_category(content)
+        return predict_ocr_categories(content)
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))

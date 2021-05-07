@@ -14,8 +14,8 @@
 ➡️ About the integration in Robotoff:
 
     The predict function in predictor.py is:
-    1/ called in robotoff/insights/ocr/category.py (into find_category which return a RawInsight).
-    2/ the function find_category is then called in robotoff/insights/ocr/core.py (extract_insights) and robotoff/insights/extraction.py (get_insights_from_image).
+    1/ called in robotoff/insights/ocr/category.py (into predict_ocr_categories which return a RawInsight).
+    2/ the function predict_ocr_categories is then called in robotoff/insights/ocr/core.py (extract_insights) and robotoff/insights/extraction.py (get_insights_from_image).
 
     Robotoff receives the information that a new image has been imported via this endpoint: "/api/v1/images/import".
     Parameters are: barcode, image_url and ocr_url.

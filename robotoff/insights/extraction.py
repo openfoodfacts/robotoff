@@ -2,9 +2,8 @@ import pathlib
 from typing import Dict, Iterable, List, Optional
 from urllib.parse import urlparse
 
-from PIL import Image
 import requests
-
+from PIL import Image
 from robotoff.insights import ocr
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import ProductInsights, RawInsight
@@ -28,7 +27,7 @@ DEFAULT_INSIGHT_TYPES: List[InsightType] = [
     InsightType.brand,
     InsightType.store,
     InsightType.packaging,
-    InsightType.category
+    InsightType.category,
 ]
 
 IMAGE_IMPORT_INSIGHT_TYPES: List[InsightType] = [
@@ -44,14 +43,14 @@ IMAGE_IMPORT_INSIGHT_TYPES: List[InsightType] = [
     InsightType.nutrient_mention,
     InsightType.image_lang,
     InsightType.image_orientation,
-    InsightType.category
+    InsightType.category,
 ]
 
 
 PRODUCT_NAME_INSIGHT_TYPES: List[InsightType] = [
     InsightType.label,
     InsightType.product_weight,
-    InsightType.brand
+    InsightType.brand,
 ]
 
 

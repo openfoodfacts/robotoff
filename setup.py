@@ -37,8 +37,8 @@ setup(
         "pymongo>=3.0.0<3.1.0",
         "dacite==1.5.0",
         "orjson==3.4.5",
-        "joblib==1.0.1"
-
+        "joblib==1.0.1",
+    ],
     include_package_data=True,
     tests_require=["pytest", "pytest-mock"],
 )
