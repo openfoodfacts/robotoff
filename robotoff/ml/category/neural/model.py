@@ -2,10 +2,8 @@ import operator
 import pathlib
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
-from more_itertools import chunked
 import numpy as np
-from tensorflow import keras
-
+from more_itertools import chunked
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import ProductInsights, RawInsight
@@ -23,7 +21,7 @@ from robotoff.taxonomy import Taxonomy
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_nlp
-
+from tensorflow import keras
 
 logger = get_logger(__name__)
 
@@ -171,7 +169,7 @@ class RemoteModel(BaseModel):
             return None
 
         X = self.get_input_from_products([product])[0]
-        X = [X[0].tolist(), X[1].tolist()]
+        X = [X[0].tolist(), X[1].tolist()]  # type: ignore
 
         data = {"signature_name": "serving_default", "instances": [X]}
 
