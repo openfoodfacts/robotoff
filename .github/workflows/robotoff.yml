@@ -95,7 +95,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/robotoff/ml/category/prediction_from_ocr/constants.py') }}
 
       - name: Download OCR predictor weight file if not cached
-        run: python -m robotoff download-models
+        run: poetry run robotoff-cli download-models
 
       #----------------------------------------------
       # Launch tests
