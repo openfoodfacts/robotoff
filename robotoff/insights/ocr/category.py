@@ -1,6 +1,7 @@
 from typing import List, Union
 
 import numpy as np
+
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult, get_text
