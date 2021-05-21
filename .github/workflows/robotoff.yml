@@ -118,7 +118,7 @@ jobs:
 
       # Build mkdocs site
       - name: Generate documentation
-        run: poetry run mkdocs build --strict
+        run: sh ./build_mkdocs.sh
 
       # Deploy docs to gh_pages
       # Example from https://github.com/marketplace/actions/deploy-to-github-pages
