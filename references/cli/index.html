@@ -1,0 +1,1098 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+    
+    
+      
+        <title>CLI Reference - Robotoff</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bde7dde4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cli-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Robotoff" class="md-header__button md-logo" aria-label="Robotoff" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Robotoff
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/openfoodfacts/robotoff/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Robotoff" class="md-nav__button md-logo" aria-label="Robotoff" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Robotoff
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/openfoodfacts/robotoff/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      <label class="md-nav__link" for="__nav_2">
+        Get started
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Get started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Get started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/architecture/" class="md-nav__link">
+        Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/contributing/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        How-to guides
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="How-to guides" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          How-to guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/nutrition-tables-annotation-guidelines/" class="md-nav__link">
+        Nutrition Table Annotation Guidelines
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
+      
+      <label class="md-nav__link" for="__nav_3_2">
+        Deployment
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Deployment" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          Deployment
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/deployment/maintenance/" class="md-nav__link">
+        Services maintenance
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      <label class="md-nav__link" for="__nav_4">
+        Technical reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Technical reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Technical reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        API Reference
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          CLI Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        CLI Reference
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-add-logo-to-ann" class="md-nav__link">
+    robotoff-cli add-logo-to-ann
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-annotate" class="md-nav__link">
+    robotoff-cli annotate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-apply-insights" class="md-nav__link">
+    robotoff-cli apply-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-batch-annotate" class="md-nav__link">
+    robotoff-cli batch-annotate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-categorize" class="md-nav__link">
+    robotoff-cli categorize
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-download-dataset" class="md-nav__link">
+    robotoff-cli download-dataset
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-download-models" class="md-nav__link">
+    robotoff-cli download-models
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-export-logo-annotation" class="md-nav__link">
+    robotoff-cli export-logo-annotation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-generate-ocr-insights" class="md-nav__link">
+    robotoff-cli generate-ocr-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-generate-spellcheck-insights" class="md-nav__link">
+    robotoff-cli generate-spellcheck-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-import-insights" class="md-nav__link">
+    robotoff-cli import-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-import-logos" class="md-nav__link">
+    robotoff-cli import-logos
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-init-elasticsearch" class="md-nav__link">
+    robotoff-cli init-elasticsearch
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-predict-category" class="md-nav__link">
+    robotoff-cli predict-category
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-predict-insight" class="md-nav__link">
+    robotoff-cli predict-insight
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-run" class="md-nav__link">
+    robotoff-cli run
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-spellcheck" class="md-nav__link">
+    robotoff-cli spellcheck
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-test-spellcheck" class="md-nav__link">
+    robotoff-cli test-spellcheck
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package/" class="md-nav__link">
+        Package reference
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Some explanations
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Some explanations" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Some explanations
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanations/questions/" class="md-nav__link">
+        Question format proposal
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-add-logo-to-ann" class="md-nav__link">
+    robotoff-cli add-logo-to-ann
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-annotate" class="md-nav__link">
+    robotoff-cli annotate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-apply-insights" class="md-nav__link">
+    robotoff-cli apply-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-batch-annotate" class="md-nav__link">
+    robotoff-cli batch-annotate
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-categorize" class="md-nav__link">
+    robotoff-cli categorize
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-download-dataset" class="md-nav__link">
+    robotoff-cli download-dataset
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-download-models" class="md-nav__link">
+    robotoff-cli download-models
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-export-logo-annotation" class="md-nav__link">
+    robotoff-cli export-logo-annotation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-generate-ocr-insights" class="md-nav__link">
+    robotoff-cli generate-ocr-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-generate-spellcheck-insights" class="md-nav__link">
+    robotoff-cli generate-spellcheck-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-import-insights" class="md-nav__link">
+    robotoff-cli import-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-import-logos" class="md-nav__link">
+    robotoff-cli import-logos
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-init-elasticsearch" class="md-nav__link">
+    robotoff-cli init-elasticsearch
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-predict-category" class="md-nav__link">
+    robotoff-cli predict-category
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-predict-insight" class="md-nav__link">
+    robotoff-cli predict-insight
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-run" class="md-nav__link">
+    robotoff-cli run
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-spellcheck" class="md-nav__link">
+    robotoff-cli spellcheck
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-test-spellcheck" class="md-nav__link">
+    robotoff-cli test-spellcheck
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/openfoodfacts/robotoff/edit/master/docs/references/cli.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="cli-reference">CLI Reference</h1>
+<p>Documentation auto-generated using <a href="https://github.com/tiangolo/typer-cli">typer-cli</a>.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--install-completion</code>: Install completion for the current shell.</li>
+<li><code>--show-completion</code>: Show completion for the current shell, to copy it or customize the installation.</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<p><strong>Commands</strong>:</p>
+<ul>
+<li><code>add-logo-to-ann</code></li>
+<li><code>annotate</code></li>
+<li><code>apply-insights</code></li>
+<li><code>batch-annotate</code></li>
+<li><code>categorize</code></li>
+<li><code>download-dataset</code></li>
+<li><code>download-models</code>: Download model weights from remote URLs.</li>
+<li><code>export-logo-annotation</code></li>
+<li><code>generate-ocr-insights</code>: Generate OCR insights of the requested type.</li>
+<li><code>generate-spellcheck-insights</code></li>
+<li><code>import-insights</code></li>
+<li><code>import-logos</code></li>
+<li><code>init-elasticsearch</code></li>
+<li><code>predict-category</code></li>
+<li><code>predict-insight</code></li>
+<li><code>run</code></li>
+<li><code>spellcheck</code></li>
+<li><code>test-spellcheck</code></li>
+</ul>
+<h2 id="robotoff-cli-add-logo-to-ann"><code>robotoff-cli add-logo-to-ann</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli add-logo-to-ann <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--sleep-time FLOAT</code>: [default: 0.5]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-annotate"><code>robotoff-cli annotate</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli annotate <span class="o">[</span>OPTIONS<span class="o">]</span> INSIGHT_TYPE COUNTRY
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>INSIGHT_TYPE</code>: [required]</li>
+<li><code>COUNTRY</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-apply-insights"><code>robotoff-cli apply-insights</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli apply-insights <span class="o">[</span>OPTIONS<span class="o">]</span> INSIGHT_TYPE
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>INSIGHT_TYPE</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--delta INTEGER</code>: [default: 1]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-batch-annotate"><code>robotoff-cli batch-annotate</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli batch-annotate <span class="o">[</span>OPTIONS<span class="o">]</span> INSIGHT_TYPE FILTER_CLAUSE
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>INSIGHT_TYPE</code>: [required]</li>
+<li><code>FILTER_CLAUSE</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--dry / --no-dry</code>: [default: True]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-categorize"><code>robotoff-cli categorize</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli categorize <span class="o">[</span>OPTIONS<span class="o">]</span> BARCODE
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>BARCODE</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--deepest-only / --no-deepest-only</code>: [default: False]</li>
+<li><code>--blacklist / --no-blacklist</code>: [default: False]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-download-dataset"><code>robotoff-cli download-dataset</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli download-dataset <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--minify / --no-minify</code>: [default: False]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-download-models"><code>robotoff-cli download-models</code></h2>
+<p>Download model weights from remote URLs.</p>
+<p>If models have already been downloaded, the command is skipped unless
+--force option is used.</p>
+<p>TODO: add all models to this CLI.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli download-models <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--force / --no-force</code>: [default: False]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-export-logo-annotation"><code>robotoff-cli export-logo-annotation</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli export-logo-annotation <span class="o">[</span>OPTIONS<span class="o">]</span> OUTPUT
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>OUTPUT</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--server-domain TEXT</code></li>
+<li><code>--annotated / --no-annotated</code></li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-generate-ocr-insights"><code>robotoff-cli generate-ocr-insights</code></h2>
+<p>Generate OCR insights of the requested type.</p>
+<p>SOURCE can be either:
+* the path to a JSON file, a (gzipped-)JSONL file, or a directory
+    containing JSON files
+* a barcode
+* the '-' character: input is read from stdin and assumed to be JSONL</p>
+<p>Output is JSONL, each line containing the insights for one document.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli generate-ocr-insights <span class="o">[</span>OPTIONS<span class="o">]</span> SOURCE INSIGHT_TYPE KEEP_EMPTY
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>SOURCE</code>: [required]</li>
+<li><code>INSIGHT_TYPE</code>: [required]</li>
+<li><code>KEEP_EMPTY</code>: Keep documents with empty insight  [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--output FILE</code>: File to write output to, stdout if not specified  [required]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-generate-spellcheck-insights"><code>robotoff-cli generate-spellcheck-insights</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli generate-spellcheck-insights <span class="o">[</span>OPTIONS<span class="o">]</span> OUTPUT
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>OUTPUT</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--index-name TEXT</code>: [default: product_all]</li>
+<li><code>--confidence FLOAT</code>: [default: 0.5]</li>
+<li><code>--max-errors INTEGER</code></li>
+<li><code>--limit INTEGER</code></li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-import-insights"><code>robotoff-cli import-insights</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli import-insights <span class="o">[</span>OPTIONS<span class="o">]</span> INSIGHT_TYPE
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>INSIGHT_TYPE</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--server-domain TEXT</code></li>
+<li><code>--batch-size INTEGER</code>: [default: 1024]</li>
+<li><code>--input- PATH</code></li>
+<li><code>--generate-from PATH</code></li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-import-logos"><code>robotoff-cli import-logos</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli import-logos <span class="o">[</span>OPTIONS<span class="o">]</span> DATA_PATH
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>DATA_PATH</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--model-name TEXT</code>: [default: universal-logo-detector]</li>
+<li><code>--model-version TEXT</code>: [default: tf-universal-logo-detector-1.0]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-init-elasticsearch"><code>robotoff-cli init-elasticsearch</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli init-elasticsearch <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--index / --no-index</code>: [default: False]</li>
+<li><code>--data / --no-data</code>: [default: True]</li>
+<li><code>--product / --no-product</code>: [default: False]</li>
+<li><code>--category / --no-category</code>: [default: False]</li>
+<li><code>--product-version TEXT</code>: [default: product]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-predict-category"><code>robotoff-cli predict-category</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli predict-category <span class="o">[</span>OPTIONS<span class="o">]</span> OUTPUT
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>OUTPUT</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-predict-insight"><code>robotoff-cli predict-insight</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli predict-insight <span class="o">[</span>OPTIONS<span class="o">]</span> OCR_URL
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>OCR_URL</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-run"><code>robotoff-cli run</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli run <span class="o">[</span>OPTIONS<span class="o">]</span> SERVICE
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>SERVICE</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-spellcheck"><code>robotoff-cli spellcheck</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli spellcheck <span class="o">[</span>OPTIONS<span class="o">]</span> PATTERN CORRECTION
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>PATTERN</code>: [required]</li>
+<li><code>CORRECTION</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--country TEXT</code>: [default: fr]</li>
+<li><code>--dry / --no-dry</code>: [default: False]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-test-spellcheck"><code>robotoff-cli test-spellcheck</code></h2>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli test-spellcheck <span class="o">[</span>OPTIONS<span class="o">]</span> TEXT
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>TEXT</code>: [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--confidence FLOAT</code>: [default: 1.0]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        <a href="../api/" class="md-footer__link md-footer__link--prev" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              API Reference
+            </div>
+          </div>
+        </a>
+      
+      
+        <a href="../package/" class="md-footer__link md-footer__link--next" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Package reference
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      
+    
+  </body>
+</html>
