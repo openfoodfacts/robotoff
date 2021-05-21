@@ -46,7 +46,7 @@ class ObjectDetectionModel:
         return cls(graph=detection_graph, label_map=label_map)
 
     def _run_inference_for_single_image(
-        self, image: np.array
+        self, image: np.ndarray
     ) -> ObjectDetectionRawResult:
         with tf.Session(graph=self.graph) as sess:
             # Get handles to input and output tensors

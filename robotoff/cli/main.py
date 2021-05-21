@@ -167,6 +167,31 @@ def download_dataset(minify: bool = False) -> None:
 
 
 @app.command()
+def download_models(force: bool = False) -> None:
+    """Download model weights from remote URLs.
+
+    If models have already been downloaded, the command is skipped unless
+    --force option is used.
+
+    TODO: add all models to this CLI.
+    """
+    from robotoff.cli.file import download_file
+    from robotoff.ml.category.prediction_from_ocr.constants import (
+        RIDGE_PREDICTOR_FILEPATH,
+        RIDGE_PREDICTOR_URL,
+    )
+    from robotoff.utils import get_logger
+
+    get_logger()
+
+    download_file(
+        url=RIDGE_PREDICTOR_URL,
+        destination=RIDGE_PREDICTOR_FILEPATH,
+        force=force,
+    )
+
+
+@app.command()
 def categorize(
     barcode: str,
     deepest_only: bool = False,

@@ -2,11 +2,11 @@ name: Robotoff code quality checks and unit tests
 
 on:
   push:
-  # paths:
-  #   - "robotoff/**"
-  pull_request:
     paths:
       - "robotoff/**"
+  pull_request:
+    paths:
+      - "**/robotoff/**"
       - "**.pot"
       - "**.po"
 
@@ -84,6 +84,18 @@ jobs:
 
       - name: Compile translations
         run: (cd i18n && bash compile.sh)
+
+      #----------------------------------------------
+      # Download model weights before running tests
+      #----------------------------------------------
+      - name: Load cache OCR predictor weight file
+        uses: actions/cache@v2
+        with:
+          path: weights/
+          key: ${{ runner.os }}-${{ hashFiles('**/robotoff/ml/category/prediction_from_ocr/constants.py') }}
+
+      - name: Download OCR predictor weight file if not cached
+        run: python -m robotoff download-models
 
       #----------------------------------------------
       # Launch tests
