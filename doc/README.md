@@ -5,8 +5,8 @@ Welcome to the Robotoff documentation !
 - To get a better understanding on how Robotoff works, go to [Architecture](./introduction/architecture).
 - If you want to help, go to [Contributing](./introduction/contributing).
 - Robotoff can be used as...
-  - an [API](./references/api.md)
-  - a CLI
+  - an [online API](./references/api.md)
+  - a [CLI tool](./references/cli.md)
   - a [Python package](./references/package.md)
 - If you need to deploy or maintain Robotoff, [Maintenance](./how-to-guides/deployment/maintenance) is the way to go.
 
