@@ -2,11 +2,11 @@ name: Robotoff code quality checks and unit tests
 
 on:
   push:
-  # paths:
-  #   - "robotoff/**"
-  pull_request:
     paths:
       - "robotoff/**"
+  pull_request:
+    paths:
+      - "**/robotoff/**"
       - "**.pot"
       - "**.po"
 
@@ -86,7 +86,46 @@ jobs:
         run: (cd i18n && bash compile.sh)
 
       #----------------------------------------------
+      # Download model weights before running tests
+      #----------------------------------------------
+      - name: Load cache OCR predictor weight file
+        uses: actions/cache@v2
+        with:
+          path: weights/
+          key: ${{ runner.os }}-${{ hashFiles('**/robotoff/ml/category/prediction_from_ocr/constants.py') }}
+
+      - name: Download OCR predictor weight file if not cached
+        run: poetry run robotoff-cli download-models
+
+      #----------------------------------------------
       # Launch tests
       #----------------------------------------------
       - name: Launch tests
-        run: poetry run python -m pytest tests
+        run: poetry run pytest --cov-report xml --cov=robotoff tests
+
+      #----------------------------------------------
+      # Upload test coverage
+      #----------------------------------------------
+      # - uses: codecov/codecov-action@v1
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     fail_ci_if_error: true
+      #     verbose: true
+
+      #----------------------------------------------
+      # Generate and upload documentation
+      #----------------------------------------------
+
+      # Build mkdocs site
+      - name: Generate documentation
+        run: bash ./build_mkdocs.sh
+
+      # Deploy docs to gh_pages
+      # Example from https://github.com/marketplace/actions/deploy-to-github-pages
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: gh_pages # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch

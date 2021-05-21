@@ -170,7 +170,7 @@ class RemoteModel(BaseModel):
             return None
 
         X = self.get_input_from_products([product])[0]
-        X = [X[0].tolist(), X[1].tolist()]
+        X = [X[0].tolist(), X[1].tolist()]  # type: ignore
 
         data = {"signature_name": "serving_default", "instances": [X]}
 

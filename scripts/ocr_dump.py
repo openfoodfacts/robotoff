@@ -6,7 +6,7 @@ import orjson
 
 
 def is_valid_dir(product_dir: str) -> bool:
-    product_dir = product_dir[len("/srv2/off/html/images/products") :]
+    product_dir = product_dir[len("/srv2/off/html/images/products") :]  # noqa: E203
     return product_dir.replace("/", "").isdigit()
 
 

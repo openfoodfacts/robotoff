@@ -1,0 +1,6 @@
+nav:
+    - README.md
+    - "Get started": "introduction"
+    - "How-to guides": "how-to-guides"
+    - "Technical reference": "references"
+    - "Some explanations": "explanations"

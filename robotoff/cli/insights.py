@@ -31,13 +31,13 @@ logger = get_logger(__name__)
 def run_from_ocr_archive(
     input_: Union[str, TextIO],
     insight_type: InsightType,
-    output: Optional[str] = None,
+    output: Optional[pathlib.Path] = None,
     keep_empty: bool = False,
 ):
     insights = generate_from_ocr_archive(input_, insight_type, keep_empty)
 
     if output is not None:
-        output_f = open(output, "w")
+        output_f = output.open("w")
     else:
         output_f = sys.stdout
 

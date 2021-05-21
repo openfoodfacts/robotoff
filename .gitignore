@@ -22,3 +22,11 @@ images
 .venv/
 
 tf_models/nutriscore
+weights/
+
+.coverage
+coverage.xml
+
+site/
+gh_pages/
+doc/references/cli.md 

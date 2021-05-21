@@ -28,6 +28,7 @@ DEFAULT_INSIGHT_TYPES: List[InsightType] = [
     InsightType.brand,
     InsightType.store,
     InsightType.packaging,
+    InsightType.category,
 ]
 
 IMAGE_IMPORT_INSIGHT_TYPES: List[InsightType] = [
@@ -43,6 +44,7 @@ IMAGE_IMPORT_INSIGHT_TYPES: List[InsightType] = [
     InsightType.nutrient_mention,
     InsightType.image_lang,
     InsightType.image_orientation,
+    InsightType.category,
 ]
 
 

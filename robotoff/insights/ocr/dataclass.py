@@ -402,7 +402,7 @@ class Word:
 
         if "detectedLanguages" in word_property:
             self.languages = [
-                DetectedLanguage(l) for l in data["property"]["detectedLanguages"]
+                DetectedLanguage(lang) for lang in data["property"]["detectedLanguages"]
             ]
 
     def get_text(self) -> str:
