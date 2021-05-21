@@ -23,3 +23,6 @@ images
 
 tf_models/nutriscore
 weights/
+
+.coverage
+coverage.xml

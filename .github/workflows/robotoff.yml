@@ -101,4 +101,13 @@ jobs:
       # Launch tests
       #----------------------------------------------
       - name: Launch tests
-        run: poetry run python -m pytest tests
+        run: poetry run pytest --cov-report xml --cov=robotoff tests
+
+      #----------------------------------------------
+      # Upload test coverage
+      #----------------------------------------------
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
