@@ -102,6 +102,7 @@ jobs:
       #----------------------------------------------
       - name: Launch tests
         run: poetry run pytest --cov-report xml --cov=robotoff tests
+
       #----------------------------------------------
       # Upload test coverage
       #----------------------------------------------
@@ -110,3 +111,21 @@ jobs:
       #     token: ${{ secrets.CODECOV_TOKEN }}
       #     fail_ci_if_error: true
       #     verbose: true
+
+      #----------------------------------------------
+      # Generate and upload documentation
+      #----------------------------------------------
+
+      # Build mkdocs site
+      - name: Generate documentation
+        run: poetry run mkdocs build --strict
+
+      # Deploy docs to gh_pages
+      # Example from https://github.com/marketplace/actions/deploy-to-github-pages
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: gh_pages # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch

@@ -26,3 +26,5 @@ weights/
 
 .coverage
 coverage.xml
+
+site/
