@@ -1,0 +1,1135 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+    
+    
+      
+        <title>API Reference - Robotoff</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bde7dde4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Robotoff" class="md-header__button md-logo" aria-label="Robotoff" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Robotoff
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/openfoodfacts/robotoff/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Robotoff" class="md-nav__button md-logo" aria-label="Robotoff" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Robotoff
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/openfoodfacts/robotoff/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      <label class="md-nav__link" for="__nav_2">
+        Get started
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Get started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Get started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/architecture/" class="md-nav__link">
+        Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/contributing/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        How-to guides
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="How-to guides" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          How-to guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/nutrition-tables-annotation-guidelines/" class="md-nav__link">
+        Nutrition Table Annotation Guidelines
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
+      
+      <label class="md-nav__link" for="__nav_3_2">
+        Deployment
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Deployment" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_2">
+          <span class="md-nav__icon md-icon"></span>
+          Deployment
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/deployment/maintenance/" class="md-nav__link">
+        Services maintenance
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      <label class="md-nav__link" for="__nav_4">
+        Technical reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Technical reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Technical reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          API Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        API Reference
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#insights" class="md-nav__link">
+    Insights
+  </a>
+  
+    <nav class="md-nav" aria-label="Insights">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-insight-insightsrandom" class="md-nav__link">
+    Random insight [/insights/random]
+  </a>
+  
+    <nav class="md-nav" aria-label="Random insight [/insights/random]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-a-random-insight-get" class="md-nav__link">
+    Get a random insight [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#product-insights-insightsbarcode" class="md-nav__link">
+    Product insights [/insights/{barcode}]
+  </a>
+  
+    <nav class="md-nav" aria-label="Product insights [/insights/{barcode}]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-all-insights-for-a-specific-product-get" class="md-nav__link">
+    Get all insights for a specific product [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insight-detail-insightsdetailid" class="md-nav__link">
+    Insight detail [/insights/detail/{id}]
+  </a>
+  
+    <nav class="md-nav" aria-label="Insight detail [/insights/detail/{id}]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-a-specific-insight-get" class="md-nav__link">
+    Get a specific insight [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insight-annotations-insightsannotate" class="md-nav__link">
+    Insight annotations [/insights/annotate]
+  </a>
+  
+    <nav class="md-nav" aria-label="Insight annotations [/insights/annotate]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#submit-an-annotation-post" class="md-nav__link">
+    Submit an annotation [POST]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    Questions
+  </a>
+  
+    <nav class="md-nav" aria-label="Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#product-questions-questionsbarcode" class="md-nav__link">
+    Product questions [/questions/{barcode}]
+  </a>
+  
+    <nav class="md-nav" aria-label="Product questions [/questions/{barcode}]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-questions-for-a-given-product-get" class="md-nav__link">
+    Get questions for a given product [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-questions-questionsrandom" class="md-nav__link">
+    Random questions [/questions/random]
+  </a>
+  
+    <nav class="md-nav" aria-label="Random questions [/questions/random]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-random-questions-get" class="md-nav__link">
+    Get random questions [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#predictions" class="md-nav__link">
+    Predictions
+  </a>
+  
+    <nav class="md-nav" aria-label="Predictions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ingredient-spellcheck-predictingredientsspellcheck" class="md-nav__link">
+    Ingredient spellcheck [/predict/ingredients/spellcheck]
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingredient spellcheck [/predict/ingredients/spellcheck]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-spelling-corrections-get" class="md-nav__link">
+    Get spelling corrections [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nutrient-prediction-predictnutrient" class="md-nav__link">
+    Nutrient prediction [/predict/nutrient]
+  </a>
+  
+    <nav class="md-nav" aria-label="Nutrient prediction [/predict/nutrient]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#predict-nutrient-from-ocr-json-get" class="md-nav__link">
+    Predict nutrient from OCR JSON [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../package/" class="md-nav__link">
+        Package reference
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Some explanations
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Some explanations" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Some explanations
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanations/questions/" class="md-nav__link">
+        Question format proposal
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#insights" class="md-nav__link">
+    Insights
+  </a>
+  
+    <nav class="md-nav" aria-label="Insights">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#random-insight-insightsrandom" class="md-nav__link">
+    Random insight [/insights/random]
+  </a>
+  
+    <nav class="md-nav" aria-label="Random insight [/insights/random]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-a-random-insight-get" class="md-nav__link">
+    Get a random insight [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#product-insights-insightsbarcode" class="md-nav__link">
+    Product insights [/insights/{barcode}]
+  </a>
+  
+    <nav class="md-nav" aria-label="Product insights [/insights/{barcode}]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-all-insights-for-a-specific-product-get" class="md-nav__link">
+    Get all insights for a specific product [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insight-detail-insightsdetailid" class="md-nav__link">
+    Insight detail [/insights/detail/{id}]
+  </a>
+  
+    <nav class="md-nav" aria-label="Insight detail [/insights/detail/{id}]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-a-specific-insight-get" class="md-nav__link">
+    Get a specific insight [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insight-annotations-insightsannotate" class="md-nav__link">
+    Insight annotations [/insights/annotate]
+  </a>
+  
+    <nav class="md-nav" aria-label="Insight annotations [/insights/annotate]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#submit-an-annotation-post" class="md-nav__link">
+    Submit an annotation [POST]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    Questions
+  </a>
+  
+    <nav class="md-nav" aria-label="Questions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#product-questions-questionsbarcode" class="md-nav__link">
+    Product questions [/questions/{barcode}]
+  </a>
+  
+    <nav class="md-nav" aria-label="Product questions [/questions/{barcode}]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-questions-for-a-given-product-get" class="md-nav__link">
+    Get questions for a given product [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#random-questions-questionsrandom" class="md-nav__link">
+    Random questions [/questions/random]
+  </a>
+  
+    <nav class="md-nav" aria-label="Random questions [/questions/random]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-random-questions-get" class="md-nav__link">
+    Get random questions [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#predictions" class="md-nav__link">
+    Predictions
+  </a>
+  
+    <nav class="md-nav" aria-label="Predictions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ingredient-spellcheck-predictingredientsspellcheck" class="md-nav__link">
+    Ingredient spellcheck [/predict/ingredients/spellcheck]
+  </a>
+  
+    <nav class="md-nav" aria-label="Ingredient spellcheck [/predict/ingredients/spellcheck]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get-spelling-corrections-get" class="md-nav__link">
+    Get spelling corrections [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nutrient-prediction-predictnutrient" class="md-nav__link">
+    Nutrient prediction [/predict/nutrient]
+  </a>
+  
+    <nav class="md-nav" aria-label="Nutrient prediction [/predict/nutrient]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#predict-nutrient-from-ocr-json-get" class="md-nav__link">
+    Predict nutrient from OCR JSON [GET]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/openfoodfacts/robotoff/edit/master/docs/references/api.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="api-reference">API Reference</h1>
+<p>Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.</p>
+<p>All endpoints must be prefixed with <code>/api/v1</code>. The full URL is <code>https://robotoff.openfoodfacts.org/api/v1/{endpoint}</code>.</p>
+<p>Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all environments (production, development, pro). The <code>server_domain</code> field should be used to specify the product/environment: <code>api.openfoodfacts.org</code> for OFF-prod, <code>api.openfoodfacts.net</code> for OFF-dev, <code>api.openbeautyfacts.org</code> for OBF-prod,...</p>
+<h2 id="insights">Insights</h2>
+<p>An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
+If the insight is correct, the Openfoodfacts DB can be updated accordingly.</p>
+<p>Current insight types:</p>
+<ul>
+<li><code>ingredient_spellcheck</code></li>
+<li><code>packager_code</code></li>
+<li><code>label</code></li>
+<li><code>category</code></li>
+<li><code>product_weight</code></li>
+<li><code>expiration_date</code></li>
+<li><code>brand</code></li>
+<li><code>store</code></li>
+<li><code>nutrient</code></li>
+</ul>
+<h3 id="random-insight-insightsrandom">Random insight [/insights/random]</h3>
+<h4 id="get-a-random-insight-get">Get a random insight [GET]</h4>
+<p>Fetch a random insight.</p>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.</li>
+<li>country (str, optional) - Only return predictions with products from a specific country (ex: <code>en:france</code>)</li>
+<li>value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts</li>
+<li>server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'</li>
+<li>count (int, optional) - number of results to return (default: 1)</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<h3 id="product-insights-insightsbarcode">Product insights [/insights/{barcode}]</h3>
+<h4 id="get-all-insights-for-a-specific-product-get">Get all insights for a specific product [GET]</h4>
+<p>Return all insights associated with a specific product.</p>
+<ul>
+<li>
+<p>Parameters</p>
+<ul>
+<li>barcode: Product barcode</li>
+<li>server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<h3 id="insight-detail-insightsdetailid">Insight detail [/insights/detail/{id}]</h3>
+<h4 id="get-a-specific-insight-get">Get a specific insight [GET]</h4>
+<p>Return a specific insight.</p>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>id: ID of the insight</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<h3 id="insight-annotations-insightsannotate">Insight annotations [/insights/annotate]</h3>
+<h4 id="submit-an-annotation-post">Submit an annotation [POST]</h4>
+<p>Submit an annotation, given the <code>insight_id</code>. The request type must be <code>application/x-www-form-urlencoded</code>.</p>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>insight_id (str, required) - ID of the insight</li>
+<li>annotation (int, required) - Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for "unknown".</li>
+<li>update (int, optional) - Send the update to Openfoodfacts if <code>update=1</code>, don't send the update otherwise. This parameter is useful if the update is performed client-side.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<h2 id="questions">Questions</h2>
+<p>See <a href="../../explanations/questions/">here</a> for more information about
+questions.</p>
+<p>Current question types:</p>
+<ul>
+<li><code>add-binary</code></li>
+</ul>
+<h3 id="product-questions-questionsbarcode">Product questions [/questions/{barcode}]</h3>
+<h4 id="get-questions-for-a-given-product-get">Get questions for a given product [GET]</h4>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>lang (str, optional) - the language of the question/value. 'en' by default.</li>
+<li>count (int, optional) - Number of questions to return. Default to 1.</li>
+<li>server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'</li>
+<li>barcode: Product barcode</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<h3 id="random-questions-questionsrandom">Random questions [/questions/random]</h3>
+<h4 id="get-random-questions-get">Get random questions [GET]</h4>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>lang (str, optional) - the language of the question/value. 'en' by default.</li>
+<li>count (int, optional) - Number of questions to return. Default to 1.</li>
+<li>insight_types (list, optional) - comma-separated list, filter by insight types.</li>
+<li>country (str, optional) - filter by country tag.</li>
+<li>brands (str, optional) - filter by brands, comma-separated list of brand tags.</li>
+<li>value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts</li>
+<li>server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<h2 id="predictions">Predictions</h2>
+<h3 id="ingredient-spellcheck-predictingredientsspellcheck">Ingredient spellcheck [/predict/ingredients/spellcheck]</h3>
+<h4 id="get-spelling-corrections-get">Get spelling corrections [GET]</h4>
+<p>Generate spellcheck corrections. Either the barcode or the text to correct must be supplied.</p>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>text (str, optional) - the ingredient text to spellcheck.</li>
+<li>barcode (str, optional) - the barcode of the product.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;corrected&quot;</span><span class="p">:</span> <span class="s2">&quot;farine de blé&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;corrections&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.0009564351</span><span class="p">,</span>
+      <span class="nt">&quot;term_corrections&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="nt">&quot;correction&quot;</span><span class="p">:</span> <span class="s2">&quot;farine&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;end_offset&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+          <span class="nt">&quot;original&quot;</span><span class="p">:</span> <span class="s2">&quot;fqrine&quot;</span><span class="p">,</span>
+          <span class="nt">&quot;start_offset&quot;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;fqrine de blé&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="nutrient-prediction-predictnutrient">Nutrient prediction [/predict/nutrient]</h3>
+<h4 id="predict-nutrient-from-ocr-json-get">Predict nutrient from OCR JSON [GET]</h4>
+<ul>
+<li>ocr_url (str, required) - the url of the OCR JSON</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;nutrients&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;glucid&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="nt">&quot;nutrient&quot;</span><span class="p">:</span> <span class="s2">&quot;glucid&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;raw&quot;</span><span class="p">:</span> <span class="s2">&quot;glucides 53 g&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;53&quot;</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        <a href="../../how-to-guides/deployment/maintenance/" class="md-footer__link md-footer__link--prev" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Services maintenance
+            </div>
+          </div>
+        </a>
+      
+      
+        <a href="../package/" class="md-footer__link md-footer__link--next" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Package reference
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      
+    
+  </body>
+</html>
