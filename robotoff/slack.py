@@ -133,6 +133,10 @@ def notify_automatic_processing(insight: ProductInsight):
         text = "The `{}` packaging was automatically added to " "product {}".format(
             insight.value_tag, insight.barcode
         )
+    elif insight.type == InsightType.category.name:
+        text = "The `{}` category was automatically added to " "product {}".format(
+            insight.value_tag, insight.barcode
+        )
 
     else:
         return

@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import PIL
 from PIL import Image
-
 from robotoff import settings
 from robotoff.ml.object_detection.utils import label_map_util
 from robotoff.ml.object_detection.utils import visualization_utils as vis_util
@@ -28,11 +27,11 @@ class ObjectDetectionResult:
 @dataclasses.dataclass
 class ObjectDetectionRawResult:
     num_detections: int
-    detection_boxes: np.array
-    detection_scores: np.array
-    detection_classes: np.array
+    detection_boxes: np.ndarray
+    detection_scores: np.ndarray
+    detection_classes: np.ndarray
     category_index: CategoryIndex
-    detection_masks: Optional[np.array] = None
+    detection_masks: Optional[np.ndarray] = None
     boxed_image: Optional[PIL.Image.Image] = None
 
     def select(self, threshold: Optional[float] = None) -> List[ObjectDetectionResult]:
@@ -63,7 +62,7 @@ class ObjectDetectionRawResult:
         return [dataclasses.asdict(r) for r in self.select(threshold)]
 
 
-def convert_image_to_array(image: PIL.Image.Image) -> np.array:
+def convert_image_to_array(image: PIL.Image.Image) -> np.ndarray:
     if image.mode != "RGB":
         image = image.convert("RGB")
 
@@ -72,7 +71,7 @@ def convert_image_to_array(image: PIL.Image.Image) -> np.array:
     return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
 
 
-def add_boxes_and_labels(image_array: np.array, raw_result: ObjectDetectionRawResult):
+def add_boxes_and_labels(image_array: np.ndarray, raw_result: ObjectDetectionRawResult):
     vis_util.visualize_boxes_and_labels_on_image_array(
         image_array,
         raw_result.detection_boxes,
@@ -111,7 +110,7 @@ class RemoteModel:
         )
 
     def detect_from_image(
-        self, image: np.array, output_image: bool = False
+        self, image: np.ndarray, output_image: bool = False
     ) -> ObjectDetectionRawResult:
         resized_image = resize_image(image, settings.OBJECT_DETECTION_IMAGE_MAX_SIZE)
         image_array = convert_image_to_array(resized_image)

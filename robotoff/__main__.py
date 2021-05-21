@@ -191,6 +191,31 @@ if __name__ == "__main__":
             fetch_dataset(minify)
 
     @click.command()
+    @click.option("--force/--no-force", default=False)
+    def download_models(force: bool) -> None:
+        """Download model weights from remote URLs.
+
+        If models have already been downloaded, the command is skipped unless
+        --force option is used.
+
+        TODO: add all models to this CLI.
+        """
+        from robotoff.cli.file import download_file
+        from robotoff.ml.category.prediction_from_ocr.constants import (
+            RIDGE_PREDICTOR_FILEPATH,
+            RIDGE_PREDICTOR_URL,
+        )
+        from robotoff.utils import get_logger
+
+        get_logger()
+
+        download_file(
+            url=RIDGE_PREDICTOR_URL,
+            destination=RIDGE_PREDICTOR_FILEPATH,
+            force=force,
+        )
+
+    @click.command()
     @click.argument("barcode")
     @click.option("--deepest-only/--all-categories", default=False)
     @click.option("--blacklist/--no-blacklist", default=False)
@@ -413,6 +438,7 @@ if __name__ == "__main__":
     cli.add_command(generate_spellcheck_insights)
     cli.add_command(test_spellcheck)
     cli.add_command(download_dataset)
+    cli.add_command(download_models)
     cli.add_command(categorize)
     cli.add_command(import_insights)
     cli.add_command(apply_insights)
