@@ -5,6 +5,7 @@ docs_dir: doc
 repo_url: https://github.com/openfoodfacts/robotoff
 
 site_name: Robotoff
+site_dir: gh_pages
 
 theme:
   name: material
