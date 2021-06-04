@@ -15,6 +15,18 @@ All services are managed by docker. [docker-compose](https://docs.docker.com/com
 
 ## Quick start
 
+### Run docker-compose
+
+Before launching the Elasticsearch service, you may need to increase a system parameter (`vm.max_map_count=262144`), as described [here](https://stackoverflow.com/questions/51445846/elasticsearch-max-virtual-memory-areas-vm-max-map-count-65530-is-too-low-inc).
+
+To start all services, simply run:
+
+```sh
+docker-compose up -d
+```
+
+### Monitor
+
 To display all running services, run `docker ps`:
 
 ```

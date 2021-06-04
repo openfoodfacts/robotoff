@@ -11,6 +11,16 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# -----------------------------------
+# First step: copy-paste README.md to doc
+# -----------------------------------
+
+cp ./README.md ./doc/README.md
+
+# -----------------------------------
+# Second step: generate CLI reference
+# -----------------------------------
+
 # Path to CLI reference (auto-generated)
 cli_md=doc/references/cli.md
 
