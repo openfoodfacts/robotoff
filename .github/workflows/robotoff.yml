@@ -16,7 +16,6 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8]
-        # python-version: [3.7, 3.8, 3.9]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -106,23 +105,25 @@ jobs:
       #----------------------------------------------
       # Upload test coverage
       #----------------------------------------------
-      # - uses: codecov/codecov-action@v1
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     fail_ci_if_error: true
-      #     verbose: true
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
 
       #----------------------------------------------
-      # Generate and upload documentation
+      # Generate and upload documentation (only on master)
       #----------------------------------------------
 
       # Build mkdocs site
       - name: Generate documentation
+        if: github.ref == 'refs/heads/master'
         run: bash ./build_mkdocs.sh
 
       # Deploy docs to gh_pages
       # Example from https://github.com/marketplace/actions/deploy-to-github-pages
       - name: Deploy 🚀
+        if: github.ref == 'refs/heads/master'
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
