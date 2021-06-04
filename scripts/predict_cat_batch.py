@@ -3,7 +3,7 @@ from typing import Iterable
 from robotoff import settings
 from robotoff.ml.category.neural.model import predict_from_product_batch
 from robotoff.products import ProductDataset
-from robotoff.utils import get_logger, dump_jsonl
+from robotoff.utils import dump_jsonl, get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger()

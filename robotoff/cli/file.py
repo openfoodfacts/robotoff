@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 
 import requests
+
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)

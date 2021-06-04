@@ -1,10 +1,10 @@
-version: '3'
+version: "3"
 
 services:
   api:
     restart: always
     image: openfoodfacts/robotoff
-    network_mode: "host"
+    # network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
@@ -36,7 +36,7 @@ services:
     restart: always
     image: postgres:11.2-alpine
     volumes:
-    - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     mem_limit: 2g

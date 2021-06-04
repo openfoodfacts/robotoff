@@ -1,5 +1,4 @@
 from robotoff.models import ProductInsight
-
 from robotoff.utils import get_logger
 
 logger = get_logger()

@@ -1,5 +1,5 @@
-from difflib import SequenceMatcher
 import json
+from difflib import SequenceMatcher
 from typing import Dict, Optional
 
 import click

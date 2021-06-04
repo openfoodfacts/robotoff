@@ -1,16 +1,15 @@
 from typing import List
 
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
-from robotoff.spellcheck.exceptions import TokenLengthMismatchException
-from robotoff.spellcheck.items import (
-    Ingredients,
-    AtomicCorrection,
-    SpellcheckIteration,
-    SpellcheckItem,
-)
-
 from robotoff.spellcheck.elasticsearch.correction_formatter import CorrectionFormatter
 from robotoff.spellcheck.elasticsearch.es_handler import ElasticsearchHandler
+from robotoff.spellcheck.exceptions import TokenLengthMismatchException
+from robotoff.spellcheck.items import (
+    AtomicCorrection,
+    Ingredients,
+    SpellcheckItem,
+    SpellcheckIteration,
+)
 
 VERSION = "1"
 

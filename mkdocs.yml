@@ -1,0 +1,19 @@
+# Where to find documentation
+docs_dir: doc
+
+# Link to Github on every page
+repo_url: https://github.com/openfoodfacts/robotoff
+
+site_name: Robotoff
+site_dir: gh_pages
+
+theme:
+  name: material
+
+markdown_extensions:
+  - mdx_truly_sane_lists
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+plugins:
+  - awesome-pages

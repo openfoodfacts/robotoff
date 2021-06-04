@@ -1,6 +1,6 @@
-from robotoff.utils.text import get_tag
-
 import pytest
+
+from robotoff.utils.text import get_tag
 
 
 @pytest.mark.parametrize(

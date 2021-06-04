@@ -1,5 +1,5 @@
-from flashtext import KeywordProcessor
 import pytest
+from flashtext import KeywordProcessor
 
 from robotoff import settings
 from robotoff.insights.ocr.location import (
@@ -8,7 +8,6 @@ from robotoff.insights.ocr.location import (
     find_locations,
     load_cities_fr,
 )
-
 
 module = "robotoff.insights.ocr.location"
 
@@ -210,7 +209,7 @@ def test_address_extractor_extract_addresses(mocker, cities):
         "postal_code": "75000",
         "text_extract": "ah paris 75000 pa",
     }
-    insights[1].data == {
+    assert insights[1].data == {
         "country_code": "fr",
         "city_name": "paris",
         "postal_code": "75000",

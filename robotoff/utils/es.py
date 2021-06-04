@@ -2,7 +2,6 @@ import json
 from typing import Dict, Iterable, Tuple
 
 import elasticsearch
-
 from robotoff import settings
 
 

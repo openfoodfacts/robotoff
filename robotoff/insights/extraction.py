@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import requests
 from PIL import Image
+
 from robotoff.insights import ocr
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import ProductInsights, RawInsight

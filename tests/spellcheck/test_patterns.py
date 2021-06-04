@@ -2,7 +2,6 @@ import pytest
 
 from robotoff.spellcheck.patterns import PatternsSpellchecker
 
-
 spellchecker = PatternsSpellchecker()
 
 

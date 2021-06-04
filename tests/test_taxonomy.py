@@ -5,7 +5,6 @@ import pytest
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy
 
-
 label_taxonomy = Taxonomy.from_json(settings.TAXONOMY_LABEL_PATH)
 category_taxonomy = Taxonomy.from_json(settings.TAXONOMY_CATEGORY_PATH)
 

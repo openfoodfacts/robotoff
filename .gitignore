@@ -20,4 +20,14 @@ docker-compose.production.yml
 images
 
 .venv/
+
+tf_models/nutriscore
 weights/
+
+.coverage
+coverage.xml
+
+site/
+gh_pages/
+doc/README.md
+doc/references/cli.md 

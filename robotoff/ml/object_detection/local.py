@@ -4,6 +4,7 @@ import numpy as np
 import PIL
 import tensorflow as tf
 from PIL import Image
+
 from robotoff.ml.object_detection.core import (
     ObjectDetectionRawResult,
     add_boxes_and_labels,

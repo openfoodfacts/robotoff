@@ -1,4 +1,4 @@
-name: Robotoff unit tests and deployments
+name: Robotoff code quality checks and unit tests
 
 on:
   push:
@@ -15,19 +15,78 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: [3.7, 3.8]
 
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
+      # Taken from https://github.com/snok/install-poetry
+
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v2
+      - name: Set up python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Compile translations
-        run: sudo apt-get install gettext && cd i18n && bash compile.sh && cd ..
-      - name: Install dependencies
-        run: python -m pip install --upgrade pip && pip install setuptools && pip install -r requirements.txt && pip install -r requirements-dev.txt
 
+      #----------------------------------------------
+      #  -----  install & configure poetry  -----
+      #----------------------------------------------
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.1.1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        run: poetry install
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+
+      #----------------------------------------------
+      # Run linters
+      #----------------------------------------------
+      - name: Toml config file quality
+        run: poetry run toml-sort --check poetry.toml pyproject.toml
+
+      - name: Code Quality Black
+        run: poetry run black . --check
+
+      - name: Code quality Flake8
+        run: poetry run flake8 --format github
+
+      - name: Code quality isort
+        run: poetry run isort . --check
+
+      - name: Typing check mypy
+        run: poetry run mypy .
+
+      #----------------------------------------------
+      # Compile i18n
+      #----------------------------------------------
+      - name: Install gettext
+        run: sudo apt-get install gettext
+
+      - name: Compile translations
+        run: (cd i18n && bash compile.sh)
+
+      #----------------------------------------------
+      # Download model weights before running tests
+      #----------------------------------------------
       - name: Load cache OCR predictor weight file
         uses: actions/cache@v2
         with:
@@ -35,13 +94,39 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('**/robotoff/ml/category/prediction_from_ocr/constants.py') }}
 
       - name: Download OCR predictor weight file if not cached
-        run: python -m robotoff download-models
+        run: poetry run robotoff-cli download-models
 
+      #----------------------------------------------
+      # Launch tests
+      #----------------------------------------------
       - name: Launch tests
-        run: python -m pytest tests
-      - name: Run flake8
-        run: flake8
-      - name: Run black
-        run: black . --check
-      - name: Run mypy
-        run: mypy .
+        run: poetry run pytest --cov-report xml --cov=robotoff tests
+
+      #----------------------------------------------
+      # Upload test coverage
+      #----------------------------------------------
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+
+      #----------------------------------------------
+      # Generate and upload documentation (only on master)
+      #----------------------------------------------
+
+      # Build mkdocs site
+      - name: Generate documentation
+        if: github.ref == 'refs/heads/master'
+        run: bash ./build_mkdocs.sh
+
+      # Deploy docs to gh_pages
+      # Example from https://github.com/marketplace/actions/deploy-to-github-pages
+      - name: Deploy 🚀
+        if: github.ref == 'refs/heads/master'
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: gh_pages # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch

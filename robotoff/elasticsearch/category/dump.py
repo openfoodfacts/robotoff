@@ -3,7 +3,7 @@ from typing import Dict, Iterable, Tuple
 
 from robotoff import settings
 from robotoff.insights import InsightType
-from robotoff.taxonomy import get_taxonomy, Taxonomy
+from robotoff.taxonomy import Taxonomy, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client, perform_export
 

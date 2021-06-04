@@ -7,8 +7,8 @@ import sys
 import tempfile
 from typing import Callable, Dict, Iterable, Optional, Tuple, Union
 
-from PIL import Image
 import requests
+from PIL import Image
 
 
 def get_logger(name=None, level: Optional[int] = None):

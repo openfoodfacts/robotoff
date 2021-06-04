@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Union
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import get_text, OCRField, OCRRegex, OCRResult
+from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:

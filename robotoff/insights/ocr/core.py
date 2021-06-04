@@ -2,6 +2,7 @@ import pathlib
 from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
+
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.brand import find_brands

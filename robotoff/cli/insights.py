@@ -12,17 +12,15 @@ from peewee import fn
 from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.dataclass import ProductInsights
-from robotoff.insights.importer import (
-    AUTHORIZED_LABELS_STORE,
-    import_insights as import_insights_,
-)
+from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
+from robotoff.insights.importer import import_insights as import_insights_
 from robotoff.insights.ocr import (
+    OCRResult,
     extract_insights,
     get_barcode_from_path,
     ocr_iter,
-    OCRResult,
 )
-from robotoff.models import db, ProductInsight
+from robotoff.models import ProductInsight, db
 from robotoff.off import get_product
 from robotoff.products import get_product_store
 from robotoff.utils import get_logger, jsonl_iter
@@ -33,13 +31,13 @@ logger = get_logger(__name__)
 def run_from_ocr_archive(
     input_: Union[str, TextIO],
     insight_type: InsightType,
-    output: Optional[str] = None,
+    output: Optional[pathlib.Path] = None,
     keep_empty: bool = False,
 ):
     insights = generate_from_ocr_archive(input_, insight_type, keep_empty)
 
     if output is not None:
-        output_f = open(output, "w")
+        output_f = output.open("w")
     else:
         output_f = sys.stdout
 

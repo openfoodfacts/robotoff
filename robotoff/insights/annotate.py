@@ -1,20 +1,20 @@
 import abc
-from dataclasses import dataclass
 import datetime
-from enum import Enum
 import pathlib
+from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, List, Optional
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import db, ProductInsight
+from robotoff.models import ProductInsight, db
 from robotoff.off import (
+    OFFAuthentication,
     add_brand,
     add_category,
     add_label_tag,
     add_packaging,
     add_store,
-    OFFAuthentication,
     save_ingredients,
     select_rotate_image,
     update_emb_codes,

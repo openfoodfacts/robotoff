@@ -12,8 +12,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.externals import joblib
 from sklearn.feature_extraction.text import (
     CountVectorizer,
-    strip_accents_ascii,
     TfidfTransformer,
+    strip_accents_ascii,
 )
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -25,11 +25,11 @@ from sklearn_hierarchical_classification.metrics import fill_ancestors
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import (
-    generate_category_hierarchy,
-    get_taxonomy,
     Taxonomy,
     TaxonomyNode,
     TaxonomyType,
+    generate_category_hierarchy,
+    get_taxonomy,
 )
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType

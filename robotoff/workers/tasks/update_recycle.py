@@ -1,8 +1,8 @@
-from robotoff.products import ProductDataset
-from robotoff.insights.extraction import get_logger, requests
-from robotoff.insights.ocr.core import get_json_for_image
 from typing import Dict
 
+from robotoff.insights.extraction import get_logger, requests
+from robotoff.insights.ocr.core import get_json_for_image
+from robotoff.products import ProductDataset
 
 logger = get_logger(__name__)
 
