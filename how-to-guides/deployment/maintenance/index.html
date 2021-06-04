@@ -166,7 +166,7 @@
   
     <li class="md-nav__item">
       <a href="../../.." class="md-nav__link">
-        Welcome
+        Robotoff
       </a>
     </li>
   
@@ -329,6 +329,26 @@
     Quick start
   </a>
   
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-docker-compose" class="md-nav__link">
+    Run docker-compose
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitor" class="md-nav__link">
+    Monitor
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -489,6 +509,26 @@
     Quick start
   </a>
   
+    <nav class="md-nav" aria-label="Quick start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-docker-compose" class="md-nav__link">
+    Run docker-compose
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitor" class="md-nav__link">
+    Monitor
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -522,6 +562,12 @@
 </ul>
 <p>All services are managed by docker. <a href="https://docs.docker.com/compose/">docker-compose</a> is used to manage these services.</p>
 <h2 id="quick-start">Quick start</h2>
+<h3 id="run-docker-compose">Run docker-compose</h3>
+<p>Before launching the Elasticsearch service, you may need to increase a system parameter (<code>vm.max_map_count=262144</code>), as described <a href="https://stackoverflow.com/questions/51445846/elasticsearch-max-virtual-memory-areas-vm-max-map-count-65530-is-too-low-inc">here</a>.</p>
+<p>To start all services, simply run:</p>
+<div class="highlight"><pre><span></span><code>docker-compose up -d
+</code></pre></div>
+<h3 id="monitor">Monitor</h3>
 <p>To display all running services, run <code>docker ps</code>:</p>
 <div class="highlight"><pre><span></span><code>CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS              PORTS                                                NAMES
 faf7c9b029ce        openfoodfacts/robotoff      &quot;python3 -m robotoff…&quot;   22 minutes ago      Up 22 minutes                                                            robotoff_scheduler_1

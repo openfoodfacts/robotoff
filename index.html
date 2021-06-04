@@ -59,7 +59,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#welcome" class="md-skip">
+        <a href="#robotoff" class="md-skip">
           Skip to content
         </a>
       
@@ -89,7 +89,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Welcome
+              Robotoff
             
           </span>
         </div>
@@ -174,9 +174,46 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Robotoff
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
-        Welcome
+        Robotoff
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licence" class="md-nav__link">
+    Licence
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -444,6 +481,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licence" class="md-nav__link">
+    Licence
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -459,11 +518,33 @@
                   </a>
                 
                 
-                <h1 id="welcome">Welcome</h1>
-<p>Welcome to the Robotoff documentation !</p>
+                <h1 id="robotoff">Robotoff</h1>
+<p><img alt="Build Status" src="https://github.com/openfoodfacts/robotoff/workflows/Robotoff%20unit%20tests%20and%20deployments/badge.svg" />
+<a href="https://codecov.io/gh/openfoodfacts/robotoff"><img alt="codecov" src="https://codecov.io/gh/openfoodfacts/robotoff/branch/master/graph/badge.svg?token=BY2T0KXNO1" /></a>
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a></p>
+<p><strong>Documentation:</strong> <a href="https://openfoodfacts.github.io/robotoff">https://openfoodfacts.github.io/robotoff</a></p>
+<p><strong>Source code:</strong> <a href="https://github.com/openfoodfacts/robotoff">https://github.com/openfoodfacts/robotoff</a></p>
+<p><strong>Open Food Facts:</strong> <a href="https://world.openfoodfacts.org">https://world.openfoodfacts.org</a></p>
+<p>Robotoff is a service managing potential Open Food Facts updates (also known as <em>insights</em>).
+These insights include a growing set of facts, including:</p>
+<ul>
+<li>the product category, weight, brand, packager codes and expiration date</li>
+<li>some of its labels</li>
+<li>abusive pictures (selfies)</li>
+<li>rotated pictures</li>
+<li>ingredient spellchecking</li>
+</ul>
+<p>Robotoff provides an API to:</p>
+<ul>
+<li>Fetch insights</li>
+<li>Annotate an insight (accept or reject)</li>
+</ul>
+<p>Once generated, the insights can be applied automatically, or after a manual validation if necessary.
+A scheduler regularly marks insights for automatic annotation and sends the update to Open Food Facts.</p>
+<h2 id="overview">Overview</h2>
 <ul>
 <li>To get a better understanding on how Robotoff works, go to <a href="./introduction/architecture">Architecture</a>.</li>
-<li>If you want to help, go to <a href="./introduction/contributing">Contributing</a>.</li>
+<li>If you want to help, go to <a href="./introduction/contributing">Contributing</a>. In particular, to make to project run, go to <a href="./introduction/contributing#get-started">Get started!</a></li>
 <li>Robotoff can be used as...<ul>
 <li>an <a href="references/api/">online API</a></li>
 <li>a <a href="references/cli/">CLI tool</a></li>
@@ -472,7 +553,9 @@
 </li>
 <li>If you need to deploy or maintain Robotoff, <a href="./how-to-guides/deployment/maintenance">Maintenance</a> is the way to go.</li>
 </ul>
-<p><strong>NOTE:</strong> This documentation this to follow as much as possible the documentation system from <a href="https://documentation.divio.com/">Divio</a>.</p>
+<p><strong>NOTE:</strong> This documentation tries to follow as much as possible the documentation system from <a href="https://documentation.divio.com/">Divio</a>.</p>
+<h2 id="licence">Licence</h2>
+<p>Robotoff is licensed under the AGPLv3.</p>
                 
               
               
