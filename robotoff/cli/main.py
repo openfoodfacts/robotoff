@@ -175,6 +175,12 @@ def download_models(force: bool = False) -> None:
     TODO: add all models to this CLI.
     """
     from robotoff.cli.file import download_file
+    from robotoff.ml.category.prediction_from_ingredients.constants import (
+        MODEL_G1_FILEPATH,
+        MODEL_G1_URL,
+        MODEL_G2_FILEPATH,
+        MODEL_G2_URL,
+    )
     from robotoff.ml.category.prediction_from_ocr.constants import (
         RIDGE_PREDICTOR_FILEPATH,
         RIDGE_PREDICTOR_URL,
@@ -184,10 +190,10 @@ def download_models(force: bool = False) -> None:
     get_logger()
 
     download_file(
-        url=RIDGE_PREDICTOR_URL,
-        destination=RIDGE_PREDICTOR_FILEPATH,
-        force=force,
+        url=RIDGE_PREDICTOR_URL, destination=RIDGE_PREDICTOR_FILEPATH, force=force
     )
+    download_file(url=MODEL_G1_URL, destination=MODEL_G1_FILEPATH, force=force)
+    download_file(url=MODEL_G2_URL, destination=MODEL_G2_FILEPATH, force=force)
 
 
 @app.command()

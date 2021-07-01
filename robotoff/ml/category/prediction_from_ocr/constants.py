@@ -1,8 +1,8 @@
 from pathlib import Path
 
 # TODO: move all weights file paths definition in the same place.
-# Model an be downloaded from the CLI.
-RIDGE_PREDICTOR_URL = "https://github.com/openfoodfacts/robotoff-models/releases/latest/download/bestridge_compressed.joblib"
+# Model can be downloaded from the CLI.
+RIDGE_PREDICTOR_URL = "https://github.com/openfoodfacts/robotoff-models/releases/download/category-predictor-ocr-lewagon-1.0/bestridge_compressed.joblib"
 RIDGE_PREDICTOR_FILEPATH = Path("weights/bestridge_compressed.joblib")
 
 LIST_CATEGORIES = [

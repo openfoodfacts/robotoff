@@ -1,0 +1,2120 @@
+{
+    "code": "3228857000852",
+    "product": {
+        "_id": "3228857000852",
+        "_keywords": [
+            "pain",
+            "palm-oil-free",
+            "france",
+            "additif",
+            "aliment",
+            "terre",
+            "cereale",
+            "pomme",
+            "vegetale",
+            "mie",
+            "vegetaux",
+            "100",
+            "origine",
+            "base",
+            "et",
+            "pt",
+            "boisson",
+            "harry",
+            "croute",
+            "nature",
+            "de",
+            "nutriscore",
+            "san"
+        ],
+        "added_countries_tags": [],
+        "additives_debug_tags": [],
+        "additives_n": 0,
+        "additives_old_n": 0,
+        "additives_old_tags": [],
+        "additives_original_tags": [],
+        "additives_prev_original_tags": [],
+        "additives_tags": [],
+        "allergens": "en:gluten",
+        "allergens_from_ingredients": "blé, gluten de blé",
+        "allergens_from_user": "(fr) en:gluten",
+        "allergens_hierarchy": [
+            "en:gluten"
+        ],
+        "allergens_imported": "Gluten",
+        "allergens_lc": "fr",
+        "allergens_tags": [
+            "en:gluten"
+        ],
+        "amino_acids_prev_tags": [],
+        "amino_acids_tags": [],
+        "brands": "Harrys",
+        "brands_imported": "Harrys",
+        "brands_tags": [
+            "harrys"
+        ],
+        "carbon_footprint_from_known_ingredients_debug": "en:wheat-flour 63% x 1.2 = 75.6 g - ",
+        "carbon_footprint_percent_of_known_ingredients": 63,
+        "categories": "Aliments et boissons à base de végétaux, Aliments d'origine végétale, Céréales et pommes de terre, Pains, Pains de mie, Pains de mie sans croûte",
+        "categories_hierarchy": [
+            "en:plant-based-foods-and-beverages",
+            "en:plant-based-foods",
+            "en:cereals-and-potatoes",
+            "en:breads",
+            "en:sliced-breads",
+            "en:sliced-breads-without-crust"
+        ],
+        "categories_imported": "Aliments et boissons à base de végétaux, Aliments d'origine végétale, Céréales et pommes de terre, Pains",
+        "categories_lc": "fr",
+        "categories_old": "Aliments et boissons à base de végétaux, Aliments d'origine végétale, Céréales et pommes de terre, Pains, Pains de mie, Pains de mie sans croûte",
+        "categories_properties": {
+            "agribalyse_food_code:en": "7201",
+            "ciqual_food_code:en": "7201"
+        },
+        "categories_properties_tags": [
+            "all-products",
+            "categories-known",
+            "agribalyse-food-code-7201",
+            "agribalyse-food-code-known",
+            "agribalyse-proxy-food-code-unknown",
+            "ciqual-food-code-7201",
+            "ciqual-food-code-known",
+            "agribalyse-known",
+            "agribalyse-7201"
+        ],
+        "categories_tags": [
+            "en:plant-based-foods-and-beverages",
+            "en:plant-based-foods",
+            "en:cereals-and-potatoes",
+            "en:breads",
+            "en:sliced-breads",
+            "en:sliced-breads-without-crust"
+        ],
+        "category_properties": {
+            "ciqual_food_name:en": "Sandwich loaf, crust less, prepacked",
+            "ciqual_food_name:fr": "Pain de mie, sans croûte, préemballé"
+        },
+        "checkers_tags": [],
+        "ciqual_food_name_tags": [
+            "sandwich-loaf-crust-less-prepacked"
+        ],
+        "cities_tags": [],
+        "code": "3228857000852",
+        "codes_tags": [
+            "code-13",
+            "3228857000xxx",
+            "322885700xxxx",
+            "32288570xxxxx",
+            "3228857xxxxxx",
+            "322885xxxxxxx",
+            "32288xxxxxxxx",
+            "3228xxxxxxxxx",
+            "322xxxxxxxxxx",
+            "32xxxxxxxxxxx",
+            "3xxxxxxxxxxxx"
+        ],
+        "compared_to_category": "en:sliced-breads-without-crust",
+        "complete": 1,
+        "completed_t": 1610032052,
+        "completeness": 1,
+        "correctors_tags": [
+            "openfoodfacts-contributors",
+            "yuka.YWY0NExhRVAvOE1vbHMwbnBnejQ1NHRZK3JHeVExeWxLTkJQSUE9PQ",
+            "yuka.UktsZUtxVWMvT1FCb2RvVjN6ZjY2TkZseHBtdFRIKzVjOWhKSVE9PQ",
+            "beniben",
+            "yuka.UnFrYk1vUUkvcU1yby9ZajFCTE00dnRPbnNTaVJIS0pKTGM2SUE9PQ",
+            "yuka.YjU4NFRmOGxyTXNCcXMxbTVCVHJxK0FweEwrN2MxaW1kZWs4SVE9PQ",
+            "yuka.U2Y0Y0ZiUUVyTVF2a1AwbHdnN1F5NEp2N2NDelgxT0tlOFFQSVE9PQ",
+            "yuka.WnJCYlFJVUFxY05Yc3ZBOW9STEU0c3RyL3JyM1hHV01KL0F2SVE9PQ",
+            "yuka.ZkxJUUhaOHVnTjFhdU5neTFURG55NGgvNnB6eGJHYTRLOGtCSVE9PQ",
+            "yuka.Rzc0cVFQNCtqZVVtaXZNQ3B6VEk5OVozMnFIMUExcTFMN0F5SVE9PQ",
+            "yuka.ZDcwNURmc3RpS2tycGYwUDBpN1U0TjFObWM2UlpHV3VGY1FNSVE9PQ",
+            "yuka.WDRsZFBMNGdvZVlYcS9BeCtEZVA1dDEvblk2bUJ6THRDN0lvSVE9PQ",
+            "yuka.V0lkZVM1a21wdElVZ01FODBoRHl5K05rMXB6M0RWcUpDckVYSVE9PQ",
+            "yuka.YUlVUk1LSWwrUDFXbWNFT3BTeloxOHhaekorclZ6aWVJTE0ySVE9PQ",
+            "yuka.YWY4bFFid3dwTWNMbS9FQnIwanI2TXBQNWNTZ2RGNkdOc0E4SVE9PQ",
+            "yuka.UkxKZk41VTdsdFVYbXZNZDNURC94ZE5GN3JLM2YwZUZNZTA2SVE9PQ",
+            "yuka.RjVnc0t2Z2dxdG9XbzlnYTlERHNwT3NxOXJ1a1kxbWVNZnNQSWc9PQ",
+            "biovie",
+            "yuka.WDVJd1NxZGUrZllzb01aZ3BpSGJwTUpUd0pud0RWSHJldTlQSVE9PQ",
+            "freezed",
+            "date-limite-app",
+            "barilla",
+            "barilla-off",
+            "scanbot",
+            "musarana",
+            "org-barilla",
+            "didierg",
+            "roboto-app"
+        ],
+        "countries": "France,Martinique, en:belgium, en:switzerland, en:reunion, en:luxembourg",
+        "countries_beforescanbot": "France,Martinique",
+        "countries_hierarchy": [
+            "en:belgium",
+            "en:france",
+            "en:luxembourg",
+            "en:martinique",
+            "en:reunion",
+            "en:switzerland"
+        ],
+        "countries_imported": "France",
+        "countries_lc": "fr",
+        "countries_tags": [
+            "en:belgium",
+            "en:france",
+            "en:luxembourg",
+            "en:martinique",
+            "en:reunion",
+            "en:switzerland"
+        ],
+        "created_t": 1523086524,
+        "creator": "kiliweb",
+        "data_quality_bugs_tags": [],
+        "data_quality_errors_tags": [],
+        "data_quality_info_tags": [
+            "en:packaging-data-incomplete",
+            "en:ingredients-percent-analysis-ok",
+            "en:carbon-footprint-from-known-ingredients-but-not-from-meat-or-fish"
+        ],
+        "data_quality_tags": [
+            "en:packaging-data-incomplete",
+            "en:ingredients-percent-analysis-ok",
+            "en:carbon-footprint-from-known-ingredients-but-not-from-meat-or-fish",
+            "en:ingredients-en-ending-comma"
+        ],
+        "data_quality_warnings_tags": [
+            "en:ingredients-en-ending-comma"
+        ],
+        "data_sources": "Producers, Producer - Barilla, App - yuka, Apps",
+        "data_sources_imported": "Producers, Producer - barilla",
+        "data_sources_tags": [
+            "producers",
+            "producer-barilla",
+            "app-yuka",
+            "apps"
+        ],
+        "debug_param_sorted_langs": [
+            "fr",
+            "en"
+        ],
+        "downgraded": "non_recyclable_and_non_biodegradable_materials",
+        "ecoscore_data": {
+            "adjustments": {
+                "origins_of_ingredients": {
+                    "aggregated_origins": [
+                        {
+                            "origin": "en:france",
+                            "percent": 100
+                        }
+                    ],
+                    "epi_score": 93,
+                    "epi_value": 4,
+                    "origins_from_origins_field": [
+                        "en:france"
+                    ],
+                    "transportation_score_be": 85,
+                    "transportation_score_ch": 69,
+                    "transportation_score_de": 61,
+                    "transportation_score_es": 37,
+                    "transportation_score_fr": 100,
+                    "transportation_score_ie": 47,
+                    "transportation_score_it": 47,
+                    "transportation_score_lu": 82,
+                    "transportation_score_nl": 77,
+                    "transportation_value_be": 13,
+                    "transportation_value_ch": 10,
+                    "transportation_value_de": 9,
+                    "transportation_value_es": 6,
+                    "transportation_value_fr": 15,
+                    "transportation_value_ie": 7,
+                    "transportation_value_it": 7,
+                    "transportation_value_lu": 12,
+                    "transportation_value_nl": 12,
+                    "value_be": 17,
+                    "value_ch": 14,
+                    "value_de": 13,
+                    "value_es": 10,
+                    "value_fr": 19,
+                    "value_ie": 11,
+                    "value_it": 11,
+                    "value_lu": 16,
+                    "value_nl": 16
+                },
+                "packaging": {
+                    "non_recyclable_and_non_biodegradable_materials": 1,
+                    "packagings": [
+                        {
+                            "ecoscore_material_score": "0",
+                            "ecoscore_shape_ratio": "1",
+                            "material": "en:plastic",
+                            "non_recyclable_and_non_biodegradable": "maybe",
+                            "shape": "en:bag"
+                        }
+                    ],
+                    "score": 0,
+                    "value": -10
+                },
+                "production_system": {
+                    "warning": "no_label"
+                },
+                "threatened_species": {}
+            },
+            "agribalyse": {
+                "agribalyse_food_code": "7201",
+                "co2_agriculture": "0.78063865",
+                "co2_consumption": "0",
+                "co2_distribution": "0.0064852108",
+                "co2_packaging": "0.28596322",
+                "co2_processing": "0.17263133",
+                "co2_total": "1.3729331",
+                "co2_transportation": "0.12721789",
+                "code": "7201",
+                "dqr": "1.95",
+                "ef_agriculture": "0.090848653",
+                "ef_consumption": "0",
+                "ef_distribution": "0.0014414118",
+                "ef_packaging": "0.021572323",
+                "ef_processing": "0.037485028999999996",
+                "ef_total": "0.16126967",
+                "ef_transportation": "0.009922987000000001",
+                "is_beverage": 0,
+                "name_en": "Sandwich loaf, crust less, prepacked",
+                "name_fr": "Pain de mie, sans croûte, préemballé",
+                "score": 93
+            },
+            "grade": "b",
+            "grade_be": "b",
+            "grade_ch": "b",
+            "grade_de": "b",
+            "grade_es": "b",
+            "grade_fr": "b",
+            "grade_ie": "b",
+            "grade_it": "b",
+            "grade_lu": "b",
+            "grade_nl": "b",
+            "missing": {
+                "labels": 1
+            },
+            "missing_data_warning": 1,
+            "score": 83,
+            "score_be": 100,
+            "score_ch": 97,
+            "score_de": 96,
+            "score_es": 93,
+            "score_fr": 102,
+            "score_ie": 94,
+            "score_it": 94,
+            "score_lu": 99,
+            "score_nl": 99,
+            "status": "known"
+        },
+        "ecoscore_grade": "b",
+        "ecoscore_score": 102,
+        "ecoscore_tags": [
+            "b"
+        ],
+        "editors_tags": [
+            "kiliweb",
+            "scanbot",
+            "yuka.ZkxJUUhaOHVnTjFhdU5neTFURG55NGgvNnB6eGJHYTRLOGtCSVE9PQ",
+            "yuka.YktaZFR2OHVqZWtGbS9ZQjFVcnE5UDRwMWNHSGMxbUtHZm9oSVE9PQ",
+            "yuka.VC8wOEsvOHNtdm9sa3NjMThSemtwOGwrelpPWmRIcXdFTXN4SUE9PQ",
+            "roboto-app",
+            "org-barilla",
+            "yuka.VDVzK0dmNG1xK1FBZzh3UjMwbjB4L0JTMnI2TmZteXJBTk1USWc9PQ",
+            "yuka.RjVnc0t2Z2dxdG9XbzlnYTlERHNwT3NxOXJ1a1kxbWVNZnNQSWc9PQ",
+            "biovie",
+            "openfoodfacts-contributors",
+            "yuka.YWY4bFFid3dwTWNMbS9FQnIwanI2TXBQNWNTZ2RGNkdOc0E4SVE9PQ",
+            "yuka.WDRsZFBMNGdvZVlYcS9BeCtEZVA1dDEvblk2bUJ6THRDN0lvSVE9PQ",
+            "yuka.VzRVUUhLa2h1ZDRXcDhVVXgwL0g2OHN1bDdLQVdFV3FEdlpCSUE9PQ",
+            "magasins-u",
+            "yuka.ZHJFcUdZOFFsOUJYeFBkbXd6Zis4UDlOM3BxR0FGKzdjZXNOSWc9PQ",
+            "inf",
+            "yuka.YUlVUk1LSWwrUDFXbWNFT3BTeloxOHhaekorclZ6aWVJTE0ySVE9PQ",
+            "yuka.Rzc0cVFQNCtqZVVtaXZNQ3B6VEk5OVozMnFIMUExcTFMN0F5SVE9PQ",
+            "barilla",
+            "yuka.Vkt3QkNyWXovS2tqcS9FUXB5ckwwTTEzd0lDVERWdUtkKzB2SVE9PQ",
+            "yuka.ZWFNeExiNVl0dllMa3RzUTgwelE4NDE3bXJtc2ZqNlhEN1lTSWc9PQ",
+            "yuka.UXFRdEFLOGRyUEFndjhFQnBVdmMzK2xsbDdXV0EwMkhMTmdVSVE9PQ",
+            "yuka.WkowRlBZY3RqUGhUcHNjNDF3THBwK292MjUySGVtZTNlOFEzSVE9PQ",
+            "musarana",
+            "beniben",
+            "freezed",
+            "yuka.ZDcwNURmc3RpS2tycGYwUDBpN1U0TjFObWM2UlpHV3VGY1FNSVE9PQ",
+            "didierg",
+            "date-limite-app",
+            "yuka.UktsZUtxVWMvT1FCb2RvVjN6ZjY2TkZseHBtdFRIKzVjOWhKSVE9PQ",
+            "barilla-off",
+            "yuka.YjU4NFRmOGxyTXNCcXMxbTVCVHJxK0FweEwrN2MxaW1kZWs4SVE9PQ",
+            "yuka.WnJCYlFJVUFxY05Yc3ZBOW9STEU0c3RyL3JyM1hHV01KL0F2SVE9PQ",
+            "yuka.V0lkZVM1a21wdElVZ01FODBoRHl5K05rMXB6M0RWcUpDckVYSVE9PQ",
+            "yuka.U1pCZkNZb05vUDBFdWNjVjFSakk4OXRTemIvMlkwanNNK29YSWc9PQ",
+            "yuka.WGE0cEFLZ3NqTUFEdTgwVTF6L1M5UFZKM3M2M1FIbWRHdEpJSUE9PQ",
+            "yuka.UkxKZk41VTdsdFVYbXZNZDNURC94ZE5GN3JLM2YwZUZNZTA2SVE9PQ",
+            "yuka.ZTdGYkthWWwrUFpSaDlzSDNESGJ3dFlyd3JHeFFHaUhOdTAySVE9PQ",
+            "yuka.WFl3cktZODdtUDhHZ1BNRzgwL1JvTXhSeW9LN1VqbWxlckZJSVE9PQ",
+            "yuka.WXFzWUFxOEY5dmNBd3ZZNTNpSHp4OHhFOTdtMFUwZVVPN29USVE9PQ",
+            "yuka.WTdCYk1xOVlyS1VSb05zTzR4REV3TkIwLzZDSFFYbWRlOW9SSVE9PQ",
+            "yuka.RzVFdUZvVTlwTnN6dDhZVCtBSCtvZjV4eHNTSFVVRzJJZlJOSVE9PQ",
+            "yuka.ZG9JSlBmdzhoUDBTbVBJaHBVbms0K3hZeEovNFlGbTFjTlFESWc9PQ",
+            "cinolito",
+            "yuka.UnFrYk1vUUkvcU1yby9ZajFCTE00dnRPbnNTaVJIS0pKTGM2SUE9PQ",
+            "yuka.YWY0NExhRVAvOE1vbHMwbnBnejQ1NHRZK3JHeVExeWxLTkJQSUE9PQ",
+            "yuka.YS84Q0RJNFppTXNIeHZBbG9CL3QwUHNrN3BTSVhGSzFKdlJOSVE9PQ",
+            "yuka.U2Y0Y0ZiUUVyTVF2a1AwbHdnN1F5NEp2N2NDelgxT0tlOFFQSVE9PQ",
+            "yuka.WDVJd1NxZGUrZllzb01aZ3BpSGJwTUpUd0pud0RWSHJldTlQSVE9PQ",
+            "ppas"
+        ],
+        "emb_codes": "",
+        "emb_codes_orig": "",
+        "emb_codes_tags": [],
+        "entry_dates_tags": [
+            "2018-04-07",
+            "2018-04",
+            "2018"
+        ],
+        "expiration_date": "4/11/2020",
+        "generic_name": "Pain de mie sans croûte.",
+        "generic_name_en": "",
+        "generic_name_fr": "Pain de mie sans croûte.",
+        "id": "3228857000852",
+        "image_front_small_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.200.jpg",
+        "image_front_thumb_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.100.jpg",
+        "image_front_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.400.jpg",
+        "image_ingredients_small_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/ingredients_fr.37.200.jpg",
+        "image_ingredients_thumb_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/ingredients_fr.37.100.jpg",
+        "image_ingredients_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/ingredients_fr.37.400.jpg",
+        "image_nutrition_small_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/nutrition_fr.68.200.jpg",
+        "image_nutrition_thumb_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/nutrition_fr.68.100.jpg",
+        "image_nutrition_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/nutrition_fr.68.400.jpg",
+        "image_packaging_small_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/packaging_fr.141.200.jpg",
+        "image_packaging_thumb_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/packaging_fr.141.100.jpg",
+        "image_packaging_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/packaging_fr.141.400.jpg",
+        "image_small_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.200.jpg",
+        "image_thumb_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.100.jpg",
+        "image_url": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.400.jpg",
+        "images": {
+            "1": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 901
+                    }
+                },
+                "uploaded_t": "1523086526",
+                "uploader": "kiliweb"
+            },
+            "10": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 900
+                    }
+                },
+                "uploaded_t": "1526232631",
+                "uploader": "kiliweb"
+            },
+            "11": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 900
+                    }
+                },
+                "uploaded_t": 1531647991,
+                "uploader": "kiliweb"
+            },
+            "12": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3226,
+                        "w": 2420
+                    }
+                },
+                "uploaded_t": 1535610749,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "14": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 2612,
+                        "w": 1958
+                    }
+                },
+                "uploaded_t": 1536938055,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "15": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 56
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 225
+                    },
+                    "full": {
+                        "h": 3226,
+                        "w": 1814
+                    }
+                },
+                "uploaded_t": 1536939774,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "16": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 4032,
+                        "w": 3024
+                    }
+                },
+                "uploaded_t": 1537016151,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "17": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 4032,
+                        "w": 3024
+                    }
+                },
+                "uploaded_t": 1537016181,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "18": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 78
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 312
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 936
+                    }
+                },
+                "uploaded_t": 1537025149,
+                "uploader": "kiliweb"
+            },
+            "19": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3328,
+                        "w": 2496
+                    }
+                },
+                "uploaded_t": 1537632125,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "2": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 41
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 165
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 496
+                    }
+                },
+                "uploaded_t": "1523086530",
+                "uploader": "kiliweb"
+            },
+            "20": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 56
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 225
+                    },
+                    "full": {
+                        "h": 4250,
+                        "w": 2390
+                    }
+                },
+                "uploaded_t": 1537956169,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "21": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 4032,
+                        "w": 3024
+                    }
+                },
+                "uploaded_t": 1538547441,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "22": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 56
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 226
+                    },
+                    "full": {
+                        "h": 4787,
+                        "w": 2700
+                    }
+                },
+                "uploaded_t": 1538830249,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "23": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 89
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 355
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 1065
+                    }
+                },
+                "uploaded_t": 1539155432,
+                "uploader": "kiliweb"
+            },
+            "24": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3264,
+                        "w": 2448
+                    }
+                },
+                "uploaded_t": 1539814933,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "25": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3264,
+                        "w": 2448
+                    }
+                },
+                "uploaded_t": 1539814995,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "26": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3264,
+                        "w": 2448
+                    }
+                },
+                "uploaded_t": 1539815021,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "27": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 72
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 286
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 859
+                    }
+                },
+                "uploaded_t": 1541059461,
+                "uploader": "kiliweb"
+            },
+            "28": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 60
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 239
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 718
+                    }
+                },
+                "uploaded_t": "1537284271",
+                "uploader": "kiliweb"
+            },
+            "29": {
+                "sizes": {
+                    "100": {
+                        "h": 79,
+                        "w": 100
+                    },
+                    "400": {
+                        "h": 317,
+                        "w": 400
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 1512
+                    }
+                },
+                "uploaded_t": "1537284272",
+                "uploader": "kiliweb"
+            },
+            "3": {
+                "sizes": {
+                    "100": {
+                        "h": 45,
+                        "w": 100
+                    },
+                    "400": {
+                        "h": 178,
+                        "w": 400
+                    },
+                    "full": {
+                        "h": 913,
+                        "w": 2050
+                    }
+                },
+                "uploaded_t": "1525101834",
+                "uploader": "kiliweb"
+            },
+            "30": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 100
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 400
+                    },
+                    "full": {
+                        "h": 1500,
+                        "w": 1500
+                    }
+                },
+                "uploaded_t": 1558447766,
+                "uploader": "barilla"
+            },
+            "31": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 34
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 135
+                    },
+                    "full": {
+                        "h": 400,
+                        "w": 135
+                    }
+                },
+                "uploaded_t": 1562947053,
+                "uploader": "date-limite-app"
+            },
+            "32": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 100
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 400
+                    },
+                    "full": {
+                        "h": 1500,
+                        "w": 1500
+                    }
+                },
+                "uploaded_t": 1575032957,
+                "uploader": "barilla-off"
+            },
+            "33": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 34
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 135
+                    },
+                    "full": {
+                        "h": 400,
+                        "w": 135
+                    }
+                },
+                "uploaded_t": 1578239069,
+                "uploader": "date-limite-app"
+            },
+            "34": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 34
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 135
+                    },
+                    "full": {
+                        "h": 2963,
+                        "w": 1000
+                    }
+                },
+                "uploaded_t": 1585142231,
+                "uploader": "date-limite-app"
+            },
+            "35": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 73
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 294
+                    },
+                    "full": {
+                        "h": 3144,
+                        "w": 2309
+                    }
+                },
+                "uploaded_t": 1587708800,
+                "uploader": "openfoodfacts-contributors"
+            },
+            "36": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3264,
+                        "w": 2448
+                    }
+                },
+                "uploaded_t": 1610032050,
+                "uploader": "cinolito"
+            },
+            "4": {
+                "sizes": {
+                    "100": {
+                        "h": 19,
+                        "w": 100
+                    },
+                    "400": {
+                        "h": 77,
+                        "w": 400
+                    },
+                    "full": {
+                        "h": 653,
+                        "w": 3402
+                    }
+                },
+                "uploaded_t": "1525101839",
+                "uploader": "kiliweb"
+            },
+            "5": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 56
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 225
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 675
+                    }
+                },
+                "uploaded_t": "1526229242",
+                "uploader": "kiliweb"
+            },
+            "6": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 56
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 225
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 675
+                    }
+                },
+                "uploaded_t": "1526229245",
+                "uploader": "kiliweb"
+            },
+            "7": {
+                "sizes": {
+                    "100": {
+                        "h": 56,
+                        "w": 100
+                    },
+                    "400": {
+                        "h": 225,
+                        "w": 400
+                    },
+                    "full": {
+                        "h": 1152,
+                        "w": 2050
+                    }
+                },
+                "uploaded_t": "1526232428",
+                "uploader": "kiliweb"
+            },
+            "8": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 56
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 225
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 674
+                    }
+                },
+                "uploaded_t": "1526232430",
+                "uploader": "kiliweb"
+            },
+            "9": {
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 899
+                    }
+                },
+                "uploaded_t": "1526232615",
+                "uploader": "kiliweb"
+            },
+            "front_fr": {
+                "angle": 0,
+                "geometry": "0x0--3--3",
+                "imgid": "30",
+                "normalize": "false",
+                "rev": "134",
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 34
+                    },
+                    "200": {
+                        "h": 200,
+                        "w": 67
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 135
+                    },
+                    "full": {
+                        "h": 1474,
+                        "w": 496
+                    }
+                },
+                "white_magic": "false",
+                "x1": "-1",
+                "x2": "-1",
+                "y1": "-1",
+                "y2": "-1"
+            },
+            "ingredients_fr": {
+                "angle": null,
+                "geometry": "0x0-0-0",
+                "imgid": "10",
+                "normalize": "0",
+                "ocr": 1,
+                "orientation": "0",
+                "rev": "37",
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "200": {
+                        "h": 200,
+                        "w": 150
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 900
+                    }
+                },
+                "white_magic": "0",
+                "x1": null,
+                "x2": null,
+                "y1": null,
+                "y2": null
+            },
+            "nutrition_fr": {
+                "angle": null,
+                "geometry": "0x0-0-0",
+                "imgid": "18",
+                "normalize": "0",
+                "ocr": 1,
+                "orientation": "0",
+                "rev": "68",
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 78
+                    },
+                    "200": {
+                        "h": 200,
+                        "w": 156
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 312
+                    },
+                    "full": {
+                        "h": 1200,
+                        "w": 936
+                    }
+                },
+                "white_magic": "0",
+                "x1": null,
+                "x2": null,
+                "y1": null,
+                "y2": null
+            },
+            "packaging_fr": {
+                "angle": 0,
+                "coordinates_image_size": "full",
+                "geometry": "0x0--1--1",
+                "imgid": "36",
+                "normalize": null,
+                "rev": "141",
+                "sizes": {
+                    "100": {
+                        "h": 100,
+                        "w": 75
+                    },
+                    "200": {
+                        "h": 200,
+                        "w": 150
+                    },
+                    "400": {
+                        "h": 400,
+                        "w": 300
+                    },
+                    "full": {
+                        "h": 3264,
+                        "w": 2448
+                    }
+                },
+                "white_magic": null,
+                "x1": "-1",
+                "x2": "-1",
+                "y1": "-1",
+                "y2": "-1"
+            }
+        },
+        "informers_tags": [
+            "yuka.VzRVUUhLa2h1ZDRXcDhVVXgwL0g2OHN1bDdLQVdFV3FEdlpCSUE9PQ",
+            "kiliweb",
+            "beniben",
+            "openfoodfacts-contributors",
+            "magasins-u",
+            "biovie",
+            "ppas",
+            "freezed",
+            "barilla",
+            "date-limite-app",
+            "inf",
+            "didierg",
+            "cinolito"
+        ],
+        "ingredients": [
+            {
+                "id": "en:wheat-flour",
+                "percent": "63",
+                "percent_estimate": "63",
+                "percent_max": "63",
+                "percent_min": "63",
+                "rank": 1,
+                "text": "Farine de blé",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:water",
+                "percent_estimate": 20.35,
+                "percent_max": 37,
+                "percent_min": 3.7,
+                "rank": 2,
+                "text": "eau",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:sugar",
+                "percent_estimate": 8.325,
+                "percent_max": 33.3,
+                "percent_min": 0,
+                "rank": 3,
+                "text": "sucre",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "from_palm_oil": "no",
+                "id": "en:colza-oil",
+                "percent_estimate": 4.1625,
+                "percent_max": 16.65,
+                "percent_min": 0,
+                "rank": 4,
+                "text": "huile de colza",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:salt",
+                "percent_estimate": 2.08125,
+                "percent_max": 11.1,
+                "percent_min": 0,
+                "rank": 5,
+                "text": "sel",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:vinegar",
+                "percent_estimate": 1.040625,
+                "percent_max": 8.325,
+                "percent_min": 0,
+                "rank": 6,
+                "text": "vinaigre",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:yeast",
+                "percent_estimate": 0.520312500000003,
+                "percent_max": 6.66,
+                "percent_min": 0,
+                "rank": 7,
+                "text": "levure",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:broad-bean-flour",
+                "percent_estimate": 0.260156250000001,
+                "percent_max": 5.55,
+                "percent_min": 0,
+                "rank": 8,
+                "text": "farine de fèves",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:wheat-gluten",
+                "percent_estimate": 0.130078124999997,
+                "percent_max": 4.75714285714286,
+                "percent_min": 0,
+                "rank": 9,
+                "text": "gluten de blé",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "has_sub_ingredients": "yes",
+                "id": "en:flavouring",
+                "percent_estimate": 0.0650390624999986,
+                "percent_max": 4.1625,
+                "percent_min": 0,
+                "rank": 10,
+                "text": "arôme",
+                "vegan": "maybe",
+                "vegetarian": "maybe"
+            },
+            {
+                "id": "en:acerola-juice",
+                "percent_estimate": 0.0650390625000057,
+                "percent_max": 3.7,
+                "percent_min": 0,
+                "rank": 11,
+                "text": "extrait d'acérola",
+                "vegan": "yes",
+                "vegetarian": "yes"
+            },
+            {
+                "id": "en:alcohol",
+                "percent_estimate": 0.0650390624999986,
+                "percent_max": 4.1625,
+                "percent_min": 0,
+                "text": "contient alcool",
+                "vegan": "maybe",
+                "vegetarian": "yes"
+            }
+        ],
+        "ingredients_analysis_tags": [
+            "en:palm-oil-free",
+            "en:maybe-vegan",
+            "en:maybe-vegetarian"
+        ],
+        "ingredients_debug": [
+            "Farine de blé 63%",
+            ",",
+            null,
+            null,
+            null,
+            " eau",
+            ",",
+            null,
+            null,
+            null,
+            " sucre",
+            ",",
+            null,
+            null,
+            null,
+            " huile de colza",
+            ",",
+            null,
+            null,
+            null,
+            " sel",
+            ",",
+            null,
+            null,
+            null,
+            " vinaigre",
+            ",",
+            null,
+            null,
+            null,
+            " levure",
+            ",",
+            null,
+            null,
+            null,
+            " farine de fèves",
+            ",",
+            null,
+            null,
+            null,
+            " gluten de blé",
+            ",",
+            null,
+            null,
+            null,
+            " arôme ",
+            "(",
+            "(",
+            null,
+            null,
+            "contient alcool)",
+            ",",
+            null,
+            null,
+            null,
+            " extrait d'acérola",
+            ". ",
+            null,
+            null,
+            null,
+            "peut contenir des traces d'oeufs",
+            ",",
+            null,
+            null,
+            null,
+            " soja",
+            ",",
+            null,
+            null,
+            null,
+            " lait",
+            ",",
+            null,
+            null,
+            null,
+            " fruits a coque",
+            ",",
+            null,
+            null,
+            null,
+            " graines de sésame."
+        ],
+        "ingredients_from_or_that_may_be_from_palm_oil_n": 0,
+        "ingredients_from_palm_oil_n": 0,
+        "ingredients_from_palm_oil_tags": [],
+        "ingredients_hierarchy": [
+            "en:wheat-flour",
+            "en:cereal",
+            "en:flour",
+            "en:wheat",
+            "en:cereal-flour",
+            "en:water",
+            "en:sugar",
+            "en:colza-oil",
+            "en:oil-and-fat",
+            "en:vegetable-oil-and-fat",
+            "en:rapeseed-oil",
+            "en:salt",
+            "en:vinegar",
+            "en:yeast",
+            "en:broad-bean-flour",
+            "en:wheat-gluten",
+            "en:gluten",
+            "en:flavouring",
+            "en:acerola-juice",
+            "en:fruit",
+            "en:fruit-juice",
+            "en:acerola",
+            "en:alcohol"
+        ],
+        "ingredients_ids_debug": [
+            "farine-de-ble-63",
+            "eau",
+            "sucre",
+            "huile-de-colza",
+            "sel",
+            "vinaigre",
+            "levure",
+            "farine-de-feves",
+            "gluten-de-ble",
+            "arome",
+            "contient-alcool",
+            "extrait-d-acerola",
+            "peut-contenir-des-traces-d-oeufs",
+            "soja",
+            "lait",
+            "fruits-a-coque",
+            "graines-de-sesame"
+        ],
+        "ingredients_n": 12,
+        "ingredients_n_tags": [
+            "12",
+            "11-20"
+        ],
+        "ingredients_original_tags": [
+            "en:wheat-flour",
+            "en:water",
+            "en:sugar",
+            "en:colza-oil",
+            "en:salt",
+            "en:vinegar",
+            "en:yeast",
+            "en:broad-bean-flour",
+            "en:wheat-gluten",
+            "en:flavouring",
+            "en:acerola-juice",
+            "en:alcohol"
+        ],
+        "ingredients_percent_analysis": 1,
+        "ingredients_tags": [
+            "en:wheat-flour",
+            "en:cereal",
+            "en:flour",
+            "en:wheat",
+            "en:cereal-flour",
+            "en:water",
+            "en:sugar",
+            "en:colza-oil",
+            "en:oil-and-fat",
+            "en:vegetable-oil-and-fat",
+            "en:rapeseed-oil",
+            "en:salt",
+            "en:vinegar",
+            "en:yeast",
+            "en:broad-bean-flour",
+            "en:wheat-gluten",
+            "en:gluten",
+            "en:flavouring",
+            "en:acerola-juice",
+            "en:fruit",
+            "en:fruit-juice",
+            "en:acerola",
+            "en:alcohol"
+        ],
+        "ingredients_text": "Farine de blé 63%, eau, sucre, huile de colza, sel, vinaigre, levure, farine de fèves, gluten de blé, arôme (contient alcool), extrait d'acérola. peut contenir des traces d'oeufs, soja, lait, fruits a coque, graines de sésame.",
+        "ingredients_text_debug": "Farine de blé 63%, eau, sucre, huile de colza, sel, vinaigre, levure, farine de fèves, gluten de blé, arôme (contient alcool), extrait d'acérola. peut contenir des traces d'oeufs, soja, lait, fruits a coque, graines de sésame.",
+        "ingredients_text_en": "wheat flour 63%, water, sugar, rapeseed oil, salt, vinegar, yeast, flour of beans, wheat gluten, flavor (contains alcohol), extract of acerola, may contain traces of eggs, soya, milk, fruit shell, sesame seeds,",
+        "ingredients_text_fr": "Farine de blé 63%, eau, sucre, huile de colza, sel, vinaigre, levure, farine de fèves, gluten de blé, arôme (contient alcool), extrait d'acérola. peut contenir des traces d'oeufs, soja, lait, fruits a coque, graines de sésame.",
+        "ingredients_text_fr_imported": "Farine de blé 63%, eau, sucre, huile de colza, sel, vinaigre, levure, farine de fèves, gluten de blé, arôme (contient alcool), extrait d'acérola. peut contenir des traces d'oeufs, soja, lait, fruits a coque, graines de sésame.",
+        "ingredients_text_with_allergens": "Farine de <span class=\"allergen\">blé</span> 63%, eau, sucre, huile de colza, sel, vinaigre, levure, farine de fèves, <span class=\"allergen\">gluten de blé</span>, arôme (contient alcool), extrait d'acérola. peut contenir des traces d'<span class=\"allergen\">oeufs</span>, <span class=\"allergen\">soja</span>, <span class=\"allergen\">lait</span>, <span class=\"allergen\">fruits a coque</span>, graines de <span class=\"allergen\">sésame</span>.",
+        "ingredients_text_with_allergens_en": "<span class=\"allergen\">wheat flour</span> 63%, water, sugar, rapeseed oil, salt, vinegar, yeast, flour of beans, wheat gluten, flavor (contains alcohol), extract of acerola, may contain traces of <span class=\"allergen\">eggs</span>, <span class=\"allergen\">soya</span>, <span class=\"allergen\">milk</span>, fruit shell, <span class=\"allergen\">sesame seeds</span>,",
+        "ingredients_text_with_allergens_fr": "Farine de <span class=\"allergen\">blé</span> 63%, eau, sucre, huile de colza, sel, vinaigre, levure, farine de fèves, <span class=\"allergen\">gluten de blé</span>, arôme (contient alcool), extrait d'acérola. peut contenir des traces d'<span class=\"allergen\">oeufs</span>, <span class=\"allergen\">soja</span>, <span class=\"allergen\">lait</span>, <span class=\"allergen\">fruits a coque</span>, graines de <span class=\"allergen\">sésame</span>.",
+        "ingredients_that_may_be_from_palm_oil_n": 0,
+        "ingredients_that_may_be_from_palm_oil_tags": [],
+        "interface_version_created": "20150316.jqm2",
+        "interface_version_modified": "20150316.jqm2",
+        "known_ingredients_n": 23,
+        "labels": "Sans additifs, Sans huile de palme, Nutriscore, Nutriscore B",
+        "labels_hierarchy": [
+            "en:no-additives",
+            "en:no-palm-oil",
+            "en:nutriscore",
+            "en:nutriscore-grade-b"
+        ],
+        "labels_lc": "fr",
+        "labels_old": "en:palm-oil-free,Nutriscore B,Sans additifs",
+        "labels_tags": [
+            "en:no-additives",
+            "en:no-palm-oil",
+            "en:nutriscore",
+            "en:nutriscore-grade-b"
+        ],
+        "lang": "fr",
+        "languages": {
+            "en:english": 1,
+            "en:french": 6
+        },
+        "languages_codes": {
+            "en": 1,
+            "fr": 6
+        },
+        "languages_hierarchy": [
+            "en:english",
+            "en:french"
+        ],
+        "languages_tags": [
+            "en:english",
+            "en:french",
+            "en:2",
+            "en:multilingual"
+        ],
+        "last_edit_dates_tags": [
+            "2021-02-27",
+            "2021-02",
+            "2021"
+        ],
+        "last_editor": "date-limite-app",
+        "last_image_dates_tags": [
+            "2021-01-07",
+            "2021-01",
+            "2021"
+        ],
+        "last_image_t": 1610032051,
+        "last_modified_by": "date-limite-app",
+        "last_modified_t": 1614429683,
+        "lc": "fr",
+        "lc_imported": "fr",
+        "link": "https://www.harrys.fr/nos-produits/100-pourcents-mie-nature/",
+        "main_countries_tags": [],
+        "manufacturing_places": "france",
+        "manufacturing_places_tags": [
+            "france"
+        ],
+        "max_imgid": "36",
+        "minerals_prev_tags": [],
+        "minerals_tags": [],
+        "misc_tags": [
+            "en:nutrition-fruits-vegetables-nuts",
+            "en:nutrition-all-nutriscore-values-known",
+            "en:nutriscore-computed",
+            "en:ecoscore-missing-data-warning",
+            "en:ecoscore-computed",
+            "en:main-countries-be-unexpectedly-low-scans",
+            "en:main-countries-be-unexpectedly-low-scans-20-30-percent-of-expected",
+            "en:main-countries-ch-unexpectedly-low-scans",
+            "en:main-countries-ch-unexpectedly-low-scans-20-30-percent-of-expected"
+        ],
+        "no_nutrition_data": "",
+        "nova_group": 4,
+        "nova_group_debug": " -- ingredients/en:sugar : 3 -- ingredients/en:gluten : 4",
+        "nova_groups": "4",
+        "nova_groups_tags": [
+            "en:4-ultra-processed-food-and-drink-products"
+        ],
+        "nucleotides_prev_tags": [],
+        "nucleotides_tags": [],
+        "nutrient_levels": {
+            "fat": "moderate",
+            "salt": "moderate",
+            "saturated-fat": "low",
+            "sugars": "moderate"
+        },
+        "nutrient_levels_tags": [
+            "en:fat-in-moderate-quantity",
+            "en:saturated-fat-in-low-quantity",
+            "en:sugars-in-moderate-quantity",
+            "en:salt-in-moderate-quantity"
+        ],
+        "nutriments": {
+            "carbohydrates": 48.5,
+            "carbohydrates_100g": 48.5,
+            "carbohydrates_serving": 12.1,
+            "carbohydrates_unit": "g",
+            "carbohydrates_value": 48.5,
+            "carbon-footprint-from-known-ingredients_100g": 75.6,
+            "carbon-footprint-from-known-ingredients_product": 378,
+            "carbon-footprint-from-known-ingredients_serving": 18.9,
+            "energy": 1121,
+            "energy-kcal": 268,
+            "energy-kcal_100g": 268,
+            "energy-kcal_serving": 67,
+            "energy-kcal_unit": "kcal",
+            "energy-kcal_value": 268,
+            "energy_100g": 1121,
+            "energy_serving": 280,
+            "energy_unit": "kcal",
+            "energy_value": 268,
+            "fat": 4.3,
+            "fat_100g": 4.3,
+            "fat_serving": 1.07,
+            "fat_unit": "g",
+            "fat_value": 4.3,
+            "fiber": 3.8,
+            "fiber_100g": 3.8,
+            "fiber_serving": 0.95,
+            "fiber_unit": "g",
+            "fiber_value": 3.8,
+            "fruits-vegetables-nuts": 0,
+            "fruits-vegetables-nuts-estimate-from-ingredients_100g": 0,
+            "fruits-vegetables-nuts_100g": 0,
+            "fruits-vegetables-nuts_serving": 0,
+            "fruits-vegetables-nuts_unit": "g",
+            "fruits-vegetables-nuts_value": 0,
+            "nova-group": 4,
+            "nova-group_100g": 4,
+            "nova-group_serving": 4,
+            "nutrition-score-fr": 1,
+            "nutrition-score-fr_100g": 1,
+            "proteins": 7,
+            "proteins_100g": 7,
+            "proteins_serving": 1.75,
+            "proteins_unit": "g",
+            "proteins_value": 7,
+            "salt": 1.13,
+            "salt_100g": 1.13,
+            "salt_serving": 0.282,
+            "salt_unit": "g",
+            "salt_value": 1.13,
+            "saturated-fat": 0.4,
+            "saturated-fat_100g": 0.4,
+            "saturated-fat_serving": 0.1,
+            "saturated-fat_unit": "g",
+            "saturated-fat_value": 0.4,
+            "sodium": 0.452,
+            "sodium_100g": 0.452,
+            "sodium_serving": 0.113,
+            "sodium_unit": "g",
+            "sodium_value": 0.452,
+            "sugars": 7.7,
+            "sugars_100g": 7.7,
+            "sugars_serving": 1.93,
+            "sugars_unit": "g",
+            "sugars_value": 7.7
+        },
+        "nutriscore_data": {
+            "energy": 1121,
+            "energy_points": 3,
+            "energy_value": 1121,
+            "fiber": 3.8,
+            "fiber_points": 4,
+            "fiber_value": 3.8,
+            "fruits_vegetables_nuts_colza_walnut_olive_oils": 0,
+            "fruits_vegetables_nuts_colza_walnut_olive_oils_points": 0,
+            "fruits_vegetables_nuts_colza_walnut_olive_oils_value": 0,
+            "grade": "b",
+            "is_beverage": 0,
+            "is_cheese": 0,
+            "is_fat": 0,
+            "is_water": 0,
+            "negative_points": 9,
+            "positive_points": 8,
+            "proteins": 7,
+            "proteins_points": 4,
+            "proteins_value": 7,
+            "saturated_fat": 0.4,
+            "saturated_fat_points": 0,
+            "saturated_fat_ratio": 9.30232558139535,
+            "saturated_fat_ratio_points": 0,
+            "saturated_fat_ratio_value": 9.3,
+            "saturated_fat_value": 0.4,
+            "score": 1,
+            "sodium": 452,
+            "sodium_points": 5,
+            "sodium_value": 452,
+            "sugars": 7.7,
+            "sugars_points": 1,
+            "sugars_value": 7.7
+        },
+        "nutriscore_grade": "b",
+        "nutriscore_score": 1,
+        "nutriscore_score_opposite": -1,
+        "nutrition_data": "on",
+        "nutrition_data_per": "100g",
+        "nutrition_data_per_imported": "100g",
+        "nutrition_data_prepared": "",
+        "nutrition_data_prepared_per": "100g",
+        "nutrition_data_prepared_per_imported": "100g",
+        "nutrition_grade_fr": "b",
+        "nutrition_grades": "b",
+        "nutrition_grades_tags": [
+            "b"
+        ],
+        "nutrition_score_beverage": 0,
+        "origins": "France",
+        "origins_hierarchy": [
+            "en:france"
+        ],
+        "origins_lc": "fr",
+        "origins_old": "",
+        "origins_tags": [
+            "en:france"
+        ],
+        "other_nutritional_substances_prev_tags": [],
+        "other_nutritional_substances_tags": [],
+        "owner": "org-barilla",
+        "owner_fields": {
+            "allergens": 1582537634,
+            "brands": 1582537634,
+            "carbohydrates": 1582537634,
+            "categories": 1582537634,
+            "countries": 1582537634,
+            "data_sources": 1582537634,
+            "energy": 1582537634,
+            "energy-kcal": 1582537634,
+            "fat": 1582537634,
+            "fiber": 1582537634,
+            "fruits-vegetables-nuts": 1582537634,
+            "ingredients_text_fr": 1582537634,
+            "lc": 1582537634,
+            "nutrition_data_per": 1582537634,
+            "nutrition_data_prepared_per": 1582537634,
+            "product_name_fr": 1582537634,
+            "proteins": 1582537634,
+            "quantity": 1582537634,
+            "salt": 1582537634,
+            "saturated-fat": 1582537634,
+            "sugars": 1582537634,
+            "traces": 1582537634
+        },
+        "owners_tags": "org-barilla",
+        "packaging": "sachet,plastique, fr:Sachet en plastique",
+        "packaging_tags": [
+            "sachet",
+            "plastique",
+            "fr-sachet-en-plastique"
+        ],
+        "packaging_text": "",
+        "packaging_text_en": "",
+        "packaging_text_fr": "",
+        "packagings": [
+            {
+                "material": "en:plastic",
+                "shape": "en:bag"
+            }
+        ],
+        "photographers_tags": [
+            "kiliweb",
+            "openfoodfacts-contributors",
+            "barilla",
+            "date-limite-app",
+            "barilla-off",
+            "cinolito"
+        ],
+        "pnns_groups_1": "Cereals and potatoes",
+        "pnns_groups_1_tags": [
+            "cereals-and-potatoes",
+            "known"
+        ],
+        "pnns_groups_2": "Bread",
+        "pnns_groups_2_tags": [
+            "bread",
+            "known"
+        ],
+        "popularity_key": 19999951273,
+        "popularity_tags": [
+            "top-50-scans-2019",
+            "top-100-scans-2019",
+            "top-500-scans-2019",
+            "top-1000-scans-2019",
+            "top-5000-scans-2019",
+            "top-10000-scans-2019",
+            "top-50000-scans-2019",
+            "top-100000-scans-2019",
+            "at-least-5-scans-2019",
+            "at-least-10-scans-2019",
+            "top-75-percent-scans-2019",
+            "top-80-percent-scans-2019",
+            "top-85-percent-scans-2019",
+            "top-90-percent-scans-2019",
+            "top-50-fr-scans-2019",
+            "top-100-fr-scans-2019",
+            "top-500-fr-scans-2019",
+            "top-1000-fr-scans-2019",
+            "top-5000-fr-scans-2019",
+            "top-10000-fr-scans-2019",
+            "top-50000-fr-scans-2019",
+            "top-100000-fr-scans-2019",
+            "top-country-fr-scans-2019",
+            "at-least-5-fr-scans-2019",
+            "at-least-10-fr-scans-2019",
+            "top-500-mq-scans-2019",
+            "top-1000-mq-scans-2019",
+            "top-5000-mq-scans-2019",
+            "top-10000-mq-scans-2019",
+            "top-50000-mq-scans-2019",
+            "top-100000-mq-scans-2019",
+            "at-least-5-mq-scans-2019",
+            "top-10000-ch-scans-2019",
+            "top-50000-ch-scans-2019",
+            "top-100000-ch-scans-2019",
+            "top-5000-re-scans-2019",
+            "top-10000-re-scans-2019",
+            "top-50000-re-scans-2019",
+            "top-100000-re-scans-2019",
+            "top-1000-gp-scans-2019",
+            "top-5000-gp-scans-2019",
+            "top-10000-gp-scans-2019",
+            "top-50000-gp-scans-2019",
+            "top-100000-gp-scans-2019",
+            "top-1000-lu-scans-2019",
+            "top-5000-lu-scans-2019",
+            "top-10000-lu-scans-2019",
+            "top-50000-lu-scans-2019",
+            "top-100000-lu-scans-2019",
+            "top-50000-be-scans-2019",
+            "top-100000-be-scans-2019",
+            "top-5000-nl-scans-2019",
+            "top-10000-nl-scans-2019",
+            "top-50000-nl-scans-2019",
+            "top-100000-nl-scans-2019",
+            "top-500-bf-scans-2019",
+            "top-1000-bf-scans-2019",
+            "top-5000-bf-scans-2019",
+            "top-10000-bf-scans-2019",
+            "top-50000-bf-scans-2019",
+            "top-100000-bf-scans-2019",
+            "top-5000-nc-scans-2019",
+            "top-10000-nc-scans-2019",
+            "top-50000-nc-scans-2019",
+            "top-100000-nc-scans-2019",
+            "top-50-scans-2020",
+            "top-100-scans-2020",
+            "top-500-scans-2020",
+            "top-1000-scans-2020",
+            "top-5000-scans-2020",
+            "top-10000-scans-2020",
+            "top-50000-scans-2020",
+            "top-100000-scans-2020",
+            "at-least-5-scans-2020",
+            "at-least-10-scans-2020",
+            "top-75-percent-scans-2020",
+            "top-80-percent-scans-2020",
+            "top-85-percent-scans-2020",
+            "top-90-percent-scans-2020",
+            "top-50-fr-scans-2020",
+            "top-100-fr-scans-2020",
+            "top-500-fr-scans-2020",
+            "top-1000-fr-scans-2020",
+            "top-5000-fr-scans-2020",
+            "top-10000-fr-scans-2020",
+            "top-50000-fr-scans-2020",
+            "top-100000-fr-scans-2020",
+            "top-country-fr-scans-2020",
+            "at-least-5-fr-scans-2020",
+            "at-least-10-fr-scans-2020",
+            "top-5000-be-scans-2020",
+            "top-10000-be-scans-2020",
+            "top-50000-be-scans-2020",
+            "top-100000-be-scans-2020",
+            "at-least-5-be-scans-2020",
+            "top-5000-ch-scans-2020",
+            "top-10000-ch-scans-2020",
+            "top-50000-ch-scans-2020",
+            "top-100000-ch-scans-2020",
+            "at-least-5-ch-scans-2020",
+            "top-500-re-scans-2020",
+            "top-1000-re-scans-2020",
+            "top-5000-re-scans-2020",
+            "top-10000-re-scans-2020",
+            "top-50000-re-scans-2020",
+            "top-100000-re-scans-2020",
+            "at-least-5-re-scans-2020",
+            "top-500-mq-scans-2020",
+            "top-1000-mq-scans-2020",
+            "top-5000-mq-scans-2020",
+            "top-10000-mq-scans-2020",
+            "top-50000-mq-scans-2020",
+            "top-100000-mq-scans-2020",
+            "at-least-5-mq-scans-2020",
+            "top-500-lu-scans-2020",
+            "top-1000-lu-scans-2020",
+            "top-5000-lu-scans-2020",
+            "top-10000-lu-scans-2020",
+            "top-50000-lu-scans-2020",
+            "top-100000-lu-scans-2020",
+            "at-least-5-lu-scans-2020",
+            "top-50000-es-scans-2020",
+            "top-100000-es-scans-2020",
+            "top-500-ml-scans-2020",
+            "top-1000-ml-scans-2020",
+            "top-5000-ml-scans-2020",
+            "top-10000-ml-scans-2020",
+            "top-50000-ml-scans-2020",
+            "top-100000-ml-scans-2020",
+            "top-50-za-scans-2020",
+            "top-100-za-scans-2020",
+            "top-500-za-scans-2020",
+            "top-1000-za-scans-2020",
+            "top-5000-za-scans-2020",
+            "top-10000-za-scans-2020",
+            "top-50000-za-scans-2020",
+            "top-100000-za-scans-2020",
+            "top-5000-au-scans-2020",
+            "top-10000-au-scans-2020",
+            "top-50000-au-scans-2020",
+            "top-100000-au-scans-2020",
+            "top-1000-br-scans-2020",
+            "top-5000-br-scans-2020",
+            "top-10000-br-scans-2020",
+            "top-50000-br-scans-2020",
+            "top-100000-br-scans-2020",
+            "top-1000-ci-scans-2020",
+            "top-5000-ci-scans-2020",
+            "top-10000-ci-scans-2020",
+            "top-50000-ci-scans-2020",
+            "top-100000-ci-scans-2020",
+            "top-5000-pf-scans-2020",
+            "top-10000-pf-scans-2020",
+            "top-50000-pf-scans-2020",
+            "top-100000-pf-scans-2020",
+            "top-50-kz-scans-2020",
+            "top-100-kz-scans-2020",
+            "top-500-kz-scans-2020",
+            "top-1000-kz-scans-2020",
+            "top-5000-kz-scans-2020",
+            "top-10000-kz-scans-2020",
+            "top-50000-kz-scans-2020",
+            "top-100000-kz-scans-2020",
+            "top-500-il-scans-2020",
+            "top-1000-il-scans-2020",
+            "top-5000-il-scans-2020",
+            "top-10000-il-scans-2020",
+            "top-50000-il-scans-2020",
+            "top-100000-il-scans-2020",
+            "top-10000-pt-scans-2020",
+            "top-50000-pt-scans-2020",
+            "top-100000-pt-scans-2020",
+            "top-50000-de-scans-2020",
+            "top-100000-de-scans-2020",
+            "top-500-pk-scans-2020",
+            "top-1000-pk-scans-2020",
+            "top-5000-pk-scans-2020",
+            "top-10000-pk-scans-2020",
+            "top-50000-pk-scans-2020",
+            "top-100000-pk-scans-2020",
+            "top-50000-gb-scans-2020",
+            "top-100000-gb-scans-2020",
+            "top-5000-us-scans-2020",
+            "top-10000-us-scans-2020",
+            "top-50000-us-scans-2020",
+            "top-100000-us-scans-2020"
+        ],
+        "product_name": "Pain 100% mie nature PT",
+        "product_name_debug_tags": [],
+        "product_name_en": "",
+        "product_name_fr": "Pain 100% mie nature PT",
+        "product_name_fr_imported": "Pain 100% mie nature PT",
+        "product_quantity": "500",
+        "purchase_places": "France,Normandie",
+        "purchase_places_tags": [
+            "france",
+            "normandie"
+        ],
+        "quantity": "500 g",
+        "quantity_imported": "500 g",
+        "removed_countries_tags": [],
+        "rev": 148,
+        "scans_n": 2062,
+        "selected_images": {
+            "front": {
+                "display": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.400.jpg"
+                },
+                "small": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.200.jpg"
+                },
+                "thumb": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/front_fr.134.100.jpg"
+                }
+            },
+            "ingredients": {
+                "display": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/ingredients_fr.37.400.jpg"
+                },
+                "small": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/ingredients_fr.37.200.jpg"
+                },
+                "thumb": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/ingredients_fr.37.100.jpg"
+                }
+            },
+            "nutrition": {
+                "display": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/nutrition_fr.68.400.jpg"
+                },
+                "small": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/nutrition_fr.68.200.jpg"
+                },
+                "thumb": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/nutrition_fr.68.100.jpg"
+                }
+            },
+            "packaging": {
+                "display": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/packaging_fr.141.400.jpg"
+                },
+                "small": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/packaging_fr.141.200.jpg"
+                },
+                "thumb": {
+                    "fr": "https://static.openfoodfacts.org/images/products/322/885/700/0852/packaging_fr.141.100.jpg"
+                }
+            }
+        },
+        "serving_quantity": "25",
+        "serving_size": "25g",
+        "sortkey": 1610032052,
+        "sources": [
+            {
+                "fields": [
+                    "product_name_fr",
+                    "data_sources",
+                    "ingredients_text_fr"
+                ],
+                "id": "barilla",
+                "images": [],
+                "import_t": 1558447764,
+                "manufacturer": "1",
+                "name": "Barilla",
+                "url": "https://www.barilla.com/fr-fr"
+            },
+            {
+                "fields": [
+                    "product_name_fr"
+                ],
+                "id": "barilla",
+                "images": [],
+                "import_t": 1582537739,
+                "manufacturer": 1,
+                "name": null,
+                "url": null
+            }
+        ],
+        "states": "en:to-be-checked, en:complete, en:nutrition-facts-completed, en:ingredients-completed, en:expiration-date-completed, en:packaging-code-to-be-completed, en:characteristics-completed, en:origins-completed, en:categories-completed, en:brands-completed, en:packaging-completed, en:quantity-completed, en:product-name-completed, en:photos-validated, en:packaging-photo-selected, en:nutrition-photo-selected, en:ingredients-photo-selected, en:front-photo-selected, en:photos-uploaded",
+        "states_hierarchy": [
+            "en:to-be-checked",
+            "en:complete",
+            "en:nutrition-facts-completed",
+            "en:ingredients-completed",
+            "en:expiration-date-completed",
+            "en:packaging-code-to-be-completed",
+            "en:characteristics-completed",
+            "en:origins-completed",
+            "en:categories-completed",
+            "en:brands-completed",
+            "en:packaging-completed",
+            "en:quantity-completed",
+            "en:product-name-completed",
+            "en:photos-validated",
+            "en:packaging-photo-selected",
+            "en:nutrition-photo-selected",
+            "en:ingredients-photo-selected",
+            "en:front-photo-selected",
+            "en:photos-uploaded"
+        ],
+        "states_tags": [
+            "en:to-be-checked",
+            "en:complete",
+            "en:nutrition-facts-completed",
+            "en:ingredients-completed",
+            "en:expiration-date-completed",
+            "en:packaging-code-to-be-completed",
+            "en:characteristics-completed",
+            "en:origins-completed",
+            "en:categories-completed",
+            "en:brands-completed",
+            "en:packaging-completed",
+            "en:quantity-completed",
+            "en:product-name-completed",
+            "en:photos-validated",
+            "en:packaging-photo-selected",
+            "en:nutrition-photo-selected",
+            "en:ingredients-photo-selected",
+            "en:front-photo-selected",
+            "en:photos-uploaded"
+        ],
+        "stores": "Magasins U,Auchan,Netto,Carrefour market",
+        "stores_tags": [
+            "magasins-u",
+            "auchan",
+            "netto",
+            "carrefour-market"
+        ],
+        "traces": "en:eggs,en:milk,en:nuts,en:sesame-seeds,en:soybeans",
+        "traces_from_ingredients": "oeufs, soja, lait, fruits a coque, sésame",
+        "traces_from_user": "(fr) en:eggs,en:milk,en:nuts,en:sesame-seeds,en:soybeans",
+        "traces_hierarchy": [
+            "en:eggs",
+            "en:milk",
+            "en:nuts",
+            "en:sesame-seeds",
+            "en:soybeans"
+        ],
+        "traces_imported": "Œufs, Lait, Fruits à coque, Graines de sésame, Soja",
+        "traces_lc": "fr",
+        "traces_tags": [
+            "en:eggs",
+            "en:milk",
+            "en:nuts",
+            "en:sesame-seeds",
+            "en:soybeans"
+        ],
+        "unique_scans_n": 1263,
+        "unknown_ingredients_n": 0,
+        "unknown_nutrients_tags": [],
+        "update_key": "key_1624611269",
+        "vitamins_prev_tags": [],
+        "vitamins_tags": []
+    },
+    "status": 1,
+    "status_verbose": "product found"
+}
