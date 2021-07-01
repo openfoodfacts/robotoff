@@ -34,7 +34,7 @@ authors = ["Openfoodfacts Team"]
 license = "GNU Affero General Public License v3"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7.1,<4.0"
 requests = "^2.25.1"
 peewee = "^3.14.0"
 psycopg2-binary = "^2.8.6"
@@ -66,6 +66,7 @@ h5py = "2.10.0"
 typer = "^0.3.2"
 xgboost = "^1.4.2"
 typing-extensions = "^3.7.0"
+pandas = "^1.2.5"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "^0.19.5"
