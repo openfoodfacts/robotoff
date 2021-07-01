@@ -1,7 +1,9 @@
 import typing
 
+import typing_extensions
 
-class XGFoodPrediction(typing.TypedDict):
+
+class XGFoodPrediction(typing_extensions.TypedDict):
     prediction_G1: str
     confidence_G1: float
 
@@ -9,7 +11,7 @@ class XGFoodPrediction(typing.TypedDict):
     confidence_G2: float
 
 
-class IngredientDetailed(typing.TypedDict, total=False):
+class IngredientDetailed(typing_extensions.TypedDict, total=False):
     percent_estimate: float
     percent_max: float
     percent_min: float
