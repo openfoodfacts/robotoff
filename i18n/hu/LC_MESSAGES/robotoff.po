@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2021-02-19 16:27\n"
+"PO-Revision-Date: 2021-07-09 08:35\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Hungarian\n"
 "Language: hu\n"
@@ -23,7 +23,7 @@ msgstr "A termék ebbe a kategóriába tartozik?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr "A terméken megtalálható ez a címke?"
+msgstr "Megtalálható a terméken ez a címke?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
@@ -31,7 +31,7 @@ msgstr "A termék ehhez a márkához tartozik?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Ez a súly megegyezik a terméken feltüntetettel?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
