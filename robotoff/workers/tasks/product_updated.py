@@ -17,6 +17,9 @@ from robotoff.insights.validator import (
 from robotoff.ml.category.neural.model import (
     predict_from_product as predict_category_from_product_ml,
 )
+from robotoff.ml.category.prediction_from_ingredients.core import (
+    get_xgfood_categories_as_insights,
+)
 from robotoff.models import ProductInsight
 from robotoff.off import ServerType, get_server_type
 from robotoff.products import Product, get_product, get_product_store
@@ -81,13 +84,16 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
         return False
 
     product_insights = []
-    product_insight = predict_category_from_product_es(product)
 
+    product_insight = predict_category_from_product_es(product)
     if product_insight is not None:
         product_insights.append(product_insight)
 
     product_insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+    if product_insight is not None:
+        product_insights.append(product_insight)
 
+    product_insight = get_xgfood_categories_as_insights(product)
     if product_insight is not None:
         product_insights.append(product_insight)
 

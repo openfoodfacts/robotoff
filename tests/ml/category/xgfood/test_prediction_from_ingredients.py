@@ -1,8 +1,14 @@
 import json
+import typing
 from pathlib import Path
 
 import pytest
 
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import ProductInsights, RawInsight
+from robotoff.ml.category.prediction_from_ingredients.core import (
+    get_xgfood_categories_as_insights,
+)
 from robotoff.ml.category.prediction_from_ingredients.xgfood import (
     XGFood,
     XGFoodPrediction,
@@ -12,7 +18,7 @@ EXAMPLES_DIRPATH = Path(__file__).parent / "examples"
 
 
 @pytest.mark.parametrize(
-    ("example_id", "expected_result"),
+    ("barcode", "expected_result"),
     [
         (
             # https://fr.openfoodfacts.org/produit/3228857000852/pain-100-mie-nature-pt-harrys
@@ -66,20 +72,61 @@ EXAMPLES_DIRPATH = Path(__file__).parent / "examples"
         ),
     ],
 )
-def test_xgfood(example_id: str, expected_result: XGFoodPrediction) -> None:
+def test_xgfood(barcode: str, expected_result: XGFoodPrediction) -> None:
     """Test XGFood model works as expected.
 
     See ./robotoff/ml/category/prediction_from_ingredients/xgfood.py for
     more details.
     """
-    filepath = EXAMPLES_DIRPATH / (example_id + ".json")
+    product = _load_product(barcode)
+    product_name = product.get("product_name_fr", "")
+    ingredients = product.get("ingredients", [])
+
+    result = XGFood().predict(product_name=product_name, ingredients=ingredients)
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "barcode",
+    [
+        "3228857000852",
+        "3366321052331",
+        "3088543506255",
+        "3225350000501",
+        "3523230028431",
+    ],
+)
+def test_get_xgfood_categories_as_insights(barcode: str) -> None:
+    product = _load_product(barcode)
+    product_insights = get_xgfood_categories_as_insights(product)
+
+    assert isinstance(product_insights, ProductInsights)
+    assert product_insights.barcode == product.get("code")
+    assert product_insights.type == InsightType.category
+    assert isinstance(product_insights.insights, list)
+
+    insights = product_insights.insights
+    if len(insights) > 0:
+        for insight in insights:
+            assert insight is not None
+            assert isinstance(insight, RawInsight)
+
+            assert insight.type == InsightType.category
+            assert isinstance(insight.value_tag, str)
+            assert insight.value_tag != "unknown"
+            assert insight.predictor == "xgfood"
+
+            assert insight.data.get("model") == "xgfood"
+            assert insight.data.get("level") in {"group_1", "group_2"}
+            assert isinstance(insight.data.get("confidence"), float)
+            assert insight.data["confidence"] > 0.0
+
+
+def _load_product(barcode: str) -> typing.Dict:
+    filepath = EXAMPLES_DIRPATH / (barcode + ".json")
     assert filepath.is_file()
 
     with filepath.open() as f:
         data = json.load(f)
 
-    product_name = data["product"].get("product_name_fr", "")
-    ingredients = data["product"].get("ingredients", [])
-
-    result = XGFood().predict(product_name=product_name, ingredients=ingredients)
-    assert result == expected_result
+    return data["product"]
