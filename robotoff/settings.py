@@ -27,6 +27,7 @@ TAXONOMY_INGREDIENT_URL = (
 TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.full.json"
 TAXONOMY_BRAND_URL = "https://static.openfoodfacts.org/data/taxonomies/brands.full.json"
 OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
+
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
 OFF_BRANDS_URL = OFF_BASE_WEBSITE_URL + "/brands.json"
 
