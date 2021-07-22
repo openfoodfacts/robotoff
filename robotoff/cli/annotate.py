@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 import click
 
+from robotoff import settings
 from robotoff.utils import http_session
 from robotoff.utils.types import JSONType
 
@@ -12,11 +13,10 @@ LOCAL = False
 if LOCAL:
     BASE_URL = "http://localhost:5500/api/v1"
 else:
-    BASE_URL = "https://robotoff.openfoodfacts.org/api/v1"
+    BASE_URL = OFF_BASE_WEBSITE_URL + "/api/v1"
 
 RANDOM_INSIGHT_URL = BASE_URL + "/insights/random"
 ANNOTATE_INSIGHT_URL = BASE_URL + "/insights/annotate"
-STATIC_IMAGE_DIR_URL = "https://static.openfoodfacts.org/images/products"
 
 
 class NoInsightException(Exception):
@@ -101,7 +101,7 @@ def print_generic_insight(insight: JSONType) -> None:
     )
 
     if "source" in insight:
-        click.echo("image: {}{}".format(STATIC_IMAGE_DIR_URL, insight["source"]))
+        click.echo("image: {}{}".format(settings.OFF_IMAGE_BASE_URL, insight["source"]))
     click.echo("")
 
 

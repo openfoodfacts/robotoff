@@ -1,5 +1,6 @@
 from typing import Dict
 
+from robotoff import settings
 from robotoff.insights.extraction import get_logger, requests
 from robotoff.insights.ocr.core import get_json_for_image
 from robotoff.products import ProductDataset
@@ -56,7 +57,7 @@ def get_images(ean: str) -> Dict:
     """
 
     url = (
-        "https://world.openfoodfacts.org/api/v0/product/" + ean + ".json?fields=images"
+        settings.OFF_BASE_WEBSITE_URL + "/api/v0/product/" + ean + ".json?fields=images"
     )
     try:
         result = requests.get(url)
@@ -128,7 +129,7 @@ def unselect_image(barcode: str, field_name: str, username: str, password: str) 
     Unselect image for product
     """
 
-    url = "https://world.openfoodfacts.org/cgi/product_image_unselect.pl"
+    url = settings.OFF_BASE_WEBSITE_URL + "/cgi/product_image_unselect.pl"
     data = {
         "code": barcode,
         "id": field_name,
@@ -152,7 +153,7 @@ def reselect_image(
     Select image for product
     """
 
-    url = "https://world.openfoodfacts.org/cgi/product_image_crop.pl"
+    url = settings.OFF_BASE_WEBSITE_URL + "/cgi/product_image_crop.pl"
     data = {
         "code": barcode,
         "imgid": img_id,

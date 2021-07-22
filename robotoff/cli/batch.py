@@ -47,7 +47,7 @@ def batch_annotate(
             i += 1
             print("Insight %d" % i)
             print(
-                "Add label {} to https://fr.openfoodfacts.org/produit/{}"
+                "Add label {} to https://fr.openfoodfacts.org/produit/{}"  # still hardcoded.
                 "".format(insight.data, insight.barcode)
             )
             print(insight.data)
