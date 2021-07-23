@@ -97,7 +97,7 @@ def print_generic_insight(insight: JSONType) -> None:
     click.echo(
         "url: {}/produit/{}".format(
             settings.BaseURLProvider().country("fr").get(), insight["barcode"]
-        )  # still hardcoded
+        )
     )
 
     if "source" in insight:
@@ -113,7 +113,7 @@ def print_ingredient_spellcheck_insight(insight: JSONType) -> None:
     click.echo(
         "url: {}/produit/{}".format(
             settings.BaseURLProvider().country("fr").get(), insight["barcode"]
-        )  # still hardcoded
+        )
     )
 
     original_snippet = insight["original_snippet"]
