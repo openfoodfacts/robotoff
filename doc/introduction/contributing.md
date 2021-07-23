@@ -60,10 +60,10 @@ development.
     poetry install
     ```
 
-4.  Launch the PostgreSQL database using docker-compose:
+4.  Download the Robotoff models(required by some tests):
 
     ```
-    docker-compose up -d postgres
+    poetry run robotoff-cli download-models
     ```
 
 5.  Create a branch for local development:
