@@ -43,7 +43,7 @@ LOGO_CONFIDENCE_THRESHOLDS = CachedStore(
 
 def get_stored_logo_ids() -> Set[int]:
     r = http_session.get(
-        settings.BaseURLProvider().get() + "/api/v1/ann/stored", timeout=30
+        settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/stored", timeout=30
     )
 
     if not r.ok:
@@ -66,7 +66,9 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
         "logos": [{"bounding_box": logo.bounding_box, "id": logo.id} for logo in logos],
     }
     r = http_session.post(
-        settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/add", json=data, timeout=30
+        settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/add",
+        json=data,
+        timeout=30,
     )
 
     if not r.ok:

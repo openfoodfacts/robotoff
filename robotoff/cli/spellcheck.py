@@ -70,7 +70,7 @@ def get_patterns(pattern: str, correction: str) -> List:
 
 def iter_products(country: str, ingredient: str):
     ingredient_field = f"ingredients_text_{country}"
-    base_url = BaseURLProvider().country(country) + "/ingredient"
+    base_url = BaseURLProvider().country(country).get() + "/ingredient"
     url = base_url + f"/{ingredient}/1.json?fields=code,{ingredient_field}"
     r = http_session.get(url)
     data = r.json()

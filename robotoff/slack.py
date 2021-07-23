@@ -92,8 +92,8 @@ def notify_automatic_processing(insight: ProductInsight):
 
     if source_image:
         image_url = (
-            "https://static.openfoodfacts.org/images/products" + source_image
-        )  # still hardcoded
+            settings.BaseURLProvider().static() + "/images/products" + source_image
+        )
         metadata_text = "(<{}|product>, <{}|source image>)".format(
             product_url, image_url
         )
