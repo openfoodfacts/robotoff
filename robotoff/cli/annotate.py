@@ -13,7 +13,7 @@ LOCAL = False
 if LOCAL:
     BASE_URL = "http://localhost:5500/api/v1"
 else:
-    BASE_URL = settings.BaseURLProvider().get() + "/api/v1"
+    BASE_URL = settings.BaseURLProvider().robotoff().get() + "/api/v1"
 
 RANDOM_INSIGHT_URL = BASE_URL + "/insights/random"
 ANNOTATE_INSIGHT_URL = BASE_URL + "/insights/annotate"
@@ -95,10 +95,9 @@ def print_generic_insight(insight: JSONType) -> None:
         click.echo("{}: {}".format(key, str(value)))
 
     click.echo(
-        "url: {}".format(
-            "https://fr.openfoodfacts.org/produit/"
-            "{}".format(insight["barcode"])  # still hardcoded
-        )
+        "url: {}/produit/{}".format(
+            settings.BaseURLProvider().country("fr").get(), insight["barcode"]
+        )  # still hardcoded
     )
 
     if "source" in insight:
@@ -112,10 +111,9 @@ def print_ingredient_spellcheck_insight(insight: JSONType) -> None:
         click.echo("{}: {}".format(key, str(value)))
 
     click.echo(
-        "url: {}".format(
-            "https://fr.openfoodfacts.org/produit/"
-            "{}".format(insight["barcode"])  # still hardcoded
-        )
+        "url: {}/produit/{}".format(
+            settings.BaseURLProvider().country("fr").get(), insight["barcode"]
+        )  # still hardcoded
     )
 
     original_snippet = insight["original_snippet"]
