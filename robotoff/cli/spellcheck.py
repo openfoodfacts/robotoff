@@ -27,7 +27,7 @@ def correct_ingredient(
         barcode = product.get("code")
         print(
             "Fixing {}/product/{}".format(
-                BaseURLProvider().country("fr").get(), barcode
+                BaseURLProvider().country(country).get(), barcode
             )
         )
         product = get_product(barcode, fields=[ingredient_field])
