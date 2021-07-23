@@ -2,6 +2,46 @@ import os
 from pathlib import Path
 from typing import Tuple
 
+# Should be either 'prod' or 'dev'.
+_robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "prod")
+
+if _robotoff_instance != "prod" and _robotoff_instance != "dev":
+    raise ValueError(
+        "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s"
+        % _robotoff_instance
+    )
+
+
+class BaseURLProvider(object):
+    """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
+
+    Example usage: BaseURLProvider().robotoff().get() returns the Robotoff URL.
+    """
+
+    def __init__(self):
+        suffix = "org"
+        if _robotoff_instance == "dev":
+            suffix = "net"
+
+        self.url = "https://%(prefix)s.openfoodfacts." + suffix
+        self.prefix = "world"
+
+    def robotoff(self):
+        self.prefix = "robotoff"
+        return self
+
+    def static(self):
+        self.prefix = "static"
+        return self
+
+    def country(self, country_code: str):
+        self.prefix = country_code
+        return self
+
+    def get(self):
+        return self.url % {"prefix": self.prefix}
+
+
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / "data"
 DATASET_DIR = PROJECT_DIR / "datasets"
@@ -15,21 +55,25 @@ DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
 INSIGHT_DUMP_PATH = DATASET_DIR / "insights.jsonl.gz"
 
 JSONL_DATASET_URL = (
-    "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz"
+    BaseURLProvider().static().get() + "/data/openfoodfacts-products.jsonl.gz"
 )
 
 TAXONOMY_CATEGORY_URL = (
-    "https://static.openfoodfacts.org/data/taxonomies/categories.full.json"
+    BaseURLProvider().static().get() + "/data/taxonomies/categories.full.json"
 )
 TAXONOMY_INGREDIENT_URL = (
-    "https://static.openfoodfacts.org/data/taxonomies/ingredients.full.json"
+    BaseURLProvider().static().get() + "/data/taxonomies/ingredients.full.json"
 )
-TAXONOMY_LABEL_URL = "https://static.openfoodfacts.org/data/taxonomies/labels.full.json"
-TAXONOMY_BRAND_URL = "https://static.openfoodfacts.org/data/taxonomies/brands.full.json"
-OFF_IMAGE_BASE_URL = "https://static.openfoodfacts.org/images/products"
+TAXONOMY_LABEL_URL = (
+    BaseURLProvider().static().get() + "/data/taxonomies/labels.full.json"
+)
+TAXONOMY_BRAND_URL = (
+    BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json"
+)
+OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
-OFF_BRANDS_URL = OFF_BASE_WEBSITE_URL + "/brands.json"
+OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
 
 OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
 OFF_SERVER_DOMAIN = "api.openfoodfacts.org"

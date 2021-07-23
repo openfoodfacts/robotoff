@@ -1,9 +1,9 @@
 from typing import Dict
 
-from robotoff import settings
 from robotoff.insights.extraction import get_logger, requests
 from robotoff.insights.ocr.core import get_json_for_image
 from robotoff.products import ProductDataset
+from robotoff.settings import BaseURLProvider
 
 logger = get_logger(__name__)
 
@@ -56,9 +56,7 @@ def get_images(ean: str) -> Dict:
     Get images for the product
     """
 
-    url = (
-        settings.OFF_BASE_WEBSITE_URL + "/api/v0/product/" + ean + ".json?fields=images"
-    )
+    url = BaseURLProvider().get() + "/api/v0/product/" + ean + ".json?fields=images"
     try:
         result = requests.get(url)
         if result.ok:
@@ -129,7 +127,7 @@ def unselect_image(barcode: str, field_name: str, username: str, password: str) 
     Unselect image for product
     """
 
-    url = settings.OFF_BASE_WEBSITE_URL + "/cgi/product_image_unselect.pl"
+    url = BaseURLProvider().get() + "/cgi/product_image_unselect.pl"
     data = {
         "code": barcode,
         "id": field_name,
@@ -153,7 +151,7 @@ def reselect_image(
     Select image for product
     """
 
-    url = settings.OFF_BASE_WEBSITE_URL + "/cgi/product_image_crop.pl"
+    url = BaseURLProvider().get() + "/cgi/product_image_crop.pl"
     data = {
         "code": barcode,
         "imgid": img_id,

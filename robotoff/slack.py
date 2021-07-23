@@ -76,7 +76,7 @@ def notify_image_flag(insights: List[RawInsight], source: str, barcode: str):
 
     url = settings.OFF_IMAGE_BASE_URL + source
     edit_url = "{}/cgi/product.pl?type=edit&code={}" "".format(
-        settings.OFF_BASE_WEBSITE_URL, barcode
+        settings.BaseURLProvider().get(), barcode
     )
     text += url + "\n"
     text += "edit: {}".format(edit_url)
@@ -85,11 +85,15 @@ def notify_image_flag(insights: List[RawInsight], source: str, barcode: str):
 
 
 def notify_automatic_processing(insight: ProductInsight):
-    product_url = "{}/product/{}".format(settings.OFF_BASE_WEBSITE_URL, insight.barcode)
+    product_url = "{}/product/{}".format(
+        settings.BaseURLProvider().get(), insight.barcode
+    )
     source_image = insight.source_image
 
     if source_image:
-        image_url = "https://static.openfoodfacts.org/images/products" + source_image
+        image_url = (
+            "https://static.openfoodfacts.org/images/products" + source_image
+        )  # still hardcoded
         metadata_text = "(<{}|product>, <{}|source image>)".format(
             product_url, image_url
         )

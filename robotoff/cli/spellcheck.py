@@ -2,6 +2,7 @@ import re
 from typing import List
 
 from robotoff.off import OFFAuthentication, get_product, save_ingredients
+from robotoff.settings import BaseURLProvider
 from robotoff.utils import http_session
 
 
@@ -24,7 +25,11 @@ def correct_ingredient(
 
     for product in products:
         barcode = product.get("code")
-        print("Fixing https://{}.openfoodfacts.org/product/{}".format(country, barcode))
+        print(
+            "Fixing {}/product/{}".format(
+                BaseURLProvider().country("fr").get(), barcode
+            )
+        )
         product = get_product(barcode, fields=[ingredient_field])
 
         if product is None:
@@ -65,7 +70,7 @@ def get_patterns(pattern: str, correction: str) -> List:
 
 def iter_products(country: str, ingredient: str):
     ingredient_field = f"ingredients_text_{country}"
-    base_url = f"https://{country}.openfoodfacts.org/ingredient"
+    base_url = BaseURLProvider().country(country) + "/ingredient"
     url = base_url + f"/{ingredient}/1.json?fields=code,{ingredient_field}"
     r = http_session.get(url)
     data = r.json()

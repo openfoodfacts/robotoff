@@ -66,7 +66,7 @@ AUTH_DICT = {
 }
 
 API_URLS: Dict[ServerType, str] = {
-    ServerType.off: "https://world.openfoodfacts.org",
+    ServerType.off: settings.BaseURLProvider().get(),
     ServerType.obf: "https://world.openbeautyfacts.org",
     ServerType.opf: "https://world.openproductfacts.org",
     ServerType.opff: "https://world.openpetfoodfacts.org",
@@ -399,7 +399,7 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     if get_product(barcode, server=to) is not None:
         return False
 
-    url = "{}/cgi/product_jqm.pl".format(settings.OFF_BASE_WEBSITE_URL)
+    url = "{}/cgi/product_jqm.pl".format(settings.BaseURLProvider().get())
     params = {
         "type": "edit",
         "code": barcode,
