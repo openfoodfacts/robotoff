@@ -72,7 +72,6 @@ TAXONOMY_BRAND_URL = (
 )
 OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
-OFF_BASE_WEBSITE_URL = "https://world.openfoodfacts.org"
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
 
 OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
