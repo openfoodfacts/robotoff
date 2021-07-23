@@ -43,7 +43,7 @@ LOGO_CONFIDENCE_THRESHOLDS = CachedStore(
 
 def get_stored_logo_ids() -> Set[int]:
     r = http_session.get(
-        settings.ROBOTOFF_BASE_WEBSITE_URL + "/api/v1/ann/stored", timeout=30
+        settings.BaseURLProvider().get() + "/api/v1/ann/stored", timeout=30
     )
 
     if not r.ok:
@@ -66,7 +66,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
         "logos": [{"bounding_box": logo.bounding_box, "id": logo.id} for logo in logos],
     }
     r = http_session.post(
-        settings.ROBOTOFF_BASE_WEBSITE_URL + "/api/v1/ann/add", json=data, timeout=30
+        settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/add", json=data, timeout=30
     )
 
     if not r.ok:
@@ -79,7 +79,9 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
 def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     logo_ids_params = ",".join((str(logo.id) for logo in logos))
     r = http_session.get(
-        settings.ROBOTOFF_BASE_WEBSITE_URL + "/api/v1/ann/batch?logo_ids=" + logo_ids_params,
+        settings.BaseURLProvider().robotoff().get()
+        + "/api/v1/ann/batch?logo_ids="
+        + logo_ids_params,
         timeout=30,
     )
 
@@ -382,7 +384,7 @@ def send_logo_notification(logo: LogoAnnotation, probs: Dict[LogoLabelType, floa
         )
     )
     barcode = logo.image_prediction.image.barcode
-    base_off_url = settings.ROBOTOFF_BASE_WEBSITE_URL
+    base_off_url = settings.BaseURLProvider().get()
     text = (
         f"Prediction for <{crop_url}|image> "
         f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "
