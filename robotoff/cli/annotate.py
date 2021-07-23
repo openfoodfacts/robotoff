@@ -95,8 +95,8 @@ def print_generic_insight(insight: JSONType) -> None:
         click.echo("{}: {}".format(key, str(value)))
 
     click.echo(
-        "url: {}/produit/{}".format(
-            settings.BaseURLProvider().country("fr").get(), insight["barcode"]
+        "url: {}/product/{}".format(
+            settings.BaseURLProvider().get(), insight["barcode"]
         )
     )
 
@@ -111,8 +111,8 @@ def print_ingredient_spellcheck_insight(insight: JSONType) -> None:
         click.echo("{}: {}".format(key, str(value)))
 
     click.echo(
-        "url: {}/produit/{}".format(
-            settings.BaseURLProvider().country("fr").get(), insight["barcode"]
+        "url: {}/product/{}".format(
+            settings.BaseURLProvider().get(), insight["barcode"]
         )
     )
 

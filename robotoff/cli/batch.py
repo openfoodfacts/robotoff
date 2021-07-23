@@ -48,10 +48,8 @@ def batch_annotate(
             i += 1
             print("Insight %d" % i)
             print(
-                "Add label {} to {}/produit/{}"
-                "".format(
-                    insight.data, BaseURLProvider().country("fr").get(), insight.barcode
-                )
+                "Add label {} to {}/product/{}"
+                "".format(insight.data, BaseURLProvider().get(), insight.barcode)
             )
             print(insight.data)
 
