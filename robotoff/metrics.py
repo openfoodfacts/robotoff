@@ -74,7 +74,7 @@ def get_influx_client() -> InfluxDBClient:
 
 def get_product_count(country_tag: str) -> int:
     r = requests.get(
-        "https://{}.openfoodfacts.org/3.json?fields=null".format(country_tag)
+        settings.BaseURLProvider().country(country_tag).get() + "/3.json?fields=null"
     ).json()
     return int(r["count"])
 
@@ -122,7 +122,7 @@ def generate_metrics_from_path(
     facet: Optional[str] = None,
 ) -> List:
     inserts: List = []
-    url = f"https://{country_tag}-en.openfoodfacts.org{path}"
+    url = settings.BaseURLProvider().country(country_tag + "-en").get() + path
 
     if facet is None:
         facet = get_facet_name(url)
