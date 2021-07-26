@@ -662,9 +662,13 @@ development.</p>
 </code></pre></div>
 </li>
 <li>
-<p>Download the Robotoff models(required by some tests):</p>
-<div class="highlight"><pre><span></span><code>poetry run robotoff-cli download-models
-</code></pre></div>
+<p>Configure files required for the tests to run locally:</p>
+<p>Download the Robotoff models:
+  <div class="highlight"><pre><span></span><code>poetry run robotoff-cli download-models
+</code></pre></div></p>
+<p>Compile the i18n files:
+  <div class="highlight"><pre><span></span><code>cd i18n &amp;&amp; bash compile.sh &amp;&amp; cd ..
+</code></pre></div></p>
 </li>
 <li>
 <p>Create a branch for local development:</p>
