@@ -4,7 +4,7 @@ import logging
 import os
 import pathlib
 import sys
-import tempfile
+from io import BytesIO
 from typing import Callable, Dict, Iterable, Optional, Tuple, Union
 
 import requests
@@ -125,8 +125,4 @@ def get_image_from_url(
     if r.status_code != 200:
         return None
 
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(r.content)
-        image = Image.open(f.name)
-
-    return image
+    return Image.open(BytesIO(r.content))
