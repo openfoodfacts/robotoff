@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Sequence, Tuple
+
+import sentry_sdk
+from sentry_sdk.integrations import Integration
 
 # Should be either 'prod' or 'dev'.
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "prod")
@@ -125,7 +128,21 @@ SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"
 SLACK_OFF_ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL = "CT2N423PA"
 SLACK_OFF_NUTRISCORE_ALERT_CHANNEL = "CJZNFCSNP"
 
-SENTRY_DSN = os.environ.get("SENTRY_DSN")
+_sentry_dsn = os.environ.get("SENTRY_DSN")
+
+
+def init_sentry(integrations: Sequence[Integration] = ()):
+    if _sentry_dsn:
+        sentry_sdk.init(
+            _sentry_dsn,
+            environment=_robotoff_instance,
+            integrations=integrations,
+        )
+    else:
+        raise ValueError(
+            "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
+        )
+
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
 OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"

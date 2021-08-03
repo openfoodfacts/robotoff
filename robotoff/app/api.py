@@ -9,7 +9,6 @@ import falcon
 import orjson
 import peewee
 import requests
-import sentry_sdk
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
@@ -56,7 +55,7 @@ from robotoff.workers.client import send_ipc_event
 
 logger = get_logger()
 
-sentry_sdk.init(dsn=settings.SENTRY_DSN, integrations=[FalconIntegration()])
+settings.init_sentry(integrations=[FalconIntegration()])
 
 es_client = get_es_client()
 

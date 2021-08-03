@@ -4,7 +4,6 @@ import os
 import uuid
 from typing import Dict, Iterable, Optional
 
-import sentry_sdk
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -38,9 +37,7 @@ from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
 
-if settings.SENTRY_DSN:
-    sentry_sdk.init(settings.SENTRY_DSN)
-
+settings.init_sentry()
 
 logger = get_logger(__name__)
 
