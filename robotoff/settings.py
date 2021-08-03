@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
 import sentry_sdk
 from sentry_sdk.integrations import Integration
@@ -77,8 +77,15 @@ OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
 
-OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
-OFF_SERVER_DOMAIN = "api.openfoodfacts.org"
+_off_password = os.environ.get("OFF_PASSWORD", "")
+_off_user = os.environ.get("OFF_USER", "")
+
+
+def off_credentials() -> Dict:
+    return {"user_id": _off_user, "password": _off_password}
+
+
+OFF_SERVER_DOMAIN = "api.openfoodfacts.org"  # not sure what to do here.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
@@ -99,7 +106,7 @@ DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
+MONGO_URI = os.environ.get("MONGO_URI", "")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
