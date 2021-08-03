@@ -1,8 +1,9 @@
 import os
 import pathlib
+from typing import Dict, Sequence
+
 import sentry_sdk
 from sentry_sdk.integrations import Integration
-from typing import Dict, Sequence, Optional
 
 PROJECT_DIR = pathlib.Path(__file__).parent
 DATA_DIR = PROJECT_DIR / "data"

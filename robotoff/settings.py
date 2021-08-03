@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
+from typing import Sequence, Tuple
+
 import sentry_sdk
 from sentry_sdk.integrations import Integration
-from typing import Tuple, Sequence
 
 # Should be either 'prod' or 'dev'.
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "prod")
