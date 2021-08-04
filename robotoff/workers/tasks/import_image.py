@@ -19,7 +19,7 @@ from robotoff.logos import (
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import get_server_type
 from robotoff.products import Product, get_product_store
-from robotoff.slack import notify_image_flag
+from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger
 from robotoff.workers.client import send_ipc_event
 
@@ -38,7 +38,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
 
     for insight_type, insights in insights_all.items():
         if insight_type == InsightType.image_flag:
-            notify_image_flag(
+            NotifierFactory.get_notifier().notify_image_flag(
                 insights.insights,
                 insights.source_image,  # type: ignore
                 insights.barcode,

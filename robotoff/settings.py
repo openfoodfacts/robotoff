@@ -120,13 +120,21 @@ ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
     PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
 )
 
-SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "")
-SLACK_OFF_TEST_CHANNEL = "CGLCKGVHS"
-SLACK_OFF_ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
-SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL = "CGWSXDGSF"
-SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"
-SLACK_OFF_ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL = "CT2N423PA"
-SLACK_OFF_NUTRISCORE_ALERT_CHANNEL = "CJZNFCSNP"
+_slack_token = os.environ.get("SLACK_TOKEN", "")
+
+
+# Returns the slack token to use for posting alerts if the current instance is the 'prod' instance.
+# For all other instances, the empty string is returned.
+def slack_token() -> str:
+    if _robotoff_instance == "prod" and _slack_token is not None:
+        return _slack_token
+    elif _slack_token is None:
+        raise ValueError("No SLACK_TOKEN specified for prod Robotoff")
+
+    if _slack_token is not None:
+        raise ValueError("SLACK_TOKEN specified for non-prod Robotoff")
+    return ""
+
 
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
