@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
 import sentry_sdk
 from sentry_sdk.integrations import Integration
@@ -15,6 +15,16 @@ if _robotoff_instance != "prod" and _robotoff_instance != "dev":
     )
 
 
+# Returns the top-level-domain (TLD) for the Robotoff instance.
+def _instance_tld() -> str:
+    if _robotoff_instance == "prod":
+        return "org"
+    elif _robotoff_instance == "dev":
+        return "net"
+    else:
+        return ""
+
+
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
@@ -22,11 +32,7 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        suffix = "org"
-        if _robotoff_instance == "dev":
-            suffix = "net"
-
-        self.url = "https://%(prefix)s.openfoodfacts." + suffix
+        self.url = "https://%(prefix)s.openfoodfacts." + _instance_tld()
         self.prefix = "world"
 
     def robotoff(self):
@@ -77,8 +83,15 @@ OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
 
-OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
-OFF_SERVER_DOMAIN = "api.openfoodfacts.org"
+_off_password = os.environ.get("OFF_PASSWORD", "")
+_off_user = os.environ.get("OFF_USER", "")
+
+
+def off_credentials() -> Dict:
+    return {"user_id": _off_user, "password": _off_password}
+
+
+OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
@@ -99,7 +112,7 @@ DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
+MONGO_URI = os.environ.get("MONGO_URI", "")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")

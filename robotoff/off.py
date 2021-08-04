@@ -59,12 +59,6 @@ class ServerType(enum.Enum):
     opf = 4
 
 
-AUTH = ("roboto-app", settings.OFF_PASSWORD)
-AUTH_DICT = {
-    "user_id": AUTH[0],
-    "password": AUTH[1],
-}
-
 API_URLS: Dict[ServerType, str] = {
     ServerType.off: settings.BaseURLProvider().get(),
     ServerType.obf: "https://world.openbeautyfacts.org",
@@ -367,7 +361,7 @@ def update_product(
             params["user_id"] = auth.username
             params["password"] = auth.password
     else:
-        params.update(AUTH_DICT)
+        params.update(settings.off_credentials())
 
         if comment:
             params["comment"] = comment + " (automated edit)"
@@ -404,7 +398,7 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
         "type": "edit",
         "code": barcode,
         "new_code": to,
-        **AUTH_DICT,
+        **settings.off_credentials(),
     }
     r = http_session.get(url, params=params, timeout=timeout)
     data = r.json()
@@ -448,7 +442,7 @@ def select_rotate_image(
             params["user_id"] = auth.username
             params["password"] = auth.password
     else:
-        params.update(AUTH_DICT)
+        params.update(settings.off_credentials())
 
     if cookies is None and not params.get("password"):
         raise ValueError(
