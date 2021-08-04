@@ -6,7 +6,7 @@ import requests
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.logos import LogoLabelType
+from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation, ProductInsight
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType

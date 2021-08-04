@@ -9,6 +9,7 @@ from robotoff.insights import InsightType
 from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
 from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import import_insights
+from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
@@ -22,8 +23,6 @@ LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
     "label": InsightType.label,
 }
 
-
-LogoLabelType = Tuple[str, Optional[str]]
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
 
 
