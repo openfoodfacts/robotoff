@@ -15,6 +15,16 @@ if _robotoff_instance != "prod" and _robotoff_instance != "dev":
     )
 
 
+# Returns the top-level-domain (TLD) for the Robotoff instance.
+def _instance_tld() -> str:
+    if _robotoff_instance == "prod":
+        return "org"
+    elif _robotoff_instance == "dev":
+        return "net"
+    else:
+        return ""
+
+
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
@@ -22,11 +32,7 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        suffix = "org"
-        if _robotoff_instance == "dev":
-            suffix = "net"
-
-        self.url = "https://%(prefix)s.openfoodfacts." + suffix
+        self.url = "https://%(prefix)s.openfoodfacts." + _instance_tld()
         self.prefix = "world"
 
     def robotoff(self):
@@ -85,7 +91,7 @@ def off_credentials() -> Dict:
     return {"user_id": _off_user, "password": _off_password}
 
 
-OFF_SERVER_DOMAIN = "api.openfoodfacts.org"  # not sure what to do here.
+OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
@@ -128,7 +134,6 @@ ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
 )
 
 SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "")
-SLACK_OFF_TEST_CHANNEL = "CGLCKGVHS"
 SLACK_OFF_ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
 SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL = "CGWSXDGSF"
 SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"
