@@ -1,16 +1,15 @@
+import operator
 from typing import Any, Dict, List, Optional
 
 import requests
-import operator
 
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.models import ProductInsight
+from robotoff.logos import LogoLabelType
+from robotoff.models import LogoAnnotation, ProductInsight
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
-from robotoff.models import LogoAnnotation
-from robotoff.logos import LogoLabelType
 
 logger = get_logger(__name__)
 

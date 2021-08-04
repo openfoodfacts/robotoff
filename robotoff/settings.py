@@ -126,12 +126,13 @@ _slack_token = os.environ.get("SLACK_TOKEN", "")
 # Returns the slack token to use for posting alerts if the current instance is the 'prod' instance.
 # For all other instances, the empty string is returned.
 def slack_token() -> str:
-    if _robotoff_instance == "prod" and _slack_token is not None:
-        return _slack_token
-    elif _slack_token is None:
-        raise ValueError("No SLACK_TOKEN specified for prod Robotoff")
+    if _robotoff_instance == "prod":
+        if _slack_token != "":
+            return _slack_token
+        else:
+            raise ValueError("No SLACK_TOKEN specified for prod Robotoff")
 
-    if _slack_token is not None:
+    if _slack_token != "":
         raise ValueError("SLACK_TOKEN specified for non-prod Robotoff")
     return ""
 

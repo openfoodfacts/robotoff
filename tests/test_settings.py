@@ -1,20 +1,57 @@
 import pytest
 
-from robotoff.settings import BaseURLProvider
+from robotoff import settings
 
 
 @pytest.mark.parametrize(
-    "got_url,want_url",
+    "instance,got_url,want_url",
     [
-        (BaseURLProvider().get(), "https://world.openfoodfacts.org"),
-        (BaseURLProvider().robotoff().get(), "https://robotoff.openfoodfacts.org"),
-        (BaseURLProvider().country("fr").get(), "https://fr.openfoodfacts.org"),
-        # In cases where multiple overrides are called, the last one takes precedence.
+        ("prod", "settings.BaseURLProvider().get()", "https://world.openfoodfacts.org"),
         (
-            BaseURLProvider().country("fr").robotoff().get(),
+            "prod",
+            "settings.BaseURLProvider().robotoff().get()",
             "https://robotoff.openfoodfacts.org",
         ),
+        (
+            "prod",
+            "settings.BaseURLProvider().country('fr').get()",
+            "https://fr.openfoodfacts.org",
+        ),
+        # In cases where multiple overrides are called, the last one takes precedence.
+        (
+            "prod",
+            "settings.BaseURLProvider().country('fr').robotoff().get()",
+            "https://robotoff.openfoodfacts.org",
+        ),
+        ("dev", "settings.BaseURLProvider().get()", "https://world.openfoodfacts.net"),
     ],
 )
-def test_base_url_provider(got_url, want_url):
-    assert got_url == want_url
+def test_base_url_provider(monkeypatch, instance, got_url, want_url):
+    monkeypatch.setattr(settings, "_robotoff_instance", instance)
+    assert eval(got_url) == want_url
+
+
+def test_slack_token_valid_prod(monkeypatch):
+    monkeypatch.setattr(settings, "_robotoff_instance", "prod")
+    monkeypatch.setattr(settings, "_slack_token", "TEST_TOKEN")
+    assert settings.slack_token() == "TEST_TOKEN"
+
+
+def test_slack_token_valid_dev(monkeypatch):
+    monkeypatch.setattr(settings, "_robotoff_instance", "dev")
+    monkeypatch.setattr(settings, "_slack_token", "")
+    assert settings.slack_token() == ""
+
+
+@pytest.mark.parametrize(
+    "instance,token",
+    [
+        ("prod", ""),
+        ("dev", "TEST_TOKEN"),
+    ],
+)
+def test_slack_token_errors(monkeypatch, instance, token):
+    monkeypatch.setattr(settings, "_robotoff_instance", instance)
+    monkeypatch.setattr(settings, "_slack_token", token)
+    with pytest.raises(ValueError):
+        settings.slack_token()
