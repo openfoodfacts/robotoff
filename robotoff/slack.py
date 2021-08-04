@@ -40,7 +40,7 @@ class NotifierFactory:
     def get_notifier() -> SlackNotifierInterface:
         token = settings.slack_token()
         if token == "":
-            return NoopSlackNotifier()  # TODO How to do private classes?
+            return NoopSlackNotifier()
         return SlackNotifier(token)
 
 
