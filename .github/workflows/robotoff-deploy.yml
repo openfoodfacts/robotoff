@@ -1,22 +1,64 @@
-name: Publish Docker image
+name: Deploy to pre-prod Proxmox VM (Docker)
+
 on:
   push:
-    tags:
-      - v20[0-9][0-9]-[01][0-9]-[0-3][0-9]**
+    branches:
+      - deploy-*
+      - main
 
 jobs:
-  push_to_registry:
-    name: Push robotoff Docker image to Docker Hub
+  deploy:
+    environment: off-net
+    concurrency: off-net
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-      - name: Push to Docker Hub
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: openfoodfacts/robotoff
-          tag_with_ref: true
-          add_git_labels: true
+    - name: Wait for container build workflow
+      uses: tomchv/wait-my-workflow@v1.1.0
+      id: wait-build
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        checkName: build
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        intervalSeconds: 10
+        timeoutSeconds: 600 # 10m
 
+    - name: Do something if build fail
+      if: steps.wait-build.outputs.conclusion == 'failure'
+      run: echo fail && false # fail if build fail
+
+    - name: Do something if build timeout
+      if: steps.wait-build.outputs.conclusion == 'timed_out'
+      run: echo Timeout && false # fail if build time out
+
+    - name: Deploy image to pre-prod Proxmox VM
+      uses: appleboy/ssh-action@master
+      env:
+        ROBOTOFF_INSTANCE: "dev"
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # Clone Git repository if not already there
+          [ ! -d 'robotoff' ] && git clone --depth 1 https://github.com/openfoodfacts/robotoff/ --no-single-branch
+
+          # Go to robotoff/ directory
+          cd robotoff
+
+          # Fetch newest commits (in case it wasn't freshly cloned)
+          git fetch --depth 1
+
+          # Checkout current commit SHA
+          git checkout ${{ github.sha }}
+
+          # Set docker-compose environment
+          echo "TAG=${{ github.sha }}" > .env
+
+          # Recreate containers that have a new image
+          sudo docker-compose up -d --remove-orphans
+
+          # Remove obsolete images
+          sudo docker image prune -f
