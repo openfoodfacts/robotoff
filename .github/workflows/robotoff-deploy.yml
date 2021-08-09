@@ -41,6 +41,7 @@ jobs:
         proxy_host: ${{ secrets.PROXY_HOST }}
         proxy_username: ${{ secrets.USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: ROBOTOFF_INSTANCE
         script: |
           # Clone Git repository if not already there
           [ ! -d 'robotoff' ] && git clone --depth 1 https://github.com/openfoodfacts/robotoff/ --no-single-branch
