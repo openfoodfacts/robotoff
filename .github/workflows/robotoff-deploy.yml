@@ -1,4 +1,4 @@
-name: Publish Docker image
+name: Publish Docker Hub image and PyPI package
 on:
   push:
     tags:
@@ -19,4 +19,12 @@ jobs:
           repository: openfoodfacts/robotoff
           tag_with_ref: true
           add_git_labels: true
-
+  push_to_pypi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Run poetry build
+        run:  poetry build
+      - name: Run poetry publish
+        run: poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_PASSWORD }}
