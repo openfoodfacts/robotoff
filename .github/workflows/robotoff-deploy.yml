@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - deploy-*
     tags:
       - v*.*.*
 
@@ -31,7 +32,7 @@ jobs:
 
     - name: Deploy image to pre-prod Proxmox VM
       uses: appleboy/ssh-action@master
-      if: startsWith(github.ref, 'refs/tags/v')
+      # if: github.ref == 'master'
       environment: dev
       concurrency: dev
       env:
@@ -66,39 +67,40 @@ jobs:
           # Remove obsolete images
           sudo docker image prune -f
   
-    - name: Deploy image to prod Proxmox VM
-      uses: appleboy/ssh-action@master
-      if: github.ref == 'master'
-      environment: prod
-      concurrency: prod
-      env:
-        ROBOTOFF_INSTANCE: prod
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
-        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        envs: ROBOTOFF_INSTANCE
-        script: |
-          # Clone Git repository if not already there
-          [ ! -d 'robotoff' ] && git clone --depth 1 https://github.com/openfoodfacts/robotoff/ --no-single-branch
+    # TODO: Uncomment once ready for prod deployment
+    # - name: Deploy image to prod Proxmox VM
+    #   uses: appleboy/ssh-action@master
+      # if: startsWith(github.ref, 'refs/tags/v')
+    #   environment: prod
+    #   concurrency: prod
+    #   env:
+    #     ROBOTOFF_INSTANCE: prod
+    #   with:
+    #     host: ${{ secrets.HOST }}
+    #     username: ${{ secrets.USERNAME }}
+    #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     proxy_host: ${{ secrets.PROXY_HOST }}
+    #     proxy_username: ${{ secrets.USERNAME }}
+    #     proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+    #     envs: ROBOTOFF_INSTANCE
+    #     script: |
+    #       # Clone Git repository if not already there
+    #       [ ! -d 'robotoff' ] && git clone --depth 1 https://github.com/openfoodfacts/robotoff/ --no-single-branch
 
-          # Go to robotoff/ directory
-          cd robotoff
+    #       # Go to robotoff/ directory
+    #       cd robotoff
 
-          # Fetch newest commits (in case it wasn't freshly cloned)
-          git fetch --depth 1
+    #       # Fetch newest commits (in case it wasn't freshly cloned)
+    #       git fetch --depth 1
 
-          # Checkout current commit SHA
-          git checkout ${{ github.sha }}
+    #       # Checkout current commit SHA
+    #       git checkout ${{ github.sha }}
 
-          # Set docker-compose environment
-          echo "TAG=${{ github.sha }}" > .env
+    #       # Set docker-compose environment
+    #       echo "TAG=${{ github.sha }}" > .env
 
-          # Recreate containers that have a new image
-          sudo docker-compose up -d --remove-orphans
+    #       # Recreate containers that have a new image
+    #       sudo docker-compose up -d --remove-orphans
 
-          # Remove obsolete images
-          sudo docker image prune -f
+    #       # Remove obsolete images
+    #       sudo docker image prune -f
