@@ -33,7 +33,7 @@ jobs:
     - name: Deploy image to pre-prod Proxmox VM
       uses: appleboy/ssh-action@master
       env:
-        ROBOTOFF_INSTANCE: "dev"
+        ROBOTOFF_INSTANCE: dev
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
