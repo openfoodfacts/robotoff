@@ -9,8 +9,9 @@ from robotoff.insights import InsightType
 from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
 from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import import_insights
+from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
-from robotoff.slack import post_message
+from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
 
@@ -22,8 +23,6 @@ LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
     "label": InsightType.label,
 }
 
-
-LogoLabelType = Tuple[str, Optional[str]]
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
 
 
@@ -254,7 +253,7 @@ def import_logo_insights(
     imported = import_insights(product_insights, server_domain, automatic=True)
 
     for logo, probs in zip(selected_logos, logo_probs):
-        send_logo_notification(logo, probs)
+        NotifierFactory.get_notifier().send_logo_notification(logo, probs)
 
     return imported
 
@@ -373,23 +372,3 @@ def generate_raw_insight(
         predictor="universal-logo-detector",
         data=kwargs,
     )
-
-
-def send_logo_notification(logo: LogoAnnotation, probs: Dict[LogoLabelType, float]):
-    crop_url = logo.get_crop_image_url()
-    prob_text = "\n".join(
-        (
-            f"{label[0]} - {label[1]}: {prob:.2g}"
-            for label, prob in sorted(
-                probs.items(), key=operator.itemgetter(1), reverse=True
-            )
-        )
-    )
-    barcode = logo.image_prediction.image.barcode
-    base_off_url = settings.BaseURLProvider().get()
-    text = (
-        f"Prediction for <{crop_url}|image> "
-        f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "
-        f"<{base_off_url}/product/{barcode}|product>):\n{prob_text}"
-    )
-    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
