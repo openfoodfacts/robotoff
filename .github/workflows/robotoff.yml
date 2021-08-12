@@ -4,11 +4,11 @@ on:
   push:
     paths:
       - "robotoff/**"
+      - "services/**"
   pull_request:
     paths:
-      - "**/robotoff/**"
-      - "**.pot"
-      - "**.po"
+      - "robotoff/**"
+      - "services/**"
 
 jobs:
   unit-test:
