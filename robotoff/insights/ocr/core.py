@@ -21,6 +21,7 @@ from robotoff.insights.ocr.product_weight import find_product_weight
 from robotoff.insights.ocr.store import find_stores
 from robotoff.insights.ocr.trace import find_traces
 from robotoff.off import generate_json_ocr_url, split_barcode
+from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
@@ -40,10 +41,7 @@ def get_barcode_from_path(path: str) -> Optional[str]:
 
 
 def fetch_images_for_ean(ean: str):
-    url = (
-        "https://world.openfoodfacts.org/api/v0/product/"
-        "{}.json?fields=images".format(ean)
-    )
+    url = BaseURLProvider().get() + "/api/v0/product/{}.json?fields=images".format(ean)
     images = http_session.get(url).json()
     return images
 
