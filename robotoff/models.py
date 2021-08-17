@@ -45,8 +45,11 @@ class BaseModel(peewee.Model):
 
 class ProductInsight(BaseModel):
     id = peewee.UUIDField(primary_key=True)
+    # Barcode represents the barcode of the product for which the insight was generated.
     barcode = peewee.CharField(max_length=100, null=False, index=True)
+    # Type represents the insight type - must match one of the types in robotoff.insights._enum.
     type = peewee.CharField(max_length=256)
+    # ??
     data = BinaryJSONField(index=True)
     timestamp = peewee.DateTimeField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True)

@@ -249,14 +249,22 @@ def exception_listener(event):
         capture_exception(event.exception)
 
 
+# The scheduler is responsible for generating work for the Robotoff workers.
 def run():
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
+
+    # The main tasks performed by Robotoff are described below:
+
+    scheduler.add_job(
+        generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
+    )
+    # mark_insights is the first 
+    scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
-    scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
     scheduler.add_job(
         download_product_dataset, "cron", day="*", hour="3", max_instances=1
@@ -269,9 +277,6 @@ def run():
         max_instances=1,
     )
     scheduler.add_job(
-        generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
-    )
-    scheduler.add_job(
         generate_quality_facets,
         "cron",
         day="*",
@@ -279,5 +284,6 @@ def run():
         minute=25,
         max_instances=1,
     )
+
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()
