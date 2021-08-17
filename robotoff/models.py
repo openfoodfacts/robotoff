@@ -1,3 +1,4 @@
+# This package describes the Postgres tables Robotoff is writing to.
 from typing import Dict, Iterable
 
 import peewee
@@ -47,14 +48,34 @@ class ProductInsight(BaseModel):
     id = peewee.UUIDField(primary_key=True)
     # Barcode represents the barcode of the product for which the insight was generated.
     barcode = peewee.CharField(max_length=100, null=False, index=True)
+
     # Type represents the insight type - must match one of the types in robotoff.insights._enum.
     type = peewee.CharField(max_length=256)
-    # ??
+
+    # Contains some additional data based on the type of the insight from above.
+    # NOTE: there is no 1:1 mapping between the type and the JSON format provided here, for example for
+    # type==label, the data here could be:
+    # {"logo_id":X,"confidence":Y}, or
+    # {"text":X,"notify":Y}
     data = BinaryJSONField(index=True)
+
+    # Timestamp is the timestamp of when this insight was imported into the DB.
     timestamp = peewee.DateTimeField(null=True, index=True)
+
+    # Stores the timestamp of when this insight was annotated.
     completed_at = peewee.DateTimeField(null=True)
+
+    # The annotation of the given insight. Three possible values are possible:
+    #  -1 = rejected
+    # 0 = pending
+    # 1 = validated
     annotation = peewee.IntegerField(null=True, index=True)
+
+    # Latent described whether the annotation is applied automatically:
+    # latent==true - the annotation is NOT applied automatically.
     latent = peewee.BooleanField(null=False, index=True, default=False)
+
+    
     countries = BinaryJSONField(null=True, index=True)
     brands = BinaryJSONField(null=True, index=True)
     process_after = peewee.DateTimeField(null=True)

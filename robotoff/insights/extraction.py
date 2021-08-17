@@ -90,7 +90,7 @@ def get_insights_from_image(
     extract_nutriscore = has_nutriscore_insight(
         ocr_insights.get(InsightType.label, None)
     )
-    image_ml_insights = extract_image_ml_insights(   # TODO(yana): check why this is here and not with other ML insights?
+    image_ml_insights = extract_image_ml_insights(
         image_url, extract_nutriscore=extract_nutriscore
     )
 
