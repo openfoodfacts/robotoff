@@ -45,7 +45,7 @@ class NotifierFactory:
 
 
 class NoopSlackNotifier(SlackNotifierInterface):
-    """ NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions of Robotoff."""
+    """NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions of Robotoff."""
 
     pass
 
