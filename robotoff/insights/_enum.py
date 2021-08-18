@@ -51,7 +51,6 @@ class InsightType(StrEnum):
     trace = "trace"
 
     # The 'packaging' insight detects the type of packaging based on the image OCR.
-    # TODO(kulizhsy): there are 0 insights of this type in the Postgres DB.
     packaging = "packaging"
 
     # The 'location' insight detects the location of where the product comes from from the image OCR.
