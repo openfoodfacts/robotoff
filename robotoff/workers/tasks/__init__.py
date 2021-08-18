@@ -62,15 +62,12 @@ EVENT_MAPPING: Dict[str, Callable] = {
     #  4. Stores the imported image metadata in the Robotoff DB.
     #
     "import_image": import_image,
-
     # 'download_dataset' is triggered via /api/v1/products/dataset and causes Robotoff to re-import the Product Opener product dump.
     #
     "download_dataset": download_product_dataset,
-
     # 'product_deleted' is triggered by Product Opener via /api/v1/webhook/product when the given product has been removed from the database - in this case we must delete all of the associated insights.
     #
     "product_deleted": delete_product_insights,
-
     # 'product_updated' is similarly triggered by the webhook API, when product information has been updated.
     #
     # When a product is updated, Robotoff will:
@@ -78,13 +75,11 @@ EVENT_MAPPING: Dict[str, Callable] = {
     # 2. clean up any unvalidated existing insights that no longer apply to the product.
     #
     "product_updated": update_insights,
-
     # 'object_detection' consists of logo detection: extracting logos from product images and generating logo-related insights.
     #
     "object_detection": run_object_detection,
-
     # 'update_recycling' auto-selects the recycling photos for a given product.
-    # TODO: currently this task is not being triggered from anywhere.
+    # TODO(kulizhsy): currently this task is not being triggered from anywhere.
     #
     "update_recycling": update_recycling,
 }

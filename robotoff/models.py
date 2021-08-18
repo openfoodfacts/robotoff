@@ -73,14 +73,30 @@ class ProductInsight(BaseModel):
 
     # Latent described whether the annotation is applied automatically:
     # latent==true - the annotation is NOT applied automatically.
+    # TODO(kulizhsy): figure out how this interacts with the automatic_processing field.
     latent = peewee.BooleanField(null=False, index=True, default=False)
 
-    
+    # Stores the list of counties that are associated with the product.
+    # E.g. possible values are "en:united-states" or "en:france".
     countries = BinaryJSONField(null=True, index=True)
+
+    # Stores the list of brands that are associated with the product.
     brands = BinaryJSONField(null=True, index=True)
+
+    # Specifies a timestamp after which the insight should be processed.
+    # TODO(kulizhsy): this should be set on every insight import - but some parts of the code assume this field is not set, figure out why.
     process_after = peewee.DateTimeField(null=True)
+
+    # TODO(kulizhsy): normalized version of 'value' field below based on the OFF taxonomies.
+    # Figure out who populates it.
+    # Some times either one or the other are set - e.g. for logo detection we are only setting the 'value' tag.
     value_tag = peewee.TextField(null=True, index=True)
+
+    # Value is used by some insight types to store the values,
+    # For example 'product_weight' -
+    # TODO(kulizhsy): figure out who populates it.
     value = peewee.TextField(null=True, index=True)
+
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False, index=True)
     server_domain = peewee.TextField(

@@ -260,7 +260,7 @@ def run():
     scheduler.add_job(
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
     )
-    # mark_insights is the first 
+    # mark_insights is the first
     scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
     scheduler.add_job(
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
