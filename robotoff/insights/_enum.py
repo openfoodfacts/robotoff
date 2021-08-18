@@ -33,6 +33,7 @@ class InsightType(StrEnum):
     expiration_date = "expiration_date"
 
     # The 'brand' insight extracts the product's brand from the image OCR.
+    brand = "brand"
 
     # The 'image_orientation' insight predicts the image orientation of the given image.
     # TODO(kulizhsy): currently there are 0 insights of this type in the Postgres DB.
