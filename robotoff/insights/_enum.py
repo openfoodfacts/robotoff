@@ -10,7 +10,8 @@ class InsightType(StrEnum):
     """InsightType defines the type of the insight."""
 
     # The 'ingredient spellcheck' insight corrects the spelling in the given ingredients list.
-    # NOTE: this insight is not currently working - last generated insight was in July 2020.
+    # NOTE: this insight currently relies on manual imports - it's possible these insights have
+    # not been generated recently.
     ingredient_spellcheck = "ingredient_spellcheck"
 
     # The 'packager code' insight extracts the packager code using regex from the image OCR.

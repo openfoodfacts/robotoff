@@ -125,7 +125,6 @@ class ProductInsight(BaseModel):
     unique_scans_n = peewee.IntegerField(default=0, index=True)
 
     # A reserved barcode is a barcode that is a 'per-weight' barcode.
-    # NOTE: currently this field is being set for 2*** barcodes, but is not read by anything.
     reserved_barcode = peewee.BooleanField(default=False, index=True)
 
     # Predictor stores what ML model/OCR processing generated this insight.
