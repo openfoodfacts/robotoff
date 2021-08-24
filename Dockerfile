@@ -2,15 +2,26 @@ FROM python:3.7-slim
 
 WORKDIR /opt/robotoff
 
-COPY robotoff.py /opt/robotoff/robotoff.py
 COPY robotoff /opt/robotoff/robotoff/
 COPY data /opt/robotoff/data
-COPY models /opt/robotoff/models
 COPY i18n /opt/robotoff/i18n
-COPY requirements.txt /opt/robotoff/
-COPY gunicorn.conf /opt/robotoff/
+COPY pyproject.toml poetry.lock poetry.toml /opt/robotoff/
+COPY gunicorn.py /opt/robotoff/
 
-RUN pip3 install -r /opt/robotoff/requirements.txt
+RUN apt-get update && \
+    apt-get install --no-install-suggests --no-install-recommends -y gettext curl && \
+    apt-get autoremove --purge && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN cd /opt/robotoff/i18n && \
+    bash compile.sh
 
 WORKDIR /opt/robotoff
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/opt/robotoff/gunicorn.conf", "robotoff.app.api:api"]
+
+RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+
+RUN /root/.poetry/bin/poetry config virtualenvs.create false
+RUN /root/.poetry/bin/poetry install --no-dev
+
+ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/opt/robotoff/gunicorn.py", "robotoff.app.api:api"]

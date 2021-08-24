@@ -1,0 +1,199 @@
+Aldi
+Aldi||gletscherkrone
+Aldi||gold[aä]hren
+Aldi||gutbio
+Aldi||milsani
+Aldi||sprengel
+Alnatura
+Alteza
+Auchan
+Coccimarket||belle france
+Coccinelle||belle france
+Eurêka ma maison||belle france
+G20||belle france
+Diagonal||belle france
+Coccimarket||les delices de belle france
+Coccinelle||les delices de belle france
+Eurêka ma maison||les delices de belle france
+G20||les delices de belle france
+Diagonal||les delices de belle france
+Biocoop
+bonÀrea||bonarea
+Bonpreu
+Coop||betty bossi
+Coop||coop naturaplan
+Coop||naturaplan
+Carrefour
+Carrefour||grand jury
+Casino
+Colruyt
+Delhaize
+Denner
+Edeka
+Edeka||gut[- \n]g[uü]nstig
+Eroski
+Franprix
+Hacendado
+Intermarché
+Intermarché||bouton d'or
+Intermarché||capitaine cook
+Intermarché||chabrior
+Intermarché||itin[ée]raire des saveurs
+Intermarché||jean roze
+Intermarché||les mousquetaires
+Intermarché||monique ranou
+Intermarché||odyss[ée]e
+Intermarché||paquito
+Intermarché||s[ée]lection des mousquetaires
+Intermarché||s[ée]lection intermarch[ée]
+Intermarché||saint [ée]loi
+Intermarché||top budget
+Kaufland
+Kaufland||k-bio
+Kaufland||k-classic
+La Vie Claire
+Leader Price
+Leclerc||(?:œ|oe)ufs de nos r[ée]gions
+Leclerc||[ée]quador
+Leclerc||autour du dessert
+Leclerc||bio village
+Leclerc||bon choco
+Leclerc||brin de jour
+Leclerc||britley
+Leclerc||chantegril
+Leclerc||chaque jour r[ée]duit en lactose
+Leclerc||chaque jour sans gluten
+Leclerc||comptoir du grain
+Leclerc||confis[ée]o
+Leclerc||copains copines
+Leclerc||couleurs vives
+Leclerc||côt[ée] snack
+Leclerc||côt[ée] table
+Leclerc||côt[ée]' snack
+Leclerc||d[ée]li d[ée]lo
+Leclerc||d[ée]li'light
+Leclerc||douceur du verger
+Leclerc||edulcorel
+Leclerc||entre'aide
+Leclerc||eskiss
+Leclerc||f[ée]rial
+Leclerc||festalie
+Leclerc||fresh tea
+Leclerc||frucci
+Leclerc||fruistar
+Leclerc||hilb[öo]rg
+Leclerc||jafaden
+Leclerc||lagoa
+Leclerc||laqueuille
+Leclerc||les caract[èe]res
+Leclerc||les crois[ée]s
+Leclerc||les go[ëe]lleries
+Leclerc||lydog
+Leclerc||ma[îi]tre coquille
+Leclerc||mamie douceur
+Leclerc||manava
+Leclerc||marque rep[èe]re
+Leclerc||menu fra[îi]cheur
+Leclerc||mots d'enfants
+Leclerc||nadya
+Leclerc||nat & vie
+Leclerc||nat et vie
+Leclerc||nat&vie
+Leclerc||new' ?r
+Leclerc||nid d'abeille
+Leclerc||nos r[ée]gions ont du talent
+Leclerc||notre jardin
+Leclerc||nustikao
+Leclerc||oeufs de nos r[ée]gions
+Leclerc||p'tit deli
+Leclerc||pause fra[îi]cheur
+Leclerc||pic'express
+Leclerc||pierre de chaumeyrac
+Leclerc||pom'lisse
+Leclerc||pêche oc[ée]an
+Leclerc||r[ée]gal soupe
+Leclerc||rives & terrasses
+Leclerc||rives et terrasses
+Leclerc||ronde des mers
+Leclerc||rustica
+Leclerc||saint azay
+Leclerc||saint charmin
+Leclerc||smicy
+Leclerc||st azay
+Leclerc||st di[ée]ry
+Leclerc||t[ée]va
+Leclerc||tables du monde
+Leclerc||tablette d'or
+Leclerc||tablier blanc
+Leclerc||tis[ée]a
+Leclerc||tokapi
+Leclerc||tradil[èe]ge
+Leclerc||tradizioni d'italia
+Leclerc||trofic
+Leclerc||turini
+Leclerc||vieux carion
+Leclerc||volandry
+Leclerc||volpone
+Lidl
+Lidl||alesto
+Lidl||baresa
+Lidl||belbake
+Lidl||bellarom
+Lidl||biotrend
+Lidl||ch[êe]ne d'argent
+Lidl||chef select
+Lidl||chef select to go
+Lidl||chef to go select
+Lidl||combino
+Lidl||crusti croc
+Lidl||culinea
+Lidl||dulano
+Lidl||el tequito
+Lidl||eridanous
+Lidl||favorina
+Lidl||freeway
+Lidl||freshona
+Lidl||gelatelli
+Lidl||golden sun
+Lidl||italiamo
+Lidl||kania
+Lidl||l'[ée]tal du boucher
+Lidl||lidl stiftung co kg
+Lidl||lord nelson
+Lidl||lovilio
+Lidl||ma[îi]tre jean pierre
+Lidl||maribel
+Lidl||mcennedy
+Lidl||milbona
+Lidl||mister choc
+Lidl||my best veggie
+Lidl||nixe
+Lidl||oaklands
+Lidl||ocean sea
+Lidl||piquebroche
+Lidl||saguaro
+Lidl||saint alby
+Lidl||saladinettes
+Lidl||saveurs de nos r[ée]gions
+Lidl||schwarz beteiligungs gmbh
+Lidl||sol mar
+Lidl||solevita
+Lidl||sondey
+Lidl||toque du chef
+Lidl||trattoria alfredo
+Lidl||vitafit
+Lidl||vitasia
+Magasins U||u saveurs
+Marks & Spencer
+Mercadona||hacendado
+Migros
+Monoprix
+Morrisson's
+Picard
+Cora||patrimoine gourmand
+Match||patrimoine gourmand
+REWE
+Sainsbury's
+Tesco
+Waitrose
+Woolworths||woolworths?

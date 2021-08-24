@@ -1,1 +1,2 @@
-from .core import ObjectDetectionModel, ObjectDetectionModelRegistry
+# flake8: noqa
+from .core import ObjectDetectionModelRegistry, ObjectDetectionRawResult

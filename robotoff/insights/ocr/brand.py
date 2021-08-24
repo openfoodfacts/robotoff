@@ -1,19 +1,41 @@
-import re
-from typing import List, Dict, Tuple, Set
+import functools
+from typing import Dict, Iterable, List, Optional, Set, Union
+
+from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
-from robotoff.utils import text_file_iter, get_logger
+from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
+from robotoff.insights import InsightType
+from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import OCRResult, get_text
+from robotoff.insights.ocr.utils import generate_keyword_processor
+from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
+
+
+def generate_brand_keyword_processor(
+    brands: Iterable[str],
+    blacklist: bool = True,
+):
+    blacklisted_brands: Optional[Set[str]] = None
+    if blacklist:
+        blacklisted_brands = BRAND_BLACKLIST_STORE.get()
+
+    keep_func = functools.partial(
+        keep_brand_from_taxonomy,
+        blacklisted_brands=blacklisted_brands,
+    )
+    return generate_keyword_processor(brands, keep_func=keep_func)
 
 
 def get_logo_annotation_brands() -> Dict[str, str]:
     brands: Dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
-        if '||' in item:
-            logo_description, label_tag = item.split('||')
+        if "||" in item:
+            logo_description, label_tag = item.split("||")
         else:
             logger.warn("'||' separator expected!")
             continue
@@ -24,83 +46,66 @@ def get_logo_annotation_brands() -> Dict[str, str]:
 
 
 LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
+TAXONOMY_BRAND_PROCESSOR = generate_brand_keyword_processor(
+    text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
+)
+BRAND_PROCESSOR = generate_brand_keyword_processor(
+    text_file_iter(settings.OCR_BRANDS_PATH),
+)
 
 
-def get_brand_tag(brand: str) -> str:
-    return (brand.lower()
-                 .replace(' & ', '-')
-                 .replace(' ', '-')
-                 .replace("'", '-'))
+def extract_brands(
+    processor: KeywordProcessor, text: str, data_source_name: str
+) -> List[RawInsight]:
+    insights = []
+
+    for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
+        text, span_info=True
+    ):
+        match_str = text[span_start:span_end]
+        insights.append(
+            RawInsight(
+                type=InsightType.brand,
+                value=brand,
+                value_tag=brand_tag,
+                automatic_processing=False,
+                predictor=data_source_name,
+                data={"text": match_str, "notify": False},
+            )
+        )
+
+    return insights
 
 
-def brand_sort_key(item):
-    """Sorting function for BRAND_DATA items.
-    For the regex to work correctly, we want the longest brand names to
-    appear first.
-    """
-    brand, _ = item
-
-    return -len(brand), brand
-
-
-def get_sorted_brands() -> List[Tuple[str, str]]:
-    sorted_brands: Dict[str, str] = {}
-
-    for item in text_file_iter(settings.OCR_BRANDS_DATA_PATH):
-        if '||' in item:
-            brand, regex_str = item.split('||')
-        else:
-            brand = item
-            regex_str = re.escape(item.lower())
-
-        sorted_brands[brand] = regex_str
-
-    return sorted(sorted_brands.items(), key=brand_sort_key)
-
-
-SORTED_BRANDS = get_sorted_brands()
-BRAND_REGEX_STR = "|".join(r"((?<!\w){}(?!\w))".format(pattern)
-                           for _, pattern in SORTED_BRANDS)
-NOTIFY_BRANDS_WHITELIST: Set[str] = set(
-    text_file_iter(settings.OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH))
-BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
-                       field=OCRField.full_text_contiguous,
-                       lowercase=True)
-
-
-def find_brands(ocr_result: OCRResult) -> List[Dict]:
-    results = []
-
-    text = ocr_result.get_text(BRAND_REGEX)
-
-    if not text:
-        return []
-
-    for match in BRAND_REGEX.regex.finditer(text):
-        groups = match.groups()
-
-        for idx, match_str in enumerate(groups):
-            if match_str is not None:
-                brand, _ = SORTED_BRANDS[idx]
-                results.append({
-                    'brand': brand,
-                    'brand_tag': get_brand_tag(brand),
-                    'text': match_str,
-                    'notify': brand not in NOTIFY_BRANDS_WHITELIST,
-                })
-                return results
-
+def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[RawInsight]:
+    insights = []
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
             brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
 
-            results.append({
-                'brand': brand,
-                'brand_tag': get_brand_tag(brand),
-                'automatic_processing': False,
-                'confidence': logo_annotation.score,
-                'model': 'google-cloud-vision',
-            })
-            return results
+            insights.append(
+                RawInsight(
+                    type=InsightType.brand,
+                    value=brand,
+                    value_tag=get_tag(brand),
+                    automatic_processing=False,
+                    predictor="google-cloud-vision",
+                    data={"confidence": logo_annotation.score, "notify": False},
+                )
+            )
 
-    return results
+    return insights
+
+
+def find_brands(content: Union[OCRResult, str]) -> List[RawInsight]:
+    insights: List[RawInsight] = []
+    text = get_text(content)
+
+    if text:
+        insights += extract_brands(BRAND_PROCESSOR, text, "curated-list")
+        insights += extract_brands(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
+
+    if isinstance(content, OCRResult):
+        insights += extract_brands_google_cloud_vision(content)
+
+    return insights

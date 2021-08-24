@@ -1,45 +1,79 @@
-version: '3'
+version: "3"
 
 services:
   api:
+    restart: always
     image: openfoodfacts/robotoff
-    network_mode: "host"
+    # network_mode: "host"
     volumes:
-    - api-dataset:/opt/robotoff/datasets
-    environment:
-      DB_HOST: "localhost"
-      ELASTICSEARCH_HOSTS: "elasticsearch"
-      IPC_HOST: "localhost"
+      - api-dataset:/opt/robotoff/datasets
+      - ./tf_models:/opt/robotoff/tf_models:Z
+      - ./models:/opt/robotoff/models:Z
+    mem_limit: 2g
+    ports:
+      - "5500:5500"
 
   workers:
+    restart: always
     image: openfoodfacts/robotoff
     volumes:
       - api-dataset:/opt/robotoff/datasets
-    network_mode: "host"
-    environment:
-      DB_HOST: "localhost"
-      ELASTICSEARCH_HOSTS: "localhost"
-    entrypoint: "python3 robotoff.py run workers"
+      - ./tf_models:/opt/robotoff/tf_models:Z
+      - ./models:/opt/robotoff/models:Z
+    entrypoint: "/root/.poetry/bin/poetry run robotoff-cli run workers"
+    mem_limit: 8g
 
   scheduler:
     image: openfoodfacts/robotoff
     volumes:
       - api-dataset:/opt/robotoff/datasets
-    environment:
-      DB_HOST: "postgres"
-      ELASTICSEARCH_HOSTS: "elasticsearch"
-    entrypoint: "python3 robotoff.py run scheduler"
+      - ./tf_models:/opt/robotoff/tf_models:Z
+      - ./models:/opt/robotoff/models:Z
+    entrypoint: "/root/.poetry/bin/poetry run robotoff-cli run scheduler"
+    mem_limit: 4g
 
   postgres:
-    image: postgres:11
+    restart: always
+    image: postgres:11.2-alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
+    mem_limit: 2g
 
   elasticsearch:
+    restart: always
     image: raphael0202/elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 262144
+        hard: 262144
+    mem_limit: 1500m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
     ports:
       - "127.0.0.1:9200:9200"
       - "127.0.0.1:9300:9300"
 
+  tf_serving:
+    restart: always
+    image: tensorflow/serving:1.15.0
+    ports:
+      - "8501:8501"
+      - "8500:8500"
+    volumes:
+      - ./tf_models:/models:Z
+    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
+    mem_limit: 3g
+
 volumes:
+  postgres-data:
   api-dataset:
+  es-data:

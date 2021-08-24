@@ -1,0 +1,58 @@
+farine de blé
+farine de bié
+
+tournesol
+toumesol
+
+cannelle
+canelle
+
+*
+&quot;
+
+# This is a comment
+
+œuf
+ceuf
+
+bœuf
+bceuf
+
+fi
+ﬁ
+
+beurre
+beure
+
+d'alcool
+dialcool
+
+ingrédients
+ingedients
+ingédients
+
+ingrédient
+ingredienb
+
+d'acidité
+dacidité
+dacidite
+diacidite
+diacidité
+
+blanc d'œuf
+blanc d'euf
+
+jaune d'œuf
+jaune d'euf
+
+d'acides
+diacides
+
+végétale
+végětale
+vegětale
+
+végétales
+végětales
+vegětales

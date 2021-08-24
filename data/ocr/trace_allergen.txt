@@ -1,0 +1,322 @@
+en:celery||aipo
+en:celery||apio
+en:celery||celer
+en:celery||celery
+en:celery||céleri
+en:celery||karfus
+en:celery||listna zelena
+en:celery||salierai
+en:celery||sedano
+en:celery||selderij
+en:celery||seler
+en:celery||selerijas
+en:celery||seller
+en:celery||selleri
+en:celery||sellerie
+en:celery||soilire
+en:celery||zeler
+en:celery||zeller
+en:celery||țelină
+en:celery||σέλινο
+en:celery||сельдерей
+en:celery||целина
+en:celery||ขึ้นฉ่าย
+en:celery||セロリ
+en:celery||旱芹
+en:crustaceans||crostacei
+en:crustaceans||crustaceans
+en:crustaceans||crustacee
+en:crustaceans||crustacés
+en:crustaceans||crustáceos
+en:crustaceans||crústach
+en:crustaceans||koorikloomad
+en:crustaceans||korýši
+en:crustaceans||krebsdyr
+en:crustaceans||krebstiere
+en:crustaceans||krustaċej
+en:crustaceans||kräftdjur
+en:crustaceans||kôrovce
+en:crustaceans||raki
+en:crustaceans||rákfélék
+en:crustaceans||schaaldieren
+en:crustaceans||skorupiaki
+en:crustaceans||vēžveidīgie
+en:crustaceans||vėžiagyviai
+en:crustaceans||äyriäiset
+en:crustaceans||καρκινοειδή
+en:crustaceans||ракообразни
+en:crustaceans||ракообразные
+en:crustaceans||ครัสเตเชียน
+en:crustaceans||甲壳亚门
+en:crustaceans||甲殻類
+en:eggs||bajd
+en:eggs||eggs
+en:eggs||eier
+en:eggs||eieren
+en:eggs||huevos
+en:eggs||jaja
+en:eggs||jajca
+en:eggs||kiaušiniai
+en:eggs||munad
+en:eggs||munat
+en:eggs||olas
+en:eggs||ouă
+en:eggs||ovos
+en:eggs||tojás
+en:eggs||uibheacha
+en:eggs||uova
+en:eggs||vajcia
+en:eggs||vejce
+en:eggs||ägg
+en:eggs||æg
+en:eggs||oeuf
+en:eggs||oeufs
+en:eggs||œufs
+en:eggs||œuf
+en:eggs||αυγά
+en:eggs||яйца
+en:eggs||ไข่
+en:eggs||卵
+en:eggs||雞蛋
+en:fish||fisch
+en:fish||fish
+en:fish||fisk
+en:fish||hal
+en:fish||kala
+en:fish||kalat
+en:fish||peixe
+en:fish||pescado
+en:fish||pesce
+en:fish||pește
+en:fish||poisson
+en:fish||ribe
+en:fish||ryba
+en:fish||ryby
+en:fish||vis
+en:fish||zivis
+en:fish||éisc
+en:fish||ħut
+en:fish||žuvis
+en:fish||ψάρια
+en:fish||риба
+en:fish||рыба
+en:fish||ปลา
+en:fish||魚
+en:gluten||auzas
+en:gluten||avižos
+en:gluten||gluteen
+en:gluten||gluteeniton
+en:gluten||gluten
+en:gluten||glutina
+en:gluten||glutine
+en:gluten||glutén
+en:gluten||glútan
+en:gluten||lepek
+en:gluten||nisu
+en:gluten||γλουτένη
+en:gluten||глутен
+en:gluten||глютен
+en:gluten||กลูเต็น
+en:gluten||グルテン
+en:gluten||麸质
+en:lupin||altramuces
+en:lupin||csillagfürt
+en:lupin||lubinai
+en:lupin||lupiin
+en:lupin||lupiinit
+en:lupin||lupin
+en:lupin||lupina
+en:lupin||lupine
+en:lupin||lupinen
+en:lupin||lupini
+en:lupin||lupīna
+en:lupin||lúipín
+en:lupin||tremoço
+en:lupin||vlčí bob
+en:lupin||vlčí bôb
+en:lupin||volčji
+en:lupin||łubin
+en:lupin||λούπινο
+en:lupin||лупина
+en:lupin||люпин
+en:lupin||ลูพิน
+en:lupin||ルピナス属
+en:lupin||羽扇豆
+en:milk||bainne
+en:milk||išrügų
+en:milk||lait
+en:milk||laktoos
+en:milk||laktozi
+en:milk||lapte
+en:milk||latte
+en:milk||leche
+en:milk||leite
+en:milk||lõssi
+en:milk||maito
+en:milk||melk
+en:milk||milch
+en:milk||milk
+en:milk||mjölk
+en:milk||mleko
+en:milk||mlieko
+en:milk||mléko
+en:milk||mælk
+en:milk||tej
+en:milk||ħalib
+en:milk||γάλα
+en:milk||молоко
+en:milk||суроватка
+en:milk||นม
+en:milk||乳
+en:milk||牛乳
+en:molluscs||blötdjur
+en:molluscs||bløddyr
+en:molluscs||gliemji
+en:molluscs||mehkužci
+en:molluscs||mięczaki
+en:molluscs||moilisc
+en:molluscs||moliuskai
+en:molluscs||molluschi
+en:molluscs||molluscs
+en:molluscs||molluski
+en:molluscs||molluskid
+en:molluscs||mollusques
+en:molluscs||moluscos
+en:molluscs||moluște
+en:molluscs||mäkkýše
+en:molluscs||měkkýši
+en:molluscs||nilviäiset
+en:molluscs||puhatestűek
+en:molluscs||weekdieren
+en:molluscs||weichtiere
+en:molluscs||μαλάκια
+en:molluscs||мекотели
+en:molluscs||มอลลัสกา
+en:molluscs||軟体動物
+en:molluscs||软体动物
+en:mustard||garstyčios
+en:mustard||gorczyca
+en:mustard||gorčično seme
+en:mustard||horčica
+en:mustard||hořčice
+en:mustard||mostarda
+en:mustard||mostaza
+en:mustard||mosterd
+en:mustard||moutarde
+en:mustard||mustard
+en:mustard||mustarda
+en:mustard||mustár
+en:mustard||muștar
+en:mustard||senap
+en:mustard||senape
+en:mustard||senf
+en:mustard||sennep
+en:mustard||sinappi
+en:mustard||sinep
+en:mustard||sinepes
+en:mustard||σινάπι
+en:mustard||горчица
+en:mustard||синап
+en:mustard||มัสตาร์ด
+en:mustard||マスタード
+en:mustard||芥末醬
+en:nuts||cnónna
+en:nuts||diófélék
+en:nuts||fructe cu coajă lemnoasă
+en:nuts||fruits à coque
+en:nuts||frutos de cáscara
+en:nuts||frutta a guscio
+en:nuts||noten
+en:nuts||nozes
+en:nuts||nuts
+en:nuts||nötter
+en:nuts||nødder
+en:nuts||orechy
+en:nuts||oreški
+en:nuts||orzechy
+en:nuts||pähkinät
+en:nuts||pähklid
+en:nuts||rieksti
+en:nuts||riešutai
+en:nuts||schalenfrüchte
+en:nuts||skořápkové plody
+en:nuts||ġewż
+en:nuts||καρποί με κέλυφος
+en:nuts||орехи
+en:nuts||ядки
+en:nuts||อัลมอนด์
+en:nuts||坚果
+en:nuts||種実類
+en:peanuts||amendoins
+en:peanuts||arachides
+en:peanuts||arachidi
+en:peanuts||arahide
+en:peanuts||arašidi
+en:peanuts||arašidy
+en:peanuts||cacahuetes
+en:peanuts||erdnüsse
+en:peanuts||földimogyoró
+en:peanuts||jordnötter
+en:peanuts||jordnødder
+en:peanuts||jádra podzemnice olejné
+en:peanuts||karawett
+en:peanuts||maapähkinät
+en:peanuts||maapähklid
+en:peanuts||orzeszki ziemne
+en:peanuts||peanuts
+en:peanuts||pinda
+en:peanuts||piseanna
+en:peanuts||zemesrieksti
+en:peanuts||žemės riešutai
+en:peanuts||αραχίδες
+en:peanuts||арахис
+en:peanuts||фъстъци
+en:peanuts||ถั่วลิสง
+en:peanuts||ラッカセイ
+en:peanuts||花生
+en:sesame-seeds||graines de sésame
+en:sesame-seeds||granos de sésamo
+en:sesame-seeds||nasiona sezamu
+en:sesame-seeds||seesaminsiemenet
+en:sesame-seeds||seesamiseemned
+en:sesame-seeds||sementes de sésamo
+en:sesame-seeds||semi di sesamo
+en:sesame-seeds||semințe de susan
+en:sesame-seeds||sesam
+en:sesame-seeds||sesame seeds
+en:sesame-seeds||sesamfrön
+en:sesame-seeds||sesamfrø
+en:sesame-seeds||sesamzaad
+en:sesame-seeds||sezama sēklas
+en:sesame-seeds||sezamo sėklos
+en:sesame-seeds||sezamovo seme
+en:sesame-seeds||sezamová semena
+en:sesame-seeds||sezamové semeno
+en:sesame-seeds||szezámmag
+en:sesame-seeds||síolta seasamain
+en:sesame-seeds||ġulġlien
+en:sesame-seeds||σπόροι σησαμιού
+en:sesame-seeds||сезам
+en:sesame-seeds||сусамово семе
+en:sesame-seeds||งา
+en:sesame-seeds||ゴマ
+en:sesame-seeds||芝麻
+en:soybeans||pónairí soighe
+en:soybeans||soia
+en:soybeans||soijapavut
+en:soybeans||soja
+en:soybeans||sojabönor
+en:soybeans||sojaoad
+en:soybeans||sojas pupas
+en:soybeans||sojų pupelės
+en:soybeans||soybeans
+en:soybeans||szójabab
+en:soybeans||sójové boby
+en:soybeans||sójové bôby
+en:soybeans||zrnje soje
+en:soybeans||σόγια
+en:soybeans||соя
+en:soybeans||فول الصويا
+en:soybeans||ถั่วเหลือง
+en:soybeans||ダイズ
+en:soybeans||大豆类制品

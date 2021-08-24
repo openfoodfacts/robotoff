@@ -1,9 +1,11 @@
 import datetime
 import functools
 import re
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional, Union
 
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
+from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
@@ -15,7 +17,9 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
         format_str = "%d/%m/%Y"
 
     try:
-        date = datetime.datetime.strptime("{}/{}/{}".format(day, month, year), format_str).date()
+        date = datetime.datetime.strptime(
+            "{}/{}/{}".format(day, month, year), format_str
+        ).date()
     except ValueError:
         return None
 
@@ -23,26 +27,32 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
 
 
 EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
-    'full_digits_short': OCRRegex(re.compile(r'(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)'),
-                                  field=OCRField.full_text,
-                                  lowercase=False,
-                                  processing_func=functools.partial(process_full_digits_expiration_date,
-                                                                    short=True)),
-    'full_digits_long': OCRRegex(re.compile(r'(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)'),
-                                 field=OCRField.full_text,
-                                 lowercase=False,
-                                 processing_func=functools.partial(process_full_digits_expiration_date,
-                                                                   short=False)),
+    "full_digits_short": OCRRegex(
+        re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)"),
+        field=OCRField.full_text,
+        lowercase=False,
+        processing_func=functools.partial(
+            process_full_digits_expiration_date, short=True
+        ),
+    ),
+    "full_digits_long": OCRRegex(
+        re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)"),
+        field=OCRField.full_text,
+        lowercase=False,
+        processing_func=functools.partial(
+            process_full_digits_expiration_date, short=False
+        ),
+    ),
 }
 
 
-def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
+def find_expiration_date(content: Union[OCRResult, str]) -> List[RawInsight]:
     # Parse expiration date
     #        "À consommer de préférence avant",
-    results = []
+    results: List[RawInsight] = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
-        text = ocr_result.get_text(ocr_regex)
+        text = get_text(content, ocr_regex)
 
         if not text:
             continue
@@ -61,13 +71,15 @@ def find_expiration_date(ocr_result: OCRResult) -> List[Dict]:
             if date.year > 2025 or date.year < 2015:
                 continue
 
-            value = date.strftime("%d/%m/%Y")
+            # Format dates according to ISO 8601
+            value = date.strftime("%Y-%m-%d")
 
-            results.append({
-                "raw": raw,
-                "text": value,
-                "type": type_,
-                "notify": ocr_regex.notify,
-            })
+            results.append(
+                RawInsight(
+                    value=value,
+                    type=InsightType.expiration_date,
+                    data={"raw": raw, "type": type_, "notify": ocr_regex.notify},
+                )
+            )
 
     return results

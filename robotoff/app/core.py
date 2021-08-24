@@ -1,98 +1,103 @@
-import tempfile
-
-import requests
-from typing import Union, Optional, List, Iterable
-
-from robotoff.insights.annotate import (InsightAnnotatorFactory,
-                                        AnnotationResult,
-                                        ALREADY_ANNOTATED_RESULT,
-                                        UNKNOWN_INSIGHT_RESULT)
-from robotoff.models import ProductInsight
-from robotoff.off import get_product
-from robotoff.utils import get_logger
-from PIL import Image
+from typing import Dict, Iterable, List, Optional, Union
 
 import peewee
 
+from robotoff import settings
+from robotoff.insights.annotate import (
+    ALREADY_ANNOTATED_RESULT,
+    UNKNOWN_INSIGHT_RESULT,
+    AnnotationResult,
+    InsightAnnotatorFactory,
+)
+from robotoff.models import ProductInsight
+from robotoff.off import OFFAuthentication
+from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_insights(barcode: Optional[str] = None,
-                 keep_types: List[str] = None,
-                 country: str = None,
-                 brands: List[str] = None,
-                 count=25) -> Iterable[ProductInsight]:
-    where_clauses = [
-        ProductInsight.annotation.is_null(),
-    ]
+def get_insights(
+    barcode: Optional[str] = None,
+    keep_types: List[str] = None,
+    country: str = None,
+    brands: List[str] = None,
+    annotated: Optional[bool] = False,
+    annotation: Optional[int] = None,
+    order_by: Optional[str] = None,
+    value_tag: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    reserved_barcode: Optional[bool] = None,
+    as_dict: bool = False,
+    limit: Optional[int] = 25,
+    offset: Optional[int] = None,
+    count: bool = False,
+    latent: Optional[bool] = False,
+) -> Iterable[ProductInsight]:
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [ProductInsight.server_domain == server_domain]
+
+    if latent is not None:
+        where_clauses.append(ProductInsight.latent == latent)
+
+    if annotated is not None:
+        where_clauses.append(ProductInsight.annotation.is_null(not annotated))
+
+    if annotation is not None:
+        where_clauses.append(ProductInsight.annotation == annotation)
 
     if barcode:
         where_clauses.append(ProductInsight.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(ProductInsight.value_tag == value_tag)
 
     if keep_types:
         where_clauses.append(ProductInsight.type.in_(keep_types))
 
     if country is not None:
-        where_clauses.append(ProductInsight.countries.contains(
-            country))
+        where_clauses.append(ProductInsight.countries.contains(country))
 
     if brands:
-        where_clauses.append(ProductInsight.brands.contains_any(
-            brands))
+        where_clauses.append(ProductInsight.brands.contains_any(brands))
 
-    query = (ProductInsight.select()
-                           .where(*where_clauses)
-                           .limit(count)
-                           .order_by(peewee.fn.Random()))
+    if reserved_barcode is not None:
+        where_clauses.append(ProductInsight.reserved_barcode == reserved_barcode)
+
+    query = ProductInsight.select()
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+
+    if limit is not None:
+        query = query.limit(limit).offset(offset)
+
+    if order_by is not None:
+        if order_by == "random":
+            query = query.order_by(peewee.fn.Random())
+
+        elif order_by == "popularity":
+            query = query.order_by(ProductInsight.unique_scans_n.desc())
+
+    if as_dict:
+        query = query.dicts()
+
     return query.iterator()
 
 
-def get_random_insight(insight_type: str = None,
-                       country: str = None) -> Optional[ProductInsight]:
-    attempts = 0
-    while True:
-        attempts += 1
-
-        if attempts > 4:
-            return None
-
-        query = ProductInsight.select()
-        where_clauses = [ProductInsight.annotation.is_null()]
-
-        if country is not None:
-            where_clauses.append(ProductInsight.countries.contains(
-                country))
-
-        if insight_type is not None:
-            where_clauses.append(ProductInsight.type ==
-                                 insight_type)
-
-        query = query.where(*where_clauses).order_by(peewee.fn.Random())
-
-        insight_list = list(query.limit(1))
-
-        if not insight_list:
-            return None
-
-        insight = insight_list[0]
-        # We only need to know if the product exists, so fetching barcode
-        # is enough
-        product = get_product(insight.barcode, ['code'])
-
-        # Product may be None if not found
-        if product:
-            return insight
-        else:
-            insight.delete_instance()
-            logger.info("Product not found, insight deleted")
-
-
-def save_insight(insight_id: str, annotation: int, update: bool = True) \
-        -> AnnotationResult:
+def save_insight(
+    insight_id: str,
+    annotation: int,
+    update: bool = True,
+    data: Optional[Dict] = None,
+    auth: Optional[OFFAuthentication] = None,
+) -> AnnotationResult:
     try:
-        insight: Union[ProductInsight, None] \
-            = ProductInsight.get_by_id(insight_id)
+        insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
         insight = None
 
@@ -103,4 +108,4 @@ def save_insight(insight_id: str, annotation: int, update: bool = True) \
         return ALREADY_ANNOTATED_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(insight, annotation, update)
+    return annotator.annotate(insight, annotation, update, data=data, auth=auth)
