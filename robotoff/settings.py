@@ -208,7 +208,7 @@ ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 MODELS_DIR = PROJECT_DIR / "models"
 
 
-# Tensorflow models being served
+# Tensorflow Serving host parameters
 
 TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
 TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
