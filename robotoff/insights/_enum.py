@@ -76,7 +76,9 @@ class InsightType(StrEnum):
     image_lang = "image_lang"
 
     # The 'nutrition_image' insight tags images that have nutrition information based on the 'nutrient_mention' insight and the 'image_orientation' insight.
+    # NOTE: this insight and the dependant insights has not been generated since 2020.
     nutrition_image = "nutrition_image"
 
     # The 'nutritional_table_structure' insight detects the nutritional table structure from the image.
+    # NOTE: this insight has not been generated since 2020.
     nutrition_table_structure = "nutrition_table_structure"

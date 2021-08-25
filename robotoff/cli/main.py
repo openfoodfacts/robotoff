@@ -223,6 +223,7 @@ def import_insights(
     input_: Optional[pathlib.Path] = None,
     generate_from: Optional[pathlib.Path] = None,
 ) -> None:
+    """This command is used to backfill a new insight type on the daily product data dump."""
     from robotoff import settings
     from robotoff.cli.insights import generate_from_ocr_archive
     from robotoff.cli.insights import import_insights as import_insights_
