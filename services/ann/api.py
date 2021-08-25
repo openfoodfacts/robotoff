@@ -6,7 +6,6 @@ import annoy
 import falcon
 import numpy as np
 import schema
-import sentry_sdk
 import settings
 from embeddings import EMBEDDING_STORE, add_logos, get_embedding
 from falcon.media.validators import jsonschema
@@ -17,7 +16,7 @@ from utils import get_image_from_url, get_logger, text_file_iter
 
 logger = get_logger()
 
-sentry_sdk.init(dsn=settings.SENTRY_DSN, integrations=[FalconIntegration()])
+settings.init_sentry(integrations=[FalconIntegration()])
 
 
 def load_index(file_path: pathlib.Path, dimension: int) -> annoy.AnnoyIndex:

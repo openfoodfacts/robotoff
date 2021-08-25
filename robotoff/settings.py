@@ -1,15 +1,28 @@
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Sequence, Tuple
+
+import sentry_sdk
+from sentry_sdk.integrations import Integration
 
 # Should be either 'prod' or 'dev'.
-_robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "prod")
+_robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
 if _robotoff_instance != "prod" and _robotoff_instance != "dev":
     raise ValueError(
         "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s"
         % _robotoff_instance
     )
+
+
+# Returns the top-level-domain (TLD) for the Robotoff instance.
+def _instance_tld() -> str:
+    if _robotoff_instance == "prod":
+        return "org"
+    elif _robotoff_instance == "dev":
+        return "net"
+    else:
+        return ""
 
 
 class BaseURLProvider(object):
@@ -19,11 +32,7 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        suffix = "org"
-        if _robotoff_instance == "dev":
-            suffix = "net"
-
-        self.url = "https://%(prefix)s.openfoodfacts." + suffix
+        self.url = "https://%(prefix)s.openfoodfacts." + _instance_tld()
         self.prefix = "world"
 
     def robotoff(self):
@@ -47,12 +56,10 @@ DATA_DIR = PROJECT_DIR / "data"
 DATASET_DIR = PROJECT_DIR / "datasets"
 DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / "i18n"
-DATASET_PATH = DATASET_DIR / "en.openfoodfacts.org.products.csv"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
-INSIGHT_DUMP_PATH = DATASET_DIR / "insights.jsonl.gz"
 
 
 # Not sure if it's the OCR JSONL or the products JSONL
@@ -77,8 +84,15 @@ OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
 
-OFF_PASSWORD = os.environ.get("OFF_PASSWORD", "")
-OFF_SERVER_DOMAIN = "api.openfoodfacts.org"
+_off_password = os.environ.get("OFF_PASSWORD", "")
+_off_user = os.environ.get("OFF_USER", "")
+
+
+def off_credentials() -> Dict:
+    return {"user_id": _off_user, "password": _off_password}
+
+
+OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
@@ -107,7 +121,7 @@ DB_HOST = os.environ.get("DB_HOST", "localhost")
 
 # Mongo used to be on the same server as Robotoff
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
+MONGO_URI = os.environ.get("MONGO_URI", "")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
@@ -131,18 +145,37 @@ ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
 )
 
 # Slack paramaters for notifications about detection
+_slack_token = os.environ.get("SLACK_TOKEN", "")
 
-SLACK_TOKEN = os.environ.get("SLACK_TOKEN", "")
-SLACK_OFF_TEST_CHANNEL = "CGLCKGVHS"
-SLACK_OFF_ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
-SLACK_OFF_ROBOTOFF_USER_ALERT_CHANNEL = "CGWSXDGSF"
-SLACK_OFF_ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"
-SLACK_OFF_ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL = "CT2N423PA"
-SLACK_OFF_NUTRISCORE_ALERT_CHANNEL = "CJZNFCSNP"
+
+# Returns the slack token to use for posting alerts if the current instance is the 'prod' instance.
+# For all other instances, the empty string is returned.
+def slack_token() -> str:
+    if _robotoff_instance == "prod":
+        if _slack_token != "":
+            return _slack_token
+        else:
+            raise ValueError("No SLACK_TOKEN specified for prod Robotoff")
+
+    if _slack_token != "":
+        raise ValueError("SLACK_TOKEN specified for non-prod Robotoff")
+    return ""
 
 # Sentry for error reporting
+_sentry_dsn = os.environ.get("SENTRY_DSN")
 
-SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+def init_sentry(integrations: Sequence[Integration] = ()):
+    if _sentry_dsn:
+        sentry_sdk.init(
+            _sentry_dsn,
+            environment=_robotoff_instance,
+            integrations=integrations,
+        )
+    else:
+        raise ValueError(
+            "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
+        )
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
 OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"

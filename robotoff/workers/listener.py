@@ -2,16 +2,13 @@ from multiprocessing.connection import Listener
 from multiprocessing.pool import Pool
 from typing import Dict
 
-import sentry_sdk
 from sentry_sdk import capture_exception
 
 from robotoff import settings
 from robotoff.utils import get_logger
 from robotoff.workers.tasks import run_task
 
-if settings.SENTRY_DSN:
-    sentry_sdk.init(settings.SENTRY_DSN)
-
+settings.init_sentry()
 
 logger = get_logger()
 

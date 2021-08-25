@@ -15,7 +15,9 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-LABEL_IMG_BASE_URL = "https://static.openfoodfacts.org/images/lang"
+LABEL_IMG_BASE_URL = "https://{}/images/lang".format(
+    settings.BaseURLProvider().static().get()
+)
 
 LABEL_IMAGES = {
     "en:eu-organic": LABEL_IMG_BASE_URL + "en/labels/eu-organic.135x90.svg",

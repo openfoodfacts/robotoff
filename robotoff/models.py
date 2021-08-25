@@ -146,7 +146,8 @@ class LogoAnnotation(BaseModel):
             settings.OFF_IMAGE_BASE_URL + self.image_prediction.image.source_image
         )
         y_min, x_min, y_max, x_max = self.bounding_box
-        return f"https://robotoff.openfoodfacts.org/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
+        base_robotoff_url = settings.BaseURLProvider().robotoff()
+        return f"https://{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
 class LogoConfidenceThreshold(BaseModel):
