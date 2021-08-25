@@ -7,7 +7,7 @@ sentry-sdk[falcon]==0.14.4
 efficientnet_pytorch==0.6.3
 torch==1.5.0
 h5py==2.10.0
-Pillow==7.1.2
+Pillow==8.2.0
 requests==2.23.0
 jsonschema==3.2.0
 click==7.1.2
