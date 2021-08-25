@@ -62,7 +62,7 @@ JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
 
 
-# Not sure if it's the OCR JSONL or the products JSONL
+# Products JSONL
 
 JSONL_DATASET_URL = (
     BaseURLProvider().static().get() + "/data/openfoodfacts-products.jsonl.gz"
@@ -129,7 +129,7 @@ IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
-# Elastic Search is used for simple category prediction, in addition to the neural classifiers
+# Elastic Search is used for simple category prediction and spellchecking. 
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
