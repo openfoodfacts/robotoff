@@ -2,8 +2,9 @@ name: Crowdin Action
 
 on:
   push:
-    paths:
-      - 'i18n/robotoff.pot'
+    #paths:
+    #  - 'i18n/robotoff.pot'
+    branches: [ translations ]
 jobs:
   synchronize-with-crowdin:
     runs-on: ubuntu-latest
