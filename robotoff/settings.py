@@ -129,7 +129,7 @@ IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
-# Elastic Search is used for simple category prediction and spellchecking. 
+# Elastic Search is used for simple category prediction and spellchecking.
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
@@ -161,6 +161,7 @@ def slack_token() -> str:
         raise ValueError("SLACK_TOKEN specified for non-prod Robotoff")
     return ""
 
+
 # Sentry for error reporting
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
@@ -176,6 +177,7 @@ def init_sentry(integrations: Sequence[Integration] = ()):
         raise ValueError(
             "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
         )
+
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
 OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"
@@ -234,7 +236,7 @@ OBJECT_DETECTION_MODEL_VERSION = {
     "universal-logo-detector": "tf-universal-logo-detector-1.0",
 }
 
-# We require a minimum of 15 occurences of the brands already on OFF to perform the extraction. This reduces false positive. 
+# We require a minimum of 15 occurences of the brands already on OFF to perform the extraction. This reduces false positive.
 # We require a minimum of 4 characters for the brand
 
 BRAND_MATCHING_MIN_LENGTH = 4
