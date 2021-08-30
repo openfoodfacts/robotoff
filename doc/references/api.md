@@ -11,17 +11,7 @@ Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeauty
 An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
 If the insight is correct, the Openfoodfacts DB can be updated accordingly.
 
-Current insight types:
-
-- `ingredient_spellcheck`
-- `packager_code`
-- `label`
-- `category`
-- `product_weight`
-- `expiration_date`
-- `brand`
-- `store`
-- `nutrient`
+Current insight types and their description can be found [here](../../robotoff/insights/_enum.py).
 
 ### Random insight [/insights/random]
 

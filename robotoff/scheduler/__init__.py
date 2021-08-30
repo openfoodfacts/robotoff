@@ -249,18 +249,33 @@ def exception_listener(event):
         capture_exception(event.exception)
 
 
+# The scheduler is responsible for scheduling periodic work that Robotoff needs to perform.
 def run():
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
+
+    # This job takes all of the newly added automatically-processable insights and sets the process_after field on them,
+    # indicating when these insights should be auto-applied.
+    scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
+
+    # This job applies all of the automatically-processable insights that have not been applied yet.
     scheduler.add_job(
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
-    scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
+
+    # This job exports daily product metrics for monitoring.
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
+
+    # This job imports the PO daily product dump.
     scheduler.add_job(
         download_product_dataset, "cron", day="*", hour="3", max_instances=1
     )
+
+    # This job updates the product insights state with respect to the latest PO dump by:
+    # - Deleting non-annotated insights for deleted products.
+    # - Converting insights to latent if they're no longer applicable.
+    # - Updating insight attributes.
     scheduler.add_job(
         functools.partial(refresh_insights, with_deletion=True),
         "cron",
@@ -268,9 +283,12 @@ def run():
         hour="4",
         max_instances=1,
     )
+
+    # This job generates category insights using ElasticSearch from the last Product Opener data dump.
     scheduler.add_job(
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
     )
+
     scheduler.add_job(
         generate_quality_facets,
         "cron",
@@ -279,5 +297,6 @@ def run():
         minute=25,
         max_instances=1,
     )
+
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)
     scheduler.start()

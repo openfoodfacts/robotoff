@@ -53,10 +53,35 @@ def delete_product_insights(barcode: str, server_domain: str):
 
 
 EVENT_MAPPING: Dict[str, Callable] = {
+    # 'import_image' is triggered every time there is a new OCR image available for processing by Robotoff, via /api/v1/images/import.
+    #
+    # On each image import, Robotoff performs the following tasks:
+    #  1. Generates various insights based on the OCR-extracted text from the image.
+    #  2. Extracts the nutriscore insight based on the nutriscore ML model.
+    #  3. Triggers the 'object_detection' task, which is described below.
+    #  4. Stores the imported image metadata in the Robotoff DB.
+    #
     "import_image": import_image,
+    # 'download_dataset' is triggered via /api/v1/products/dataset and causes Robotoff to re-import the Product Opener product dump.
+    #
     "download_dataset": download_product_dataset,
+    # 'product_deleted' is triggered by Product Opener via /api/v1/webhook/product when the given product has been removed from the
+    # database - in this case we must delete all of the associated insights that have not been annotated.
+    #
     "product_deleted": delete_product_insights,
+    # 'product_updated' is similarly triggered by the webhook API, when product information has been updated.
+    #
+    # When a product is updated, Robotoff will:
+    # 1. Generate new insights related to the product's category and name.
+    # 2. Clean up any unvalidated existing insights that no longer apply to the product.
+    #
     "product_updated": update_insights,
+    # 'object_detection' consists of logo detection: extracting logos from product images and generating logo-related insights.
+    # This task is triggered by the 'import_image' task above.
+    #
     "object_detection": run_object_detection,
+    # 'update_recycling' auto-selects the recycling photos for a given product.
+    # NOTE: currently this task is not being triggered from anywhere.
+    #
     "update_recycling": update_recycling,
 }

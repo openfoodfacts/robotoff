@@ -66,6 +66,8 @@ class ProductInsights:
 
 @dataclasses.dataclass
 class Insight:
+    """This class is a copy of robotoff.models.ProductInsight - see that class's documentation field description."""
+
     barcode: str
     type: InsightType
     data: Dict[str, Any]
