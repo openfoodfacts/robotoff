@@ -20,7 +20,7 @@ services:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
       - ./models:/opt/robotoff/models:Z
-    entrypoint: "/root/.poetry/bin/poetry run robotoff-cli run workers"
+    entrypoint: "/root/.local/bin/poetry run robotoff-cli run workers"
     mem_limit: 8g
 
   scheduler:
@@ -29,7 +29,7 @@ services:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
       - ./models:/opt/robotoff/models:Z
-    entrypoint: "/root/.poetry/bin/poetry run robotoff-cli run scheduler"
+    entrypoint: "/root/.local/bin/poetry run robotoff-cli run scheduler"
     mem_limit: 4g
 
   postgres:
