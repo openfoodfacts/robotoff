@@ -19,7 +19,8 @@ RUN cd /opt/robotoff/i18n && \
 
 WORKDIR /opt/robotoff
 
-RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+# Restrict poetry version to 1.1.7, as newer version cause issues with 'docker pull' on the server.
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | POETRY_VERSION=1.1.7 python -
 
 RUN /root/.poetry/bin/poetry config virtualenvs.create false
 RUN /root/.poetry/bin/poetry install --no-dev
