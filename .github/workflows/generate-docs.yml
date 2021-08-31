@@ -1,0 +1,26 @@
+#----------------------------------------------
+# Generate and upload documentation (only on push to master)
+#----------------------------------------------
+
+name: Generate documentation
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate documentation
+        run: bash ./build_mkdocs.sh
+
+    # Deploy docs to gh_pages
+    # Example from https://github.com/marketplace/actions/deploy-to-github-pages
+      - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.5
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: gh_pages # The folder the action should deploy.
+        CLEAN: true # Automatically remove deleted files from the deploy branch
