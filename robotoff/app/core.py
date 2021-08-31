@@ -21,7 +21,7 @@ def get_insights(
     keep_types: List[str] = None,
     country: str = None,
     brands: List[str] = None,
-    annotated: Optional[bool] = False,
+    annotated: Optional[bool] = None,
     annotation: Optional[int] = None,
     order_by: Optional[str] = None,
     value_tag: Optional[str] = None,
@@ -31,7 +31,7 @@ def get_insights(
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
-    latent: Optional[bool] = False,
+    latent: Optional[bool] = None,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
