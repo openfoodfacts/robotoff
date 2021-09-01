@@ -2,6 +2,8 @@ name: Robotoff code quality checks and unit tests
 
 on:
   push:
+    tags-ignore:
+      - "**"
     paths:
       - "robotoff/**"
   pull_request:
@@ -111,22 +113,8 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-      #----------------------------------------------
-      # Generate and upload documentation (only on master)
-      #----------------------------------------------
-
-      # Build mkdocs site
-      - name: Generate documentation
-        if: github.ref == 'refs/heads/master'
-        run: bash ./build_mkdocs.sh
-
-      # Deploy docs to gh_pages
-      # Example from https://github.com/marketplace/actions/deploy-to-github-pages
-      - name: Deploy 🚀
-        if: github.ref == 'refs/heads/master'
-        uses: JamesIves/github-pages-deploy-action@4.1.5
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: gh_pages # The folder the action should deploy.
-          CLEAN: true # Automatically remove deleted files from the deploy branch
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
