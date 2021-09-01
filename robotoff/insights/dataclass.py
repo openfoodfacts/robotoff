@@ -99,7 +99,7 @@ class Insight:
             data=insight.data,
             value_tag=insight.value_tag,
             value=insight.value,
-            automatic_processing=insight.automatic_processing or False,
+            automatic_processing=insight.automatic_processing,
             barcode=product_insights.barcode,
             source_image=product_insights.source_image,
             predictor=insight.predictor,
