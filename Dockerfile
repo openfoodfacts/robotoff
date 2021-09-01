@@ -19,10 +19,9 @@ RUN cd /opt/robotoff/i18n && \
 
 WORKDIR /opt/robotoff
 
-# Restrict poetry version to 1.1.7, as newer version cause issues with 'docker pull' on the server.
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | POETRY_VERSION=1.1.7 python -
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
 
 RUN /root/.local/bin/poetry config virtualenvs.create false
 RUN /root/.local/bin/poetry install --no-dev
 
-ENTRYPOINT ["/usr/local/bin/gunicorn", "--config", "/opt/robotoff/gunicorn.py", "robotoff.app.api:api"]
+ENTRYPOINT ["/root/.local/bin/poetry", "run", "gunicorn", "--config", "/opt/robotoff/gunicorn.py", "robotoff.app.api:api"]
