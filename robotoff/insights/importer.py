@@ -143,6 +143,8 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         return seen_set
 
     def get_seen_count(self, barcode: str, server_domain: str) -> int:
+        """Return the number of non-latent insights that have the same barcode and
+        server domain as provided as parameter."""
         query = generate_seen_set_query(self.get_type(), barcode, server_domain)
         return query.count()
 
