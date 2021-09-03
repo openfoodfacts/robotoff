@@ -33,7 +33,7 @@ def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]
 def match(client, query: str, lang: str):
     body = generate_request(query, lang)
     return client.search(
-        index=settings.ELASTICSEARCH_CATEGORY_INDEX,
+        index=settings.ElasticsearchIndex.CATEGORY,
         doc_type=settings.ELASTICSEARCH_TYPE,
         body=body,
         _source=True,

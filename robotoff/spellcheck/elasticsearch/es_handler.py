@@ -14,7 +14,7 @@ class ElasticsearchHandler:
         suggest_mode: str = "missing",
         suggester_name: str = "autocorrect",
         reverse: bool = True,
-        index_name: str = settings.ELASTICSEARCH_PRODUCT_INDEX,
+        index_name: str = settings.ElasticsearchIndex.PRODUCT,
     ):
         self.client = client
         self.confidence = confidence
@@ -27,7 +27,7 @@ class ElasticsearchHandler:
 
     def analyze(self, text: str):
         return self.client.indices.analyze(
-            index=settings.ELASTICSEARCH_PRODUCT_INDEX,
+            index=settings.ElasticsearchIndex.PRODUCT,
             body={"tokenizer": "standard", "text": text},
         )["tokens"]
 

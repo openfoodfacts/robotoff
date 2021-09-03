@@ -121,15 +121,23 @@ WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
 
-ELASTICSEARCH_CATEGORY_INDEX = "category"
-ELASTICSEARCH_PRODUCT_INDEX = "product"
-ELASTICSEARCH_PRODUCT_EXTENDED_INDEX = "product_extended"
-ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
-)
-ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
-)
+
+class ElasticsearchIndex(object):
+    CATEGORY = "category"
+    PRODUCT = "product"
+
+
+def supported_elasticsearch_indices() -> Dict:
+    """ Returns a dict of supported Elasticsearch indices to their json filepaths. """
+    return {
+        ElasticsearchIndex.CATEGORY: (
+            PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
+        ),
+        ElasticsearchIndex.PRODUCT: (
+            PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
+        ),
+    }
+
 
 _slack_token = os.environ.get("SLACK_TOKEN", "")
 
