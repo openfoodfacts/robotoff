@@ -1,13 +1,12 @@
 import itertools
 import re
-from typing import Dict, Iterator, List
+from typing import Dict, Iterable, Iterator, List, Tuple
 
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.spellcheck.items import Ingredients
 from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
 from robotoff.utils import get_logger, text_file_iter
-from robotoff.utils.es import get_es_client, perform_export
 from robotoff.utils.text import FR_NLP_CACHE
 
 logger = get_logger(__name__)
@@ -25,7 +24,7 @@ def ingredients_iter() -> Iterator[str]:
             yield ingredient
 
 
-def product_export(version: str = "product"):
+def product_export(version: str = "product") -> Iterable[Tuple[str, Dict]]:
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_stream = (
@@ -68,13 +67,7 @@ def product_export(version: str = "product"):
     else:
         iterator = data
 
-    index = version
-    es_client = get_es_client()
-    logger.info("Deleting products")
-    delete_products(es_client, index)
-    logger.info("Importing products")
-    inserted = perform_export(es_client, iterator, index)
-    logger.info("{} rows inserted".format(inserted))
+    return iterator
 
 
 def empty_ingredient(ingredient: str) -> bool:
@@ -95,12 +88,3 @@ def normalize_ingredient_list(ingredient_text: str) -> List[str]:
         normalized.append(ingredient)
 
     return normalized
-
-
-def delete_products(client, index_name: str):
-    body: Dict = {"query": {"match_all": {}}}
-    client.delete_by_query(
-        body=body,
-        index=index_name,
-        doc_type=settings.ELASTICSEARCH_TYPE,
-    )
