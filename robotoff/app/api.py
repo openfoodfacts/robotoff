@@ -934,8 +934,6 @@ class DumpResource:
         writer = None
 
         with tempfile.TemporaryFile("w+", newline="") as temp_f:
-            logger.info("Dumping insights into temp file.")
-
             for insight in insights_iter:
                 serial = orjson.loads(orjson.dumps(insight.to_dict()))
 
@@ -945,7 +943,6 @@ class DumpResource:
 
                 writer.writerow(serial)
 
-            logger.info("Dump file written - constructing HTTP response.")
             temp_f.seek(0)
             content = temp_f.read()
 
