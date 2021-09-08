@@ -34,7 +34,7 @@ A scheduler regularly marks insights for automatic annotation and sends the upda
 - Robotoff can be used as...
   - an [online API](https://openfoodfacts.github.io/robotoff/references/api/)
   - a [CLI tool](https://openfoodfacts.github.io/robotoff/references/cli)
-  - a [Python package](https://openfoodfacts.github.io/robotoff/references/api/package)
+  - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
 - If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
 **NOTE:** This documentation tries to follow as much as possible the documentation system from [Divio](https://documentation.divio.com/).
