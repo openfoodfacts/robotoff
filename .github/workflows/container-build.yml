@@ -11,11 +11,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    matrix:
-      image_name: [
-        "robotoff",
-        "robotoff-ann"
-      ]
+    strategy:
+      matrix:
+        image_name: [
+          "robotoff",
+          "robotoff-ann"
+        ]
     steps:
     - uses: actions/checkout@v2
       with:
