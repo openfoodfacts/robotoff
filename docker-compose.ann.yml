@@ -1,0 +1,10 @@
+version: 3.9
+
+services:
+  ann:
+    restart: always
+    image: openfoodfacts/robotoff-ann:latest
+    ports:
+      - "5501:5501"
+    volumes:
+      - /home/robotoff/ann_data:/opt/ann/data

@@ -1,21 +1,20 @@
-version: "3"
+version: 3.9
 
 services:
   api:
     restart: always
-    image: openfoodfacts/robotoff
-    # network_mode: "host"
+    image: openfoodfacts/robotoff:${TAG}
+    network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
+      - /home/robotoff/tf_models:/opt/robotoff/tf_models
+      - /home/robotoff/models:/opt/robotoff/models
     mem_limit: 2g
-    ports:
-      - "5500:5500"
 
   workers:
     restart: always
-    image: openfoodfacts/robotoff
+    image: openfoodfacts/robotoff:dev
+    network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
@@ -24,7 +23,9 @@ services:
     mem_limit: 8g
 
   scheduler:
-    image: openfoodfacts/robotoff
+    restart: always
+    image: openfoodfacts/robotoff:dev
+    network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models:Z
@@ -35,11 +36,15 @@ services:
   postgres:
     restart: always
     image: postgres:11.2-alpine
+    environment:
+      POSTGRES_PASSWORD
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+    - postgres-data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
-    mem_limit: 2g
+    command: postgres -c shared_buffers=1024MB -c work_mem=64MB
+    mem_limit: 4g
+    shm_size: 1g
 
   elasticsearch:
     restart: always
@@ -48,13 +53,6 @@ services:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 262144
-        hard: 262144
     mem_limit: 1500m
     volumes:
       - es-data:/usr/share/elasticsearch/data
@@ -66,14 +64,19 @@ services:
     restart: always
     image: tensorflow/serving:1.15.0
     ports:
-      - "8501:8501"
-      - "8500:8500"
+      - "127.0.0.1:8501:8501"
+      - "127.0.0.1:8500:8500"
     volumes:
-      - ./tf_models:/models:Z
+      - /home/robotoff/tf_models:/models
     entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
-    mem_limit: 3g
+    mem_limit: 10g
 
 volumes:
   postgres-data:
+    external: true
+
   api-dataset:
+    external: true
+
   es-data:
+    external: true
