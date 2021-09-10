@@ -6,7 +6,6 @@ import orjson
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.brand import find_brands
-from robotoff.insights.ocr.category import predict_ocr_categories
 from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.insights.ocr.expiration_date import find_expiration_date
 from robotoff.insights.ocr.image_flag import flag_image
