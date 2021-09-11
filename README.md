@@ -29,13 +29,13 @@ A scheduler regularly marks insights for automatic annotation and sends the upda
 
 ## Overview
 
-- To get a better understanding on how Robotoff works, go to [Architecture](./introduction/architecture).
-- If you want to help, go to [Contributing](./introduction/contributing). In particular, to make to project run, go to [Get started!](./introduction/contributing#get-started)
+- To get a better understanding on how Robotoff works, go to [Architecture](https://openfoodfacts.github.io/robotoff/introduction/architecture/).
+- If you want to help, go to [Contributing](https://openfoodfacts.github.io/robotoff/introduction/contributing/).
 - Robotoff can be used as...
-  - an [online API](./references/api.md)
-  - a [CLI tool](./references/cli.md)
-  - a [Python package](./references/package.md)
-- If you need to deploy or maintain Robotoff, [Maintenance](./how-to-guides/deployment/maintenance) is the way to go.
+  - an [online API](https://openfoodfacts.github.io/robotoff/references/api/)
+  - a [CLI tool](https://openfoodfacts.github.io/robotoff/references/cli)
+  - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
+- If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
 **NOTE:** This documentation tries to follow as much as possible the documentation system from [Divio](https://documentation.divio.com/).
 
