@@ -23,9 +23,8 @@ EMBEDDINGS_HDF5_PATH = DATA_DIR / "efficientnet-b0.hdf5"
 _ann_instance = os.environ.get("ANN_INSTANCE", "dev")
 
 if _ann_instance != "prod" and _ann_instance != "dev":
-    raise ValueError(
-        "ANN_INSTANCE should be either 'prod' or 'dev', got %s" % _ann_instance
-    )
+    raise ValueError("ANN_INSTANCE should be either 'prod' or 'dev', got %s" %
+                     _ann_instance)
 
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
@@ -37,7 +36,5 @@ def init_sentry(integrations: Sequence[Integration] = ()):
             environment=_ann_instance,
             integrations=integrations,
         )
-    else:
-        raise ValueError(
-            "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
-        )
+    elif _ann_instance == 'prod':
+        raise ValueError("No SENTRY_DSN specified for prod Robotoff")

@@ -12,3 +12,4 @@ requests==2.23.0
 jsonschema==3.2.0
 click==7.1.2
 tqdm==4.47.0
+typer==0.4.0

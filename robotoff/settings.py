@@ -10,9 +10,8 @@ _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
 if _robotoff_instance != "prod" and _robotoff_instance != "dev":
     raise ValueError(
-        "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s"
-        % _robotoff_instance
-    )
+        "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s" %
+        _robotoff_instance)
 
 
 # Returns the top-level-domain (TLD) for the Robotoff instance.
@@ -61,25 +60,19 @@ JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
 
-
 # Products JSONL
 
-JSONL_DATASET_URL = (
-    BaseURLProvider().static().get() + "/data/openfoodfacts-products.jsonl.gz"
-)
+JSONL_DATASET_URL = (BaseURLProvider().static().get() +
+                     "/data/openfoodfacts-products.jsonl.gz")
 
-TAXONOMY_CATEGORY_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/categories.full.json"
-)
-TAXONOMY_INGREDIENT_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/ingredients.full.json"
-)
-TAXONOMY_LABEL_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/labels.full.json"
-)
-TAXONOMY_BRAND_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json"
-)
+TAXONOMY_CATEGORY_URL = (BaseURLProvider().static().get() +
+                         "/data/taxonomies/categories.full.json")
+TAXONOMY_INGREDIENT_URL = (BaseURLProvider().static().get() +
+                           "/data/taxonomies/ingredients.full.json")
+TAXONOMY_LABEL_URL = (BaseURLProvider().static().get() +
+                      "/data/taxonomies/labels.full.json")
+TAXONOMY_BRAND_URL = (BaseURLProvider().static().get() +
+                      "/data/taxonomies/brands.full.json")
 OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
@@ -131,18 +124,17 @@ WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
 # Elastic Search is used for simple category prediction and spellchecking.
 
-ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
+ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS",
+                                     "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
 
 ELASTICSEARCH_CATEGORY_INDEX = "category"
 ELASTICSEARCH_PRODUCT_INDEX = "product"
 ELASTICSEARCH_PRODUCT_EXTENDED_INDEX = "product_extended"
 ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
-)
+    PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json")
 ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
-)
+    PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json")
 
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
@@ -173,10 +165,8 @@ def init_sentry(integrations: Sequence[Integration] = ()):
             environment=_robotoff_instance,
             integrations=integrations,
         )
-    else:
-        raise ValueError(
-            "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
-        )
+    elif _robotoff_instance == 'prod':
+        raise ValueError("No SENTRY_DSN specified for prod Robotoff")
 
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
@@ -199,9 +189,7 @@ OCR_TRACE_ALLERGEN_DATA_PATH = OCR_DATA_DIR / "trace_allergen.txt"
 # Try to detect postal codes in France
 OCR_CITIES_FR_PATH = OCR_DATA_DIR / "cities_laposte_hexasmal.json.gz"
 
-
 BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json"
-
 
 # When we're making queries to the API, so that we're not blocked by error
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
@@ -209,14 +197,12 @@ ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 
 MODELS_DIR = PROJECT_DIR / "models"
 
-
 # Tensorflow Serving host parameters
 
 TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
 TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
-TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
-    TF_SERVING_HOST, TF_SERVING_HTTP_PORT
-)
+TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(TF_SERVING_HOST,
+                                                      TF_SERVING_HTTP_PORT)
 
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)

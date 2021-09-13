@@ -78,8 +78,23 @@ jobs:
           echo "COMPOSE_HTTP_TIMEOUT=120" >> .env
           echo "COMPOSE_FILE=${{ contains(matrix.env, 'ann') && 'docker-compose.ann.yml' || 'docker-compose.yml' }}" >> .env
           echo "TAG=${{ github.sha }}" >> .env
-  
-    - name: Deploy Docker image to Proxmox VM
+
+    - name: Create Docker volumes
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          docker volume create postgres-data || echo "Docker volume 'postgres-data' already exist. Skipping."
+          docker volume create api-dataset || echo "Docker volume 'api-dataset' already exist. Skipping."
+          docker volume create es-data || echo "Docker volume 'es-data' already exist. Skipping."
+
+    - name: Start services
       uses: appleboy/ssh-action@master
       env:
         DOCKER_CLIENT_TIMEOUT: 120
