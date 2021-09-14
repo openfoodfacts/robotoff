@@ -74,6 +74,8 @@ def dump_jsonl(
     count = 0
     open_fn = get_open_fn(filepath)
 
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
     with open_fn(str(filepath), "wb") as f:
         for item in json_iter:
             f.write(orjson.dumps(item) + b"\n")

@@ -1,4 +1,6 @@
-from typing import Iterator, List, Optional, Set
+from typing import Iterator, List, Optional, Set, Dict
+
+from sklearn.model_selection import train_test_split
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
@@ -28,9 +30,10 @@ def infer_category_tags(
     return all_categories
 
 
-def generate_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSONType]:
+def generate_base_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSONType]:
     category_taxonomy = get_taxonomy("category")
     ingredient_taxonomy = get_taxonomy("ingredient")
+    # Dump the taxonomy jsons extraction outside of this function
 
     for product in stream.iter():
         categories_tags: List[str] = product["categories_tags"]
@@ -66,6 +69,15 @@ def generate_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSO
                 "lang": product.get("lang", None),
             }
 
+def generate_train_test_val_datasets(stream: ProductStream, lang: Optional[str]) -> Dict[str, Iterator[JSONType]]:
+    base_dataset = generate_base_dataset(stream, lang)
+
+    train, rem = train_test_split(list(base_dataset), train_size=0.8)
+    test, val = train_test_split(rem, train_size=0.5)
+
+    return {"train": train, "test": test, "val": val}
+    
+
 
 def run(lang: Optional[str] = None):
     logger.info("Generating category dataset for lang {}".format(lang or "xx"))
@@ -79,15 +91,17 @@ def run(lang: Optional[str] = None):
     else:
         training_stream = training_stream.filter_nonempty_text_field("product_name")
 
-    dataset_iter = generate_dataset(training_stream, lang)
-    count = dump_jsonl(
-        settings.PROJECT_DIR
-        / "datasets"
-        / "category"
-        / "category_{}.jsonl".format(lang or "xx"),
-        dataset_iter,
-    )
-    logger.info("{} items for lang {}".format(count, lang or "xx"))
+    datasets = generate_train_test_val_datasets(training_stream, lang)
+    
+    for key, data in datasets.items():
+        count = dump_jsonl_gz(
+            settings.PROJECT_DIR
+            / "datasets"
+            / "category"
+            / "category_{}.{}.jsonl.gz".format(key, lang or "xx"),
+            dataset_iter,
+        )
+        logger.info("{} items for dataset {}, lang {}".format(count, key, lang or "xx"))
 
 
 if __name__ == "__main__":

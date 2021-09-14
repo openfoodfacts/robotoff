@@ -6,7 +6,7 @@ import sentry_sdk
 from sentry_sdk.integrations import Integration
 
 # Should be either 'prod' or 'dev'.
-_robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
+_robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "prod")
 
 if _robotoff_instance != "prod" and _robotoff_instance != "dev":
     raise ValueError(
