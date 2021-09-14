@@ -4,42 +4,58 @@ services:
   api:
     restart: always
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
-    profiles: [robotoff]
-    network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
+    environment:
+      - POSTGRES_HOST
+      - POSTGRES_PASSWORD
+      - ROBOTOFF_INSTANCE
+      - MONGODB_HOST
+      - OFF_USER
+      - OFF_PASSWORD
+      - SENTRY_DSN
+      - ELASTICSEARCH_HOSTS
     mem_limit: 2g
+    ports:
+      - 5500:5500
+    networks:
+      - internal
+      - webnet
 
   workers:
     restart: always
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
-    profiles: [robotoff]
-    network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
     command: poetry run robotoff-cli run workers
     mem_limit: 8g
+    networks:
+      - internal
+    environment:
+      - IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
+      - IPC_HOST = os.environ.get("IPC_HOST", "localhost")
+      - IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
+      - WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
   scheduler:
     restart: always
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
-    profiles: [robotoff]
-    network_mode: "host"
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
     command: poetry run robotoff-cli run scheduler
     mem_limit: 4g
+    networks:
+      - internal
 
   tf_serving:
     restart: always
     image: tensorflow/serving:1.15.0
-    profiles: [robotoff]
     ports:
       - 8501:8501
       - 8500:8500
@@ -47,11 +63,12 @@ services:
       - ./tf_models:/models
     entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
     mem_limit: 10g
+    networks:
+      - internal
 
   postgres:
     restart: always
     image: postgres:11.2-alpine
-    profiles: [db]
     environment:
       - POSTGRES_PASSWORD
     volumes:
@@ -61,11 +78,12 @@ services:
     command: postgres -c shared_buffers=1024MB -c work_mem=64MB
     mem_limit: 4g
     shm_size: 1g
+    networks:
+      - internal
 
   elasticsearch:
     restart: always
     image: raphael0202/elasticsearch
-    profiles: [db]
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
@@ -76,8 +94,15 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+    networks:
+      - internal
+      - webnet
 
 volumes:
   postgres-data:
   api-dataset:
   es-data:
+
+networks:
+  internal:
+  webnet:

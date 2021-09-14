@@ -113,14 +113,14 @@ SPELLCHECK_PATTERNS_PATHS = {
 
 # Credentials for the Robotoff insights database
 
-DB_NAME = os.environ.get("DB_NAME", "postgres")
-DB_USER = os.environ.get("DB_USER", "postgres")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
-DB_HOST = os.environ.get("DB_HOST", "localhost")
+POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
 
 # Mongo used to be on the same server as Robotoff
 
-MONGO_URI = os.environ.get("MONGO_URI", "")
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://mongodb:27017")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
@@ -236,10 +236,10 @@ OBJECT_DETECTION_MODEL_VERSION = {
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15
 
-INFLUXDB_HOST = "localhost"
-INFLUXDB_PORT = 8086
-INFLUXDB_DB_NAME = "off_metrics"
-INFLUXDB_USERNAME = "off_metrics"
+INFLUXDB_HOST = os.environ.get("INFLUXDB_HOST", "localhost")
+INFLUXDB_PORT = int(os.environ.get("INFLUXDB_PORT", "8086"))
+INFLUXDB_DB_NAME = os.environ.get("INFLUXDB_DB_NAME", "off_metrics")
+INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
 TEST_DIR = PROJECT_DIR / "tests"

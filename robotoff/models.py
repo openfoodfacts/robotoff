@@ -9,10 +9,10 @@ from robotoff import settings
 from robotoff.utils.types import JSONType
 
 db = PostgresqlExtDatabase(
-    settings.DB_NAME,
-    user=settings.DB_USER,
-    password=settings.DB_PASSWORD,
-    host=settings.DB_HOST,
+    settings.POSTGRES_DB,
+    user=settings.POSTGRES_USER,
+    password=settings.POSTGRES_PASSWORD,
+    host=settings.POSTGRES_HOST,
     port=5432,
 )
 
