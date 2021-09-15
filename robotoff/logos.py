@@ -78,7 +78,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
 def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     logo_ids_params = ",".join((str(logo.id) for logo in logos))
     r = http_session.get(
-        ANN_BASE_URL + "/batch?logo_ids=" + logo_ids_params,
+        settings.ANN_BASE_URL + "/batch?logo_ids=" + logo_ids_params,
         timeout=30,
     )
 
