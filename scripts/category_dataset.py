@@ -122,7 +122,7 @@ def run(lang: Optional[str] = None):
             / "datasets"
             / "category"
             / "category_{}.{}.jsonl".format(key, lang or "xx"),
-            dataset_iter,
+            data,
         )
         logger.info("{} items for dataset {}, lang {}".format(count, key, lang or "xx"))
 
