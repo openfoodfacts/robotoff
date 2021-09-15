@@ -131,7 +131,7 @@ def run(lang: Optional[str] = None):
 
     for key, data in datasets.items():
         count = dump_jsonl(
-            WRITE_PATH / "category_{}.{}.jsonl".format(key, lang or "xx"),
+            WRITE_PATH / "category_{}.{}.jsonl".format(lang or "xx", key),
             data,
         )
         logger.info("{} items for dataset {}, lang {}".format(count, key, lang or "xx"))
