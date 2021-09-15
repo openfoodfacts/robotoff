@@ -250,3 +250,7 @@ INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
 TEST_DIR = PROJECT_DIR / "tests"
 TEST_DATA_DIR = TEST_DIR / "data"
+
+_ann_host = os.environ.get("ANN_HOST", "localhost")
+_ann_http_port = os.environ.get("ANN_PORT", "5501")
+ANN_BASE_URL = "http://{}:{}/api/v1/ann".format(_ann_host, _ann_http_port)
