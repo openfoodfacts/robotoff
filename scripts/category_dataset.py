@@ -1,4 +1,4 @@
-'''
+"""
 This script is used to generate the datasets for the 'neural' category ML model.
 For example: https://github.com/openfoodfacts/openfoodfacts-ai/releases/tag/dataset-category-2020-06-30
 
@@ -9,14 +9,12 @@ Usage:
 3. Gzip the train/test/val datasets.
 4. Upload all of the data (products.json.gz, generated and zipped files under 'datasets/category/') to
    https://github.com/openfoodfacts/openfoodfacts-ai/releases/ with a description of what the data consists of.
-'''
-from typing import Iterator, List, Optional, Set, Dict
+"""
+import json
+import os
+from typing import Dict, Iterator, List, Optional, Set
 
 from sklearn.model_selection import train_test_split
-
-import os
-
-import json
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
@@ -48,7 +46,12 @@ def infer_category_tags(
     return all_categories
 
 
-def generate_base_dataset(category_taxonomy: Taxonomy, ingredient_taxonomy: Taxonomy, stream: ProductStream, lang: Optional[str]) -> Iterator[JSONType]:
+def generate_base_dataset(
+    category_taxonomy: Taxonomy,
+    ingredient_taxonomy: Taxonomy,
+    stream: ProductStream,
+    lang: Optional[str],
+) -> Iterator[JSONType]:
     for product in stream.iter():
         categories_tags: List[str] = product["categories_tags"]
         inferred_categories_tags: List[TaxonomyNode] = list(
@@ -83,13 +86,22 @@ def generate_base_dataset(category_taxonomy: Taxonomy, ingredient_taxonomy: Taxo
                 "lang": product.get("lang", None),
             }
 
-def generate_train_test_val_datasets(category_taxonomy: Taxonomy, ingredient_taxonomy: Taxonomy, stream: ProductStream, lang: Optional[str]) -> Dict[str, Iterator[JSONType]]:
-    base_dataset = generate_base_dataset(category_taxonomy, ingredient_taxonomy, stream, lang)
+
+def generate_train_test_val_datasets(
+    category_taxonomy: Taxonomy,
+    ingredient_taxonomy: Taxonomy,
+    stream: ProductStream,
+    lang: Optional[str],
+) -> Dict[str, Iterator[JSONType]]:
+    base_dataset = generate_base_dataset(
+        category_taxonomy, ingredient_taxonomy, stream, lang
+    )
 
     train, rem = train_test_split(list(base_dataset), train_size=0.8)
     test, val = train_test_split(rem, train_size=0.5)
 
     return {"train": train, "test": test, "val": val}
+
 
 def run(lang: Optional[str] = None):
     logger.info("Generating category dataset for lang {}".format(lang or "xx"))
@@ -113,9 +125,10 @@ def run(lang: Optional[str] = None):
     with open(WRITE_PATH / "ingredients.full.json", "w") as f:
         f.write(json.dumps(category_taxonomy.to_dict()))
 
+    datasets = generate_train_test_val_datasets(
+        category_taxonomy, ingredient_taxonomy, training_stream, lang
+    )
 
-    datasets = generate_train_test_val_datasets(category_taxonomy, ingredient_taxonomy, training_stream, lang)
-    
     for key, data in datasets.items():
         count = dump_jsonl(
             settings.PROJECT_DIR
