@@ -74,6 +74,8 @@ jobs:
       - name: Code quality isort
         run: poetry run isort . --check
 
+      - name: Typing check mypy
+        run: poetry run mypy . services/ann
       #----------------------------------------------
       # Compile i18n
       #----------------------------------------------
