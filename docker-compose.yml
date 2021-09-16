@@ -10,6 +10,8 @@ services:
       - ./models:/opt/robotoff/models
     environment:
       - POSTGRES_HOST
+      - POSTGRES_DB
+      - POSTGRES_USER
       - POSTGRES_PASSWORD
       - ROBOTOFF_INSTANCE
       - MONGODB_HOST
@@ -32,14 +34,18 @@ services:
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
     command: poetry run robotoff-cli run workers
+    environment:
+      - IPC_AUTHKEY
+      - IPC_HOST
+      - IPC_PORT
+      - WORKER_COUNT
+      - POSTGRES_HOST
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
     mem_limit: 8g
     networks:
       - internal
-    environment:
-      - IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
-      - IPC_HOST = os.environ.get("IPC_HOST", "localhost")
-      - IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
-      - WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 
   scheduler:
     restart: always
@@ -53,24 +59,13 @@ services:
     networks:
       - internal
 
-  tf_serving:
-    restart: always
-    image: tensorflow/serving:1.15.0
-    ports:
-      - 8501:8501
-      - 8500:8500
-    volumes:
-      - ./tf_models:/models
-    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
-    mem_limit: 10g
-    networks:
-      - internal
-
   postgres:
     restart: always
     image: postgres:11.2-alpine
     environment:
+      - POSTGRES_USER
       - POSTGRES_PASSWORD
+      - POSTGRES_DB
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -81,27 +76,9 @@ services:
     networks:
       - internal
 
-  elasticsearch:
-    restart: always
-    image: raphael0202/elasticsearch
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    mem_limit: 1500m
-    volumes:
-      - es-data:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-      - 9300:9300
-    networks:
-      - internal
-      - webnet
-
 volumes:
   postgres-data:
   api-dataset:
-  es-data:
 
 networks:
   internal:

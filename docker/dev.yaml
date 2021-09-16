@@ -19,10 +19,3 @@ services:
       context: .
     volumes:
       - ./:/opt/robotoff/
-  ann:
-    image: openfoodfacts/robotoff-ann:dev
-    build:
-      context: ./services/ann
-    volumes:
-      - ./services/ann:/opt/ann/
-

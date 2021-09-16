@@ -21,8 +21,6 @@ def _instance_tld() -> str:
         return "org"
     elif _robotoff_instance == "dev":
         return "net"
-    else:
-        return ""
 
 
 class BaseURLProvider(object):
@@ -113,10 +111,10 @@ SPELLCHECK_PATTERNS_PATHS = {
 
 # Credentials for the Robotoff insights database
 
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
 POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
 
 # Mongo used to be on the same server as Robotoff
 
