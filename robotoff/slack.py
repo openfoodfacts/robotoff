@@ -140,7 +140,9 @@ class SlackNotifier(SlackNotifierInterface):
 
         if source_image:
             image_url = (
-                settings.BaseURLProvider().static().get() + "/images/products" + source_image
+                settings.BaseURLProvider().static().get()
+                + "/images/products"
+                + source_image
             )
             metadata_text = "(<{}|product>, <{}|source image>)".format(
                 product_url, image_url
