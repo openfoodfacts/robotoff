@@ -190,6 +190,8 @@ OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
 OCR_LABEL_WHITELIST_DATA_PATH = OCR_DATA_DIR / "label_whitelist.txt"
 # Try to detect MSC codes
 OCR_FISHING_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_flashtext.txt"
+# Try to detect FAO fishing zones
+OCR_FAO_ZONES_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_zones_flashtext.txt"
 OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / "brand_taxonomy_blacklist.txt"
 # Try to detect cosmetics in OFF
 OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / "image_flag_beauty.txt"
