@@ -132,6 +132,36 @@ FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
+def generate_fao_zones_code_keyword_processor() -> KeywordProcessor:
+    codes = text_file_iter(settings.OCR_FAO_ZONES_FLASHTEXT_DATA_PATH)
+    return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
+
+
+def extract_fao_zones_code(processor: KeywordProcessor, text: str) -> List[RawInsight]:
+    insights = []
+
+    for (key, _), span_start, span_end in processor.extract_keywords(
+        text, span_info=True
+    ):
+        match_str = text[span_start:span_end]
+        insights.append(
+            RawInsight(
+                type=InsightType.origins,
+                value=key,
+                predictor="flashtext",
+                data={"type": "fao_zones", "raw": match_str, "notify": False},
+                automatic_processing=True,
+            )
+        )
+
+    return insights
+
+
+FAO_ZONES_KEYWORD_PROCESSOR_STORE = CachedStore(
+    fetch_func=generate_fao_zones_code_keyword_processor, expiration_interval=None
+)
+
+
 def find_packager_codes(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:
     insights = find_packager_codes_regex(ocr_result)
     processor = FISHING_KEYWORD_PROCESSOR_STORE.get()
