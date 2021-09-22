@@ -16,6 +16,7 @@ def _instance_tld() -> str:
     else:
         return _robotoff_instance
 
+
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
@@ -23,7 +24,9 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        self.domain = os.environ.get('ROBOTOFF_DOMAIN', "openfoodfacts.%s" % _instance_tld())
+        self.domain = os.environ.get(
+            "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
+        )
         self.url = "https://%(prefix)s.%(domain)s"
         self.prefix = "world"
 
