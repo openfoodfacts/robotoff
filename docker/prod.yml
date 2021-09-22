@@ -5,5 +5,3 @@ volumes:
     external: true
   api-dataset:
     external: true
-  es-data:
-    external: true

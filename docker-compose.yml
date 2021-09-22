@@ -9,11 +9,16 @@ services:
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
     environment:
+      - ROBOTOFF_INSTANCE
+      - ROBOTOFF_DOMAIN
+      - IPC_AUTHKEY
+      - IPC_HOST
+      - IPC_PORT
+      - WORKER_COUNT
       - POSTGRES_HOST
       - POSTGRES_DB
       - POSTGRES_USER
       - POSTGRES_PASSWORD
-      - ROBOTOFF_INSTANCE
       - MONGODB_HOST
       - OFF_USER
       - OFF_PASSWORD
@@ -35,6 +40,8 @@ services:
       - ./models:/opt/robotoff/models
     command: poetry run robotoff-cli run workers
     environment:
+      - ROBOTOFF_INSTANCE
+      - ROBOTOFF_DOMAIN
       - IPC_AUTHKEY
       - IPC_HOST
       - IPC_PORT
@@ -43,6 +50,11 @@ services:
       - POSTGRES_DB
       - POSTGRES_USER
       - POSTGRES_PASSWORD
+      - MONGODB_HOST
+      - OFF_USER
+      - OFF_PASSWORD
+      - SENTRY_DSN
+      - ELASTICSEARCH_HOSTS
     mem_limit: 8g
     networks:
       - internal
@@ -55,6 +67,22 @@ services:
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
     command: poetry run robotoff-cli run scheduler
+    environment:
+      - ROBOTOFF_INSTANCE
+      - ROBOTOFF_DOMAIN
+      - IPC_AUTHKEY
+      - IPC_HOST
+      - IPC_PORT
+      - WORKER_COUNT
+      - POSTGRES_HOST
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - MONGODB_HOST
+      - OFF_USER
+      - OFF_PASSWORD
+      - SENTRY_DSN
+      - ELASTICSEARCH_HOSTS
     mem_limit: 4g
     networks:
       - internal

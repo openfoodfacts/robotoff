@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  elasticsearch:
+    restart: always
+    image: raphael0202/elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 262144
+        hard: 262144
+    mem_limit: 2g
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - internal
+      - webnet
+  tf_serving:
+    restart: always
+    image: tensorflow/serving:1.15.0
+    ports:
+      - 8501:8501
+      - 8500:8500
+    volumes:
+      - ./tf_models:/models
+    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
+    mem_limit: 10g
+    networks:
+      - internal
+volumes:
+  es-data:
+    external: true

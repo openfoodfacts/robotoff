@@ -27,7 +27,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up
+dev: hello create_elasticsearch_volume up
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
@@ -65,9 +65,13 @@ log:
 #------------#
 create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
-	for volume in postgres_data api_dataset; do \
+	for volume in postgres-data api-dataset; do \
 		docker volume create $$volume || echo "Docker volume '$$volume' already exist. Skipping."; \
 	done
+
+create_elasticsearch_volume:
+	@echo "🥫 Creating ElasticSearch volume …"
+	docker volume create es-data || echo "Docker volume 'es-data' already exist. Skipping."; \
 
 #---------#
 # Cleanup #

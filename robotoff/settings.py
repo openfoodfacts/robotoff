@@ -5,15 +5,7 @@ from typing import Dict, Sequence, Tuple
 import sentry_sdk
 from sentry_sdk.integrations import Integration
 
-# Should be either 'prod' or 'dev'.
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
-
-if _robotoff_instance != "prod" and _robotoff_instance != "dev":
-    raise ValueError(
-        "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s"
-        % _robotoff_instance
-    )
-
 
 # Returns the top-level-domain (TLD) for the Robotoff instance.
 def _instance_tld() -> str:
@@ -21,7 +13,8 @@ def _instance_tld() -> str:
         return "org"
     elif _robotoff_instance == "dev":
         return "net"
-
+    else:
+        return _robotoff_instance
 
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
@@ -30,7 +23,8 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        self.url = "https://%(prefix)s.openfoodfacts." + _instance_tld()
+        self.domain = os.environ.get('ROBOTOFF_DOMAIN', "openfoodfacts.%s" % _instance_tld())
+        self.url = "https://%(prefix)s.%(domain)s"
         self.prefix = "world"
 
     def robotoff(self):
@@ -41,12 +35,16 @@ class BaseURLProvider(object):
         self.prefix = "static"
         return self
 
+    def api(self):
+        self.prefix = "api"
+        return self
+
     def country(self, country_code: str):
         self.prefix = country_code
         return self
 
     def get(self):
-        return self.url % {"prefix": self.prefix}
+        return self.url % {"prefix": self.prefix, "domain": self.domain}
 
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -89,7 +87,7 @@ def off_credentials() -> Dict:
     return {"user_id": _off_user, "password": _off_password}
 
 
-OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
+OFF_SERVER_DOMAIN = BaseURLProvider().api().get()
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
