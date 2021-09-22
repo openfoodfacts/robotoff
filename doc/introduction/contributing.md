@@ -85,6 +85,7 @@ development.
     ```
     flake8
     black --check .
+    mypy .
     isort --check .
     poetry run pytest tests
     ```
