@@ -100,10 +100,13 @@ def extract_insights(
     elif insight_type == InsightType.image_lang:
         return get_image_lang(content)
 
-    # TODO: This has been temporarily commented-out as this breaks OCR detection
-    # due to the model not being fully integrated with Robotoff.
-    #     elif insight_type == InsightType.category:
-    #         return predict_ocr_categories(content)
+    elif insight_type == InsightType.category:
+        # TODO: This has been temporarily commented-out as this breaks OCR detection
+        # due to the model not being fully integrated with Robotoff.
+        # return predict_ocr_categories(content)
+        logger.info(
+            "Skipping category OCR prediction until it has been integrated into Robotoff"
+        )
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
