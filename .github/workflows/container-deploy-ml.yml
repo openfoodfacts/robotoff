@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'ml-org' || 'ml-net' }}
+    environment: robotoff-ml
     steps:
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
