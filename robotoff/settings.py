@@ -7,6 +7,7 @@ from sentry_sdk.integrations import Integration
 
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
+
 # Returns the top-level-domain (TLD) for the Robotoff instance.
 def _instance_tld() -> str:
     if _robotoff_instance == "prod":
