@@ -70,6 +70,9 @@ class AddBinaryQuestion(Question):
             "insight_id": self.insight_id,
             "insight_type": self.insight_type,
         }
+        
+        if self.value_tag:
+            serial["value_tag"] = self.value_tag
 
         if self.image_url:
             serial["image_url"] = self.image_url
