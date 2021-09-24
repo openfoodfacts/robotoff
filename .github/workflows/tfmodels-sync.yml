@@ -39,5 +39,7 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "tf_models/${{ matrix.asset_name }}/*"
         target: "tf_models/${{ matrix.asset_name }}"
