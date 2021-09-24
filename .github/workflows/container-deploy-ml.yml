@@ -110,4 +110,5 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
+          cd ${{ github.event.repository.name }}/
           docker system prune -af
