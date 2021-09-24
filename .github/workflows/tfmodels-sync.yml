@@ -28,7 +28,7 @@ jobs:
         repo: "openfoodfacts/robotoff-models"
         version: "tags/${{ matrix.asset_name }}-1.0"
         file: "${{ matrix.file }}"
-        target: "tf_models/${{ matrix.assert_name }}/${{ matrix.file }}"
+        target: "tf_models/${{ matrix.asset_name }}/${{ matrix.file }}"
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: SCP
       uses: appleboy/scp-action@master
