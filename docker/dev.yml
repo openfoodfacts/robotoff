@@ -19,7 +19,3 @@ services:
       context: .
     volumes:
       - ./robotoff:/opt/robotoff/robotoff
-    depends_on:
-      - elasticsearch
-volumes:
-  es_data:
