@@ -43,10 +43,10 @@ jobs:
         script_stop: false
         script: |
           # Clone Git repository if not already there
-          [ ! -d 'robotoff' ] && git clone --depth 1 https://github.com/openfoodfacts/robotoff/ --no-single-branch 2>&1
+          [ ! -d '${{ github.event.repository.name }}' ] && git clone --depth 1 https://github.com/${{ github.repository }} --no-single-branch 2>&1
 
           # Go to repository directory
-          cd robotoff/
+          cd ${{ github.event.repository.name }}/
 
           # Fetch newest commits (in case it wasn't freshly cloned)
           git fetch --depth 1
@@ -66,13 +66,14 @@ jobs:
         script_stop: false
         script: |
           # Go to repository directory
-          cd robotoff/
+          cd ${{ github.event.repository.name }}/
 
           # Set Docker Compose variables
           echo "DOCKER_CLIENT_TIMEOUT=120" > .env
           echo "COMPOSE_HTTP_TIMEOUT=120" >> .env
+          echo "COMPOSE_PROJECT_NAME=po" >> .env
           echo "COMPOSE_PATH_SEPARATOR=;" >> .env
-          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml" >> .env
+          echo "COMPOSE_FILE=docker-compose.yml" >> .env
           echo "TAG=sha-${{ github.sha }}" >> .env
 
     - name: Create Docker volumes
@@ -104,7 +105,7 @@ jobs:
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
-          cd robotoff/
+          cd ${{ github.event.repository.name }}/
           docker-compose up -d --remove-orphans 2>&1
 
     - name: Check services are up
@@ -119,9 +120,9 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
-          cd robotoff/
+          cd ${{ github.event.repository.name }}/
           exit_code=0
-          for service in robotoff; do 
+          for service in `docker-compose config  --service | tr '\n' ' '`; do 
             if [ -z `docker-compose ps -q $service` ] || [ -z `docker ps -q --no-trunc | grep $(docker-compose ps -q $service)` ]; then
               echo "$service: DOWN"
               exit_code=1
