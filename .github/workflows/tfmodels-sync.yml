@@ -6,11 +6,6 @@ on:
       - deploy-*
     tags: 
       - v*.*.*
-inputs:
-  version:
-    description: 'Tensorflow model version'
-    required: false
-    default: '1.0'
 jobs:
   build:
     name: Build
@@ -31,7 +26,7 @@ jobs:
       uses: dsaltares/fetch-gh-release-asset@master
       with:
         repo: "openfoodfacts/robotoff-models"
-        version: "tags/${{ matrix.asset_name }}-${{ inputs.version }}"
+        version: "tags/${{ matrix.asset_name }}-1.0"
         file: "${{ matrix.file }}"
         target: "tf_models/${{ matrix.assert_name }}/${{ matrix.file }}"
         token: ${{ secrets.GITHUB_TOKEN }}
