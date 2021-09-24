@@ -7,8 +7,8 @@ on:
     tags: 
       - v*.*.*
 jobs:
-  build:
-    name: Build
+  tfmodels-sync:
+    name: Sync model
     runs-on: ubuntu-latest
     environment: robotoff-ml
     strategy:
