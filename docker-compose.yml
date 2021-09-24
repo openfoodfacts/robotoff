@@ -28,7 +28,6 @@ services:
     ports:
       - 5500:5500
     networks:
-      - internal
       - webnet
 
   workers:
@@ -57,7 +56,7 @@ services:
       - ELASTICSEARCH_HOSTS
     mem_limit: 8g
     networks:
-      - internal
+      - webnet
 
   scheduler:
     restart: always
@@ -85,7 +84,7 @@ services:
       - ELASTICSEARCH_HOSTS
     mem_limit: 4g
     networks:
-      - internal
+      - webnet
 
   postgres:
     restart: always
@@ -102,12 +101,11 @@ services:
     mem_limit: 4g
     shm_size: 1g
     networks:
-      - internal
+      - webnet
 
 volumes:
   postgres-data:
   api-dataset:
 
 networks:
-  internal:
   webnet:
