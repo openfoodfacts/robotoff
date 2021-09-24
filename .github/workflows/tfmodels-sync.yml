@@ -1,0 +1,48 @@
+name: Sync Tensorflow models to Proxmox VM
+on: 
+  push:
+    branches:
+      - master
+      - deploy-*
+    tags: 
+      - v*.*.*
+inputs:
+  version:
+    description: 'Tensorflow model version'
+    required: false
+    default: '1.0'
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+    strategy:
+      matrix:
+        asset_name:
+        - tf-universal-logo-detector
+        - tf-nutrition-table
+        - tf-nutriscore
+        file:
+        - label_map.pbtxt
+        - saved_model.tar.gz
+    steps:
+    - uses: actions/checkout@master
+    - name: Download
+      uses: dsaltares/fetch-gh-release-asset@master
+      with:
+        repo: "openfoodfacts/robotoff-models"
+        version: "tags/${{ matrix.asset_name }}-${{ inputs.version }}"
+        file: "${{ matrix.file }}"
+        target: "tf_models/${{ matrix.assert_name }}/${{ matrix.file }}"
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: SCP
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        port: ${{ secrets.PORT }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        source: "tf_models/${{ matrix.asset_name }}/*"
+        target: "tf_models/${{ matrix.asset_name }}"

@@ -8,7 +8,7 @@ services:
       - 8501:8501
       - 8500:8500
     volumes:
-      - ./tf_models:/models
+      - ../tf_models:/models
     entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
     mem_limit: 10g
     networks:
