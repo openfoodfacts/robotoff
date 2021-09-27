@@ -6,7 +6,7 @@ name: Generate documentation
 on:
   push:
     branches:
-      - master
+      - $default-branch
 
 jobs:
   publish-docs:

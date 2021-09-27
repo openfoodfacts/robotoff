@@ -2,7 +2,7 @@ name: Sync Tensorflow models to Proxmox VM
 on: 
   push:
     branches:
-      - master
+      - $default-branch
       - deploy-*
     tags: 
       - v*.*.*

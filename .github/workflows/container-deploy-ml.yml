@@ -3,7 +3,7 @@ name: Container Image Deployment CI (ML stack)
 on:
   push:
     branches:
-      - main
+      - $default-branch
       - deploy-*
     tags: 
       - v*.*.*
