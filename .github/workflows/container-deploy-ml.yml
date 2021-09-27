@@ -1,0 +1,114 @@
+name: Container Image Deployment CI (ML stack)
+
+on:
+  push:
+    branches:
+      - main
+      - deploy-*
+    tags: 
+      - v*.*.*
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: robotoff-ml
+    steps:
+    - name: Checkout git repository
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          # Clone Git repository if not already there
+          [ ! -d '${{ github.event.repository.name }}' ] && git clone --depth 1 https://github.com/${{ github.repository }}/ --no-single-branch 2>&1
+
+          # Go to repository directory
+          cd ${{ github.event.repository.name }}/
+
+          # Fetch newest commits (in case it wasn't freshly cloned)
+          git fetch --depth 1
+
+          # Checkout current commit SHA
+          git checkout -qf ${{ github.sha }}
+
+    - name: Set environment variables
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          # Go to repository directory
+          cd ${{ github.event.repository.name }}/
+
+          # Set Docker Compose variables
+          echo "DOCKER_CLIENT_TIMEOUT=120" > .env
+          echo "COMPOSE_HTTP_TIMEOUT=120" >> .env
+          echo "COMPOSE_PATH_SEPARATOR=;" >> .env
+          echo "COMPOSE_FILE=docker/ml.yml" >> .env
+
+    - name: Start services
+      uses: appleboy/ssh-action@master
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script_stop: false
+        script: |
+          cd ${{ github.event.repository.name }}/
+          docker-compose up -d --remove-orphans 2>&1
+
+    - name: Check services are up
+      uses: appleboy/ssh-action@master
+      if: ${{ always() }}
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ github.event.repository.name }}/
+          exit_code=0
+          for service in `docker-compose config  --service | tr '\n' ' '`; do 
+            if [ -z `docker-compose ps -q $service` ] || [ -z `docker ps -q --no-trunc | grep $(docker-compose ps -q $service)` ]; then
+              echo "$service: DOWN"
+              exit_code=1
+            else
+              echo "$service: UP"
+            fi
+          done;
+          exit $exit_code;
+
+    - name: Cleanup obsolete Docker objects
+      uses: appleboy/ssh-action@master
+      if: ${{ always() }}
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ github.event.repository.name }}/
+          docker system prune -af

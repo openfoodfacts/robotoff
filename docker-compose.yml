@@ -1,79 +1,111 @@
-version: "3"
+version: "3.9"
 
 services:
   api:
     restart: always
-    image: openfoodfacts/robotoff
-    # network_mode: "host"
+    image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
+      - ./tf_models:/opt/robotoff/tf_models
+      - ./models:/opt/robotoff/models
+    environment:
+      - ROBOTOFF_INSTANCE
+      - ROBOTOFF_DOMAIN
+      - IPC_AUTHKEY
+      - IPC_HOST
+      - IPC_PORT
+      - WORKER_COUNT
+      - POSTGRES_HOST
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - MONGODB_HOST
+      - OFF_USER
+      - OFF_PASSWORD
+      - SENTRY_DSN
+      - ELASTICSEARCH_HOSTS
     mem_limit: 2g
     ports:
-      - "5500:5500"
+      - 5500:5500
+    networks:
+      - webnet
 
   workers:
     restart: always
-    image: openfoodfacts/robotoff
+    image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
-    entrypoint: "/root/.local/bin/poetry run robotoff-cli run workers"
+      - ./tf_models:/opt/robotoff/tf_models
+      - ./models:/opt/robotoff/models
+    command: poetry run robotoff-cli run workers
+    environment:
+      - ROBOTOFF_INSTANCE
+      - ROBOTOFF_DOMAIN
+      - IPC_AUTHKEY
+      - IPC_HOST
+      - IPC_PORT
+      - WORKER_COUNT
+      - POSTGRES_HOST
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - MONGODB_HOST
+      - OFF_USER
+      - OFF_PASSWORD
+      - SENTRY_DSN
+      - ELASTICSEARCH_HOSTS
     mem_limit: 8g
+    networks:
+      - webnet
 
   scheduler:
-    image: openfoodfacts/robotoff
+    restart: always
+    image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
-    entrypoint: "/root/.local/bin/poetry run robotoff-cli run scheduler"
+      - ./tf_models:/opt/robotoff/tf_models
+      - ./models:/opt/robotoff/models
+    command: poetry run robotoff-cli run scheduler
+    environment:
+      - ROBOTOFF_INSTANCE
+      - ROBOTOFF_DOMAIN
+      - IPC_AUTHKEY
+      - IPC_HOST
+      - IPC_PORT
+      - WORKER_COUNT
+      - POSTGRES_HOST
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - MONGODB_HOST
+      - OFF_USER
+      - OFF_PASSWORD
+      - SENTRY_DSN
+      - ELASTICSEARCH_HOSTS
     mem_limit: 4g
+    networks:
+      - webnet
 
   postgres:
     restart: always
     image: postgres:11.2-alpine
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432"
-    mem_limit: 2g
-
-  elasticsearch:
-    restart: always
-    image: raphael0202/elasticsearch
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 262144
-        hard: 262144
-    mem_limit: 1500m
-    volumes:
-      - es-data:/usr/share/elasticsearch/data
-    ports:
-      - "127.0.0.1:9200:9200"
-      - "127.0.0.1:9300:9300"
-
-  tf_serving:
-    restart: always
-    image: tensorflow/serving:1.15.0
-    ports:
-      - "8501:8501"
-      - "8500:8500"
-    volumes:
-      - ./tf_models:/models:Z
-    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
-    mem_limit: 3g
+      - 5432:5432
+    command: postgres -c shared_buffers=1024MB -c work_mem=64MB
+    mem_limit: 4g
+    shm_size: 1g
+    networks:
+      - webnet
 
 volumes:
   postgres-data:
   api-dataset:
-  es-data:
+
+networks:
+  webnet:

@@ -5,14 +5,7 @@ from typing import Dict, Sequence, Tuple
 import sentry_sdk
 from sentry_sdk.integrations import Integration
 
-# Should be either 'prod' or 'dev'.
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
-
-if _robotoff_instance != "prod" and _robotoff_instance != "dev":
-    raise ValueError(
-        "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s"
-        % _robotoff_instance
-    )
 
 
 # Returns the top-level-domain (TLD) for the Robotoff instance.
@@ -22,7 +15,7 @@ def _instance_tld() -> str:
     elif _robotoff_instance == "dev":
         return "net"
     else:
-        return ""
+        return _robotoff_instance
 
 
 class BaseURLProvider(object):
@@ -32,7 +25,10 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        self.url = "https://%(prefix)s.openfoodfacts." + _instance_tld()
+        self.domain = os.environ.get(
+            "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
+        )
+        self.url = "https://%(prefix)s.%(domain)s"
         self.prefix = "world"
 
     def robotoff(self):
@@ -43,12 +39,16 @@ class BaseURLProvider(object):
         self.prefix = "static"
         return self
 
+    def api(self):
+        self.prefix = "api"
+        return self
+
     def country(self, country_code: str):
         self.prefix = country_code
         return self
 
     def get(self):
-        return self.url % {"prefix": self.prefix}
+        return self.url % {"prefix": self.prefix, "domain": self.domain}
 
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -60,7 +60,6 @@ JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
-
 
 # Products JSONL
 
@@ -92,7 +91,7 @@ def off_credentials() -> Dict:
     return {"user_id": _off_user, "password": _off_password}
 
 
-OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
+OFF_SERVER_DOMAIN = BaseURLProvider().api().get()
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
@@ -114,14 +113,14 @@ SPELLCHECK_PATTERNS_PATHS = {
 
 # Credentials for the Robotoff insights database
 
-DB_NAME = os.environ.get("DB_NAME", "postgres")
-DB_USER = os.environ.get("DB_USER", "postgres")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
-DB_HOST = os.environ.get("DB_HOST", "localhost")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
+POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
 
 # Mongo used to be on the same server as Robotoff
 
-MONGO_URI = os.environ.get("MONGO_URI", "")
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://mongodb:27017")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
@@ -173,10 +172,8 @@ def init_sentry(integrations: Sequence[Integration] = ()):
             environment=_robotoff_instance,
             integrations=integrations,
         )
-    else:
-        raise ValueError(
-            "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
-        )
+    elif _robotoff_instance == "prod":
+        raise ValueError("No SENTRY_DSN specified for prod Robotoff")
 
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
@@ -199,16 +196,13 @@ OCR_TRACE_ALLERGEN_DATA_PATH = OCR_DATA_DIR / "trace_allergen.txt"
 # Try to detect postal codes in France
 OCR_CITIES_FR_PATH = OCR_DATA_DIR / "cities_laposte_hexasmal.json.gz"
 
-
 BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json"
-
 
 # When we're making queries to the API, so that we're not blocked by error
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
 MODELS_DIR = PROJECT_DIR / "models"
-
 
 # Tensorflow Serving host parameters
 
@@ -242,10 +236,10 @@ OBJECT_DETECTION_MODEL_VERSION = {
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15
 
-INFLUXDB_HOST = "localhost"
-INFLUXDB_PORT = 8086
-INFLUXDB_DB_NAME = "off_metrics"
-INFLUXDB_USERNAME = "off_metrics"
+INFLUXDB_HOST = os.environ.get("INFLUXDB_HOST", "localhost")
+INFLUXDB_PORT = int(os.environ.get("INFLUXDB_PORT", "8086"))
+INFLUXDB_DB_NAME = os.environ.get("INFLUXDB_DB_NAME", "off_metrics")
+INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
 TEST_DIR = PROJECT_DIR / "tests"

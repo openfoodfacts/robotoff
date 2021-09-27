@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  api:
+    image: openfoodfacts/robotoff:dev
+    build:
+      context: .
+    volumes:
+      - ./robotoff:/opt/robotoff/robotoff
+  workers:
+    image: openfoodfacts/robotoff:dev
+    build:
+      context: .
+    volumes:
+      - ./robotoff:/opt/robotoff/robotoff
+  scheduler:
+    image: openfoodfacts/robotoff:dev
+    build:
+      context: .
+    volumes:
+      - ./robotoff:/opt/robotoff/robotoff

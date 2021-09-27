@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  tf_serving:
+    restart: always
+    image: tensorflow/serving:1.15.0
+    ports:
+      - 8501:8501
+      - 8500:8500
+    volumes:
+      - ../tf_models:/models
+    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
+    mem_limit: 10g
+    networks:
+      - webnet
+
+networks:
+  webnet:

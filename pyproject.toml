@@ -64,6 +64,7 @@ tensorflow = "^2.4.1"
 scipy = "^1.6.0"
 h5py = "2.10.0"
 typer = "^0.3.2"
+uvicorn = "^0.15.0"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "^0.19.5"
