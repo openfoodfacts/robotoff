@@ -3,7 +3,7 @@ name: Container Image Build CI
 on:
   push:
     branches:
-      - $default-branch
+      - master
       - deploy-*
     tags: 
       - v*.*.*
