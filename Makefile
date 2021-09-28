@@ -50,7 +50,7 @@ hdown:
 
 restart:
 	@echo "🥫 Restarting frontend & backend containers …"
-	${DOCKER_COMPOSE} restart backend frontend
+	${DOCKER_COMPOSE} restart
 
 status:
 	@echo "🥫 Getting container status …"
