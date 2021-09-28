@@ -27,7 +27,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up
+dev: hello download_models up
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
@@ -50,7 +50,7 @@ hdown:
 
 restart:
 	@echo "🥫 Restarting frontend & backend containers …"
-	${DOCKER_COMPOSE} restart backend frontend
+	${DOCKER_COMPOSE} restart
 
 status:
 	@echo "🥫 Getting container status …"
