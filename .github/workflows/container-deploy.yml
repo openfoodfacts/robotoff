@@ -78,20 +78,20 @@ jobs:
 
           # Set app variables
           echo "ROBOTOFF_INSTANCE=${{ secrets.ROBOTOFF_INSTANCE }}" >> .env
-          echo "ROBOTOFF_DOMAIN=${{ secrets.ROBOTOFF_DOMAIN }}"
-          echo "IPC_AUTHKEY=${{ secrets.IPC_AUTHKEY }}"
-          echo "IPC_HOST=${{ secrets.IPC_HOST }}"
-          echo "IPC_PORT=${{ secrets.IPC_PORT }}"
-          echo "WORKER_COUNT=${{ secrets.WORKER_COUNT }}"
-          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}"
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}"
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}"
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}"
-          echo "OFF_USER=${{ secrets.OFF_USER }}"
-          echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}"
-          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}"
-          echo "ELASTICSEARCH_HOSTS=${{ secrets.ELASTICSEARCH_HOSTS }}"
+          echo "ROBOTOFF_DOMAIN=${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
+          echo "IPC_AUTHKEY=${{ secrets.IPC_AUTHKEY }}" >> .env
+          echo "IPC_HOST=${{ secrets.IPC_HOST }}" >> .env
+          echo "IPC_PORT=${{ secrets.IPC_PORT }}" >> .env
+          echo "WORKER_COUNT=${{ secrets.WORKER_COUNT }}" >> .env
+          echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "OFF_USER=${{ secrets.OFF_USER }}" >> .env
+          echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
+          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
+          echo "ELASTICSEARCH_HOSTS=${{ secrets.ELASTICSEARCH_HOSTS }}" >> .env
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
