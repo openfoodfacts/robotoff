@@ -27,7 +27,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello download_models up
+dev: hello up
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
