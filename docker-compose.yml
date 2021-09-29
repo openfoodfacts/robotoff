@@ -12,7 +12,7 @@ services:
       - ROBOTOFF_INSTANCE
       - ROBOTOFF_DOMAIN
       - IPC_AUTHKEY
-      - IPC_HOST
+      - IPC_HOST=workers
       - IPC_PORT
       - WORKER_COUNT
       - POSTGRES_HOST
@@ -25,6 +25,8 @@ services:
       - SENTRY_DSN
       - ELASTICSEARCH_HOSTS
     mem_limit: 2g
+    depends_on:
+      - workers
     ports:
       - 5500:5500
     networks:
@@ -54,6 +56,7 @@ services:
       - OFF_PASSWORD
       - SENTRY_DSN
       - ELASTICSEARCH_HOSTS
+      - REAL_TIME_IMAGE_PREDICTION=1
     mem_limit: 8g
     networks:
       - webnet
