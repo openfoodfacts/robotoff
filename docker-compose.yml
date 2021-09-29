@@ -27,7 +27,6 @@ services:
     mem_limit: 2g
     depends_on:
       - workers
-      - statsd
     ports:
       - 5500:5500
     networks:
@@ -104,17 +103,6 @@ services:
     command: postgres -c shared_buffers=1024MB -c work_mem=64MB
     mem_limit: 4g
     shm_size: 1g
-    networks:
-      - webnet
-
-  statsd:
-    image: prom/statsd-exporter
-    volumes:
-      - ./statsd.conf:/statsd/statsd.conf
-    command:
-      - "--statsd.mapping-config=/statsd/statsd.conf"
-    ports:
-      - 9102:9102
     networks:
       - webnet
 
