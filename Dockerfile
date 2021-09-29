@@ -43,4 +43,4 @@ COPY poetry.lock pyproject.toml poetry.toml /opt/robotoff/
 
 WORKDIR /opt/robotoff
 ENTRYPOINT /docker-entrypoint.sh $0 $@
-CMD [ "gunicorn", "--worker-class uvicorn.workers.UvicornWorker", "--config /opt/robotoff/gunicorn.py", "robotoff.app.api:api"]
+CMD [ "gunicorn", "--config /opt/robotoff/gunicorn.py", "robotoff.app.api:api"]
