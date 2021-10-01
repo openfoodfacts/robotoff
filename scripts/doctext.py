@@ -112,7 +112,7 @@ def render_doc_text(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("image_url", help="The image URL for text detection.")
+    parser.add_argument("image_url", help='The image URL for text detection.')
     parser.add_argument("--output-path", help="Optional output file", type=pathlib.Path)
     args = parser.parse_args()
 
