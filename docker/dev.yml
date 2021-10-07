@@ -29,7 +29,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     command: postgres -c shared_buffers=1024MB -c work_mem=64MB
     mem_limit: 4g
     shm_size: 1g
