@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   api:
-    restart: always
+    restart: $RESTART_POLICY
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
@@ -33,7 +33,7 @@ services:
       - webnet
 
   workers:
-    restart: always
+    restart: $RESTART_POLICY
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
@@ -62,7 +62,7 @@ services:
       - webnet
 
   scheduler:
-    restart: always
+    restart: $RESTART_POLICY
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
@@ -90,7 +90,7 @@ services:
       - webnet
 
   postgres:
-    restart: always
+    restart: $RESTART_POLICY
     image: postgres:11.2-alpine
     environment:
       - POSTGRES_USER
