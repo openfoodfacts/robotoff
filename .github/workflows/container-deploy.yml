@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        env: ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+        env: 
+          - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
     environment: ${{ matrix.env }}
     steps:
     - name: Wait for container build workflow
@@ -46,10 +47,10 @@ jobs:
         script_stop: false
         script: |
           # Clone Git repository if not already there
-          [ ! -d '${{ github.event.repository.name }}' ] && git clone --depth 1 https://github.com/${{ github.repository }} --no-single-branch 2>&1
+          [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
 
           # Go to repository directory
-          cd ${{ github.event.repository.name }}/
+          cd ${{ matrix.env}}
 
           # Fetch newest commits (in case it wasn't freshly cloned)
           git fetch --depth 1
@@ -69,7 +70,7 @@ jobs:
         script_stop: false
         script: |
           # Go to repository directory
-          cd ${{ github.event.repository.name }}/
+          cd ${{ matrix.env}}
 
           # Set Docker Compose variables
           echo "DOCKER_CLIENT_TIMEOUT=200" > .env
@@ -124,7 +125,7 @@ jobs:
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
-          cd ${{ github.event.repository.name }}/
+          cd ${{ matrix.env}}
           make up
 
     - name: Check services are up
@@ -139,7 +140,7 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
-          cd ${{ github.event.repository.name }}/
+          cd ${{ matrix.env}}
           make livecheck
 
     - name: Cleanup obsolete Docker objects
@@ -154,4 +155,4 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
-          docker system prune -af
+          make prune
