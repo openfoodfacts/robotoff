@@ -1,5 +1,6 @@
-from robotoff import models
 import multiprocessing
+
+from robotoff import models
 
 bind = ":5500"
 workers = multiprocessing.cpu_count() * 2 + 1
