@@ -36,7 +36,7 @@ COPY robotoff /opt/robotoff/robotoff/
 COPY data /opt/robotoff/data
 COPY gunicorn.py /opt/robotoff/
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY docker/robotoff-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 COPY poetry.lock pyproject.toml poetry.toml /opt/robotoff/
