@@ -10,7 +10,10 @@ jobs:
   tfmodels-sync:
     name: Sync model
     runs-on: ubuntu-latest
-    environment: robotoff-ml
+    strategy:
+      matrix: 
+        env: [robotoff-ml]
+    environment: ${{ matrix.env }}
     strategy:
       matrix:
         asset_name:
@@ -29,7 +32,7 @@ jobs:
         proxy_username: ${{ secrets.USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          cd ${{ github.event.repository.name }}/tf_models
+          cd ${{ matrix.env }}/tf_models
           dir=`echo ${{ matrix.asset_name }} | sed 's/tf-//g'`
           mkdir -p ${dir} ${dir}/1
           wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/${{ matrix.asset_name }}-1.0/label_map.pbtxt > ${dir}/labels.pbtxt

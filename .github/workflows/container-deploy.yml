@@ -11,7 +11,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+    strategy:
+      matrix:
+        env: ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+    environment: ${{ matrix.env }}
     steps:
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
@@ -71,7 +74,7 @@ jobs:
           # Set Docker Compose variables
           echo "DOCKER_CLIENT_TIMEOUT=200" > .env
           echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
-          echo "COMPOSE_PROJECT_NAME=po" >> .env
+          echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
           echo "COMPOSE_PATH_SEPARATOR=;" >> .env
           echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml" >> .env
           echo "TAG=sha-${{ github.sha }}" >> .env
@@ -104,8 +107,7 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
-          docker volume create postgres-data || echo "Docker volume 'postgres-data' already exist. Skipping."
-          docker volume create api-dataset || echo "Docker volume 'api-dataset' already exist. Skipping."
+          make create_external_volumes
 
     - name: Start services
       uses: appleboy/ssh-action@master
@@ -123,7 +125,7 @@ jobs:
         script_stop: false
         script: |
           cd ${{ github.event.repository.name }}/
-          docker-compose up -d --remove-orphans 2>&1
+          make up
 
     - name: Check services are up
       uses: appleboy/ssh-action@master
@@ -138,16 +140,7 @@ jobs:
         script_stop: false
         script: |
           cd ${{ github.event.repository.name }}/
-          exit_code=0
-          for service in `docker-compose config  --service | tr '\n' ' '`; do 
-            if [ -z `docker-compose ps -q $service` ] || [ -z `docker ps -q --no-trunc | grep $(docker-compose ps -q $service)` ]; then
-              echo "$service: DOWN"
-              exit_code=1
-            else
-              echo "$service: UP"
-            fi
-          done;
-          exit $exit_code;
+          make livecheck
 
     - name: Cleanup obsolete Docker objects
       uses: appleboy/ssh-action@master
