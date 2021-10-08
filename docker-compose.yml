@@ -1,29 +1,35 @@
 version: "3.9"
 
-services:
-  api:
+
+x-robotoff-base: &robotoff-base
     restart: $RESTART_POLICY
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
       - api-dataset:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
-    environment:
-      - ROBOTOFF_INSTANCE
-      - ROBOTOFF_DOMAIN
-      - IPC_AUTHKEY
-      - IPC_HOST=workers
-      - IPC_PORT
-      - WORKER_COUNT
-      - POSTGRES_HOST
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - MONGODB_HOST
-      - OFF_USER
-      - OFF_PASSWORD
-      - SENTRY_DSN
-      - ELASTICSEARCH_HOSTS
+
+x-robotoff-base-env: &robotoff-base-env
+  ROBOTOFF_INSTANCE:
+  ROBOTOFF_DOMAIN:
+  IPC_AUTHKEY:
+  IPC_HOST: workers
+  IPC_PORT:
+  WORKER_COUNT:
+  POSTGRES_HOST:
+  POSTGRES_DB:
+  POSTGRES_USER:
+  POSTGRES_PASSWORD:
+  MONGODB_HOST:
+  OFF_USER:
+  OFF_PASSWORD:
+  SENTRY_DSN:
+  ELASTICSEARCH_HOSTS:
+
+services:
+  api:
+    <<: *robotoff-base
+    environment: *robotoff-base-env
     mem_limit: 2g
     depends_on:
       - workers
@@ -33,58 +39,19 @@ services:
       - webnet
 
   workers:
-    restart: $RESTART_POLICY
-    image: ghcr.io/openfoodfacts/robotoff:${TAG}
-    volumes:
-      - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models
-      - ./models:/opt/robotoff/models
+    <<: *robotoff-base
     command: poetry run robotoff-cli run workers
     environment:
-      - ROBOTOFF_INSTANCE
-      - ROBOTOFF_DOMAIN
-      - IPC_AUTHKEY
-      - IPC_HOST
-      - IPC_PORT
-      - WORKER_COUNT
-      - POSTGRES_HOST
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - MONGODB_HOST
-      - OFF_USER
-      - OFF_PASSWORD
-      - SENTRY_DSN
-      - ELASTICSEARCH_HOSTS
-      - REAL_TIME_IMAGE_PREDICTION=1
+      <<: *robotoff-base-env
+      REAL_TIME_IMAGE_PREDICTION: 1
     mem_limit: 8g
     networks:
       - webnet
 
   scheduler:
-    restart: $RESTART_POLICY
-    image: ghcr.io/openfoodfacts/robotoff:${TAG}
-    volumes:
-      - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models
-      - ./models:/opt/robotoff/models
+    <<: *robotoff-base
+    environment: *robotoff-base-env
     command: poetry run robotoff-cli run scheduler
-    environment:
-      - ROBOTOFF_INSTANCE
-      - ROBOTOFF_DOMAIN
-      - IPC_AUTHKEY
-      - IPC_HOST
-      - IPC_PORT
-      - WORKER_COUNT
-      - POSTGRES_HOST
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - MONGODB_HOST
-      - OFF_USER
-      - OFF_PASSWORD
-      - SENTRY_DSN
-      - ELASTICSEARCH_HOSTS
     mem_limit: 4g
     networks:
       - webnet
