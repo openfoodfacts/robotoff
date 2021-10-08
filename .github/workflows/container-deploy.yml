@@ -108,6 +108,7 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
+          cd ${{ matrix.env }}
           make create_external_volumes
 
     - name: Start services
@@ -155,4 +156,5 @@ jobs:
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
+          cd ${{ matrix.env }}
           make prune
