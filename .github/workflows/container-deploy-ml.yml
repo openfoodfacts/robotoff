@@ -15,6 +15,7 @@ jobs:
       matrix:
         env:
           - robotoff-ml
+    environment: ${{ matrix.env }}
     steps:
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
