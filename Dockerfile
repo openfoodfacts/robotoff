@@ -1,3 +1,5 @@
+# base python setup
+# -----------------
 FROM python:3.7-slim as python-base
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends -y gettext curl build-essential && \
@@ -17,17 +19,27 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
+# building packages
+# -----------------
 FROM python-base as builder-base
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
 RUN poetry install --no-dev
 
+# This is our final image
+# ------------------------
 FROM python-base as runtime
 COPY --from=builder-base $VENV_PATH $VENV_PATH
 COPY --from=builder-base $POETRY_HOME $POETRY_HOME
 RUN poetry config virtualenvs.create false
 ENV POETRY_VIRTUALENVS_IN_PROJECT=false
+
+# creaet off user
+ARG OFF_UID=1000
+ARG OFF_GID=$OFF_UID
+RUN groupadd -g $OFF_GID off && \
+    useradd -u $OFF_UID -g off -m off
 
 COPY i18n /opt/robotoff/i18n
 RUN cd /opt/robotoff/i18n && \
@@ -35,12 +47,14 @@ RUN cd /opt/robotoff/i18n && \
 COPY robotoff /opt/robotoff/robotoff/
 COPY data /opt/robotoff/data
 COPY gunicorn.py /opt/robotoff/
+RUN chown off:off -R /opt/robotoff
 
 COPY docker/robotoff-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 COPY poetry.lock pyproject.toml poetry.toml /opt/robotoff/
 
+USER off
 WORKDIR /opt/robotoff
 ENTRYPOINT /docker-entrypoint.sh $0 $@
 CMD [ "gunicorn", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotoff.app.api:api"]

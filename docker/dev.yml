@@ -4,6 +4,9 @@ x-robotoff-dev: &robotoff-dev
     image: openfoodfacts/robotoff:dev
     build:
       context: .
+      args:
+        OFF_UID: ${OFF_UID:-1000}
+        OFF_GID: ${OFF_GID:-1000}
     volumes:
       - ./robotoff:/opt/robotoff/robotoff
 
