@@ -1,7 +1,10 @@
+import multiprocessing
+
 from robotoff import models
 
 bind = ":5500"
-workers = 4
+workers = multiprocessing.cpu_count() * 2 + 1
+worker_connections = 1000
 preload_app = True
 timeout = 60
 
