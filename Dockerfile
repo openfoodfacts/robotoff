@@ -35,7 +35,7 @@ COPY --from=builder-base $POETRY_HOME $POETRY_HOME
 RUN poetry config virtualenvs.create false
 ENV POETRY_VIRTUALENVS_IN_PROJECT=false
 
-# creaet off user
+# create off user
 ARG OFF_UID=1000
 ARG OFF_GID=$OFF_UID
 RUN groupadd -g $OFF_GID off && \
@@ -58,3 +58,19 @@ USER off
 WORKDIR /opt/robotoff
 ENTRYPOINT /docker-entrypoint.sh $0 $@
 CMD [ "gunicorn", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotoff.app.api:api"]
+
+
+# building dev packages
+# ----------------------
+FROM builder-base as builder-dev
+WORKDIR $PYSETUP_PATH
+COPY poetry.lock  pyproject.toml poetry.toml ./
+# full install
+RUN poetry install
+
+# image with dev tooling
+# ----------------------
+FROM runtime as runtime-dev
+COPY --from=builder-dev $VENV_PATH $VENV_PATH
+COPY --from=builder-dev $POETRY_HOME $POETRY_HOME
+COPY mypy.ini .flake8 pyproject.toml ./

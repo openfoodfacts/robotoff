@@ -27,7 +27,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up
+dev: hello up dl-models
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
@@ -63,6 +63,43 @@ livecheck:
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
 	${DOCKER_COMPOSE} logs -f
+
+#------------#
+# Management #
+#------------#
+
+dl-models:
+	@echo "🥫 Downloading models"
+	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
+
+#------------#
+# Quality    #
+#------------#
+
+flake8:
+	${DOCKER_COMPOSE} run --rm api flake8
+
+black-check:
+	${DOCKER_COMPOSE} run --rm api black --check .
+
+black:
+	${DOCKER_COMPOSE} run --rm api black .
+
+mypy:
+	${DOCKER_COMPOSE} run --rm api mypy .
+
+isort-check:
+	${DOCKER_COMPOSE} run --rm api isort --check .
+
+isort:
+	${DOCKER_COMPOSE} run --rm api isort .
+
+checks: flake8 black-check mypy isort-check
+
+lint: isort black
+
+tests:
+	docker-compose run --rm 
 
 #------------#
 # Production #

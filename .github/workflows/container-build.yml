@@ -45,6 +45,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
+        target: runtime
         push: true
         cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
         cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
