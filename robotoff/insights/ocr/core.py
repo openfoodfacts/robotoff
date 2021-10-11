@@ -107,6 +107,7 @@ def extract_insights(
         logger.info(
             "Skipping category OCR prediction until it has been integrated into Robotoff"
         )
+        return []
 
     else:
         raise ValueError("unknown insight type: {}".format(insight_type))
