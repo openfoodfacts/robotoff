@@ -7,6 +7,8 @@ HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
 
 .DEFAULT_GOAL := dev
+# avoid target corresponding to file names, to depends on them
+.PHONY: *
 
 #------#
 # Info #
@@ -77,29 +79,31 @@ dl-models:
 #------------#
 
 flake8:
-	${DOCKER_COMPOSE} run --rm api flake8
+	${DOCKER_COMPOSE} run --rm --no-deps api flake8
 
 black-check:
-	${DOCKER_COMPOSE} run --rm api black --check .
+	${DOCKER_COMPOSE} run --rm --no-deps api black --check .
 
 black:
-	${DOCKER_COMPOSE} run --rm api black .
+	${DOCKER_COMPOSE} run --rm --no-deps api black .
 
 mypy:
-	${DOCKER_COMPOSE} run --rm api mypy .
+	${DOCKER_COMPOSE} run --rm --no-deps api mypy .
 
 isort-check:
-	${DOCKER_COMPOSE} run --rm api isort --check .
+	${DOCKER_COMPOSE} run --rm --no-deps api isort --check .
 
 isort:
-	${DOCKER_COMPOSE} run --rm api isort .
+	${DOCKER_COMPOSE} run --rm --no-deps api isort .
 
 checks: flake8 black-check mypy isort-check
 
 lint: isort black
 
 tests:
-	docker-compose run --rm 
+	@echo "🥫 Running tests …"
+	# run tests in worker to have more memory
+	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests
 
 #------------#
 # Production #
