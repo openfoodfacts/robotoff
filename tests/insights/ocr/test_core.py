@@ -12,7 +12,7 @@ def test_extract_insights_category_deactivated(caplog):
     caplog.set_level(logging.INFO)
     result = extract_insights("spam", InsightType.category)
     assert result == []
-    logged, = caplog.records
+    (logged,) = caplog.records
     assert logged.msg.startswith("Skipping category OCR prediction")
 
 
