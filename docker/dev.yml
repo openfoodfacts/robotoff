@@ -9,7 +9,10 @@ x-robotoff-dev: &robotoff-dev
         OFF_UID: ${OFF_UID:-1000}
         OFF_GID: ${OFF_GID:-1000}
     volumes:
+      # make updates to code available
       - ./robotoff:/opt/robotoff/robotoff
+      # make tests available
+      - ./tests:/opt/robotoff/tests
 
 services:
   api: *robotoff-dev
