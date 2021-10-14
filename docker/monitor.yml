@@ -11,7 +11,7 @@ services:
     depends_on:
       - statsd
   statsd:
-    image: prom/statsd-exporter
+    image: prom/statsd-exporter:v0.22.2
     volumes:
       - ./statsd.conf:/statsd/statsd.conf
     command:
@@ -21,8 +21,10 @@ services:
     networks:
       - webnet
   postgres_exporter:
-    image: prometheuscommunity/postgres-exporter
+    image: prometheuscommunity/postgres-exporter:v0.10.0
     environment:
-    - DATA_SOURCE_NAME=postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable
     networks:
       - webnet
+    depends_on:
+      - postgres
