@@ -70,6 +70,7 @@ log:
 create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
 	docker volume create api-dataset
+	docker volume create postgres-data
 
 #---------#
 # Cleanup #

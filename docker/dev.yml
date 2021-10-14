@@ -19,21 +19,3 @@ services:
       context: .
     volumes:
       - ./robotoff:/opt/robotoff/robotoff
-  postgres:
-    restart: always
-    image: postgres:11.2-alpine
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - 127.0.0.1:5432:5432
-    command: postgres -c shared_buffers=1024MB -c work_mem=64MB
-    mem_limit: 4g
-    shm_size: 1g
-    networks:
-      - webnet
-volumes:
-  postgres-data:
