@@ -1,3 +1,5 @@
+"""Interacting with OFF server to eg. update products or get infos
+"""
 import enum
 import re
 from typing import Dict, List, Optional, Tuple, Union

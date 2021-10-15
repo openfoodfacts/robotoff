@@ -62,6 +62,9 @@ es_client = get_es_client()
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
 
+###########
+# IMPORTANT: remember to update documentation at doc/references/api.md if you change API
+###########
 
 class ProductInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
@@ -792,6 +795,11 @@ class WebhookProductResource:
 
 
 class ProductQuestionsResource:
+    """Get a question about a product to confirm/infirm an insight
+
+    see also doc/explanation/questions.md
+    """
+
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1) or 1
@@ -880,7 +888,7 @@ def get_questions_resource_on_get(
 
     insights = list(get_insights_(limit=count))
     response["count"] = get_insights_(count=True)
-
+    # This code should be merged with the one in ProductQuestionsResource.get
     if not insights:
         response["questions"] = []
         response["status"] = "no_questions"
@@ -984,6 +992,7 @@ api.resp_options.media_handlers.update(extra_handlers)
 api.req_options.auto_parse_form_urlencoded = True
 api.req_options.strip_url_path_trailing_slash = True
 api.req_options.auto_parse_qs_csv = True
+# defines urls
 api.add_route("/api/v1/insights/{barcode}", ProductInsightResource())
 api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail())
 api.add_route("/api/v1/insights", InsightCollection())
