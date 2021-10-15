@@ -39,10 +39,6 @@ class BaseURLProvider(object):
         self.prefix = "static"
         return self
 
-    def api(self):
-        self.prefix = "api"
-        return self
-
     def country(self, country_code: str):
         self.prefix = country_code
         return self
@@ -91,7 +87,7 @@ def off_credentials() -> Dict:
     return {"user_id": _off_user, "password": _off_password}
 
 
-OFF_SERVER_DOMAIN = BaseURLProvider().api().get()
+OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
