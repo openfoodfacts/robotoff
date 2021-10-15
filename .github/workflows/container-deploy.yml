@@ -165,5 +165,5 @@ jobs:
       with:
         apiHost: https://grafana.openfoodfacts.org
         apiToken: ${{ secrets.GRAFANA_API_TOKEN }}
-        text: <a href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}">Deploy ${{ github.sha }} on ${{ matrix.env }}</a>
+        text: Deploy ${{ github.sha }} on ${{ matrix.env }}
         tags: deployment,github,${{ steps.livecheck.outcome }},${{ matrix.env }},${{ github.repository }}
