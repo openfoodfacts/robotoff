@@ -66,6 +66,7 @@ TRANSLATION_STORE.load()
 # IMPORTANT: remember to update documentation at doc/references/api.md if you change API
 ###########
 
+
 class ProductInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         server_domain: Optional[str] = req.get_param("server_domain")
