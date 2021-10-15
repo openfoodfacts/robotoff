@@ -87,7 +87,7 @@ def off_credentials() -> Dict:
     return {"user_id": _off_user, "password": _off_password}
 
 
-OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
+OFF_SERVER_DOMAIN = 'api.' + BaseURLProvider().domain
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
