@@ -29,7 +29,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up dl-models
+dev: hello up dl-models init-elasticsearch
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
@@ -71,8 +71,12 @@ log:
 #------------#
 
 dl-models:
-	@echo "🥫 Downloading models"
+	@echo "🥫 Downloading models …"
 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
+
+init-elasticsearch:
+	@echo "Initializing ElasticSearch indexes …"
+	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli init-elasticsearch
 
 #------------#
 # Quality    #

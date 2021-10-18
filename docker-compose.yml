@@ -71,9 +71,30 @@ services:
     networks:
       - webnet
 
+  elasticsearch:
+    restart: $RESTART_POLICY
+    image: raphael0202/elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 262144
+        hard: 262144
+    mem_limit: 2g
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    networks:
+      - webnet
+
 volumes:
   api-dataset:
   postgres-data:
+  es-data:
 
 networks:
   webnet:
