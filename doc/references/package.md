@@ -9,7 +9,7 @@ This document presents a brief, high-level overview of Robotoff’s library prim
 ## Install
 
 Robotoff is currently compatible with Python 3.7 and 3.8.
-Robotoff can be installed easily using pip: `pip3 install robotoff`
+Robotoff can be installed [following dev install doc](../how-to-guides/dev-install.md)
 
 ## Play with the Open Food Facts dataset
 

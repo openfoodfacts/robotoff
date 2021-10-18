@@ -44,7 +44,7 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up Robotoff for local
+Ready to contribute code? Here's how to set up Robotoff for local
 development.
 
 1.  Fork the robotoff repo on GitHub.
@@ -53,34 +53,22 @@ development.
     ```
     git clone git@github.com:your_name_here/robotoff.git
     ```
+3. choose between [docker install (recommended) or local install](../how-to/deployment/dev-install.md)
+   and run it.
 
-3.  Install the dependencies using [Poetry](https://python-poetry.org/docs/#installation):
+4. code !
 
-    ```
-    poetry install
-    ```
+5.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
 
-4.  Configure files required for the tests to run locally:
-    
-    Download the Robotoff models:
-    ```
-    poetry run robotoff-cli download-models
-    ```
-
-    Compile the i18n files:
-    ```
-    cd i18n && bash compile.sh && cd ..
-    ```
-
-5.  Create a branch for local development:
+    If you are using docker:
 
     ```
-    git checkout -b name-of-your-bugfix-or-feature
+    make lint
+    make checks
+    make tests
     ```
 
-    Now you can make your changes locally.
-
-6.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
+    If you are on a local install:
 
     ```
     flake8
@@ -90,10 +78,11 @@ development.
     poetry run pytest tests
     ```
 
-7.  Commit your changes and push your branch to GitHub:
+6.  Commit your changes and push your branch to GitHub:
 
     ```
-    git add .
+    git status
+    git add files-you-have-modified
     git commit -m "Your detailed description of your changes."
     git push origin name-of-your-bugfix-or-feature
     ```
@@ -106,7 +95,7 @@ development.
 
     More tips at <https://chris.beams.io/posts/git-commit>
 
-8.  Submit a pull request through the GitHub website.
+7.  Submit a pull request through the GitHub website.
 
 ## Pull Request Guidelines
 

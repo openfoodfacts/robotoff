@@ -15,6 +15,16 @@ SUPPORTED_LANG = {
 
 
 def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]]:
+    """Predict category from product name using ES.
+
+    Lang is not used to filter category index, but to stem the name in the right way.
+
+    :param elasticsearch.Elasticsearch client: ES client
+    :param name: name of the product
+    :param lang: language of the name
+
+    :return: None if language not supported or no guess
+    """
     if lang not in SUPPORTED_LANG:
         return None
 
@@ -31,6 +41,7 @@ def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]
 
 
 def match(client, query: str, lang: str):
+    """Match a phrase (query) against product database using stemming"""
     body = generate_request(query, lang)
     return client.search(
         index=settings.ELASTICSEARCH_CATEGORY_INDEX,

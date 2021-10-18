@@ -1,3 +1,5 @@
+"""Methods to load products in elasticsearch
+"""
 import itertools
 import re
 from typing import Dict, Iterator, List

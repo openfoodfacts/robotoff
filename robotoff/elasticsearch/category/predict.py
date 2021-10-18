@@ -13,6 +13,13 @@ logger = get_logger(__name__)
 
 
 def predict(client, product: Dict) -> Optional[ProductInsights]:
+    """Predict product categories using ES
+
+    :param elasticsearch.Elasticsearch client: connection to ES instance
+    :param product: product properties
+
+    :return: an insight on category or None if no prediction was available
+    """
     predictions = []
 
     for lang in product.get("languages_codes", []):
@@ -66,6 +73,7 @@ def predict_from_product(product: Dict) -> Optional[ProductInsights]:
 def predict_from_iterable(
     client, products: Iterable[Dict]
 ) -> Iterable[ProductInsights]:
+    """Iterative version of :py:func:`predict`"""
     for product in products:
         prediction = predict(client, product)
 

@@ -58,6 +58,7 @@ def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
 def extract_insights(
     content: Union[OCRResult, str], insight_type: InsightType
 ) -> List[RawInsight]:
+    """Proxy to each predictor, depending on insight type"""
     if insight_type == InsightType.packager_code:
         return find_packager_codes(content)
 
