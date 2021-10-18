@@ -20,7 +20,7 @@ x-robotoff-base-env: &robotoff-base-env
   POSTGRES_DB:
   POSTGRES_USER:
   POSTGRES_PASSWORD:
-  MONGODB_HOST:
+  MONGODB_URI:
   OFF_USER:
   OFF_PASSWORD:
   SENTRY_DSN:
