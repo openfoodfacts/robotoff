@@ -96,7 +96,7 @@ jobs:
           echo "OFF_USER=${{ secrets.OFF_USER }}" >> .env
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
-          echo "ELASTICSEARCH_HOSTS=${{ secrets.ELASTICSEARCH_HOSTS }}" >> .env
+          echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
