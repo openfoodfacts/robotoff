@@ -226,6 +226,10 @@ def apply_comparison_operator(
 
 
 class ProductStream:
+    """Starting for a stream of dict representing products,
+    provides a stream with filter methods to narrow down data.
+    """
+
     def __init__(self, iterator: Iterable[JSONType]):
         self.iterator: Iterable[JSONType] = iterator
 
@@ -338,6 +342,10 @@ class ProductStream:
 
 
 class ProductDataset:
+    """Handles the iteration over products dataset
+    contained in an eventually gziped file with one json by line.
+    """
+
     def __init__(self, jsonl_path):
         self.jsonl_path = jsonl_path
 

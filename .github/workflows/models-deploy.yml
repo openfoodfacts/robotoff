@@ -1,0 +1,41 @@
+name: Sync Tensorflow models to Proxmox VM
+on: 
+  push:
+    branches:
+      - master
+      - deploy-*
+    tags: 
+      - v*.*.*
+jobs:
+  tfmodels-sync:
+    name: Sync model
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    strategy:
+      matrix:
+        asset_name:
+          - tf-universal-logo-detector
+          - tf-nutrition-table
+          - tf-nutriscore
+        env:
+          - robotoff-ml
+    steps:
+      - uses: actions/checkout@master
+      - name: Download
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.PROXY_HOST }}
+          proxy_username: ${{ secrets.USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ matrix.env }}/tf_models
+            dir=`echo ${{ matrix.asset_name }} | sed 's/tf-//g'`
+            mkdir -p ${dir} ${dir}/1
+            wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/${{ matrix.asset_name }}-1.0/label_map.pbtxt > ${dir}/labels.pbtxt
+            wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/${{ matrix.asset_name }}-1.0/saved_model.tar.gz > ${dir}/1/saved_model.tar.gz
+            cd ${dir}/1
+            tar -xzvf saved_model.tar.gz --strip-component=1
+            rm saved_model.tar.gz

@@ -69,7 +69,9 @@ def process_insights():
             if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
                 "notify", False
             ):
-                slack.notify_automatic_processing(insight)
+                slack.NotifierFactory.get_notifier().notify_automatic_processing(
+                    insight
+                )
 
     logger.info("{} insights processed".format(processed))
 

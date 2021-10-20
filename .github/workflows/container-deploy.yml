@@ -1,0 +1,172 @@
+name: Container Image Deployment CI
+
+on:
+  push:
+    branches:
+      - master
+      - deploy-*
+    tags: 
+      - v*.*.*
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: 
+          - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+    environment: ${{ matrix.env }}
+    steps:
+    - name: Wait for container build workflow
+      uses: tomchv/wait-my-workflow@v1.1.0
+      id: wait-build
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        checkName: build
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        intervalSeconds: 10
+        timeoutSeconds: 600 # 10m
+
+    - name: Do something if build fail
+      if: steps.wait-build.outputs.conclusion == 'failure'
+      run: echo fail && false # fail if build fail
+
+    - name: Do something if build timeout
+      if: steps.wait-build.outputs.conclusion == 'timed_out'
+      run: echo Timeout && false # fail if build time out
+
+    - name: Checkout git repository
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          # Clone Git repository if not already there
+          [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
+
+          # Go to repository directory
+          cd ${{ matrix.env}}
+
+          # Fetch newest commits (in case it wasn't freshly cloned)
+          git fetch --depth 1
+
+          # Checkout current commit SHA
+          git checkout -qf ${{ github.sha }}
+
+    - name: Set environment variables
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          # Go to repository directory
+          cd ${{ matrix.env}}
+
+          # Set Docker Compose variables
+          echo "DOCKER_CLIENT_TIMEOUT=200" > .env
+          echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
+          echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
+          echo "COMPOSE_PATH_SEPARATOR=;" >> .env
+          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml" >> .env
+          echo "TAG=sha-${{ github.sha }}" >> .env
+          echo "RESTART_POLICY=always" >> .env
+
+          # Set app variables
+          echo "ROBOTOFF_INSTANCE=${{ secrets.ROBOTOFF_INSTANCE }}" >> .env
+          echo "ROBOTOFF_DOMAIN=${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
+          echo "IPC_AUTHKEY=${{ secrets.IPC_AUTHKEY }}" >> .env
+          echo "IPC_HOST=${{ secrets.IPC_HOST }}" >> .env
+          echo "IPC_PORT=${{ secrets.IPC_PORT }}" >> .env
+          echo "WORKER_COUNT=${{ secrets.WORKER_COUNT }}" >> .env
+          echo "POSTGRES_HOST=postgres" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "OFF_USER=${{ secrets.OFF_USER }}" >> .env
+          echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
+          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
+          echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
+
+    - name: Create Docker volumes
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ matrix.env }}
+          make create_external_volumes
+
+    - name: Start services
+      uses: appleboy/ssh-action@master
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script_stop: false
+        script: |
+          cd ${{ matrix.env}}
+          make up
+          make dl-models
+          make init-elasticsearch
+
+    - name: Check services are up
+      uses: appleboy/ssh-action@master
+      id: livecheck
+      if: ${{ always() }}
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ matrix.env}}
+          make livecheck
+
+    - name: Cleanup obsolete Docker objects
+      uses: appleboy/ssh-action@master
+      if: ${{ always() }}
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ matrix.env }}
+          make prune
+
+    - uses: frankie567/grafana-annotation-action@v1.0.2
+      if: ${{ always() }}
+      with:
+        apiHost: https://grafana.openfoodfacts.org
+        apiToken: ${{ secrets.GRAFANA_API_TOKEN }}
+        text: <a href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}">Deployment ${{ steps.livecheck.outcome }} on ${{ matrix.env }}</a>
+        tags: type:deployment,origin:github,status:${{ steps.livecheck.outcome }},repo:${{ github.repository }},sha:${{ github.sha }},app:robotoff,env:${{ matrix.env }}

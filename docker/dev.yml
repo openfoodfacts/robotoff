@@ -1,0 +1,20 @@
+version: "3.9"
+
+x-robotoff-dev: &robotoff-dev
+    image: openfoodfacts/robotoff:dev
+    build:
+      context: .
+      target: runtime-dev
+      args:
+        OFF_UID: ${OFF_UID:-1000}
+        OFF_GID: ${OFF_GID:-1000}
+    volumes:
+      # make updates to code available
+      - ./robotoff:/opt/robotoff/robotoff
+      # make tests available
+      - ./tests:/opt/robotoff/tests
+
+services:
+  api: *robotoff-dev
+  workers: *robotoff-dev
+  scheduler: *robotoff-dev

@@ -1,0 +1,9 @@
+version: "3.9"
+
+volumes:
+  postgres-data:
+    external: true
+  api-dataset:
+    external: true
+  es-data:
+    external: true

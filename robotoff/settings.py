@@ -5,14 +5,7 @@ from typing import Dict, Sequence, Tuple
 import sentry_sdk
 from sentry_sdk.integrations import Integration
 
-# Should be either 'prod' or 'dev'.
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
-
-if _robotoff_instance != "prod" and _robotoff_instance != "dev":
-    raise ValueError(
-        "ROBOTOFF_INSTANCE should be either 'prod' or 'dev', got %s"
-        % _robotoff_instance
-    )
 
 
 # Returns the top-level-domain (TLD) for the Robotoff instance.
@@ -22,7 +15,7 @@ def _instance_tld() -> str:
     elif _robotoff_instance == "dev":
         return "net"
     else:
-        return ""
+        return _robotoff_instance
 
 
 class BaseURLProvider(object):
@@ -32,7 +25,10 @@ class BaseURLProvider(object):
     """
 
     def __init__(self):
-        self.url = "https://%(prefix)s.openfoodfacts." + _instance_tld()
+        self.domain = os.environ.get(
+            "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
+        )
+        self.url = "https://%(prefix)s.%(domain)s"
         self.prefix = "world"
 
     def robotoff(self):
@@ -48,7 +44,7 @@ class BaseURLProvider(object):
         return self
 
     def get(self):
-        return self.url % {"prefix": self.prefix}
+        return self.url % {"prefix": self.prefix, "domain": self.domain}
 
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -60,6 +56,8 @@ JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
+
+# Products JSONL
 
 JSONL_DATASET_URL = (
     BaseURLProvider().static().get() + "/data/openfoodfacts-products.jsonl.gz"
@@ -89,7 +87,9 @@ def off_credentials() -> Dict:
     return {"user_id": _off_user, "password": _off_password}
 
 
-OFF_SERVER_DOMAIN = "api.openfoodfacts.%s" % _instance_tld()
+OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
+
+# Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
 TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
@@ -100,23 +100,31 @@ INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 
+# Spellchecking parameters. Wauplin and Raphael are the experts.
+
 SPELLCHECK_DIR = DATA_DIR / "spellcheck"
 SPELLCHECK_PATTERNS_PATHS = {
     "fr": SPELLCHECK_DIR / "patterns_fr.txt",
 }
 
-DB_NAME = os.environ.get("DB_NAME", "postgres")
-DB_USER = os.environ.get("DB_USER", "postgres")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "postgres")
-DB_HOST = os.environ.get("DB_HOST", "localhost")
+# Credentials for the Robotoff insights database
 
-MONGO_URI = os.environ.get("MONGO_URI", "")
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
+POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
+
+# Mongo used to be on the same server as Robotoff
+
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://mongodb:27017")
 
 IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
 IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
+
+# Elastic Search is used for simple category prediction and spellchecking.
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
@@ -139,6 +147,7 @@ def supported_elasticsearch_indices() -> Dict:
     }
 
 
+# Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
 
 
@@ -156,6 +165,7 @@ def slack_token() -> str:
     return ""
 
 
+# Sentry for error reporting
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
 
@@ -166,10 +176,8 @@ def init_sentry(integrations: Sequence[Integration] = ()):
             environment=_robotoff_instance,
             integrations=integrations,
         )
-    else:
-        raise ValueError(
-            "init_sentry was requested, yet SENTRY_DSN env variable was not provided"
-        )
+    elif _robotoff_instance == "prod":
+        raise ValueError("No SENTRY_DSN specified for prod Robotoff")
 
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
@@ -181,21 +189,26 @@ OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
 OCR_LABEL_WHITELIST_DATA_PATH = OCR_DATA_DIR / "label_whitelist.txt"
+# Try to detect MSC codes
 OCR_FISHING_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_flashtext.txt"
 OCR_TAXONOMY_BRANDS_BLACKLIST_PATH = OCR_DATA_DIR / "brand_taxonomy_blacklist.txt"
+# Try to detect cosmetics in OFF
 OCR_IMAGE_FLAG_BEAUTY_PATH = OCR_DATA_DIR / "image_flag_beauty.txt"
 OCR_IMAGE_FLAG_MISCELLANEOUS_PATH = OCR_DATA_DIR / "image_flag_miscellaneous.txt"
 OCR_PACKAGING_DATA_PATH = OCR_DATA_DIR / "packaging.txt"
 OCR_TRACE_ALLERGEN_DATA_PATH = OCR_DATA_DIR / "trace_allergen.txt"
+# Try to detect postal codes in France
 OCR_CITIES_FR_PATH = OCR_DATA_DIR / "cities_laposte_hexasmal.json.gz"
-
 
 BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json"
 
+# When we're making queries to the API, so that we're not blocked by error
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
 MODELS_DIR = PROJECT_DIR / "models"
+
+# Tensorflow Serving host parameters
 
 TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
 TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
@@ -221,14 +234,16 @@ OBJECT_DETECTION_MODEL_VERSION = {
     "universal-logo-detector": "tf-universal-logo-detector-1.0",
 }
 
+# We require a minimum of 15 occurences of the brands already on OFF to perform the extraction. This reduces false positive.
+# We require a minimum of 4 characters for the brand
 
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15
 
-INFLUXDB_HOST = "localhost"
-INFLUXDB_PORT = 8086
-INFLUXDB_DB_NAME = "off_metrics"
-INFLUXDB_USERNAME = "off_metrics"
+INFLUXDB_HOST = os.environ.get("INFLUXDB_HOST", "localhost")
+INFLUXDB_PORT = int(os.environ.get("INFLUXDB_PORT", "8086"))
+INFLUXDB_DB_NAME = os.environ.get("INFLUXDB_DB_NAME", "off_metrics")
+INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
 TEST_DIR = PROJECT_DIR / "tests"

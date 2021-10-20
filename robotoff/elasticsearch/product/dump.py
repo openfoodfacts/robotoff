@@ -1,3 +1,5 @@
+"""Methods to load products in elasticsearch
+"""
 import itertools
 import re
 from typing import Dict, Iterable, Iterator, List, Tuple
@@ -79,7 +81,7 @@ def normalize_ingredient_list(ingredient_text: str) -> List[str]:
 
     normalized = []
 
-    for ingredient in ingredients.iter_normalized_ingredients():
+    for ingredient in ingredients.get_iter():
         if empty_ingredient(ingredient):
             continue
 

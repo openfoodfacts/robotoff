@@ -75,8 +75,7 @@ jobs:
         run: poetry run isort . --check
 
       - name: Typing check mypy
-        run: poetry run mypy . services/ann
-
+        run: poetry run mypy .
       #----------------------------------------------
       # Compile i18n
       #----------------------------------------------
