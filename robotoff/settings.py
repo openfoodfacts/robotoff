@@ -130,7 +130,7 @@ ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").sp
 ELASTICSEARCH_TYPE = "document"
 
 
-class ElasticsearchIndex():
+class ElasticsearchIndex:
     CATEGORY = "category"
     PRODUCT = "product"
 

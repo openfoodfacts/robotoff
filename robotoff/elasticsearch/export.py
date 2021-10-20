@@ -10,7 +10,7 @@ from robotoff.utils.es import perform_export
 logger = get_logger()
 
 
-class ElasticsearchExporter():
+class ElasticsearchExporter:
     """ElasticsearchExporter exports new index data to Elasticsearch."""
 
     def __init__(self, es_client: Elasticsearch):
