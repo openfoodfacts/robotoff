@@ -209,7 +209,7 @@ def mark_insights():
     logger.info("{} insights marked".format(marked))
 
 
-def download_product_dataset():
+def _download_product_dataset():
     logger.info("Downloading new version of product dataset")
 
     if has_dataset_changed():
@@ -222,18 +222,15 @@ def _refresh_elasticsearch():
     es_client = get_es_client()
     exporter = ElasticsearchExporter(es_client)
 
-    for index, config_path in settings.supported_elasticsearch_indices():
-        if not es_client.indices.exists(index):
-            logger.info("Creating index: {}".format(index))
-            es_client.indices.create(index, config_path)
-
+    for index, config_path in settings.supported_elasticsearch_indices().items():
+        exporter.load_index(index, config_path)
         exporter.export_index_data(index)
 
 
 def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
 
-    download_product_dataset()
+    _download_product_dataset()
     # Elasticsearch is dependent on the availability of the PO product dump, i.e.
     # it it called after the download product dataset call.
     _refresh_elasticsearch()

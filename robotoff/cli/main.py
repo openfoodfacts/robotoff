@@ -3,13 +3,8 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-import orjson
 import typer
 from typer import Argument, Option
-
-from robotoff import settings
-from robotoff.elasticsearch.export import ElasticsearchExporter
-from robotoff.utils import get_logger
 
 app = typer.Typer()
 
@@ -283,21 +278,16 @@ def init_elasticsearch(
     to_load specifies which indexes/data should be loaded - supported values are
     in robotoff.settings.ElasticsearchIndex.
     """
+    import orjson
+
+    from robotoff import settings
+    from robotoff.elasticsearch.export import ElasticsearchExporter
+    from robotoff.utils import get_logger
     from robotoff.utils.es import get_es_client
-
-    exporter = ElasticsearchExporter(get_es_client())
-    _init_elasticsearch_impl(exporter)
-
-
-def _init_elasticsearch_impl(
-    es_exporter: ElasticsearchExporter,
-    load_index: bool = False,
-    load_data: bool = True,
-    to_load: List[str] = [],
-) -> None:
 
     logger = get_logger()
 
+    es_exporter = ElasticsearchExporter(get_es_client())
     supported = settings.supported_elasticsearch_indices()
 
     for l in to_load:

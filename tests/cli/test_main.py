@@ -1,35 +1,36 @@
+from unittest.mock import ANY, call
+
 import pytest
 
-from robotoff.cli.main import _init_elasticsearch_impl
-from robotoff.elasticsearch.export import ElasticsearchExporter
-
-
-class FakeESExporter(ElasticsearchExporter):
-    def __init__(self):
-        self.index_loads = 0
-        self.data_loads = 0
-
-    def load_index(self, *_):
-        self.index_loads += 1
-
-    def export_index_data(self, *_):
-        self.data_loads += 1
+from robotoff.cli.main import init_elasticsearch
 
 
 @pytest.mark.parametrize(
-    "load_index,load_data,to_load,want_index_loads,want_data_loads",
+    "load_index,load_data,to_load,index_loads_calls,data_loads_calls",
     [
-        (False, False, [], 0, 0),
-        (False, True, ["non-existent"], 0, 0),
-        (False, True, ["category"], 0, 1),
-        (True, True, ["product", "category"], 2, 2),
+        (False, False, [], [], []),
+        (False, True, ["non-existent"], [], []),
+        (False, True, ["category"], [], [call("category")]),
+        (
+            True,
+            True,
+            ["product", "category"],
+            [call("product", ANY), call("category", ANY)],
+            [call("product"), call("category")],
+        ),
     ],
 )
 def test_init_elasticsearch(
-    load_index, load_data, to_load, want_index_loads, want_data_loads
+    mocker, load_index, load_data, to_load, index_loads_calls, data_loads_calls
 ):
-    f = FakeESExporter()
+    fake_exporter = mocker.MagicMock()
 
-    _init_elasticsearch_impl(f, load_index, load_data, to_load)
+    mocker.patch(
+        "robotoff.elasticsearch.export.ElasticsearchExporter",
+        return_value=fake_exporter,
+    )
 
-    assert (f.index_loads, f.data_loads) == (want_index_loads, want_data_loads)
+    init_elasticsearch(load_index, load_data, to_load)
+
+    fake_exporter.load_index.assert_has_calls(index_loads_calls)
+    fake_exporter.export_index_data.assert_has_calls(data_loads_calls)

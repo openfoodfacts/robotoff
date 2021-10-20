@@ -18,7 +18,7 @@ class ElasticsearchExporter(object):
     def __init__(self, es_client: Elasticsearch):
         self.es_client = es_client
 
-    def _delete_existing_data(self, index: str):
+    def _delete_existing_data(self, index: str) -> None:
         resp = self.es_client.delete_by_query(
             body={"query": {"match_all": {}}},
             index=index,
@@ -28,7 +28,7 @@ class ElasticsearchExporter(object):
 
         logger.info("Deleted {} documents from {}".format(resp["deleted"], index))
 
-    def load_index(self, index: str, index_filepath: str):
+    def load_index(self, index: str, index_filepath: str) -> None:
         """ Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index):
             logger.info("Creating index: {}".format(index))
@@ -36,8 +36,9 @@ class ElasticsearchExporter(object):
                 conf = orjson.loads(f.read())
             self.es_client.indices.create(index=index, body=conf)
 
-    def export_index_data(self, index: str):
-        """Given the index to export data for, this function removes existing data and exports a newer version."""
+    def export_index_data(self, index: str) -> int:
+        """Given the index to export data for, this function removes existing data and exports a newer version.
+        Returns the number of rows inserted into the index."""
         logger.info("Deleting existing {} data...".format(index))
         self._delete_existing_data(index)
 
@@ -52,4 +53,5 @@ class ElasticsearchExporter(object):
 
         rows_inserted = perform_export(self.es_client, index_data, index)
 
-        logger.info("{} rows inserted for index {}", rows_inserted, index)
+        logger.info("{} rows inserted for index {}".format(rows_inserted, index))
+        return rows_inserted
