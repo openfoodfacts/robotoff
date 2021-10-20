@@ -216,7 +216,7 @@ def download_product_dataset():
         fetch_dataset()
 
 
-def refresh_elasticsearch():
+def _refresh_elasticsearch():
     logger.info("Refreshing Elasticsearch data")
 
     es_client = get_es_client()
@@ -234,8 +234,9 @@ def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
 
     download_product_dataset()
-    # Elasticsearch is dependent on the availability of the PO product dump.
-    refresh_elasticsearch()
+    # Elasticsearch is dependent on the availability of the PO product dump, i.e.
+    # it it called after the download product dataset call.
+    _refresh_elasticsearch()
 
 
 def generate_insights():

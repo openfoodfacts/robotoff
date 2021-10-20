@@ -17,16 +17,7 @@ logger = get_logger(__name__)
 MULTIPLE_SPACES_RE = re.compile(r"\s{2,}")
 
 
-def ingredients_iter() -> Iterator[str]:
-    known_tokens = FR_KNOWN_TOKENS_CACHE.get()
-    nlp = FR_NLP_CACHE.get()
-
-    for ingredient in text_file_iter(settings.INGREDIENTS_FR_PATH):
-        if all(token.lower_ in known_tokens for token in nlp(ingredient)):
-            yield ingredient
-
-
-def product_export(version: str = "product") -> Iterable[Tuple[str, Dict]]:
+def generate_product_data() -> Iterable[Tuple[str, Dict]]:
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_stream = (
@@ -34,17 +25,15 @@ def product_export(version: str = "product") -> Iterable[Tuple[str, Dict]]:
         .filter_text_field("lang", "fr")
         .filter_by_country_tag("en:france")
         .filter_nonempty_text_field("ingredients_text_fr")
+        .filter_by_state_tag("en:complete")
     )
-
-    if "all" not in version:
-        product_stream = product_stream.filter_by_state_tag("en:complete")
 
     product_iter = product_stream.iter()
     product_iter = (
         p for p in product_iter if int(p.get("unknown_ingredients_n", 0)) == 0
     )
 
-    data = (
+    return (
         (
             product["code"],
             {
@@ -55,21 +44,6 @@ def product_export(version: str = "product") -> Iterable[Tuple[str, Dict]]:
         )
         for product in product_iter
     )
-
-    if "extended" in version:
-        ingredients = (
-            (
-                "ingredient_{}".format(i),
-                {"ingredients_text_fr": normalize_ingredient_list(ingredient)},
-            )
-            for i, ingredient in enumerate(ingredients_iter())
-        )
-        iterator: Iterator = itertools.chain(data, ingredients)
-
-    else:
-        iterator = data
-
-    return iterator
 
 
 def empty_ingredient(ingredient: str) -> bool:

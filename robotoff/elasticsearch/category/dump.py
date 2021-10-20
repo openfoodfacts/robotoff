@@ -1,7 +1,6 @@
 import hashlib
 from typing import Dict, Iterable, Tuple
 
-from elasticsearch import Elasticsearch
 from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.taxonomy import Taxonomy, get_taxonomy
