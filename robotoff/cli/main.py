@@ -269,7 +269,7 @@ def apply_insights(
 def init_elasticsearch(
     load_index: bool = False,
     load_data: bool = True,
-    to_load: List[str] = [],
+    to_load: Optional[List[str]] = None,
 ) -> None:
     """
     This command is used for manual insertion of the Elasticsearch data and/or indexes
@@ -278,8 +278,6 @@ def init_elasticsearch(
     to_load specifies which indexes/data should be loaded - supported values are
     in robotoff.settings.ElasticsearchIndex.
     """
-    import orjson
-
     from robotoff import settings
     from robotoff.elasticsearch.export import ElasticsearchExporter
     from robotoff.utils import get_logger
@@ -290,14 +288,17 @@ def init_elasticsearch(
     es_exporter = ElasticsearchExporter(get_es_client())
     supported = settings.supported_elasticsearch_indices()
 
-    for l in to_load:
-        if l not in supported:
-            logger.error("Skipping over unknown Elasticsearch type: '{}'".format(l))
+    if not to_load:
+        return
+
+    for item in to_load:
+        if item not in supported:
+            logger.error("Skipping over unknown Elasticsearch type: '{}'".format(item))
             continue
         if load_index:
-            es_exporter.load_index(l, supported[l])
+            es_exporter.load_index(item, supported[item])
         if load_data:
-            es_exporter.export_index_data(l)
+            es_exporter.export_index_data(item)
 
 
 @app.command()

@@ -1,7 +1,5 @@
 from unittest.mock import ANY, call
 
-import pytest
-
 from robotoff import scheduler
 
 

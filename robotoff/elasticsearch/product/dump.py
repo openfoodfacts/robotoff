@@ -1,15 +1,12 @@
 """Methods to load products in elasticsearch
 """
-import itertools
 import re
-from typing import Dict, Iterable, Iterator, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.spellcheck.items import Ingredients
-from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
-from robotoff.utils import get_logger, text_file_iter
-from robotoff.utils.text import FR_NLP_CACHE
+from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
 
