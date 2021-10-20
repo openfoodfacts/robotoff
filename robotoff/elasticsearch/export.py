@@ -13,7 +13,7 @@ logger = get_logger()
 
 
 class ElasticsearchExporter(object):
-    """ElasticsearchExporter exports new index data to Elasticsearch. """
+    """ElasticsearchExporter exports new index data to Elasticsearch."""
 
     def __init__(self, es_client: Elasticsearch):
         self.es_client = es_client
@@ -29,7 +29,7 @@ class ElasticsearchExporter(object):
         logger.info("Deleted {} documents from {}".format(resp["deleted"], index))
 
     def load_index(self, index: str, index_filepath: str) -> None:
-        """ Creates the given index if it doesn't already exist."""
+        """Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index):
             logger.info("Creating index: {}".format(index))
             with open(index_filepath, "rb") as f:

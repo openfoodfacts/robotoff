@@ -136,7 +136,7 @@ class ElasticsearchIndex(object):
 
 
 def supported_elasticsearch_indices() -> Dict:
-    """ Returns a dict of supported Elasticsearch indices to their json filepaths. """
+    """Returns a dict of supported Elasticsearch indices to their json filepaths."""
     return {
         ElasticsearchIndex.CATEGORY: (
             PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
