@@ -39,6 +39,7 @@ jobs:
             cd ${dir}/1
             tar -xzvf saved_model.tar.gz --strip-component=1
             rm saved_model.tar.gz
+
   keras-category-classifier-sync:
     name: Sync Keras category classifier configs
     runs-on: ubuntu-latest
@@ -46,7 +47,7 @@ jobs:
     strategy:
       matrix:
         env:
-          - robotoff-ml
+          - robotoff-net
     steps:
       - uses: actions/checkout@master
       - name: Download
