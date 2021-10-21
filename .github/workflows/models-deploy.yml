@@ -39,3 +39,33 @@ jobs:
             cd ${dir}/1
             tar -xzvf saved_model.tar.gz --strip-component=1
             rm saved_model.tar.gz
+  keras-category-classifier-sync:
+    name: Sync Keras category classifier configs
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    strategy:
+      matrix:
+        env:
+          - robotoff-ml
+    steps:
+      - uses: actions/checkout@master
+      - name: Download
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.PROXY_HOST }}
+          proxy_username: ${{ secrets.USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ matrix.env }}/models
+            base_url=https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-xx-1.0
+            dest_folder=category
+            mkdir -p ${dest_folder}
+            wget -cO - ${base_url}/config.json > ${dest_folder}/config.json
+            wget -cO - ${base_url}/category_taxonomy.json > ${dest_folder}/category_taxonomy.json
+            wget -cO - ${base_url}/category_voc.json > ${dest_folder}/category_voc.json
+            wget -cO - ${base_url}/ingredient_voc.json > ${dest_folder}/ingredient_voc.json
+            wget -cO - ${base_url}/product_name_voc.json > ${dest_folder}/product_name_voc.json
+            wget -cO - ${base_url}/checkpoint.hdf5 > ${dest_folder}/checkpoint.hdf5
