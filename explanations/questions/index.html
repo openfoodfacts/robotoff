@@ -302,6 +302,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../../how-to-guides/deployment/dev-install/" class="md-nav__link">
+        Dev install
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../how-to-guides/deployment/maintenance/" class="md-nav__link">
         Services maintenance
       </a>
@@ -588,7 +600,7 @@
                 
                 <h1 id="question-format-proposal">Question format proposal</h1>
 <p>After loading a product, the client (web, iOS, Android) will request the Robotoff server a <em>question</em> (on 
-<code>/api/v1/questions/{barcode}</code>).
+<code>/api/v1/questions/{barcode}</code>). <sup id="fnref:question_api"><a class="footnote-ref" href="#fn:question_api">1</a></sup>
 A question includes an insight and metadata such that the client knows how to display the question and what kind of 
 input is expected from the user. All data returned by Robotoff is localized with respect to the <code>lang</code> parameter 
 provided by the client.</p>
@@ -634,7 +646,18 @@ provided by the client.</p>
 </code></pre></div>
 <p>The <code>image_url</code> can be used to display an image in the <code>question</code> interface, such as labels (IGP, organic,...).
 The <code>source_image_url</code> is the URL of the image from which the insight was extracted, if any.</p>
-<p>The client returns the insight ID and the annotation (0, -1 or 1).</p>
+<p>The client returns the insight ID and the annotation (0, -1 or 1). <sup id="fnref:annotate"><a class="footnote-ref" href="#fn:annotate">2</a></sup></p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:question_api">
+<p>see <code>robotoff.app.api.ProductQuestionsResource</code>&#160;<a class="footnote-backref" href="#fnref:question_api" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:annotate">
+<p>see <code>robotoff.app.api.AnnotateInsightResource</code>&#160;<a class="footnote-backref" href="#fnref:annotate" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
                 
               
               

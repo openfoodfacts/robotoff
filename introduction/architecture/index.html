@@ -344,6 +344,18 @@
   
   
     <li class="md-nav__item">
+      <a href="../../how-to-guides/deployment/dev-install/" class="md-nav__link">
+        Dev install
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../how-to-guides/deployment/maintenance/" class="md-nav__link">
         Services maintenance
       </a>
@@ -525,7 +537,7 @@
 <p>Robotoff is made of several services:</p>
 <ul>
 <li>the public <em>API</em> service</li>
-<li>the <em>scheduler</em>, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...)</li>
+<li>the <em>scheduler</em>, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...) <sup id="fnref:scheduler"><a class="footnote-ref" href="#fn:scheduler">1</a></sup></li>
 <li>the <em>workers</em>, responsible for all long-lasting tasks</li>
 </ul>
 <p>Robotoff allows to predict many information (also called <em>insights</em>), mostly from the product images.</p>
@@ -542,21 +554,41 @@
 <li>brand</li>
 <li>...</li>
 </ul>
-<p>We use simple string matching algorithms to find patterns in the OCR text to generate new insights. These insights are stored in the PostgreSQL database.
-These new insights are then accessible to all annotation tools (Hunger Games, mobile apps,...), that can validate or not the insight. If the insight is validated, it's applied immediately and the product is updated through Product Opener API. Otherwise, no update is performed. In all cases, the insight is marked as annotated, so that it is not suggested to another annotater.
+<p>We use simple string matching algorithms to find patterns in the OCR text to generate new insights <sup id="fnref:insights"><a class="footnote-ref" href="#fn:insights">2</a></sup>. These insights are stored in the PostgreSQL database.</p>
+<p>These new insights are then accessible to all annotation tools (Hunger Games, mobile apps,...), that can validate or not the insight. If the insight is validated, it's applied immediately and the product is updated through Product Opener API. Otherwise, no update is performed. In all cases, the insight is marked as annotated, so that it is not suggested to another annotater.
 Some insights with high confidence are applied automatically, 10 minutes after import.</p>
-<p>Robotoff is also notified by Product Opener every time a product is updated or deleted. This is used to delete insights associated with deleted products, or to update them accordingly.</p>
+<p>Robotoff is also notified by Product Opener every time a product is updated or deleted <sup id="fnref:product_update"><a class="footnote-ref" href="#fn:product_update">3</a></sup>. This is used to delete insights associated with deleted products, or to update them accordingly.</p>
 <h2 id="other-services">Other services</h2>
 <p>Robotoff also depends on the following services:</p>
 <ul>
 <li>a single node Elasticsearch instance, used to:<ul>
-<li>infer the product category from the product name, using an improved string matching algorithm.</li>
-<li>perform spellcheck on ingredient lists</li>
+<li>infer the product category from the product name, using an improved string matching algorithm. <sup id="fnref:predict_category"><a class="footnote-ref" href="#fn:predict_category">4</a></sup></li>
+<li>perform spellcheck on ingredient lists <sup id="fnref:spellcheck_ingredients"><a class="footnote-ref" href="#fn:spellcheck_ingredients">5</a></sup></li>
 </ul>
 </li>
 <li>a Tensorflow Serving instance, used to serve object detection models (currently, only nutriscore).</li>
 <li>MongoDB, to fetch the product latest version without querying Product Opener API.</li>
 </ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:scheduler">
+<p>See <code>scheduler.run</code>&#160;<a class="footnote-backref" href="#fnref:scheduler" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:insights">
+<p>see <code>models.ProductInsight</code>&#160;<a class="footnote-backref" href="#fnref:insights" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:product_update">
+<p>see <code>workers.tasks.product_updated</code> and <code>workers.tasks.delete_product_insights</code>&#160;<a class="footnote-backref" href="#fnref:product_update" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:predict_category">
+<p>see <code>robotoff.elasticsearch.predict</code>&#160;<a class="footnote-backref" href="#fnref:predict_category" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:spellcheck_ingredients">
+<p>see <code>robotoff.spellcheck.elasticsearch.es_handler.ElasticsearchHandler</code>&#160;<a class="footnote-backref" href="#fnref:spellcheck_ingredients" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
                 
               
               

@@ -304,6 +304,18 @@
             
   
   
+  
+    <li class="md-nav__item">
+      <a href="../dev-install/" class="md-nav__link">
+        Dev install
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
     
   
   
@@ -343,25 +355,12 @@
     Quick start
   </a>
   
-    <nav class="md-nav" aria-label="Quick start">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#run-docker-compose" class="md-nav__link">
-    Run docker-compose
-  </a>
-  
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#monitor" class="md-nav__link">
     Monitor
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -523,25 +522,12 @@
     Quick start
   </a>
   
-    <nav class="md-nav" aria-label="Quick start">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#run-docker-compose" class="md-nav__link">
-    Run docker-compose
-  </a>
-  
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#monitor" class="md-nav__link">
     Monitor
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -576,25 +562,24 @@
 </ul>
 <p>All services are managed by docker. <a href="https://docs.docker.com/compose/">docker-compose</a> is used to manage these services.</p>
 <h2 id="quick-start">Quick start</h2>
-<h3 id="run-docker-compose">Run docker-compose</h3>
-<p>Before launching the Elasticsearch service, you may need to increase a system parameter (<code>vm.max_map_count=262144</code>), as described <a href="https://stackoverflow.com/questions/51445846/elasticsearch-max-virtual-memory-areas-vm-max-map-count-65530-is-too-low-inc">here</a>.</p>
-<p>To start all services, simply run:</p>
-<div class="highlight"><pre><span></span><code>docker-compose up -d
+<p>see <a href="../dev-install/">dev-install</a></p>
+<p>You can then use:
+<code>docker-compose start [service-name]</code> or <code>docker-compose stop [service-name]</code></p>
+<p>Or <code>make up</code> when you refresh the product (it will re-build and run <code>docker-compose up -d</code>).</p>
+<p>Take the time to become a bit familiar with docker-compose if it's your first use.</p>
+<h2 id="monitor">Monitor</h2>
+<p>To display the logs of the container, <code>docker-compose logs [service-name]</code>.
+(without service-name, you got all logs).</p>
+<p>Two options are often used: <code>-f</code> to follow output and <code>--tail n</code> to only display last n lines.</p>
+<p>To display all running services, run <code>docker-compose ps</code>:</p>
+<div class="highlight"><pre><span></span><code>        Name                      Command               State                  Ports                
+----------------------------------------------------------------------------------------------------
+robotoff_api_1         /bin/sh -c /docker-entrypo ...   Up      0.0.0.0:5500-&gt;5500/tcp,:::5500-&gt;5500
+                                                                /tcp                                
+robotoff_postgres_1    docker-entrypoint.sh postg ...   Up      127.0.0.1:5432-&gt;5432/tcp            
+robotoff_scheduler_1   /bin/sh -c /docker-entrypo ...   Up                                          
+robotoff_workers_1     /bin/sh -c /docker-entrypo ...   Up                              
 </code></pre></div>
-<h3 id="monitor">Monitor</h3>
-<p>To display all running services, run <code>docker ps</code>:</p>
-<div class="highlight"><pre><span></span><code>CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS              PORTS                                                NAMES
-faf7c9b029ce        openfoodfacts/robotoff      &quot;python3 -m robotoff…&quot;   22 minutes ago      Up 22 minutes                                                            robotoff_scheduler_1
-00bfe5e8b67e        openfoodfacts/robotoff      &quot;python3 -m robotoff…&quot;   32 minutes ago      Up 32 minutes                                                            robotoff_workers_1
-9d7d357bbe2a        openfoodfacts/robotoff      &quot;/usr/local/bin/guni…&quot;   33 minutes ago      Up 33 minutes                                                            robotoff_api_1
-60dc39032386        raphael0202/elasticsearch   &quot;/usr/local/bin/dock…&quot;   5 weeks ago         Up 5 weeks          127.0.0.1:9200-&gt;9200/tcp, 127.0.0.1:9300-&gt;9300/tcp   robotoff_elasticsearch_1
-64b9b2f6ecb8        postgres:11.2-alpine        &quot;docker-entrypoint.s…&quot;   5 weeks ago         Up 5 days           127.0.0.1:5432-&gt;5432/tcp                             robotoff_postgres_1
-</code></pre></div>
-<p>To display all containers (even stopped ones), add the <code>--all</code> flag.</p>
-<p>To stop the scheduler service, run <code>docker stop robotoff_scheduler_1</code>.
-To start it again, <code>docker start robotoff_scheduler_1</code>.</p>
-<p>To display the logs of the container, <code>docker logs robotoff_scheduler_1</code>.
-Two options are often used: <code>-f</code> to follow output and <code>--tail n</code> to only display last n lines.</p>
                 
               
               
@@ -614,7 +599,7 @@ Two options are often used: <code>-f</code> to follow output and <code>--tail n<
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../../nutrition-tables-annotation-guidelines/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Nutrition Table Annotation Guidelines" rel="prev">
+        <a href="../dev-install/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Dev install" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -623,7 +608,7 @@ Two options are often used: <code>-f</code> to follow output and <code>--tail n<
               <span class="md-footer__direction">
                 Previous
               </span>
-              Nutrition Table Annotation Guidelines
+              Dev install
             </div>
           </div>
         </a>
