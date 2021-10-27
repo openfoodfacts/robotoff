@@ -72,6 +72,7 @@ log:
 
 dl-models:
 	@echo "🥫 Downloading models …"
+	chmod a+w models
 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
 
 init-elasticsearch:
