@@ -13,6 +13,12 @@ x-robotoff-dev: &robotoff-dev
       - ./robotoff:/opt/robotoff/robotoff
       # make tests available
       - ./tests:/opt/robotoff/tests
+      # make doc generation available
+      - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
+      - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
+      - ./README.md:/opt/robotoff/README.md
+      - ./doc:/opt/robotoff/doc
+      - ./gh_pages:/opt/robotoff/gh_pages
 
 services:
   api: *robotoff-dev
