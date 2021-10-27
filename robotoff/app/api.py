@@ -19,7 +19,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import get_insights, save_insight
+from robotoff.app.core import get_insights, save_annotation
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
@@ -208,6 +208,12 @@ class AnnotateInsightResource:
         data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
+        verify_annotation: bool = auth == None
+
+        device_id: str = req.get_param(
+            "device_id",
+            default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+        )
 
         username = auth.get_username() if auth else "unknown annotator"
         logger.info(
@@ -216,8 +222,14 @@ class AnnotateInsightResource:
             )
         )
 
-        annotation_result = save_insight(
-            insight_id, annotation, update=update, data=data, auth=auth
+        annotation_result = save_annotation(
+            insight_id,
+            annotation,
+            update=update,
+            data=data,
+            auth=auth,
+            device_id=device_id,
+            verify_annotation=verify_annotation,
         )
 
         resp.media = {

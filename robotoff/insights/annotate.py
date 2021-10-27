@@ -37,6 +37,7 @@ class AnnotationResult:
 class AnnotationStatus(Enum):
     saved = 1
     updated = 2
+    vote_saved = 9
     error_missing_product = 3
     error_updated_product = 4
     error_already_annotated = 5
@@ -70,6 +71,10 @@ LATENT_INSIGHT_RESULT = AnnotationResult(
 DATA_REQUIRED_RESULT = AnnotationResult(
     status=AnnotationStatus.error_missing_data.name,
     description="annotation data is required as JSON in `data` field",
+)
+SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
+    status=AnnotationStatus.vote_saved.name,
+    description="annotation vote was saved",
 )
 
 
