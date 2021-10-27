@@ -129,8 +129,6 @@ jobs:
         script: |
           cd ${{ matrix.env}}
           make up
-          make dl-models
-          make init-elasticsearch
 
     - name: Check services are up
       uses: appleboy/ssh-action@master
