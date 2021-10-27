@@ -9,10 +9,6 @@ from playhouse.shortcuts import model_to_dict
 from robotoff import settings
 from robotoff.utils.types import JSONType
 
-logger = logging.getLogger("peewee")
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
-
 db = PostgresqlExtDatabase(
     settings.POSTGRES_DB,
     user=settings.POSTGRES_USER,
@@ -158,7 +154,7 @@ class ProductInsight(BaseModel):
 class AnnotationVote(BaseModel):
     id = peewee.UUIDField(primary_key=True)
     # The insight this vote belongs to.
-    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="votes")
+    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="n_votes")
     # The username of the voter - if logged in.
     username = peewee.TextField(index=True, null=True)
     # The value of the annotation, see ProductInsight.annotation.

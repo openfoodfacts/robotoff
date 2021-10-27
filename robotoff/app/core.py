@@ -6,6 +6,7 @@ from robotoff import settings
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
     UNKNOWN_INSIGHT_RESULT,
+    SAVED_ANNOTATION_VOTE_RESULT,
     AnnotationResult,
     InsightAnnotatorFactory,
 )
@@ -112,13 +113,19 @@ def get_insights(
     return query.iterator()
 
 
-def save_insight(
+def save_annotation(
     insight_id: str,
     annotation: int,
+    device_id: str,
     update: bool = True,
     data: Optional[Dict] = None,
     auth: Optional[OFFAuthentication] = None,
+    verify_annotation: bool = False,
 ) -> AnnotationResult:
+"""Saves annotation either by using a single response as ground truth or by using several responses.
+
+verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or whether we require several responses(=True) for annotation validation.
+"""
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
@@ -129,6 +136,37 @@ def save_insight(
 
     if insight.annotation is not None:
         return ALREADY_ANNOTATED_RESULT
+
+    if verify_annotation:
+        verified: bool = False
+
+        AnnotationVote.create(
+            insight_id=insight_id,
+            username=auth.get_username() if auth else None,
+            value=annotation,
+            device_id=device_id,
+        )
+
+        existing_votes = list(
+            AnnotationVote.select(
+                AnnotationVote.value,
+                peewee.fn.COUNT(AnnotationVote.value).alias("num_votes"),
+            )
+            .where(AnnotationVote.insight_id == insight_id)
+            .group_by(AnnotationVote.value)
+            .order_by(peewee.SQL("num_votes").desc())
+        )
+
+        # Since we just atomically inserted the vote, we must have at least one row.
+        if existing_votes[0].num_votes > 2:
+            annotation = existing_votes[0].value
+            if len(existing_votes) > 1 and existing_votes[1].num_votes >= 2:
+                # This code credits the last person to contribute a vote with a potentially not their annotation.
+                annotation = 0
+            verified = True
+
+        if not verified:
+            return SAVED_ANNOTATION_VOTE_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
     return annotator.annotate(insight, annotation, update, data=data, auth=auth)
