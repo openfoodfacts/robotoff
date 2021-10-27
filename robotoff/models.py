@@ -1,5 +1,6 @@
 # This package describes the Postgres tables Robotoff is writing to.
 import logging
+import os
 from typing import Dict, Iterable
 
 import peewee
@@ -9,9 +10,10 @@ from playhouse.shortcuts import model_to_dict
 from robotoff import settings
 from robotoff.utils.types import JSONType
 
-logger = logging.getLogger("peewee")
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
+if os.environ.get("LOG_SQL_QUERIES", "false") == "true":
+    logger = logging.getLogger("peewee")
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.StreamHandler())
 
 db = PostgresqlExtDatabase(
     settings.POSTGRES_DB,
