@@ -1,5 +1,6 @@
 # This package describes the Postgres tables Robotoff is writing to.
 import logging
+import os
 from typing import Dict, Iterable
 
 import peewee
