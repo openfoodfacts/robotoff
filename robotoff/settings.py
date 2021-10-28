@@ -239,4 +239,4 @@ INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
 TEST_DIR = PROJECT_DIR / "tests"
-TEST_DATA_DIR = TEST_DIR / "data"
+TEST_DATA_DIR = TEST_DIR / "unit/data"

@@ -109,10 +109,17 @@ checks: flake8 black-check mypy isort-check docs
 
 lint: isort black
 
-tests:
+tests: unit-tests integration-tests
+
+unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests
+	${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit 
+
+integration-tests: dev
+	@echo "🥫 Running integration tests …"
+	${DOCKER_COMPOSE} exec api poetry run pytest tests/integration
+	${DOCKER_COMPOSE} down -v
 
 #------------#
 # Production #
