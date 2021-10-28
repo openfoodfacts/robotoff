@@ -1,6 +1,7 @@
 from typing import Dict, Iterable, List, Optional, Union
 
 import peewee
+import functools
 
 from robotoff import settings
 from robotoff.insights.annotate import (
@@ -122,10 +123,10 @@ def save_annotation(
     auth: Optional[OFFAuthentication] = None,
     verify_annotation: bool = False,
 ) -> AnnotationResult:
-"""Saves annotation either by using a single response as ground truth or by using several responses.
+    """Saves annotation either by using a single response as ground truth or by using several responses.
 
-verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or whether we require several responses(=True) for annotation validation.
-"""
+    verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or whether we require several responses(=True) for annotation validation.
+    """
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
@@ -147,15 +148,24 @@ verify_annotation: controls whether we accept a single response(verify_annotatio
             device_id=device_id,
         )
 
-        existing_votes = list(
-            AnnotationVote.select(
-                AnnotationVote.value,
-                peewee.fn.COUNT(AnnotationVote.value).alias("num_votes"),
-            )
-            .where(AnnotationVote.insight_id == insight_id)
-            .group_by(AnnotationVote.value)
-            .order_by(peewee.SQL("num_votes").desc())
-        )
+        with db.atomic as tx:
+            try:
+                existing_votes = list(
+                    AnnotationVote.select(
+                        AnnotationVote.value,
+                        peewee.fn.COUNT(AnnotationVote.value).alias("num_votes"),
+                    )
+                    .where(AnnotationVote.insight_id == insight_id)
+                    .group_by(AnnotationVote.value)
+                    .order_by(peewee.SQL("num_votes").desc())
+                )
+                insight.num_votes = functools.reduce(
+                    lambda row, sum: sum + row.num_votes, existing_votes
+                )
+                insight.save()
+            except Exception as e:
+                transaction.rollback()
+                raise e
 
         # Since we just atomically inserted the vote, we must have at least one row.
         if existing_votes[0].num_votes > 2:

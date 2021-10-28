@@ -1,5 +1,6 @@
 # This package describes the Postgres tables Robotoff is writing to.
 import logging
+import os
 from typing import Dict, Iterable
 
 import peewee
@@ -153,7 +154,7 @@ class ProductInsight(BaseModel):
 class AnnotationVote(BaseModel):
     id = peewee.UUIDField(primary_key=True)
     # The insight this vote belongs to.
-    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="n_votes")
+    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="votes")
     # The username of the voter - if logged in.
     username = peewee.TextField(index=True, null=True)
     # The value of the annotation, see ProductInsight.annotation.

@@ -205,6 +205,7 @@ class AnnotateInsightResource:
         )
 
         update = req.get_param_as_bool("update", default=True)
+        # This field is only needed for nutritional table structure insights.
         data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)

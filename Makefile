@@ -72,6 +72,7 @@ log:
 
 dl-models:
 	@echo "🥫 Downloading models …"
+	chmod a+w models
 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
 
 init-elasticsearch:
@@ -111,7 +112,12 @@ lint: isort black
 tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests
+	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/unit
+
+integration-tests: dev
+	@echo "🥫 Running integration tests …"
+	${DOCKER_COMPOSE} exec api poetry run pytest tests/integration
+	${DOCKER_COMPOSE} down
 
 #------------#
 # Production #
