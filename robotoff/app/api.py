@@ -20,6 +20,7 @@ from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
+from robotoff.app.events import send_event_async
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -264,6 +265,7 @@ class AnnotateInsightResource:
             device_id=device_id,
             trusted_annotator=trusted_annotator,
         )
+        send_event_async("question_answered", username, device_id)
 
         resp.media = {
             "status": annotation_result.status,
@@ -812,7 +814,8 @@ class WebhookProductResource:
         barcode = req.get_param("barcode", required=True)
         action = req.get_param("action", required=True)
         server_domain = req.get_param("server_domain", required=True)
-
+        print(server_domain)
+        print(settings.OFF_SERVER_DOMAIN)
         if server_domain != settings.OFF_SERVER_DOMAIN:
             logger.info("Rejecting webhook event from {}".format(server_domain))
             resp.media = {
