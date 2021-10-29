@@ -79,8 +79,8 @@ class ProductInsight(BaseModel):
     # The number of votes for this annotation.
     n_votes = peewee.IntegerField(null=False, index=True)
 
-    # If the insight was annotated manually by a logged in user, this field stores the username of the annotator.
-    username = peewee.TextField(index=True)
+    # If the insight was annotated manually, this field stores the username of the annotator.
+    username = peewee.TextField(index=True, null=True)
 
     # Latent insights are insights that should not be applied to the product directly.
     # These can be 'meta' insights extracted from product images and combined to generate a classic insight
