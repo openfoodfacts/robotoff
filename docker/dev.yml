@@ -24,6 +24,3 @@ services:
   api: *robotoff-dev
   workers: *robotoff-dev
   scheduler: *robotoff-dev
-  postgres:
-    ports:
-      - 15432:5432

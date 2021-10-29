@@ -51,8 +51,8 @@ hdown:
 	${DOCKER_COMPOSE} down -v
 
 restart:
-	@echo "🥫 Restarting frontend & backend containers …"
-	${DOCKER_COMPOSE} restart
+	@echo "🥫 Restarting api, workers and scheduler containers …"
+	${DOCKER_COMPOSE} restart api workers scheduler
 
 status:
 	@echo "🥫 Getting container status …"
@@ -77,7 +77,7 @@ dl-models:
 
 init-elasticsearch:
 	@echo "Initializing ElasticSearch indexes …"
-	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli init-elasticsearch
+	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli init-elasticsearch --index --category --product
 
 #------------#
 # Quality    #
