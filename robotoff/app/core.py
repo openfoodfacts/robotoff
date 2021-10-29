@@ -1,13 +1,13 @@
+import functools
 from typing import Dict, Iterable, List, Optional, Union
 
 import peewee
-import functools
 
 from robotoff import settings
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
-    UNKNOWN_INSIGHT_RESULT,
     SAVED_ANNOTATION_VOTE_RESULT,
+    UNKNOWN_INSIGHT_RESULT,
     AnnotationResult,
     InsightAnnotatorFactory,
 )
