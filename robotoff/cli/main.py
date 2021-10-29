@@ -1,3 +1,4 @@
+import elasticsearch as es
 import pathlib
 import sys
 from pathlib import Path
@@ -5,6 +6,8 @@ from typing import Optional
 
 import typer
 from typer import Argument, Option
+
+from robotoff.spellcheck import elasticsearch
 
 app = typer.Typer()
 
@@ -290,10 +293,21 @@ def init_elasticsearch(
         client = get_es_client()
 
         if product:
-            client.indices.create(product_version, product_index_config)
-
+            try:
+                client.indices.create(product_version, product_index_config)
+            except es.exceptions.RequestError as ex:
+                if ex.error == "resource_already_exists_exception":
+                    pass  # Index already exists. Ignore.
+                else:  # Other exception - raise it
+                    raise ex
         if category:
-            client.indices.create("category", category_index_config)
+            try:
+                client.indices.create("category", category_index_config)
+            except es.exceptions.RequestError as ex:
+                if ex.error == "resource_already_exists_exception":
+                    pass  # Index already exists. Ignore.
+                else:  # Other exception - raise it
+                    raise ex
 
     if data:
         if product:

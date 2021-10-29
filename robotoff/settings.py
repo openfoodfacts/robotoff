@@ -88,6 +88,9 @@ def off_credentials() -> Dict:
 
 
 OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
+EVENTS_API_URL = os.environ.get(
+    "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
+)
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
