@@ -24,12 +24,12 @@ class ElasticsearchExporter:
             ignore_unavailable=True,
         )
 
-        logger.info("Deleted {} documents from {}".format(resp["deleted"], index))
+        logger.info(f"Deleted %d documents from {index}", resp["deleted"])
 
     def load_index(self, index: str, index_filepath: str) -> None:
         """Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index):
-            logger.info("Creating index: {}".format(index))
+            logger.info(f"Creating index: {index}")
             with open(index_filepath, "rb") as f:
                 conf = orjson.loads(f.read())
             self.es_client.indices.create(index=index, body=conf)
@@ -47,7 +47,7 @@ class ElasticsearchExporter:
         else:
             raise ValueError("unknown index: {}".format(index))
 
-        logger.info("Starting {} export to Elasticsearch...".format(index))
+        logger.info(f"Starting {index} export to Elasticsearch...")
 
         rows_inserted = perform_export(self.es_client, index_data, index)
 
