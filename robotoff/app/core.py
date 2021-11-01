@@ -1,3 +1,4 @@
+import functools
 from typing import Dict, Iterable, List, Optional, Union
 
 import peewee
@@ -5,12 +6,12 @@ import peewee
 from robotoff import settings
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
-    UNKNOWN_INSIGHT_RESULT,
     SAVED_ANNOTATION_VOTE_RESULT,
+    UNKNOWN_INSIGHT_RESULT,
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, ProductInsight
+from robotoff.models import AnnotationVote, ProductInsight, db
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -124,8 +125,9 @@ def save_annotation(
 ) -> AnnotationResult:
 """Saves annotation either by using a single response as ground truth or by using several responses.
 
-verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or whether we require several responses(=True) for annotation validation.
-"""
+    verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or
+     whether we require several responses(=True) for annotation validation.
+    """
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
@@ -147,22 +149,42 @@ verify_annotation: controls whether we accept a single response(verify_annotatio
             device_id=device_id,
         )
 
-        existing_votes = list(
-            AnnotationVote.select(
-                AnnotationVote.value,
-                peewee.fn.COUNT(AnnotationVote.value).alias("num_votes"),
-            )
-            .where(AnnotationVote.insight_id == insight_id)
-            .group_by(AnnotationVote.value)
-            .order_by(peewee.SQL("num_votes").desc())
-        )
+        with db.atomic() as tx:
+            try:
+                existing_votes = list(
+                    AnnotationVote.select(
+                        AnnotationVote.value,
+                        peewee.fn.COUNT(AnnotationVote.value).alias("num_votes"),
+                    )
+                    .where(AnnotationVote.insight_id == insight_id)
+                    .group_by(AnnotationVote.value)
+                    .order_by(peewee.SQL("num_votes").desc())
+                )
+                insight.n_votes = functools.reduce(
+                    lambda sum, row: sum + row.num_votes, existing_votes, 0
+                )
+                insight.save()
+            except Exception as e:
+                tx.rollback()
+                raise e
 
-        # Since we just atomically inserted the vote, we must have at least one row.
+        # If the top annotation has more than 2 votes, consider applying it to the insight.
         if existing_votes[0].num_votes > 2:
             annotation = existing_votes[0].value
-            if len(existing_votes) > 1 and existing_votes[1].num_votes >= 2:
-                # This code credits the last person to contribute a vote with a potentially not their annotation.
-                annotation = 0
+            verified = True
+
+        # But first check for the following cases:
+        #  1) The 1st place annotation has >2 votes, and the 2nd place annotation has >= 2 votes.
+        #  2) 1st place and 2nd place have 2 votes each.
+        #
+        # In both cases, we consider this an ambiguous result and mark it with 'I don't know'.
+        if (
+            existing_votes[0].num_votes >= 2
+            and len(existing_votes) > 1
+            and existing_votes[1].num_votes >= 2
+        ):
+            # This code credits the last person to contribute a vote with a potentially not their annotation.
+            annotation = 0
             verified = True
 
         if not verified:

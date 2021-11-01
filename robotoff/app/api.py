@@ -208,7 +208,7 @@ class AnnotateInsightResource:
         data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
-        verify_annotation: bool = auth == None
+        verify_annotation: bool = auth is None
 
         device_id: str = req.get_param(
             "device_id",
