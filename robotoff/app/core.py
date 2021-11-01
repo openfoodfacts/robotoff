@@ -36,7 +36,6 @@ def get_insights(
     latent: Optional[bool] = False,
     avoid_voted_by_username: Optional[str] = None,
     avoid_voted_by_device_id: Optional[str] = None,
-    prioritize_voted: Optional[bool] = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
