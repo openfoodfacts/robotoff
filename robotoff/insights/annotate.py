@@ -74,7 +74,7 @@ DATA_REQUIRED_RESULT = AnnotationResult(
 )
 SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
     status=AnnotationStatus.vote_saved.name,
-    description="annotation vote was saved",
+    description="the annotation vote was saved",
 )
 
 

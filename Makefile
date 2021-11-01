@@ -118,7 +118,7 @@ unit-tests:
 
 integration-tests: dev
 	@echo "🥫 Running integration tests …"
-	${DOCKER_COMPOSE} exec api poetry run pytest tests/integration
+	${DOCKER_COMPOSE} exec api poetry run pytest -vv tests/integration
 	${DOCKER_COMPOSE} down -v
 
 #------------#

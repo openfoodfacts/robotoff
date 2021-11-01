@@ -1,6 +1,6 @@
 # This package describes the Postgres tables Robotoff is writing to.
-import logging
-import os
+import datetime
+import uuid
 from typing import Dict, Iterable
 
 import peewee
@@ -152,17 +152,19 @@ class ProductInsight(BaseModel):
 
 
 class AnnotationVote(BaseModel):
-    id = peewee.UUIDField(primary_key=True)
+    id = peewee.UUIDField(primary_key=True, default=uuid.uuid4)
     # The insight this vote belongs to.
     insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="votes")
     # The username of the voter - if logged in.
+    # Currently logged in users do not need to vote on an insight for their annotaion to
+    # be applied.
     username = peewee.TextField(index=True, null=True)
     # The value of the annotation, see ProductInsight.annotation.
     value = peewee.IntegerField(null=False)
     # If the request has a device_id, use that - otherwise use a secure hash of the IP address.
     device_id = peewee.TextField(index=True, null=False)
     # Creation date for bookkeeping.
-    timestamp = peewee.DateTimeField(null=False)
+    timestamp = peewee.DateTimeField(null=False, default=datetime.datetime.utcnow)
 
 
 class ImageModel(BaseModel):
