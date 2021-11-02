@@ -7,10 +7,10 @@ from robotoff.elasticsearch.product.dump import generate_product_data
 from robotoff.utils import get_logger
 from robotoff.utils.es import perform_export
 
-logger = get_logger()
+logger = get_logger(__name__)
 
 
-class ElasticsearchExporter():
+class ElasticsearchExporter:
     """ElasticsearchExporter exports new index data to Elasticsearch."""
 
     def __init__(self, es_client: Elasticsearch):
@@ -20,16 +20,24 @@ class ElasticsearchExporter():
         resp = self.es_client.delete_by_query(
             body={"query": {"match_all": {}}},
             index=index,
-            doc_type=settings.ELASTICSEARCH_TYPE,
             ignore_unavailable=True,
         )
 
-        logger.info("Deleted {} documents from {}".format(resp["deleted"], index))
+        logger.info(f"Deleted %d documents from {index}", resp["deleted"])
+
+    def _get_data(self, index: str) -> Iterable[Tuple[str, Dict]]:
+        if index == settings.ElasticsearchIndex.CATEGORY:
+            return generate_category_data()
+        
+        if index == settings.ElasticsearchIndex.PRODUCT:
+            return generate_product_data()
+        
+        raise ValueError(f"unknown index: {index}")
 
     def load_index(self, index: str, index_filepath: str) -> None:
         """Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index):
-            logger.info("Creating index: {}".format(index))
+            logger.info(f"Creating index: {index}")
             with open(index_filepath, "rb") as f:
                 conf = orjson.loads(f.read())
             self.es_client.indices.create(index=index, body=conf)
@@ -37,19 +45,14 @@ class ElasticsearchExporter():
     def export_index_data(self, index: str) -> int:
         """Given the index to export data for, this function removes existing data and exports a newer version.
         Returns the number of rows inserted into the index."""
-        logger.info("Deleting existing {} data...".format(index))
+        logger.info(f"Deleting existing {index} data...")
         self._delete_existing_data(index)
 
-        if index == settings.ElasticsearchIndex.CATEGORY:
-            index_data = generate_category_data()
-        elif index == settings.ElasticsearchIndex.PRODUCT:
-            index_data = generate_product_data()
-        else:
-            raise ValueError("unknown index: {}".format(index))
+        index_data = self._get_data(index)
 
-        logger.info("Starting {} export to Elasticsearch...".format(index))
+        logger.info(f"Starting {index} export to Elasticsearch...")
 
         rows_inserted = perform_export(self.es_client, index_data, index)
 
-        logger.info("{} rows inserted for index {}".format(rows_inserted, index))
+        logger.info(f"Inserted %d rows for index {index}",rows_inserted)
         return rows_inserted

@@ -37,7 +37,7 @@ class ElasticsearchHandler:
     def suggest_batch(self, texts: Iterable[str]) -> List[Dict]:
         queries = [self.__generate_query(text) for text in texts]
         body = generate_msearch_body(self.index_name, queries)
-        response = self.client.msearch(body=body, doc_type=settings.ELASTICSEARCH_TYPE)
+        response = self.client.msearch(body=body)
         suggestions = self.__postprocess_response(response)
         return suggestions
 

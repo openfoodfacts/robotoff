@@ -293,7 +293,7 @@ def init_elasticsearch(
 
     for item in to_load:
         if item not in supported:
-            logger.error("Skipping over unknown Elasticsearch type: '{}'".format(item))
+            logger.error(f"Skipping over unknown Elasticsearch type: '{item}'")
             continue
         if load_index:
             es_exporter.load_index(item, supported[item])

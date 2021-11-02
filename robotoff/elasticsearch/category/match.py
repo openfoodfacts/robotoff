@@ -45,7 +45,6 @@ def match(client, query: str, lang: str):
     body = generate_request(query, lang)
     return client.search(
         index=settings.ElasticsearchIndex.CATEGORY,
-        doc_type=settings.ELASTICSEARCH_TYPE,
         body=body,
         _source=True,
     )
