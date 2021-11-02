@@ -1,3 +1,5 @@
+from typing import Dict, Iterable, Tuple
+
 import orjson
 from elasticsearch import Elasticsearch
 
@@ -28,10 +30,10 @@ class ElasticsearchExporter:
     def _get_data(self, index: str) -> Iterable[Tuple[str, Dict]]:
         if index == settings.ElasticsearchIndex.CATEGORY:
             return generate_category_data()
-        
+
         if index == settings.ElasticsearchIndex.PRODUCT:
             return generate_product_data()
-        
+
         raise ValueError(f"unknown index: {index}")
 
     def load_index(self, index: str, index_filepath: str) -> None:
@@ -54,5 +56,5 @@ class ElasticsearchExporter:
 
         rows_inserted = perform_export(self.es_client, index_data, index)
 
-        logger.info(f"Inserted %d rows for index {index}",rows_inserted)
+        logger.info(f"Inserted %d rows for index {index}", rows_inserted)
         return rows_inserted
