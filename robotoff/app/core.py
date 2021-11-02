@@ -9,7 +9,7 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import ProductInsight
+from robotoff.models import AnnotationVote, ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -32,6 +32,9 @@ def get_insights(
     offset: Optional[int] = None,
     count: bool = False,
     latent: Optional[bool] = False,
+    avoid_voted_by_username: Optional[str] = None,
+    avoid_voted_by_device_id: Optional[str] = None,
+    prioritize_voted: Optional[bool] = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -67,6 +70,23 @@ def get_insights(
 
     query = ProductInsight.select()
 
+    def join_with_no_votes_by(query, criteria):
+        return query.join(
+            AnnotationVote,
+            join_type=peewee.JOIN.LEFT_OUTER,
+            on=((AnnotationVote.insight_id == ProductInsight.id) & (criteria)),
+        ).where(AnnotationVote.id.is_null())
+
+    if avoid_voted_by_username:
+        query = join_with_no_votes_by(
+            query, (AnnotationVote.username == avoid_voted_by_username)
+        )
+
+    if avoid_voted_by_device_id:
+        query = join_with_no_votes_by(
+            query, (AnnotationVote.device_id == avoid_voted_by_device_id)
+        )
+
     if where_clauses:
         query = query.where(*where_clauses)
 
@@ -78,10 +98,13 @@ def get_insights(
 
     if order_by is not None:
         if order_by == "random":
-            query = query.order_by(peewee.fn.Random())
+            query = query.order_by((peewee.fn.Random() * ProductInsight.n_votes).desc())
 
         elif order_by == "popularity":
             query = query.order_by(ProductInsight.unique_scans_n.desc())
+
+        elif order_by == "n_votes":
+            query = query.order_by(ProductInsight.n_votes.desc())
 
     if as_dict:
         query = query.dicts()

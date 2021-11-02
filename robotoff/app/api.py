@@ -1,6 +1,7 @@
 import csv
 import datetime
 import functools
+import hashlib
 import io
 import tempfile
 from typing import List, Optional
@@ -805,15 +806,29 @@ class ProductQuestionsResource:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1) or 1
         lang: str = req.get_param("lang", default="en")
+        # If the device_id is not provided as a request parameter, we use the
+        # hash of the IPs as a backup.
+        device_id: str = req.get_param(
+            "device_id",
+            default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+        )
         server_domain: Optional[str] = req.get_param("server_domain")
 
+        auth: Optional[OFFAuthentication] = parse_auth(req)
+        username = auth.get_username() if auth else None
+
         keep_types = QuestionFormatterFactory.get_default_types()
+
         insights = list(
             get_insights(
                 barcode=barcode,
                 keep_types=keep_types,
                 server_domain=server_domain,
                 limit=count,
+                order_by="n_votes",
+                avoid_voted_by_username=username,
+                # We use the device_id as a backup for non-authenticated users.
+                avoid_voted_by_device_id=device_id if not username else None,
             )
         )
 
@@ -862,6 +877,16 @@ def get_questions_resource_on_get(
         "reserved_barcode", default=False
     )
 
+    # If the device_id is not provided as a request parameter, we use the
+    # hash of the IPs as a backup.
+    device_id: str = req.get_param(
+        "device_id",
+        default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+    )
+
+    auth: Optional[OFFAuthentication] = parse_auth(req)
+    username = auth.get_username() if auth else None
+
     if reserved_barcode:
         # Include all results, including non reserved barcodes
         reserved_barcode = None
@@ -885,6 +910,9 @@ def get_questions_resource_on_get(
         brands=brands,
         order_by=order_by,
         reserved_barcode=reserved_barcode,
+        avoid_voted_by_username=username,
+        # We use the device_id as a backup for non-authenticated users.
+        avoid_voted_by_device_id=device_id if not username else None,
     )
 
     insights = list(get_insights_(limit=count))

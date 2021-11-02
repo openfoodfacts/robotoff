@@ -1,4 +1,5 @@
 # This package describes the Postgres tables Robotoff is writing to.
+import logging
 from typing import Dict, Iterable
 
 import peewee
@@ -7,6 +8,10 @@ from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
 from robotoff.utils.types import JSONType
+
+logger = logging.getLogger("peewee")
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
 
 db = PostgresqlExtDatabase(
     settings.POSTGRES_DB,
@@ -74,7 +79,11 @@ class ProductInsight(BaseModel):
     # 1 = Validated
     annotation = peewee.IntegerField(null=True, index=True)
 
-    # If the insight was annotated manually, this field stores the username of the annotator.
+    # The number of votes for this annotation.
+    n_votes = peewee.IntegerField(null=False, index=True)
+
+    # If the insight was annotated manually, this field stores the username of the annotator
+    # (or first annotator, if multiple votes were cast).
     username = peewee.TextField(index=True, null=True)
 
     # Latent insights are insights that should not be applied to the product directly.
@@ -144,6 +153,20 @@ class ProductInsight(BaseModel):
     def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):
         updated_values = {**latent_insight.__data__, **kwargs}
         return cls.create(**updated_values)
+
+
+class AnnotationVote(BaseModel):
+    id = peewee.UUIDField(primary_key=True)
+    # The insight this vote belongs to.
+    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="votes")
+    # The username of the voter - if logged in.
+    username = peewee.TextField(index=True, null=True)
+    # The value of the annotation, see ProductInsight.annotation.
+    value = peewee.IntegerField(null=False)
+    # If the request has a device_id, use that - otherwise use a secure hash of the IP address.
+    device_id = peewee.TextField(index=True, null=False)
+    # Creation date for bookkeeping.
+    timestamp = peewee.DateTimeField(null=False)
 
 
 class ImageModel(BaseModel):
@@ -218,4 +241,5 @@ MODELS = [
     ImagePrediction,
     LogoAnnotation,
     LogoConfidenceThreshold,
+    AnnotationVote,
 ]
