@@ -27,6 +27,7 @@ class ElasticsearchExporter:
 
         logger.info(f"Deleted %d documents from {index}", resp["deleted"])
 
+
     def _get_data(self, index: str) -> Iterable[Tuple[str, Dict]]:
         if index == settings.ElasticsearchIndex.CATEGORY:
             return generate_category_data()
