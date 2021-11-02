@@ -122,7 +122,7 @@ def save_annotation(
     auth: Optional[OFFAuthentication] = None,
     verify_annotation: bool = False,
 ) -> AnnotationResult:
-"""Saves annotation either by using a single response as ground truth or by using several responses.
+    """Saves annotation either by using a single response as ground truth or by using several responses.
 
     verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or
      whether we require several responses(=True) for annotation validation.

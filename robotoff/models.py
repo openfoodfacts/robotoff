@@ -155,7 +155,7 @@ class ProductInsight(BaseModel):
 class AnnotationVote(BaseModel):
     id = peewee.UUIDField(primary_key=True, default=uuid.uuid4)
     # The insight this vote belongs to.
-    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="n_votes")
+    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="votes")
     # The username of the voter - if logged in.
     # Currently logged in users do not need to vote on an insight for their annotaion to
     # be applied.
