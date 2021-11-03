@@ -72,7 +72,10 @@ def _get_skip_voted_on(
         return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
 
     username: Optional[str] = auth.get_username()
-    return SkipVotedOn(SkipVotedType.USERNAME, username if username else "")
+    if not username:
+        return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
+
+    return SkipVotedOn(SkipVotedType.USERNAME, username)
 
 
 ###########
