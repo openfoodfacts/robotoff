@@ -209,6 +209,15 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     )
 
 
+def device_id_from_request(req: falcon.Request) -> str:
+    """Returns the 'device_id' from the request parameters, or a hash of the
+    access route (which should be the IPs of the proxies and the client)."""
+    return req.get_param(
+            "device_id",
+            default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+            )
+
+
 class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         insight_id = req.get_param("insight_id", required=True)
@@ -223,10 +232,7 @@ class AnnotateInsightResource:
         auth: Optional[OFFAuthentication] = parse_auth(req)
         trusted_annotator: bool = auth is not None
 
-        device_id: str = req.get_param(
-            "device_id",
-            default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
-        )
+        device_id = device_id_from_request(req)
 
         username = auth.get_username() if auth else "unknown annotator"
         logger.info(
@@ -833,10 +839,7 @@ class ProductQuestionsResource:
         lang: str = req.get_param("lang", default="en")
         # If the device_id is not provided as a request parameter, we use the
         # hash of the IPs as a backup.
-        device_id: str = req.get_param(
-            "device_id",
-            default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
-        )
+        device_id = device_id_from_request(req)
         server_domain: Optional[str] = req.get_param("server_domain")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
@@ -901,10 +904,7 @@ def get_questions_resource_on_get(
 
     # If the device_id is not provided as a request parameter, we use the
     # hash of the IPs as a backup.
-    device_id: str = req.get_param(
-        "device_id",
-        default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
-    )
+    device_id = device_id_from_request(req)
 
     auth: Optional[OFFAuthentication] = parse_auth(req)
 
