@@ -102,6 +102,8 @@ jobs:
       #----------------------------------------------
       - name: Launch tests
         run: make tests
+        env:
+          DOCKER_BUILDKIT: 1
 
       #----------------------------------------------
       # Upload test coverage
