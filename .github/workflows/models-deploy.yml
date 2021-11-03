@@ -19,6 +19,7 @@ jobs:
           - tf-nutriscore
         env:
           - robotoff-ml
+          - robotoff-net
     steps:
       - uses: actions/checkout@master
       - name: Download
