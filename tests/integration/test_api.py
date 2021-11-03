@@ -59,6 +59,21 @@ def test_random_question():
     }
 
 
+def test_random_question_user_has_already_seen():
+    AnnotationVote.create(
+        insight_id=insight_id,
+        value=1,
+        device_id="device1",
+    )
+
+    cl = client()
+
+    result = cl.simulate_get("/api/v1/questions/random?device_id=device1")
+
+    assert result.status_code == 200
+    assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
+
+
 def test_popular_question():
     cl = client()
     result = cl.simulate_get("/api/v1/questions/popular")
