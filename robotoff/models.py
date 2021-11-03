@@ -77,6 +77,7 @@ class ProductInsight(BaseModel):
     annotation = peewee.IntegerField(null=True, index=True)
 
     # The number of votes for this annotation.
+    # Stored here for quick sorting.
     n_votes = peewee.IntegerField(null=False, index=True)
 
     # If the insight was annotated manually, this field stores the username of the annotator
@@ -161,7 +162,7 @@ class AnnotationVote(BaseModel):
     # be applied.
     username = peewee.TextField(index=True, null=True)
     # The value of the annotation, see ProductInsight.annotation.
-    value = peewee.IntegerField(null=False)
+    value = peewee.IntegerField(null=False, choices=[(-1, "False"), (0, "Unknown"), (1, "True")])
     # If the request has a device_id, use that - otherwise use a secure hash of the IP address.
     device_id = peewee.TextField(index=True, null=False)
     # Creation date for bookkeeping.
