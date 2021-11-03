@@ -216,9 +216,9 @@ def device_id_from_request(req: falcon.Request) -> str:
     """Returns the 'device_id' from the request parameters, or a hash of the
     access route (which should be the IPs of the proxies and the client)."""
     return req.get_param(
-            "device_id",
-            default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
-            )
+        "device_id",
+        default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+    )
 
 
 class AnnotateInsightResource:
