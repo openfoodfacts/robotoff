@@ -95,13 +95,16 @@ def test_popular_question():
     }
 
 
-def test_barcode_question():
+def test_barcode_question_not_found():
     cl = client()
     result = cl.simulate_get("/api/v1/questions/2")
 
     assert result.status_code == 200
     assert result.json == {"questions": [], "status": "no_questions"}
 
+
+def test_barcode_question():
+    cl = client()
     result = cl.simulate_get("/api/v1/questions/1")
 
     assert result.status_code == 200
@@ -180,13 +183,7 @@ def test_annotate_insight_not_enough_votes():
         .iterator()
     )
 
-    assert all(
-        [
-            val is None
-            for key, val in insight.items()
-            if key in {"username", "completed_at", "annotation"}
-        ]
-    )
+    assert not any(insight[key] for key in ("username", "completed_at", "annotation"))
     assert insight.items() > {"n_votes": 1}.items()
 
 
