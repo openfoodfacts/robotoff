@@ -1,5 +1,6 @@
 import functools
-from typing import Dict, Iterable, List, Optional, Union
+from enum import Enum
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
 
@@ -18,6 +19,39 @@ from robotoff.utils import get_logger
 logger = get_logger(__name__)
 
 
+class SkipVotedType(Enum):
+    DEVICE_ID = 1
+    USERNAME = 2
+
+
+class SkipVotedOn(NamedTuple):
+    """A helper class to specify whether a voted-on insight should be dropped from
+    the get_insights results."""
+
+    by: SkipVotedType
+    id: str
+
+
+def _add_vote_exclusions(
+    query: peewee.Query, exclusion: Optional[SkipVotedOn]
+) -> peewee.Query:
+    if not exclusion:
+        return query
+
+    if exclusion.by == SkipVotedType.DEVICE_ID:
+        criteria = AnnotationVote.device_id == exclusion.id
+    elif exclusion.by == SkipVotedType.USERNAME:
+        criteria = AnnotationVote.username == exclusion.id
+    else:
+        raise ValueError("Unknown SkipVoteType: {exclusion.by}")
+
+    return query.join(
+        AnnotationVote,
+        join_type=peewee.JOIN.LEFT_OUTER,
+        on=((AnnotationVote.insight_id == ProductInsight.id) & (criteria)),
+    ).where(AnnotationVote.id.is_null())
+
+
 def get_insights(
     barcode: Optional[str] = None,
     keep_types: List[str] = None,
@@ -34,8 +68,7 @@ def get_insights(
     offset: Optional[int] = None,
     count: bool = False,
     latent: Optional[bool] = False,
-    avoid_voted_by_username: Optional[str] = None,
-    avoid_voted_by_device_id: Optional[str] = None,
+    avoid_voted_on: Optional[SkipVotedOn] = None,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -69,24 +102,7 @@ def get_insights(
     if reserved_barcode is not None:
         where_clauses.append(ProductInsight.reserved_barcode == reserved_barcode)
 
-    query = ProductInsight.select()
-
-    def join_with_no_votes_by(query, criteria):
-        return query.join(
-            AnnotationVote,
-            join_type=peewee.JOIN.LEFT_OUTER,
-            on=((AnnotationVote.insight_id == ProductInsight.id) & (criteria)),
-        ).where(AnnotationVote.id.is_null())
-
-    if avoid_voted_by_username:
-        query = join_with_no_votes_by(
-            query, (AnnotationVote.username == avoid_voted_by_username)
-        )
-
-    if avoid_voted_by_device_id:
-        query = join_with_no_votes_by(
-            query, (AnnotationVote.device_id == avoid_voted_by_device_id)
-        )
+    query = _add_vote_exclusions(ProductInsight.select(), avoid_voted_on)
 
     if where_clauses:
         query = query.where(*where_clauses)
@@ -120,12 +136,12 @@ def save_annotation(
     update: bool = True,
     data: Optional[Dict] = None,
     auth: Optional[OFFAuthentication] = None,
-    verify_annotation: bool = False,
+    trusted_annotator: bool = False,
 ) -> AnnotationResult:
     """Saves annotation either by using a single response as ground truth or by using several responses.
 
-    verify_annotation: controls whether we accept a single response(verify_annotation=False) as truth or
-     whether we require several responses(=True) for annotation validation.
+    trusted_annotator: defines whether the given annotation comes from an authoritative source (e.g.
+    a trusted user), ot whether the annotation should be subject to the voting system.
     """
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
@@ -138,7 +154,7 @@ def save_annotation(
     if insight.annotation is not None:
         return ALREADY_ANNOTATED_RESULT
 
-    if verify_annotation:
+    if not trusted_annotator:
         verified: bool = False
 
         AnnotationVote.create(

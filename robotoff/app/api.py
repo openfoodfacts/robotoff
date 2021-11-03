@@ -19,7 +19,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import get_insights, save_annotation
+from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
@@ -62,6 +62,18 @@ es_client = get_es_client()
 
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
+
+
+def _get_skip_voted_on(
+    auth: Optional[OFFAuthentication], device_id: str
+) -> SkipVotedOn:
+    """Helper function for constructing SkipVotedOn objects based on request params."""
+    if not auth:
+        return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
+
+    username: Optional[str] = auth.get_username()
+    return SkipVotedOn(SkipVotedType.USERNAME, username if username else "")
+
 
 ###########
 # IMPORTANT: remember to update documentation at doc/references/api.md if you change API
@@ -209,7 +221,7 @@ class AnnotateInsightResource:
         data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
-        verify_annotation: bool = auth is None
+        trusted_annotator: bool = auth is not None
 
         device_id: str = req.get_param(
             "device_id",
@@ -230,7 +242,7 @@ class AnnotateInsightResource:
             data=data,
             auth=auth,
             device_id=device_id,
-            verify_annotation=verify_annotation,
+            trusted_annotator=trusted_annotator,
         )
 
         resp.media = {
@@ -828,7 +840,6 @@ class ProductQuestionsResource:
         server_domain: Optional[str] = req.get_param("server_domain")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
-        username = auth.get_username() if auth else None
 
         keep_types = QuestionFormatterFactory.get_default_types()
 
@@ -839,9 +850,7 @@ class ProductQuestionsResource:
                 server_domain=server_domain,
                 limit=count,
                 order_by="n_votes",
-                avoid_voted_by_username=username,
-                # We use the device_id as a backup for non-authenticated users.
-                avoid_voted_by_device_id=device_id if not username else None,
+                avoid_voted_on=_get_skip_voted_on(auth, device_id),
             )
         )
 
@@ -898,7 +907,6 @@ def get_questions_resource_on_get(
     )
 
     auth: Optional[OFFAuthentication] = parse_auth(req)
-    username = auth.get_username() if auth else None
 
     if reserved_barcode:
         # Include all results, including non reserved barcodes
@@ -923,9 +931,7 @@ def get_questions_resource_on_get(
         brands=brands,
         order_by=order_by,
         reserved_barcode=reserved_barcode,
-        avoid_voted_by_username=username,
-        # We use the device_id as a backup for non-authenticated users.
-        avoid_voted_by_device_id=device_id if not username else None,
+        avoid_voted_on=_get_skip_voted_on(auth, device_id),
     )
 
     insights = list(get_insights_(limit=count))
