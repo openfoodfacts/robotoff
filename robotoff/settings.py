@@ -133,16 +133,9 @@ class ElasticsearchIndex:
     CATEGORY = "category"
     PRODUCT = "product"
 
-
-def supported_elasticsearch_indices() -> Dict:
-    """Returns a dict of supported Elasticsearch indices to their json filepaths."""
-    return {
-        ElasticsearchIndex.CATEGORY: (
-            PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
-        ),
-        ElasticsearchIndex.PRODUCT: (
-            PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
-        ),
+    SUPPORTED_INDICES = {
+        CATEGORY: (PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"),
+        PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
     }
 
 

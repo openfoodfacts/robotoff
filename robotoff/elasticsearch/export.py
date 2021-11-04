@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, Iterable, Tuple
 
 import orjson
@@ -27,7 +28,6 @@ class ElasticsearchExporter:
 
         logger.info(f"Deleted %d documents from {index}", resp["deleted"])
 
-
     def _get_data(self, index: str) -> Iterable[Tuple[str, Dict]]:
         if index == settings.ElasticsearchIndex.CATEGORY:
             return generate_category_data()
@@ -37,7 +37,7 @@ class ElasticsearchExporter:
 
         raise ValueError(f"unknown index: {index}")
 
-    def load_index(self, index: str, index_filepath: str) -> None:
+    def load_index(self, index: str, index_filepath: Path) -> None:
         """Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index):
             logger.info(f"Creating index: {index}")

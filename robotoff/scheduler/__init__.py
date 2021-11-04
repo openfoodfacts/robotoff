@@ -222,7 +222,7 @@ def _refresh_elasticsearch():
     es_client = get_es_client()
     exporter = ElasticsearchExporter(es_client)
 
-    for index, config_path in settings.supported_elasticsearch_indices().items():
+    for index, config_path in settings.ElasticsearchIndex.SUPPORTED_INDICES.items():
         exporter.load_index(index, config_path)
         exporter.export_index_data(index)
 

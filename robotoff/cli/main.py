@@ -278,25 +278,24 @@ def init_elasticsearch(
     to_load specifies which indexes/data should be loaded - supported values are
     in robotoff.settings.ElasticsearchIndex.
     """
-    from robotoff import settings
     from robotoff.elasticsearch.export import ElasticsearchExporter
+    from robotoff.settings import ElasticsearchIndex
     from robotoff.utils import get_logger
     from robotoff.utils.es import get_es_client
 
     logger = get_logger()
 
     es_exporter = ElasticsearchExporter(get_es_client())
-    supported = settings.supported_elasticsearch_indices()
 
     if not to_load:
         return
 
     for item in to_load:
-        if item not in supported:
+        if item not in ElasticsearchIndex.SUPPORTED_INDICES:
             logger.error(f"Skipping over unknown Elasticsearch type: '{item}'")
             continue
         if load_index:
-            es_exporter.load_index(item, supported[item])
+            es_exporter.load_index(item, ElasticsearchIndex.SUPPORTED_INDICES[item])
         if load_data:
             es_exporter.export_index_data(item)
 
