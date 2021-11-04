@@ -117,8 +117,9 @@ unit-tests:
 
 integration-tests: dev
 	@echo "🥫 Running integration tests …"
-	${DOCKER_COMPOSE} exec api poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
-	${DOCKER_COMPOSE} down -v
+	# run tests in worker to have more memory
+	${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE} down
 
 #------------#
 # Production #
