@@ -73,4 +73,6 @@ RUN poetry install
 FROM runtime as runtime-dev
 COPY --from=builder-dev $VENV_PATH $VENV_PATH
 COPY --from=builder-dev $POETRY_HOME $POETRY_HOME
+# Handle possible issue with Docker being too eager after copying files
+RUN true
 COPY mypy.ini .flake8 pyproject.toml ./
