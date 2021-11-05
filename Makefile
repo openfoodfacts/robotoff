@@ -81,6 +81,11 @@ init-elasticsearch:
 #------------#
 # Quality    #
 #------------#
+toml-check:
+	${DOCKER_COMPOSE} run --rm --no-deps api poetry run toml-sort --check poetry.toml pyproject.toml
+
+toml-lint:
+	${DOCKER_COMPOSE} run --rm --no-deps api poetry run toml-sort --in-place poetry.toml pyproject.toml
 
 flake8:
 	${DOCKER_COMPOSE} run --rm --no-deps api flake8
@@ -104,9 +109,9 @@ docs:
 	@echo "🥫 Generationg doc…"
 	${DOCKER_COMPOSE} run --rm api ./build_mkdocs.sh
 
-checks: flake8 black-check mypy isort-check docs
+checks: toml-check flake8 black-check mypy isort-check docs
 
-lint: isort black
+lint: toml-lint isort black
 
 tests: unit-tests integration-tests
 

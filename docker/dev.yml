@@ -12,6 +12,7 @@ x-robotoff-dev: &robotoff-dev
       # make updates to code available
       - ./robotoff:/opt/robotoff/robotoff
       - ./pyproject.toml:/opt/robotoff/pyproject.toml
+      - ./poetry.toml:/opt/robotoff/poetry.toml
       # make tests available
       - ./tests:/opt/robotoff/tests
       - ./.cov:/opt/robotoff/.cov
