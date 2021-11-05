@@ -100,10 +100,10 @@ jobs:
       #----------------------------------------------
       # Launch tests
       #----------------------------------------------
+      - name: Configure docker
+        run: echo "OFF_UID=$UID" >> .env
       - name: Launch tests
         run: make tests
-        env:
-          DOCKER_BUILDKIT: 1
 
       #----------------------------------------------
       # Upload test coverage
@@ -113,6 +113,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
+          directory: .cov
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
