@@ -11,8 +11,10 @@ x-robotoff-dev: &robotoff-dev
     volumes:
       # make updates to code available
       - ./robotoff:/opt/robotoff/robotoff
+      - ./pyproject.toml:/opt/robotoff/pyproject.toml
       # make tests available
       - ./tests:/opt/robotoff/tests
+      - ./.cov:/opt/robotoff/.cov
       # make doc generation available
       - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
       - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
