@@ -25,6 +25,7 @@ x-robotoff-base-env: &robotoff-base-env
   OFF_PASSWORD:
   SENTRY_DSN:
   ELASTICSEARCH_HOSTS:
+  TF_SERVING_HOST:
 
 services:
   api:
