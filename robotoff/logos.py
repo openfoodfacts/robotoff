@@ -87,6 +87,8 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     )
 
     response = r.json()
+    response.raise_for_status()
+
     results = {int(key): value for key, value in response["results"].items()}
 
     logo_id_to_logo = {logo.id: logo for logo in logos}
