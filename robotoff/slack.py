@@ -94,7 +94,7 @@ def _slack_message_block(
     if with_image:
         block["accessory"] = {
             "type": "image",
-            "image_url": {with_image},
+            "image_url": with_image,
             "alt_text": "-",
         }
     return [block]
@@ -127,13 +127,13 @@ class SlackNotifier(SlackNotifierInterface):
         self.slack_token = slack_token
 
     def notify_image_flag(
-        self, flagged_images: List[RawInsight], source_image: str, barcode: str
+        self, image_insights: List[RawInsight], source_image: str, barcode: str
     ):
         """Sends alerts to Slack channels for flagged images."""
         text = ""
         slack_channel: str = self.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 
-        for flagged in flagged_images:
+        for flagged in image_insights:
             flag_type = flagged.data["type"]
             label = flagged.data["label"]
 
@@ -145,7 +145,7 @@ class SlackNotifier(SlackNotifierInterface):
                 text += f"type: {flag_type}\nlabel: *{label}*, score: {likelihood}\n"
             else:
                 match_text = flagged.data["text"]
-                text += f"type: {flag_type}\n label: *{label}*, match: {match_text}\n"
+                text += f"type: {flag_type}\nlabel: *{label}*, match: {match_text}\n"
 
         edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={barcode}"
         image_url = settings.OFF_IMAGE_BASE_URL + source_image
@@ -156,75 +156,27 @@ class SlackNotifier(SlackNotifierInterface):
         self._post_message(message, slack_channel)
 
     def notify_automatic_processing(self, insight: ProductInsight):
-        product_url = "{}/product/{}".format(
-            settings.BaseURLProvider().get(), insight.barcode
-        )
-        source_image = insight.source_image
+        product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
 
-        if source_image:
-            image_url = (
-                settings.BaseURLProvider().static().get()
-                + "/images/products"
-                + source_image
-            )
-            metadata_text = "(<{}|product>, <{}|source image>)".format(
-                product_url, image_url
-            )
+        if insight.source_image:
+            image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
+            metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
-            metadata_text = "(<{}|product>)".format(product_url)
+            metadata_text = f"(<{product_url}|product>)"
 
-        if insight.type == InsightType.label.name:
-            text = "The `{}` label was automatically added to product {}" "".format(
-                insight.value_tag, insight.barcode
-            )
-
-        elif insight.type == InsightType.product_weight.name:
-            text = (
-                "The weight `{}` (match: `{}`) was automatically added to "
-                "product {}"
-                "".format(insight.value, insight.data["raw"], insight.barcode)
-            )
-
-        elif insight.type == InsightType.packager_code.name:
-            text = (
-                "The `{}` packager code was automatically added to "
-                "product {}".format(insight.value, insight.barcode)
-            )
-
-        elif insight.type == InsightType.expiration_date.name:
-            text = (
-                "The expiration date `{}` (match: `{}`) was automatically added to "
-                "product {}".format(insight.value, insight.data["raw"], insight.barcode)
-            )
-
-        elif insight.type == InsightType.brand.name:
-            text = "The `{}` brand was automatically added to " "product {}".format(
-                insight.value, insight.barcode
-            )
-
-        elif insight.type == InsightType.store.name:
-            text = "The `{}` store was automatically added to " "product {}".format(
-                insight.value, insight.barcode
-            )
-
-        elif insight.type == InsightType.packaging.name:
-            text = "The `{}` packaging was automatically added to " "product {}".format(
-                insight.value_tag, insight.barcode
-            )
-        elif insight.type == InsightType.category.name:
-            text = "The `{}` category was automatically added to " "product {}".format(
-                insight.value_tag, insight.barcode
-            )
-
+        if (
+            insight.type == InsightType.product_weight.name
+            or insight.type == InsightType.expiration_date.name
+        ):
+            text = f"The {insight.type} `{insight.value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
         else:
-            return
+            text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        text += " " + metadata_text
         slack_kwargs: Dict[str, Any] = {
             "unfurl_links": False,
             "unfurl_media": False,
         }
-        message = _slack_message_block(text)
+        message = _slack_message_block(text + " " + metadata_text)
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
             self._post_message(message, self.NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
