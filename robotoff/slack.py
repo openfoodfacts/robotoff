@@ -242,7 +242,7 @@ class NoopSlackNotifier(SlackNotifier):
     """NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions of Robotoff."""
 
     def __init__(self):
-        pass
+        super().__init__("")
 
     def _post_message(
         self,
