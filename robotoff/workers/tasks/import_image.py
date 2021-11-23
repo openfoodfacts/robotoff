@@ -2,6 +2,8 @@ import datetime
 import pathlib
 from typing import Optional
 
+import requests
+
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import (
@@ -158,6 +160,14 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
 
     if logos:
         add_logos_to_ann(image_instance, logos)
-        save_nearest_neighbors(logos)
+
+        try:
+            save_nearest_neighbors(logos)
+        except requests.exceptions.HTTPError as e:
+            resp = e.response
+            logger.warning(
+                f"Could not save nearest neighbors in ANN: {resp.status_code}: {resp.text}"
+            )
+
         thresholds = LOGO_CONFIDENCE_THRESHOLDS.get()
         import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)
