@@ -1,5 +1,6 @@
+import json
 import operator
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import requests
 
@@ -50,6 +51,55 @@ class NoopSlackNotifier(SlackNotifierInterface):
     pass
 
 
+def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
+    """Determines whether the given flagged image should be considered as sensitive."""
+    is_human: bool = flagged_label in {
+        "face",
+        "head",
+        "selfie",
+        "hair",
+        "forehead",
+        "chin",
+        "cheek",
+        "tooth",
+        "eyebrow",
+        "ear",
+        "neck",
+        "jaw",
+        "nose",
+        "facial expression",
+        "glasses",
+        "eyewear",
+        "child",
+        "baby",
+        "human",
+    }
+    return (
+        is_human and flag_type == "label_annotation"
+    ) or flag_type == "safe_search_annotation"
+
+
+def _slack_message_block(
+    message_text: str, with_image: Optional[str] = None
+) -> List[Dict]:
+    """Formats given parameters into a Slack message block."""
+    block = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": message_text,
+        },
+    }
+
+    if with_image:
+        block["accessory"] = {
+            "type": "image",
+            "image_url": with_image,
+            "alt_text": "-",
+        }
+    return [block]
+
+
 class SlackNotifier(SlackNotifierInterface):
     """SlackNotifier implements the real SlackNotifier."""
 
@@ -72,140 +122,75 @@ class SlackNotifier(SlackNotifierInterface):
         "en:nutriscore-grade-e",
     }
 
-    PRIVATE_MODERATION_LABELS = {
-        "face",
-        "head",
-        "selfie",
-        "hair",
-        "forehead",
-        "chin",
-        "cheek",
-        "tooth",
-        "eyebrow",
-        "ear",
-        "neck",
-        "jaw",
-        "nose",
-        "facial expression",
-        "glasses",
-        "eyewear",
-        "child",
-        "baby",
-        "human",
+    COLLAPSE_LINKS_PARAMS = {
+        "unfurl_links": False,
+        "unfurl_media": False,
     }
 
     def __init__(self, slack_token: str):
         """Should not be called directly, use the NotifierFactory instead."""
         self.slack_token = slack_token
 
-    def notify_image_flag(self, insights: List[RawInsight], source: str, barcode: str):
+    def notify_image_flag(
+        self, image_insights: List[RawInsight], source_image: str, barcode: str
+    ):
+        """Sends alerts to Slack channels for flagged images."""
+        if len(image_insights) < 1:
+            return
+
         text = ""
         slack_channel: str = self.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 
-        for insight in insights:
-            flag_type = insight.data["type"]
-            label = insight.data["label"]
+        for flagged in image_insights:
+            flag_type = flagged.data["type"]
+            label = flagged.data["label"]
+
+            if _sensitive_image(flag_type, label):
+                slack_channel = self.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL
 
             if flag_type in ("safe_search_annotation", "label_annotation"):
-                if (
-                    flag_type == "label_annotation"
-                    and label in self.PRIVATE_MODERATION_LABELS
-                ) or flag_type == "safe_search_annotation":
-                    slack_channel = self.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL
-
-                likelihood = insight.data["likelihood"]
-                text += "type: {}, label: {}, score: {}\n".format(
-                    flag_type, label, likelihood
-                )
+                likelihood = flagged.data["likelihood"]
+                text += f"type: {flag_type}\nlabel: *{label}*, score: {likelihood}\n"
             else:
-                match_text = insight.data["text"]
-                text += "type: {}, label: {}, match: {}\n".format(
-                    flag_type, label, match_text
-                )
+                match_text = flagged.data["text"]
+                text += f"type: {flag_type}\nlabel: *{label}*, match: {match_text}\n"
 
-        url = settings.OFF_IMAGE_BASE_URL + source
-        edit_url = "{}/cgi/product.pl?type=edit&code={}" "".format(
-            settings.BaseURLProvider().get(), barcode
-        )
-        text += url + "\n"
-        text += "edit: {}".format(edit_url)
+        edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={barcode}"
+        image_url = settings.OFF_IMAGE_BASE_URL + source_image
 
-        self._post_message(text, slack_channel)
+        full_text = f"{text}\n <{image_url}|Image> -- <{edit_url}|*Edit*>"
+        message = _slack_message_block(full_text, with_image=image_url)
+
+        self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
     def notify_automatic_processing(self, insight: ProductInsight):
-        product_url = "{}/product/{}".format(
-            settings.BaseURLProvider().get(), insight.barcode
-        )
-        source_image = insight.source_image
+        product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
 
-        if source_image:
-            image_url = (
-                settings.BaseURLProvider().static().get()
-                + "/images/products"
-                + source_image
-            )
-            metadata_text = "(<{}|product>, <{}|source image>)".format(
-                product_url, image_url
-            )
+        if insight.source_image:
+            image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
+            metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
-            metadata_text = "(<{}|product>)".format(product_url)
+            metadata_text = f"(<{product_url}|product>)"
 
-        if insight.type == InsightType.label.name:
-            text = "The `{}` label was automatically added to product {}" "".format(
-                insight.value_tag, insight.barcode
-            )
-
-        elif insight.type == InsightType.product_weight.name:
-            text = (
-                "The weight `{}` (match: `{}`) was automatically added to "
-                "product {}"
-                "".format(insight.value, insight.data["raw"], insight.barcode)
-            )
-
-        elif insight.type == InsightType.packager_code.name:
-            text = (
-                "The `{}` packager code was automatically added to "
-                "product {}".format(insight.value, insight.barcode)
-            )
-
-        elif insight.type == InsightType.expiration_date.name:
-            text = (
-                "The expiration date `{}` (match: `{}`) was automatically added to "
-                "product {}".format(insight.value, insight.data["raw"], insight.barcode)
-            )
-
-        elif insight.type == InsightType.brand.name:
-            text = "The `{}` brand was automatically added to " "product {}".format(
-                insight.value, insight.barcode
-            )
-
-        elif insight.type == InsightType.store.name:
-            text = "The `{}` store was automatically added to " "product {}".format(
-                insight.value, insight.barcode
-            )
-
-        elif insight.type == InsightType.packaging.name:
-            text = "The `{}` packaging was automatically added to " "product {}".format(
-                insight.value_tag, insight.barcode
-            )
-        elif insight.type == InsightType.category.name:
-            text = "The `{}` category was automatically added to " "product {}".format(
-                insight.value_tag, insight.barcode
-            )
-
+        if insight.type in {
+            InsightType.product_weight.name,
+            InsightType.expiration_date.name,
+        }:
+            text = f"The {insight.type} `{insight.value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
         else:
-            return
+            text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        text += " " + metadata_text
-        slack_kwargs: Dict[str, Any] = {
-            "unfurl_links": False,
-            "unfurl_media": False,
-        }
+        message = _slack_message_block(text + " " + metadata_text)
+
         if insight.value_tag in self.NUTRISCORE_LABELS:
-            self._post_message(text, self.NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
+            self._post_message(
+                message, self.NUTRISCORE_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+            )
             return
 
-        self._post_message(text, self.ROBOTOFF_ALERT_CHANNEL, **slack_kwargs)
+        self._post_message(
+            message, self.ROBOTOFF_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+        )
 
     def _get_base_params(self) -> JSONType:
         return {
@@ -234,25 +219,21 @@ class SlackNotifier(SlackNotifierInterface):
             f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "
             f"<{base_off_url}/product/{barcode}|product>):\n{prob_text}"
         )
-        self._post_message(text, self.ROBOTOFF_ALERT_CHANNEL)
+        self._post_message(_slack_message_block(text), self.ROBOTOFF_ALERT_CHANNEL)
 
     def _post_message(
         self,
-        text: str,
+        blocks: List[Dict],
         channel: str,
-        attachments: Optional[List[JSONType]] = None,
         **kwargs,
     ):
         try:
             params: JSONType = {
                 **(self._get_base_params()),
                 "channel": channel,
-                "text": text,
+                "blocks": json.dumps(blocks),
                 **kwargs,
             }
-
-            if attachments:
-                params["attachments"] = attachments
 
             r = http_session.post(self.POST_MESSAGE_URL, data=params)
             response_json = _get_slack_json(r)
