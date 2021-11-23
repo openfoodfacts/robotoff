@@ -45,12 +45,6 @@ class NotifierFactory:
         return SlackNotifier(token)
 
 
-class NoopSlackNotifier(SlackNotifierInterface):
-    """NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions of Robotoff."""
-
-    pass
-
-
 def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
     """Determines whether the given flagged image should be considered as sensitive."""
     is_human: bool = flagged_label in {
@@ -242,6 +236,24 @@ class SlackNotifier(SlackNotifierInterface):
             logger.error(
                 "An exception occurred when sending a Slack " "notification", exc_info=e
             )
+
+
+class NoopSlackNotifier(SlackNotifier):
+    """NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions of Robotoff."""
+
+    def __init__(self):
+        super().__init__("")
+
+    def _post_message(
+        self,
+        blocks: List[Dict],
+        channel: str,
+        **kwargs,
+    ):
+        """Overrides the actual posting to Slack with logging of the args that would've been posted."""
+        logger.info(
+            f"Alerting on slack channel '{channel}', with message:\n{blocks}\nand additional args:\n{kwargs}"
+        )
 
 
 def _get_slack_json(response: requests.Response) -> JSONType:
