@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 import pytest
@@ -29,7 +30,7 @@ class PartialRequestMatcher:
     def __eq__(self, actual):
         assert self.expected_channel == actual["channel"]
 
-        act_blocks = actual["blocks"]
+        act_blocks = json.loads(actual["blocks"])
 
         assert len(act_blocks) == 1
         assert act_blocks[0]["text"]["text"] == self.expected_text

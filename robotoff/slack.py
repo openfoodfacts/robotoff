@@ -1,5 +1,6 @@
+import json
 import operator
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import requests
 
@@ -122,6 +123,11 @@ class SlackNotifier(SlackNotifierInterface):
         "en:nutriscore-grade-e",
     }
 
+    COLLAPSE_LINKS_PARAMS = {
+        "unfurl_links": False,
+        "unfurl_media": False,
+    }
+
     def __init__(self, slack_token: str):
         """Should not be called directly, use the NotifierFactory instead."""
         self.slack_token = slack_token
@@ -153,7 +159,7 @@ class SlackNotifier(SlackNotifierInterface):
         full_text = f"{text}\n <{image_url}|Image> -- <{edit_url}|*Edit*>"
         message = _slack_message_block(full_text, with_image=image_url)
 
-        self._post_message(message, slack_channel)
+        self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
     def notify_automatic_processing(self, insight: ProductInsight):
         product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
@@ -172,17 +178,17 @@ class SlackNotifier(SlackNotifierInterface):
         else:
             text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        slack_kwargs: Dict[str, Any] = {
-            "unfurl_links": False,
-            "unfurl_media": False,
-        }
         message = _slack_message_block(text + " " + metadata_text)
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
-            self._post_message(message, self.NUTRISCORE_ALERT_CHANNEL, **slack_kwargs)
+            self._post_message(
+                message, self.NUTRISCORE_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+            )
             return
 
-        self._post_message(message, self.ROBOTOFF_ALERT_CHANNEL, **slack_kwargs)
+        self._post_message(
+            message, self.ROBOTOFF_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+        )
 
     def _get_base_params(self) -> JSONType:
         return {
@@ -223,7 +229,7 @@ class SlackNotifier(SlackNotifierInterface):
             params: JSONType = {
                 **(self._get_base_params()),
                 "channel": channel,
-                "blocks": blocks,
+                "blocks": json.dumps(blocks),
                 **kwargs,
             }
 
