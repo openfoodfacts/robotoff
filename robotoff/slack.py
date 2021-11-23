@@ -53,31 +53,28 @@ class NoopSlackNotifier(SlackNotifierInterface):
 
 def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
     """Determines whether the given flagged image should be considered as sensitive."""
-    return (
-        flag_type == "label_annotation"
-        and flagged_label
-        in {
-            "face",
-            "head",
-            "selfie",
-            "hair",
-            "forehead",
-            "chin",
-            "cheek",
-            "tooth",
-            "eyebrow",
-            "ear",
-            "neck",
-            "jaw",
-            "nose",
-            "facial expression",
-            "glasses",
-            "eyewear",
-            "child",
-            "baby",
-            "human",
-        }
-    ) or flag_type == "safe_search_annotation"
+    is_human : bool = flagged_label in {
+        "face",
+        "head",
+        "selfie",
+        "hair",
+        "forehead",
+        "chin",
+        "cheek",
+        "tooth",
+        "eyebrow",
+        "ear",
+        "neck",
+        "jaw",
+        "nose",
+        "facial expression",
+        "glasses",
+        "eyewear",
+        "child",
+        "baby",
+        "human",
+    }
+    return (is_human and flag_type == "label_annotation") or flag_type == "safe_search_annotation"
 
 
 def _slack_message_block(
