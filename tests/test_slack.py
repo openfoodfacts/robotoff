@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Optional
 
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from robotoff import settings, slack
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.models import ProductInsight
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
 
 
 class MockSlackResponse:
@@ -174,3 +175,24 @@ def test_notify_automatic_processing_label(mocker):
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
+
+
+def test_noop_slack_notifier_logging(caplog):
+    caplog.set_level(logging.INFO)
+    notifier = slack.NoopSlackNotifier()
+
+    notifier.send_logo_notification(
+        LogoAnnotation(
+            image_prediction=ImagePrediction(
+                barcode="123",
+                image=ImageModel(
+                    source_image="/path/to/image.jpg", width=10, height=10
+                ),
+            ),
+            bounding_box=(1, 1, 2, 2),
+        ),
+        {},
+    )
+
+    (logged,) = caplog.records
+    assert logged.msg.startswith("Alerting on slack channel")
