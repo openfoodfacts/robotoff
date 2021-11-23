@@ -53,7 +53,7 @@ class NoopSlackNotifier(SlackNotifierInterface):
 
 def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
     """Determines whether the given flagged image should be considered as sensitive."""
-    is_human : bool = flagged_label in {
+    is_human: bool = flagged_label in {
         "face",
         "head",
         "selfie",
@@ -74,7 +74,9 @@ def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
         "baby",
         "human",
     }
-    return (is_human and flag_type == "label_annotation") or flag_type == "safe_search_annotation"
+    return (
+        is_human and flag_type == "label_annotation"
+    ) or flag_type == "safe_search_annotation"
 
 
 def _slack_message_block(
@@ -133,6 +135,9 @@ class SlackNotifier(SlackNotifierInterface):
         self, image_insights: List[RawInsight], source_image: str, barcode: str
     ):
         """Sends alerts to Slack channels for flagged images."""
+        if len(image_insights) < 1:
+            return
+
         text = ""
         slack_channel: str = self.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 

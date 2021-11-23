@@ -58,6 +58,20 @@ def test_notifier_factory(monkeypatch, token_value, want_type):
     assert type(notifier) is want_type
 
 
+def test_notify_image_flag_no_insights(mocker):
+    mock = mocker.patch("robotoff.slack.http_session.post")
+
+    notifier = slack.SlackNotifier("")
+
+    notifier.notify_image_flag(
+        [],
+        "/source_image",
+        "123",
+    )
+
+    assert not mock.called
+
+
 def test_notify_image_flag_public(mocker):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
