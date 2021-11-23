@@ -172,10 +172,10 @@ class SlackNotifier(SlackNotifierInterface):
         else:
             metadata_text = f"(<{product_url}|product>)"
 
-        if (
-            insight.type == InsightType.product_weight.name
-            or insight.type == InsightType.expiration_date.name
-        ):
+        if insight.type in {
+            InsightType.product_weight.name,
+            InsightType.expiration_date.name,
+        }:
             text = f"The {insight.type} `{insight.value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
         else:
             text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
