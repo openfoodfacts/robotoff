@@ -23,6 +23,9 @@ images
 tf_models/*
 weights/
 
+# direnv
+.envrc
+
 .coverage
 coverage.xml
 
