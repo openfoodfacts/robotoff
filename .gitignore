@@ -25,6 +25,8 @@ weights/
 
 # direnv
 .envrc
+# vim
+.*.swp
 
 .coverage
 coverage.xml
