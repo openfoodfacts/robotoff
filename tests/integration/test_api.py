@@ -10,7 +10,7 @@ insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
 
 @pytest.fixture(autouse=True)
-def _set_up_and_tear_down():
+def _set_up_and_tear_down(peewee_db):
     # Set up.
     ProductInsight.create(
         id=insight_id,

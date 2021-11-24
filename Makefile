@@ -118,13 +118,15 @@ tests: unit-tests integration-tests
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit 
+	# also, change project name to run in isolation
+	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit 
 
-integration-tests: dev
+integration-tests: 
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
-	${DOCKER_COMPOSE} down
+	# also, change project name to run in isolation
+	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v
 
 #------------#
 # Production #
