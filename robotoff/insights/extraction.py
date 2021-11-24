@@ -160,8 +160,13 @@ def extract_image_ml_insights(
 
     if extract_nutriscore:
         image = get_image_from_url(image_url, error_raise=True, session=http_session)
+        # Currently all of the automatic processing for the Nutri-Score grades has been
+        # disabled due to a prediction quality issue.
+        # Last automatic processing threshold was set to 0.9 - resulting in ~70% incorrect
+        # detection.
         nutriscore_insight = extract_nutriscore_label(
-            image, manual_threshold=0.5, automatic_threshold=0.9
+            image,
+            manual_threshold=0.5,
         )
 
         if not nutriscore_insight:
@@ -227,7 +232,9 @@ NUTRISCORE_LABELS: Dict[str, str] = {
 
 
 def extract_nutriscore_label(
-    image: Image.Image, manual_threshold: float, automatic_threshold: float
+    image: Image.Image,
+    manual_threshold: float,
+    automatic_threshold: Optional[float] = None,
 ) -> Optional[RawInsight]:
     model = ObjectDetectionModelRegistry.get("nutriscore")
     raw_result = model.detect_from_image(image, output_image=False)
@@ -243,7 +250,9 @@ def extract_nutriscore_label(
     result = results[0]
     score = result.score
 
-    automatic_processing = score >= automatic_threshold
+    automatic_processing = False
+    if automatic_threshold:
+        automatic_processing = score >= automatic_threshold
     label_tag = NUTRISCORE_LABELS[result.label]
 
     return RawInsight(

@@ -41,18 +41,17 @@ ARG OFF_GID=$OFF_UID
 RUN groupadd -g $OFF_GID off && \
     useradd -u $OFF_UID -g off -m off
 
-COPY i18n /opt/robotoff/i18n
+COPY --chown=off:off i18n /opt/robotoff/i18n
 RUN cd /opt/robotoff/i18n && \
     bash compile.sh
-COPY robotoff /opt/robotoff/robotoff/
-COPY data /opt/robotoff/data
-COPY gunicorn.py /opt/robotoff/
-RUN chown off:off -R /opt/robotoff
+COPY --chown=off:off robotoff /opt/robotoff/robotoff/
+COPY --chown=off:off data /opt/robotoff/data
+COPY --chown=off:off gunicorn.py /opt/robotoff/
 
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-COPY poetry.lock pyproject.toml poetry.toml /opt/robotoff/
+COPY --chown=off:off poetry.lock pyproject.toml poetry.toml /opt/robotoff/
 
 USER off
 WORKDIR /opt/robotoff
