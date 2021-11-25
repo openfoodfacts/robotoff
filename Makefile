@@ -74,10 +74,6 @@ dl-models:
 	@echo "🥫 Downloading models …"
 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
 
-init-elasticsearch:
-	@echo "Initializing ElasticSearch indexes …"
-	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli init-elasticsearch
-
 #------------#
 # Quality    #
 #------------#
