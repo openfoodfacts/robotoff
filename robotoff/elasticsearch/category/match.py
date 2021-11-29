@@ -44,8 +44,7 @@ def match(client, query: str, lang: str):
     """Match a phrase (query) against product database using stemming"""
     body = generate_request(query, lang)
     return client.search(
-        index=settings.ELASTICSEARCH_CATEGORY_INDEX,
-        doc_type=settings.ELASTICSEARCH_TYPE,
+        index=settings.ElasticsearchIndex.CATEGORY,
         body=body,
         _source=True,
     )

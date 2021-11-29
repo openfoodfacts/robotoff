@@ -127,17 +127,17 @@ WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 # Elastic Search is used for simple category prediction and spellchecking.
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
-ELASTICSEARCH_TYPE = "document"
 
-ELASTICSEARCH_CATEGORY_INDEX = "category"
-ELASTICSEARCH_PRODUCT_INDEX = "product"
-ELASTICSEARCH_PRODUCT_EXTENDED_INDEX = "product_extended"
-ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
-)
-ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
-)
+
+class ElasticsearchIndex:
+    CATEGORY = "category"
+    PRODUCT = "product"
+
+    SUPPORTED_INDICES = {
+        CATEGORY: (PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"),
+        PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
+    }
+
 
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")

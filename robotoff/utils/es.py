@@ -36,7 +36,7 @@ def insert_batch(client, batch: Iterable[Tuple[Dict, Dict]], index: str):
     for action, source in batch:
         body += "{}\n{}\n".format(json.dumps(action), json.dumps(source))
 
-    client.bulk(body=body, index=index, doc_type=settings.ELASTICSEARCH_TYPE)
+    client.bulk(body=body, index=index)
 
 
 def generate_msearch_body(index: str, queries: Iterable[Dict]):
