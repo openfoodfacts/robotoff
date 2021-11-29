@@ -795,7 +795,7 @@
 <li><code>generate-spellcheck-insights</code></li>
 <li><code>import-insights</code>: This command is used to backfill a new...</li>
 <li><code>import-logos</code></li>
-<li><code>init-elasticsearch</code></li>
+<li><code>init-elasticsearch</code>: This command is used for manual insertion of...</li>
 <li><code>predict-category</code></li>
 <li><code>predict-insight</code></li>
 <li><code>run</code></li>
@@ -971,16 +971,18 @@
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="robotoff-cli-init-elasticsearch"><code>robotoff-cli init-elasticsearch</code></h2>
+<p>This command is used for manual insertion of the Elasticsearch data and/or indexes
+for products and categorties.</p>
+<p>to_load specifies which indexes/data should be loaded - supported values are
+in robotoff.settings.ElasticsearchIndex.</p>
 <p><strong>Usage</strong>:</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli init-elasticsearch <span class="o">[</span>OPTIONS<span class="o">]</span>
 </code></pre></div>
 <p><strong>Options</strong>:</p>
 <ul>
-<li><code>--index / --no-index</code>: [default: False]</li>
-<li><code>--data / --no-data</code>: [default: True]</li>
-<li><code>--product / --no-product</code>: [default: False]</li>
-<li><code>--category / --no-category</code>: [default: False]</li>
-<li><code>--product-version TEXT</code>: [default: product]</li>
+<li><code>--load-index / --no-load-index</code>: [default: False]</li>
+<li><code>--load-data / --no-load-data</code>: [default: True]</li>
+<li><code>--to-load TEXT</code></li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="robotoff-cli-predict-category"><code>robotoff-cli predict-category</code></h2>
