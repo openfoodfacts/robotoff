@@ -47,6 +47,13 @@ class ElasticsearchExporter:
 
     def export_index_data(self, index: str) -> int:
         """Given the index to export data for, this function removes existing data and exports a newer version.
+
+        .. warning: right now, we delete then recreate the index.
+           This means that as this method runs, 
+           some request might be silently handled erroneously (with a partial index).
+           This is not a problem right now, as we don't have *real-time* requests,
+           but only async ones for categories.
+
         Returns the number of rows inserted into the index."""
         logger.info(f"Deleting existing {index} data...")
         self._delete_existing_data(index)
