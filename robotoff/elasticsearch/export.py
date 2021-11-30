@@ -24,6 +24,7 @@ class ElasticsearchExporter:
             body={"query": {"match_all": {}}},
             index=index,
             ignore_unavailable=True,
+            doc_type=settings.ELASTICSEARCH_TYPE,
         )
 
         logger.info(f"Deleted %d documents from {index}", resp["deleted"])

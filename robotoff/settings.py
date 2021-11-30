@@ -127,6 +127,7 @@ WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
 # Elastic Search is used for simple category prediction and spellchecking.
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
+ELASTICSEARCH_TYPE = "document"
 
 
 class ElasticsearchIndex:

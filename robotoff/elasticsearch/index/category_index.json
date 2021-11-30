@@ -133,7 +133,7 @@
     }
   },
   "mappings": {
-    "_doc": {
+    "document": {
       "properties": {
         "fr:name": {
           "type": "text",
