@@ -72,8 +72,8 @@ jobs:
             mkdir -p ${dir} ${dir}/1
             wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-xx-2.0/serving_model.tar.gz > ${dir}/1/saved_model.tar.gz
             cd ${dir}/1
-            tar -xzvf serving_model.tar.gz --strip-component=1
-            rm serving_model.tar.gz
+            tar -xzvf saved_model.tar.gz --strip-component=1
+            rm saved_model.tar.gz
 
   # TODO(kulizhsy): delete this job after we've migrated to TF Serving.
   keras-category-classifier-sync:
