@@ -12,6 +12,7 @@ from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
 from robotoff.elasticsearch.category.predict import predict_from_dataset
+from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
     InsightAnnotatorFactory,
@@ -34,6 +35,7 @@ from robotoff.products import (
     has_dataset_changed,
 )
 from robotoff.utils import get_logger
+from robotoff.utils.es import get_es_client
 
 from .latent import generate_quality_facets
 
@@ -207,11 +209,31 @@ def mark_insights():
     logger.info("{} insights marked".format(marked))
 
 
-def download_product_dataset():
+def _download_product_dataset():
     logger.info("Downloading new version of product dataset")
 
     if has_dataset_changed():
         fetch_dataset()
+
+
+def _refresh_elasticsearch():
+    logger.info("Refreshing Elasticsearch data")
+
+    es_client = get_es_client()
+    exporter = ElasticsearchExporter(es_client)
+
+    for index, config_path in settings.ElasticsearchIndex.SUPPORTED_INDICES.items():
+        exporter.load_index(index, config_path)
+        exporter.export_index_data(index)
+
+
+def _update_data():
+    """Refreshes the PO product dump and updates the Elasticsearch index data."""
+
+    _download_product_dataset()
+    # Elasticsearch is dependent on the availability of the PO product dump, i.e.
+    # it it called after the download product dataset call.
+    _refresh_elasticsearch()
 
 
 def generate_insights():
@@ -253,6 +275,10 @@ def exception_listener(event):
 
 # The scheduler is responsible for scheduling periodic work that Robotoff needs to perform.
 def run():
+    # This call needs to happen on every start of the scheduler to ensure we're not in
+    # the state where Robotoff is unable to perform tasks because of missing data.
+    _update_data()
+
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
@@ -269,10 +295,8 @@ def run():
     # This job exports daily product metrics for monitoring.
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
 
-    # This job imports the PO daily product dump.
-    scheduler.add_job(
-        download_product_dataset, "cron", day="*", hour="3", max_instances=1
-    )
+    # This job refreshes data needed to generate insights.
+    scheduler.add_job(_update_data, "cron", day="*", hour="3", max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO dump by:
     # - Deleting non-annotated insights for deleted products.

@@ -53,7 +53,7 @@ development.
     ```
     git clone git@github.com:your_name_here/robotoff.git
     ```
-3. choose between [docker install (recommended) or local install](../how-to/deployment/dev-install.md)
+3. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md)
    and run it.
 
 4. code !

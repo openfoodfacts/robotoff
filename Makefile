@@ -74,10 +74,6 @@ dl-models:
 	@echo "🥫 Downloading models …"
 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
 
-init-elasticsearch:
-	@echo "Initializing ElasticSearch indexes …"
-	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli init-elasticsearch
-
 #------------#
 # Quality    #
 #------------#
@@ -100,7 +96,11 @@ isort-check:
 isort:
 	${DOCKER_COMPOSE} run --rm --no-deps api isort .
 
-checks: flake8 black-check mypy isort-check
+docs:
+	@echo "🥫 Generationg doc…"
+	${DOCKER_COMPOSE} run --rm api ./build_mkdocs.sh
+
+checks: flake8 black-check mypy isort-check docs
 
 lint: isort black
 

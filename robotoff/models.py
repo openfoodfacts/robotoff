@@ -75,7 +75,7 @@ class ProductInsight(BaseModel):
     annotation = peewee.IntegerField(null=True, index=True)
 
     # If the insight was annotated manually, this field stores the username of the annotator.
-    username = peewee.TextField(index=True)
+    username = peewee.TextField(index=True, null=True)
 
     # Latent insights are insights that should not be applied to the product directly.
     # These can be 'meta' insights extracted from product images and combined to generate a classic insight
@@ -150,6 +150,7 @@ class ImageModel(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     uploaded_at = peewee.DateTimeField(null=True, index=True)
     image_id = peewee.CharField(max_length=50, null=False, index=True)
+    # The complete image path can be constructed with robotoff.settings.OFF_IMAGE_BASE_URL + source_image.
     source_image = peewee.TextField(null=False, index=True)
     width = peewee.IntegerField(null=False, index=True)
     height = peewee.IntegerField(null=False, index=True)
@@ -202,8 +203,8 @@ class LogoAnnotation(BaseModel):
             settings.OFF_IMAGE_BASE_URL + self.image_prediction.image.source_image
         )
         y_min, x_min, y_max, x_max = self.bounding_box
-        base_robotoff_url = settings.BaseURLProvider().robotoff()
-        return f"https://{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
+        base_robotoff_url = settings.BaseURLProvider().robotoff().get()
+        return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
 class LogoConfidenceThreshold(BaseModel):

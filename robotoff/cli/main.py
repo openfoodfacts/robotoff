@@ -1,7 +1,7 @@
 import pathlib
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import typer
 from typer import Argument, Option
@@ -270,40 +270,37 @@ def apply_insights(
 
 @app.command()
 def init_elasticsearch(
-    index: bool = False,
-    data: bool = True,
-    product: bool = False,
-    category: bool = False,
-    product_version: str = "product",
+    load_index: bool = False,
+    load_data: bool = True,
+    to_load: Optional[List[str]] = None,
 ) -> None:
-    import orjson
+    """
+    This command is used for manual insertion of the Elasticsearch data and/or indexes
+    for products and categorties.
 
-    from robotoff import settings
-    from robotoff.elasticsearch.category.dump import category_export
-    from robotoff.elasticsearch.product.dump import product_export
+    to_load specifies which indexes/data should be loaded - supported values are
+    in robotoff.settings.ElasticsearchIndex.
+    """
+    from robotoff.elasticsearch.export import ElasticsearchExporter
+    from robotoff.settings import ElasticsearchIndex
+    from robotoff.utils import get_logger
     from robotoff.utils.es import get_es_client
 
-    if index:
-        with settings.ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH.open("rb") as f:
-            product_index_config = orjson.loads(f.read())
+    logger = get_logger()
 
-        with settings.ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH.open("rb") as f:
-            category_index_config = orjson.loads(f.read())
+    es_exporter = ElasticsearchExporter(get_es_client())
 
-        client = get_es_client()
+    if not to_load:
+        return
 
-        if product:
-            client.indices.create(product_version, product_index_config)
-
-        if category:
-            client.indices.create("category", category_index_config)
-
-    if data:
-        if product:
-            product_export(version=product_version)
-
-        if category:
-            category_export()
+    for item in to_load:
+        if item not in ElasticsearchIndex.SUPPORTED_INDICES:
+            logger.error(f"Skipping over unknown Elasticsearch type: '{item}'")
+            continue
+        if load_index:
+            es_exporter.load_index(item, ElasticsearchIndex.SUPPORTED_INDICES[item])
+        if load_data:
+            es_exporter.export_index_data(item)
 
 
 @app.command()

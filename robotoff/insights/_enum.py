@@ -35,7 +35,13 @@ class InsightType(StrEnum):
     category = "category"
 
     # The 'image_flag' insight flags inappropriate images based on OCR text.
-    # NOTE: there are currently 0 insights of this type in the Postgres DB.
+    # This insight type is never persisted to the Postgres DB and is only used to pass insight information
+    # in memory.
+    #
+    # Currently 3 possible sources of flagged images are possible:
+    #  1) "safe_search_annotation" - Google's SafeSearch API detects explicit content on product images.
+    #  2) "label_annotation" - a list of hard-coded labels that should be flagged that are found on the image's OCR.
+    #  3) Flashtext matches on the image's OCR.
     image_flag = "image_flag"
 
     # The 'product_weight' insight extracts the product weight from the image OCR.
