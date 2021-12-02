@@ -29,7 +29,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up dl-models init-elasticsearch
+dev: hello up dl-models
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
