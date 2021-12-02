@@ -14,9 +14,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     validate_insight,
 )
-from robotoff.ml.category.neural.model import (
-    predict_from_product as predict_category_from_product_ml,
-)
+from robotoff.ml.category.neural.category_classifier import CategoryClassifier
 from robotoff.models import ProductInsight
 from robotoff.off import ServerType, get_server_type
 from robotoff.products import Product, get_product, get_product_store
@@ -86,12 +84,17 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if product_insight is not None:
         product_insights.append(product_insight)
 
-    product_insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+    predictions = CategoryClassifier().predict(product)
 
-    if product_insight is not None:
+    if predictions is not None:
+        product_insight = ProductInsights(
+            barcode=product["code"],
+            type=InsightType.category,
+            insights=[insight.to_raw_insight() for insight in predictions],
+        )
         product_insights.append(product_insight)
 
-    if not product_insights:
+    if len(product_insights) < 1:
         return False
 
     merged_product_insight = ProductInsights.merge(product_insights)

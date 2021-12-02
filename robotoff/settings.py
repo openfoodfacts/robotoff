@@ -202,17 +202,13 @@ MODELS_DIR = PROJECT_DIR / "models"
 
 # Tensorflow Serving host parameters
 
-TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
-TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
-TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
-    TF_SERVING_HOST, TF_SERVING_HTTP_PORT
-)
+_tf_serving_host = os.environ.get("TF_SERVING_HOST", "localhost")
+_tf_serving_http_port = os.environ.get("TF_SERVING_PORT", "8501")
+TF_SERVING_BASE_URL = f"http://{_tf_serving_host}:{_tf_serving_http_port}/v1/models"
 
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
-CATEGORY_CLF_MODEL_PATH = MODELS_DIR / "category" / "checkpoint.hdf5"
-CATEGORY_CLF_CATEGORY_BLACKLIST = DATA_DIR / "clf_category_blacklist.txt"
 
 OBJECT_DETECTION_TF_SERVING_MODELS = (
     "nutriscore",
