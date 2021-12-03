@@ -62,7 +62,7 @@ class CategoryClassifier:
         r = http_session.post(
             f"{settings.TF_SERVING_BASE_URL}/category-classifier:predict", json=data
         )
-        r.raise_for_status()  # TODO(kulizhsy): handle this on the caller side?
+        r.raise_for_status()
         response = r.json()
 
         # Since we only sent one product in the query, we can be guaranteed that only one

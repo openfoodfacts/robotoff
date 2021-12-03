@@ -1,6 +1,8 @@
 import time
 from typing import Dict, Optional
 
+import requests
+
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
@@ -85,9 +87,15 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if product_insight is not None:
         product_insights.append(product_insight)
 
-    predictions = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
-        product
-    )
+    try:
+        predictions = CategoryClassifier(
+            get_taxonomy(TaxonomyType.category.name)
+        ).predict(product)
+    except requests.exceptions.HTTPError as e:
+        resp = e.response
+        logger.error(
+            f"Category classifier returned an error: {resp.status_code}: {resp.text}"
+        )
 
     if predictions is not None:
         product_insight = ProductInsights(
