@@ -114,7 +114,7 @@ class TaxonomyNode:
 
 
 def _ancestor_set(nodes: List[TaxonomyNode]) -> Set:
-    """ Constructs a set of all ancestor ids for the given node list."""
+    """Constructs a set of all ancestor ids for the given node list."""
     res = set()
     for node in nodes:
         for parent in node.get_parents_hierarchy():
