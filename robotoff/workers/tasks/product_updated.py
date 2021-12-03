@@ -18,6 +18,7 @@ from robotoff.ml.category.neural.category_classifier import CategoryClassifier
 from robotoff.models import ProductInsight
 from robotoff.off import ServerType, get_server_type
 from robotoff.products import Product, get_product, get_product_store
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -84,7 +85,9 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if product_insight is not None:
         product_insights.append(product_insight)
 
-    predictions = CategoryClassifier().predict(product)
+    predictions = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
+        product
+    )
 
     if predictions is not None:
         product_insight = ProductInsights(

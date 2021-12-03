@@ -3,9 +3,8 @@ from typing import Dict, List, Optional
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.utils import get_logger, http_session
-
-logger = get_logger()
+from robotoff.taxonomy import Taxonomy
+from robotoff.utils import http_session
 
 
 class Prediction:
@@ -27,9 +26,19 @@ class Prediction:
             },
         )
 
+    def __eq__(self, other):
+        """A Prediction is equal to another prediction when their attributes match."""
+        if not isinstance(other, Prediction):
+            return NotImplemented
+
+        return self.category == other.category and self.confidence == other.confidence
+
 
 class CategoryClassifier:
     """CategoryClassifier is responsible for generating predictions for a given product."""
+
+    def __init__(self, category_taxonomy: Taxonomy):
+        self.taxonomy = category_taxonomy
 
     def predict(
         self, product: Dict, deepest_only: bool = False
@@ -87,17 +96,16 @@ class CategoryClassifier:
             else:
                 break
 
-        # TODO(kulizhsy): support deepest_only &(figure out why we want to use it as opposed to all predictions.)
+        if deepest_only:
+            predicted_dict = {p.category: p for p in predictions}
+            taxonomy_nodes = [self.taxonomy[p.category] for p in predictions]
 
-        # if deepest_only:
-        #     category_to_confidence = dict(product_predicted)
-        #     product_predicted = [
-        #         (x.id, category_to_confidence[x.id])
-        #         for x in taxonomy.find_deepest_nodes(
-        #             [taxonomy[c] for c, confidence in product_predicted]
-        #         )
-        #     ]
-        # predicted.append(product_predicted)
+            predictions = [
+                predicted_dict[x.id]
+                for x in self.taxonomy.find_deepest_nodes(
+                    taxonomy_nodes, ignore_ancestor_gaps=False
+                )
+            ]
 
         if len(predictions) == 0:
             return None

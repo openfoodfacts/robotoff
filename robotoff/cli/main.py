@@ -203,13 +203,16 @@ def categorize(
     setting deepest_only=True will return 'beans'."""
     from robotoff.ml.category.neural.category_classifier import CategoryClassifier
     from robotoff.products import get_product
+    from robotoff.taxonomy import TaxonomyType, get_taxonomy
 
     product = get_product(barcode)
     if product is None:
         print(f"Product {barcode} not found")
         return
 
-    predicted = CategoryClassifier().predict(product, deepest_only)
+    predicted = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
+        product, deepest_only
+    )
 
     if predicted:
         for prediction in predicted:

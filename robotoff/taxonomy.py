@@ -113,6 +113,15 @@ class TaxonomyNode:
         return "<TaxonomyNode %s>" % self.id
 
 
+def _ancestor_set(nodes: List[TaxonomyNode]) -> Set:
+    """ Constructs a set of all ancestor ids for the given node list."""
+    res = set()
+    for node in nodes:
+        for parent in node.get_parents_hierarchy():
+            res.add(parent.id)
+    return res
+
+
 class Taxonomy:
     def __init__(self):
         self.nodes: Dict[str, TaxonomyNode] = {}
@@ -136,16 +145,31 @@ class Taxonomy:
     def keys(self):
         return self.nodes.keys()
 
-    def find_deepest_nodes(self, nodes: List[TaxonomyNode]) -> List[TaxonomyNode]:
-        """From a list of nodes, find the deepest nodes using the taxonomy."""
+    def find_deepest_nodes(
+        self, nodes: List[TaxonomyNode], ignore_ancestor_gaps=True
+    ) -> List[TaxonomyNode]:
+        """Given a list of nodes, returns the list of nodes where all connected parents
+        within the list have been removed.
+
+        For example, for a taxonomy, 'fish' -> 'salmon' -> 'smoked-salmon':
+
+        ['fish', 'salmon'] -> ['salmon']
+        ['fish', 'smoked-salmon'] -> ['fish', 'smoked-salmon']
+
+        Setting ignore_ancestor_gaps=False, would result in:
+        ['fish', 'smoked-salmon'] -> ['smoked-salmon']
+        """
         excluded: Set[str] = set()
 
-        for node in nodes:
-            for second_node in (
-                n for n in nodes if n.id not in excluded and n.id != node.id
-            ):
-                if node.is_child_of(second_node):
-                    excluded.add(second_node.id)
+        if not ignore_ancestor_gaps:
+            excluded = _ancestor_set(nodes)
+        else:
+            for node in nodes:
+                for second_node in (
+                    n for n in nodes if n.id not in excluded and n.id != node.id
+                ):
+                    if node.is_child_of(second_node):
+                        excluded.add(second_node.id)
 
         return [node for node in nodes if node.id not in excluded]
 
