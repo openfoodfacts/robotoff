@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+      - uses: actions/setup-python@v2s
+      - uses: abatilo/actions-poetry@v2.0.0
       - name: Run poetry build
         run:  poetry build
       - name: Run poetry publish
