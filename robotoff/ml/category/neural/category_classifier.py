@@ -102,9 +102,7 @@ class CategoryClassifier:
 
             predictions = [
                 predicted_dict[x.id]
-                for x in self.taxonomy.find_deepest_nodes(
-                    taxonomy_nodes
-                )
+                for x in self.taxonomy.find_deepest_nodes(taxonomy_nodes)
             ]
 
         if len(predictions) == 0:
