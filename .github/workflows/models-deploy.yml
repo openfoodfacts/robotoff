@@ -21,8 +21,7 @@ jobs:
           - robotoff-ml
           # Syncing to robotoff-net/org is required as post-processing for most models is done
           # on the caller side, i.e. the caller needs access to the label_map.pbtxt file.
-          - robotoff-net
-          - robotoff-org
+          - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
     steps:
       - uses: actions/checkout@master
       - name: Download
