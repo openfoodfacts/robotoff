@@ -218,7 +218,7 @@ def categorize(
         for prediction in predicted:
             print(f"{prediction.category}: {prediction.confidence}")
     else:
-        print("Nothing predicted")
+        print(f"Nothing predicted for product {barcode}")
 
 
 @app.command()

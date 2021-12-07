@@ -47,7 +47,7 @@ def _prediction_resp(categories: List[str], confs: List[float]) -> MockResponse:
     [
         # Nothing predicted - nothing returned.
         (False, _prediction_resp([], []), None),
-        # Low prediction confidences - nothing returned
+        # Low prediction confidences - nothing returned.
         (False, _prediction_resp(["en:meat", "en:fish"], [0.3, 0.3]), None),
         # Only the high confidence prediction is returned.
         (
@@ -55,7 +55,7 @@ def _prediction_resp(categories: List[str], confs: List[float]) -> MockResponse:
             _prediction_resp(["en:fish", "en:meat"], [0.7, 0.3]),
             [Prediction("en:fish", 0.7)],
         ),
-        # Only the leaves of the taxonomy are returned
+        # Only the leaves of the taxonomy are returned.
         (
             True,
             _prediction_resp(["en:fish", "en:smoked-salmon"], [0.8, 0.8]),
