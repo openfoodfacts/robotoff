@@ -5,7 +5,7 @@ x-robotoff-base: &robotoff-base
     restart: $RESTART_POLICY
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
-      - api-dataset:/opt/robotoff/datasets
+      - ./datasets:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
 
@@ -93,7 +93,6 @@ services:
       - webnet
 
 volumes:
-  api-dataset:
   postgres-data:
   es-data:
 
