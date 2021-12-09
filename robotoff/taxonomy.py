@@ -137,14 +137,7 @@ class Taxonomy:
         return self.nodes.keys()
 
     def find_deepest_nodes(self, nodes: List[TaxonomyNode]) -> List[TaxonomyNode]:
-        """Given a list of nodes, returns the list of nodes where all the parents
-        within the list have been removed.
-
-        For example, for a taxonomy, 'fish' -> 'salmon' -> 'smoked-salmon':
-
-        ['fish', 'salmon'] -> ['salmon']
-        ['fish', 'smoked-salmon'] -> [smoked-salmon']
-        """
+        """From a list of nodes, find the deepest nodes using the taxonomy."""
         excluded: Set[str] = set()
 
         for node in nodes:
