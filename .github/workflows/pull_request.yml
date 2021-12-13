@@ -100,8 +100,8 @@ jobs:
       #----------------------------------------------
       # Launch tests
       #----------------------------------------------
-      - name: Launch tests
-        run: poetry run pytest --cov-report xml --cov=robotoff tests
+      - name: Launch unit tests
+        run: poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
       #----------------------------------------------
       # Upload test coverage

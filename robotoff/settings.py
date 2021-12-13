@@ -17,6 +17,8 @@ def _instance_tld() -> str:
     else:
         return _robotoff_instance
 
+_default_robotoff_doimain = f'openfoodfacts.{_instance_tld()}'
+_robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_doimain)
 
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
@@ -239,5 +241,5 @@ INFLUXDB_DB_NAME = os.environ.get("INFLUXDB_DB_NAME", "off_metrics")
 INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
-TEST_DIR = PROJECT_DIR / "tests"
+TEST_DIR = PROJECT_DIR / "tests" / "unit"
 TEST_DATA_DIR = TEST_DIR / "data"

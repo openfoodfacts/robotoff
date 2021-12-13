@@ -94,9 +94,9 @@ def test_notify_image_flag_public(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <https://static.openfoodfacts.net/images/products/source_image|Image> -- <https://world.openfoodfacts.net/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <https://static.{settings._robotoff_domain}/images/products/source_image|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
             notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
-            "https://static.openfoodfacts.net/images/products/source_image",
+            f"https://static.{settings._robotoff_domain}/images/products/source_image",
         ),
     )
 
@@ -122,9 +122,9 @@ def test_notify_image_flag_private(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "type: label_annotation\nlabel: *face*, score: 0.8\n\n <https://static.openfoodfacts.net/images/products/source_image|Image> -- <https://world.openfoodfacts.net/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <https://static.{settings._robotoff_domain}/images/products/source_image|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
             notifier.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL,
-            "https://static.openfoodfacts.net/images/products/source_image",
+            f"https://static.{settings._robotoff_domain}/images/products/source_image",
         ),
     )
 
@@ -149,7 +149,7 @@ def test_notify_automatic_processing_weight(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "The `200g` weight was automatically added to product 123 (<https://world.openfoodfacts.net/product/123|product>, <https://static.openfoodfacts.net/images/products/image/1|source image>)",
+            f"The `200g` weight was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://static.{settings._robotoff_domain}/images/products/image/1|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
@@ -171,7 +171,7 @@ def test_notify_automatic_processing_label(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "The `en:vegan` label was automatically added to product 123 (<https://world.openfoodfacts.net/product/123|product>, <https://static.openfoodfacts.net/images/products/image/1|source image>)",
+            f"The `en:vegan` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://static.{settings._robotoff_domain}/images/products/image/1|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
