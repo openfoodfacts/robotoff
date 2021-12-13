@@ -49,6 +49,10 @@ class CategoryClassifier:
         for a predicted taxonomy chain.
         For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
         setting deepest_only=True will return ['beans']."""
+
+        if "ingredients_tags" not in product or "product_name" not in product:
+            return None
+
         data = {
             "signature_name": "serving_default",
             "instances": [
