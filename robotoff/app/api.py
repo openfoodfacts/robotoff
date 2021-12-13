@@ -25,7 +25,10 @@ from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insi
 from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
-from robotoff.ml.category.neural.category_classifier import CategoryClassifier
+from robotoff.ml.category.neural.model import (
+    ModelRegistry,
+    filter_blacklisted_categories,
+)
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.models import (
     ImageModel,
@@ -42,7 +45,7 @@ from robotoff.off import (
 )
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
+from robotoff.taxonomy import match_unprefixed_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -339,24 +342,20 @@ class CategoryPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         deepest_only = req.get_param_as_bool("deepest_only", default=False)
+        blacklist = req.get_param_as_bool("blacklist", default=False)
+        model = ModelRegistry.get()
+        predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
 
-        categories = []
+        if predicted:
+            if blacklist:
+                predicted = filter_blacklisted_categories(predicted)
 
-        product = get_product(barcode)
-        if product:
-            predicted = CategoryClassifier(
-                get_taxonomy(TaxonomyType.category.name)
-            ).predict(product, deepest_only)
+            categories = [
+                {"category": category, "confidence": confidence}
+                for category, confidence in predicted
+            ]
 
-            if predicted:
-                categories = [
-                    {
-                        "category": prediction.category,
-                        "confidence": prediction.confidence,
-                    }
-                    for prediction in predicted
-                ]
-
+        categories = categories or []
         resp.media = {"categories": categories}
 
 

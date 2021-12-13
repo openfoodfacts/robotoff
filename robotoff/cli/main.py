@@ -194,31 +194,25 @@ def download_models(force: bool = False) -> None:
 def categorize(
     barcode: str,
     deepest_only: bool = False,
+    blacklist: bool = False,
 ) -> None:
-    """Categorise predicts product categories based on the neural category classifier.
-
-    deepest_only: controls whether the returned predictions should only contain the deepmost
-    categories for a predicted taxonomy chain.
-    For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
-    setting deepest_only=True will return 'beans'."""
-    from robotoff.ml.category.neural.category_classifier import CategoryClassifier
-    from robotoff.products import get_product
-    from robotoff.taxonomy import TaxonomyType, get_taxonomy
-
-    product = get_product(barcode)
-    if product is None:
-        print(f"Product {barcode} not found")
-        return
-
-    predicted = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
-        product, deepest_only
+    from robotoff import settings
+    from robotoff.ml.category.neural.model import (
+        LocalModel,
+        filter_blacklisted_categories,
     )
+    from robotoff.utils import get_logger
+
+    get_logger()
+    model = LocalModel(settings.CATEGORY_CLF_MODEL_PATH)
+    predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
 
     if predicted:
-        for prediction in predicted:
-            print(f"{prediction.category}: {prediction.confidence}")
-    else:
-        print(f"Nothing predicted for product {barcode}")
+        if blacklist:
+            predicted = filter_blacklisted_categories(predicted)
+
+        for cat, confidence in predicted:
+            print("{}: {}".format(cat, confidence))
 
 
 @app.command()
