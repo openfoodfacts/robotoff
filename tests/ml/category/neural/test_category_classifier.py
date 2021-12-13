@@ -91,7 +91,7 @@ def test_predict(mocker, deepest_only, mock_response, want_predictions):
     )
 
     predictions = classifier.predict(
-        {"known_ingredient_tags": ["ingredient1"], "product_name": "Test Product"},
+        {"ingredients_tags": ["ingredient1"], "product_name": "Test Product"},
         deepest_only,
     )
 

@@ -53,7 +53,7 @@ class CategoryClassifier:
             "signature_name": "serving_default",
             "instances": [
                 {
-                    "ingredient": product["known_ingredient_tags"],
+                    "ingredient": product["ingredients_tags"],
                     "product_name": [product["product_name"]],
                 }
             ],
