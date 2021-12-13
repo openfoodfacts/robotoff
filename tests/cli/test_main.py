@@ -75,7 +75,10 @@ def test_categorize_no_product(mocker, capsys):
     ],
 )
 def test_categorize(mocker, capsys, confidence, want_nothing):
-    mocker.patch("robotoff.products.get_product")
+    mocker.patch(
+        "robotoff.products.get_product",
+        return_value={"product_name": "Test Product", "ingredients_tags": []},
+    )
     mocker.patch(
         "robotoff.ml.category.neural.category_classifier.http_session.post",
         return_value=_construct_prediction_resp("en:chicken", confidence),
