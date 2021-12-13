@@ -17,8 +17,10 @@ def _instance_tld() -> str:
     else:
         return _robotoff_instance
 
-_default_robotoff_doimain = f'openfoodfacts.{_instance_tld()}'
+
+_default_robotoff_doimain = f"openfoodfacts.{_instance_tld()}"
 _robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_doimain)
+
 
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.

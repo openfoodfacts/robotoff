@@ -21,5 +21,5 @@ def test_crop_image_url():
 
     assert (
         logo_annotation.get_crop_image_url()
-        == f'https://robotoff.{_robotoff_domain}/api/v1/images/crop?image_url=https://static.{_robotoff_domain}/images/products/image&y_min=1&x_min=1&y_max=2&x_max=2'
+        == f"https://robotoff.{_robotoff_domain}/api/v1/images/crop?image_url=https://static.{_robotoff_domain}/images/products/image&y_min=1&x_min=1&y_max=2&x_max=2"
     )

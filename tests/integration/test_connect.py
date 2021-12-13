@@ -1,15 +1,16 @@
 import pytest
-
+from influxdb import InfluxDBClient
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from pymongo import MongoClient
-from influxdb import InfluxDBClient
 
 from robotoff import settings
+
 
 @pytest.mark.integtest
 def test_connect_mongodb():
     client = MongoClient(settings.MONGO_URI)
     client.server_info()
+
 
 @pytest.mark.integtest
 def test_connect_postgres():
@@ -21,6 +22,7 @@ def test_connect_postgres():
         port=5432,
     )
     client.connect()
+
 
 @pytest.mark.integtest
 def test_connect_influxdb():
