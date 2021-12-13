@@ -42,6 +42,16 @@ def _prediction_resp(categories: List[str], confs: List[float]) -> MockResponse:
     )
 
 
+def test_predict_missing_data():
+    classifier = CategoryClassifier(None)
+
+    predicted = classifier.predict(
+        {"WRONG_ingredients_tags": ["ingredient1"]},
+    )
+
+    assert not predicted
+
+
 @pytest.mark.parametrize(
     "deepest_only,mock_response,want_predictions",
     [
