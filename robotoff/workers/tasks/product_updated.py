@@ -87,6 +87,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if product_insight is not None:
         product_insights.append(product_insight)
 
+    predictions = None
     try:
         predictions = CategoryClassifier(
             get_taxonomy(TaxonomyType.category.name)
