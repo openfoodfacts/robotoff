@@ -2,17 +2,16 @@ import pytest
 from influxdb import InfluxDBClient
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from pymongo import MongoClient
+import requests
 
 from robotoff import settings
 
 
-@pytest.mark.integtest
 def test_connect_mongodb():
     client = MongoClient(settings.MONGO_URI)
     client.server_info()
 
 
-@pytest.mark.integtest
 def test_connect_postgres():
     client = PostgresqlExtDatabase(
         settings.POSTGRES_DB,
@@ -24,7 +23,6 @@ def test_connect_postgres():
     client.connect()
 
 
-@pytest.mark.integtest
 def test_connect_influxdb():
     client = InfluxDBClient(
         settings.INFLUXDB_HOST,
@@ -34,3 +32,13 @@ def test_connect_influxdb():
         settings.INFLUXDB_DB_NAME,
     )
     client.get_list_users()
+
+
+def test_connect_ann():
+    resp = requests.get(f'{settings.BaseURLProvider().robotoff().get()}/ann/api/v1/status')
+    assert resp.json()['status'] == 'running'
+
+# TODO: Automate model health checks
+# def test_connect_tfserving():
+#     req = requests.get(f'https://{settings.TF_SERVING_BASE_URL}/v1/models/{model}/labels/{label}')
+#     assert req.json()['model_version_status'] == 1

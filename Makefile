@@ -111,7 +111,7 @@ unit:
 
 health:
 	@echo "🥫 Running health tests …"
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/integration --disable-warnings
+	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/health --disable-warnings
 
 #------------#
 # Production #
