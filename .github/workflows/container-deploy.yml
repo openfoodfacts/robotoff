@@ -168,10 +168,10 @@ jobs:
           cd ${{ matrix.env}}
           make health
 
-    - name: Run integration tests
+    - name: Run integration tests [pre-prod only]
       uses: appleboy/ssh-action@master
       id: integration
-      if: ${{ always() }}
+      if: ${{ matrix.env == 'robotoff-net' }}
       env:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
