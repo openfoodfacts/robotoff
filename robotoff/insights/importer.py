@@ -73,6 +73,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
     ) -> int:
+        """Returns the number of insights that were imported."""
         timestamp = datetime.datetime.utcnow()
         processed_insights: Iterator[Insight] = self.process_insights(
             data, server_domain, automatic
