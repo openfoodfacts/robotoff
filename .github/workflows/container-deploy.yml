@@ -16,6 +16,7 @@ jobs:
         env: 
           - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
     environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}
     steps:
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
@@ -166,6 +167,26 @@ jobs:
         script: |
           cd ${{ matrix.env}}
           make health
+
+    - name: Run integration tests
+      uses: appleboy/ssh-action@master
+      id: integration
+      if: ${{ always() }}
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.PROXY_HOST }}
+        proxy_username: ${{ secrets.USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script_stop: false
+        script: |
+          cd ${{ matrix.env}}
+          make integration
 
     - name: Cleanup obsolete Docker objects
       uses: appleboy/ssh-action@master
