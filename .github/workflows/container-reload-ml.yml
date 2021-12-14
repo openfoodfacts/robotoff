@@ -64,7 +64,7 @@ jobs:
           echo "COMPOSE_FILE=docker/ml.yml" >> .env
           echo "RESTART_POLICY=always" >> .env
 
-    - name: Start services
+    - name: Restart services
       uses: appleboy/ssh-action@master
       env:
         DOCKER_CLIENT_TIMEOUT: 120
@@ -80,7 +80,7 @@ jobs:
         script_stop: false
         script: |
           cd ${{ matrix.env }}
-          make up
+          make restart
 
     - name: Check services are up
       uses: appleboy/ssh-action@master
