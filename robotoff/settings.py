@@ -18,8 +18,8 @@ def _instance_tld() -> str:
         return _robotoff_instance
 
 
-_default_robotoff_doimain = f"openfoodfacts.{_instance_tld()}"
-_robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_doimain)
+_default_robotoff_domain = f"openfoodfacts.{_instance_tld()}"
+_robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_domain)
 
 
 class BaseURLProvider(object):
