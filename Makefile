@@ -117,6 +117,8 @@ integration:
 	@echo "🥫 Running integration tests …"
 	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/integration --disable-warnings
 
+tests: lint unit health integration
+
 #------------#
 # Production #
 #------------#
