@@ -1,4 +1,3 @@
-import pytest
 import requests
 from influxdb import InfluxDBClient
 from playhouse.postgres_ext import PostgresqlExtDatabase
