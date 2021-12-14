@@ -131,7 +131,7 @@ jobs:
           cd ${{ matrix.env}}
           make up
 
-    - name: Run integration tests
+    - name: Run health tests
       uses: appleboy/ssh-action@master
       env:
         DOCKER_CLIENT_TIMEOUT: 120
@@ -147,7 +147,7 @@ jobs:
         script_stop: false
         script: |
           cd ${{ matrix.env}}
-          make integration
+          make health
 
     - name: Check services are up
       uses: appleboy/ssh-action@master

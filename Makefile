@@ -109,8 +109,8 @@ unit:
 	# run tests in worker to have more memory
 	${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
-integration:
-	@echo "🥫 Running integration tests …"
+health:
+	@echo "🥫 Running health tests …"
 	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/integration --disable-warnings
 
 #------------#
