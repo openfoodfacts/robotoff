@@ -11,5 +11,5 @@ def client():
 
 def test_get_random_question(client):
     response = client.simulate_get("/api/v1/questions/random")
-    expected_resp = {'count': 0, 'questions': [], 'status': 'no_questions'}
+    expected_resp = {"count": 0, "questions": [], "status": "no_questions"}
     assert response.json == expected_resp
