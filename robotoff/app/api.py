@@ -919,16 +919,19 @@ class StatusResource:
             "status": "running",
         }
 
+
 class HealthResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         from robotoff.health import health
+
         message, status, headers = health.run()
         resp.media = {
             "message": orjson.loads(message),
             "status": status,
-            "headers": headers
+            "headers": headers,
         }
         resp.status = str(status)
+
 
 class DumpResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
