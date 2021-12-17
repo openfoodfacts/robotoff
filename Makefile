@@ -111,7 +111,7 @@ unit:
 
 health:
 	@echo "🥫 Running health tests …"
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/health --disable-warnings
+	@curl --fail-with-body localhost:5500/api/v1/health
 
 integration:
 	@echo "🥫 Running integration tests …"
