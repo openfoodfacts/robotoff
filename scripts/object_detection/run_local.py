@@ -11,9 +11,10 @@ from robotoff.ml.object_detection.core import (
     convert_image_to_array,
 )
 from robotoff.ml.object_detection.utils import label_map_util
-from robotoff.ml.object_detection.utils import ops as utils_ops
 from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
 from robotoff.utils import get_logger
+
+import utils_ops
 
 logger = get_logger(__name__)
 
