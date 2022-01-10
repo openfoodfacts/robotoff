@@ -706,21 +706,6 @@ fast = ["fastnumbers (>=2.0.0)"]
 icu = ["PyICU (>=1.0.0)"]
 
 [[package]]
-name = "networkx"
-version = "2.6.3"
-description = "Python package for creating and manipulating graphs and networks"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.extras]
-default = ["numpy (>=1.19)", "scipy (>=1.5,!=1.6.1)", "matplotlib (>=3.3)", "pandas (>=1.1)"]
-developer = ["black (==21.5b1)", "pre-commit (>=2.12)"]
-doc = ["sphinx (>=4.0,<5.0)", "pydata-sphinx-theme (>=0.6,<1.0)", "sphinx-gallery (>=0.9,<1.0)", "numpydoc (>=1.1)", "pillow (>=8.2)", "nb2plots (>=0.6)", "texext (>=0.6.6)"]
-extra = ["lxml (>=4.5)", "pygraphviz (>=1.7)", "pydot (>=1.4.1)"]
-test = ["pytest (>=6.2)", "pytest-cov (>=2.12)", "codecov (>=2.1)"]
-
-[[package]]
 name = "nodeenv"
 version = "1.6.0"
 description = "Node.js virtual environment builder"
@@ -1143,23 +1128,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
-name = "sklearn-hierarchical-classification"
-version = "1.3.2"
-description = "Hierarchical classification interface extensions for scikit-learn"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-networkx = ">=2.4"
-numpy = ">=1.13.1"
-scikit-learn = ">=0.19.0"
-scipy = ">=0.19.1"
-
-[package.extras]
-test = ["PyHamcrest (>=1.9.0)", "coverage (>=3.7.1)", "inflect (>=4.0.0)", "parameterized (>=0.7.1)"]
-
-[[package]]
 name = "spacy"
 version = "2.3.7"
 description = "Industrial-strength Natural Language Processing (NLP) in Python"
@@ -1440,7 +1408,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "f2df8b342e417c261768b22085d23138cb39d8f8935a298bb47e5166394dbc95"
+content-hash = "4e8ae9902ad1bd705886892642f32e65f24645a456c2e598a7526b762c20e5dd"
 
 [metadata.files]
 appdirs = [
@@ -1961,10 +1929,6 @@ mypy-extensions = [
 natsort = [
     {file = "natsort-8.0.2-py3-none-any.whl", hash = "sha256:09cff3cabb617f9794f643758ab5b337c1c0af1a6df11edf5c04de496fd7fb26"},
     {file = "natsort-8.0.2.tar.gz", hash = "sha256:feb87e0ce1dc1f8f3f21e18a85216c790e746d76a5ff6889563394605f504a2b"},
-]
-networkx = [
-    {file = "networkx-2.6.3-py3-none-any.whl", hash = "sha256:80b6b89c77d1dfb64a4c7854981b60aeea6360ac02c6d4e4913319e0a313abef"},
-    {file = "networkx-2.6.3.tar.gz", hash = "sha256:c0946ed31d71f1b732b5aaa6da5a0388a345019af232ce2f49c766e2d6795c51"},
 ]
 nodeenv = [
     {file = "nodeenv-1.6.0-py2.py3-none-any.whl", hash = "sha256:621e6b7076565ddcacd2db0294c0381e01fd28945ab36bcf00f41c5daf63bef7"},
@@ -2585,9 +2549,6 @@ shellingham = [
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
-]
-sklearn-hierarchical-classification = [
-    {file = "sklearn-hierarchical-classification-1.3.2.tar.gz", hash = "sha256:703a756118e333de73601f75bf9f8b1e4d02fdece5a0915718e09df950b3b4ec"},
 ]
 spacy = [
     {file = "spacy-2.3.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:6ebc5a7f7da70a793cc1d2569097bdf80fbce66d7e39e17a157f95c258bec78d"},
