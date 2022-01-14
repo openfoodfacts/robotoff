@@ -16,6 +16,7 @@ x-robotoff-base-env: &robotoff-base-env
   IPC_HOST: workers
   IPC_PORT:
   WORKER_COUNT:
+  ROBOTOFF_UPDATED_PRODUCT_WAIT:
   POSTGRES_HOST:
   POSTGRES_DB:
   POSTGRES_USER:

@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 import requests
 
+from robotoff import settings
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
@@ -30,7 +31,7 @@ logger = get_logger(__name__)
 def update_insights(barcode: str, server_domain: str):
     # Sleep 10s to let the OFF update request that triggered the webhook call
     # to finish
-    time.sleep(10)
+    time.sleep(settings.UPDATED_PRODUCT_WAIT)
     product_dict = get_product(barcode)
 
     if product_dict is None:
