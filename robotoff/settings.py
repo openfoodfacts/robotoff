@@ -123,6 +123,8 @@ IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
+# how many seconds should we wait to compute insight on product updated
+UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 
 # Elastic Search is used for simple category prediction and spellchecking.
 
