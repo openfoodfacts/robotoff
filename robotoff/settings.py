@@ -55,7 +55,11 @@ class BaseURLProvider(object):
         return self
 
     def get(self):
-        return self.url % {"scheme": self.scheme, "prefix": self.prefix, "domain": self.domain}
+        return self.url % {
+            "scheme": self.scheme,
+            "prefix": self.prefix,
+            "domain": self.domain,
+        }
 
 
 PROJECT_DIR = Path(__file__).parent.parent
