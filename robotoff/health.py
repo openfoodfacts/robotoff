@@ -13,12 +13,14 @@ logger = get_logger(__name__)
 
 
 def test_connect_mongodb():
+    logger.debug("health: testing mongodb connection to %s", settings.MONGO_URI)
     client = MongoClient(settings.MONGO_URI)
     client.server_info()
     return True, "MongoDB db connection success !"
 
 
 def test_connect_postgres():
+    logger.debug("health: testing postgres connection to %s", settings.POSTGRES_HOST)
     client = PostgresqlExtDatabase(
         settings.POSTGRES_DB,
         user=settings.POSTGRES_USER,
@@ -31,18 +33,21 @@ def test_connect_postgres():
 
 
 def test_connect_influxdb():
+    logger.debug("health: testing postgres connection to %s", settings.INFLUXDB_HOST)
     client = InfluxDBClient(
         settings.INFLUXDB_HOST,
         settings.INFLUXDB_PORT,
         settings.INFLUXDB_USERNAME,
         settings.INFLUXDB_PASSWORD,
         settings.INFLUXDB_DB_NAME,
+        timeout=10,  # 10s is much
     )
     client.get_list_users()
     return True, "InfluxDB db connection success !"
 
 
 def test_connect_ann():
+    logger.debug("health: testing robotoff status")
     resp = requests.get(
         f"{settings.BaseURLProvider().robotoff().get()}/ann/api/v1/status"
     )

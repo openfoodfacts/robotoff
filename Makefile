@@ -107,17 +107,20 @@ lint: isort black
 unit:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit
+	# and change project name to run in isolation
+	COMPOSE_PROJECT_NAME=test ${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
 health:
 	@echo "🥫 Running health tests …"
-	@curl --fail-with-body localhost:5500/api/v1/health
+	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
 
 integration:
 	@echo "🥫 Running integration tests …"
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests/integration --disable-warnings
+	# run tests in worker to have more memory
+	# and change project name to run in isolation
+	COMPOSE_PROJECT_NAME=test ${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append  tests/integration --disable-warnings
 
-tests: lint unit health integration
+tests: lint unit integration
 
 #------------#
 # Production #

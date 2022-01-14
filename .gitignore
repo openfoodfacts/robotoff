@@ -23,6 +23,13 @@ images
 tf_models/*
 weights/
 
+# direnv
+.envrc
+# vim
+.*.swp
+
+# coverage
+.cov
 .coverage
 coverage.xml
 

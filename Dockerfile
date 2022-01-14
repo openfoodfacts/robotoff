@@ -43,7 +43,8 @@ RUN groupadd -g $OFF_GID off && \
 
 COPY --chown=off:off i18n /opt/robotoff/i18n
 RUN cd /opt/robotoff/i18n && \
-    bash compile.sh
+    bash compile.sh && \
+    chown off:off -R /opt/robotoff/
 COPY --chown=off:off robotoff /opt/robotoff/robotoff/
 COPY --chown=off:off data /opt/robotoff/data
 COPY --chown=off:off gunicorn.py /opt/robotoff/
@@ -73,3 +74,9 @@ FROM runtime as runtime-dev
 COPY --from=builder-dev $VENV_PATH $VENV_PATH
 COPY --from=builder-dev $POETRY_HOME $POETRY_HOME
 COPY mypy.ini .flake8 pyproject.toml ./
+# create folders that we mount in dev to avoid permission problems
+USER root
+RUN \
+    mkdir -p /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov && \
+    chown -R off:off /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov
+USER off
