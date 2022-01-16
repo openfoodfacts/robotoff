@@ -2,7 +2,8 @@ from typing import List, Union
 
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import ImageOrientation, OCRResult
+
+from .dataclass import ImageOrientation, OCRResult
 
 
 def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> int:

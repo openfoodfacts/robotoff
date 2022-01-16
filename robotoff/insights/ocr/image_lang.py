@@ -2,7 +2,8 @@ from typing import Dict, List, Optional, Union
 
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult
+
+from .dataclass import OCRResult
 
 
 def get_image_lang(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:

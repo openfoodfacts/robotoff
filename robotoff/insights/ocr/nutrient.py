@@ -3,8 +3,9 @@ from typing import Dict, List, Tuple, Union
 
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult, get_text
 from robotoff.utils.types import JSONType
+
+from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 EXTRACTOR_VERSION = "2"
 

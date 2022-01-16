@@ -6,10 +6,11 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult, get_text
-from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
+
+from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .utils import generate_keyword_processor
 
 
 def process_fr_packaging_match(match) -> str:

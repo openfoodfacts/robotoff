@@ -4,9 +4,10 @@ import numpy as np
 
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult, get_text
 from robotoff.prediction.category.prediction_from_ocr.constants import LIST_CATEGORIES
 from robotoff.prediction.category.prediction_from_ocr.predictor import Predictor
+
+from .dataclass import OCRResult, get_text
 
 HESITATION_THRESHOLD = 0.012
 

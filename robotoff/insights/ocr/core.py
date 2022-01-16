@@ -5,24 +5,25 @@ import orjson
 
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.brand import find_brands
-from robotoff.insights.ocr.dataclass import OCRResult
-from robotoff.insights.ocr.expiration_date import find_expiration_date
-from robotoff.insights.ocr.image_flag import flag_image
-from robotoff.insights.ocr.image_lang import get_image_lang
-from robotoff.insights.ocr.image_orientation import find_image_orientation
-from robotoff.insights.ocr.label import find_labels
-from robotoff.insights.ocr.location import find_locations
-from robotoff.insights.ocr.nutrient import find_nutrient_mentions, find_nutrient_values
-from robotoff.insights.ocr.packager_code import find_packager_codes
-from robotoff.insights.ocr.packaging import find_packaging
-from robotoff.insights.ocr.product_weight import find_product_weight
-from robotoff.insights.ocr.store import find_stores
-from robotoff.insights.ocr.trace import find_traces
 from robotoff.off import generate_json_ocr_url, split_barcode
 from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
+
+from .brand import find_brands
+from .dataclass import OCRResult
+from .expiration_date import find_expiration_date
+from .image_flag import flag_image
+from .image_lang import get_image_lang
+from .image_orientation import find_image_orientation
+from .label import find_labels
+from .location import find_locations
+from .nutrient import find_nutrient_mentions, find_nutrient_values
+from .packager_code import find_packager_codes
+from .packaging import find_packaging
+from .product_weight import find_product_weight
+from .store import find_stores
+from .trace import find_traces
 
 logger = get_logger(__name__)
 
