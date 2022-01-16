@@ -157,6 +157,9 @@ category = "dev"
 optional = false
 python-versions = ">=3.6"
 
+[package.dependencies]
+tomli = {version = "*", optional = true, markers = "extra == \"toml\""}
+
 [package.extras]
 toml = ["tomli"]
 
@@ -1200,6 +1203,14 @@ click = ">=7.0"
 tomlkit = ">=0.5.8"
 
 [[package]]
+name = "tomli"
+version = "2.0.0"
+description = "A lil' TOML parser"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "tomlkit"
 version = "0.8.0"
 description = "Style preserving TOML library"
@@ -1357,7 +1368,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "e5affff9423e9dc9cae35beb3634ae25568355b395ea1aa0725d86e67d1a977c"
+content-hash = "5b139b339b81555b85bfc8d22984d9bd8a0fb093a53a52ec817007c9cf84d061"
 
 [metadata.files]
 appdirs = [
@@ -2516,6 +2527,10 @@ toml = [
 toml-sort = [
     {file = "toml-sort-0.18.0.tar.gz", hash = "sha256:93c8ba23c540f9029d20b4a3d6b9ec650fc32d1586d701939e6614390820b3f0"},
     {file = "toml_sort-0.18.0-py3-none-any.whl", hash = "sha256:9bb460111e2d9e275c4b80ebbc57b4153d4cd24d0ac1d875126d6f86e032da13"},
+]
+tomli = [
+    {file = "tomli-2.0.0-py3-none-any.whl", hash = "sha256:b5bde28da1fed24b9bd1d4d2b8cba62300bfb4ec9a6187a957e8ddb9434c5224"},
+    {file = "tomli-2.0.0.tar.gz", hash = "sha256:c292c34f58502a1eb2bbb9f5bbc9a5ebc37bee10ffb8c2d6bbdfa8eb13cc14e1"},
 ]
 tomlkit = [
     {file = "tomlkit-0.8.0-py3-none-any.whl", hash = "sha256:b824e3466f1d475b2b5f1c392954c6cb7ea04d64354ff7300dc7c14257dc85db"},
