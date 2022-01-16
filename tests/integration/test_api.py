@@ -1,5 +1,5 @@
-from falcon import testing
 import pytest
+from falcon import testing
 
 from robotoff.app.api import api
 from robotoff.models import ProductInsight
