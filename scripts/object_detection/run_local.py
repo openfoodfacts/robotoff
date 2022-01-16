@@ -3,6 +3,7 @@ import pathlib
 import numpy as np
 import PIL
 import tensorflow as tf
+import utils_ops
 from PIL import Image
 
 from robotoff.ml.object_detection.core import (
@@ -13,8 +14,6 @@ from robotoff.ml.object_detection.core import (
 from robotoff.ml.object_detection.utils import label_map_util
 from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
 from robotoff.utils import get_logger
-
-import utils_ops
 
 logger = get_logger(__name__)
 
