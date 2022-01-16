@@ -11,7 +11,10 @@ from robotoff.insights.extraction import (
     get_barcode_from_url,
     get_source_from_ocr_url,
 )
-from robotoff.ml.object_detection.core import ObjectDetectionRawResult, RemoteModel
+from robotoff.prediction.object_detection.core import (
+    ObjectDetectionRawResult,
+    RemoteModel,
+)
 
 
 @pytest.mark.parametrize(
@@ -55,17 +58,7 @@ class FakeNutriscoreModel(RemoteModel):
 
 
 @pytest.mark.parametrize(
-    "automatic_threshold, processed_automatically",
-    [
-        (
-            None,
-            False,
-        ),
-        (
-            0.7,
-            True,
-        ),
-    ],
+    "automatic_threshold, processed_automatically", [(None, False,), (0.7, True,),],
 )
 def test_extract_nutriscore_label_automatic(
     mocker, automatic_threshold, processed_automatically

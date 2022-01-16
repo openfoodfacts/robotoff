@@ -17,7 +17,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     validate_insight,
 )
-from robotoff.ml.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.models import ProductInsight
 from robotoff.off import ServerType, get_server_type
 from robotoff.products import Product, get_product, get_product_store
@@ -115,9 +115,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     importer = InsightImporterFactory.create(InsightType.category, product_store)
 
     imported = importer.import_insights(
-        [merged_product_insight],
-        server_domain=server_domain,
-        automatic=False,
+        [merged_product_insight], server_domain=server_domain, automatic=False,
     )
 
     if imported:

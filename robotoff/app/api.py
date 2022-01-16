@@ -25,8 +25,8 @@ from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insi
 from robotoff.insights.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
-from robotoff.ml.category.neural.category_classifier import CategoryClassifier
-from robotoff.ml.object_detection import ObjectDetectionModelRegistry
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.models import (
     ImageModel,
     ImagePrediction,

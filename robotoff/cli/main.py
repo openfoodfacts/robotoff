@@ -93,10 +93,7 @@ def predict_category(output: str) -> None:
 
 @app.command()
 def spellcheck(
-    pattern: str,
-    correction: str,
-    country: str = "fr",
-    dry: bool = False,
+    pattern: str, correction: str, country: str = "fr", dry: bool = False,
 ) -> None:
     from robotoff.cli.spellcheck import correct_ingredient
     from robotoff.off import OFFAuthentication
@@ -175,7 +172,7 @@ def download_models(force: bool = False) -> None:
     TODO: add all models to this CLI.
     """
     from robotoff.cli.file import download_file
-    from robotoff.ml.category.prediction_from_ocr.constants import (
+    from robotoff.prediction.category.prediction_from_ocr.constants import (
         RIDGE_PREDICTOR_FILEPATH,
         RIDGE_PREDICTOR_URL,
     )
@@ -184,24 +181,21 @@ def download_models(force: bool = False) -> None:
     get_logger()
 
     download_file(
-        url=RIDGE_PREDICTOR_URL,
-        destination=RIDGE_PREDICTOR_FILEPATH,
-        force=force,
+        url=RIDGE_PREDICTOR_URL, destination=RIDGE_PREDICTOR_FILEPATH, force=force,
     )
 
 
 @app.command()
-def categorize(
-    barcode: str,
-    deepest_only: bool = False,
-) -> None:
+def categorize(barcode: str, deepest_only: bool = False,) -> None:
     """Categorise predicts product categories based on the neural category classifier.
 
     deepest_only: controls whether the returned predictions should only contain the deepmost
     categories for a predicted taxonomy chain.
     For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
     setting deepest_only=True will return 'beans'."""
-    from robotoff.ml.category.neural.category_classifier import CategoryClassifier
+    from robotoff.prediction.category.neural.category_classifier import (
+        CategoryClassifier,
+    )
     from robotoff.products import get_product
     from robotoff.taxonomy import TaxonomyType, get_taxonomy
 
@@ -257,10 +251,7 @@ def import_insights(
 
 
 @app.command()
-def apply_insights(
-    insight_type: str,
-    delta: int = 1,
-) -> None:
+def apply_insights(insight_type: str, delta: int = 1,) -> None:
     import datetime
 
     from robotoff.cli import insights
