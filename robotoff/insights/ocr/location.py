@@ -10,10 +10,11 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import strip_accents_ascii
+
+from .dataclass import OCRResult
 
 
 @dataclasses.dataclass(frozen=True)

@@ -7,25 +7,24 @@ from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRResult, get_text
-from robotoff.insights.ocr.utils import generate_keyword_processor
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.text import get_tag
+
+from .dataclass import OCRResult, get_text
+from .utils import generate_keyword_processor
 
 logger = get_logger(__name__)
 
 
 def generate_brand_keyword_processor(
-    brands: Iterable[str],
-    blacklist: bool = True,
+    brands: Iterable[str], blacklist: bool = True,
 ):
     blacklisted_brands: Optional[Set[str]] = None
     if blacklist:
         blacklisted_brands = BRAND_BLACKLIST_STORE.get()
 
     keep_func = functools.partial(
-        keep_brand_from_taxonomy,
-        blacklisted_brands=blacklisted_brands,
+        keep_brand_from_taxonomy, blacklisted_brands=blacklisted_brands,
     )
     return generate_keyword_processor(brands, keep_func=keep_func)
 

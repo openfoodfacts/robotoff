@@ -4,8 +4,9 @@ from typing import Dict, List, Set, Tuple, Union
 from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
-from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult, get_text
 from robotoff.utils import text_file_iter
+
+from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 
 def get_store_tag(store: str) -> str:
