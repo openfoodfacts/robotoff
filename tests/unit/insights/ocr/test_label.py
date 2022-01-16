@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import pytest
 
-from robotoff.insights.ocr.label import LABELS_REGEX, find_labels
+from robotoff.prediction.ocr.label import LABELS_REGEX, find_labels
 
 XX_BIO_XX_OCR_REGEX = LABELS_REGEX["xx-bio-xx"][0]
 ES_BIO_OCR_REGEX = LABELS_REGEX["xx-bio-xx"][1]

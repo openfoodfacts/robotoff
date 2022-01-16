@@ -14,7 +14,7 @@ from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.dataclass import ProductInsights
 from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.insights.importer import import_insights as import_insights_
-from robotoff.insights.ocr import (
+from robotoff.prediction.ocr import (
     OCRResult,
     extract_insights,
     get_barcode_from_path,
@@ -89,9 +89,7 @@ def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
 
 
 def import_insights(
-    insights: Iterable[ProductInsights],
-    server_domain: str,
-    batch_size: int = 1024,
+    insights: Iterable[ProductInsights], server_domain: str, batch_size: int = 1024,
 ) -> int:
     product_store = get_product_store()
     imported: int = 0

@@ -22,7 +22,7 @@ from robotoff.app.core import get_insights, save_insight
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights._enum import InsightType
 from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
-from robotoff.insights.ocr.dataclass import OCRParsingException
+from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier

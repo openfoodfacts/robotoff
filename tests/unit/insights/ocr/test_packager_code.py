@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from robotoff.insights.ocr.packager_code import find_packager_codes
+from robotoff.prediction.ocr.packager_code import find_packager_codes
 
 
 @pytest.mark.parametrize(

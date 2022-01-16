@@ -1,6 +1,6 @@
 import pytest
 
-from robotoff.insights.ocr.dataclass import BoundingPoly, ImageOrientation
+from robotoff.prediction.ocr.dataclass import BoundingPoly, ImageOrientation
 
 
 def generate_bounding_poly(*items):

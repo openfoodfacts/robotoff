@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from robotoff.insights.ocr.dataclass import OCRResult
+from robotoff.prediction.ocr.dataclass import OCRResult
 
 data_dir = pathlib.Path(__file__).parent / "data"
 

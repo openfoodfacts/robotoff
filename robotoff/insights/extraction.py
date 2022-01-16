@@ -5,11 +5,11 @@ from urllib.parse import urlparse
 import requests
 from PIL import Image
 
-from robotoff.insights import ocr
 from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import ProductInsights, RawInsight
-from robotoff.insights.ocr.core import get_barcode_from_path
-from robotoff.insights.ocr.dataclass import OCRParsingException
+from robotoff.prediction import ocr
+from robotoff.prediction.ocr.core import get_barcode_from_path
+from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.object_detection import (
     ObjectDetectionModelRegistry,
     ObjectDetectionRawResult,
