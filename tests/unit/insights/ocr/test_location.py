@@ -2,14 +2,14 @@ import pytest
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights.ocr.location import (
+from robotoff.prediction.ocr.location import (
     AddressExtractor,
     City,
     find_locations,
     load_cities_fr,
 )
 
-module = "robotoff.insights.ocr.location"
+module = "robotoff.prediction.ocr.location"
 
 
 def test_load_cities_fr(mocker):

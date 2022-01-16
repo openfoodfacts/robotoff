@@ -2,7 +2,7 @@ from typing import Dict, List
 
 import pytest
 
-from robotoff.insights.ocr.nutrient import find_nutrient_mentions
+from robotoff.prediction.ocr.nutrient import find_nutrient_mentions
 from robotoff.utils.types import JSONType
 
 

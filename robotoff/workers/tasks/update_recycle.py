@@ -1,7 +1,7 @@
 from typing import Dict
 
 from robotoff.insights.extraction import get_logger, requests
-from robotoff.insights.ocr.core import get_json_for_image
+from robotoff.prediction.ocr.core import get_json_for_image
 from robotoff.products import ProductDataset
 from robotoff.settings import BaseURLProvider
 

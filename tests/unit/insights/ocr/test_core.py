@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from robotoff.insights import InsightType
-from robotoff.insights.ocr.core import extract_insights
+from robotoff.prediction.ocr.core import extract_insights
 
 
 def test_extract_insights_category_deactivated(caplog):

@@ -2,8 +2,8 @@ from typing import Tuple
 
 import pytest
 
-from robotoff.insights.ocr.dataclass import OCRRegex
-from robotoff.insights.ocr.product_weight import (
+from robotoff.prediction.ocr.dataclass import OCRRegex
+from robotoff.prediction.ocr.product_weight import (
     PRODUCT_WEIGHT_REGEX,
     is_extreme_weight,
     is_suspicious_weight,
