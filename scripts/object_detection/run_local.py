@@ -6,13 +6,13 @@ import tensorflow as tf
 import utils_ops
 from PIL import Image
 
-from robotoff.ml.object_detection.core import (
+from robotoff.prediction.object_detection.core import (
     ObjectDetectionRawResult,
     add_boxes_and_labels,
     convert_image_to_array,
 )
-from robotoff.ml.object_detection.utils import label_map_util
-from robotoff.ml.object_detection.utils.label_map_util import CategoryIndex
+from robotoff.prediction.object_detection.utils import label_map_util
+from robotoff.prediction.object_detection.utils.label_map_util import CategoryIndex
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)

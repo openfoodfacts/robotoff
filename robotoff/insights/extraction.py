@@ -10,7 +10,7 @@ from robotoff.insights._enum import InsightType
 from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.ocr.core import get_barcode_from_path
 from robotoff.insights.ocr.dataclass import OCRParsingException
-from robotoff.ml.object_detection import (
+from robotoff.prediction.object_detection import (
     ObjectDetectionModelRegistry,
     ObjectDetectionRawResult,
 )
@@ -67,9 +67,7 @@ def get_insights_from_product_name(
                 insight.data["source"] = "product_name"
 
             results[insight_type] = ProductInsights(
-                insights=insights,
-                barcode=barcode,
-                type=insight_type,
+                insights=insights, barcode=barcode, type=insight_type,
             )
 
     return results
@@ -164,10 +162,7 @@ def extract_image_ml_insights(
         # disabled due to a prediction quality issue.
         # Last automatic processing threshold was set to 0.9 - resulting in ~70% incorrect
         # detection.
-        nutriscore_insight = extract_nutriscore_label(
-            image,
-            manual_threshold=0.5,
-        )
+        nutriscore_insight = extract_nutriscore_label(image, manual_threshold=0.5,)
 
         if not nutriscore_insight:
             return results

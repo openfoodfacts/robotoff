@@ -1,6 +1,6 @@
 import pytest
 
-from robotoff.ml.langid import (
+from robotoff.prediction.langid import (
     DEFAULT_LANGUAGE_IDENTIFIER,
     LanguageIdentifier,
     LanguagePrediction,

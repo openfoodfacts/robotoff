@@ -5,8 +5,8 @@ import numpy as np
 from robotoff.insights import InsightType
 from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.ocr.dataclass import OCRResult, get_text
-from robotoff.ml.category.prediction_from_ocr.constants import LIST_CATEGORIES
-from robotoff.ml.category.prediction_from_ocr.predictor import Predictor
+from robotoff.prediction.category.prediction_from_ocr.constants import LIST_CATEGORIES
+from robotoff.prediction.category.prediction_from_ocr.predictor import Predictor
 
 HESITATION_THRESHOLD = 0.012
 
@@ -44,8 +44,6 @@ def _get_raw_insight(probabilily: float, index: int) -> RawInsight:
     return RawInsight(
         type=InsightType.category,
         value_tag=LIST_CATEGORIES[index],
-        data={
-            "confidence": round(probabilily, 4),
-        },
+        data={"confidence": round(probabilily, 4),},
         predictor="ridge_model-ml",
     )

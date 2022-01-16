@@ -3,7 +3,7 @@ import re
 from dataclasses import InitVar, asdict, dataclass, field
 from typing import Dict, Iterable, List, Optional
 
-from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
+from robotoff.prediction.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
 from robotoff.utils.text import FR_NLP_CACHE
 
@@ -97,8 +97,7 @@ class SpellcheckIteration:
             return self.original
 
         sorted_atomic_corrections = sorted(
-            valid_atomic_corrections,
-            key=operator.attrgetter("offset"),
+            valid_atomic_corrections, key=operator.attrgetter("offset"),
         )
 
         last_correction = None
@@ -186,9 +185,7 @@ class SpellcheckItem:
     def update_correction(self, correction: str, model: str = "UNK"):
         self.iterations.append(
             SpellcheckIteration(
-                original=self.latest_correction,
-                correction=correction,
-                model=model,
+                original=self.latest_correction, correction=correction, model=model,
             )
         )
 
