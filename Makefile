@@ -77,6 +77,11 @@ dl-models:
 #------------#
 # Quality    #
 #------------#
+toml-check:
+	${DOCKER_COMPOSE} run --rm --no-deps api poetry run toml-sort --check poetry.toml pyproject.toml
+
+toml-lint:
+	${DOCKER_COMPOSE} run --rm --no-deps api poetry run toml-sort --in-place poetry.toml pyproject.toml
 
 flake8:
 	${DOCKER_COMPOSE} run --rm --no-deps api flake8
@@ -100,14 +105,24 @@ docs:
 	@echo "🥫 Generationg doc…"
 	${DOCKER_COMPOSE} run --rm api ./build_mkdocs.sh
 
-checks: flake8 black-check mypy isort-check docs
+checks: toml-check flake8 black-check mypy isort-check docs
 
-lint: isort black
+lint: toml-lint isort black
 
-tests:
+tests: unit-tests integration-tests
+
+unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
-	${DOCKER_COMPOSE} run --rm workers poetry run pytest tests
+	# also, change project name to run in isolation
+	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit 
+
+integration-tests: 
+	@echo "🥫 Running integration tests …"
+	# run tests in worker to have more memory
+	# also, change project name to run in isolation
+	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v
 
 #------------#
 # Production #
