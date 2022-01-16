@@ -37,7 +37,7 @@ A scheduler regularly marks insights for automatic annotation and sends the upda
   - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
 - If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
-**NOTE:** This documentation tries to follow as much as possible the documentation system from [Divio](https://documentation.divio.com/).
+**NOTE:** This documentation tries to follow as much as possible the documentation system from [Diátaxis](https://diataxis.fr/).
 
 ## Licence
 

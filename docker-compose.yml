@@ -45,6 +45,8 @@ services:
     environment:
       <<: *robotoff-base-env
       REAL_TIME_IMAGE_PREDICTION: 1
+    depends_on:
+      - postgres
     mem_limit: 8g
     networks:
       - webnet

@@ -18,6 +18,13 @@ exclude = '''
 )/
 '''
 
+[tool.coverage.run]
+data_file = ".cov/.coverage"
+source = ["robotoff"]
+
+[tool.coverage.xml]
+output = ".cov/coverage.xml"
+
 [tool.isort] # From https://black.readthedocs.io/en/stable/compatible_configs.html#isort
 multi_line_output = 3
 include_trailing_comma = true
