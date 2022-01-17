@@ -241,7 +241,11 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
             )
 
         save_ingredients(
-            barcode, corrected, lang=lang, insight_id=insight.id, auth=auth,
+            barcode,
+            corrected,
+            lang=lang,
+            insight_id=insight.id,
+            auth=auth,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -424,7 +428,8 @@ class NutritionImageAnnotator(InsightAnnotator):
 
         if not image_id:
             return AnnotationResult(
-                status="error_invalid_image", description="the image is invalid",
+                status="error_invalid_image",
+                description="the image is invalid",
             )
         image_key = "nutrition_{}".format(insight.value_tag)
         select_rotate_image(

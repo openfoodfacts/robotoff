@@ -12,8 +12,16 @@ from robotoff.prediction.ocr.category import predict_ocr_categories
             "sweetened beverages",
             0.0726,
         ),
-        ("champignons de paris en conserve", "vegetables", 0.1658,),
-        ("pate de dattes dalgerie elbaraka tolga eldaraka", "fruits", 0.0998,),
+        (
+            "champignons de paris en conserve",
+            "vegetables",
+            0.1658,
+        ),
+        (
+            "pate de dattes dalgerie elbaraka tolga eldaraka",
+            "fruits",
+            0.0998,
+        ),
         (
             "our sucre pour barbe a papa parfum framboise msation deshydratee aromatisee et coloree ants sucre dextrose ardme gluten coloant antagglomerant dioxy e de silicium inanel traces de ouf sofe aat fruits a coque g pour g de produit deshydrate o e kcal naiut t etique kj bupds s satures e suktes asg o g ref pu lngrang ne s",
             "sweets",

@@ -45,7 +45,9 @@ def _prediction_resp(categories: List[str], confs: List[float]) -> MockResponse:
 def test_predict_missing_data():
     classifier = CategoryClassifier(None)
 
-    predicted = classifier.predict({"WRONG_ingredients_tags": ["ingredient1"]},)
+    predicted = classifier.predict(
+        {"WRONG_ingredients_tags": ["ingredient1"]},
+    )
 
     assert not predicted
 
@@ -74,10 +76,20 @@ def test_predict_missing_data():
 def test_predict(mocker, deepest_only, mock_response, want_predictions):
     category_taxonomy = Taxonomy.from_dict(
         {
-            "en:meat": {"names": "meat",},
-            "en:fish": {"names": "fish",},
-            "en:salmon": {"names": "salmon", "parents": ["en:fish"],},
-            "en:smoked-salmon": {"names": "salmon", "parents": ["en:salmon"],},
+            "en:meat": {
+                "names": "meat",
+            },
+            "en:fish": {
+                "names": "fish",
+            },
+            "en:salmon": {
+                "names": "salmon",
+                "parents": ["en:fish"],
+            },
+            "en:smoked-salmon": {
+                "names": "salmon",
+                "parents": ["en:salmon"],
+            },
         }
     )
 

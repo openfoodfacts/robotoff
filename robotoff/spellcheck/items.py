@@ -97,7 +97,8 @@ class SpellcheckIteration:
             return self.original
 
         sorted_atomic_corrections = sorted(
-            valid_atomic_corrections, key=operator.attrgetter("offset"),
+            valid_atomic_corrections,
+            key=operator.attrgetter("offset"),
         )
 
         last_correction = None
@@ -185,7 +186,9 @@ class SpellcheckItem:
     def update_correction(self, correction: str, model: str = "UNK"):
         self.iterations.append(
             SpellcheckIteration(
-                original=self.latest_correction, correction=correction, model=model,
+                original=self.latest_correction,
+                correction=correction,
+                model=model,
             )
         )
 

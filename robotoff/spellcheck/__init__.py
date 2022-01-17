@@ -81,7 +81,8 @@ class Spellchecker:
                     yield ProductPredictions(
                         predictions=[
                             Prediction(
-                                type=PredictionType.ingredient_spellcheck, data=insight,
+                                type=PredictionType.ingredient_spellcheck,
+                                data=insight,
                             )
                         ],
                         barcode=product["code"],

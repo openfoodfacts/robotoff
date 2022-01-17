@@ -81,7 +81,10 @@ def _slack_message_block(
     """Formats given parameters into a Slack message block."""
     block = {
         "type": "section",
-        "text": {"type": "mrkdwn", "text": message_text,},
+        "text": {
+            "type": "mrkdwn",
+            "text": message_text,
+        },
     }
 
     if with_image:
@@ -215,7 +218,10 @@ class SlackNotifier(SlackNotifierInterface):
         self._post_message(_slack_message_block(text), self.ROBOTOFF_ALERT_CHANNEL)
 
     def _post_message(
-        self, blocks: List[Dict], channel: str, **kwargs,
+        self,
+        blocks: List[Dict],
+        channel: str,
+        **kwargs,
     ):
         try:
             params: JSONType = {
@@ -241,7 +247,10 @@ class NoopSlackNotifier(SlackNotifier):
         super().__init__("")
 
     def _post_message(
-        self, blocks: List[Dict], channel: str, **kwargs,
+        self,
+        blocks: List[Dict],
+        channel: str,
+        **kwargs,
     ):
         """Overrides the actual posting to Slack with logging of the args that would've been posted."""
         logger.info(
