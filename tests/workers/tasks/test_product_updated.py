@@ -1,6 +1,6 @@
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.prediction.category.neural.category_classifier import CategoryPrediction
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.workers.tasks.product_updated import add_category_insight
 
 # TODO: refactor function under test to make it easier to test

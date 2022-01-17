@@ -1,11 +1,10 @@
 import pathlib
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import List, Optional
 
 import typer
 from typer import Argument, Option
-
 
 app = typer.Typer()
 

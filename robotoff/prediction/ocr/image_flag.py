@@ -6,11 +6,7 @@ from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 
-from .dataclass import (
-    OCRResult,
-    SafeSearchAnnotationLikelihood,
-    get_text,
-)
+from .dataclass import OCRResult, SafeSearchAnnotationLikelihood, get_text
 
 LABELS_TO_FLAG = {
     "Face",

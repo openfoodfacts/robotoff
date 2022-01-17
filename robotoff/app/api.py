@@ -6,18 +6,18 @@ import tempfile
 from typing import List, Optional
 
 import falcon
+import orjson
+import peewee
+import requests
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
-import orjson
-import peewee
 from PIL import Image
-import requests
 from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
 from robotoff.app import schema
-from robotoff.app.auth import basic_decode, BasicAuthDecodeError
+from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
@@ -27,25 +27,25 @@ from robotoff.insights.extraction import (
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
 from robotoff.models import (
-    batch_insert,
     ImageModel,
     ImagePrediction,
     LogoAnnotation,
     ProductInsight,
+    batch_insert,
 )
 from robotoff.off import (
+    OFFAuthentication,
     generate_image_path,
     get_product,
     get_server_type,
-    OFFAuthentication,
 )
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
-from robotoff.spellcheck import Spellchecker, SPELLCHECKERS
-from robotoff.taxonomy import get_taxonomy, match_unprefixed_value, TaxonomyType
+from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
+from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
