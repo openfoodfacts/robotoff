@@ -16,12 +16,12 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     validate_insight,
 )
-from robotoff.prediction.types import PredictionType, ProductPredictions
-from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.models import ProductInsight
-from robotoff.off import ServerType, get_server_type
-from robotoff.products import Product, get_product, get_product_store
-from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.off import get_server_type, ServerType
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.types import PredictionType, ProductPredictions
+from robotoff.products import get_product, get_product_store, Product
+from robotoff.taxonomy import get_taxonomy, TaxonomyType
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 

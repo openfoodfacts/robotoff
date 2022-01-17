@@ -1,9 +1,8 @@
-import uuid
 from typing import Any, Dict, List, Optional
+import uuid
 
-from robotoff.insights.dataclass import InsightType
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.insights.importer import ProductWeightImporter
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
