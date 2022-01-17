@@ -70,7 +70,7 @@ def test_extract_nutriscore_label_automatic(
         category_index={1: {"id": 1, "name": "nutriscore-a"}},
     )
     mocker.patch(
-        "robotoff.ml.object_detection.core.ObjectDetectionModelRegistry.get",
+        "robotoff.prediction.object_detection.core.ObjectDetectionModelRegistry.get",
         return_value=FakeNutriscoreModel(raw_result),
     )
 

@@ -84,7 +84,7 @@ def test_predict(mocker, deepest_only, mock_response, want_predictions):
     classifier = CategoryClassifier(category_taxonomy)
 
     mocker.patch(
-        "robotoff.ml.category.neural.category_classifier.http_session.post",
+        "robotoff.prediction.category.neural.category_classifier.http_session.post",
         return_value=mock_response,
     )
 
