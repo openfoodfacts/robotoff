@@ -1,34 +1,29 @@
 from typing import Dict, List, Optional
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.taxonomy import Taxonomy
 from robotoff.utils import http_session
 
 
-class Prediction:
-    """Prediction stores information about a category classification prediction."""
+class CategoryPrediction:
+    """CategoryPrediction stores information about a category classification prediction."""
 
     def __init__(self, category: str, confidence: float):
         self.category = category
         self.confidence = confidence
 
-    def to_raw_insight(self) -> RawInsight:
-        """Converts this prediction to a RawInsight."""
-        return RawInsight(
-            type=InsightType.category,
+    def to_prediction(self) -> Prediction:
+        """Converts this category prediction to a Prediction."""
+        return Prediction(
+            type=PredictionType.category,
             value_tag=self.category,
-            data={
-                "lang": "xx",
-                "model": "neural",
-                "confidence": self.confidence,
-            },
+            data={"lang": "xx", "model": "neural", "confidence": self.confidence},
         )
 
     def __eq__(self, other):
-        """A Prediction is equal to another prediction when their attributes match."""
-        if not isinstance(other, Prediction):
+        """A CategoryPrediction is equal to another prediction when their attributes match."""
+        if not isinstance(other, CategoryPrediction):
             return NotImplemented
 
         return self.category == other.category and self.confidence == other.confidence
@@ -42,7 +37,7 @@ class CategoryClassifier:
 
     def predict(
         self, product: Dict, deepest_only: bool = False
-    ) -> Optional[List[Prediction]]:
+    ) -> Optional[List[CategoryPrediction]]:
         """Returns an unordered list of category predictions for the given product.
 
         deepest_only: controls whether the returned list should only contain the deepmost categories
@@ -92,7 +87,7 @@ class CategoryClassifier:
         for idx, confidence in enumerate(prediction["output_mapper_layer"]):
             if confidence >= 0.5:
                 predictions.append(
-                    Prediction(
+                    CategoryPrediction(
                         category=prediction["output_mapper_layer_1"][idx],
                         confidence=prediction["output_mapper_layer"][idx],
                     )

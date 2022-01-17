@@ -3,8 +3,7 @@ from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
 
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.off import generate_json_ocr_url, split_barcode
 from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
@@ -56,53 +55,53 @@ def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
     return r.json()
 
 
-def extract_insights(
-    content: Union[OCRResult, str], insight_type: InsightType
-) -> List[RawInsight]:
-    """Proxy to each predictor, depending on insight type"""
-    if insight_type == InsightType.packager_code:
+def extract_predictions(
+    content: Union[OCRResult, str], prediction_type: PredictionType
+) -> List[Prediction]:
+    """Proxy to each predictor, depending on prediction type."""
+    if prediction_type == PredictionType.packager_code:
         return find_packager_codes(content)
 
-    elif insight_type == InsightType.label:
+    elif prediction_type == PredictionType.label:
         return find_labels(content)
 
-    elif insight_type == InsightType.expiration_date:
+    elif prediction_type == PredictionType.expiration_date:
         return find_expiration_date(content)
 
-    elif insight_type == InsightType.image_flag:
+    elif prediction_type == PredictionType.image_flag:
         return flag_image(content)
 
-    elif insight_type == InsightType.image_orientation:
+    elif prediction_type == PredictionType.image_orientation:
         return find_image_orientation(content)
 
-    elif insight_type == InsightType.product_weight:
+    elif prediction_type == PredictionType.product_weight:
         return find_product_weight(content)
 
-    elif insight_type == InsightType.trace:
+    elif prediction_type == PredictionType.trace:
         return find_traces(content)
 
-    elif insight_type == InsightType.nutrient:
+    elif prediction_type == PredictionType.nutrient:
         return find_nutrient_values(content)
 
-    elif insight_type == InsightType.nutrient_mention:
+    elif prediction_type == PredictionType.nutrient_mention:
         return find_nutrient_mentions(content)
 
-    elif insight_type == InsightType.brand:
+    elif prediction_type == PredictionType.brand:
         return find_brands(content)
 
-    elif insight_type == InsightType.store:
+    elif prediction_type == PredictionType.store:
         return find_stores(content)
 
-    elif insight_type == InsightType.packaging:
+    elif prediction_type == PredictionType.packaging:
         return find_packaging(content)
 
-    elif insight_type == InsightType.location:
+    elif prediction_type == PredictionType.location:
         return find_locations(content)
 
-    elif insight_type == InsightType.image_lang:
+    elif prediction_type == PredictionType.image_lang:
         return get_image_lang(content)
 
-    elif insight_type == InsightType.category:
+    elif prediction_type == PredictionType.category:
         # TODO: This has been temporarily commented-out as this breaks OCR detection
         # due to the model not being fully integrated with Robotoff.
         # return predict_ocr_categories(content)
@@ -112,7 +111,7 @@ def extract_insights(
         return []
 
     else:
-        raise ValueError("unknown insight type: {}".format(insight_type))
+        raise ValueError("unknown prediction type: {}".format(prediction_type))
 
 
 def is_barcode(text: str):

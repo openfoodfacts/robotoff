@@ -5,9 +5,9 @@ from typing import Optional
 import requests
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import InsightType
 from robotoff.insights.extraction import (
-    get_insights_from_image,
+    get_predictions_from_image,
     get_source_from_image_url,
     predict_objects,
 )
@@ -20,6 +20,7 @@ from robotoff.logos import (
 )
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import get_server_type
+from robotoff.prediction.types import PredictionType
 from robotoff.products import Product, get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger
@@ -36,25 +37,25 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
     product = product_store[barcode]
     save_image(barcode, image_url, product, server_domain)
     launch_object_detection_job(barcode, image_url, server_domain)
-    insights_all = get_insights_from_image(barcode, image_url, ocr_url)
+    predictions_all = get_predictions_from_image(barcode, image_url, ocr_url)
 
-    for insight_type, insights in insights_all.items():
-        if insight_type == InsightType.image_flag:
+    for prediction_type, product_predictions in predictions_all.items():
+        if prediction_type == PredictionType.image_flag:
             NotifierFactory.get_notifier().notify_image_flag(
-                insights.insights,
-                insights.source_image,  # type: ignore
-                insights.barcode,
+                product_predictions.predictions,
+                product_predictions.source_image,  # type: ignore
+                product_predictions.barcode,
             )
             continue
 
-        logger.info("Extracting {}".format(insight_type.name))
+        logger.info("Extracting {}".format(prediction_type.name))
         importer: BaseInsightImporter = InsightImporterFactory.create(
-            insight_type, product_store
+            InsightType[prediction_type], product_store
         )
 
         with db.atomic():
             imported = importer.import_insights(
-                [insights], server_domain=server_domain, automatic=True
+                [product_predictions], server_domain=server_domain, automatic=True
             )
             logger.info("Import finished, {} insights imported".format(imported))
 

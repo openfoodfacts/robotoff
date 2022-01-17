@@ -4,8 +4,7 @@ from typing import Dict, Iterable, List, Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -219,16 +218,16 @@ def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
     return generate_keyword_processor(labels)
 
 
-def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[RawInsight]:
-    insights = []
+def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[Prediction]:
+    predictions = []
 
     for (label_tag, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        insights.append(
-            RawInsight(
-                type=InsightType.label,
+        predictions.append(
+            Prediction(
+                type=PredictionType.label,
                 value_tag=label_tag,
                 automatic_processing=False,
                 predictor="flashtext",
@@ -236,7 +235,7 @@ def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[RawI
             )
         )
 
-    return insights
+    return predictions
 
 
 LOGO_ANNOTATION_LABELS: Dict[str, str] = get_logo_annotation_labels()
@@ -245,8 +244,8 @@ LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
-    insights = []
+def find_labels(content: Union[OCRResult, str]) -> List[Prediction]:
+    predictions = []
 
     for label_tag, regex_list in LABELS_REGEX.items():
         for ocr_regex in regex_list:
@@ -265,9 +264,9 @@ def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
                 else:
                     label_value = label_tag
 
-                insights.append(
-                    RawInsight(
-                        type=InsightType.label,
+                predictions.append(
+                    Prediction(
+                        type=PredictionType.label,
                         value_tag=label_value,
                         predictor="regex",
                         data={"text": match.group(), "notify": ocr_regex.notify},
@@ -277,16 +276,16 @@ def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
     processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
 
     text = get_text(content)
-    insights += extract_label_flashtext(processor, text)
+    predictions += extract_label_flashtext(processor, text)
 
     if isinstance(content, OCRResult):
         for logo_annotation in content.logo_annotations:
             if logo_annotation.description in LOGO_ANNOTATION_LABELS:
                 label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
 
-                insights.append(
-                    RawInsight(
-                        type=InsightType.label,
+                predictions.append(
+                    Prediction(
+                        type=PredictionType.label,
                         value_tag=label_tag,
                         automatic_processing=False,
                         predictor="google-cloud-vision",
@@ -294,4 +293,4 @@ def find_labels(content: Union[OCRResult, str]) -> List[RawInsight]:
                     )
                 )
 
-    return insights
+    return predictions

@@ -6,6 +6,8 @@ from typing import List, Optional
 import typer
 from typer import Argument, Option
 
+from robotoff.prediction.types import PredictionType
+
 app = typer.Typer()
 
 
@@ -20,12 +22,15 @@ def run(service: str) -> None:
 def predict_insight(ocr_url: str) -> None:
     import json
 
-    from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
+    from robotoff.insights.extraction import (
+        DEFAULT_PREDICTION_TYPES,
+        extract_ocr_predictions,
+    )
     from robotoff.utils import get_logger
 
     get_logger()
 
-    results = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+    results = extract_ocr_predictions(ocr_url, DEFAULT_PREDICTION_TYPES)
 
     print(json.dumps(results, indent=4))
 
@@ -33,7 +38,7 @@ def predict_insight(ocr_url: str) -> None:
 @app.command()
 def generate_ocr_insights(
     source: str,
-    insight_type: str,
+    prediction_type: str,
     output: Path = Option(
         ...,
         help="File to write output to, stdout if not specified",
@@ -55,13 +60,15 @@ def generate_ocr_insights(
     from typing import TextIO, Union
 
     from robotoff.cli import insights
-    from robotoff.insights._enum import InsightType
+    from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     input_: Union[str, TextIO] = sys.stdin if source == "-" else source
 
     get_logger()
-    insights.run_from_ocr_archive(input_, InsightType[insight_type], output, keep_empty)
+    insights.run_from_ocr_archive(
+        input_, PredictionType[prediction_type], output, keep_empty
+    )
 
 
 @app.command()
@@ -228,7 +235,7 @@ def import_insights(
     from robotoff.cli.insights import generate_from_ocr_archive
     from robotoff.cli.insights import import_insights as import_insights_
     from robotoff.cli.insights import insights_iter
-    from robotoff.insights._enum import InsightType
+    from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     logger = get_logger()
@@ -239,7 +246,9 @@ def import_insights(
         if insight_type is None:
             sys.exit("Required option: --insight-type")
 
-        insights = generate_from_ocr_archive(generate_from, InsightType[insight_type])
+        insights = generate_from_ocr_archive(
+            generate_from, PredictionType[insight_type]
+        )
     elif input_ is not None:
         logger.info("Importing insights from {}".format(input_))
         insights = insights_iter(input_)

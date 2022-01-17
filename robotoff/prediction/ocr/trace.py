@@ -2,8 +2,7 @@ import re
 from typing import List, Optional, Union
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -31,8 +30,8 @@ TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_traces(content: Union[OCRResult, str]) -> List[RawInsight]:
-    insights = []
+def find_traces(content: Union[OCRResult, str]) -> List[Prediction]:
+    predictions = []
 
     text = get_text(content, TRACES_REGEX)
 
@@ -50,12 +49,12 @@ def find_traces(content: Union[OCRResult, str]) -> List[RawInsight]:
             captured, span_info=True
         ):
             match_str = captured[span_start:span_end]
-            insights.append(
-                RawInsight(
-                    type=InsightType.trace,
+            predictions.append(
+                Prediction(
+                    type=PredictionType.trace,
                     value_tag=trace_tag,
                     data={"text": match_str, "prompt": prompt, "notify": False},
                 )
             )
 
-    return insights
+    return predictions

@@ -20,8 +20,11 @@ from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import get_insights, save_insight
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.insights._enum import InsightType
-from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
+from robotoff.insights.dataclass import InsightType
+from robotoff.insights.extraction import (
+    DEFAULT_PREDICTION_TYPES,
+    extract_ocr_predictions,
+)
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
@@ -40,6 +43,7 @@ from robotoff.off import (
     get_product,
     get_server_type,
 )
+from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
@@ -282,7 +286,9 @@ class NutrientPredictorResource:
             raise falcon.HTTPBadRequest("a JSON file is expected")
 
         try:
-            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient])
+            product_predictions = extract_ocr_predictions(
+                ocr_url, [PredictionType.nutrient]
+            )
 
         except requests.exceptions.RequestException:
             resp.media = {
@@ -299,13 +305,13 @@ class NutrientPredictorResource:
             }
             return
 
-        if not insights:
+        if not product_predictions:
             resp.media = {
                 "nutrients": {},
             }
         else:
-            nutrient_insights = insights[InsightType.nutrient]
-            resp.media = nutrient_insights.to_dict()
+            nutrient_predictions = product_predictions[PredictionType.nutrient]
+            resp.media = nutrient_predictions.to_dict()
 
 
 class OCRInsightsPredictorResource:
@@ -313,7 +319,7 @@ class OCRInsightsPredictorResource:
         ocr_url = req.get_param("ocr_url", required=True)
 
         try:
-            insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+            insights = extract_ocr_predictions(ocr_url, DEFAULT_PREDICTION_TYPES)
 
         except requests.exceptions.RequestException:
             resp.media = {

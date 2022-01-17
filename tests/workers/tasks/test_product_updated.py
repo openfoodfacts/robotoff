@@ -1,5 +1,5 @@
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import InsightType
 from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.prediction.category.neural.category_classifier import Prediction
 from robotoff.workers.tasks.product_updated import add_category_insight

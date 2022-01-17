@@ -2,19 +2,19 @@ from typing import Dict, List
 
 import pytest
 
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.dataclass import InsightType
+from robotoff.prediction.types import Prediction
 from robotoff.prediction.category.neural.category_classifier import (
     CategoryClassifier,
-    Prediction,
+    CategoryPrediction,
 )
 from robotoff.taxonomy import Taxonomy
 
 
-def test_prediction_to_raw_insight():
-    prediction = Prediction("category", 0.9)
+def test_category_prediction_to_prediction():
+    category_prediction = CategoryPrediction("category", 0.9)
 
-    assert prediction.to_raw_insight() == RawInsight(
+    assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
         data={"lang": "xx", "model": "neural", "confidence": 0.9},
@@ -61,13 +61,13 @@ def test_predict_missing_data():
         (
             False,
             _prediction_resp(["en:fish", "en:meat"], [0.7, 0.3]),
-            [Prediction("en:fish", 0.7)],
+            [CategoryPrediction("en:fish", 0.7)],
         ),
         # Only the leaves of the taxonomy are returned.
         (
             True,
             _prediction_resp(["en:fish", "en:smoked-salmon"], [0.8, 0.8]),
-            [Prediction("en:smoked-salmon", 0.8)],
+            [CategoryPrediction("en:smoked-salmon", 0.8)],
         ),
     ],
 )

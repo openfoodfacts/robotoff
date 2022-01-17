@@ -1,8 +1,7 @@
 from typing import List, Optional, Union
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_tag
@@ -25,8 +24,8 @@ KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packaging(content: Union[OCRResult, str]) -> List[RawInsight]:
-    insights = []
+def find_packaging(content: Union[OCRResult, str]) -> List[Prediction]:
+    predictions = []
 
     text = get_text(content)
 
@@ -42,9 +41,9 @@ def find_packaging(content: Union[OCRResult, str]) -> List[RawInsight]:
 
         for packaging in packagings:
             match_str = text[span_start:span_end]
-            insights.append(
-                RawInsight(
-                    type=InsightType.packaging,
+            predictions.append(
+                Prediction(
+                    type=PredictionType.packaging,
                     value_tag=get_tag(packaging),
                     value=packaging,
                     data={"text": match_str, "notify": False},
@@ -52,4 +51,4 @@ def find_packaging(content: Union[OCRResult, str]) -> List[RawInsight]:
                 )
             )
 
-    return insights
+    return predictions

@@ -3,8 +3,7 @@ from typing import List, Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 
 from .dataclass import (
@@ -66,30 +65,30 @@ PROCESSOR = generate_image_flag_keyword_processor()
 
 def extract_image_flag_flashtext(
     processor: KeywordProcessor, text: str
-) -> Optional[RawInsight]:
+) -> Optional[Prediction]:
     for (_, key), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        return RawInsight(
-            type=InsightType.image_flag,
+        return Prediction(
+            type=PredictionType.image_flag,
             data={"text": match_str, "type": "text", "label": key},
         )
 
     return None
 
 
-def flag_image(content: Union[OCRResult, str]) -> List[RawInsight]:
-    insights: List[RawInsight] = []
+def flag_image(content: Union[OCRResult, str]) -> List[Prediction]:
+    predictions: List[Prediction] = []
 
     text = get_text(content)
-    insight = extract_image_flag_flashtext(PROCESSOR, text)
+    prediction = extract_image_flag_flashtext(PROCESSOR, text)
 
-    if insight is not None:
-        insights.append(insight)
+    if prediction is not None:
+        predictions.append(prediction)
 
     if isinstance(content, str):
-        return insights
+        return predictions
 
     safe_search_annotation = content.get_safe_search_annotation()
     label_annotations = content.get_label_annotations()
@@ -98,9 +97,9 @@ def flag_image(content: Union[OCRResult, str]) -> List[RawInsight]:
         for key in ("adult", "violence"):
             value: SafeSearchAnnotationLikelihood = getattr(safe_search_annotation, key)
             if value >= SafeSearchAnnotationLikelihood.VERY_LIKELY:
-                insights.append(
-                    RawInsight(
-                        type=InsightType.image_flag,
+                predictions.append(
+                    Prediction(
+                        type=PredictionType.image_flag,
                         data={
                             "type": "safe_search_annotation",
                             "label": key,
@@ -114,9 +113,9 @@ def flag_image(content: Union[OCRResult, str]) -> List[RawInsight]:
             label_annotation.description in LABELS_TO_FLAG
             and label_annotation.score >= 0.6
         ):
-            insights.append(
-                RawInsight(
-                    type=InsightType.image_flag,
+            predictions.append(
+                Prediction(
+                    type=PredictionType.image_flag,
                     data={
                         "type": "label_annotation",
                         "label": label_annotation.description.lower(),
@@ -126,4 +125,4 @@ def flag_image(content: Union[OCRResult, str]) -> List[RawInsight]:
             )
             break
 
-    return insights
+    return predictions

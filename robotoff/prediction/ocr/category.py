@@ -2,8 +2,7 @@ from typing import List, Union
 
 import numpy as np
 
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.prediction.category.prediction_from_ocr.constants import LIST_CATEGORIES
 from robotoff.prediction.category.prediction_from_ocr.predictor import Predictor
 
@@ -12,10 +11,10 @@ from .dataclass import OCRResult, get_text
 HESITATION_THRESHOLD = 0.012
 
 
-def predict_ocr_categories(content: Union[OCRResult, str]) -> List[RawInsight]:
-    """Run prediction on a given OCR and return insights.
+def predict_ocr_categories(content: Union[OCRResult, str]) -> List[Prediction]:
+    """Run prediction on a given OCR and return predictions.
 
-    If the model hesitates between 2 categories, both are returned as insights.
+    If the model hesitates between 2 categories, both are returned as predictions.
     Otherwise, only 1 category is returned. We consider the model to be
     "hesitating" if the probability of the top 2 categories are separated by
     less than `HESITATION_THRESHOLD` percent.
@@ -41,9 +40,9 @@ def predict_ocr_categories(content: Union[OCRResult, str]) -> List[RawInsight]:
     return results
 
 
-def _get_raw_insight(probabilily: float, index: int) -> RawInsight:
-    return RawInsight(
-        type=InsightType.category,
+def _get_raw_insight(probabilily: float, index: int) -> Prediction:
+    return Prediction(
+        type=PredictionType.category,
         value_tag=LIST_CATEGORIES[index],
         data={"confidence": round(probabilily, 4),},
         predictor="ridge_model-ml",
