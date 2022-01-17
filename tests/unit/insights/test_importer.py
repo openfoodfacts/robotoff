@@ -1,5 +1,5 @@
-from typing import Any, Dict, List, Optional
 import uuid
+from typing import Any, Dict, List, Optional
 
 from robotoff.insights.importer import ProductWeightImporter
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions

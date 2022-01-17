@@ -2,8 +2,8 @@ import abc
 import datetime
 import itertools
 import operator
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 import uuid
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 
 from more_itertools import chunked
 
@@ -11,11 +11,11 @@ from robotoff import settings
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights.dataclass import Insight, InsightType
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import batch_insert, ProductInsight
+from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
 from robotoff.prediction.types import PredictionType, ProductPredictions
-from robotoff.products import get_product_store, is_valid_image, Product, ProductStore
-from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyNode
+from robotoff.products import Product, ProductStore, get_product_store, is_valid_image
+from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType

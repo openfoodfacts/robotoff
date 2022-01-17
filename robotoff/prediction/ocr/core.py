@@ -3,8 +3,8 @@ from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
 
-from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.off import generate_json_ocr_url, split_barcode
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType

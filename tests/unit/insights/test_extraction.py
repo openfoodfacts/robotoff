@@ -1,8 +1,8 @@
 from typing import Optional
 
 import numpy as np
-from PIL import Image
 import pytest
+from PIL import Image
 
 from robotoff.insights.extraction import (
     extract_nutriscore_label,

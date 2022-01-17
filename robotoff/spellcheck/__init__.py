@@ -1,8 +1,8 @@
 from typing import Iterable, List, Optional, Union
 
 from robotoff import settings
-from robotoff.products import ProductDataset
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
+from robotoff.products import ProductDataset
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.elasticsearch import ElasticSearchSpellchecker
 from robotoff.spellcheck.items import SpellcheckItem
