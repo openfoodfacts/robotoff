@@ -44,6 +44,8 @@ def _get_raw_insight(probabilily: float, index: int) -> Prediction:
     return Prediction(
         type=PredictionType.category,
         value_tag=LIST_CATEGORIES[index],
-        data={"confidence": round(probabilily, 4),},
+        data={
+            "confidence": round(probabilily, 4),
+        },
         predictor="ridge_model-ml",
     )

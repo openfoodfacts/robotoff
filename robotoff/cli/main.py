@@ -99,7 +99,10 @@ def predict_category(output: str) -> None:
 
 @app.command()
 def spellcheck(
-    pattern: str, correction: str, country: str = "fr", dry: bool = False,
+    pattern: str,
+    correction: str,
+    country: str = "fr",
+    dry: bool = False,
 ) -> None:
     from robotoff.cli.spellcheck import correct_ingredient
     from robotoff.off import OFFAuthentication
@@ -187,12 +190,17 @@ def download_models(force: bool = False) -> None:
     get_logger()
 
     download_file(
-        url=RIDGE_PREDICTOR_URL, destination=RIDGE_PREDICTOR_FILEPATH, force=force,
+        url=RIDGE_PREDICTOR_URL,
+        destination=RIDGE_PREDICTOR_FILEPATH,
+        force=force,
     )
 
 
 @app.command()
-def categorize(barcode: str, deepest_only: bool = False,) -> None:
+def categorize(
+    barcode: str,
+    deepest_only: bool = False,
+) -> None:
     """Categorise predicts product categories based on the neural category classifier.
 
     deepest_only: controls whether the returned predictions should only contain the deepmost
@@ -259,7 +267,10 @@ def import_insights(
 
 
 @app.command()
-def apply_insights(insight_type: str, delta: int = 1,) -> None:
+def apply_insights(
+    insight_type: str,
+    delta: int = 1,
+) -> None:
     import datetime
 
     from robotoff.cli import insights

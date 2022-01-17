@@ -66,7 +66,9 @@ def get_predictions_from_product_name(
                 prediction.data["source"] = "product_name"
 
             results[prediction_type] = ProductPredictions(
-                predictions=predictions, barcode=barcode, type=prediction_type,
+                predictions=predictions,
+                barcode=barcode,
+                type=prediction_type,
             )
 
     return results
@@ -163,7 +165,10 @@ def extract_image_ml_predictions(
         # disabled due to a prediction quality issue.
         # Last automatic processing threshold was set to 0.9 - resulting in ~70% incorrect
         # detection.
-        nutriscore_prediction = extract_nutriscore_label(image, manual_threshold=0.5,)
+        nutriscore_prediction = extract_nutriscore_label(
+            image,
+            manual_threshold=0.5,
+        )
 
         if not nutriscore_prediction:
             return results

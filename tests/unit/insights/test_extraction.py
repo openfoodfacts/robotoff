@@ -57,7 +57,17 @@ class FakeNutriscoreModel(RemoteModel):
 
 
 @pytest.mark.parametrize(
-    "automatic_threshold, processed_automatically", [(None, False,), (0.7, True,)],
+    "automatic_threshold, processed_automatically",
+    [
+        (
+            None,
+            False,
+        ),
+        (
+            0.7,
+            True,
+        ),
+    ],
 )
 def test_extract_nutriscore_label_automatic(
     mocker, automatic_threshold, processed_automatically

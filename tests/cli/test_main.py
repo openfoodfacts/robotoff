@@ -68,7 +68,11 @@ def test_categorize_no_product(mocker, capsys):
 
 
 @pytest.mark.parametrize(
-    "confidence,want_nothing", [(0.8, False), (0.3, True),],
+    "confidence,want_nothing",
+    [
+        (0.8, False),
+        (0.3, True),
+    ],
 )
 def test_categorize(mocker, capsys, confidence, want_nothing):
     mocker.patch(

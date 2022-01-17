@@ -61,7 +61,9 @@ def test_notify_image_flag_no_insights(mocker):
     notifier = slack.SlackNotifier("")
 
     notifier.notify_image_flag(
-        [], "/source_image", "123",
+        [],
+        "/source_image",
+        "123",
     )
 
     assert not mock.called
