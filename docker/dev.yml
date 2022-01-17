@@ -11,6 +11,7 @@ x-robotoff-dev: &robotoff-dev
     volumes:
       # make updates to code available
       - ./robotoff:/opt/robotoff/robotoff
+      - ./scripts:/opt/robotoff/scripts
       - ./pyproject.toml:/opt/robotoff/pyproject.toml
       - ./poetry.toml:/opt/robotoff/poetry.toml
       # make tests available
