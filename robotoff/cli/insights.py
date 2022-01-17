@@ -13,15 +13,15 @@ from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.insights.importer import import_insights as import_insights_
+from robotoff.models import db, ProductInsight
+from robotoff.off import get_product
 from robotoff.prediction.ocr import (
-    OCRResult,
     extract_predictions,
     get_barcode_from_path,
     ocr_iter,
+    OCRResult,
 )
 from robotoff.prediction.types import PredictionType, ProductPredictions
-from robotoff.models import ProductInsight, db
-from robotoff.off import get_product
 from robotoff.products import get_product_store
 from robotoff.utils import get_logger, jsonl_iter
 

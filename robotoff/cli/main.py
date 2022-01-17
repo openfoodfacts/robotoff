@@ -1,12 +1,11 @@
 import pathlib
-import sys
 from pathlib import Path
+import sys
 from typing import List, Optional
 
 import typer
 from typer import Argument, Option
 
-from robotoff.prediction.types import PredictionType
 
 app = typer.Typer()
 

@@ -44,7 +44,7 @@ class PartialRequestMatcher:
 
 @pytest.mark.parametrize(
     "token_value,want_type",
-    [("T", slack.SlackNotifier), ("", slack.NoopSlackNotifier),],
+    [("T", slack.SlackNotifier), ("", slack.NoopSlackNotifier)],
 )
 def test_notifier_factory(monkeypatch, token_value, want_type):
     def test_slack_token(t: str) -> str:

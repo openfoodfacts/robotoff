@@ -2,17 +2,17 @@ import pathlib
 from typing import Dict, Iterable, List, Optional
 from urllib.parse import urlparse
 
-import requests
 from PIL import Image
+import requests
 
 from robotoff.prediction import ocr
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
-from robotoff.prediction.ocr.core import get_barcode_from_path
-from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.object_detection import (
     ObjectDetectionModelRegistry,
     ObjectDetectionRawResult,
 )
+from robotoff.prediction.ocr.core import get_barcode_from_path
+from robotoff.prediction.ocr.dataclass import OCRParsingException
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.utils import get_image_from_url, get_logger, http_session
 
 logger = get_logger(__name__)
