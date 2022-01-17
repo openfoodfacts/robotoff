@@ -68,11 +68,7 @@ def test_categorize_no_product(mocker, capsys):
 
 
 @pytest.mark.parametrize(
-    "confidence,want_nothing",
-    [
-        (0.8, False),
-        (0.3, True),
-    ],
+    "confidence,want_nothing", [(0.8, False), (0.3, True),],
 )
 def test_categorize(mocker, capsys, confidence, want_nothing):
     mocker.patch(
@@ -80,7 +76,7 @@ def test_categorize(mocker, capsys, confidence, want_nothing):
         return_value={"product_name": "Test Product", "ingredients_tags": []},
     )
     mocker.patch(
-        "robotoff.ml.category.neural.category_classifier.http_session.post",
+        "robotoff.prediction.category.neural.category_classifier.http_session.post",
         return_value=_construct_prediction_resp("en:chicken", confidence),
     )
 
