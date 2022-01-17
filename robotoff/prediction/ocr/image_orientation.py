@@ -1,7 +1,6 @@
 from typing import List, Union
 
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 
 from .dataclass import ImageOrientation, OCRResult
 
@@ -21,7 +20,7 @@ def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> 
         raise ValueError("unknown image orientation: {}".format(image_orientation))
 
 
-def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:
+def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
     if isinstance(ocr_result, str):
         return []
 
@@ -30,8 +29,8 @@ def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[RawInsight
     if orientation_result is None:
         return []
 
-    insight = orientation_result.to_json()
-    insight["rotation"] = get_rotation_angle_from_orientation(
+    prediction = orientation_result.to_json()
+    prediction["rotation"] = get_rotation_angle_from_orientation(
         orientation_result.orientation
     )
-    return [RawInsight(type=InsightType.image_orientation, data=insight)]
+    return [Prediction(type=PredictionType.image_orientation, data=prediction)]

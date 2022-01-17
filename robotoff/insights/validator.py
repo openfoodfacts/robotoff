@@ -3,7 +3,7 @@ import enum
 from typing import Optional
 
 from robotoff.brands import BRAND_BLACKLIST_STORE, BRAND_PREFIX_STORE, in_barcode_range
-from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight
 from robotoff.products import Product, ProductStore, is_valid_image

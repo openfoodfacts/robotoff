@@ -5,8 +5,7 @@ from flashtext import KeywordProcessor
 
 from robotoff import settings
 from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.text import get_tag
 
@@ -55,16 +54,16 @@ BRAND_PROCESSOR = generate_brand_keyword_processor(
 
 def extract_brands(
     processor: KeywordProcessor, text: str, data_source_name: str
-) -> List[RawInsight]:
-    insights = []
+) -> List[Prediction]:
+    predictions = []
 
     for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        insights.append(
-            RawInsight(
-                type=InsightType.brand,
+        predictions.append(
+            Prediction(
+                type=PredictionType.brand,
                 value=brand,
                 value_tag=brand_tag,
                 automatic_processing=False,
@@ -73,18 +72,18 @@ def extract_brands(
             )
         )
 
-    return insights
+    return predictions
 
 
-def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[RawInsight]:
-    insights = []
+def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[Prediction]:
+    predictions = []
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
             brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
 
-            insights.append(
-                RawInsight(
-                    type=InsightType.brand,
+            predictions.append(
+                Prediction(
+                    type=PredictionType.brand,
                     value=brand,
                     value_tag=get_tag(brand),
                     automatic_processing=False,
@@ -93,18 +92,18 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[RawInsight
                 )
             )
 
-    return insights
+    return predictions
 
 
-def find_brands(content: Union[OCRResult, str]) -> List[RawInsight]:
-    insights: List[RawInsight] = []
+def find_brands(content: Union[OCRResult, str]) -> List[Prediction]:
+    predictions: List[Prediction] = []
     text = get_text(content)
 
     if text:
-        insights += extract_brands(BRAND_PROCESSOR, text, "curated-list")
-        insights += extract_brands(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
+        predictions += extract_brands(BRAND_PROCESSOR, text, "curated-list")
+        predictions += extract_brands(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
 
     if isinstance(content, OCRResult):
-        insights += extract_brands_google_cloud_vision(content)
+        predictions += extract_brands_google_cloud_vision(content)
 
-    return insights
+    return predictions

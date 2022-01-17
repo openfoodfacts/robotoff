@@ -4,8 +4,7 @@ from typing import Dict, List, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -72,8 +71,8 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
 }
 
 
-def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:
-    results: List[RawInsight] = []
+def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
+    results: List[Prediction] = []
 
     for regex_code, ocr_regex in PACKAGER_CODE.items():
         text = get_text(ocr_result, ocr_regex, ocr_regex.lowercase)
@@ -88,14 +87,14 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[RawInsi
                 value = ocr_regex.processing_func(match)
 
             results.append(
-                RawInsight(
+                Prediction(
                     value=value,
                     data={
                         "raw": match.group(0),
                         "type": regex_code,
                         "notify": ocr_regex.notify,
                     },
-                    type=InsightType.packager_code,
+                    type=PredictionType.packager_code,
                     automatic_processing=True,
                 )
             )
@@ -108,16 +107,16 @@ def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
 
 
-def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[RawInsight]:
-    insights = []
+def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[Prediction]:
+    predictions = []
 
     for (key, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        insights.append(
-            RawInsight(
-                type=InsightType.packager_code,
+        predictions.append(
+            Prediction(
+                type=PredictionType.packager_code,
                 value=key,
                 predictor="flashtext",
                 data={"type": "fishing", "raw": match_str, "notify": False},
@@ -125,7 +124,7 @@ def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[RawInsi
             )
         )
 
-    return insights
+    return predictions
 
 
 FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
@@ -133,9 +132,9 @@ FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packager_codes(ocr_result: Union[OCRResult, str]) -> List[RawInsight]:
-    insights = find_packager_codes_regex(ocr_result)
+def find_packager_codes(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
+    predictions = find_packager_codes_regex(ocr_result)
     processor = FISHING_KEYWORD_PROCESSOR_STORE.get()
     text = get_text(ocr_result)
-    insights += extract_fishing_code(processor, text)
-    return insights
+    predictions += extract_fishing_code(processor, text)
+    return predictions

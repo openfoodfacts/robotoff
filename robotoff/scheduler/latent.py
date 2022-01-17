@@ -2,7 +2,7 @@ import uuid
 from typing import Dict, List, Optional, Set
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import InsightType
 from robotoff.models import ProductInsight
 from robotoff.products import (
     DBProductStore,

@@ -1,11 +1,9 @@
 from typing import Optional
 
 import numpy as np
-import pytest
 from PIL import Image
+import pytest
 
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import RawInsight
 from robotoff.insights.extraction import (
     extract_nutriscore_label,
     get_barcode_from_url,
@@ -15,6 +13,7 @@ from robotoff.prediction.object_detection.core import (
     ObjectDetectionRawResult,
     RemoteModel,
 )
+from robotoff.prediction.types import Prediction, PredictionType
 
 
 @pytest.mark.parametrize(
@@ -58,7 +57,7 @@ class FakeNutriscoreModel(RemoteModel):
 
 
 @pytest.mark.parametrize(
-    "automatic_threshold, processed_automatically", [(None, False,), (0.7, True,),],
+    "automatic_threshold, processed_automatically", [(None, False,), (0.7, True,)],
 )
 def test_extract_nutriscore_label_automatic(
     mocker, automatic_threshold, processed_automatically
@@ -79,8 +78,8 @@ def test_extract_nutriscore_label_automatic(
         Image.Image, manual_threshold=0.5, automatic_threshold=automatic_threshold
     )
 
-    assert insight == RawInsight(
-        type=InsightType.label.name,
+    assert insight == Prediction(
+        type=PredictionType.label,
         data={
             "confidence": 0.8,
             "bounding_box": (1, 2, 3, 4),

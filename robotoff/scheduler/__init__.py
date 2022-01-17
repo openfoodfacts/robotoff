@@ -247,10 +247,10 @@ def generate_insights():
         hour=0, minute=0, second=0, microsecond=0
     ) - datetime.timedelta(days=1)
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-    category_insights_iter = predict_from_dataset(dataset, datetime_threshold)
+    product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
     imported = importer.import_insights(
-        category_insights_iter,
+        product_predictions_iter,
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic=False,
     )
@@ -316,12 +316,7 @@ def run():
     )
 
     scheduler.add_job(
-        generate_quality_facets,
-        "cron",
-        day="*",
-        hour="5",
-        minute=25,
-        max_instances=1,
+        generate_quality_facets, "cron", day="*", hour="5", minute=25, max_instances=1,
     )
 
     scheduler.add_listener(exception_listener, EVENT_JOB_ERROR)

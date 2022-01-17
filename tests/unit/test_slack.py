@@ -5,9 +5,8 @@ from typing import Optional
 import pytest
 
 from robotoff import settings, slack
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
+from robotoff.prediction.types import Prediction, PredictionType
 
 
 class MockSlackResponse:
@@ -45,10 +44,7 @@ class PartialRequestMatcher:
 
 @pytest.mark.parametrize(
     "token_value,want_type",
-    [
-        ("T", slack.SlackNotifier),
-        ("", slack.NoopSlackNotifier),
-    ],
+    [("T", slack.SlackNotifier), ("", slack.NoopSlackNotifier),],
 )
 def test_notifier_factory(monkeypatch, token_value, want_type):
     def test_slack_token(t: str) -> str:
@@ -65,9 +61,7 @@ def test_notify_image_flag_no_insights(mocker):
     notifier = slack.SlackNotifier("")
 
     notifier.notify_image_flag(
-        [],
-        "/source_image",
-        "123",
+        [], "/source_image", "123",
     )
 
     assert not mock.called
@@ -82,8 +76,8 @@ def test_notify_image_flag_public(mocker):
 
     notifier.notify_image_flag(
         [
-            RawInsight(
-                type=InsightType.image_flag,
+            Prediction(
+                type=PredictionType.image_flag,
                 data={"text": "bad_word", "type": "SENSITIVE", "label": "flagged"},
             )
         ],
@@ -110,8 +104,8 @@ def test_notify_image_flag_private(mocker):
 
     notifier.notify_image_flag(
         [
-            RawInsight(
-                type=InsightType.image_flag,
+            Prediction(
+                type=PredictionType.image_flag,
                 data={"type": "label_annotation", "label": "face", "likelihood": 0.8},
             )
         ],

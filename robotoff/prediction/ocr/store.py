@@ -2,8 +2,7 @@ import re
 from typing import Dict, List, Set, Tuple, Union
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
@@ -48,7 +47,7 @@ STORE_REGEX = OCRRegex(
 )
 
 
-def find_stores(content: Union[OCRResult, str]) -> List[RawInsight]:
+def find_stores(content: Union[OCRResult, str]) -> List[Prediction]:
     results = []
 
     text = get_text(content, STORE_REGEX)
@@ -63,8 +62,8 @@ def find_stores(content: Union[OCRResult, str]) -> List[RawInsight]:
             if match_str is not None:
                 store, _ = SORTED_STORES[idx]
                 results.append(
-                    RawInsight(
-                        type=InsightType.store,
+                    Prediction(
+                        type=PredictionType.store,
                         value=store,
                         value_tag=get_store_tag(store),
                         data={"text": match_str, "notify": store in NOTIFY_STORES},

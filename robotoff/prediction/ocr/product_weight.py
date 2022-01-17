@@ -4,8 +4,7 @@ from typing import Dict, List, Match, Optional, Tuple, Union
 
 import pint
 
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
@@ -149,7 +148,7 @@ def process_product_weight(
     }
 
     if is_suspicious_weight(normalized_value, normalized_unit):
-        # Don't process the insight automatically if the value
+        # Don't process the prediction automatically if the value
         # is suspicious (very high, low,...)
         result["automatic_processing"] = False
 
@@ -187,7 +186,7 @@ def process_multi_packaging(match) -> Optional[Dict]:
     }
 
     if is_suspicious_weight(normalized_value, normalized_unit):
-        # Don't process the insight automatically if the value
+        # Don't process the prediction automatically if the value
         # is suspiciously high
         result["automatic_processing"] = False
 
@@ -236,7 +235,7 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_product_weight(content: Union[OCRResult, str]) -> List[RawInsight]:
+def find_product_weight(content: Union[OCRResult, str]) -> List[Prediction]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
@@ -260,9 +259,9 @@ def find_product_weight(content: Union[OCRResult, str]) -> List[RawInsight]:
             value = result.pop("text")
             automatic_processing = result.pop("automatic_processing", None)
             results.append(
-                RawInsight(
+                Prediction(
                     value=value,
-                    type=InsightType.product_weight,
+                    type=PredictionType.product_weight,
                     automatic_processing=automatic_processing,
                     data=result,
                 )

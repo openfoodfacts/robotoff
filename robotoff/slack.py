@@ -5,9 +5,9 @@ from typing import Dict, List, Optional
 import requests
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.insights.dataclass import InsightType
 from robotoff.logo_label_type import LogoLabelType
+from robotoff.prediction.types import Prediction
 from robotoff.models import LogoAnnotation, ProductInsight
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
@@ -22,7 +22,9 @@ class SlackException(Exception):
 class SlackNotifierInterface:
     """SlackNotifierInterface is an interface for posting Robotoff-related alerts and notifications to the OFF Slack channels."""
 
-    def notify_image_flag(self, insights: List[RawInsight], source: str, barcode: str):
+    def notify_image_flag(
+        self, predictions: List[Prediction], source: str, barcode: str
+    ):
         pass
 
     def notify_automatic_processing(self, insight: ProductInsight):
@@ -79,10 +81,7 @@ def _slack_message_block(
     """Formats given parameters into a Slack message block."""
     block = {
         "type": "section",
-        "text": {
-            "type": "mrkdwn",
-            "text": message_text,
-        },
+        "text": {"type": "mrkdwn", "text": message_text,},
     }
 
     if with_image:
@@ -126,16 +125,16 @@ class SlackNotifier(SlackNotifierInterface):
         self.slack_token = slack_token
 
     def notify_image_flag(
-        self, image_insights: List[RawInsight], source_image: str, barcode: str
+        self, predictions: List[Prediction], source_image: str, barcode: str
     ):
         """Sends alerts to Slack channels for flagged images."""
-        if len(image_insights) < 1:
+        if len(predictions) < 1:
             return
 
         text = ""
         slack_channel: str = self.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL
 
-        for flagged in image_insights:
+        for flagged in predictions:
             flag_type = flagged.data["type"]
             label = flagged.data["label"]
 
@@ -216,10 +215,7 @@ class SlackNotifier(SlackNotifierInterface):
         self._post_message(_slack_message_block(text), self.ROBOTOFF_ALERT_CHANNEL)
 
     def _post_message(
-        self,
-        blocks: List[Dict],
-        channel: str,
-        **kwargs,
+        self, blocks: List[Dict], channel: str, **kwargs,
     ):
         try:
             params: JSONType = {
@@ -245,10 +241,7 @@ class NoopSlackNotifier(SlackNotifier):
         super().__init__("")
 
     def _post_message(
-        self,
-        blocks: List[Dict],
-        channel: str,
-        **kwargs,
+        self, blocks: List[Dict], channel: str, **kwargs,
     ):
         """Overrides the actual posting to Slack with logging of the args that would've been posted."""
         logger.info(

@@ -3,8 +3,7 @@ import functools
 import re
 from typing import Dict, List, Optional, Union
 
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import RawInsight
+from robotoff.prediction.types import Prediction, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
@@ -47,10 +46,10 @@ EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_expiration_date(content: Union[OCRResult, str]) -> List[RawInsight]:
+def find_expiration_date(content: Union[OCRResult, str]) -> List[Prediction]:
     # Parse expiration date
     #        "À consommer de préférence avant",
-    results: List[RawInsight] = []
+    results: List[Prediction] = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
         text = get_text(content, ocr_regex)
@@ -76,9 +75,9 @@ def find_expiration_date(content: Union[OCRResult, str]) -> List[RawInsight]:
             value = date.strftime("%Y-%m-%d")
 
             results.append(
-                RawInsight(
+                Prediction(
                     value=value,
-                    type=InsightType.expiration_date,
+                    type=PredictionType.expiration_date,
                     data={"raw": raw, "type": type_, "notify": ocr_regex.notify},
                 )
             )

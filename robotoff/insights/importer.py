@@ -9,11 +9,11 @@ from more_itertools import chunked
 
 from robotoff import settings
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import Insight, ProductInsights
+from robotoff.insights.dataclass import Insight, InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
+from robotoff.prediction.types import PredictionType, ProductPredictions
 from robotoff.products import Product, ProductStore, get_product_store, is_valid_image
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
 from robotoff.utils import get_logger, text_file_iter
@@ -68,10 +68,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         self.product_store: ProductStore = product_store
 
     def import_insights(
-        self,
-        data: Iterable[ProductInsights],
-        server_domain: str,
-        automatic: bool,
+        self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool,
     ) -> int:
         """Returns the number of insights that were imported."""
         timestamp = datetime.datetime.utcnow()
@@ -81,23 +78,23 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         full_insights = self.add_fields(processed_insights, timestamp, server_domain)
         inserted = 0
 
-        for raw_insight_batch in chunked(full_insights, 50):
-            insight_batch: List[JSONType] = []
+        for insight_batch in chunked(full_insights, 50):
+            to_import: List[JSONType] = []
             insight: Insight
 
-            for insight in raw_insight_batch:
+            for insight in insight_batch:
                 insight_dict = insight.to_dict()
 
                 if not insight.latent or not exist_latent(insight_dict):
-                    insight_batch.append(insight_dict)
+                    to_import.append(insight_dict)
 
-            inserted += batch_insert(ProductInsight, insight_batch, 50)
+            inserted += batch_insert(ProductInsight, to_import, 50)
 
         return inserted
 
     @abc.abstractmethod
     def process_insights(
-        self, data: Iterable[ProductInsights], server_domain: str, automatic: bool
+        self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
     ) -> Iterator[Insight]:
         pass
 
@@ -157,7 +154,7 @@ class IngredientSpellcheckImporter(BaseInsightImporter):
 
     def process_insights(
         self,
-        data: Iterable[ProductInsights],
+        data: Iterable[ProductPredictions],
         server_domain: str,
         automatic: bool = False,
     ) -> Iterator[Insight]:
@@ -172,10 +169,10 @@ class IngredientSpellcheckImporter(BaseInsightImporter):
             .iterator()
         )
 
-        for product_insights in data:
-            barcode = product_insights.barcode
+        for product_predictions in data:
+            barcode = product_predictions.barcode
 
-            for insight in product_insights.insights:
+            for insight in product_predictions.predictions:
                 lang = insight.data["lang"]
                 key = (barcode, lang)
 
@@ -184,7 +181,9 @@ class IngredientSpellcheckImporter(BaseInsightImporter):
                 else:
                     continue
 
-                yield Insight.from_raw_insight(insight, product_insights, latent=False)
+                yield Insight.from_prediction(
+                    insight, product_predictions, latent=False
+                )
 
 
 GroupedByOCRInsights = Dict[str, List[Insight]]
@@ -192,7 +191,7 @@ GroupedByOCRInsights = Dict[str, List[Insight]]
 
 class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
     def process_insights(
-        self, data: Iterable[ProductInsights], server_domain: str, automatic: bool
+        self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
     ) -> Iterator[Insight]:
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
 
@@ -238,7 +237,9 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
 
             yield insight
 
-    def group_by_barcode(self, data: Iterable[ProductInsights]) -> GroupedByOCRInsights:
+    def group_by_barcode(
+        self, data: Iterable[ProductPredictions]
+    ) -> GroupedByOCRInsights:
         grouped_by: GroupedByOCRInsights = {}
         insight_type = self.get_type()
 
@@ -250,15 +251,15 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
                     "unexpected insight type: " "'{}'".format(insight_type)
                 )
 
-            raw_insights = item.insights
+            predictions = item.predictions
 
-            if not raw_insights:
+            if not predictions:
                 continue
 
             grouped_by.setdefault(barcode, [])
 
-            for raw_insight in raw_insights:
-                insights = Insight.from_raw_insight(raw_insight, item, latent=False)
+            for prediction in predictions:
+                insights = Insight.from_prediction(prediction, item, latent=False)
                 grouped_by[barcode].append(insights)
 
         return grouped_by
@@ -294,10 +295,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_latent(
-        product: Optional[Product],
-        barcode: str,
-        emb_code: str,
-        code_seen: Set[str],
+        product: Optional[Product], barcode: str, emb_code: str, code_seen: Set[str],
     ) -> bool:
         product_emb_codes_tags = getattr(product, "emb_codes_tags", [])
 
@@ -482,9 +480,7 @@ class ProductWeightImporter(InsightImporter):
         return False
 
     @staticmethod
-    def group_by_subtype(
-        insights: List[Insight],
-    ) -> Dict[str, List[Insight]]:
+    def group_by_subtype(insights: List[Insight],) -> Dict[str, List[Insight]]:
         insights_by_subtype: Dict[str, List[Insight]] = {}
 
         for insight in insights:
@@ -789,7 +785,7 @@ class InsightImporterFactory:
 
 
 def import_insights(
-    insights: Iterable[ProductInsights],
+    product_predictions: Iterable[ProductPredictions],
     server_domain: str,
     automatic: bool,
     product_store: Optional[ProductStore] = None,
@@ -798,15 +794,16 @@ def import_insights(
         product_store = get_product_store()
 
     importers: Dict[InsightType, BaseInsightImporter] = {}
-    insights = sorted(insights, key=operator.attrgetter("type"))
+    product_predictions = sorted(product_predictions, key=operator.attrgetter("type"))
 
-    insight_type: InsightType
-    insight_group: Iterable[ProductInsights]
+    prediction_type: PredictionType
+    insight_group: Iterable[ProductPredictions]
     imported = 0
 
-    for insight_type, insight_group in itertools.groupby(
-        insights, operator.attrgetter("type")
+    for prediction_type, insight_group in itertools.groupby(
+        product_predictions, operator.attrgetter("type")
     ):
+        insight_type = InsightType[prediction_type]
         if insight_type not in importers:
             importers[insight_type] = InsightImporterFactory.create(
                 insight_type, product_store
