@@ -120,14 +120,13 @@ checks: toml-check flake8 black-check mypy isort-check docs
 
 lint: toml-lint isort black
 
-tests: unit-tests integration-tests
+tests: create_external_networks unit-tests integration-tests
 
 
 health:
 	@echo "🥫 Running health tests …"
 	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
 
-tests: create_external_networks lint unit integration
 
 unit-tests:
 	@echo "🥫 Running tests …"
