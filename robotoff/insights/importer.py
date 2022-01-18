@@ -155,22 +155,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for insight in self.process_product_insights(
                 product, barcode, insights, server_domain
             ):
-                source_image: Optional[str] = insight.source_image
-                if (
-                    product
-                    and source_image
-                    and not is_valid_image(product.images, source_image)
-                ):
-                    logger.info(
-                        "Invalid image for product {}: {}".format(barcode, source_image)
-                    )
-                    continue
-
-                if not product and self.product_store.is_real_time():
-                    # if product store is in real time, the product does not exist (deleted)
-                    logger.info("Insight of deleted product {}".format(barcode))
-                    continue
-
                 if not automatic:
                     insight.automatic_processing = False
 
@@ -692,6 +676,45 @@ class LatentInsightImporter(InsightImporter):
             yield insight
 
 
+def is_valid_product_predictions(product_predictions: ProductPredictions, product_store: ProductStore) -> bool:
+    """Return True if the ProductPredictions is valid and can be imported,
+    i.e:
+       - if the source image (if any) is valid
+       - if the product was not deleted (only possible to check if the
+         ProductStore is backed by the MongoDB)
+
+
+    Parameters
+    ----------
+    product_predictions : ProductPredictions
+        The ProductPredictions to check
+    product_store : ProductStore
+        The ProductStore used to fetch the product information
+
+    Returns
+    -------
+    bool
+        Whether the ProductPredictions is valid
+    """
+    product = product_store[product_predictions.barcode]
+    if (
+        product
+        and product_predictions.source_image
+        and not is_valid_image(product.images, product_predictions.source_image)
+    ):
+        logger.info(
+            f"Invalid image for product {product.barcode}: {product_predictions.source_image}"
+        )
+        return False
+
+    if not product and product_store.is_real_time():
+        # if product store is in real time, the product does not exist (deleted)
+        logger.info(f"Insight of deleted product {product.barcode}")
+        return False
+
+    return True
+
+
 class InsightImporterFactory:
     importers: Dict[InsightType, Type[InsightImporter]] = {
         InsightType.packager_code: PackagerCodeInsightImporter,
@@ -735,6 +758,7 @@ def import_insights(
         product_store = get_product_store()
 
     importers: Dict[InsightType, InsightImporter] = {}
+    product_predictions = [p for p in product_predictions if is_valid_product_predictions(p, product_store)]
     product_predictions = sorted(product_predictions, key=operator.attrgetter("type"))
 
     prediction_type: PredictionType
