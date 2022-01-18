@@ -247,10 +247,10 @@ def generate_insights():
         hour=0, minute=0, second=0, microsecond=0
     ) - datetime.timedelta(days=1)
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-    category_insights_iter = predict_from_dataset(dataset, datetime_threshold)
+    product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
     imported = importer.import_insights(
-        category_insights_iter,
+        product_predictions_iter,
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic=False,
     )

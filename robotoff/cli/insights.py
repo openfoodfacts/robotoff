@@ -11,17 +11,17 @@ from peewee import fn
 
 from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
-from robotoff.insights.dataclass import ProductInsights
 from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.insights.importer import import_insights as import_insights_
-from robotoff.insights.ocr import (
+from robotoff.models import ProductInsight, db
+from robotoff.off import get_product
+from robotoff.prediction.ocr import (
     OCRResult,
-    extract_insights,
+    extract_predictions,
     get_barcode_from_path,
     ocr_iter,
 )
-from robotoff.models import ProductInsight, db
-from robotoff.off import get_product
+from robotoff.prediction.types import PredictionType, ProductPredictions
 from robotoff.products import get_product_store
 from robotoff.utils import get_logger, jsonl_iter
 
@@ -30,11 +30,11 @@ logger = get_logger(__name__)
 
 def run_from_ocr_archive(
     input_: Union[str, TextIO],
-    insight_type: InsightType,
+    prediction_type: PredictionType,
     output: Optional[pathlib.Path] = None,
     keep_empty: bool = False,
 ):
-    insights = generate_from_ocr_archive(input_, insight_type, keep_empty)
+    predictions = generate_from_ocr_archive(input_, prediction_type, keep_empty)
 
     if output is not None:
         output_f = output.open("w")
@@ -42,15 +42,15 @@ def run_from_ocr_archive(
         output_f = sys.stdout
 
     with contextlib.closing(output_f):
-        for insight in insights:
-            output_f.write(json.dumps(insight.to_dict()) + "\n")
+        for prediction in predictions:
+            output_f.write(json.dumps(prediction.to_dict()) + "\n")
 
 
 def generate_from_ocr_archive(
     input_: Union[str, TextIO, pathlib.Path],
-    insight_type: InsightType,
+    prediction_type: PredictionType,
     keep_empty: bool = False,
-) -> Iterable[ProductInsights]:
+) -> Iterable[ProductPredictions]:
     for source_image, ocr_json in ocr_iter(input_):
         if source_image is None:
             continue
@@ -69,38 +69,38 @@ def generate_from_ocr_archive(
         if ocr_result is None:
             continue
 
-        insights = extract_insights(ocr_result, insight_type)
+        predictions = extract_predictions(ocr_result, prediction_type)
 
-        # Do not produce output if insights is empty and we don't want to keep it
-        if not keep_empty and not insights:
+        # Do not produce output if predictions is empty and we don't want to keep it
+        if not keep_empty and not predictions:
             continue
 
-        yield ProductInsights(
-            insights=insights,
+        yield ProductPredictions(
+            predictions=predictions,
             barcode=barcode,
-            type=insight_type,
+            type=prediction_type,
             source_image=source_image,
         )
 
 
-def insights_iter(file_path: pathlib.Path) -> Iterable[ProductInsights]:
+def insights_iter(file_path: pathlib.Path) -> Iterable[ProductPredictions]:
     for insight in jsonl_iter(file_path):
-        yield ProductInsights.from_dict(insight)
+        yield ProductPredictions.from_dict(insight)
 
 
 def import_insights(
-    insights: Iterable[ProductInsights],
+    predictions: Iterable[ProductPredictions],
     server_domain: str,
     batch_size: int = 1024,
 ) -> int:
     product_store = get_product_store()
     imported: int = 0
 
-    insight_batch: List[ProductInsights]
-    for insight_batch in chunked(insights, batch_size):
+    prediction_batch: List[ProductPredictions]
+    for prediction_batch in chunked(predictions, batch_size):
         with db.atomic():
             imported += import_insights_(
-                insight_batch,
+                prediction_batch,
                 server_domain,
                 automatic=False,
                 product_store=product_store,

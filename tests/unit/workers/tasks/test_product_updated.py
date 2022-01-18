@@ -1,7 +1,6 @@
 from robotoff import settings
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import ProductInsights, RawInsight
-from robotoff.ml.category.neural.category_classifier import Prediction
+from robotoff.prediction.category.neural.category_classifier import CategoryPrediction
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.workers.tasks.product_updated import add_category_insight
 
 # TODO: refactor function under test to make it easier to test
@@ -37,7 +36,7 @@ def test_add_category_insight_with_ml_insights(mocker):
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
-        return_value=[Prediction("en:chicken", 0.9)],
+        return_value=[CategoryPrediction("en:chicken", 0.9)],
     )
     mocker.patch("robotoff.workers.tasks.product_updated.get_product_store")
     import_insights_mock = mocker.patch(
@@ -49,12 +48,12 @@ def test_add_category_insight_with_ml_insights(mocker):
 
     import_insights_mock.assert_called_once_with(
         [
-            ProductInsights(
+            ProductPredictions(
                 barcode="123",
-                type=InsightType.category,
-                insights=[
-                    RawInsight(
-                        type=InsightType.category,
+                type=PredictionType.category,
+                predictions=[
+                    Prediction(
+                        type=PredictionType.category,
                         value_tag="en:chicken",
                         data={"lang": "xx", "model": "neural", "confidence": 0.9},
                     )

@@ -1,7 +1,7 @@
 from typing import Iterable, List, Optional, Union
 
 from robotoff import settings
-from robotoff.insights import InsightType, ProductInsights, RawInsight
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.products import ProductDataset
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.elasticsearch import ElasticSearchSpellchecker
@@ -62,7 +62,7 @@ class Spellchecker:
         max_errors: Optional[int] = None,
         lang: str = "fr",
         limit: Optional[int] = None,
-    ) -> Iterable[ProductInsights]:
+    ) -> Iterable[ProductPredictions]:
         dataset = ProductDataset(settings.JSONL_DATASET_PATH)
         product_iter = (
             dataset.stream()
@@ -78,15 +78,15 @@ class Spellchecker:
                 insight = self.predict_insight(product["ingredients_text_fr"])
                 if insight is not None:
                     insight["lang"] = lang
-                    yield ProductInsights(
-                        insights=[
-                            RawInsight(
-                                type=InsightType.ingredient_spellcheck,
+                    yield ProductPredictions(
+                        predictions=[
+                            Prediction(
+                                type=PredictionType.ingredient_spellcheck,
                                 data=insight,
                             )
                         ],
                         barcode=product["code"],
-                        type=InsightType.ingredient_spellcheck,
+                        type=PredictionType.ingredient_spellcheck,
                     )
 
                     insights_count += 1

@@ -102,7 +102,7 @@ jobs:
       #----------------------------------------------
       - name: Configure docker
         run: echo "OFF_UID=$UID" >> .env
-      - name: Launch unit tests
+      - name: Launch tests
         run: make tests
 
       #----------------------------------------------

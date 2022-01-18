@@ -5,12 +5,11 @@ from typing import Dict, List, Optional, Set, Tuple
 import numpy as np
 
 from robotoff import settings
-from robotoff.insights import InsightType
 from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
-from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
@@ -18,9 +17,9 @@ from robotoff.utils.cache import CachedStore
 logger = get_logger(__name__)
 
 
-LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
-    "brand": InsightType.brand,
-    "label": InsightType.label,
+LOGO_TYPE_MAPPING: Dict[str, PredictionType] = {
+    "brand": PredictionType.brand,
+    "label": PredictionType.label,
 }
 
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
@@ -251,8 +250,8 @@ def import_logo_insights(
         selected_logos.append(logo)
         logo_probs.append(probs)
 
-    product_insights = predict_logo_insights(selected_logos, logo_probs)
-    imported = import_insights(product_insights, server_domain, automatic=True)
+    product_predictions = predict_logo_predictions(selected_logos, logo_probs)
+    imported = import_insights(product_predictions, server_domain, automatic=True)
 
     for logo, probs in zip(selected_logos, logo_probs):
         NotifierFactory.get_notifier().send_logo_notification(logo, probs)
@@ -263,47 +262,47 @@ def import_logo_insights(
 def generate_insights_from_annotated_logos(
     logos: List[LogoAnnotation], server_domain: str
 ):
-    product_insights: List[ProductInsights] = []
+    product_predictions: List[ProductPredictions] = []
     for logo in logos:
-        raw_insight = generate_raw_insight(
+        prediction = generate_prediction(
             logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
         )
 
-        if raw_insight is None:
+        if prediction is None:
             return
 
         image = logo.image_prediction.image
 
         try:
-            raw_insight.automatic_processing = is_automatically_processable(
+            prediction.automatic_processing = is_automatically_processable(
                 image.barcode, image.source_image, datetime.timedelta(days=30)
             )
         except InvalidInsight:
             return
 
-        if raw_insight.automatic_processing:
-            raw_insight.data["notify"] = True
+        if prediction.automatic_processing:
+            prediction.data["notify"] = True
 
-        product_insights.append(
-            ProductInsights(
-                insights=[raw_insight],
-                type=raw_insight.type,
+        product_predictions.append(
+            ProductPredictions(
+                predictions=[prediction],
+                type=prediction.type,
                 barcode=image.barcode,
                 source_image=image.source_image,
             )
         )
 
-    imported = import_insights(product_insights, server_domain, automatic=True)
+    imported = import_insights(product_predictions, server_domain, automatic=True)
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")
 
 
-def predict_logo_insights(
+def predict_logo_predictions(
     logos: List[LogoAnnotation],
     logo_probs: List[Dict[LogoLabelType, float]],
-) -> List[ProductInsights]:
-    grouped_insights: Dict[Tuple[str, str, InsightType], List[RawInsight]] = {}
+) -> List[ProductPredictions]:
+    grouped_predictions: Dict[Tuple[str, str, PredictionType], List[Prediction]] = {}
 
     for logo, probs in zip(logos, logo_probs):
         if not probs:
@@ -318,56 +317,59 @@ def predict_logo_insights(
         if label == UNKNOWN_LABEL:
             continue
 
-        raw_insight = generate_raw_insight(
+        prediction = generate_prediction(
             label[0], label[1], confidence=max_prob, logo_id=logo.id
         )
 
-        if raw_insight is not None:
+        if prediction is not None:
             image = logo.image_prediction.image
             source_image = image.source_image
             barcode = image.barcode
-            key = (barcode, source_image, raw_insight.type)
-            grouped_insights.setdefault(key, [])
-            grouped_insights[key].append(raw_insight)
+            key = (barcode, source_image, prediction.type)
+            grouped_predictions.setdefault(key, [])
+            grouped_predictions[key].append(prediction)
 
-    insights: List[ProductInsights] = []
+    product_predictions: List[ProductPredictions] = []
 
-    for (barcode, source_image, insight_type), raw_insights in grouped_insights.items():
-        insights.append(
-            ProductInsights(
-                insights=raw_insights,
-                type=insight_type,
+    for (
+        (barcode, source_image, prediction_type),
+        predictions,
+    ) in grouped_predictions.items():
+        product_predictions.append(
+            ProductPredictions(
+                predictions=predictions,
+                type=prediction_type,
                 barcode=barcode,
                 source_image=source_image,
             )
         )
 
-    return insights
+    return product_predictions
 
 
-def generate_raw_insight(
+def generate_prediction(
     logo_type: str, logo_value: Optional[str], **kwargs
-) -> Optional[RawInsight]:
+) -> Optional[Prediction]:
     if logo_type not in LOGO_TYPE_MAPPING:
         return None
 
-    insight_type = LOGO_TYPE_MAPPING[logo_type]
+    prediction_type = LOGO_TYPE_MAPPING[logo_type]
 
     value_tag = None
     value = None
 
-    if insight_type == InsightType.brand:
+    if prediction_type == PredictionType.brand:
         value = logo_value
         if value is None:
             return None
 
-    elif insight_type == InsightType.label:
+    elif prediction_type == PredictionType.label:
         value_tag = logo_value
         if value_tag is None:
             return None
 
-    return RawInsight(
-        type=insight_type,
+    return Prediction(
+        type=prediction_type,
         value_tag=value_tag,
         value=value,
         automatic_processing=False,

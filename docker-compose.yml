@@ -18,6 +18,7 @@ x-robotoff-base-env: &robotoff-base-env
   IPC_HOST: workers
   IPC_PORT:
   WORKER_COUNT:
+  ROBOTOFF_UPDATED_PRODUCT_WAIT:
   POSTGRES_HOST:
   POSTGRES_DB:
   POSTGRES_USER:
@@ -88,6 +89,7 @@ services:
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
+      - cluster.routing.allocation.disk.watermark.high=95%
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:

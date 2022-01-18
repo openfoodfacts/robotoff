@@ -138,6 +138,8 @@ IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
+# how many seconds should we wait to compute insight on product updated
+UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 
 # Elastic Search is used for simple category prediction and spellchecking.
 
@@ -250,5 +252,5 @@ INFLUXDB_DB_NAME = os.environ.get("INFLUXDB_DB_NAME", "off_metrics")
 INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
 INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
 
-TEST_DIR = PROJECT_DIR / "tests" / "unit"
-TEST_DATA_DIR = TEST_DIR / "data"
+TEST_DIR = PROJECT_DIR / "tests"
+TEST_DATA_DIR = TEST_DIR / "unit/data"
