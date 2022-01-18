@@ -151,44 +151,33 @@ class InsightImporter(metaclass=abc.ABCMeta):
         for barcode, insights in grouped_by.items():
             insights = self.sort_by_priority(insights)
             product = self.product_store[barcode]
-            yield from self._process_product_insights(
-                product, barcode, insights, automatic, server_domain
-            )
 
-    def _process_product_insights(
-        self,
-        product: Optional[Product],
-        barcode: str,
-        insights: List[Insight],
-        automatic: bool,
-        server_domain: str,
-    ) -> Iterator[Insight]:
-        for insight in self.process_product_insights(
-            product, barcode, insights, server_domain
-        ):
-            source_image: Optional[str] = insight.source_image
-            if (
-                product
-                and source_image
-                and not is_valid_image(product.images, source_image)
+            for insight in self.process_product_insights(
+                product, barcode, insights, server_domain
             ):
-                logger.info(
-                    "Invalid image for product {}: {}".format(barcode, source_image)
-                )
-                continue
+                source_image: Optional[str] = insight.source_image
+                if (
+                    product
+                    and source_image
+                    and not is_valid_image(product.images, source_image)
+                ):
+                    logger.info(
+                        "Invalid image for product {}: {}".format(barcode, source_image)
+                    )
+                    continue
 
-            if not product and self.product_store.is_real_time():
-                # if product store is in real time, the product does not exist (deleted)
-                logger.info("Insight of deleted product {}".format(barcode))
-                continue
+                if not product and self.product_store.is_real_time():
+                    # if product store is in real time, the product does not exist (deleted)
+                    logger.info("Insight of deleted product {}".format(barcode))
+                    continue
 
-            if not automatic:
-                insight.automatic_processing = False
+                if not automatic:
+                    insight.automatic_processing = False
 
-            elif insight.automatic_processing is None:
-                insight.automatic_processing = not self.need_validation(insight)
+                elif insight.automatic_processing is None:
+                    insight.automatic_processing = not self.need_validation(insight)
 
-            yield insight
+                yield insight
 
     def group_by_barcode(
         self, data: Iterable[ProductPredictions]
