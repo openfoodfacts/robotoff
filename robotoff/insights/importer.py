@@ -63,15 +63,15 @@ def exist_latent(latent_insight: JSONType) -> bool:
     )
 
 
-class BaseInsightImporter(metaclass=abc.ABCMeta):
+GroupedByOCRInsights = Dict[str, List[Insight]]
+
+
+class InsightImporter(metaclass=abc.ABCMeta):
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
     def import_insights(
-        self,
-        data: Iterable[ProductPredictions],
-        server_domain: str,
-        automatic: bool,
+        self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool,
     ) -> int:
         """Returns the number of insights that were imported."""
         timestamp = datetime.datetime.utcnow()
@@ -94,12 +94,6 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
             inserted += batch_insert(ProductInsight, to_import, 50)
 
         return inserted
-
-    @abc.abstractmethod
-    def process_insights(
-        self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
-    ) -> Iterator[Insight]:
-        pass
 
     def add_fields(
         self,
@@ -149,50 +143,6 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         query = generate_seen_set_query(self.get_type(), barcode, server_domain)
         return query.count()
 
-
-class IngredientSpellcheckImporter(BaseInsightImporter):
-    @staticmethod
-    def get_type() -> InsightType:
-        return InsightType.ingredient_spellcheck
-
-    def process_insights(
-        self,
-        data: Iterable[ProductPredictions],
-        server_domain: str,
-        automatic: bool = False,
-    ) -> Iterator[Insight]:
-        seen_set: Set[Tuple[str, str]] = set(
-            (x.barcode, x.data["lang"])
-            for x in ProductInsight.select(ProductInsight.barcode, ProductInsight.data)
-            .where(
-                ProductInsight.type == self.get_type(),
-                ProductInsight.server_domain == server_domain,
-                ProductInsight.annotation.is_null(True),
-            )
-            .iterator()
-        )
-
-        for product_predictions in data:
-            barcode = product_predictions.barcode
-
-            for insight in product_predictions.predictions:
-                lang = insight.data["lang"]
-                key = (barcode, lang)
-
-                if key not in seen_set:
-                    seen_set.add(key)
-                else:
-                    continue
-
-                yield Insight.from_prediction(
-                    insight, product_predictions, latent=False
-                )
-
-
-GroupedByOCRInsights = Dict[str, List[Insight]]
-
-
-class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
     def process_insights(
         self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
     ) -> Iterator[Insight]:
@@ -298,10 +248,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_latent(
-        product: Optional[Product],
-        barcode: str,
-        emb_code: str,
-        code_seen: Set[str],
+        product: Optional[Product], barcode: str, emb_code: str, code_seen: Set[str],
     ) -> bool:
         product_emb_codes_tags = getattr(product, "emb_codes_tags", [])
 
@@ -486,9 +433,7 @@ class ProductWeightImporter(InsightImporter):
         return False
 
     @staticmethod
-    def group_by_subtype(
-        insights: List[Insight],
-    ) -> Dict[str, List[Insight]]:
+    def group_by_subtype(insights: List[Insight]) -> Dict[str, List[Insight]]:
         insights_by_subtype: Dict[str, List[Insight]] = {}
 
         for insight in insights:
@@ -759,8 +704,7 @@ class LatentInsightImporter(InsightImporter):
 
 
 class InsightImporterFactory:
-    importers: Dict[InsightType, Type[BaseInsightImporter]] = {
-        InsightType.ingredient_spellcheck: IngredientSpellcheckImporter,
+    importers: Dict[InsightType, Type[InsightImporter]] = {
         InsightType.packager_code: PackagerCodeInsightImporter,
         InsightType.label: LabelInsightImporter,
         InsightType.category: CategoryImporter,
@@ -780,7 +724,7 @@ class InsightImporterFactory:
     @classmethod
     def create(
         cls, insight_type: InsightType, product_store: ProductStore
-    ) -> BaseInsightImporter:
+    ) -> InsightImporter:
         if insight_type in cls.importers:
             insight_cls = cls.importers[insight_type]
 
@@ -801,7 +745,7 @@ def import_insights(
     if product_store is None:
         product_store = get_product_store()
 
-    importers: Dict[InsightType, BaseInsightImporter] = {}
+    importers: Dict[InsightType, InsightImporter] = {}
     product_predictions = sorted(product_predictions, key=operator.attrgetter("type"))
 
     prediction_type: PredictionType
