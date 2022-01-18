@@ -44,6 +44,7 @@ services:
     <<: *robotoff-dev
 
 networks:
+  # this links to the product opener dev environment on local machine
   po_local:
-    name: ${PO_LOCAL_NET}
+    name: ${PO_LOCAL_NET:-po_default}
     external: true
