@@ -137,12 +137,6 @@ class ProductInsight(BaseModel):
             **self.data,
         }
 
-    @classmethod
-    def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):
-        updated_values = {**latent_insight.__data__, **kwargs}
-        return cls.create(**updated_values)
-
-
 class Prediction(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256, index=True)
