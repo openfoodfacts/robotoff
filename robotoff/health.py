@@ -53,7 +53,7 @@ def test_connect_ann():
     resp = requests.get(
         f"{settings.BaseURLProvider().robotoff().get()}/api/v1/ann/?count=1"
     )
-    return resp.json()["status"] == "running", "ANN API connection success !"
+    return "count" in resp.json(), "ANN API connection success !"
 
 
 health.add_check(test_connect_mongodb)
