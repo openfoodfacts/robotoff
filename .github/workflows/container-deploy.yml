@@ -99,6 +99,12 @@ jobs:
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
           echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
           echo "TF_SERVING_HOST=${{ secrets.TF_SERVING_HOST }}" >> .env
+          echo "INFLUXDB_HOST={{ secrets.INFLUXDB_HOST }}" >> .env
+          echo "INFLUXDB_PORT=8086" >> .env
+          echo "INFLUXDB_NAME=db0" >> .env
+          echo "INFLUXDB_USERNAME=off" >> .env
+          echo "INFLUXDB_PASSWORD={{ secrets.INFLUXDB_PASSWORD }}" >> .env
+
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
