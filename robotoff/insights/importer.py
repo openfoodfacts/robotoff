@@ -49,7 +49,7 @@ def is_reserved_barcode(barcode: str) -> bool:
     return barcode.startswith("2")
 
 
-GroupedByOCRInsights = Dict[str, List[Insight]]
+GroupedByBarcodeInsights = Dict[str, List[Insight]]
 
 
 class InsightImporter(metaclass=abc.ABCMeta):
@@ -132,7 +132,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def process_insights(
         self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
     ) -> Iterator[Insight]:
-        grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
+        grouped_by: GroupedByBarcodeInsights = self.group_by_barcode(data)
 
         for barcode, insights in grouped_by.items():
             insights = self.sort_by_priority(insights)
@@ -151,8 +151,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     def group_by_barcode(
         self, data: Iterable[ProductPredictions]
-    ) -> GroupedByOCRInsights:
-        grouped_by: GroupedByOCRInsights = {}
+    ) -> GroupedByBarcodeInsights:
+        grouped_by: GroupedByBarcodeInsights = {}
         insight_type = self.get_type()
 
         for item in data:
