@@ -68,6 +68,7 @@ scikit-learn = "~0.24.2"
 matplotlib = "~3.4.3"
 scipy = "~1.6.1"
 typer = "~0.3.2"
+py-healthcheck = "^1.10.1"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "~0.19.5"

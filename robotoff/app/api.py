@@ -925,6 +925,19 @@ class StatusResource:
         }
 
 
+class HealthResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        from robotoff.health import health
+
+        message, status, headers = health.run()
+        resp.media = {
+            "message": orjson.loads(message),
+            "status": status,
+            "headers": headers,
+        }
+        resp.status = str(status)
+
+
 class DumpResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         keep_types: Optional[List[str]] = req.get_param_as_list(
@@ -1024,5 +1037,6 @@ api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/status", StatusResource())
+api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())

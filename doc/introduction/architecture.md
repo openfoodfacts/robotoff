@@ -8,7 +8,10 @@ Robotoff is made of several services:
 - the _scheduler_, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...) [^scheduler]
 - the _workers_, responsible for all long-lasting tasks
 
+Communication between API and Workers happens through ipc events. [^ipc_events]
+
 [^scheduler]: See `scheduler.run`
+[^ipc_events]: See `robotoff.workers.client` and `robotoff.workers.listener`
 
 Robotoff allows to predict many information (also called _insights_), mostly from the product images.
 

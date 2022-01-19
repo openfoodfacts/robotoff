@@ -1,10 +1,11 @@
 # Services maintenance
 
-Robotoff is split in 3 services:
+Robotoff is split in several services:
 
 - the _scheduler_, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...)
 - the _workers_, responsible for all long-lasting tasks (mainly insight extraction from images)
 - the public _api_ service
+- the _tf\_serving_ service which serve tensor flow models
 
 Two additional services are used:
 
@@ -12,6 +13,11 @@ Two additional services are used:
 - a Elasticsearch single node (_elasticsearch_ service)
 
 All services are managed by docker. [docker-compose](https://docs.docker.com/compose/) is used to manage these services.
+
+`tf-serving` has it's own file: `docker/ml.yml`.
+
+Models for tf-serving part are stored as released at https://github.com/openfoodfacts/robotoff-models.
+
 
 ## Quick start
 

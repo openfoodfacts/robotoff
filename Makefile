@@ -1,10 +1,21 @@
 #!/usr/bin/make
 
+# nice way to have our .env in environment for use in makefile
+# see https://lithic.tech/blog/2020-05/makefile-dot-env
+# Note: this will mask environment variable as opposed to docker-compose priority
+# yet most developper should'nt bump into this
+ifneq (,$(wildcard ./.env))
+    -include .env
+    -include .envrc
+    export
+endif
+
 NAME = "robotoff"
 ENV_FILE ?= .env
 MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
+
 
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
@@ -29,7 +40,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up dl-models
+dev: hello up create_external_networks dl-models
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
@@ -109,7 +120,13 @@ checks: toml-check flake8 black-check mypy isort-check docs
 
 lint: toml-lint isort black
 
-tests: unit-tests integration-tests
+tests: create_external_networks unit-tests integration-tests
+
+
+health:
+	@echo "🥫 Running health tests …"
+	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
+
 
 unit-tests:
 	@echo "🥫 Running tests …"
@@ -132,6 +149,10 @@ create_external_volumes:
 	docker volume create api-dataset
 	docker volume create postgres-data
 	docker volume create es-data
+
+create_external_networks:
+	@echo "🥫 Creating external networks if needed … (dev only)"
+	( docker network create ${PO_LOCAL_NET} || true )
 
 #---------#
 # Cleanup #

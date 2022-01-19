@@ -14,6 +14,7 @@ x-robotoff-dev: &robotoff-dev
       - ./scripts:/opt/robotoff/scripts
       - ./pyproject.toml:/opt/robotoff/pyproject.toml
       - ./poetry.toml:/opt/robotoff/poetry.toml
+      - ./poetry.lock:/opt/robotoff/poetry.lock
       # make tests available
       - ./tests:/opt/robotoff/tests
       - ./.cov:/opt/robotoff/.cov
@@ -24,7 +25,26 @@ x-robotoff-dev: &robotoff-dev
       - ./doc:/opt/robotoff/doc
       - ./gh_pages:/opt/robotoff/gh_pages
 
+x-networks-productopener-local: &networks-productopener-local
+    # in dev we want to be able to communicatet with product opener
+    # using our docker-compose environment
+    networks:
+      - po_local
+      - webnet
+
 services:
-  api: *robotoff-dev
-  workers: *robotoff-dev
-  scheduler: *robotoff-dev
+  api:
+    <<: *robotoff-dev
+    <<: *networks-productopener-local
+  workers:
+    <<: *robotoff-dev
+    <<: *networks-productopener-local
+  scheduler:
+    <<: *networks-productopener-local
+    <<: *robotoff-dev
+
+networks:
+  # this links to the product opener dev environment on local machine
+  po_local:
+    name: ${PO_LOCAL_NET:-po_default}
+    external: true
