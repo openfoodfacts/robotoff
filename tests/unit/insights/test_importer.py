@@ -62,7 +62,6 @@ class TestProductWeightImporter:
         _, inserted_insights, __ = batch_insert_mock.call_args[0]
         assert len(inserted_insights) == 1
         inserted_insight = inserted_insights[0]
-        assert inserted_insight["latent"] is False
         assert inserted_insight["automatic_processing"] is True
         assert inserted_insight["barcode"] == DEFAULT_BARCODE
         assert inserted_insight["type"] == "product_weight"
