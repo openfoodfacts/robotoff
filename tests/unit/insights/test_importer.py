@@ -54,9 +54,11 @@ class TestProductWeightImporter:
         predictions = self.get_product_weight_predictions(
             [self.generate_prediction(value, insight_data)], DEFAULT_BARCODE
         )
-        insights = list(importer.generate_insights(
-            [predictions], automatic=True, server_domain=DEFAULT_SERVER_DOMAIN
-        ))
+        insights = list(
+            importer.generate_insights(
+                [predictions], automatic=True, server_domain=DEFAULT_SERVER_DOMAIN
+            )
+        )
         assert len(insights) == 1
         insight = insights[0]
         assert insight.automatic_processing is True

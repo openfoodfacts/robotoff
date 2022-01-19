@@ -73,7 +73,9 @@ class BrandValidator(InsightValidator):
 
 
 class LabelValidator(InsightValidator):
-    def is_valid(self, insight: ProductInsight, product: Optional[Product] = None) -> bool:
+    def is_valid(
+        self, insight: ProductInsight, product: Optional[Product] = None
+    ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 

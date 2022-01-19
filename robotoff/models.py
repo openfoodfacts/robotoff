@@ -152,7 +152,9 @@ class Prediction(BaseModel):
     value = peewee.TextField(null=True)
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False)
-    server_domain = peewee.TextField(help_text="server domain linked to the insight", index=True)
+    server_domain = peewee.TextField(
+        help_text="server domain linked to the insight", index=True
+    )
     predictor = peewee.CharField(max_length=100, null=True)
 
 
