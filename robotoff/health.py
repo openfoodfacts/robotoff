@@ -33,7 +33,9 @@ def test_connect_postgres():
 
 
 def test_connect_influxdb():
-    logger.debug("health: testing postgres connection to %s", settings.INFLUXDB_HOST)
+    if not settings.INFLUXDB_HOST:
+        return True, "skipped InfluxDB db connection test (INFLUXDB_HOST is empty)!"
+    logger.debug("health: testing InfluxDB connection to %s", settings.INFLUXDB_HOST)
     client = InfluxDBClient(
         settings.INFLUXDB_HOST,
         settings.INFLUXDB_PORT,
