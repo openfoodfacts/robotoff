@@ -174,26 +174,6 @@ jobs:
           cd ${{ matrix.env}}
           make health
 
-    - name: Run integration tests [pre-prod only]
-      uses: appleboy/ssh-action@master
-      id: integration
-      if: ${{ matrix.env == 'robotoff-net' }}
-      env:
-        DOCKER_CLIENT_TIMEOUT: 120
-        COMPOSE_HTTP_TIMEOUT: 120
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
-        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-        script_stop: false
-        script: |
-          cd ${{ matrix.env}}
-          make integration
-
     - name: Cleanup obsolete Docker objects
       uses: appleboy/ssh-action@master
       if: ${{ always() }}
