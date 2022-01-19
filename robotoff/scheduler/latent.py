@@ -3,7 +3,8 @@ from typing import Dict, List, Optional, Set
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
-from robotoff.models import ProductInsight
+from robotoff.models import Prediction, ProductInsight
+from robotoff.prediction.types import PredictionType
 from robotoff.products import (
     DBProductStore,
     get_image_id,
@@ -33,16 +34,16 @@ def generate_fiber_quality_facet():
     added = 0
     seen_set: Set[str] = set()
 
-    for insight in (
-        ProductInsight.select(ProductInsight.barcode, ProductInsight.source_image)
+    for prediction in (
+        Prediction.select(Prediction.barcode, Prediction.source_image)
         .where(
-            ProductInsight.type == InsightType.nutrient_mention.name,
-            ProductInsight.data["mentions"].contains("fiber"),
-            ProductInsight.source_image.is_null(False),
+            Prediction.type == PredictionType.nutrient_mention.name,
+            Prediction.data["mentions"].contains("fiber"),
+            Prediction.source_image.is_null(False),
         )
         .iterator()
     ):
-        barcode = insight.barcode
+        barcode = prediction.barcode
 
         if barcode in seen_set:
             continue
@@ -59,7 +60,7 @@ def generate_fiber_quality_facet():
         images = product.get("images", {})
 
         if (
-            not is_valid_image(images, insight.source_image)
+            not is_valid_image(images, prediction.source_image)
             or "fiber" in nutriments
             or "fiber_prepared" in nutriments
         ):
@@ -72,7 +73,7 @@ def generate_fiber_quality_facet():
 
         if (
             FIBER_NUTRITION_QUALITY_FACET_NAME not in data_quality_tags
-            and is_nutrition_image(images, insight.source_image)
+            and is_nutrition_image(images, prediction.source_image)
         ):
             facets.append(FIBER_NUTRITION_QUALITY_FACET_NAME)
 
@@ -95,20 +96,20 @@ def generate_fiber_quality_facet():
 
 
 def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
-    for insight in (
-        ProductInsight.select(ProductInsight.data, ProductInsight.source_image)
+    for prediction in (
+        Prediction.select(Prediction.data, Prediction.source_image)
         .where(
-            ProductInsight.barcode == barcode,
-            ProductInsight.type == InsightType.image_orientation.name,
-            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-            ProductInsight.source_image.is_null(False),
+            Prediction.barcode == barcode,
+            Prediction.type == PredictionType.image_orientation.name,
+            Prediction.server_domain == settings.OFF_SERVER_DOMAIN,
+            Prediction.source_image.is_null(False),
         )
         .iterator()
     ):
-        insight_image_id = get_image_id(insight.source_image)  # type: ignore
+        prediction_image_id = get_image_id(prediction.source_image)  # type: ignore
 
-        if image_id is not None and insight_image_id == image_id:
-            return insight.data.get("rotation")
+        if image_id is not None and prediction_image_id == image_id:
+            return prediction.data.get("rotation")
 
     return None
 

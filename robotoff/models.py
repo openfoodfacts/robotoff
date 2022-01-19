@@ -146,13 +146,13 @@ class ProductInsight(BaseModel):
 class Prediction(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256, index=True)
-    data = BinaryJSONField()
+    data = BinaryJSONField(index=True)
     timestamp = peewee.DateTimeField(index=True)
     value_tag = peewee.TextField(null=True)
     value = peewee.TextField(null=True)
-    source_image = peewee.TextField(null=True)
+    source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(default=False)
-    server_domain = peewee.TextField(help_text="server domain linked to the insight")
+    server_domain = peewee.TextField(help_text="server domain linked to the insight", index=True)
     predictor = peewee.CharField(max_length=100, null=True)
 
 
