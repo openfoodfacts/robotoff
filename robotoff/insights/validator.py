@@ -196,7 +196,6 @@ class InsightValidatorFactory:
 class InsightValidationResult(enum.IntEnum):
     unchanged = 0
     deleted = 1
-    updated = 2
 
 
 def validate_insight(

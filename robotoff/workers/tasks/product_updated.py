@@ -70,12 +70,6 @@ def update_insights(barcode: str, server_domain: str):
                 logger.info(
                     "Insight {} deleted (type: {})".format(insight.id, insight.type)
                 )
-            elif result == InsightValidationResult.updated:
-                logger.info(
-                    "Insight {} converted to latent (type: {})".format(
-                        insight.id, insight.type
-                    )
-                )
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:

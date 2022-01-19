@@ -132,12 +132,6 @@ def refresh_insights(with_deletion: bool = False):
                         )
                         continue
 
-                    elif result == InsightValidationResult.updated:
-                        logger.info(
-                            "converting insight {} (type: {}) to latent"
-                            "".format(insight.id, insight.type)
-                        )
-
                     insight_updated = update_insight_attributes(product, insight)
 
                     if insight_updated:

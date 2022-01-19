@@ -16,7 +16,6 @@ def _set_up_and_tear_down(peewee_db):
         barcode=1,
         type="category",
         n_votes=0,
-        latent=False,
         value_tag="en:seeds",
         server_domain="api.openfoodfacts.net",
         automatic_processing=False,
