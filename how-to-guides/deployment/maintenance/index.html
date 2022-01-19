@@ -549,11 +549,12 @@
                 
                 
                 <h1 id="services-maintenance">Services maintenance</h1>
-<p>Robotoff is split in 3 services:</p>
+<p>Robotoff is split in several services:</p>
 <ul>
 <li>the <em>scheduler</em>, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...)</li>
 <li>the <em>workers</em>, responsible for all long-lasting tasks (mainly insight extraction from images)</li>
 <li>the public <em>api</em> service</li>
+<li>the <em>tf_serving</em> service which serve tensor flow models</li>
 </ul>
 <p>Two additional services are used:</p>
 <ul>
@@ -561,6 +562,8 @@
 <li>a Elasticsearch single node (<em>elasticsearch</em> service)</li>
 </ul>
 <p>All services are managed by docker. <a href="https://docs.docker.com/compose/">docker-compose</a> is used to manage these services.</p>
+<p><code>tf-serving</code> has it's own file: <code>docker/ml.yml</code>.</p>
+<p>Models for tf-serving part are stored as released at https://github.com/openfoodfacts/robotoff-models.</p>
 <h2 id="quick-start">Quick start</h2>
 <p>see <a href="../dev-install/">dev-install</a></p>
 <p>You can then use:
