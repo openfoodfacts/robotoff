@@ -38,12 +38,6 @@ class InsightValidator(metaclass=abc.ABCMeta):
 
         return not self.has_invalid_image(insight, product)
 
-    @abc.abstractmethod
-    def is_latent(
-        self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> Optional[bool]:
-        pass
-
 
 class BrandValidator(InsightValidator):
     def is_valid(self, insight: ProductInsight, product: Optional[Product] = None):
@@ -67,29 +61,19 @@ class BrandValidator(InsightValidator):
         if brand_tag in BRAND_BLACKLIST_STORE.get():
             return False
 
-        return True
-
-    def is_latent(
-        self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> bool:
-        if product is None:
-            product = self.product_store[insight.barcode]
-
         brand_tag = insight.value_tag
 
         if product is None:
-            return False
-
-        if brand_tag in product.brands_tags:
             return True
 
-        return False
+        if brand_tag in product.brands_tags:
+            return False
+
+        return True
 
 
 class LabelValidator(InsightValidator):
-    def is_latent(
-        self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> bool:
+    def is_valid(self, insight: ProductInsight, product: Optional[Product] = None) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
@@ -97,7 +81,7 @@ class LabelValidator(InsightValidator):
         label_tag = insight.value_tag
 
         if label_tag in product_labels_tags:
-            return True
+            return False
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
@@ -106,9 +90,9 @@ class LabelValidator(InsightValidator):
         if label_tag in label_taxonomy and label_taxonomy.is_parent_of_any(
             label_tag, product_labels_tags
         ):
-            return True
+            return False
 
-        return False
+        return True
 
 
 class CategoryValidator(InsightValidator):
@@ -135,46 +119,41 @@ class CategoryValidator(InsightValidator):
 
         return True
 
-    def is_latent(
-        self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> None:
-        return None
-
 
 class ProductWeightValidator(InsightValidator):
-    def is_latent(
+    def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
         if product is None:
-            return False
-
-        if product.quantity is not None:
             return True
 
-        return False
+        if product.quantity is not None:
+            return False
+
+        return True
 
 
 class ExpirationDateValidator(InsightValidator):
-    def is_latent(
+    def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
             product = self.product_store[insight.barcode]
 
         if not product:
-            return False
-
-        if product.expiration_date:
             return True
 
-        return False
+        if product.expiration_date:
+            return False
+
+        return True
 
 
 class PackagerCodeValidator(InsightValidator):
-    def is_latent(
+    def is_valid(
         self, insight: ProductInsight, product: Optional[Product] = None
     ) -> bool:
         if product is None:
@@ -186,16 +165,9 @@ class PackagerCodeValidator(InsightValidator):
         normalized_emb_codes = [normalize_emb_code(c) for c in product_emb_codes_tags]
 
         if normalized_emb_code in normalized_emb_codes:
-            return True
+            return False
 
-        return False
-
-
-class GenericValidator(InsightValidator):
-    def is_latent(
-        self, insight: ProductInsight, product: Optional[Product] = None
-    ) -> None:
-        return None
+        return True
 
 
 class InsightValidatorFactory:
@@ -206,8 +178,6 @@ class InsightValidatorFactory:
         InsightType.brand.name: BrandValidator,
         InsightType.expiration_date.name: ExpirationDateValidator,
         InsightType.packager_code.name: PackagerCodeValidator,
-        InsightType.packaging.name: GenericValidator,
-        InsightType.store.name: GenericValidator,
     }
 
     @classmethod
@@ -238,14 +208,5 @@ def validate_insight(
     if not validator.is_valid(insight, product=product):
         insight.delete_instance()
         return InsightValidationResult.deleted
-
-    if not insight.latent:
-        latent = validator.is_latent(insight, product)
-
-        if latent is not None and latent:
-            insight.latent = True
-            insight.process_after = None
-            insight.save()
-            return InsightValidationResult.updated
 
     return InsightValidationResult.unchanged
