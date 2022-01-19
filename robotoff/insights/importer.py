@@ -5,8 +5,6 @@ import operator
 import uuid
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 
-from more_itertools import chunked
-
 from robotoff import settings
 from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
 from robotoff.insights.dataclass import Insight, InsightType
@@ -19,7 +17,6 @@ from robotoff.products import Product, ProductStore, get_product_store, is_valid
 from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -63,48 +60,33 @@ class InsightImporter(metaclass=abc.ABCMeta):
         automatic: bool,
     ) -> int:
         """Returns the number of insights that were imported."""
-        timestamp = datetime.datetime.utcnow()
-        processed_insights: Iterator[Insight] = self.process_insights(
+        insights: Iterator[Insight] = self.generate_insights(
             data, server_domain, automatic
         )
-        full_insights = self.add_fields(processed_insights, timestamp, server_domain)
-        inserted = 0
-
-        for insight_batch in chunked(full_insights, 50):
-            to_import: List[JSONType] = []
-            insight: Insight
-
-            for insight in insight_batch:
-                to_import.append(insight.to_dict())
-
-            inserted += batch_insert(ProductInsight, to_import, 50)
-
-        return inserted
+        return batch_insert(
+            ProductInsight, (insight.to_dict() for insight in insights), 50
+        )
 
     def add_fields(
         self,
-        insights: Iterator[Insight],
+        insight: Insight,
+        product: Optional[Product],
         timestamp: datetime.datetime,
         server_domain: str,
-    ) -> Iterator[Insight]:
+        server_type: str,
+    ):
         """Add mandatory insight fields."""
-        server_type: str = get_server_type(server_domain).name
+        barcode = insight.barcode
+        insight.reserved_barcode = is_reserved_barcode(barcode)
+        insight.server_domain = server_domain
+        insight.server_type = server_type
+        insight.id = str(uuid.uuid4())
+        insight.timestamp = timestamp
+        insight.countries = getattr(product, "countries_tags", [])
+        insight.brands = getattr(product, "brands_tags", [])
 
-        for insight in insights:
-            barcode = insight.barcode
-            product = self.product_store[barcode]
-            insight.reserved_barcode = is_reserved_barcode(barcode)
-            insight.server_domain = server_domain
-            insight.server_type = server_type
-            insight.id = str(uuid.uuid4())
-            insight.timestamp = timestamp
-            insight.countries = getattr(product, "countries_tags", [])
-            insight.brands = getattr(product, "brands_tags", [])
-
-            if insight.automatic_processing:
-                insight.process_after = timestamp + datetime.timedelta(minutes=10)
-
-            yield insight
+        if insight.automatic_processing:
+            insight.process_after = timestamp + datetime.timedelta(minutes=10)
 
     @abc.abstractmethod
     def get_type(self) -> InsightType:
@@ -129,16 +111,21 @@ class InsightImporter(metaclass=abc.ABCMeta):
         query = generate_seen_set_query(self.get_type(), barcode, server_domain)
         return query.count()
 
-    def process_insights(
-        self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
+    def generate_insights(
+        self,
+        data: Iterable[ProductPredictions],
+        server_domain: str,
+        automatic: bool,
     ) -> Iterator[Insight]:
+        timestamp = datetime.datetime.utcnow()
+        server_type = get_server_type(server_domain).name
         grouped_by: GroupedByBarcodeInsights = self.group_by_barcode(data)
 
         for barcode, insights in grouped_by.items():
             insights = self.sort_by_priority(insights)
             product = self.product_store[barcode]
 
-            for insight in self.process_product_insights(
+            for insight in self._generate_insights(
                 product, barcode, insights, server_domain
             ):
                 if not automatic:
@@ -147,6 +134,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 elif insight.automatic_processing is None:
                     insight.automatic_processing = not self.need_validation(insight)
 
+                self.add_fields(insight, product, timestamp, server_domain, server_type)
                 yield insight
 
     def group_by_barcode(
@@ -181,7 +169,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         return sorted(insights, key=lambda insight: insight.data.get("priority", 1))
 
     @abc.abstractmethod
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -224,7 +212,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
         return False
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -276,7 +264,7 @@ class LabelInsightImporter(InsightImporter):
 
         return False
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -307,7 +295,7 @@ class CategoryImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.category
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -391,7 +379,7 @@ class ProductWeightImporter(InsightImporter):
 
         return insights_by_subtype
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -447,7 +435,7 @@ class ExpirationDateImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.expiration_date
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -511,7 +499,7 @@ class BrandInsightImporter(InsightImporter):
 
         return False
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -542,7 +530,7 @@ class StoreInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.store
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
@@ -568,7 +556,7 @@ class PackagingInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.packaging
 
-    def process_product_insights(
+    def _generate_insights(
         self,
         product: Optional[Product],
         barcode: str,
