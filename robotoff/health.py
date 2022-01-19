@@ -49,9 +49,9 @@ def test_connect_influxdb():
 
 
 def test_connect_ann():
-    logger.debug("health: testing robotoff status")
+    logger.debug("health: testing robotoff ann status")
     resp = requests.get(
-        f"{settings.BaseURLProvider().robotoff().get()}/ann/api/v1/status"
+        f"{settings.BaseURLProvider().robotoff().get()}/api/v1/ann/?count=1"
     )
     return resp.json()["status"] == "running", "ANN API connection success !"
 
