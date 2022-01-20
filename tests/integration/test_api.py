@@ -43,7 +43,7 @@ def client():
     return testing.TestClient(api)
 
 
-def test_random_question(client):
+def test_random_question(client, mocker):
     product = {"selected_images": {"ingredients": {"display": {"fr": "foo"}}}}
     mocker.patch("robotoff.insights.question.get_product", return_value=product)
     result = client.simulate_get("/api/v1/questions/random")
@@ -66,7 +66,7 @@ def test_random_question(client):
     }
 
 
-def test_random_question_user_has_already_seen(client):
+def test_random_question_user_has_already_seen(client, mocker):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
     AnnotationVote.create(
         insight_id=insight_id,
@@ -80,7 +80,7 @@ def test_random_question_user_has_already_seen(client):
     assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
 
 
-def test_popular_question(client):
+def test_popular_question(client, mocker):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
     result = client.simulate_get("/api/v1/questions/popular")
 
@@ -108,7 +108,8 @@ def test_barcode_question_not_found(client):
     assert result.json == {"questions": [], "status": "no_questions"}
 
 
-def test_barcode_question(client):
+def test_barcode_question(client, mocker):
+    mocker.patch("robotoff.insights.question.get_product", return_value={})
     result = client.simulate_get("/api/v1/questions/1")
 
     assert result.status_code == 200
