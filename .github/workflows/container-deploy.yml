@@ -152,6 +152,8 @@ jobs:
         script_stop: false
         script: |
           cd ${{ matrix.env}}
+          # let api 15s to be up !
+          sleep 15s
           make livecheck
 
     - name: Run health tests
