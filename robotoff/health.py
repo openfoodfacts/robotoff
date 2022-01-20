@@ -50,10 +50,9 @@ def test_connect_influxdb():
 
 def test_connect_robotoff_api():
     logger.debug("health: testing robotoff API status")
-    resp = requests.get(
-        f"{settings.BaseURLProvider().robotoff().get()}/api/v1/status"
-    )
+    resp = requests.get(f"{settings.BaseURLProvider().robotoff().get()}/api/v1/status")
     return resp.json()["status"] == "running", "Robotoff API connection success !"
+
 
 def test_connect_ann_api():
     logger.debug("health: testing robotoff ANN API status")
@@ -61,6 +60,7 @@ def test_connect_ann_api():
         f"{settings.BaseURLProvider().robotoff().get()}/api/v1/ann/count"
     )
     return resp["count"] >= 0, "Robotoff ANN API connection success !"
+
 
 health.add_check(test_connect_mongodb)
 health.add_check(test_connect_postgres)
