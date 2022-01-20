@@ -1,9 +1,8 @@
 import uuid
 from typing import Any, Dict, List, Optional
 
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import ProductWeightImporter
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
@@ -22,24 +21,24 @@ class FakeProductStore:
 
 class TestProductWeightImporter:
     @staticmethod
-    def generate_raw_insight(value, data: Dict[str, Any]):
-        return RawInsight(
-            type=InsightType.product_weight,
+    def generate_prediction(value, data: Dict[str, Any]):
+        return Prediction(
+            type=PredictionType.product_weight,
             data=data,
             automatic_processing=None,
             predictor="ocr",
         )
 
     @staticmethod
-    def get_product_weight_insights(
-        insights: List[RawInsight],
+    def get_product_weight_predictions(
+        predictions: List[Prediction],
         barcode: Optional[str] = None,
         source_image: Optional[str] = None,
     ):
-        return ProductInsights(
-            insights=insights,
+        return ProductPredictions(
+            predictions=predictions,
             barcode=barcode or DEFAULT_BARCODE,
-            type=InsightType.product_weight,
+            type=PredictionType.product_weight,
             source_image=source_image,
         )
 
@@ -53,11 +52,11 @@ class TestProductWeightImporter:
         importer = ProductWeightImporter(product_store)
         value = "poids net: 30 g"
         insight_data = {"matcher_type": "with_mention", "value": value}
-        insights = self.get_product_weight_insights(
-            [self.generate_raw_insight(value, insight_data)], DEFAULT_BARCODE
+        predictions = self.get_product_weight_predictions(
+            [self.generate_prediction(value, insight_data)], DEFAULT_BARCODE
         )
         importer.import_insights(
-            [insights], automatic=True, server_domain=DEFAULT_SERVER_DOMAIN
+            [predictions], automatic=True, server_domain=DEFAULT_SERVER_DOMAIN
         )
         batch_insert_mock.assert_called_once()
         _, inserted_insights, __ = batch_insert_mock.call_args[0]

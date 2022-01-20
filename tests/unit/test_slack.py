@@ -5,9 +5,8 @@ from typing import Optional
 import pytest
 
 from robotoff import settings, slack
-from robotoff.insights import InsightType
-from robotoff.insights.dataclass import RawInsight
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
+from robotoff.prediction.types import Prediction, PredictionType
 
 
 class MockSlackResponse:
@@ -45,10 +44,7 @@ class PartialRequestMatcher:
 
 @pytest.mark.parametrize(
     "token_value,want_type",
-    [
-        ("T", slack.SlackNotifier),
-        ("", slack.NoopSlackNotifier),
-    ],
+    [("T", slack.SlackNotifier), ("", slack.NoopSlackNotifier)],
 )
 def test_notifier_factory(monkeypatch, token_value, want_type):
     def test_slack_token(t: str) -> str:
@@ -73,17 +69,18 @@ def test_notify_image_flag_no_insights(mocker):
     assert not mock.called
 
 
-def test_notify_image_flag_public(mocker):
+def test_notify_image_flag_public(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
 
     notifier = slack.SlackNotifier("")
 
     notifier.notify_image_flag(
         [
-            RawInsight(
-                type=InsightType.image_flag,
+            Prediction(
+                type=PredictionType.image_flag,
                 data={"text": "bad_word", "type": "SENSITIVE", "label": "flagged"},
             )
         ],
@@ -94,24 +91,25 @@ def test_notify_image_flag_public(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <https://static.openfoodfacts.net/images/products/source_image|Image> -- <https://world.openfoodfacts.net/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
             notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
-            "https://static.openfoodfacts.net/images/products/source_image",
+            f"{settings.OFF_IMAGE_BASE_URL}/source_image",
         ),
     )
 
 
-def test_notify_image_flag_private(mocker):
+def test_notify_image_flag_private(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
 
     notifier = slack.SlackNotifier("")
 
     notifier.notify_image_flag(
         [
-            RawInsight(
-                type=InsightType.image_flag,
+            Prediction(
+                type=PredictionType.image_flag,
                 data={"type": "label_annotation", "label": "face", "likelihood": 0.8},
             )
         ],
@@ -122,17 +120,18 @@ def test_notify_image_flag_private(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "type: label_annotation\nlabel: *face*, score: 0.8\n\n <https://static.openfoodfacts.net/images/products/source_image|Image> -- <https://world.openfoodfacts.net/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
             notifier.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL,
-            "https://static.openfoodfacts.net/images/products/source_image",
+            f"{settings.OFF_IMAGE_BASE_URL}/source_image",
         ),
     )
 
 
-def test_notify_automatic_processing_weight(mocker):
+def test_notify_automatic_processing_weight(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
 
     notifier = slack.SlackNotifier("")
 
@@ -149,16 +148,17 @@ def test_notify_automatic_processing_weight(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "The `200g` weight was automatically added to product 123 (<https://world.openfoodfacts.net/product/123|product>, <https://static.openfoodfacts.net/images/products/image/1|source image>)",
+            f"The `200g` weight was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <{settings.OFF_IMAGE_BASE_URL}/image/1|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
 
 
-def test_notify_automatic_processing_label(mocker):
+def test_notify_automatic_processing_label(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
 
     notifier = slack.SlackNotifier("")
 
@@ -171,7 +171,7 @@ def test_notify_automatic_processing_label(mocker):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            "The `en:vegan` label was automatically added to product 123 (<https://world.openfoodfacts.net/product/123|product>, <https://static.openfoodfacts.net/images/products/image/1|source image>)",
+            f"The `en:vegan` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <{settings.OFF_IMAGE_BASE_URL}/image/1|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )

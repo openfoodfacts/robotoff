@@ -1,7 +1,7 @@
 import pathlib
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import typer
 from typer import Argument, Option
@@ -20,12 +20,15 @@ def run(service: str) -> None:
 def predict_insight(ocr_url: str) -> None:
     import json
 
-    from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
+    from robotoff.insights.extraction import (
+        DEFAULT_PREDICTION_TYPES,
+        extract_ocr_predictions,
+    )
     from robotoff.utils import get_logger
 
     get_logger()
 
-    results = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+    results = extract_ocr_predictions(ocr_url, DEFAULT_PREDICTION_TYPES)
 
     print(json.dumps(results, indent=4))
 
@@ -33,7 +36,7 @@ def predict_insight(ocr_url: str) -> None:
 @app.command()
 def generate_ocr_insights(
     source: str,
-    insight_type: str,
+    prediction_type: str,
     output: Path = Option(
         ...,
         help="File to write output to, stdout if not specified",
@@ -55,13 +58,15 @@ def generate_ocr_insights(
     from typing import TextIO, Union
 
     from robotoff.cli import insights
-    from robotoff.insights._enum import InsightType
+    from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     input_: Union[str, TextIO] = sys.stdin if source == "-" else source
 
     get_logger()
-    insights.run_from_ocr_archive(input_, InsightType[insight_type], output, keep_empty)
+    insights.run_from_ocr_archive(
+        input_, PredictionType[prediction_type], output, keep_empty
+    )
 
 
 @app.command()
@@ -175,7 +180,7 @@ def download_models(force: bool = False) -> None:
     TODO: add all models to this CLI.
     """
     from robotoff.cli.file import download_file
-    from robotoff.ml.category.prediction_from_ocr.constants import (
+    from robotoff.prediction.category.prediction_from_ocr.constants import (
         RIDGE_PREDICTOR_FILEPATH,
         RIDGE_PREDICTOR_URL,
     )
@@ -194,25 +199,33 @@ def download_models(force: bool = False) -> None:
 def categorize(
     barcode: str,
     deepest_only: bool = False,
-    blacklist: bool = False,
 ) -> None:
-    from robotoff import settings
-    from robotoff.ml.category.neural.model import (
-        LocalModel,
-        filter_blacklisted_categories,
-    )
-    from robotoff.utils import get_logger
+    """Categorise predicts product categories based on the neural category classifier.
 
-    get_logger()
-    model = LocalModel(settings.CATEGORY_CLF_MODEL_PATH)
-    predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
+    deepest_only: controls whether the returned predictions should only contain the deepmost
+    categories for a predicted taxonomy chain.
+    For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
+    setting deepest_only=True will return 'beans'."""
+    from robotoff.prediction.category.neural.category_classifier import (
+        CategoryClassifier,
+    )
+    from robotoff.products import get_product
+    from robotoff.taxonomy import TaxonomyType, get_taxonomy
+
+    product = get_product(barcode)
+    if product is None:
+        print(f"Product {barcode} not found")
+        return
+
+    predicted = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
+        product, deepest_only
+    )
 
     if predicted:
-        if blacklist:
-            predicted = filter_blacklisted_categories(predicted)
-
-        for cat, confidence in predicted:
-            print("{}: {}".format(cat, confidence))
+        for prediction in predicted:
+            print(f"{prediction.category}: {prediction.confidence}")
+    else:
+        print(f"Nothing predicted for product {barcode}")
 
 
 @app.command()
@@ -228,7 +241,7 @@ def import_insights(
     from robotoff.cli.insights import generate_from_ocr_archive
     from robotoff.cli.insights import import_insights as import_insights_
     from robotoff.cli.insights import insights_iter
-    from robotoff.insights._enum import InsightType
+    from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     logger = get_logger()
@@ -239,7 +252,9 @@ def import_insights(
         if insight_type is None:
             sys.exit("Required option: --insight-type")
 
-        insights = generate_from_ocr_archive(generate_from, InsightType[insight_type])
+        insights = generate_from_ocr_archive(
+            generate_from, PredictionType[insight_type]
+        )
     elif input_ is not None:
         logger.info("Importing insights from {}".format(input_))
         insights = insights_iter(input_)
@@ -267,40 +282,37 @@ def apply_insights(
 
 @app.command()
 def init_elasticsearch(
-    index: bool = False,
-    data: bool = True,
-    product: bool = False,
-    category: bool = False,
-    product_version: str = "product",
+    load_index: bool = False,
+    load_data: bool = True,
+    to_load: Optional[List[str]] = None,
 ) -> None:
-    import orjson
+    """
+    This command is used for manual insertion of the Elasticsearch data and/or indexes
+    for products and categorties.
 
-    from robotoff import settings
-    from robotoff.elasticsearch.category.dump import category_export
-    from robotoff.elasticsearch.product.dump import product_export
+    to_load specifies which indexes/data should be loaded - supported values are
+    in robotoff.settings.ElasticsearchIndex.
+    """
+    from robotoff.elasticsearch.export import ElasticsearchExporter
+    from robotoff.settings import ElasticsearchIndex
+    from robotoff.utils import get_logger
     from robotoff.utils.es import get_es_client
 
-    if index:
-        with settings.ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH.open("rb") as f:
-            product_index_config = orjson.loads(f.read())
+    logger = get_logger()
 
-        with settings.ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH.open("rb") as f:
-            category_index_config = orjson.loads(f.read())
+    es_exporter = ElasticsearchExporter(get_es_client())
 
-        client = get_es_client()
+    if not to_load:
+        return
 
-        if product:
-            client.indices.create(product_version, product_index_config)
-
-        if category:
-            client.indices.create("category", category_index_config)
-
-    if data:
-        if product:
-            product_export(version=product_version)
-
-        if category:
-            category_export()
+    for item in to_load:
+        if item not in ElasticsearchIndex.SUPPORTED_INDICES:
+            logger.error(f"Skipping over unknown Elasticsearch type: '{item}'")
+            continue
+        if load_index:
+            es_exporter.load_index(item, ElasticsearchIndex.SUPPORTED_INDICES[item])
+        if load_data:
+            es_exporter.export_index_data(item)
 
 
 @app.command()

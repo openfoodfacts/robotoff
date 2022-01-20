@@ -18,6 +18,10 @@ def _instance_tld() -> str:
         return _robotoff_instance
 
 
+_default_robotoff_domain = f"openfoodfacts.{_instance_tld()}"
+_robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_domain)
+
+
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
@@ -28,8 +32,9 @@ class BaseURLProvider(object):
         self.domain = os.environ.get(
             "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
         )
-        self.url = "https://%(prefix)s.%(domain)s"
+        self.url = "%(scheme)s://%(prefix)s.%(domain)s"
         self.prefix = "world"
+        self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
 
     def robotoff(self):
         self.prefix = "robotoff"
@@ -37,6 +42,12 @@ class BaseURLProvider(object):
 
     def static(self):
         self.prefix = "static"
+        # locally we may want to change it, give environment a chance
+        static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
+        if static_domain:
+            if "://" in static_domain:
+                self.scheme, static_domain = static_domain.split("://", 1)
+            self.domain = static_domain
         return self
 
     def country(self, country_code: str):
@@ -44,7 +55,11 @@ class BaseURLProvider(object):
         return self
 
     def get(self):
-        return self.url % {"prefix": self.prefix, "domain": self.domain}
+        return self.url % {
+            "scheme": self.scheme,
+            "prefix": self.prefix,
+            "domain": self.domain,
+        }
 
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -123,21 +138,24 @@ IPC_HOST = os.environ.get("IPC_HOST", "localhost")
 IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
 IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
 WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
+# how many seconds should we wait to compute insight on product updated
+UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 
 # Elastic Search is used for simple category prediction and spellchecking.
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
 
-ELASTICSEARCH_CATEGORY_INDEX = "category"
-ELASTICSEARCH_PRODUCT_INDEX = "product"
-ELASTICSEARCH_PRODUCT_EXTENDED_INDEX = "product_extended"
-ELASTICSEARCH_CATEGORY_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"
-)
-ELASTICSEARCH_PRODUCT_INDEX_CONFIG_PATH = (
-    PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"
-)
+
+class ElasticsearchIndex:
+    CATEGORY = "category"
+    PRODUCT = "product"
+
+    SUPPORTED_INDICES = {
+        CATEGORY: (PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"),
+        PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
+    }
+
 
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
@@ -202,17 +220,13 @@ MODELS_DIR = PROJECT_DIR / "models"
 
 # Tensorflow Serving host parameters
 
-TF_SERVING_HOST = os.environ.get("TF_SERVING_HOST", "localhost")
-TF_SERVING_HTTP_PORT = os.environ.get("TF_SERVING_PORT", "8501")
-TF_SERVING_BASE_URL = "http://{}:{}/v1/models".format(
-    TF_SERVING_HOST, TF_SERVING_HTTP_PORT
-)
+_tf_serving_host = os.environ.get("TF_SERVING_HOST", "localhost")
+_tf_serving_http_port = os.environ.get("TF_SERVING_PORT", "8501")
+TF_SERVING_BASE_URL = f"http://{_tf_serving_host}:{_tf_serving_http_port}/v1/models"
 
 TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
-CATEGORY_CLF_MODEL_PATH = MODELS_DIR / "category" / "checkpoint.hdf5"
-CATEGORY_CLF_CATEGORY_BLACKLIST = DATA_DIR / "clf_category_blacklist.txt"
 
 OBJECT_DETECTION_TF_SERVING_MODELS = (
     "nutriscore",

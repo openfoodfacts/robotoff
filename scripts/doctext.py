@@ -8,8 +8,8 @@ from typing import List, Optional
 import requests
 from PIL import Image, ImageDraw
 
-from robotoff.insights.ocr import OCRResult
-from robotoff.insights.ocr.dataclass import BoundingPoly
+from robotoff.prediction.ocr import OCRResult
+from robotoff.prediction.ocr.dataclass import BoundingPoly
 
 
 class FeatureType(Enum):

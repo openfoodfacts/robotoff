@@ -14,7 +14,7 @@ class ElasticsearchHandler:
         suggest_mode: str = "missing",
         suggester_name: str = "autocorrect",
         reverse: bool = True,
-        index_name: str = settings.ELASTICSEARCH_PRODUCT_INDEX,
+        index_name: str = settings.ElasticsearchIndex.PRODUCT,
     ):
         self.client = client
         self.confidence = confidence
@@ -27,7 +27,7 @@ class ElasticsearchHandler:
 
     def analyze(self, text: str):
         return self.client.indices.analyze(
-            index=settings.ELASTICSEARCH_PRODUCT_INDEX,
+            index=settings.ElasticsearchIndex.PRODUCT,
             body={"tokenizer": "standard", "text": text},
         )["tokens"]
 
@@ -37,7 +37,7 @@ class ElasticsearchHandler:
     def suggest_batch(self, texts: Iterable[str]) -> List[Dict]:
         queries = [self.__generate_query(text) for text in texts]
         body = generate_msearch_body(self.index_name, queries)
-        response = self.client.msearch(body=body, doc_type=settings.ELASTICSEARCH_TYPE)
+        response = self.client.msearch(body=body)
         suggestions = self.__postprocess_response(response)
         return suggestions
 

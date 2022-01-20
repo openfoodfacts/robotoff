@@ -5,17 +5,20 @@ x-robotoff-base: &robotoff-base
     restart: $RESTART_POLICY
     image: ghcr.io/openfoodfacts/robotoff:${TAG}
     volumes:
-      - api-dataset:/opt/robotoff/datasets
+      - ./datasets:/opt/robotoff/datasets
       - ./tf_models:/opt/robotoff/tf_models
       - ./models:/opt/robotoff/models
 
 x-robotoff-base-env: &robotoff-base-env
   ROBOTOFF_INSTANCE:
   ROBOTOFF_DOMAIN:
+  ROBOTOFF_SCHEME:
+  STATIC_OFF_DOMAIN:
   IPC_AUTHKEY:
   IPC_HOST: workers
   IPC_PORT:
   WORKER_COUNT:
+  ROBOTOFF_UPDATED_PRODUCT_WAIT:
   POSTGRES_HOST:
   POSTGRES_DB:
   POSTGRES_USER:
@@ -23,6 +26,10 @@ x-robotoff-base-env: &robotoff-base-env
   MONGO_URI:
   OFF_USER:
   OFF_PASSWORD:
+  INFLUXDB_HOST:
+  INFLUXDB_PORT:
+  INFLUXDB_USERNAME:
+  INFLUXDB_PASSWORD:
   SENTRY_DSN:
   ELASTICSEARCH_HOSTS:
   TF_SERVING_HOST:
@@ -35,7 +42,7 @@ services:
     depends_on:
       - workers
     ports:
-      - 5500:5500
+      - "${ROBOTOFF_EXPOSE:-5500}:5500"
     networks:
       - webnet
 
@@ -50,6 +57,8 @@ services:
     mem_limit: 8g
     networks:
       - webnet
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   scheduler:
     <<: *robotoff-base
@@ -80,6 +89,7 @@ services:
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
+      - cluster.routing.allocation.disk.watermark.high=95%
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
@@ -95,9 +105,9 @@ services:
       - webnet
 
 volumes:
-  api-dataset:
   postgres-data:
   es-data:
 
 networks:
   webnet:
+    name: webnet

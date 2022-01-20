@@ -29,6 +29,7 @@ from robotoff import settings
 def test_base_url_provider(monkeypatch, instance, got_url, want_url):
     monkeypatch.setattr(settings, "_robotoff_instance", instance)
     monkeypatch.delenv("ROBOTOFF_DOMAIN", raising=False)  # force defaults to apply
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
     assert eval(got_url) == want_url
 
 

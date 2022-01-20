@@ -1,12 +1,14 @@
 import time
 from typing import Dict, Optional
 
+import requests
+
+from robotoff import settings
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import ProductInsights
-from robotoff.insights.extraction import get_insights_from_product_name
+from robotoff.insights.dataclass import InsightType
+from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import InsightImporterFactory
 from robotoff.insights.validator import (
     InsightValidationResult,
@@ -14,12 +16,12 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     validate_insight,
 )
-from robotoff.ml.category.neural.model import (
-    predict_from_product as predict_category_from_product_ml,
-)
 from robotoff.models import ProductInsight
 from robotoff.off import ServerType, get_server_type
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.types import PredictionType, ProductPredictions
 from robotoff.products import Product, get_product, get_product_store
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -29,7 +31,7 @@ logger = get_logger(__name__)
 def update_insights(barcode: str, server_domain: str):
     # Sleep 10s to let the OFF update request that triggered the webhook call
     # to finish
-    time.sleep(10)
+    time.sleep(settings.UPDATED_PRODUCT_WAIT)
     product_dict = get_product(barcode)
 
     if product_dict is None:
@@ -80,26 +82,43 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if get_server_type(server_domain) != ServerType.off:
         return False
 
-    product_insights = []
+    product_predictions = []
     product_insight = predict_category_from_product_es(product)
 
     if product_insight is not None:
-        product_insights.append(product_insight)
+        product_predictions.append(product_insight)
 
-    product_insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+    category_predictions = None
+    try:
+        category_predictions = CategoryClassifier(
+            get_taxonomy(TaxonomyType.category.name)
+        ).predict(product)
+    except requests.exceptions.HTTPError as e:
+        resp = e.response
+        logger.error(
+            f"Category classifier returned an error: {resp.status_code}: {resp.text}"
+        )
 
-    if product_insight is not None:
-        product_insights.append(product_insight)
+    if category_predictions is not None:
+        product_insight = ProductPredictions(
+            barcode=product["code"],
+            type=PredictionType.category,
+            predictions=[
+                category_prediction.to_prediction()
+                for category_prediction in category_predictions
+            ],
+        )
+        product_predictions.append(product_insight)
 
-    if not product_insights:
+    if len(product_predictions) < 1:
         return False
 
-    merged_product_insight = ProductInsights.merge(product_insights)
+    merged_product_prediction = ProductPredictions.merge(product_predictions)
     product_store = get_product_store()
     importer = InsightImporterFactory.create(InsightType.category, product_store)
 
     imported = importer.import_insights(
-        [merged_product_insight],
+        [merged_product_prediction],
         server_domain=server_domain,
         automatic=False,
     )
@@ -120,18 +139,20 @@ def updated_product_predict_insights(
         return updated
 
     product_store = get_product_store()
-    insights_all = get_insights_from_product_name(barcode, product_name)
+    predictions_all = get_predictions_from_product_name(barcode, product_name)
 
-    for insight_type, insights in insights_all.items():
-        importer = InsightImporterFactory.create(insight_type, product_store)
+    for prediction_type, predictions in predictions_all.items():
+        importer = InsightImporterFactory.create(
+            InsightType[prediction_type], product_store
+        )
         imported = importer.import_insights(
-            [insights], server_domain=server_domain, automatic=False
+            [predictions], server_domain=server_domain, automatic=False
         )
 
         if imported:
             logger.info(
                 "{} insights ({}) imported for product {}".format(
-                    imported, insight_type, barcode
+                    imported, prediction_type, barcode
                 )
             )
             updated = True

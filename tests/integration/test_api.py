@@ -3,6 +3,7 @@ import base64
 import pytest
 from falcon import testing
 
+from robotoff import settings
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
 
@@ -11,6 +12,9 @@ insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
+    # clean db
+    AnnotationVote.delete().execute()
+    ProductInsight.delete().execute()
     # Set up.
     ProductInsight.create(
         id=insight_id,
@@ -20,7 +24,7 @@ def _set_up_and_tear_down(peewee_db):
         n_votes=0,
         latent=False,
         value_tag="en:seeds",
-        server_domain="api.openfoodfacts.net",
+        server_domain=settings.OFF_SERVER_DOMAIN,
         automatic_processing=False,
         unique_scans_n=0,
         reserved_barcode=False,
@@ -34,13 +38,15 @@ def _set_up_and_tear_down(peewee_db):
     ProductInsight.delete().execute()
 
 
+@pytest.fixture()
 def client():
     return testing.TestClient(api)
 
 
-def test_random_question():
-    cl = client()
-    result = cl.simulate_get("/api/v1/questions/random")
+def test_random_question(client):
+    product = {"selected_images": {"ingredients": {"display": {"fr": "foo"}}}}
+    mocker.patch("robotoff.insights.question.get_product", return_value=product)
+    result = client.simulate_get("/api/v1/questions/random")
 
     assert result.status_code == 200
     assert result.json == {
@@ -53,30 +59,30 @@ def test_random_question():
                 "question": "Does the product belong to this category?",
                 "insight_id": insight_id,
                 "insight_type": "category",
+                "source_image_url": "foo",
             }
         ],
         "status": "found",
     }
 
 
-def test_random_question_user_has_already_seen():
+def test_random_question_user_has_already_seen(client):
+    mocker.patch("robotoff.insights.question.get_product", return_value={})
     AnnotationVote.create(
         insight_id=insight_id,
         value=1,
         device_id="device1",
     )
 
-    cl = client()
-
-    result = cl.simulate_get("/api/v1/questions/random?device_id=device1")
+    result = client.simulate_get("/api/v1/questions/random?device_id=device1")
 
     assert result.status_code == 200
     assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
 
 
-def test_popular_question():
-    cl = client()
-    result = cl.simulate_get("/api/v1/questions/popular")
+def test_popular_question(client):
+    mocker.patch("robotoff.insights.question.get_product", return_value={})
+    result = client.simulate_get("/api/v1/questions/popular")
 
     assert result.status_code == 200
     assert result.json == {
@@ -95,17 +101,15 @@ def test_popular_question():
     }
 
 
-def test_barcode_question_not_found():
-    cl = client()
-    result = cl.simulate_get("/api/v1/questions/2")
+def test_barcode_question_not_found(client):
+    result = client.simulate_get("/api/v1/questions/2")
 
     assert result.status_code == 200
     assert result.json == {"questions": [], "status": "no_questions"}
 
 
-def test_barcode_question():
-    cl = client()
-    result = cl.simulate_get("/api/v1/questions/1")
+def test_barcode_question(client):
+    result = client.simulate_get("/api/v1/questions/1")
 
     assert result.status_code == 200
     assert result.json == {
@@ -123,9 +127,8 @@ def test_barcode_question():
     }
 
 
-def test_annotate_insight_authenticated():
-    cl = client()
-    result = cl.simulate_post(
+def test_annotate_insight_authenticated(client):
+    result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
@@ -151,9 +154,8 @@ def test_annotate_insight_authenticated():
     assert "completed_at" in insight
 
 
-def test_annotate_insight_not_enough_votes():
-    cl = client()
-    result = cl.simulate_post(
+def test_annotate_insight_not_enough_votes(client):
+    result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
@@ -187,7 +189,7 @@ def test_annotate_insight_not_enough_votes():
     assert insight.items() > {"n_votes": 1}.items()
 
 
-def test_annotate_insight_majority_annotation():
+def test_annotate_insight_majority_annotation(client):
     # Add pre-existing insight votes.
     AnnotationVote.create(
         insight_id=insight_id,
@@ -205,8 +207,7 @@ def test_annotate_insight_majority_annotation():
         device_id="no-voter1",
     )
 
-    cl = client()
-    result = cl.simulate_post(
+    result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
@@ -234,7 +235,7 @@ def test_annotate_insight_majority_annotation():
 
 
 # This test checks for handling of cases where we have 2 votes for 2 different annotations.
-def test_annotate_insight_opposite_votes():
+def test_annotate_insight_opposite_votes(client):
     # Add pre-existing insight votes.
     AnnotationVote.create(
         insight_id=insight_id,
@@ -252,8 +253,7 @@ def test_annotate_insight_opposite_votes():
         device_id="no-voter1",
     )
 
-    cl = client()
-    result = cl.simulate_post(
+    result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
@@ -282,7 +282,7 @@ def test_annotate_insight_opposite_votes():
 
 # This test checks for handling of cases where we have 3 votes for one annotation,
 # but the follow-up has 2 votes.
-def test_annotate_insight_majority_vote_overriden():
+def test_annotate_insight_majority_vote_overriden(client):
     # Add pre-existing insight votes.
     AnnotationVote.create(
         insight_id=insight_id,
@@ -305,8 +305,7 @@ def test_annotate_insight_majority_vote_overriden():
         device_id="no-voter2",
     )
 
-    cl = client()
-    result = cl.simulate_post(
+    result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,

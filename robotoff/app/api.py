@@ -21,16 +21,12 @@ from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.insights._enum import InsightType
-from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
-from robotoff.insights.ocr.dataclass import OCRParsingException
+from robotoff.insights.extraction import (
+    DEFAULT_PREDICTION_TYPES,
+    extract_ocr_predictions,
+)
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
-from robotoff.ml.category.neural.model import (
-    ModelRegistry,
-    filter_blacklisted_categories,
-)
-from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.models import (
     ImageModel,
     ImagePrediction,
@@ -44,9 +40,13 @@ from robotoff.off import (
     get_product,
     get_server_type,
 )
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
+from robotoff.prediction.ocr.dataclass import OCRParsingException
+from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import match_unprefixed_value
+from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -320,7 +320,9 @@ class NutrientPredictorResource:
             raise falcon.HTTPBadRequest("a JSON file is expected")
 
         try:
-            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient])
+            product_predictions = extract_ocr_predictions(
+                ocr_url, [PredictionType.nutrient]
+            )
 
         except requests.exceptions.RequestException:
             resp.media = {
@@ -337,13 +339,13 @@ class NutrientPredictorResource:
             }
             return
 
-        if not insights:
+        if not product_predictions:
             resp.media = {
                 "nutrients": {},
             }
         else:
-            nutrient_insights = insights[InsightType.nutrient]
-            resp.media = nutrient_insights.to_dict()
+            nutrient_predictions = product_predictions[PredictionType.nutrient]
+            resp.media = nutrient_predictions.to_dict()
 
 
 class OCRInsightsPredictorResource:
@@ -351,7 +353,7 @@ class OCRInsightsPredictorResource:
         ocr_url = req.get_param("ocr_url", required=True)
 
         try:
-            insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+            insights = extract_ocr_predictions(ocr_url, DEFAULT_PREDICTION_TYPES)
 
         except requests.exceptions.RequestException:
             resp.media = {
@@ -377,20 +379,24 @@ class CategoryPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         deepest_only = req.get_param_as_bool("deepest_only", default=False)
-        blacklist = req.get_param_as_bool("blacklist", default=False)
-        model = ModelRegistry.get()
-        predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
 
-        if predicted:
-            if blacklist:
-                predicted = filter_blacklisted_categories(predicted)
+        categories = []
 
-            categories = [
-                {"category": category, "confidence": confidence}
-                for category, confidence in predicted
-            ]
+        product = get_product(barcode)
+        if product:
+            predicted = CategoryClassifier(
+                get_taxonomy(TaxonomyType.category.name)
+            ).predict(product, deepest_only)
 
-        categories = categories or []
+            if predicted:
+                categories = [
+                    {
+                        "category": prediction.category,
+                        "confidence": prediction.confidence,
+                    }
+                    for prediction in predicted
+                ]
+
         resp.media = {"categories": categories}
 
 
@@ -969,6 +975,19 @@ class StatusResource:
         }
 
 
+class HealthResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        from robotoff.health import health
+
+        message, status, headers = health.run()
+        resp.media = {
+            "message": orjson.loads(message),
+            "status": status,
+            "headers": headers,
+        }
+        resp.status = str(status)
+
+
 class DumpResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         keep_types: Optional[List[str]] = req.get_param_as_list(
@@ -1068,5 +1087,6 @@ api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/status", StatusResource())
+api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
