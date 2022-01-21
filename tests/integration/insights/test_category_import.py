@@ -135,7 +135,9 @@ class TestCategoryImporter:
         assert not inserted.automatic_processing
 
     def test_import_auto(self):
-        imported = self._run_import([neural_prediction("en:Smoked Salmons", confidence=.91, auto=True)])
+        imported = self._run_import(
+            [neural_prediction("en:Smoked Salmons", confidence=0.91, auto=True)]
+        )
         assert imported == 1
         # no insight created
         assert ProductInsight.select().count() == 2
