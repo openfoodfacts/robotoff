@@ -33,6 +33,7 @@ AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interva
 def generate_seen_set_query(
     insight_type: InsightType, barcode: str, server_domain: str
 ):
+    """Query to database to retrieve a type of insight for a product"""
     return ProductInsight.select(ProductInsight.value, ProductInsight.value_tag).where(
         ProductInsight.type == insight_type.name,
         ProductInsight.latent == False,  # noqa: E712
@@ -73,7 +74,10 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
     ) -> int:
-        """Returns the number of insights that were imported."""
+        """
+        Import insights, this is the main method.
+
+        :return: the number of insights that were imported."""
         timestamp = datetime.datetime.utcnow()
         processed_insights: Iterator[Insight] = self.process_insights(
             data, server_domain, automatic
@@ -135,6 +139,7 @@ class BaseInsightImporter(metaclass=abc.ABCMeta):
         return True
 
     def get_seen_set(self, barcode: str, server_domain: str) -> Set[str]:
+        """Retrieve insights already computed"""
         seen_set: Set[str] = set()
         query = generate_seen_set_query(self.get_type(), barcode, server_domain)
 
@@ -193,9 +198,12 @@ GroupedByOCRInsights = Dict[str, List[Insight]]
 
 
 class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
+    """Abstract Base Class for insight importers"""
+
     def process_insights(
         self, data: Iterable[ProductPredictions], server_domain: str, automatic: bool
     ) -> Iterator[Insight]:
+        """Insights are grouped by products and pass to specific methods"""
         grouped_by: GroupedByOCRInsights = self.group_by_barcode(data)
 
         for barcode, insights in grouped_by.items():
@@ -213,6 +221,13 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
         automatic: bool,
         server_domain: str,
     ) -> Iterator[Insight]:
+        """Call specific `process_product_insights` for each product
+        then post process insight,
+        like checking image,
+        and computing if this shoud be automatically applyied.
+
+        :return iterator: iterating over validated insights
+        """
         for insight in self.process_product_insights(
             product, barcode, insights, server_domain
         ):
@@ -243,6 +258,7 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
     def group_by_barcode(
         self, data: Iterable[ProductPredictions]
     ) -> GroupedByOCRInsights:
+        """Group insight by barcode, to be able to process by product"""
         grouped_by: GroupedByOCRInsights = {}
         insight_type = self.get_type()
 
@@ -279,6 +295,7 @@ class InsightImporter(BaseInsightImporter, metaclass=abc.ABCMeta):
         insights: List[Insight],
         server_domain: str,
     ) -> Iterator[Insight]:
+        """Specific processing for products insights"""
         pass
 
 
@@ -393,6 +410,8 @@ class LabelInsightImporter(InsightImporter):
 
 
 class CategoryImporter(InsightImporter):
+    """Importer for insight on category"""
+
     @staticmethod
     def get_type() -> InsightType:
         return InsightType.category
@@ -404,6 +423,7 @@ class CategoryImporter(InsightImporter):
         insights: List[Insight],
         server_domain: str,
     ) -> Iterator[Insight]:
+        # we will filter out insight we already have
         seen_set: Set[str] = self.get_seen_set(
             barcode=barcode, server_domain=server_domain
         )
@@ -426,8 +446,10 @@ class CategoryImporter(InsightImporter):
         category: str,
         seen_set: Set[str],
     ):
-        product_categories_tags = getattr(product, "categories_tags", [])
+        """Category insight validation"""
 
+        # first check wether this is new information
+        product_categories_tags = getattr(product, "categories_tags", [])
         if category in product_categories_tags:
             logger.debug(
                 "The product already belongs to this category, "
@@ -463,7 +485,7 @@ class CategoryImporter(InsightImporter):
                         "considering the insight as invalid"
                     )
                     return False
-
+        # we make it, this is valid
         return True
 
 
@@ -759,6 +781,11 @@ class LatentInsightImporter(InsightImporter):
 
 
 class InsightImporterFactory:
+    """Importer is responsible for storing insights into the database, or other backends.
+    It will import insight taking a strategy according to its type.
+    """
+
+    #: associate each insight type with it's import strategy
     importers: Dict[InsightType, Type[BaseInsightImporter]] = {
         InsightType.ingredient_spellcheck: IngredientSpellcheckImporter,
         InsightType.packager_code: PackagerCodeInsightImporter,
@@ -781,10 +808,12 @@ class InsightImporterFactory:
     def create(
         cls, insight_type: InsightType, product_store: ProductStore
     ) -> BaseInsightImporter:
+        """Store insight to database choosing right importer"""
         if insight_type in cls.importers:
             insight_cls = cls.importers[insight_type]
 
             if insight_cls == LatentInsightImporter:
+                # LatentInsightImporter is generic, thus needs insight_type
                 return insight_cls(product_store, insight_type)  # type: ignore
 
             return insight_cls(product_store)
