@@ -18,6 +18,10 @@ def _instance_tld() -> str:
         return _robotoff_instance
 
 
+_default_robotoff_domain = f"openfoodfacts.{_instance_tld()}"
+_robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_domain)
+
+
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
@@ -28,8 +32,9 @@ class BaseURLProvider(object):
         self.domain = os.environ.get(
             "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
         )
-        self.url = "https://%(prefix)s.%(domain)s"
+        self.url = "%(scheme)s://%(prefix)s.%(domain)s"
         self.prefix = "world"
+        self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
 
     def robotoff(self):
         self.prefix = "robotoff"
@@ -37,6 +42,12 @@ class BaseURLProvider(object):
 
     def static(self):
         self.prefix = "static"
+        # locally we may want to change it, give environment a chance
+        static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
+        if static_domain:
+            if "://" in static_domain:
+                self.scheme, static_domain = static_domain.split("://", 1)
+            self.domain = static_domain
         return self
 
     def country(self, country_code: str):
@@ -44,7 +55,11 @@ class BaseURLProvider(object):
         return self
 
     def get(self):
-        return self.url % {"prefix": self.prefix, "domain": self.domain}
+        return self.url % {
+            "scheme": self.scheme,
+            "prefix": self.prefix,
+            "domain": self.domain,
+        }
 
 
 PROJECT_DIR = Path(__file__).parent.parent

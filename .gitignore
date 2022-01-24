@@ -28,6 +28,8 @@ weights/
 # vim
 .*.swp
 
+# coverage
+.cov
 .coverage
 coverage.xml
 

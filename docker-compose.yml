@@ -12,6 +12,8 @@ x-robotoff-base: &robotoff-base
 x-robotoff-base-env: &robotoff-base-env
   ROBOTOFF_INSTANCE:
   ROBOTOFF_DOMAIN:
+  ROBOTOFF_SCHEME:
+  STATIC_OFF_DOMAIN:
   IPC_AUTHKEY:
   IPC_HOST: workers
   IPC_PORT:
@@ -24,6 +26,10 @@ x-robotoff-base-env: &robotoff-base-env
   MONGO_URI:
   OFF_USER:
   OFF_PASSWORD:
+  INFLUXDB_HOST:
+  INFLUXDB_PORT:
+  INFLUXDB_USERNAME:
+  INFLUXDB_PASSWORD:
   SENTRY_DSN:
   ELASTICSEARCH_HOSTS:
   TF_SERVING_HOST:
@@ -36,7 +42,7 @@ services:
     depends_on:
       - workers
     ports:
-      - 5500:5500
+      - "${ROBOTOFF_EXPOSE:-5500}:5500"
     networks:
       - webnet
 
@@ -51,6 +57,8 @@ services:
     mem_limit: 8g
     networks:
       - webnet
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   scheduler:
     <<: *robotoff-base
@@ -102,3 +110,4 @@ volumes:
 
 networks:
   webnet:
+    name: webnet

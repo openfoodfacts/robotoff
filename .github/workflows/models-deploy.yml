@@ -11,6 +11,7 @@ jobs:
     name: Sync TF models
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}-${{ matrix.asset_name }}
     strategy:
       matrix:
         asset_name:
@@ -49,6 +50,7 @@ jobs:
     name: Sync Category Classifier
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}-${{ matrix.asset_name }}
     strategy:
       matrix:
         asset_name:
