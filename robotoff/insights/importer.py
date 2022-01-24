@@ -31,6 +31,8 @@ AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interva
 def generate_seen_set_query(
     insight_type: InsightType, barcode: str, server_domain: str
 ):
+    """Get `value` and `value_tag` of all insights for specific product and
+    `insight_type`."""
     return ProductInsight.select(ProductInsight.value, ProductInsight.value_tag).where(
         ProductInsight.type == insight_type.name,
         ProductInsight.latent == False,  # noqa: E712
@@ -50,6 +52,8 @@ GroupedByBarcodeInsights = Dict[str, List[Insight]]
 
 
 class InsightImporter(metaclass=abc.ABCMeta):
+    """Abstract class for all insight importers."""
+
     def __init__(self, product_store: ProductStore):
         self.product_store: ProductStore = product_store
 
@@ -59,7 +63,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
     ) -> int:
-        """Returns the number of insights that were imported."""
+        """Import insights, this is the main method.
+
+        :return: the number of insights that were imported.
+        """
         insights: Iterator[Insight] = self.generate_insights(
             data, server_domain, automatic
         )
@@ -97,6 +104,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
         return True
 
     def get_seen_set(self, barcode: str, server_domain: str) -> Set[str]:
+        """Get the set of `value_tag` of all insights for specific product
+        and `insight_type`."""
         seen_set: Set[str] = set()
         query = generate_seen_set_query(self.get_type(), barcode, server_domain)
 
@@ -140,6 +149,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def group_by_barcode(
         self, data: Iterable[ProductPredictions]
     ) -> GroupedByBarcodeInsights:
+        """Generate Insights from ProductPredictions and group them by
+        barcode.
+
+        :param data: an iterable of ProductPredictions
+        :return: A dict mapping a barcode to a list of Insights
+        """
         grouped_by: GroupedByBarcodeInsights = {}
         insight_type = self.get_type()
 
@@ -148,7 +163,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
             if item.type != insight_type:
                 raise ValueError(
-                    "unexpected insight type: " "'{}'".format(insight_type)
+                    "unexpected insight type: '{}'".format(insight_type)
                 )
 
             predictions = item.predictions
@@ -324,6 +339,7 @@ class CategoryImporter(InsightImporter):
     ):
         product_categories_tags = getattr(product, "categories_tags", [])
 
+        # first check whether this is new information
         if category in product_categories_tags:
             logger.debug(
                 "The product already belongs to this category, "
@@ -586,18 +602,10 @@ def is_valid_product_predictions(
        - if the product was not deleted (only possible to check if the
          ProductStore is backed by the MongoDB)
 
-
-    Parameters
-    ----------
-    product_predictions : ProductPredictions
-        The ProductPredictions to check
-    product_store : ProductStore
-        The ProductStore used to fetch the product information
-
-    Returns
-    -------
-    bool
-        Whether the ProductPredictions is valid
+    :param product_predictions: The ProductPredictions to check
+    :param product_store: The ProductStore used to fetch the product
+    information
+    :return: Whether the ProductPredictions is valid
     """
     product = product_store[product_predictions.barcode]
     if (
@@ -677,6 +685,12 @@ def import_product_predictions(
 
 
 class InsightImporterFactory:
+    """Class used to create an InsightImporter.
+
+    InsightImporter classes are responsible for filtering and storing
+    insights into the database. The insight import strategy is specific to its
+    type.
+    """
     importers: Dict[InsightType, Type[InsightImporter]] = {
         InsightType.packager_code: PackagerCodeInsightImporter,
         InsightType.label: LabelInsightImporter,
@@ -692,6 +706,14 @@ class InsightImporterFactory:
     def create(
         cls, insight_type: InsightType, product_store: ProductStore
     ) -> Optional[InsightImporter]:
+        """Create an InsightImporter.
+
+        :param insight_type: the type of the InsightImporter to create
+        :param product_store: the ProductStore that will be used to check
+        insight validity.
+        :return: The InsightImporter or None if no importer is available for
+        this `insight_type`.
+        """
         if insight_type in cls.importers:
             insight_cls = cls.importers[insight_type]
             return insight_cls(product_store)
