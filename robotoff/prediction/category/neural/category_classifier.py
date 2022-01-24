@@ -9,7 +9,7 @@ from robotoff.utils import http_session
 class CategoryPrediction:
     """CategoryPrediction stores information about a category classification prediction."""
 
-    #: treshold on the neural model confidence to automatically apply prediction
+    #: threshold on the neural model confidence to automatically apply prediction
     NEURAL_CONFIDENCE_TRESHOLD = 0.9
 
     def __init__(self, category: str, confidence: float):
