@@ -9,6 +9,3 @@
 * make wait on product update a parameter ([70d54c3](https://www.github.com/openfoodfacts/robotoff/commit/70d54c32afaab009547894e9283a461baec7f9b9))
 
 
-### Documentation
-
-* fix bold word ([203fd91](https://www.github.com/openfoodfacts/robotoff/commit/203fd915863063c56b723e54a718a04e3d5301a1))
