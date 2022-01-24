@@ -56,11 +56,12 @@ def test_add_category_insight_with_ml_insights(mocker):
                         type=PredictionType.category,
                         value_tag="en:chicken",
                         data={"lang": "xx", "model": "neural", "confidence": 0.9},
+                        automatic_processing=True,
                     )
                 ],
             ),
         ],
         server_domain=server_domain,
-        automatic=False,
+        automatic=True,
     )
     assert imported
