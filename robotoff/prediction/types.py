@@ -67,7 +67,7 @@ class ProductPredictions:
 
     @classmethod
     def merge(cls, items: Iterable["ProductPredictions"]) -> "ProductPredictions":
-        """Merges predictions into one object, checking compatibility"""
+        """Merge predictions into one object, checking compatibility."""
         items = list(items)
         if len(items) == 0:
             raise ValueError("no items to merge")
