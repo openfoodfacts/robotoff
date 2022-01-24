@@ -79,12 +79,12 @@ def update_insights(barcode: str, server_domain: str):
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
-    """Tries to compute categories
+    """Predict categories for product and import predicted category insight.
 
     :param barcode: product barcode
     :param product: product as retrieved from application
     :param server_domain: the server the product belongs to
-    :return: True if at least one category was predicted
+    :return: True if at least one category insight was imported
     """
     if get_server_type(server_domain) != ServerType.off:
         return False
