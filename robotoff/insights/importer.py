@@ -162,9 +162,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             barcode = item.barcode
 
             if item.type != insight_type:
-                raise ValueError(
-                    "unexpected insight type: '{}'".format(insight_type)
-                )
+                raise ValueError("unexpected insight type: '{}'".format(insight_type))
 
             predictions = item.predictions
 
@@ -691,6 +689,7 @@ class InsightImporterFactory:
     insights into the database. The insight import strategy is specific to its
     type.
     """
+
     importers: Dict[InsightType, Type[InsightImporter]] = {
         InsightType.packager_code: PackagerCodeInsightImporter,
         InsightType.label: LabelInsightImporter,
