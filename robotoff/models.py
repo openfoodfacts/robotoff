@@ -137,6 +137,7 @@ class ProductInsight(BaseModel):
             **self.data,
         }
 
+
 class Prediction(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256, index=True)
