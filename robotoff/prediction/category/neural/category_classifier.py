@@ -10,7 +10,7 @@ class CategoryPrediction:
     """CategoryPrediction stores information about a category classification prediction."""
 
     #: threshold on the neural model confidence to automatically apply prediction
-    NEURAL_CONFIDENCE_TRESHOLD = 0.9
+    NEURAL_CONFIDENCE_THRESHOLD = 0.9
 
     def __init__(self, category: str, confidence: float):
         self.category = category
@@ -22,7 +22,7 @@ class CategoryPrediction:
             type=PredictionType.category,
             value_tag=self.category,
             data={"lang": "xx", "model": "neural", "confidence": self.confidence},
-            automatic_processing=self.confidence > self.NEURAL_CONFIDENCE_TRESHOLD,
+            automatic_processing=self.confidence > self.NEURAL_CONFIDENCE_THRESHOLD,
         )
 
     def __eq__(self, other):
