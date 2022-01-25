@@ -9,6 +9,9 @@ from robotoff.utils import http_session
 class CategoryPrediction:
     """CategoryPrediction stores information about a category classification prediction."""
 
+    #: threshold on the neural model confidence to automatically apply prediction
+    NEURAL_CONFIDENCE_THRESHOLD = 0.9
+
     def __init__(self, category: str, confidence: float):
         self.category = category
         self.confidence = confidence
@@ -19,6 +22,7 @@ class CategoryPrediction:
             type=PredictionType.category,
             value_tag=self.category,
             data={"lang": "xx", "model": "neural", "confidence": self.confidence},
+            automatic_processing=self.confidence >= self.NEURAL_CONFIDENCE_THRESHOLD,
         )
 
     def __eq__(self, other):
@@ -30,7 +34,11 @@ class CategoryPrediction:
 
 
 class CategoryClassifier:
-    """CategoryClassifier is responsible for generating predictions for a given product."""
+    """CategoryClassifier is responsible for generating predictions for a given product.
+
+    param category_taxonomy: the Taxonomy.
+        This is used to have hierarchy in order to remove parents from resulting category set.
+    """
 
     def __init__(self, category_taxonomy: Taxonomy):
         self.taxonomy = category_taxonomy
@@ -40,10 +48,12 @@ class CategoryClassifier:
     ) -> Optional[List[CategoryPrediction]]:
         """Returns an unordered list of category predictions for the given product.
 
-        deepest_only: controls whether the returned list should only contain the deepmost categories
-        for a predicted taxonomy chain.
-        For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
-        setting deepest_only=True will return ['beans']."""
+        :param deepest_only: controls whether the returned list should only contain the deepmost categories
+            for a predicted taxonomy chain.
+
+            For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
+            setting deepest_only=True will return ['beans'].
+        """
 
         if "ingredients_tags" not in product or "product_name" not in product:
             return None
