@@ -104,6 +104,7 @@ jobs:
           echo "INFLUXDB_NAME=db0" >> .env
           echo "INFLUXDB_USERNAME=off" >> .env
           echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
+          echo "GUNICORN_NUM_WORKERS=8"
 
 
     - name: Create Docker volumes
