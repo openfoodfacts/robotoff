@@ -14,6 +14,7 @@ x-robotoff-base-env: &robotoff-base-env
   ROBOTOFF_DOMAIN:
   ROBOTOFF_SCHEME:
   STATIC_OFF_DOMAIN:
+  GUNICORN_NUM_WORKERS:
   IPC_AUTHKEY:
   IPC_HOST: workers
   IPC_PORT:

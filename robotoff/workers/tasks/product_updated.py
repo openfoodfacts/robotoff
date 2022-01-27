@@ -73,15 +73,24 @@ def update_insights(barcode: str, server_domain: str):
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
+    """Predict categories for product and import predicted category insight.
+
+    :param barcode: product barcode
+    :param product: product as retrieved from application
+    :param server_domain: the server the product belongs to
+    :return: True if at least one category insight was imported
+    """
     if get_server_type(server_domain) != ServerType.off:
         return False
 
+    # predict category using Elasticsearch on title
     product_predictions = []
     product_insight = predict_category_from_product_es(product)
 
     if product_insight is not None:
         product_predictions.append(product_insight)
 
+    # predict category using neural model
     category_predictions = None
     try:
         category_predictions = CategoryClassifier(
@@ -109,7 +118,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
 
     merged_product_prediction = ProductPredictions.merge(product_predictions)
     imported = import_insights(
-        [merged_product_prediction], server_domain, automatic=False
+        [merged_product_prediction], server_domain, automatic=True
     )
 
     if imported:

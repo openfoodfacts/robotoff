@@ -18,6 +18,7 @@ def test_category_prediction_to_prediction():
         type=InsightType.category,
         value_tag="category",
         data={"lang": "xx", "model": "neural", "confidence": 0.9},
+        automatic_processing=True,
     )
 
 
