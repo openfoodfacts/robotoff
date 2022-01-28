@@ -129,7 +129,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         """
         Given a set of predictions, generate insights by products based upon those.
 
-        It calls the _generate_insight method, specific to each insight type 
+        It calls the _generate_insight method, specific to each insight type
         (and implemented in sub-classes)
         """
         timestamp = datetime.datetime.utcnow()
