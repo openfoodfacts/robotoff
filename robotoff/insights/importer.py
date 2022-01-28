@@ -126,6 +126,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
     ) -> Iterator[Insight]:
+        """
+        Given a set of predictions, generate insights by products based upon those.
+
+        It calls the _generate_insight method, specific to each insight type 
+        (and implemented in sub-classes)
+        """
         timestamp = datetime.datetime.utcnow()
         server_type = get_server_type(server_domain).name
         grouped_by: GroupedByBarcodeInsights = self.group_by_barcode(data)
