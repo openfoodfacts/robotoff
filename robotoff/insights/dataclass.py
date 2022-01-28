@@ -98,7 +98,6 @@ class Insight:
     barcode: str
     type: InsightType
     data: Dict[str, Any]
-    latent: bool
     value_tag: Optional[str] = None
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
@@ -121,10 +120,8 @@ class Insight:
         cls,
         prediction: "Prediction",
         product_predictions: "ProductPredictions",
-        latent: bool,
     ) -> "Insight":
         return cls(
-            latent=latent,
             type=InsightType(prediction.type),
             data=prediction.data,
             value_tag=prediction.value_tag,

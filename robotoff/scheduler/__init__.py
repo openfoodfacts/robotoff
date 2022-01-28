@@ -132,12 +132,6 @@ def refresh_insights(with_deletion: bool = False):
                         )
                         continue
 
-                    elif result == InsightValidationResult.updated:
-                        logger.info(
-                            "converting insight {} (type: {}) to latent"
-                            "".format(insight.id, insight.type)
-                        )
-
                     insight_updated = update_insight_attributes(product, insight)
 
                     if insight_updated:
@@ -299,8 +293,8 @@ def run():
     scheduler.add_job(_update_data, "cron", day="*", hour="3", max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO dump by:
-    # - Deleting non-annotated insights for deleted products.
-    # - Converting insights to latent if they're no longer applicable.
+    # - Deleting non-annotated insights for deleted products and insights that
+    #   are no longer applicable.
     # - Updating insight attributes.
     scheduler.add_job(
         functools.partial(refresh_insights, with_deletion=True),

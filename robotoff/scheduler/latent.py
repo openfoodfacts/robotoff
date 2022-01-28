@@ -1,9 +1,12 @@
+import datetime
 import uuid
 from typing import Dict, List, Optional, Set
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
-from robotoff.models import ProductInsight
+from robotoff.models import Prediction, ProductInsight
+from robotoff.off import get_server_type
+from robotoff.prediction.types import PredictionType
 from robotoff.products import (
     DBProductStore,
     get_image_id,
@@ -33,16 +36,16 @@ def generate_fiber_quality_facet():
     added = 0
     seen_set: Set[str] = set()
 
-    for insight in (
-        ProductInsight.select(ProductInsight.barcode, ProductInsight.source_image)
+    for prediction in (
+        Prediction.select(Prediction.barcode, Prediction.source_image)
         .where(
-            ProductInsight.type == InsightType.nutrient_mention.name,
-            ProductInsight.data["mentions"].contains("fiber"),
-            ProductInsight.source_image.is_null(False),
+            Prediction.type == PredictionType.nutrient_mention.name,
+            Prediction.data["mentions"].contains("fiber"),
+            Prediction.source_image.is_null(False),
         )
         .iterator()
     ):
-        barcode = insight.barcode
+        barcode = prediction.barcode
 
         if barcode in seen_set:
             continue
@@ -59,7 +62,7 @@ def generate_fiber_quality_facet():
         images = product.get("images", {})
 
         if (
-            not is_valid_image(images, insight.source_image)
+            not is_valid_image(images, prediction.source_image)
             or "fiber" in nutriments
             or "fiber_prepared" in nutriments
         ):
@@ -72,7 +75,7 @@ def generate_fiber_quality_facet():
 
         if (
             FIBER_NUTRITION_QUALITY_FACET_NAME not in data_quality_tags
-            and is_nutrition_image(images, insight.source_image)
+            and is_nutrition_image(images, prediction.source_image)
         ):
             facets.append(FIBER_NUTRITION_QUALITY_FACET_NAME)
 
@@ -95,20 +98,20 @@ def generate_fiber_quality_facet():
 
 
 def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
-    for insight in (
-        ProductInsight.select(ProductInsight.data, ProductInsight.source_image)
+    for prediction in (
+        Prediction.select(Prediction.data, Prediction.source_image)
         .where(
-            ProductInsight.barcode == barcode,
-            ProductInsight.type == InsightType.image_orientation.name,
-            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-            ProductInsight.source_image.is_null(False),
+            Prediction.barcode == barcode,
+            Prediction.type == PredictionType.image_orientation.name,
+            Prediction.server_domain == settings.OFF_SERVER_DOMAIN,
+            Prediction.source_image.is_null(False),
         )
         .iterator()
     ):
-        insight_image_id = get_image_id(insight.source_image)  # type: ignore
+        prediction_image_id = get_image_id(prediction.source_image)  # type: ignore
 
-        if image_id is not None and insight_image_id == image_id:
-            return insight.data.get("rotation")
+        if image_id is not None and prediction_image_id == image_id:
+            return prediction.data.get("rotation")
 
     return None
 
@@ -130,25 +133,25 @@ def generate_nutrition_image_insights():
     added = 0
     seen_set: Set[str] = set()
 
-    latent_insight: ProductInsight
-    for latent_insight in (
-        ProductInsight.select()
-        .where(ProductInsight.type == InsightType.nutrient_mention.name)
-        .order_by(ProductInsight.source_image.desc())
+    prediction: Prediction
+    for prediction in (
+        Prediction.select()
+        .where(Prediction.type == PredictionType.nutrient_mention.name)
+        .order_by(Prediction.source_image.desc())
         .iterator()
     ):
-        barcode = latent_insight.barcode
+        barcode = prediction.barcode
 
         if barcode in seen_set:
             continue
 
-        mentions = latent_insight.data["mentions"]
+        mentions = prediction.data["mentions"]
         nutrition_image_langs = find_nutrition_image_lang(mentions)
 
         if not nutrition_image_langs:
             continue
 
-        image_id = get_image_id(latent_insight.source_image)
+        image_id = get_image_id(prediction.source_image)
         rotation = get_image_orientation(barcode, image_id)
 
         if rotation is None:
@@ -164,25 +167,30 @@ def generate_nutrition_image_insights():
         if not has_nutrition_image(images):
             for lang in nutrition_image_langs:
                 if not (
-                    ProductInsight.select()
+                    Prediction.select()
                     .where(
-                        ProductInsight.type == InsightType.nutrition_image.name,
-                        ProductInsight.barcode == barcode,
-                        ProductInsight.value_tag == lang,
-                        ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
+                        Prediction.type == PredictionType.nutrition_image.name,
+                        Prediction.barcode == barcode,
+                        Prediction.value_tag == lang,
+                        Prediction.server_domain == settings.OFF_SERVER_DOMAIN,
                     )
                     .count()
                 ):
-                    ProductInsight.create_from_latent(
-                        latent_insight,
+                    ProductInsight.create(
+                        id=str(uuid.uuid4()),
+                        barcode=prediction.barcode,
                         type=InsightType.nutrition_image.name,
                         value_tag=lang,
+                        timestamp=datetime.datetime.utcnow(),
+                        source_image=prediction.source_image,
+                        server_domain=prediction.server_domain,
+                        server_type=get_server_type(prediction.server_domain).name,
+                        automatic_processing=False,
                         data={
-                            "from_latent": str(latent_insight.id),
+                            "from_prediction": str(prediction.id),
                             "languages": nutrition_image_langs,
                             "rotation": rotation or None,
                         },
-                        id=str(uuid.uuid4()),
                     )
                     added += 1
 
