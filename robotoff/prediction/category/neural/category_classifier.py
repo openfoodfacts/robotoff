@@ -55,7 +55,7 @@ class CategoryClassifier:
             setting deepest_only=True will return ['beans'].
         """
 
-        if "ingredients_tags" not in product or "product_name" not in product:
+        if not (product.get("ingredients_tags") and product.get("product_name")):
             return None
 
         data = {

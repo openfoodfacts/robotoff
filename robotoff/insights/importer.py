@@ -341,6 +341,9 @@ class CategoryImporter(InsightImporter):
         category: str,
         seen_set: Set[str],
     ):
+        if product is None:
+            return False  # product not in store !
+
         product_categories_tags = getattr(product, "categories_tags", [])
 
         # first check whether this is new information

@@ -64,7 +64,9 @@ class TestCategoryImporter:
     def fake_product_store(self):
         return {barcode1: Product({"categories_tags": ["en:Fish"]})}
 
-    def _run_import(self, predictions):
+    def _run_import(self, predictions, product_store=None):
+        if product_store is None:
+            product_store = self.fake_product_store()
         insights = [
             ProductPredictions(
                 barcode=barcode1,
@@ -72,9 +74,7 @@ class TestCategoryImporter:
                 predictions=predictions,
             )
         ]
-        importer = InsightImporterFactory.create(
-            InsightType.category, self.fake_product_store()
-        )
+        importer = InsightImporterFactory.create(InsightType.category, product_store)
         imported = importer.import_insights(
             insights,
             server_domain=settings.OFF_SERVER_DOMAIN,
@@ -145,3 +145,19 @@ class TestCategoryImporter:
         assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
         assert not inserted.latent
         assert inserted.automatic_processing
+
+    @pytest.mark.parametrize(
+        "predictions",
+        [
+            # new category ES
+            [matcher_prediction("en:Smoked Salmons")],
+            # new category Neural
+            [neural_prediction("en:Smoked Salmons", confidence=0.99, auto=True)],
+        ],
+    )
+    def test_import_product_not_in_store(self, predictions):
+        # we should not create insight for non existing products !
+        imported = self._run_import(predictions, product_store={barcode1: None})
+        assert imported == 0
+        # no insight created
+        assert ProductInsight.select().count() == 1
