@@ -678,7 +678,7 @@ def import_product_predictions(
                     prediction, product_predictions, server_domain, timestamp
                 )
                 for prediction in product_predictions.predictions
-                if is_duplicated_prediction(
+                if not is_duplicated_prediction(
                     prediction, product_predictions, server_domain
                 )
             )
