@@ -79,9 +79,7 @@ extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "3.9.2"
-# If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml
-# and in .pre-commit-config.yaml
-black = "21.12b0"
+black = "21.12b0"                                  # If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml and in .pre-commit-config.yaml
 mypy = "0.931"
 pytest = "~6.2.5"
 pytest-mock = "~3.6.1"
