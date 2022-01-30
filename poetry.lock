@@ -1275,6 +1275,65 @@ shellingham = ">=1.3.2,<2.0.0"
 typer = ">=0.3.0,<0.4.0"
 
 [[package]]
+name = "types-certifi"
+version = "2021.10.8.1"
+description = "Typing stubs for certifi"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-futures"
+version = "3.3.8"
+description = "Typing stubs for futures"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-protobuf"
+version = "3.19.7"
+description = "Typing stubs for protobuf"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+types-futures = "*"
+
+[[package]]
+name = "types-requests"
+version = "2.26.3"
+description = "Typing stubs for requests"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-setuptools"
+version = "57.4.8"
+description = "Typing stubs for setuptools"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-six"
+version = "1.16.10"
+description = "Typing stubs for six"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-toml"
+version = "0.10.3"
+description = "Typing stubs for toml"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.0.1"
 description = "Backported and Experimental Type Hints for Python 3.6+"
@@ -1370,7 +1429,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "4b64afa8a41c718dffeeb155675baccfc88d3f8413b9d83fbde637f7971a8a83"
+content-hash = "046028679ec7f61d98a5f78713bdb0e879326f92d3bf1fd1a2bd8bb3ace0e228"
 
 [metadata.files]
 apscheduler = [
@@ -2505,6 +2564,34 @@ typer = [
 typer-cli = [
     {file = "typer-cli-0.0.12.tar.gz", hash = "sha256:d2c4a7a5c0326c20fb0970eed3c2173f76ba6b8b33d9bbece3a3dd91d673f096"},
     {file = "typer_cli-0.0.12-py3-none-any.whl", hash = "sha256:f9b810d4fbdb750b28ceaa5fd8f737db596570418ae092e6d54a64d378e843ca"},
+]
+types-certifi = [
+    {file = "types-certifi-2021.10.8.1.tar.gz", hash = "sha256:546cd3ca4466855959fbc8868fd7139a50eb55a2d1fae497e13b60af439597a3"},
+    {file = "types_certifi-2021.10.8.1-py3-none-any.whl", hash = "sha256:2290008f32e6ac7c69e779d04fa1bc4c6bb4c7200aa3b3b072ad5475a8968aa5"},
+]
+types-futures = [
+    {file = "types-futures-3.3.8.tar.gz", hash = "sha256:6fe8ccc2c2af7ef2fdd9bf73eab6d617074f09f30ad7d373510b4043d39c42de"},
+    {file = "types_futures-3.3.8-py3-none-any.whl", hash = "sha256:d6e97ec51d56b96debfbf1dea32ebec22c1687f16d2547ea0a34b48db45df205"},
+]
+types-protobuf = [
+    {file = "types-protobuf-3.19.7.tar.gz", hash = "sha256:bdee65903eb8f24658ee270e19bd35883915b1e77852b322ae4ec2e4fa822116"},
+    {file = "types_protobuf-3.19.7-py3-none-any.whl", hash = "sha256:aa55e549ab5070639f21bc60623bde7123e36fbbbcd3508a1b174c64433a93e6"},
+]
+types-requests = [
+    {file = "types-requests-2.26.3.tar.gz", hash = "sha256:d63fa617846dcefff5aa2d59e47ab4ffd806e4bb0567115f7adbb5e438302fe4"},
+    {file = "types_requests-2.26.3-py3-none-any.whl", hash = "sha256:ad18284931c5ddbf050ccdd138f200d18fd56f88aa3567019d8da9b2d4fe0344"},
+]
+types-setuptools = [
+    {file = "types-setuptools-57.4.8.tar.gz", hash = "sha256:d5545f2ab3dad24f5cb1c01ba74c1acb7407ab31b2618d423158fc84085160f1"},
+    {file = "types_setuptools-57.4.8-py3-none-any.whl", hash = "sha256:af8480491f9894e6081fb568811978fd7ac87434cab122a0605a32be08d98dbe"},
+]
+types-six = [
+    {file = "types-six-1.16.10.tar.gz", hash = "sha256:78e6c0fe40c2958e2a95ab1e1adfbf3dab56894dc8cf590dae18fd69f3179eff"},
+    {file = "types_six-1.16.10-py2.py3-none-any.whl", hash = "sha256:1038d7a9a7d70004d69c94df97aa375ec177c0ee604bccb91465b1506c3972aa"},
+]
+types-toml = [
+    {file = "types-toml-0.10.3.tar.gz", hash = "sha256:215a7a79198651ec5bdfd66193c1e71eb681a42f3ef7226c9af3123ced62564a"},
+    {file = "types_toml-0.10.3-py3-none-any.whl", hash = "sha256:988457744d9774d194e3539388772e3a685d8057b7c4a89407afeb0a6cbd1b14"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.0.1-py3-none-any.whl", hash = "sha256:7f001e5ac290a0c0401508864c7ec868be4e701886d5b573a9528ed3973d9d3b"},
