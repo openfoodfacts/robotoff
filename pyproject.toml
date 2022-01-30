@@ -33,6 +33,9 @@ use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 88
 
+[tool.mypy]
+ignore_missing_imports = true
+
 [tool.poetry]
 name = "robotoff"
 version = "1.1.0"
