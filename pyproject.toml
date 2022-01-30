@@ -76,7 +76,9 @@ extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "3.9.2"
-black = "20.8b1"
+# If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml
+# and in .pre-commit-config.yaml
+black = "21.12b0"
 mypy = "0.931"
 pytest = "~6.2.5"
 pytest-mock = "~3.6.1"
@@ -90,7 +92,7 @@ mkdocs-material = "~7.2.3"
 mdx-truly-sane-lists = "~1.2"
 mkdocs-awesome-pages-plugin = "~2.5.0"
 typer-cli = "~0.0.11"
-coverage = {extras = ["toml"], version = "~6.2"}
+coverage = { extras = ["toml"], version = "~6.2" }
 
 [tool.poetry.scripts]
 robotoff-cli = 'robotoff.cli.main:main'
