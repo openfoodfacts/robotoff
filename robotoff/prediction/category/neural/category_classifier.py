@@ -55,8 +55,11 @@ class CategoryClassifier:
             setting deepest_only=True will return ['beans'].
         """
 
-        if not (product.get("ingredients_tags") and product.get("product_name")):
+        # model was train with product having a name
+        if not product.get("product_name"):
             return None
+        # ingredients are not mandatory, just insure correct type
+        product.setdefault("ingredients_tags", [])
 
         data = {
             "signature_name": "serving_default",

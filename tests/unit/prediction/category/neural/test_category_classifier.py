@@ -56,22 +56,41 @@ def test_predict_missing_data():
 @pytest.mark.parametrize(
     "data",
     [
-        {"product_name": "Test Product"},  # missing ingredients_tags
-        {"ingredients_tags": ["ingredient1"]},  # missing product_name
+        # missing ingredients_tags
+        {"product_name": "Test Product"},
+        # ingredients_tag empty
         {
             "ingredients_tags": [],
             "product_name": "Test Product",
-        },  # ingredients_tag empty
-        {"ingredients_tags": ["ingredient1"], "product_name": ""},  # product_name empty
+        },
     ],
     ids=[
         "missing ingredients_tags",
-        "missing product_name",
         "ingredients_tag empty",
+    ],
+)
+def test_predict_ingredients_only(mocker, data):
+    mocker.patch(
+        "robotoff.prediction.category.neural.category_classifier.http_session.post",
+        return_value=_prediction_resp(["en:meat"], [0.99]),
+    )
+    classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
+    predictions = classifier.predict(data)
+    assert predictions == [CategoryPrediction("en:meat", 0.99)]
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"ingredients_tags": ["ingredient1"]},  # missing product_name
+        {"ingredients_tags": ["ingredient1"], "product_name": ""},  # product_name empty
+    ],
+    ids=[
+        "missing product_name",
         "product_name empty",
     ],
 )
-def test_predict_incomplete_products(mocker, data):
+def test_predict_product_no_title(mocker, data):
     mocker.patch(
         "robotoff.prediction.category.neural.category_classifier.http_session.post",
         return_value=_prediction_resp(["en:meat"], [0.99]),
