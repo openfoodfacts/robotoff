@@ -329,7 +329,7 @@ class CategoryImporter(InsightImporter):
             barcode = insight.barcode
             value_tag: str = insight.value_tag  # type: ignore
 
-            if not self.ignore_insight(product, value_tag, seen_set):
+            if self.ignore_insight(product, value_tag, seen_set):
                 continue
 
             yield insight
@@ -342,7 +342,8 @@ class CategoryImporter(InsightImporter):
         seen_set: Set[str],
     ):
         if product is None:
-            return False  # product not in store !
+            logger.debug("Insight for a product which does not exist, ignoring")
+            return True  # product not in store !
 
         product_categories_tags = getattr(product, "categories_tags", [])
 
@@ -352,14 +353,14 @@ class CategoryImporter(InsightImporter):
                 "The product already belongs to this category, "
                 "considering the insight as invalid"
             )
-            return False
+            return True
 
         if category in seen_set:
             logger.debug(
                 "An insight already exists for this product and "
                 "category, considering the insight as invalid"
             )
-            return False
+            return True
 
         # Check that the predicted category is not a parent of a
         # current/already predicted category
@@ -381,9 +382,9 @@ class CategoryImporter(InsightImporter):
                         "category or of the predicted category of an insight, "
                         "considering the insight as invalid"
                     )
-                    return False
+                    return True
 
-        return True
+        return False
 
 
 class ProductWeightImporter(InsightImporter):
