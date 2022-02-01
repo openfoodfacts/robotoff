@@ -24,7 +24,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     validate_insight,
 )
-from robotoff.metrics import save_facet_metrics
+from robotoff.metrics import ensure_influx_database, save_facet_metrics
 from robotoff.models import ProductInsight, db
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
@@ -269,6 +269,9 @@ def exception_listener(event):
 
 # The scheduler is responsible for scheduling periodic work that Robotoff needs to perform.
 def run():
+    # ensure influxdb database exists
+    ensure_influx_database()
+
     # This call needs to happen on every start of the scheduler to ensure we're not in
     # the state where Robotoff is unable to perform tasks because of missing data.
     _update_data()
