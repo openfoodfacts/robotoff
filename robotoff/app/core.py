@@ -72,10 +72,7 @@ def get_insights(
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
 
-    where_clauses = [
-        ProductInsight.server_domain == server_domain,
-        ProductInsight.latent == False,  # noqa: E712
-    ]
+    where_clauses = [ProductInsight.server_domain == server_domain]
 
     if annotated is not None:
         where_clauses.append(ProductInsight.annotation.is_null(not annotated))

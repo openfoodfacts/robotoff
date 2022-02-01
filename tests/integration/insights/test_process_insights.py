@@ -32,7 +32,6 @@ def _create_insight(**kwargs):
             "data": {"notify": False},  # we do not test notification
             "barcode": barcode,
             "type": "category",
-            "latent": False,
             "value_tag": "en:Salmons",
             "server_domain": settings.OFF_SERVER_DOMAIN,
             "automatic_processing": True,

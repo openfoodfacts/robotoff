@@ -2,7 +2,7 @@ import datetime
 import functools
 import os
 import uuid
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable
 
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
@@ -17,20 +17,13 @@ from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
     InsightAnnotatorFactory,
 )
-from robotoff.insights.importer import CategoryImporter
-from robotoff.insights.validator import (
-    InsightValidationResult,
-    InsightValidator,
-    InsightValidatorFactory,
-    validate_insight,
-)
+from robotoff.insights.importer import import_insights
 from robotoff.metrics import ensure_influx_database, save_facet_metrics
 from robotoff.models import ProductInsight, db
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
     Product,
     ProductDataset,
-    ProductStore,
     fetch_dataset,
     has_dataset_changed,
 )
@@ -67,7 +60,6 @@ def process_insights():
             ProductInsight.annotation.is_null(),
             ProductInsight.process_after.is_null(False),
             ProductInsight.process_after <= datetime.datetime.utcnow(),
-            ProductInsight.latent == False,  # noqa: E712
         )
         .iterator()
     ):
@@ -82,6 +74,11 @@ def process_insights():
             "notify", False
         ):
             slack.NotifierFactory.get_notifier().notify_automatic_processing(insight)
+
+    if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
+        "notify", False
+    ):
+        slack.NotifierFactory.get_notifier().notify_automatic_processing(insight)
     logger.info("{} insights processed".format(processed))
 
 
@@ -102,8 +99,6 @@ def refresh_insights(with_deletion: bool = False):
         logger.warn("Dataset version is not up to date, aborting insight removal job")
         return
 
-    validators: Dict[str, Optional[InsightValidator]] = {}
-
     for insight in (
         ProductInsight.select()
         .where(
@@ -122,22 +117,6 @@ def refresh_insights(with_deletion: bool = False):
                 deleted += 1
                 insight.delete_instance()
         else:
-            if insight.type not in validators:
-                validators[insight.type] = InsightValidatorFactory.create(
-                    insight.type, product_store
-                )
-
-            validator = validators[insight.type]
-            result = validate_insight(insight, validator)
-
-            if result == InsightValidationResult.deleted:
-                deleted += 1
-                logger.info(
-                    "invalid insight {} (type: {}), deleting..."
-                    "".format(insight.id, insight.type)
-                )
-                continue
-
             insight_updated = update_insight_attributes(product, insight)
 
             if insight_updated:
@@ -189,7 +168,6 @@ def mark_insights():
         ProductInsight.select()
         .where(
             ProductInsight.automatic_processing == True,  # noqa: E712
-            ProductInsight.latent == False,  # noqa: E712
             ProductInsight.process_after.is_null(),
             ProductInsight.annotation.is_null(),
         )
@@ -240,8 +218,6 @@ def generate_insights():
     """Generate and import category insights from the latest dataset dump, for
     products added at day-1."""
     logger.info("Generating new category insights")
-    product_store: ProductStore = CACHED_PRODUCT_STORE.get()
-    importer = CategoryImporter(product_store)
 
     datetime_threshold = datetime.datetime.utcnow().replace(
         hour=0, minute=0, second=0, microsecond=0
@@ -249,7 +225,7 @@ def generate_insights():
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
     product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
-    imported = importer.import_insights(
+    imported = import_insights(
         product_predictions_iter,
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic=False,

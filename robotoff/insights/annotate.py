@@ -42,8 +42,7 @@ class AnnotationStatus(Enum):
     error_updated_product = 4
     error_already_annotated = 5
     error_unknown_insight = 6
-    error_latent_insight = 7
-    error_missing_data = 8
+    error_missing_data = 7
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -63,10 +62,6 @@ ALREADY_ANNOTATED_RESULT = AnnotationResult(
 )
 UNKNOWN_INSIGHT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_unknown_insight.name, description="unknown insight ID"
-)
-LATENT_INSIGHT_RESULT = AnnotationResult(
-    status=AnnotationStatus.error_latent_insight.name,
-    description="cannot annotate a latent insight",
 )
 DATA_REQUIRED_RESULT = AnnotationResult(
     status=AnnotationStatus.error_missing_data.name,
@@ -88,9 +83,6 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
-        if insight.latent:
-            return LATENT_INSIGHT_RESULT
-
         with db.atomic() as transaction:
             try:
                 return self._annotate(
