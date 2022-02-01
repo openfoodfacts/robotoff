@@ -114,7 +114,7 @@ isort:
 
 docs:
 	@echo "🥫 Generationg doc…"
-	${DOCKER_COMPOSE} run --rm api ./build_mkdocs.sh
+	${DOCKER_COMPOSE} run --rm --no-deps api ./build_mkdocs.sh
 
 checks: toml-check flake8 black-check mypy isort-check docs
 
