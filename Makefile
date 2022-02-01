@@ -137,7 +137,7 @@ integration-tests:
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
 	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
-	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v
+	( COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v || true )
 
 #------------#
 # Production #

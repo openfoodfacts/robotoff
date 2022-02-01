@@ -98,7 +98,7 @@ _off_password = os.environ.get("OFF_PASSWORD", "")
 _off_user = os.environ.get("OFF_USER", "")
 
 
-def off_credentials() -> Dict:
+def off_credentials() -> Dict[str, str]:
     return {"user_id": _off_user, "password": _off_password}
 
 

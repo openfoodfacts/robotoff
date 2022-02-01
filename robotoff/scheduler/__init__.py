@@ -24,7 +24,7 @@ from robotoff.insights.validator import (
     InsightValidatorFactory,
     validate_insight,
 )
-from robotoff.metrics import save_facet_metrics
+from robotoff.metrics import ensure_influx_database, save_facet_metrics
 from robotoff.models import ProductInsight, db
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
@@ -131,12 +131,6 @@ def refresh_insights(with_deletion: bool = False):
                             "".format(insight.id, insight.type)
                         )
                         continue
-
-                    elif result == InsightValidationResult.updated:
-                        logger.info(
-                            "converting insight {} (type: {}) to latent"
-                            "".format(insight.id, insight.type)
-                        )
 
                     insight_updated = update_insight_attributes(product, insight)
 
@@ -275,6 +269,9 @@ def exception_listener(event):
 
 # The scheduler is responsible for scheduling periodic work that Robotoff needs to perform.
 def run():
+    # ensure influxdb database exists
+    ensure_influx_database()
+
     # This call needs to happen on every start of the scheduler to ensure we're not in
     # the state where Robotoff is unable to perform tasks because of missing data.
     _update_data()
@@ -299,8 +296,8 @@ def run():
     scheduler.add_job(_update_data, "cron", day="*", hour="3", max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO dump by:
-    # - Deleting non-annotated insights for deleted products.
-    # - Converting insights to latent if they're no longer applicable.
+    # - Deleting non-annotated insights for deleted products and insights that
+    #   are no longer applicable.
     # - Updating insight attributes.
     scheduler.add_job(
         functools.partial(refresh_insights, with_deletion=True),

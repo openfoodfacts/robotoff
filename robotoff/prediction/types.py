@@ -54,13 +54,20 @@ def dict_factory(*args, **kwargs):
 
 @dataclasses.dataclass
 class ProductPredictions:
+    """Represent a list of prediction on a single product for a single type"""
+
+    #: the prediction list
     predictions: List[Prediction]
+    #: product barcode
     barcode: str
+    #: type of prediction
     type: PredictionType
+    #: optional image
     source_image: Optional[str] = None
 
     @classmethod
     def merge(cls, items: Iterable["ProductPredictions"]) -> "ProductPredictions":
+        """Merge predictions into one object, checking compatibility."""
         items = list(items)
         if len(items) == 0:
             raise ValueError("no items to merge")

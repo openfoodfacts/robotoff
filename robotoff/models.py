@@ -56,7 +56,7 @@ class ProductInsight(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
 
     # Type represents the insight type - must match one of the types in robotoff.insights.dataclass.InsightType.
-    type = peewee.CharField(max_length=256)
+    type = peewee.CharField(max_length=256, index=True)
 
     # Contains some additional data based on the type of the insight from above.
     # NOTE: there is no 1:1 mapping between the type and the JSON format provided here, for example for
@@ -84,10 +84,7 @@ class ProductInsight(BaseModel):
     # (or first annotator, if multiple votes were cast).
     username = peewee.TextField(index=True, null=True)
 
-    # Latent insights are insights that should not be applied to the product directly.
-    # These can be 'meta' insights extracted from product images and combined to generate a classic insight
-    # that can be
-    # A latent insight could also be an insight that is no longer valid for a product (e.g. based on an updated state of product).
+    # Latent insights don't exist anymore, this field is kept here for compatibility purpose during the migration
     latent = peewee.BooleanField(null=False, index=True, default=False)
 
     # Stores the list of counties that are associated with the product.
@@ -147,10 +144,20 @@ class ProductInsight(BaseModel):
             **self.data,
         }
 
-    @classmethod
-    def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):
-        updated_values = {**latent_insight.__data__, **kwargs}
-        return cls.create(**updated_values)
+
+class Prediction(BaseModel):
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    type = peewee.CharField(max_length=256, index=True)
+    data = BinaryJSONField(index=True)
+    timestamp = peewee.DateTimeField(index=True)
+    value_tag = peewee.TextField(null=True)
+    value = peewee.TextField(null=True)
+    source_image = peewee.TextField(null=True, index=True)
+    automatic_processing = peewee.BooleanField(default=False)
+    server_domain = peewee.TextField(
+        help_text="server domain linked to the insight", index=True
+    )
+    predictor = peewee.CharField(max_length=100, null=True)
 
 
 class AnnotationVote(BaseModel):
@@ -239,6 +246,7 @@ class LogoConfidenceThreshold(BaseModel):
 
 
 MODELS = [
+    Prediction,
     ProductInsight,
     ImageModel,
     ImagePrediction,

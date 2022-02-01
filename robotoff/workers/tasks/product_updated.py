@@ -9,7 +9,7 @@ from robotoff.elasticsearch.category.predict import (
 )
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.extraction import get_predictions_from_product_name
-from robotoff.insights.importer import InsightImporterFactory
+from robotoff.insights.importer import import_insights
 from robotoff.insights.validator import (
     InsightValidationResult,
     InsightValidator,
@@ -20,7 +20,7 @@ from robotoff.models import ProductInsight
 from robotoff.off import ServerType, get_server_type
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.prediction.types import PredictionType, ProductPredictions
-from robotoff.products import Product, get_product, get_product_store
+from robotoff.products import Product, get_product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -70,24 +70,27 @@ def update_insights(barcode: str, server_domain: str):
                 logger.info(
                     "Insight {} deleted (type: {})".format(insight.id, insight.type)
                 )
-            elif result == InsightValidationResult.updated:
-                logger.info(
-                    "Insight {} converted to latent (type: {})".format(
-                        insight.id, insight.type
-                    )
-                )
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
+    """Predict categories for product and import predicted category insight.
+
+    :param barcode: product barcode
+    :param product: product as retrieved from application
+    :param server_domain: the server the product belongs to
+    :return: True if at least one category insight was imported
+    """
     if get_server_type(server_domain) != ServerType.off:
         return False
 
+    # predict category using Elasticsearch on title
     product_predictions = []
     product_insight = predict_category_from_product_es(product)
 
     if product_insight is not None:
         product_predictions.append(product_insight)
 
+    # predict category using neural model
     category_predictions = None
     try:
         category_predictions = CategoryClassifier(
@@ -114,13 +117,8 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
         return False
 
     merged_product_prediction = ProductPredictions.merge(product_predictions)
-    product_store = get_product_store()
-    importer = InsightImporterFactory.create(InsightType.category, product_store)
-
-    imported = importer.import_insights(
-        [merged_product_prediction],
-        server_domain=server_domain,
-        automatic=False,
+    imported = import_insights(
+        [merged_product_prediction], server_domain, automatic=True
     )
 
     if imported:
@@ -138,24 +136,13 @@ def updated_product_predict_insights(
     if not product_name:
         return updated
 
-    product_store = get_product_store()
     predictions_all = get_predictions_from_product_name(barcode, product_name)
-
-    for prediction_type, predictions in predictions_all.items():
-        importer = InsightImporterFactory.create(
-            InsightType[prediction_type], product_store
-        )
-        imported = importer.import_insights(
-            [predictions], server_domain=server_domain, automatic=False
-        )
-
-        if imported:
-            logger.info(
-                "{} insights ({}) imported for product {}".format(
-                    imported, prediction_type, barcode
-                )
-            )
-            updated = True
+    imported = import_insights(
+        list(predictions_all.values()), server_domain, automatic=False
+    )
+    if imported:
+        logger.info("{} insights imported for product {}".format(imported, barcode))
+        updated = True
 
     return updated
 
