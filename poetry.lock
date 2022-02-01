@@ -214,7 +214,7 @@ dates = ["pytz (>=2019.1)"]
 
 [[package]]
 name = "elasticsearch"
-version = "7.14.2"
+version = "7.16.3"
 description = "Python client for Elasticsearch"
 category = "main"
 optional = false
@@ -1445,7 +1445,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "157e089fb5d71842b293eb858e84ce8f4ac3f09a0da03e4dc8ad89eccdea30e7"
+content-hash = "508eba69c1e8a55bed445b9340db5913b48b311f29226783af1fcf61aa4eaa12"
 
 [metadata.files]
 apscheduler = [
@@ -1594,8 +1594,8 @@ domdf-python-tools = [
     {file = "domdf_python_tools-3.2.1-py3-none-any.whl", hash = "sha256:cb2770dbeef6ec7babb19c3bf08fd115370c0186adc73b6c4155062602ca8291"},
 ]
 elasticsearch = [
-    {file = "elasticsearch-7.14.2-py2.py3-none-any.whl", hash = "sha256:6d049fc6abcbcf1e6756dc7c7d5581186a9dde61136325bcef81563450af6ac9"},
-    {file = "elasticsearch-7.14.2.tar.gz", hash = "sha256:49ac65a3438e742177c0f69e0214588809e97e4341b2f4825d212d957adedcec"},
+    {file = "elasticsearch-7.16.3-py2.py3-none-any.whl", hash = "sha256:213eaae9937924a9c523792748e7b0fc7ea2041d32a646538cbe81e52f852e1f"},
+    {file = "elasticsearch-7.16.3.tar.gz", hash = "sha256:8adf8bc351ed55df7296be1009d38a1c999c0abc7d8700fa88533f1ad6087c5e"},
 ]
 falcon = [
     {file = "falcon-2.0.0-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:733033ec80c896e30a43ab3e776856096836787197a44eb21022320a61311983"},
