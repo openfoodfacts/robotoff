@@ -26,6 +26,7 @@ def _set_up_and_tear_down(peewee_db):
         server_domain=settings.OFF_SERVER_DOMAIN,
         automatic_processing=False,
         unique_scans_n=0,
+        n_votes=0,
         reserved_barcode=False,
     )
     # Run the test case.
