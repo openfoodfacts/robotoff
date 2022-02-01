@@ -4,7 +4,7 @@ on:
   push:
     #paths:
     #  - 'i18n/robotoff.pot'
-    branches: [ translations ]
+    branches: [ 'crowdin-trigger' ]
 jobs:
   synchronize-with-crowdin:
     runs-on: ubuntu-latest
