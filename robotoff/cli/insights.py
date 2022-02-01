@@ -235,7 +235,6 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
         .where(
             ProductInsight.type == insight_type,
             ProductInsight.annotation.is_null(),
-            ProductInsight.latent == False,  # noqa: E712
         )
         .order_by(fn.Random())
     ):
