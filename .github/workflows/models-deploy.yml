@@ -24,7 +24,7 @@ jobs:
           # on the caller side, i.e. the caller needs access to the label_map.pbtxt file.
           - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2.4.0
       - name: Download
         uses: appleboy/ssh-action@master
         with:
@@ -58,7 +58,7 @@ jobs:
         env:
           - robotoff-ml
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2.4.0
       - name: Download
         uses: appleboy/ssh-action@master
         with:
