@@ -1,6 +1,7 @@
 import csv
 import datetime
 import functools
+import hashlib
 import io
 import tempfile
 from typing import List, Optional
@@ -18,7 +19,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import get_insights, save_insight
+from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_PREDICTION_TYPES,
@@ -61,6 +62,21 @@ es_client = get_es_client()
 
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
+
+
+def _get_skip_voted_on(
+    auth: Optional[OFFAuthentication], device_id: str
+) -> SkipVotedOn:
+    """Helper function for constructing SkipVotedOn objects based on request params."""
+    if not auth:
+        return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
+
+    username: Optional[str] = auth.get_username()
+    if not username:
+        return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
+
+    return SkipVotedOn(SkipVotedType.USERNAME, username)
+
 
 ###########
 # IMPORTANT: remember to update documentation at doc/references/api.md if you change API
@@ -196,6 +212,15 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     )
 
 
+def device_id_from_request(req: falcon.Request) -> str:
+    """Returns the 'device_id' from the request parameters, or a hash of the
+    access route (which should be the IPs of the proxies and the client)."""
+    return req.get_param(
+        "device_id",
+        default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+    )
+
+
 class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         insight_id = req.get_param("insight_id", required=True)
@@ -204,9 +229,13 @@ class AnnotateInsightResource:
         )
 
         update = req.get_param_as_bool("update", default=True)
+        # This field is only needed for nutritional table structure insights.
         data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
+        trusted_annotator: bool = auth is not None
+
+        device_id = device_id_from_request(req)
 
         username = auth.get_username() if auth else "unknown annotator"
         logger.info(
@@ -215,8 +244,14 @@ class AnnotateInsightResource:
             )
         )
 
-        annotation_result = save_insight(
-            insight_id, annotation, update=update, data=data, auth=auth
+        annotation_result = save_annotation(
+            insight_id,
+            annotation,
+            update=update,
+            data=data,
+            auth=auth,
+            device_id=device_id,
+            trusted_annotator=trusted_annotator,
         )
 
         resp.media = {
@@ -811,15 +846,23 @@ class ProductQuestionsResource:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1) or 1
         lang: str = req.get_param("lang", default="en")
+        # If the device_id is not provided as a request parameter, we use the
+        # hash of the IPs as a backup.
+        device_id = device_id_from_request(req)
         server_domain: Optional[str] = req.get_param("server_domain")
 
+        auth: Optional[OFFAuthentication] = parse_auth(req)
+
         keep_types = QuestionFormatterFactory.get_default_types()
+
         insights = list(
             get_insights(
                 barcode=barcode,
                 keep_types=keep_types,
                 server_domain=server_domain,
                 limit=count,
+                order_by="n_votes",
+                avoid_voted_on=_get_skip_voted_on(auth, device_id),
             )
         )
 
@@ -868,6 +911,12 @@ def get_questions_resource_on_get(
         "reserved_barcode", default=False
     )
 
+    # If the device_id is not provided as a request parameter, we use the
+    # hash of the IPs as a backup.
+    device_id = device_id_from_request(req)
+
+    auth: Optional[OFFAuthentication] = parse_auth(req)
+
     if reserved_barcode:
         # Include all results, including non reserved barcodes
         reserved_barcode = None
@@ -891,6 +940,7 @@ def get_questions_resource_on_get(
         brands=brands,
         order_by=order_by,
         reserved_barcode=reserved_barcode,
+        avoid_voted_on=_get_skip_voted_on(auth, device_id),
     )
 
     insights = list(get_insights_(limit=count))

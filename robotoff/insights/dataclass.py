@@ -111,6 +111,7 @@ class Insight:
     predictor: Optional[str] = None
     countries: List[str] = dataclasses.field(default_factory=list)
     brands: List[str] = dataclasses.field(default_factory=list)
+    n_votes: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)

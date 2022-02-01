@@ -122,11 +122,9 @@ lint: toml-lint isort black
 
 tests: create_external_networks unit-tests integration-tests
 
-
 health:
 	@echo "🥫 Running health tests …"
 	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
-
 
 unit-tests:
 	@echo "🥫 Running tests …"
