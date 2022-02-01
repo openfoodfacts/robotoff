@@ -594,7 +594,7 @@ i18n = ["babel (>=2.9.0)"]
 
 [[package]]
 name = "mkdocs-awesome-pages-plugin"
-version = "2.5.1"
+version = "2.6.1"
 description = "An MkDocs plugin that simplifies configuring page titles and their order"
 category = "dev"
 optional = false
@@ -1445,7 +1445,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "157e089fb5d71842b293eb858e84ce8f4ac3f09a0da03e4dc8ad89eccdea30e7"
+content-hash = "1810b23e21e4ec2f4eecdf392033bf815f27f724159494f4f418d2f7ee8bf887"
 
 [metadata.files]
 apscheduler = [
@@ -1851,8 +1851,8 @@ mkdocs = [
     {file = "mkdocs-1.2.3.tar.gz", hash = "sha256:89f5a094764381cda656af4298727c9f53dc3e602983087e1fe96ea1df24f4c1"},
 ]
 mkdocs-awesome-pages-plugin = [
-    {file = "mkdocs-awesome-pages-plugin-2.5.1.tar.gz", hash = "sha256:4e8273e8f0bdaa94bd65429398421fb2ab04fda9e3f8bc13e18328f9a831dfaa"},
-    {file = "mkdocs_awesome_pages_plugin-2.5.1-py3-none-any.whl", hash = "sha256:00922e203cd3773d047d4670cd166fb4ff49f62df371a430259aa909c8f033f9"},
+    {file = "mkdocs-awesome-pages-plugin-2.6.1.tar.gz", hash = "sha256:8f2f803a3d4a2cd2e290644b1b8c54cf2ae942db9ce91021c2ba858a991a3a8a"},
+    {file = "mkdocs_awesome_pages_plugin-2.6.1-py3-none-any.whl", hash = "sha256:43994aedadca881088e5d6bb420140a73ce517ca3e070972715f93b086c9c497"},
 ]
 mkdocs-material = [
     {file = "mkdocs-material-7.2.8.tar.gz", hash = "sha256:b9a3d1cda28310acf74842a227fedc90d26e407742d3d7ffc0cdcf0560d22ed3"},
