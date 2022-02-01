@@ -84,9 +84,6 @@ class ProductInsight(BaseModel):
     # (or first annotator, if multiple votes were cast).
     username = peewee.TextField(index=True, null=True)
 
-    # Latent insights don't exist anymore, this field is kept here for compatibility purpose during the migration
-    latent = peewee.BooleanField(null=False, index=True, default=False)
-
     # Stores the list of counties that are associated with the product.
     # E.g. possible values are "en:united-states" or "en:france".
     countries = BinaryJSONField(null=True, index=True)

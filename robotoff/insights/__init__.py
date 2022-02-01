@@ -1,3 +1,3 @@
-from .dataclass import Insight, InsightType
+from .dataclass import InsightType
 
-__all__ = ["InsightType", "Insight"]
+__all__ = ["InsightType"]

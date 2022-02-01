@@ -57,6 +57,7 @@ def predict(client, product: Dict) -> Optional[ProductPredictions]:
                         "product_name": product_name,
                         "model": "matcher",
                     },
+                    automatic_processing=False,
                 )
             ],
         )

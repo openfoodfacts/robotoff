@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 import itertools
 from enum import Enum, unique
 from typing import Any, Dict, Iterable, List, Optional
@@ -33,11 +34,16 @@ class PredictionType(str, Enum):
 @dataclasses.dataclass
 class Prediction:
     type: PredictionType
-    data: Dict[str, Any]
+    data: Dict[str, Any] = dataclasses.field(default_factory=dict)
     value_tag: Optional[str] = None
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
     predictor: Optional[str] = None
+    barcode: Optional[str] = None
+    timestamp: Optional[datetime.datetime] = None
+    source_image: Optional[str] = None
+    server_domain: Optional[str] = None
+    id: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)

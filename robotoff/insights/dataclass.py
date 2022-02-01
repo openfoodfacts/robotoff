@@ -1,9 +1,4 @@
-import dataclasses
-import datetime
 from enum import Enum, unique
-from typing import Any, Dict, List, Optional
-
-from robotoff.prediction.types import Prediction, ProductPredictions
 
 
 @unique
@@ -89,55 +84,3 @@ class InsightType(str, Enum):
     # The 'nutritional_table_structure' insight detects the nutritional table structure from the image.
     # NOTE: this insight has not been generated since 2020.
     nutrition_table_structure = "nutrition_table_structure"
-
-
-@dataclasses.dataclass
-class Insight:
-    """This class is a copy of robotoff.models.ProductInsight - see that class's documentation field description."""
-
-    barcode: str
-    type: InsightType
-    data: Dict[str, Any]
-    value_tag: Optional[str] = None
-    value: Optional[str] = None
-    automatic_processing: Optional[bool] = None
-    source_image: Optional[str] = None
-    reserved_barcode: bool = False
-    server_domain: str = ""
-    server_type: str = ""
-    id: str = ""
-    timestamp: Optional[datetime.datetime] = None
-    process_after: Optional[datetime.datetime] = None
-    predictor: Optional[str] = None
-    countries: List[str] = dataclasses.field(default_factory=list)
-    brands: List[str] = dataclasses.field(default_factory=list)
-    n_votes: int = 0
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dataclasses.asdict(self, dict_factory=dict_factory)
-
-    @classmethod
-    def from_prediction(
-        cls,
-        prediction: "Prediction",
-        product_predictions: "ProductPredictions",
-    ) -> "Insight":
-        return cls(
-            type=InsightType(prediction.type),
-            data=prediction.data,
-            value_tag=prediction.value_tag,
-            value=prediction.value,
-            automatic_processing=prediction.automatic_processing,
-            barcode=product_predictions.barcode,
-            source_image=product_predictions.source_image,
-            predictor=prediction.predictor,
-        )
-
-
-def dict_factory(*args, **kwargs):
-    d = dict(*args, **kwargs)
-    for key, value in d.items():
-        if isinstance(value, InsightType):
-            d[key] = value.name
-
-    return d
