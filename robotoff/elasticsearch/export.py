@@ -40,7 +40,7 @@ class ElasticsearchExporter:
 
     def load_index(self, index: str, index_filepath: Path) -> None:
         """Creates the given index if it doesn't already exist."""
-        if not self.es_client.indices.exists(index):
+        if not self.es_client.indices.exists(index=index):
             logger.info(f"Creating index: {index}")
             with open(index_filepath, "rb") as f:
                 conf = orjson.loads(f.read())
