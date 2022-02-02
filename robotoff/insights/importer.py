@@ -648,7 +648,7 @@ def create_prediction_model(
         "value_tag": prediction.value_tag,
         "value": prediction.value,
         "source_image": product_predictions.source_image,
-        "automatic_processing": prediction.automatic_processing or False,
+        "automatic_processing": prediction.automatic_processing,
         "server_domain": server_domain,
         "predictor": prediction.predictor,
     }
