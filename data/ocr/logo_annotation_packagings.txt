@@ -1,2 +1,3 @@
 en:Aluminium||alu 41
 en:Recyclable steel||Acier Recyclable
+en:Plastic bottle||Plastic bottle
