@@ -3,6 +3,7 @@ import json
 from typing import Optional, Tuple
 
 from robotoff import settings
+from robotoff.elasticsearch.category.preprocessing import preprocess_name
 from robotoff.utils.es import get_es_client
 
 SUPPORTED_LANG = {
@@ -14,10 +15,21 @@ SUPPORTED_LANG = {
 
 
 def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]]:
+    """Predict category from product name using ES.
+
+    Lang is not used to filter category index, but to stem the name in the right way.
+
+    :param elasticsearch.Elasticsearch client: ES client
+    :param name: name of the product
+    :param lang: language of the name
+
+    :return: None if language not supported or no guess
+    """
     if lang not in SUPPORTED_LANG:
         return None
 
-    results = match(client, name, lang)
+    preprocessed_name = preprocess_name(name, lang)
+    results = match(client, preprocessed_name, lang)
 
     hits = results["hits"]["hits"]
 
@@ -29,9 +41,10 @@ def predict_category(client, name: str, lang: str) -> Optional[Tuple[str, float]
 
 
 def match(client, query: str, lang: str):
+    """Match a phrase (query) against product database using stemming"""
     body = generate_request(query, lang)
     return client.search(
-        index=settings.ELASTICSEARCH_CATEGORY_INDEX,
+        index=settings.ElasticsearchIndex.CATEGORY,
         doc_type=settings.ELASTICSEARCH_TYPE,
         body=body,
         _source=True,
@@ -40,13 +53,7 @@ def match(client, query: str, lang: str):
 
 def generate_request(query: str, lang: str):
     return {
-        "query": {
-            "match_phrase": {
-                f"{lang}:name.stemmed": {
-                    "query": query,
-                }
-            }
-        }
+        "query": {"match_phrase": {"{}:name.stemmed".format(lang): {"query": query}}}
     }
 
 

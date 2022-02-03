@@ -3,19 +3,26 @@ import operator
 from typing import Dict, Iterable, Optional
 
 from robotoff.elasticsearch.category.match import predict_category
+from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.products import ProductDataset
 from robotoff.utils import get_logger
 from robotoff.utils.es import get_es_client
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
 
-def predict(client, product: Dict) -> Optional[Dict]:
+def predict(client, product: Dict) -> Optional[ProductPredictions]:
+    """Predict product categories using ES
+
+    :param elasticsearch.Elasticsearch client: connection to ES instance
+    :param product: product properties
+
+    :return: an ProductPrediction on category or None if no prediction was available
+    """
     predictions = []
 
     for lang in product.get("languages_codes", []):
-        product_name = product.get(f"product_name_{lang}")
+        product_name = product.get("product_name_{}".format(lang))
 
         if not product_name:
             continue
@@ -35,26 +42,37 @@ def predict(client, product: Dict) -> Optional[Dict]:
             predictions, key=operator.itemgetter(2), reverse=True
         )
 
-        prediction = sorted_predictions[0]
-        lang, category, product_name, score = prediction
+        p = sorted_predictions[0]
+        lang, category, product_name, score = p
 
-        return {
-            "barcode": product["code"],
-            "category": category,
-            "matcher_lang": lang,
-            "product_name": product_name,
-            "model": "matcher",
-        }
+        return ProductPredictions(
+            barcode=product["code"],
+            type=PredictionType.category,
+            predictions=[
+                Prediction(
+                    type=PredictionType.category,
+                    value_tag=category,
+                    data={
+                        "lang": lang,
+                        "product_name": product_name,
+                        "model": "matcher",
+                    },
+                )
+            ],
+        )
 
     return None
 
 
-def predict_from_product(product: Dict) -> Optional[Dict]:
+def predict_from_product(product: Dict) -> Optional[ProductPredictions]:
     client = get_es_client()
     return predict(client, product)
 
 
-def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
+def predict_from_iterable(
+    client, products: Iterable[Dict]
+) -> Iterable[ProductPredictions]:
+    """Iterative version of :py:func:`predict`"""
     for product in products:
         prediction = predict(client, product)
 
@@ -64,8 +82,8 @@ def predict_from_iterable(client, products: Iterable[Dict]) -> Iterable[Dict]:
 
 def predict_from_dataset(
     dataset: ProductDataset, from_datetime: Optional[datetime.datetime] = None
-) -> Iterable[JSONType]:
-    """Return an iterable of category insights, using the provided dataset.
+) -> Iterable[ProductPredictions]:
+    """Return an iterable of category predictions, using the provided dataset.
 
     Args:
         dataset: a ProductDataset

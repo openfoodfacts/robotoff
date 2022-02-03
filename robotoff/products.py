@@ -1,20 +1,82 @@
+import abc
 import datetime
+import enum
 import gzip
 import json
 import os
 import pathlib
 import shutil
 import tempfile
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional, Union
 
 import requests
+from pymongo import MongoClient
 
 from robotoff import settings
-from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
+from robotoff.mongo import MONGO_CLIENT_CACHE
+from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
+
+
+def get_image_id(image_path: str) -> Optional[str]:
+    image_id = pathlib.Path(image_path).stem
+
+    if image_id.isdigit():
+        return image_id
+
+    return None
+
+
+def is_valid_image(images: JSONType, image_path: str) -> bool:
+    image_id = pathlib.Path(image_path).stem
+    if not image_id.isdigit():
+        return False
+
+    return image_id in images
+
+
+def is_nutrition_image(
+    images: JSONType, image_path: str, lang: Optional[str] = None
+) -> bool:
+    return is_special_image(images, image_path, "nutrition", lang)
+
+
+def has_nutrition_image(images: JSONType, lang: Optional[str] = None) -> bool:
+    return has_special_image(images, "nutrition", lang)
+
+
+def has_special_image(images: JSONType, key: str, lang: Optional[str] = None) -> bool:
+    field_name = "{}_".format(key) if lang is None else "{}_{}".format(key, lang)
+    for image_key in images:
+        if image_key.startswith(field_name):
+            return True
+
+    return False
+
+
+def is_special_image(
+    images: JSONType, image_path: str, image_type: str, lang: Optional[str] = None
+) -> bool:
+    if not is_valid_image(images, image_path):
+        return False
+
+    image_id = pathlib.Path(image_path).stem
+
+    for image_key, image_data in images.items():
+        if (
+            image_key.startswith(image_type)
+            and str(image_data.get("imgid")) == image_id
+        ):
+            if lang is None:
+                return True
+
+            elif image_key.endswith("_{}".format(lang)):
+                return True
+
+    return False
 
 
 def minify_product_dataset(dataset_path: pathlib.Path, output_path: pathlib.Path):
@@ -23,7 +85,7 @@ def minify_product_dataset(dataset_path: pathlib.Path, output_path: pathlib.Path
     else:
         jsonl_iter_func = jsonl_iter
 
-    with gzip.open(output_path, "wt") as output_:
+    with gzip.open(output_path, "wt", encoding="utf-8") as output_:
         for item in jsonl_iter_func(dataset_path):
             available_fields = Product.get_fields()
 
@@ -50,21 +112,30 @@ def save_product_dataset_etag(etag: str):
         return f.write(etag)
 
 
-def fetch_dataset():
+def fetch_dataset(minify: bool = True) -> bool:
     with tempfile.TemporaryDirectory() as tmp_dir:
         output_dir = pathlib.Path(tmp_dir)
         output_path = output_dir / "products.jsonl.gz"
         etag = download_dataset(output_path)
-        minify_path = output_dir / "products-min.jsonl.gz"
 
-        logger.info("Minifying product JSONL")
-        minify_product_dataset(output_path, minify_path)
+        logger.info("Checking dataset file integrity")
+        if not is_valid_dataset(output_path):
+            return False
 
-        logger.info("Moving files to dataset directory")
-        shutil.move(output_path, settings.JSONL_DATASET_PATH)
-        shutil.move(minify_path, settings.JSONL_MIN_DATASET_PATH)
+        if minify:
+            minify_path = output_dir / "products-min.jsonl.gz"
+            logger.info("Minifying product JSONL")
+            minify_product_dataset(output_path, minify_path)
+
+        logger.info("Moving file(s) to dataset directory")
+        shutil.copy(str(output_path), settings.JSONL_DATASET_PATH)
+
+        if minify:
+            shutil.copy(str(minify_path), settings.JSONL_MIN_DATASET_PATH)
+
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
+        return True
 
 
 def has_dataset_changed() -> bool:
@@ -83,7 +154,7 @@ def has_dataset_changed() -> bool:
 
 
 def download_dataset(output_path: os.PathLike) -> str:
-    r = requests.get(settings.JSONL_DATASET_URL, stream=True)
+    r = http_session.get(settings.JSONL_DATASET_URL, stream=True)
     current_etag = r.headers.get("ETag", "").strip("'\"")
 
     logger.info("Dataset has changed, downloading file")
@@ -95,7 +166,70 @@ def download_dataset(output_path: os.PathLike) -> str:
     return current_etag
 
 
+def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
+    """Check the dataset integrity: readable end to end and with a minimum number of products.
+    This is used to spot corrupted archive files."""
+    dataset = ProductDataset(dataset_path)
+    try:
+        count = dataset.count()
+    except Exception as e:
+        logger.error("Exception raised during dataset iteration", exc_info=e)
+        return False
+
+    if count < settings.DATASET_CHECK_MIN_PRODUCT_COUNT:
+        logger.error(
+            "Dataset has {} products, less than minimum of {} products".format(
+                count, settings.DATASET_CHECK_MIN_PRODUCT_COUNT
+            )
+        )
+        return False
+
+    return True
+
+
+class ComparisonOperator(enum.Enum):
+    eq = 1
+    gt = 2
+    geq = 3
+    lt = 4
+    leq = 5
+
+    @classmethod
+    def get_from_string(cls, value: str):
+        for operator in cls:
+            if operator.name == value:
+                return operator
+
+        raise ValueError("unknown operator: {}".format(value))
+
+
+def apply_comparison_operator(
+    value_1, value_2, comparison_operator: ComparisonOperator
+) -> bool:
+    try:
+        if comparison_operator == ComparisonOperator.eq:
+            return value_1 == value_2
+
+        elif comparison_operator == ComparisonOperator.gt:
+            return value_1 > value_2
+
+        elif comparison_operator == ComparisonOperator.geq:
+            return value_1 >= value_2
+
+        elif comparison_operator == ComparisonOperator.lt:
+            return value_1 < value_2
+
+        else:
+            return value_1 <= value_2
+    except TypeError:
+        return False
+
+
 class ProductStream:
+    """Starting for a stream of dict representing products,
+    provides a stream with filter methods to narrow down data.
+    """
+
     def __init__(self, iterator: Iterable[JSONType]):
         self.iterator: Iterable[JSONType] = iterator
 
@@ -115,6 +249,27 @@ class ProductStream:
             product
             for product in self.iterator
             if state_tag in (product.get("states_tags") or [])
+        )
+        return ProductStream(filtered)
+
+    def filter_text_field(self, field: str, value: str):
+        filtered = (
+            product for product in self.iterator if product.get(field, "") == value
+        )
+        return ProductStream(filtered)
+
+    def filter_number_field(
+        self,
+        field: str,
+        ref: Union[int, float],
+        default: Union[int, float],
+        operator: str = "eq",
+    ) -> "ProductStream":
+        operator_ = ComparisonOperator.get_from_string(operator)
+        filtered = (
+            product
+            for product in self.iterator
+            if apply_comparison_operator(product.get(field, default), ref, operator_)
         )
         return ProductStream(filtered)
 
@@ -187,6 +342,10 @@ class ProductStream:
 
 
 class ProductDataset:
+    """Handles the iteration over products dataset
+    contained in an eventually gziped file with one json by line.
+    """
+
     def __init__(self, jsonl_path):
         self.jsonl_path = jsonl_path
 
@@ -199,6 +358,13 @@ class ProductDataset:
             iterator = jsonl_iter(json_path_str)
 
         return ProductStream(iterator)
+
+    def count(self) -> int:
+        count = 0
+        for _ in self.stream():
+            count += 1
+
+        return count
 
     @classmethod
     def load(cls):
@@ -218,18 +384,22 @@ class Product:
         "expiration_date",
         "brands_tags",
         "stores_tags",
+        "unique_scans_n",
+        "images",
     )
 
     def __init__(self, product: JSONType):
-        self.barcode = product.get("code")
-        self.countries_tags = product.get("countries_tags") or []
-        self.categories_tags = product.get("categories_tags") or []
-        self.emb_codes_tags = product.get("emb_codes_tags") or []
-        self.labels_tags = product.get("labels_tags") or []
-        self.quantity = product.get("quantity") or None
-        self.expiration_date = product.get("expiration_date") or None
-        self.brands_tags = product.get("brands_tags") or []
-        self.stores_tags = product.get("stores_tags") or []
+        self.barcode: Optional[str] = product.get("code")
+        self.countries_tags: List[str] = product.get("countries_tags") or []
+        self.categories_tags: List[str] = product.get("categories_tags") or []
+        self.emb_codes_tags: List[str] = product.get("emb_codes_tags") or []
+        self.labels_tags: List[str] = product.get("labels_tags") or []
+        self.quantity: Optional[str] = product.get("quantity") or None
+        self.expiration_date: Optional[str] = product.get("expiration_date") or None
+        self.brands_tags: List[str] = product.get("brands_tags") or []
+        self.stores_tags: List[str] = product.get("stores_tags") or []
+        self.unique_scans_n: int = product.get("unique_scans_n") or 0
+        self.images: JSONType = product.get("images") or {}
 
     @staticmethod
     def get_fields():
@@ -243,41 +413,111 @@ class Product:
             "expiration_date",
             "brands_tags",
             "stores_tags",
+            "unique_scans_n",
+            "images",
         }
 
 
-class ProductStore:
-    def __init__(self):
-        self.store: Dict[str, Product] = {}
+class ProductStore(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def __len__(self):
+        pass
 
-    def load(self, path: str, reset: bool = True):
+    @abc.abstractmethod
+    def __getitem__(self, item):
+        pass
+
+    @abc.abstractmethod
+    def is_real_time(self) -> bool:
+        """Return True if the product store return the current version of the product,
+        and not an dumped version as in MemoryProductStore."""
+        pass
+
+
+class MemoryProductStore(ProductStore):
+    def __init__(self, store: Dict[str, Product]):
+        self.store: Dict[str, Product] = store
+
+    def __len__(self):
+        return len(self.store)
+
+    @classmethod
+    def load_from_path(cls, path: str):
         logger.info("Loading product store")
         ds = ProductDataset(path)
         stream = ds.stream()
 
-        seen = set()
+        store: Dict[str, Product] = {}
+
         for product in stream.iter_product():
             if product.barcode:
-                seen.add(product.barcode)
-                self.store[product.barcode] = product
+                store[product.barcode] = product
 
-        if reset:
-            for key in set(self.store.keys()).difference(seen):
-                self.store.pop(key)
-
-        logger.info("product store loaded ({} items added)".format(len(seen)))
+        return cls(store)
 
     @classmethod
-    def load_from_min_dataset(cls):
-        product_store = ProductStore()
-        product_store.load(settings.JSONL_MIN_DATASET_PATH, False)
-        return product_store
+    def load_min(cls):
+        return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH)
+
+    @classmethod
+    def load_full(cls):
+        return cls.load_from_path(settings.JSONL_DATASET_PATH)
 
     def __getitem__(self, item) -> Optional[Product]:
         return self.store.get(item)
 
-    def __iter__(self) -> Iterable[Product]:
+    def __iter__(self) -> Iterator[Product]:
         return iter(self.store.values())
 
+    def is_real_time(self) -> bool:
+        return False
 
-CACHED_PRODUCT_STORE = CachedStore(lambda: ProductStore.load_from_min_dataset())
+
+class DBProductStore(ProductStore):
+    def __init__(self, client: MongoClient):
+        self.client = client
+        self.db = self.client.off
+        self.collection = self.db.products
+
+    def __len__(self):
+        return len(self.collection.estimated_document_count())
+
+    def get_product(
+        self, barcode: str, projection: Optional[List[str]] = None
+    ) -> Optional[JSONType]:
+        return self.collection.find_one({"code": barcode}, projection)
+
+    def __getitem__(self, barcode: str) -> Optional[Product]:
+        product = self.get_product(barcode)
+
+        if product:
+            return Product(product)
+
+        return None
+
+    def __iter__(self):
+        raise NotImplementedError("cannot iterate over database product store")
+
+    def is_real_time(self) -> bool:
+        return True
+
+
+def load_min_dataset() -> ProductStore:
+    ps = MemoryProductStore.load_min()
+    logger.info("product store loaded ({} items)".format(len(ps)))
+    return ps
+
+
+def get_product_store() -> DBProductStore:
+    mongo_client = MONGO_CLIENT_CACHE.get()
+    return DBProductStore(client=mongo_client)
+
+
+def get_product(
+    barcode: str, projection: Optional[List[str]] = None
+) -> Optional[JSONType]:
+    mongo_client = MONGO_CLIENT_CACHE.get()
+    return mongo_client.off.products.find_one({"code": barcode}, projection)
+
+
+CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)

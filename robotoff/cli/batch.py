@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.models import ProductInsight
+from robotoff.settings import BaseURLProvider
 
 
 def run(insight_type: str, dry: bool = True, json_contains_str: Optional[str] = None):
@@ -25,6 +26,7 @@ def batch_annotate(
     where_clauses = [
         ProductInsight.type == insight_type,
         ProductInsight.annotation.is_null(),
+        ProductInsight.annotation.latent == False,  # noqa: E712
     ]
 
     if json_contains is not None:
@@ -46,8 +48,8 @@ def batch_annotate(
             i += 1
             print("Insight %d" % i)
             print(
-                "Add label {} to https://fr.openfoodfacts.org/produit/{}"
-                "".format(insight.data, insight.barcode)
+                "Add label {} to {}/product/{}"
+                "".format(insight.data, BaseURLProvider().get(), insight.barcode)
             )
             print(insight.data)
 

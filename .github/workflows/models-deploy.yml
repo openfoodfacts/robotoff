@@ -1,0 +1,79 @@
+name: Sync Tensorflow models to Proxmox VM
+on: 
+  push:
+    branches:
+      - master
+      - deploy-*
+    tags: 
+      - v*.*.*
+jobs:
+  tfmodels-sync:
+    name: Sync TF models
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}-${{ matrix.asset_name }}
+    strategy:
+      matrix:
+        asset_name:
+          - tf-universal-logo-detector
+          - tf-nutrition-table
+          - tf-nutriscore
+        env:
+          - robotoff-ml
+          # Syncing to robotoff-net/org is required as post-processing for most models is done
+          # on the caller side, i.e. the caller needs access to the label_map.pbtxt file.
+          - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - name: Download
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.PROXY_HOST }}
+          proxy_username: ${{ secrets.USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ matrix.env }}/tf_models
+            dir=`echo ${{ matrix.asset_name }} | sed 's/tf-//g'`
+            mkdir -p ${dir} ${dir}/1
+            wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/${{ matrix.asset_name }}-1.0/label_map.pbtxt > ${dir}/labels.pbtxt
+            wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/${{ matrix.asset_name }}-1.0/saved_model.tar.gz > ${dir}/1/saved_model.tar.gz
+            cd ${dir}/1
+            tar -xzvf saved_model.tar.gz --strip-component=1
+            rm saved_model.tar.gz
+
+  # The category classifier has the pre- and post-processing built in, therefore
+  # it requires a slightly different sequence of steps to the 'tfmodels-sync' above.
+  tfmodels-category-classifier-sync:
+    name: Sync Category Classifier
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}-${{ matrix.asset_name }}
+    strategy:
+      matrix:
+        asset_name:
+          - tf-category-classifier
+        env:
+          - robotoff-ml
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - name: Download
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.PROXY_HOST }}
+          proxy_username: ${{ secrets.USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ matrix.env }}/tf_models
+            dir=`echo ${{ matrix.asset_name }} | sed 's/tf-//g'`
+            mkdir -p ${dir} ${dir}/1
+            wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-xx-2.0/serving_model.tar.gz > ${dir}/1/saved_model.tar.gz
+            cd ${dir}/1
+            tar -xzvf saved_model.tar.gz --strip-component=1
+            rm saved_model.tar.gz
+

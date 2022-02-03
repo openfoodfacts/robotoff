@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  api:
+    command:
+      - gunicorn
+      - --config /opt/robotoff/gunicorn.py
+      - --statsd-host=statsd:9125
+      - --statsd-prefix=robotoff
+      - --log-file=-
+      - robotoff.app.api:api
+    depends_on:
+      - statsd
+  statsd:
+    image: prom/statsd-exporter:v0.22.2
+    volumes:
+      - ./statsd.conf:/statsd/statsd.conf
+    command:
+      - "--statsd.mapping-config=/statsd/statsd.conf"
+    ports:
+      - 9102:9102
+    networks:
+      - webnet
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:v0.10.0
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable
+    networks:
+      - webnet
+    depends_on:
+      - postgres

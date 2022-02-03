@@ -1,0 +1,50 @@
+version: "3.9"
+
+x-robotoff-dev: &robotoff-dev
+    image: openfoodfacts/robotoff:dev
+    build:
+      context: .
+      target: runtime-dev
+      args:
+        OFF_UID: ${OFF_UID:-1000}
+        OFF_GID: ${OFF_GID:-1000}
+    volumes:
+      # make updates to code available
+      - ./robotoff:/opt/robotoff/robotoff
+      - ./scripts:/opt/robotoff/scripts
+      - ./pyproject.toml:/opt/robotoff/pyproject.toml
+      - ./poetry.toml:/opt/robotoff/poetry.toml
+      - ./poetry.lock:/opt/robotoff/poetry.lock
+      # make tests available
+      - ./tests:/opt/robotoff/tests
+      - ./.cov:/opt/robotoff/.cov
+      # make doc generation available
+      - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
+      - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
+      - ./README.md:/opt/robotoff/README.md
+      - ./doc:/opt/robotoff/doc
+      - ./gh_pages:/opt/robotoff/gh_pages
+
+x-networks-productopener-local: &networks-productopener-local
+    # in dev we want to be able to communicatet with product opener
+    # using our docker-compose environment
+    networks:
+      - po_local
+      - webnet
+
+services:
+  api:
+    <<: *robotoff-dev
+    <<: *networks-productopener-local
+  workers:
+    <<: *robotoff-dev
+    <<: *networks-productopener-local
+  scheduler:
+    <<: *networks-productopener-local
+    <<: *robotoff-dev
+
+networks:
+  # this links to the product opener dev environment on local machine
+  po_local:
+    name: ${PO_LOCAL_NET:-po_default}
+    external: true

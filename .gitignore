@@ -1,5 +1,10 @@
+.vscode
+robotoff.code-workspace
 __pycache__
+build
+dist
 .idea
+robotoff.egg-info
 ml/data/*
 datasets
 *.joblib
@@ -10,3 +15,25 @@ datasets
 models
 local_models
 docker-compose.production.yml
+*.mo
+.DS_Store
+images
+
+.venv/
+tf_models/*
+weights/
+
+# direnv
+.envrc
+# vim
+.*.swp
+
+# coverage
+.cov
+.coverage
+coverage.xml
+
+site/
+gh_pages/
+doc/README.md
+doc/references/cli.md 

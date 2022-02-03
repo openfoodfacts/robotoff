@@ -3,10 +3,11 @@ import pathlib
 from typing import Dict, List, Optional
 
 from robotoff import settings
-from robotoff.insights._enum import InsightType
+from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
-from robotoff.off import get_product
-from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy, TaxonomyType
+from robotoff.mongo import MONGO_CLIENT_CACHE
+from robotoff.off import generate_image_url, get_product
+from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
@@ -14,11 +15,13 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-LABEL_IMG_BASE_URL = "https://static.openfoodfacts.org/images/lang"
+LABEL_IMG_BASE_URL = "https://{}/images/lang".format(
+    settings.BaseURLProvider().static().get()
+)
 
 LABEL_IMAGES = {
-    "en:eu-organic": LABEL_IMG_BASE_URL + "en/labels/eu-organic.135x90.svg",
-    "fr:ab-agriculture-biologique": LABEL_IMG_BASE_URL
+    "en:eu-organic": LABEL_IMG_BASE_URL + "/en/labels/eu-organic.135x90.svg",
+    "en:ab-agriculture-biologique": LABEL_IMG_BASE_URL
     + "/fr/labels/ab-agriculture-biologique.74x90.svg",
     "en:european-vegetarian-union": LABEL_IMG_BASE_URL
     + "/en/labels/european-vegetarian-union.90x90.svg",
@@ -44,6 +47,7 @@ class AddBinaryQuestion(Question):
         insight: ProductInsight,
         image_url: Optional[str] = None,
         source_image_url: Optional[str] = None,
+        value_tag: Optional[str] = None,
     ):
         self.question: str = question
         self.value: str = value
@@ -52,6 +56,7 @@ class AddBinaryQuestion(Question):
         self.barcode: str = insight.barcode
         self.image_url: Optional[str] = image_url
         self.source_image_url: Optional[str] = source_image_url
+        self.value_tag: Optional[str] = value_tag
 
     def get_type(self):
         return "add-binary"
@@ -66,11 +71,46 @@ class AddBinaryQuestion(Question):
             "insight_type": self.insight_type,
         }
 
+        if self.value_tag:
+            serial["value_tag"] = self.value_tag
+
         if self.image_url:
             serial["image_url"] = self.image_url
 
         if self.source_image_url:
             serial["source_image_url"] = self.source_image_url
+
+        return serial
+
+
+class IngredientSpellcheckQuestion(Question):
+    def __init__(self, insight: ProductInsight, image_url: Optional[str]):
+        self.insight_id: str = str(insight.id)
+        self.insight_type: str = str(insight.type)
+        self.barcode: str = insight.barcode
+        self.corrected: str = insight.data["corrected"]
+        self.text: str = insight.data["text"]
+        self.corrections: List[JSONType] = insight.data["corrections"]
+        self.lang: str = insight.data["lang"]
+        self.image_url: Optional[str] = image_url
+
+    def get_type(self):
+        return "ingredient-spellcheck"
+
+    def serialize(self) -> JSONType:
+        serial = {
+            "barcode": self.barcode,
+            "type": self.get_type(),
+            "insight_id": self.insight_id,
+            "insight_type": self.insight_type,
+            "text": self.text,
+            "corrected": self.corrected,
+            "corrections": self.corrections,
+            "lang": self.lang,
+        }
+
+        if self.image_url:
+            serial["image_url"] = self.image_url
 
         return serial
 
@@ -88,14 +128,14 @@ class CategoryQuestionFormatter(QuestionFormatter):
     question = "Does the product belong to this category?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.value_tag
-        taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.category.name].get()
-        localized_value: str = taxonomy.get_localized_name(value, lang)
+        taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
+        localized_value: str = taxonomy.get_localized_name(insight.value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
         source_image_url = self.get_source_image_url(insight.barcode)
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
+            value_tag=insight.value_tag,
             insight=insight,
             source_image_url=source_image_url,
         )
@@ -112,16 +152,15 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
         selected_images = product["selected_images"]
 
-        if "front" not in selected_images:
-            return None
+        for key in ("front", "ingredients", "nutrition"):
+            if key in selected_images:
+                images = selected_images[key]
 
-        front_images = selected_images["front"]
+                if "display" in images:
+                    display_images = list(images["display"].values())
 
-        if "display" in front_images:
-            display_images = list(front_images["display"].values())
-
-            if display_images:
-                return display_images[0]
+                    if display_images:
+                        return display_images[0]
 
         return None
 
@@ -130,15 +169,17 @@ class ProductWeightQuestionFormatter(QuestionFormatter):
     question = "Does this weight match the weight displayed on the product?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.data["text"]
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
-            insight.source_image
-        )
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
 
         return AddBinaryQuestion(
             question=localized_question,
-            value=value,
+            value=insight.value,
             insight=insight,
             source_image_url=source_image_url,
         )
@@ -148,23 +189,26 @@ class LabelQuestionFormatter(QuestionFormatter):
     question = "Does the product have this label?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.data["label_tag"]
-
+        value_tag: str = insight.value_tag
         image_url = None
 
-        if value in LABEL_IMAGES:
-            image_url = LABEL_IMAGES[value]
+        if value_tag in LABEL_IMAGES:
+            image_url = LABEL_IMAGES[value_tag]
 
-        taxonomy: Taxonomy = TAXONOMY_STORES[TaxonomyType.label.name].get()
-        localized_value: str = taxonomy.get_localized_name(value, lang)
+        taxonomy: Taxonomy = get_taxonomy(TaxonomyType.label.name)
+        localized_value: str = taxonomy.get_localized_name(value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
-            insight.source_image
-        )
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
 
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
+            value_tag=value_tag,
             insight=insight,
             image_url=image_url,
             source_image_url=source_image_url,
@@ -175,15 +219,62 @@ class BrandQuestionFormatter(QuestionFormatter):
     question = "Does the product belong to this brand?"
 
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        value: str = insight.data["brand"]
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
-            insight.source_image
-        )
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
 
         return AddBinaryQuestion(
             question=localized_question,
-            value=value,
+            value=insight.value,
+            value_tag=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
+class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        image_url = self.get_ingredient_image_url(insight.barcode, lang)
+        return IngredientSpellcheckQuestion(insight=insight, image_url=image_url)
+
+    def get_ingredient_image_url(self, barcode: str, lang: str) -> Optional[str]:
+        mongo_client = MONGO_CLIENT_CACHE.get()
+        collection = mongo_client.off.products
+        product = collection.find_one({"code": barcode}, ["images"])
+
+        if product is None:
+            return None
+
+        images = product.get("images", {})
+        field_name = "ingredients_{}".format(lang)
+
+        if field_name in images:
+            image = images[field_name]
+            image_id = "ingredients_{}.{}.full".format(lang, image["rev"])
+            return generate_image_url(barcode, image_id)
+
+        return None
+
+
+class NutritionImageQuestionFormatter(QuestionFormatter):
+    question = "Is this image a nutrition image for this language?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
+                insight.source_image
+            )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
             insight=insight,
             source_image_url=source_image_url,
         )
@@ -205,6 +296,8 @@ class QuestionFormatterFactory:
         InsightType.label.name: LabelQuestionFormatter,
         InsightType.product_weight.name: ProductWeightQuestionFormatter,
         InsightType.brand.name: BrandQuestionFormatter,
+        InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
+        InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
     }
 
     @classmethod
@@ -214,3 +307,12 @@ class QuestionFormatterFactory:
     @classmethod
     def get_available_types(cls) -> List[str]:
         return list(cls.formatters.keys())
+
+    @classmethod
+    def get_default_types(cls) -> List[str]:
+        return [
+            InsightType.category.name,
+            InsightType.label.name,
+            InsightType.product_weight.name,
+            InsightType.brand.name,
+        ]

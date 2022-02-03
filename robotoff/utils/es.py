@@ -2,6 +2,7 @@ import json
 from typing import Dict, Iterable, Tuple
 
 import elasticsearch
+
 from robotoff import settings
 
 
@@ -11,7 +12,7 @@ def get_es_client():
 
 def perform_export(
     client, data: Iterable[Tuple[str, Dict]], index: str, batch_size=100
-):
+) -> int:
     batch = []
     rows_inserted = 0
 

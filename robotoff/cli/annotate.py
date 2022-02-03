@@ -3,22 +3,20 @@ from difflib import SequenceMatcher
 from typing import Dict, Optional
 
 import click
-import requests
 
+from robotoff import settings
+from robotoff.utils import http_session
 from robotoff.utils.types import JSONType
-
-http_session = requests.Session()
 
 LOCAL = False
 
 if LOCAL:
     BASE_URL = "http://localhost:5500/api/v1"
 else:
-    BASE_URL = "https://robotoff.openfoodfacts.org/api/v1"
+    BASE_URL = settings.BaseURLProvider().robotoff().get() + "/api/v1"
 
 RANDOM_INSIGHT_URL = BASE_URL + "/insights/random"
 ANNOTATE_INSIGHT_URL = BASE_URL + "/insights/annotate"
-STATIC_IMAGE_DIR_URL = "https://static.openfoodfacts.org/images/products"
 
 
 class NoInsightException(Exception):
@@ -97,13 +95,13 @@ def print_generic_insight(insight: JSONType) -> None:
         click.echo("{}: {}".format(key, str(value)))
 
     click.echo(
-        "url: {}".format(
-            "https://fr.openfoodfacts.org/produit/" "{}".format(insight["barcode"])
+        "url: {}/product/{}".format(
+            settings.BaseURLProvider().get(), insight["barcode"]
         )
     )
 
     if "source" in insight:
-        click.echo("image: {}{}".format(STATIC_IMAGE_DIR_URL, insight["source"]))
+        click.echo("image: {}{}".format(settings.OFF_IMAGE_BASE_URL, insight["source"]))
     click.echo("")
 
 
@@ -113,8 +111,8 @@ def print_ingredient_spellcheck_insight(insight: JSONType) -> None:
         click.echo("{}: {}".format(key, str(value)))
 
     click.echo(
-        "url: {}".format(
-            "https://fr.openfoodfacts.org/produit/" "{}".format(insight["barcode"])
+        "url: {}/product/{}".format(
+            settings.BaseURLProvider().get(), insight["barcode"]
         )
     )
 
