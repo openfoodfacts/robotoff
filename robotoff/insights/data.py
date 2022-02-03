@@ -86,7 +86,7 @@ AUTHORIZED_LABELS = {
 }
 
 BRANDS_BARCODE_RANGE: Dict[str, str] = {
-    'boni': "5400141xxxxxx",
-    'everyday': "5400141xxxxxx",
-    'netto': "325039xxxxxxx",
+    "boni": "5400141xxxxxx",
+    "everyday": "5400141xxxxxx",
+    "netto": "325039xxxxxxx",
 }

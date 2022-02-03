@@ -4,7 +4,7 @@ from typing import Optional
 from robotoff.insights._enum import InsightType
 from robotoff.models import ProductInsight
 from robotoff.products import ProductStore
-from robotoff.taxonomy import Taxonomy, TAXONOMY_STORES
+from robotoff.taxonomy import TAXONOMY_STORES, Taxonomy
 from robotoff.utils.types import JSONType
 
 
@@ -29,7 +29,7 @@ class LabelValidator(InsightValidator):
 
     def is_valid(self, insight: ProductInsight) -> bool:
         product = self.product_store[insight.barcode]
-        product_labels_tags = getattr(product, 'labels_tags', [])
+        product_labels_tags = getattr(product, "labels_tags", [])
         label_tag = insight.value_tag
 
         if label_tag in product_labels_tags:
@@ -37,12 +37,11 @@ class LabelValidator(InsightValidator):
 
         # Check that the predicted label is not a parent of a
         # current/already predicted label
-        label_taxonomy: Taxonomy = TAXONOMY_STORES[
-            InsightType.label.name].get()
+        label_taxonomy: Taxonomy = TAXONOMY_STORES[InsightType.label.name].get()
 
-        if (label_tag in label_taxonomy and
-            label_taxonomy.is_parent_of_any(label_tag,
-                                            product_labels_tags)):
+        if label_tag in label_taxonomy and label_taxonomy.is_parent_of_any(
+            label_tag, product_labels_tags
+        ):
             return False
 
         return True
@@ -55,7 +54,7 @@ class CategoryValidator(InsightValidator):
 
     def is_valid(self, insight: ProductInsight) -> bool:
         product = self.product_store[insight.barcode]
-        product_categories_tags = getattr(product, 'categories_tags', [])
+        product_categories_tags = getattr(product, "categories_tags", [])
         category_tag = insight.value_tag
 
         if category_tag in product_categories_tags:
@@ -63,12 +62,11 @@ class CategoryValidator(InsightValidator):
 
         # Check that the predicted category is not a parent of a
         # current/already predicted category
-        category_taxonomy: Taxonomy = TAXONOMY_STORES[
-            InsightType.category.name].get()
+        category_taxonomy: Taxonomy = TAXONOMY_STORES[InsightType.category.name].get()
 
-        if (category_tag in category_taxonomy and
-            category_taxonomy.is_parent_of_any(category_tag,
-                                               product_categories_tags)):
+        if category_tag in category_taxonomy and category_taxonomy.is_parent_of_any(
+            category_tag, product_categories_tags
+        ):
             return False
 
         return True
@@ -81,9 +79,9 @@ class InsightValidatorFactory:
     }
 
     @classmethod
-    def create(cls, insight_type: str,
-               product_store: Optional[ProductStore]) -> \
-            Optional[InsightValidator]:
+    def create(
+        cls, insight_type: str, product_store: Optional[ProductStore]
+    ) -> Optional[InsightValidator]:
         if insight_type in cls.validators:
             return cls.validators[insight_type](product_store)
         else:

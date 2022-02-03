@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import requests
 
@@ -12,8 +12,8 @@ POST_URL = "https://world.openfoodfacts.org/cgi/product_jqm2.pl"
 DRY_POST_URL = "https://world.openfoodfacts.net/cgi/product_jqm2.pl"
 AUTH = ("roboto-app", settings.OFF_PASSWORD)
 AUTH_DICT = {
-    'user_id': AUTH[0],
-    'password': AUTH[1],
+    "user_id": AUTH[0],
+    "password": AUTH[1],
 }
 
 API_URL = "https://world.openfoodfacts.org/api/v0"
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 USER_AGENT_HEADERS = {
-    'User-Agent': settings.ROBOTOFF_USER_AGENT,
+    "User-Agent": settings.ROBOTOFF_USER_AGENT,
 }
 
 
@@ -43,27 +43,27 @@ def split_barcode(barcode: str) -> List[str]:
 
 def generate_json_ocr_url(barcode: str, image_name: str) -> str:
     splitted_barcode = split_barcode(barcode)
-    path = "/{}/{}.json".format('/'.join(splitted_barcode), image_name)
+    path = "/{}/{}.json".format("/".join(splitted_barcode), image_name)
     return settings.OFF_IMAGE_BASE_URL + path
 
 
 def generate_image_url(barcode: str, image_name: str) -> str:
     splitted_barcode = split_barcode(barcode)
-    path = "/{}/{}.jpg".format('/'.join(splitted_barcode), image_name)
+    path = "/{}/{}.jpg".format("/".join(splitted_barcode), image_name)
     return settings.OFF_IMAGE_BASE_URL + path
 
 
 def product_exists(barcode: str) -> bool:
-    return get_product(barcode, ['code']) is not None
+    return get_product(barcode, ["code"]) is not None
 
 
 def is_valid_image(barcode: str, image_id: str) -> bool:
-    product = get_product(barcode, fields=['images'])
+    product = get_product(barcode, fields=["images"])
 
     if product is None:
         return False
 
-    images = product.get('images', {})
+    images = product.get("images", {})
 
     return image_id in images
 
@@ -76,7 +76,7 @@ def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
         # requests escape comma in URLs, as expected, but openfoodfacts server
         # does not recognize escaped commas.
         # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
-        url += '?fields={}'.format(','.join(fields))
+        url += "?fields={}".format(",".join(fields))
 
     r = http_session.get(url, headers=USER_AGENT_HEADERS)
 
@@ -85,41 +85,37 @@ def get_product(barcode: str, fields: List[str] = None) -> Optional[Dict]:
 
     data = r.json()
 
-    if data['status_verbose'] != 'product found':
+    if data["status_verbose"] != "product found":
         return None
 
-    return data['product']
+    return data["product"]
 
 
 def add_category(barcode: str, category: str, dry=False):
     params = {
-        'code': barcode,
-        'add_categories': category,
-        'comment': "Adding category '{}' "
-                   "(automated edit)".format(category),
-        **AUTH_DICT
+        "code": barcode,
+        "add_categories": category,
+        "comment": "Adding category '{}' " "(automated edit)".format(category),
+        **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
 
 def update_quantity(barcode: str, quantity: str, dry=False):
     params = {
-        'code': barcode,
-        'quantity': quantity,
-        'comment': "Updating quantity to '{}' "
-                   "(automated edit)".format(quantity),
+        "code": barcode,
+        "quantity": quantity,
+        "comment": "Updating quantity to '{}' " "(automated edit)".format(quantity),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
 
 
-def save_ingredients(barcode: str, ingredient_text: str,
-                     lang: str = None, dry=False):
-    ingredient_key = ('ingredients_text' if lang is None
-                      else f'ingredients_{lang}_text')
+def save_ingredients(barcode: str, ingredient_text: str, lang: str = None, dry=False):
+    ingredient_key = "ingredients_text" if lang is None else f"ingredients_{lang}_text"
     params = {
-        'code': barcode,
-        'comment': "Ingredient spellcheck correction (automated edit)",
+        "code": barcode,
+        "comment": "Ingredient spellcheck correction (automated edit)",
         ingredient_key: ingredient_text,
         **AUTH_DICT,
     }
@@ -127,12 +123,12 @@ def save_ingredients(barcode: str, ingredient_text: str,
 
 
 def update_emb_codes(barcode: str, emb_codes: List[str], dry=False):
-    emb_codes_str = ','.join(emb_codes)
+    emb_codes_str = ",".join(emb_codes)
 
     params = {
-        'code': barcode,
-        'emb_codes': emb_codes_str,
-        'comment': "Adding packager code (automated edit)",
+        "code": barcode,
+        "emb_codes": emb_codes_str,
+        "comment": "Adding packager code (automated edit)",
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -140,10 +136,10 @@ def update_emb_codes(barcode: str, emb_codes: List[str], dry=False):
 
 def update_expiration_date(barcode: str, expiration_date: str, dry=False):
     params = {
-        'code': barcode,
-        'expiration_date': expiration_date,
-        'comment': "Adding expiration date '{}' "
-                   "(automated edit)".format(expiration_date),
+        "code": barcode,
+        "expiration_date": expiration_date,
+        "comment": "Adding expiration date '{}' "
+        "(automated edit)".format(expiration_date),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -151,9 +147,9 @@ def update_expiration_date(barcode: str, expiration_date: str, dry=False):
 
 def add_label_tag(barcode: str, label_tag: str, dry=False):
     params = {
-        'code': barcode,
-        'add_labels': label_tag,
-        'comment': "Adding label tag '{}' (automated edit)".format(label_tag),
+        "code": barcode,
+        "add_labels": label_tag,
+        "comment": "Adding label tag '{}' (automated edit)".format(label_tag),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -161,9 +157,9 @@ def add_label_tag(barcode: str, label_tag: str, dry=False):
 
 def add_brand(barcode: str, brand: str, dry=False):
     params = {
-        'code': barcode,
-        'add_brands': brand,
-        'comment': "Adding brand '{}' (automated edit)".format(brand),
+        "code": barcode,
+        "add_brands": brand,
+        "comment": "Adding brand '{}' (automated edit)".format(brand),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -171,9 +167,9 @@ def add_brand(barcode: str, brand: str, dry=False):
 
 def add_store(barcode: str, store: str, dry=False):
     params = {
-        'code': barcode,
-        'add_stores': store,
-        'comment': "Adding store '{}' (automated edit)".format(store),
+        "code": barcode,
+        "add_stores": store,
+        "comment": "Adding store '{}' (automated edit)".format(store),
         **AUTH_DICT,
     }
     update_product(params, dry=dry)
@@ -181,19 +177,16 @@ def add_store(barcode: str, store: str, dry=False):
 
 def update_product(params: Dict, dry=False):
     if dry:
-        r = http_session.get(DRY_POST_URL, params=params,
-                             auth=('off', 'off'),
-                             headers=USER_AGENT_HEADERS)
+        r = http_session.get(
+            DRY_POST_URL, params=params, auth=("off", "off"), headers=USER_AGENT_HEADERS
+        )
     else:
-        r = http_session.get(POST_URL, params=params,
-                             headers=USER_AGENT_HEADERS)
+        r = http_session.get(POST_URL, params=params, headers=USER_AGENT_HEADERS)
 
     r.raise_for_status()
     json = r.json()
 
-    status = json.get('status_verbose')
+    status = json.get("status_verbose")
 
     if status != "fields saved":
-        logger.warn(
-            "Unexpected status during product update: {}".format(
-                status))
+        logger.warn("Unexpected status during product update: {}".format(status))

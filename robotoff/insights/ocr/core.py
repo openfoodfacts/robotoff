@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import gzip
 import json
-
 import pathlib as pathlib
-from typing import List, Dict, Iterable, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import requests
 
@@ -27,7 +26,7 @@ logger = get_logger(__name__)
 
 
 def get_barcode_from_path(path: str) -> Optional[str]:
-    barcode = ''
+    barcode = ""
 
     for parent in pathlib.Path(path).parents:
         if parent.name.isdigit():
@@ -39,14 +38,15 @@ def get_barcode_from_path(path: str) -> Optional[str]:
 
 
 def fetch_images_for_ean(ean: str):
-    url = "https://world.openfoodfacts.org/api/v0/product/" \
-          "{}.json?fields=images".format(ean)
+    url = (
+        "https://world.openfoodfacts.org/api/v0/product/"
+        "{}.json?fields=images".format(ean)
+    )
     images = requests.get(url).json()
     return images
 
 
-def get_json_for_image(barcode: str, image_name: str) -> \
-        Optional[JSONType]:
+def get_json_for_image(barcode: str, image_name: str) -> Optional[JSONType]:
     url = generate_json_ocr_url(barcode, image_name)
     r = requests.get(url)
 
@@ -56,8 +56,7 @@ def get_json_for_image(barcode: str, image_name: str) -> \
     return r.json()
 
 
-def extract_insights(ocr_result: OCRResult,
-                     insight_type: str) -> List[Dict]:
+def extract_insights(ocr_result: OCRResult, insight_type: str) -> List[Dict]:
     if insight_type == InsightType.packager_code.name:
         return find_packager_codes(ocr_result)
 
@@ -76,10 +75,10 @@ def extract_insights(ocr_result: OCRResult,
     elif insight_type == InsightType.product_weight.name:
         return find_product_weight(ocr_result)
 
-    elif insight_type == 'trace':
+    elif insight_type == "trace":
         return find_traces(ocr_result)
 
-    elif insight_type == 'nutrient':
+    elif insight_type == "nutrient":
         return find_nutrient_values(ocr_result)
 
     elif insight_type == InsightType.brand.name:
@@ -100,14 +99,12 @@ def get_source(image_name: str, json_path: str = None, barcode: str = None):
     if not barcode:
         barcode = get_barcode_from_path(str(json_path))
 
-    return "/{}/{}.jpg" \
-           "".format('/'.join(split_barcode(barcode)),
-                     image_name)
+    return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
 
 def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
     if is_barcode(input_str):
-        image_data = fetch_images_for_ean(input_str)['product']['images']
+        image_data = fetch_images_for_ean(input_str)["product"]["images"]
 
         for image_name in image_data.keys():
             if image_name.isdigit():
@@ -126,25 +123,24 @@ def ocr_iter(input_str: str) -> Iterable[Tuple[Optional[str], Dict]]:
 
         if input_path.is_dir():
             for json_path in input_path.glob("**/*.json"):
-                with open(str(json_path), 'r') as f:
-                    source = get_source(json_path.stem,
-                                        json_path=str(json_path))
+                with open(str(json_path), "r") as f:
+                    source = get_source(json_path.stem, json_path=str(json_path))
                     yield source, json.load(f)
         else:
-            if '.json' in input_path.suffixes:
-                with open(str(input_path), 'r') as f:
+            if ".json" in input_path.suffixes:
+                with open(str(input_path), "r") as f:
                     yield None, json.load(f)
 
-            elif '.jsonl' in input_path.suffixes:
-                if input_path.suffix == '.gz':
+            elif ".jsonl" in input_path.suffixes:
+                if input_path.suffix == ".gz":
                     open_func = gzip.open
                 else:
                     open_func = open
 
-                with open_func(input_path, mode='rt') as f:
+                with open_func(input_path, mode="rt") as f:
                     for line in f:
                         json_data = json.loads(line)
 
-                        if 'content' in json_data:
-                            source = json_data['source'].replace('//', '/')
-                            yield source, json_data['content']
+                        if "content" in json_data:
+                            source = json_data["source"].replace("//", "/")
+                            yield source, json_data["content"]

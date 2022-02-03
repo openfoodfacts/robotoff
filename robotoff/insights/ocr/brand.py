@@ -1,9 +1,9 @@
 import re
-from typing import List, Dict, Tuple, Set
+from typing import Dict, List, Set, Tuple
 
 from robotoff import settings
-from robotoff.insights.ocr.dataclass import OCRResult, OCRRegex, OCRField
-from robotoff.utils import text_file_iter, get_logger
+from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult
+from robotoff.utils import get_logger, text_file_iter
 
 logger = get_logger(__name__)
 
@@ -12,8 +12,8 @@ def get_logo_annotation_brands() -> Dict[str, str]:
     brands: Dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
-        if '||' in item:
-            logo_description, label_tag = item.split('||')
+        if "||" in item:
+            logo_description, label_tag = item.split("||")
         else:
             logger.warn("'||' separator expected!")
             continue
@@ -27,10 +27,7 @@ LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
 
 
 def get_brand_tag(brand: str) -> str:
-    return (brand.lower()
-                 .replace(' & ', '-')
-                 .replace(' ', '-')
-                 .replace("'", '-'))
+    return brand.lower().replace(" & ", "-").replace(" ", "-").replace("'", "-")
 
 
 def brand_sort_key(item):
@@ -47,8 +44,8 @@ def get_sorted_brands() -> List[Tuple[str, str]]:
     sorted_brands: Dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_BRANDS_DATA_PATH):
-        if '||' in item:
-            brand, regex_str = item.split('||')
+        if "||" in item:
+            brand, regex_str = item.split("||")
         else:
             brand = item
             regex_str = re.escape(item.lower())
@@ -59,13 +56,15 @@ def get_sorted_brands() -> List[Tuple[str, str]]:
 
 
 SORTED_BRANDS = get_sorted_brands()
-BRAND_REGEX_STR = "|".join(r"((?<!\w){}(?!\w))".format(pattern)
-                           for _, pattern in SORTED_BRANDS)
+BRAND_REGEX_STR = "|".join(
+    r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in SORTED_BRANDS
+)
 NOTIFY_BRANDS_WHITELIST: Set[str] = set(
-    text_file_iter(settings.OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH))
-BRAND_REGEX = OCRRegex(re.compile(BRAND_REGEX_STR),
-                       field=OCRField.full_text_contiguous,
-                       lowercase=True)
+    text_file_iter(settings.OCR_BRANDS_NOTIFY_WHITELIST_DATA_PATH)
+)
+BRAND_REGEX = OCRRegex(
+    re.compile(BRAND_REGEX_STR), field=OCRField.full_text_contiguous, lowercase=True
+)
 
 
 def find_brands(ocr_result: OCRResult) -> List[Dict]:
@@ -82,25 +81,29 @@ def find_brands(ocr_result: OCRResult) -> List[Dict]:
         for idx, match_str in enumerate(groups):
             if match_str is not None:
                 brand, _ = SORTED_BRANDS[idx]
-                results.append({
-                    'brand': brand,
-                    'brand_tag': get_brand_tag(brand),
-                    'text': match_str,
-                    'notify': brand not in NOTIFY_BRANDS_WHITELIST,
-                })
+                results.append(
+                    {
+                        "brand": brand,
+                        "brand_tag": get_brand_tag(brand),
+                        "text": match_str,
+                        "notify": brand not in NOTIFY_BRANDS_WHITELIST,
+                    }
+                )
                 return results
 
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
             brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
 
-            results.append({
-                'brand': brand,
-                'brand_tag': get_brand_tag(brand),
-                'automatic_processing': False,
-                'confidence': logo_annotation.score,
-                'model': 'google-cloud-vision',
-            })
+            results.append(
+                {
+                    "brand": brand,
+                    "brand_tag": get_brand_tag(brand),
+                    "automatic_processing": False,
+                    "confidence": logo_annotation.score,
+                    "model": "google-cloud-vision",
+                }
+            )
             return results
 
     return results

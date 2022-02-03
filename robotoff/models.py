@@ -1,16 +1,18 @@
-from typing import Iterable, Dict
+from typing import Dict, Iterable
 
 import peewee
-from playhouse.postgres_ext import (PostgresqlExtDatabase,
-                                    BinaryJSONField)
+from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 
 from robotoff import settings
 from robotoff.utils.types import JSONType
 
-db = PostgresqlExtDatabase(settings.DB_NAME,
-                           user=settings.DB_USER,
-                           password=settings.DB_PASSWORD,
-                           host=settings.DB_HOST, port=5432)
+db = PostgresqlExtDatabase(
+    settings.DB_NAME,
+    user=settings.DB_USER,
+    password=settings.DB_PASSWORD,
+    host=settings.DB_HOST,
+    port=5432,
+)
 
 
 def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
@@ -54,10 +56,10 @@ class ProductInsight(BaseModel):
 
     def serialize(self) -> JSONType:
         return {
-            'id': str(self.id),
-            'type': self.type,
-            'barcode': self.barcode,
-            'countries': self.countries,
+            "id": str(self.id),
+            "type": self.type,
+            "barcode": self.barcode,
+            "countries": self.countries,
             **self.data,
         }
 

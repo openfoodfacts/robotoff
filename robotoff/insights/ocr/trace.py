@@ -1,12 +1,15 @@
 import re
-from typing import List, Dict
+from typing import Dict, List
 
-from robotoff.insights.ocr.dataclass import OCRRegex, OCRField, OCRResult
+from robotoff.insights.ocr.dataclass import OCRField, OCRRegex, OCRResult
 
 TRACES_REGEX = OCRRegex(
-    re.compile(r"(?:possibilit[ée] de traces|peut contenir(?: des traces)?|traces? [ée]ventuelles? de)"),
+    re.compile(
+        r"(?:possibilit[ée] de traces|peut contenir(?: des traces)?|traces? [ée]ventuelles? de)"
+    ),
     field=OCRField.full_text_contiguous,
-    lowercase=True)
+    lowercase=True,
+)
 
 
 def find_traces(ocr_result: OCRResult) -> List[Dict]:
@@ -20,12 +23,12 @@ def find_traces(ocr_result: OCRResult) -> List[Dict]:
     for match in TRACES_REGEX.regex.finditer(text):
         raw = match.group()
         end_idx = match.end()
-        captured = text[end_idx:end_idx+100]
+        captured = text[end_idx : end_idx + 100]
 
         result = {
-            'raw': raw,
-            'text': captured,
-            'notify': TRACES_REGEX.notify,
+            "raw": raw,
+            "text": captured,
+            "notify": TRACES_REGEX.notify,
         }
         results.append(result)
 

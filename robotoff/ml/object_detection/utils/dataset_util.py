@@ -53,7 +53,7 @@ def read_examples_list(path):
     """
     with tf.gfile.GFile(path) as fid:
         lines = fid.readlines()
-    return [line.strip().split(' ')[0] for line in lines]
+    return [line.strip().split(" ")[0] for line in lines]
 
 
 def recursive_parse_xml_to_dict(xml):
@@ -70,7 +70,7 @@ def recursive_parse_xml_to_dict(xml):
     result = {}
     for child in xml:
         child_result = recursive_parse_xml_to_dict(child)
-        if child.tag != 'object':
+        if child.tag != "object":
             result[child.tag] = child_result[child.tag]
         else:
             if child.tag not in result:

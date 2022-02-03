@@ -1,15 +1,15 @@
 import gettext
-from typing import Set, Dict, Optional
+from typing import Dict, Optional, Set
 
 from robotoff import settings
 
 
 class TranslationStore:
     SUPPORTED_LANGUAGES: Set[str] = {
-        'fr',
-        'es',
-        'it',
-        'de',
+        "fr",
+        "es",
+        "it",
+        "de",
     }
 
     def __init__(self):
@@ -17,9 +17,9 @@ class TranslationStore:
 
     def load(self):
         for lang in self.SUPPORTED_LANGUAGES:
-            t = gettext.translation('robotoff',
-                                    str(settings.I18N_DIR),
-                                    languages=[lang])
+            t = gettext.translation(
+                "robotoff", str(settings.I18N_DIR), languages=[lang]
+            )
             if t is not None:
                 self.translations[lang] = t
 

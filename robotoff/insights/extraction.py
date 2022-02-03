@@ -1,12 +1,11 @@
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import requests
-from typing import Optional, Dict, List
-
 from PIL import Image
 
-from robotoff.insights._enum import InsightType
 from robotoff.insights import ocr
+from robotoff.insights._enum import InsightType
 from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.utils import get_image_from_url, get_logger
 from robotoff.utils.types import JSONType
@@ -14,26 +13,28 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
-        -> Optional[Dict]:
+def get_insights_from_image(
+    barcode: str, image_url: str, ocr_url: str
+) -> Optional[Dict]:
     ocr_insights = extract_ocr_insights(ocr_url)
 
     extract_nutriscore = has_nutriscore_insight(ocr_insights)
     image_ml_insights = extract_image_ml_insights(
-        image_url, extract_nutriscore=extract_nutriscore)
+        image_url, extract_nutriscore=extract_nutriscore
+    )
 
     insight_types = set(ocr_insights.keys()).union(image_ml_insights.keys())
 
     results = {}
 
     for insight_type in insight_types:
-        insights = (ocr_insights.get(insight_type, []) +
-                    image_ml_insights.get(insight_type, []))
+        insights = ocr_insights.get(insight_type, []) + image_ml_insights.get(
+            insight_type, []
+        )
 
-        results[insight_type] = generate_insights_dict(insights,
-                                                       barcode,
-                                                       insight_type,
-                                                       image_url)
+        results[insight_type] = generate_insights_dict(
+            insights, barcode, insight_type, image_url
+        )
 
     if not results:
         return None
@@ -42,48 +43,44 @@ def get_insights_from_image(barcode: str, image_url: str, ocr_url: str) \
 
 
 def has_nutriscore_insight(insights: JSONType) -> bool:
-    for insight in insights.get('label', []):
-        if insight['label_tag'] == 'en:nutriscore':
+    for insight in insights.get("label", []):
+        if insight["label_tag"] == "en:nutriscore":
             return True
 
     return False
 
 
-def generate_insights_dict(insights: List[JSONType],
-                           barcode: str,
-                           insight_type: str,
-                           image_url: str):
+def generate_insights_dict(
+    insights: List[JSONType], barcode: str, insight_type: str, image_url: str
+):
     image_url_path = urlparse(image_url).path
 
-    if image_url_path.startswith('/images/products'):
-        image_url_path = image_url_path[len("/images/products"):]
+    if image_url_path.startswith("/images/products"):
+        image_url_path = image_url_path[len("/images/products") :]
 
     return {
-        'insights': insights,
-        'barcode': barcode,
-        'type': insight_type,
-        'source': image_url_path,
+        "insights": insights,
+        "barcode": barcode,
+        "type": insight_type,
+        "source": image_url_path,
     }
 
 
-def extract_image_ml_insights(image_url: str,
-                              extract_nutriscore: bool = True) -> JSONType:
+def extract_image_ml_insights(
+    image_url: str, extract_nutriscore: bool = True
+) -> JSONType:
     results: JSONType = {}
 
     if extract_nutriscore:
         image = get_image_from_url(image_url, error_raise=True)
-        nutriscore_insight = extract_nutriscore_label(image,
-                                                      manual_threshold=0.5,
-                                                      automatic_threshold=0.9)
+        nutriscore_insight = extract_nutriscore_label(
+            image, manual_threshold=0.5, automatic_threshold=0.9
+        )
 
         if not nutriscore_insight:
             return results
 
-        results = {
-            'label': [
-                nutriscore_insight
-            ]
-        }
+        results = {"label": [nutriscore_insight]}
 
     return results
 
@@ -106,13 +103,15 @@ def extract_ocr_insights(ocr_url: str) -> JSONType:
 
     results = {}
 
-    for insight_type in (InsightType.label.name,
-                         InsightType.packager_code.name,
-                         InsightType.product_weight.name,
-                         InsightType.image_flag.name,
-                         InsightType.expiration_date.name,
-                         InsightType.brand.name,
-                         InsightType.store.name):
+    for insight_type in (
+        InsightType.label.name,
+        InsightType.packager_code.name,
+        InsightType.product_weight.name,
+        InsightType.image_flag.name,
+        InsightType.expiration_date.name,
+        InsightType.brand.name,
+        InsightType.store.name,
+    ):
         insights = ocr.extract_insights(ocr_result, insight_type)
 
         if insights:
@@ -121,10 +120,10 @@ def extract_ocr_insights(ocr_url: str) -> JSONType:
     return results
 
 
-def extract_nutriscore_label(image: Image.Image,
-                             manual_threshold: float,
-                             automatic_threshold: float) -> Optional[JSONType]:
-    model = ObjectDetectionModelRegistry.get('nutriscore')
+def extract_nutriscore_label(
+    image: Image.Image, manual_threshold: float, automatic_threshold: float
+) -> Optional[JSONType]:
+    model = ObjectDetectionModelRegistry.get("nutriscore")
     raw_result = model.detect_from_image(image, output_image=False)
     results = raw_result.select(threshold=manual_threshold)
 
@@ -139,13 +138,13 @@ def extract_nutriscore_label(image: Image.Image,
     score = result.score
 
     automatic_processing = score >= automatic_threshold
-    label_tag = 'en:{}'.format(result.label)
+    label_tag = "en:{}".format(result.label)
 
     return {
-        'label_tag': label_tag,
-        'notify': True,
-        'automatic_processing': automatic_processing,
-        'confidence': score,
-        'bounding_box': result.bounding_box,
-        'model': 'nutriscore',
+        "label_tag": label_tag,
+        "notify": True,
+        "automatic_processing": automatic_processing,
+        "confidence": score,
+        "bounding_box": result.bounding_box,
+        "model": "nutriscore",
     }

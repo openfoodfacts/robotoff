@@ -1,28 +1,30 @@
 import tempfile
+from typing import Iterable, List, Optional, Union
 
+import peewee
 import requests
-from typing import Union, Optional, List, Iterable
+from PIL import Image
 
-from robotoff.insights.annotate import (InsightAnnotatorFactory,
-                                        AnnotationResult,
-                                        ALREADY_ANNOTATED_RESULT,
-                                        UNKNOWN_INSIGHT_RESULT)
+from robotoff.insights.annotate import (
+    ALREADY_ANNOTATED_RESULT,
+    UNKNOWN_INSIGHT_RESULT,
+    AnnotationResult,
+    InsightAnnotatorFactory,
+)
 from robotoff.models import ProductInsight
 from robotoff.off import get_product
 from robotoff.utils import get_logger
-from PIL import Image
-
-import peewee
-
 
 logger = get_logger(__name__)
 
 
-def get_insights(barcode: Optional[str] = None,
-                 keep_types: List[str] = None,
-                 country: str = None,
-                 brands: List[str] = None,
-                 count=25) -> Iterable[ProductInsight]:
+def get_insights(
+    barcode: Optional[str] = None,
+    keep_types: List[str] = None,
+    country: str = None,
+    brands: List[str] = None,
+    count=25,
+) -> Iterable[ProductInsight]:
     where_clauses = [
         ProductInsight.annotation.is_null(),
     ]
@@ -34,22 +36,23 @@ def get_insights(barcode: Optional[str] = None,
         where_clauses.append(ProductInsight.type.in_(keep_types))
 
     if country is not None:
-        where_clauses.append(ProductInsight.countries.contains(
-            country))
+        where_clauses.append(ProductInsight.countries.contains(country))
 
     if brands:
-        where_clauses.append(ProductInsight.brands.contains_any(
-            brands))
+        where_clauses.append(ProductInsight.brands.contains_any(brands))
 
-    query = (ProductInsight.select()
-                           .where(*where_clauses)
-                           .limit(count)
-                           .order_by(peewee.fn.Random()))
+    query = (
+        ProductInsight.select()
+        .where(*where_clauses)
+        .limit(count)
+        .order_by(peewee.fn.Random())
+    )
     return query.iterator()
 
 
-def get_random_insight(insight_type: str = None,
-                       country: str = None) -> Optional[ProductInsight]:
+def get_random_insight(
+    insight_type: str = None, country: str = None
+) -> Optional[ProductInsight]:
     attempts = 0
     while True:
         attempts += 1
@@ -61,12 +64,10 @@ def get_random_insight(insight_type: str = None,
         where_clauses = [ProductInsight.annotation.is_null()]
 
         if country is not None:
-            where_clauses.append(ProductInsight.countries.contains(
-                country))
+            where_clauses.append(ProductInsight.countries.contains(country))
 
         if insight_type is not None:
-            where_clauses.append(ProductInsight.type ==
-                                 insight_type)
+            where_clauses.append(ProductInsight.type == insight_type)
 
         query = query.where(*where_clauses).order_by(peewee.fn.Random())
 
@@ -78,7 +79,7 @@ def get_random_insight(insight_type: str = None,
         insight = insight_list[0]
         # We only need to know if the product exists, so fetching barcode
         # is enough
-        product = get_product(insight.barcode, ['code'])
+        product = get_product(insight.barcode, ["code"])
 
         # Product may be None if not found
         if product:
@@ -88,11 +89,11 @@ def get_random_insight(insight_type: str = None,
             logger.info("Product not found, insight deleted")
 
 
-def save_insight(insight_id: str, annotation: int, update: bool = True) \
-        -> AnnotationResult:
+def save_insight(
+    insight_id: str, annotation: int, update: bool = True
+) -> AnnotationResult:
     try:
-        insight: Union[ProductInsight, None] \
-            = ProductInsight.get_by_id(insight_id)
+        insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
         insight = None
 

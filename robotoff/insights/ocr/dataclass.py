@@ -2,11 +2,10 @@ import enum
 import operator
 import re
 from collections import Counter
-from typing import Optional, Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
-
 
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 
@@ -20,15 +19,17 @@ class OCRField(enum.Enum):
 
 
 class OCRRegex:
-    __slots__ = ('regex', 'field', 'lowercase', 'processing_func',
-                 'priority', 'notify')
+    __slots__ = ("regex", "field", "lowercase", "processing_func", "priority", "notify")
 
-    def __init__(self, regex,
-                 field: OCRField,
-                 lowercase: bool = False,
-                 processing_func: Optional[Callable] = None,
-                 priority: Optional[int] = None,
-                 notify: bool = False):
+    def __init__(
+        self,
+        regex,
+        field: OCRField,
+        lowercase: bool = False,
+        processing_func: Optional[Callable] = None,
+        priority: Optional[int] = None,
+        notify: bool = False,
+    ):
         self.regex = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
@@ -46,7 +47,7 @@ class ImageOrientation(enum.Enum):
 
 
 class OrientationResult:
-    __slots__ = ('count', 'orientation')
+    __slots__ = ("count", "orientation")
 
     def __init__(self, count: Counter):
         most_common_list = count.most_common(1)
@@ -57,22 +58,25 @@ class OrientationResult:
         else:
             self.orientation = ImageOrientation.unknown
 
-        self.count: Dict[str, int] = {key.name: value
-                                      for key, value in count.items()}
+        self.count: Dict[str, int] = {key.name: value for key, value in count.items()}
 
     def to_json(self) -> JSONType:
         return {
-            'count': self.count,
-            'orientation': self.orientation.name,
+            "count": self.count,
+            "orientation": self.orientation.name,
         }
 
 
 class OCRResult:
-    __slots__ = ('text_annotations', 'text_annotations_str',
-                 'text_annotations_str_lower',
-                 'full_text_annotation',
-                 'logo_annotations', 'safe_search_annotation',
-                 'label_annotations')
+    __slots__ = (
+        "text_annotations",
+        "text_annotations_str",
+        "text_annotations_str_lower",
+        "full_text_annotation",
+        "logo_annotations",
+        "safe_search_annotation",
+        "label_annotations",
+    )
 
     def __init__(self, data: JSONType):
         self.text_annotations: List[OCRTextAnnotation] = []
@@ -81,7 +85,7 @@ class OCRResult:
         self.label_annotations: List[LabelAnnotation] = []
         self.safe_search_annotation: Optional[SafeSearchAnnotation] = None
 
-        for text_annotation_data in data.get('textAnnotations', []):
+        for text_annotation_data in data.get("textAnnotations", []):
             text_annotation = OCRTextAnnotation(text_annotation_data)
             self.text_annotations.append(text_annotation)
 
@@ -89,28 +93,26 @@ class OCRResult:
         self.text_annotations_str_lower: Optional[str] = None
 
         if self.text_annotations:
-            self.text_annotations_str = '||'.join(t.text
-                                                  for t in self.text_annotations)
-            self.text_annotations_str_lower = (self.text_annotations_str
-                                               .lower())
+            self.text_annotations_str = "||".join(t.text for t in self.text_annotations)
+            self.text_annotations_str_lower = self.text_annotations_str.lower()
 
-        full_text_annotation_data = data.get('fullTextAnnotation')
+        full_text_annotation_data = data.get("fullTextAnnotation")
 
         if full_text_annotation_data:
-            self.full_text_annotation = OCRFullTextAnnotation(
-                full_text_annotation_data)
+            self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
 
-        for logo_annotation_data in data.get('logoAnnotations', []):
+        for logo_annotation_data in data.get("logoAnnotations", []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
             self.logo_annotations.append(logo_annotation)
 
-        for label_annotation_data in data.get('labelAnnotations', []):
+        for label_annotation_data in data.get("labelAnnotations", []):
             label_annotation = LabelAnnotation(label_annotation_data)
             self.label_annotations.append(label_annotation)
 
-        if 'safeSearchAnnotation' in data:
+        if "safeSearchAnnotation" in data:
             self.safe_search_annotation = SafeSearchAnnotation(
-                data['safeSearchAnnotation'])
+                data["safeSearchAnnotation"]
+            )
 
     def get_full_text(self, lowercase: bool = False) -> Optional[str]:
         if self.full_text_annotation is not None:
@@ -164,10 +166,10 @@ class OCRResult:
         else:
             raise ValueError("invalid field: {}".format(field))
 
-    def get_logo_annotations(self) -> List['LogoAnnotation']:
+    def get_logo_annotations(self) -> List["LogoAnnotation"]:
         return self.logo_annotations
 
-    def get_label_annotations(self) -> List['LabelAnnotation']:
+    def get_label_annotations(self) -> List["LabelAnnotation"]:
         return self.label_annotations
 
     def get_safe_search_annotation(self):
@@ -180,33 +182,38 @@ class OCRResult:
             return None
 
     @classmethod
-    def from_json(cls, data: JSONType) -> Optional['OCRResult']:
-        responses = data.get('responses', [])
+    def from_json(cls, data: JSONType) -> Optional["OCRResult"]:
+        responses = data.get("responses", [])
 
         if not responses:
             return None
 
         response = responses[0]
 
-        if 'error' in response:
+        if "error" in response:
             return None
 
         return OCRResult(response)
 
 
 class OCRFullTextAnnotation:
-    __slots__ = ('text', 'text_lower',
-                 'pages', 'contiguous_text', 'contiguous_text_lower')
+    __slots__ = (
+        "text",
+        "text_lower",
+        "pages",
+        "contiguous_text",
+        "contiguous_text_lower",
+    )
 
     def __init__(self, data: JSONType):
-        self.text = MULTIPLE_SPACES_REGEX.sub(' ', data['text'])
+        self.text = MULTIPLE_SPACES_REGEX.sub(" ", data["text"])
         self.text_lower = self.text.lower()
-        self.contiguous_text = self.text.replace('\n', ' ')
-        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(' ',
-                                                         self.contiguous_text)
+        self.contiguous_text = self.text.replace("\n", " ")
+        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(" ", self.contiguous_text)
         self.contiguous_text_lower = self.contiguous_text.lower()
-        self.pages: List[TextAnnotationPage] = [TextAnnotationPage(page)
-                                                for page in data['pages']]
+        self.pages: List[TextAnnotationPage] = [
+            TextAnnotationPage(page) for page in data["pages"]
+        ]
 
     def detect_orientation(self) -> OrientationResult:
         word_orientations: List[ImageOrientation] = []
@@ -220,9 +227,9 @@ class OCRFullTextAnnotation:
 
 class TextAnnotationPage:
     def __init__(self, data: JSONType):
-        self.width = data['width']
-        self.height = data['height']
-        self.blocks = [Block(d) for d in data['blocks']]
+        self.width = data["width"]
+        self.height = data["height"]
+        self.blocks = [Block(d) for d in data["blocks"]]
 
     def detect_words_orientation(self) -> List[ImageOrientation]:
         word_orientations: List[ImageOrientation] = []
@@ -235,10 +242,9 @@ class TextAnnotationPage:
 
 class Block:
     def __init__(self, data: JSONType):
-        self.type = data['blockType']
-        self.paragraphs = [Paragraph(paragraph)
-                           for paragraph in data['paragraphs']]
-        self.bounding_poly = BoundingPoly(data['boundingBox'])
+        self.type = data["blockType"]
+        self.paragraphs = [Paragraph(paragraph) for paragraph in data["paragraphs"]]
+        self.bounding_poly = BoundingPoly(data["boundingBox"])
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
@@ -254,8 +260,8 @@ class Block:
 
 class Paragraph:
     def __init__(self, data: JSONType):
-        self.words = [Word(word) for word in data['words']]
-        self.bounding_poly = BoundingPoly(data['boundingBox'])
+        self.words = [Word(word) for word in data["words"]]
+        self.bounding_poly = BoundingPoly(data["boundingBox"])
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
@@ -265,28 +271,28 @@ class Paragraph:
 
     def get_text(self) -> str:
         """Return the text of the paragraph, by concatenating the words."""
-        return ''.join(w.get_text() for w in self.words)
+        return "".join(w.get_text() for w in self.words)
 
 
 class Word:
-    __slots__ = ('bounding_poly', 'symbols', 'languages')
+    __slots__ = ("bounding_poly", "symbols", "languages")
 
     def __init__(self, data: JSONType):
-        self.bounding_poly = BoundingPoly(data['boundingBox'])
-        self.symbols: List[Symbol] = [Symbol(s) for s in data['symbols']]
+        self.bounding_poly = BoundingPoly(data["boundingBox"])
+        self.symbols: List[Symbol] = [Symbol(s) for s in data["symbols"]]
 
         self.languages: Optional[List[DetectedLanguage]] = None
-        word_property = data.get('property', {})
+        word_property = data.get("property", {})
 
-        if 'detectedLanguages' in word_property:
+        if "detectedLanguages" in word_property:
             self.languages: List[DetectedLanguage] = [
-                DetectedLanguage(l) for l in
-                data['property']['detectedLanguages']]
+                DetectedLanguage(l) for l in data["property"]["detectedLanguages"]
+            ]
 
     def get_text(self) -> str:
         text_list = []
         for symbol in self.symbols:
-            symbol_str = ''
+            symbol_str = ""
 
             if symbol.symbol_break and symbol.symbol_break.is_prefix:
                 symbol_str = symbol.symbol_break.get_value()
@@ -298,69 +304,69 @@ class Word:
 
             text_list.append(symbol_str)
 
-        return ''.join(text_list)
+        return "".join(text_list)
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
 
 
 class Symbol:
-    __slots__ = ('bounding_poly', 'text', 'confidence', 'symbol_break')
+    __slots__ = ("bounding_poly", "text", "confidence", "symbol_break")
 
     def __init__(self, data: JSONType):
-        self.bounding_poly = BoundingPoly(data['boundingBox'])
-        self.text = data['text']
-        self.confidence = data.get('confidence', None)
+        self.bounding_poly = BoundingPoly(data["boundingBox"])
+        self.text = data["text"]
+        self.confidence = data.get("confidence", None)
 
         self.symbol_break: Optional[DetectedBreak] = None
-        symbol_property = data.get('property', {})
+        symbol_property = data.get("property", {})
 
-        if 'detectedBreak' in symbol_property:
-            self.symbol_break = DetectedBreak(
-                symbol_property['detectedBreak'])
+        if "detectedBreak" in symbol_property:
+            self.symbol_break = DetectedBreak(symbol_property["detectedBreak"])
 
     def detect_orientation(self) -> ImageOrientation:
         return self.bounding_poly.detect_orientation()
 
 
 class DetectedBreak:
-    __slots__ = ('type', 'is_prefix')
+    __slots__ = ("type", "is_prefix")
 
     def __init__(self, data: JSONType):
-        self.type = data['type']
-        self.is_prefix = data.get('isPrefix', False)
+        self.type = data["type"]
+        self.is_prefix = data.get("isPrefix", False)
 
     def __repr__(self):
         return "<DetectedBreak {}>".format(self.type)
 
     def get_value(self):
-        if self.type in ('UNKNOWN', 'HYPHEN'):
-            return ''
+        if self.type in ("UNKNOWN", "HYPHEN"):
+            return ""
 
-        elif self.type in ('SPACE', 'SURE_SPACE', 'EOL_SURE_SPACE'):
-            return ' '
+        elif self.type in ("SPACE", "SURE_SPACE", "EOL_SURE_SPACE"):
+            return " "
 
-        elif self.type == 'LINE_BREAK':
-            return '\n'
+        elif self.type == "LINE_BREAK":
+            return "\n"
 
         else:
             raise ValueError("unknown type: {}".format(self.type))
 
 
 class DetectedLanguage:
-    __slots__ = ('language', 'confidence')
+    __slots__ = ("language", "confidence")
 
     def __init__(self, data: JSONType):
-        self.language = data['languageCode']
-        self.confidence = data.get('confidence', 0)
+        self.language = data["languageCode"]
+        self.confidence = data.get("confidence", 0)
 
 
 class BoundingPoly:
-    __slots__ = ('vertices', )
+    __slots__ = ("vertices",)
 
     def __init__(self, data: JSONType):
-        self.vertices = [(point.get('x', 0), point.get('y', 0))
-                         for point in data['vertices']]
+        self.vertices = [
+            (point.get("x", 0), point.get("y", 0)) for point in data["vertices"]
+        ]
 
     def detect_orientation(self) -> ImageOrientation:
         """Detect bounding poly orientation (up, down, left, or right).
@@ -390,12 +396,10 @@ class BoundingPoly:
         - (3, 0) for 90° clockwise rotation (right)
         It is u
         """
-        indexed_vertices = [(x[0], x[1], i)
-                            for i, x in enumerate(self.vertices)]
+        indexed_vertices = [(x[0], x[1], i) for i, x in enumerate(self.vertices)]
         # Sort by ascending y-value and select first two vertices:
         # get the two topmost vertices
-        indexed_vertices = sorted(indexed_vertices,
-                                  key=operator.itemgetter(1))[:2]
+        indexed_vertices = sorted(indexed_vertices, key=operator.itemgetter(1))[:2]
 
         first_vertex_index = indexed_vertices[0][2]
         second_vertex_index = indexed_vertices[1][2]
@@ -417,52 +421,59 @@ class BoundingPoly:
             return ImageOrientation.right
 
         else:
-            logger.error("Unknown orientation: edge {}, vertices {}"
-                         "".format(first_edge, self.vertices))
+            logger.error(
+                "Unknown orientation: edge {}, vertices {}"
+                "".format(first_edge, self.vertices)
+            )
             return ImageOrientation.unknown
 
 
 class OCRTextAnnotation:
-    __slots__ = ('locale', 'text', 'bounding_poly')
+    __slots__ = ("locale", "text", "bounding_poly")
 
     def __init__(self, data: JSONType):
-        self.locale = data.get('locale')
-        self.text = data['description']
-        self.bounding_poly = BoundingPoly(data['boundingPoly'])
+        self.locale = data.get("locale")
+        self.text = data["description"]
+        self.bounding_poly = BoundingPoly(data["boundingPoly"])
 
 
 class LogoAnnotation:
-    __slots__ = ('id', 'description', 'score')
+    __slots__ = ("id", "description", "score")
 
     def __init__(self, data: JSONType):
-        self.id = data.get('mid') or None
-        self.score = data['score']
-        self.description = data['description']
+        self.id = data.get("mid") or None
+        self.score = data["score"]
+        self.description = data["description"]
 
 
 class LabelAnnotation:
-    __slots__ = ('id', 'description', 'score')
+    __slots__ = ("id", "description", "score")
 
     def __init__(self, data: JSONType):
-        self.id = data.get('mid') or None
-        self.score = data['score']
-        self.description = data['description']
+        self.id = data.get("mid") or None
+        self.score = data["score"]
+        self.description = data["description"]
 
 
 class SafeSearchAnnotation:
-    __slots__ = ('adult', 'spoof', 'medical', 'violence', 'racy')
+    __slots__ = ("adult", "spoof", "medical", "violence", "racy")
 
     def __init__(self, data: JSONType):
-        self.adult: SafeSearchAnnotationLikelihood = \
-            SafeSearchAnnotationLikelihood[data['adult']]
-        self.spoof: SafeSearchAnnotationLikelihood = \
-            SafeSearchAnnotationLikelihood[data['spoof']]
-        self.medical: SafeSearchAnnotationLikelihood = \
-            SafeSearchAnnotationLikelihood[data['medical']]
-        self.violence: SafeSearchAnnotationLikelihood = \
-            SafeSearchAnnotationLikelihood[data['violence']]
-        self.racy: SafeSearchAnnotationLikelihood = \
-            SafeSearchAnnotationLikelihood[data['racy']]
+        self.adult: SafeSearchAnnotationLikelihood = SafeSearchAnnotationLikelihood[
+            data["adult"]
+        ]
+        self.spoof: SafeSearchAnnotationLikelihood = SafeSearchAnnotationLikelihood[
+            data["spoof"]
+        ]
+        self.medical: SafeSearchAnnotationLikelihood = SafeSearchAnnotationLikelihood[
+            data["medical"]
+        ]
+        self.violence: SafeSearchAnnotationLikelihood = SafeSearchAnnotationLikelihood[
+            data["violence"]
+        ]
+        self.racy: SafeSearchAnnotationLikelihood = SafeSearchAnnotationLikelihood[
+            data["racy"]
+        ]
 
 
 class SafeSearchAnnotationLikelihood(enum.IntEnum):

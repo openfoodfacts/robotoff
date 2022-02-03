@@ -5,14 +5,17 @@ from typing import Optional
 
 import click
 
-from robotoff.insights.ocr import (ocr_iter, OCRResult,
-                                   extract_insights,
-                                   get_barcode_from_path)
+from robotoff.insights.ocr import (
+    OCRResult,
+    extract_insights,
+    get_barcode_from_path,
+    ocr_iter,
+)
 
 
 def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
     if output is not None:
-        output_f = open(output, 'w')
+        output_f = open(output, "w")
     else:
         output_f = sys.stdout
 
@@ -24,8 +27,9 @@ def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
             barcode: Optional[str] = get_barcode_from_path(source)
 
             if barcode is None:
-                click.echo("cannot extract barcode from source "
-                           "{}".format(source), err=True)
+                click.echo(
+                    "cannot extract barcode from source " "{}".format(source), err=True
+                )
                 continue
 
             ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
@@ -37,12 +41,12 @@ def run_from_ocr_archive(input_: str, insight_type: str, output: Optional[str]):
 
             if insights:
                 item = {
-                    'insights': insights,
-                    'barcode': barcode,
-                    'type': insight_type,
+                    "insights": insights,
+                    "barcode": barcode,
+                    "type": insight_type,
                 }
 
                 if source:
-                    item['source'] = source
+                    item["source"] = source
 
-                output_f.write(json.dumps(item) + '\n')
+                output_f.write(json.dumps(item) + "\n")

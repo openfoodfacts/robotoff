@@ -17,5 +17,5 @@ def strip_accents_ascii(s):
     strip_accents_unicode
         Remove accentuated char for any unicode symbol.
     """
-    nkfd_form = unicodedata.normalize('NFKD', s)
-    return nkfd_form.encode('ASCII', 'ignore').decode('ASCII')
+    nkfd_form = unicodedata.normalize("NFKD", s)
+    return nkfd_form.encode("ASCII", "ignore").decode("ASCII")
