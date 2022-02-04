@@ -18,4 +18,4 @@ jobs:
       - name: Run poetry build
         run:  poetry build
       - name: Run poetry publish
-        run: poetry publish --username ${{ secrets.PYPI_USERNAME }} --password ${{ secrets.PYPI_PASSWORD }}
+        run: POETRY_PYPI_TOKEN_PYPI=${{ secrets.PYPI_TOKEN }} poetry publish
