@@ -41,14 +41,16 @@ def _create_insight(**kwargs):
             "n_votes": 3,
             "reserved_barcode": False,
         },
-        **kwargs
+        **kwargs,
     )
     ProductInsight.create(**data)
     return insight_id, barcode
 
 
 def test_process_insight_category(mocker):
-    mocker.patch("robotoff.insights.annotate.get_product", return_value={"categories_tags": []})
+    mocker.patch(
+        "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
+    )
     mock = mocker.patch("robotoff.off.update_product")
     # a processed insight exists
     date0 = datetime.now() - timedelta(minutes=10)
@@ -69,7 +71,7 @@ def test_process_insight_category(mocker):
         {
             "code": code1,
             "add_categories": "en:Salmons",
-            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}"
+            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
         },
         auth=None,
         server_domain=settings.OFF_SERVER_DOMAIN,
@@ -77,7 +79,10 @@ def test_process_insight_category(mocker):
 
 
 def test_process_insight_category_existing(mocker):
-    mocker.patch("robotoff.insights.annotate.get_product", return_value={"categories_tags": ["en:Salmons"]})
+    mocker.patch(
+        "robotoff.insights.annotate.get_product",
+        return_value={"categories_tags": ["en:Salmons"]},
+    )
     mock = mocker.patch("robotoff.off.update_product")
     # an insight to be processed
     id1, code1 = _create_insight(type="category")
@@ -109,7 +114,9 @@ def test_process_insight_non_existing_product(mocker):
 
 
 def test_process_insight_update_product_raises(mocker):
-    mocker.patch("robotoff.insights.annotate.get_product", return_value={"categories_tags": []})
+    mocker.patch(
+        "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
+    )
     mock = mocker.patch("robotoff.off.update_product", side_effect=Exception("Boom !"))
     # an insight to be processed
     id1, code1 = _create_insight(type="category")
@@ -125,7 +132,7 @@ def test_process_insight_update_product_raises(mocker):
         {
             "code": code1,
             "add_categories": "en:Salmons",
-            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}"
+            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
         },
         auth=None,
         server_domain=settings.OFF_SERVER_DOMAIN,
@@ -133,10 +140,13 @@ def test_process_insight_update_product_raises(mocker):
 
 
 def test_process_insight_same_product(mocker):
-    mocker.patch("robotoff.insights.annotate.get_product", return_value={"categories_tags": ["en:Salmons"]})
+    mocker.patch(
+        "robotoff.insights.annotate.get_product",
+        return_value={"categories_tags": ["en:Salmons"]},
+    )
     mock = mocker.patch("robotoff.off.update_product")
     # an insight to be processed but already there
-    id1, code1 = _create_insight(type="category", value_tag= "en:Salmons")
+    id1, code1 = _create_insight(type="category", value_tag="en:Salmons")
     # a new category
     id2, code2 = _create_insight(type="category", value_tag="en:Big fish")
     # another new category
@@ -155,7 +165,7 @@ def test_process_insight_same_product(mocker):
         {
             "code": code2,
             "add_categories": "en:Big fish",
-            "comment": f"[robotoff] Adding category 'en:Big fish', ID: {id2}"
+            "comment": f"[robotoff] Adding category 'en:Big fish', ID: {id2}",
         },
         auth=None,
         server_domain=settings.OFF_SERVER_DOMAIN,
@@ -164,7 +174,7 @@ def test_process_insight_same_product(mocker):
         {
             "code": code3,
             "add_categories": "en:Smoked Salmon",
-            "comment": f"[robotoff] Adding category 'en:Smoked Salmon', ID: {id3}"
+            "comment": f"[robotoff] Adding category 'en:Smoked Salmon', ID: {id3}",
         },
         auth=None,
         server_domain=settings.OFF_SERVER_DOMAIN,
