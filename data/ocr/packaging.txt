@@ -105,6 +105,10 @@ fr:Bouteille (et son bouchon) métal à recycler
 fr:Bouteille (et son bouchon) plastique à recycler
 fr:Bouteille (et son bouchon) verre
 fr:Bouteille (et son bouchon) verre
+fr:Bouteille et son bouchon
+fr:Bouteille métal et son bouchon à recycler
+fr:Bouteille plastique et son bouchon à recycler
+fr:Bouteille en verre et son bouchon
 fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastique
 fr:Bouteille en plastique||bouteille plastique
 fr:Bouteille en verre;fr:Bouchon||bouteille verre et son bouchon
