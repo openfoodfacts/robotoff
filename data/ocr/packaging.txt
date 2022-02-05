@@ -73,15 +73,28 @@ fr:Boîte en métal||boîte metal
 fr:Boîte en métal||boîte métal
 fr:Boîte en plastique||boite plastique
 fr:Boîte en plastique||boîte plastique
-fr:Boîte, boîtier autres à jeter
-fr:Boîte, boîtier carton à recycler
-fr:Boîte, boîtier métal à recycler
-fr:Boîte, boîtier plastique à jeter
-fr:Boîte, boîtier verre à recycler
-fr:Bol, coupe, coupelle carton à recycler
-fr:Bol, coupe, coupelle métal à recycler
-fr:Bol, coupe, coupelle plastique à jeter
-fr:Bol, coupe, coupelle verre à recycler
+fr:Boîte à jeter
+fr:boîtier à jeter
+fr:Boîte carton à recycler
+fr:boîtier carton à recycler
+fr:Boîte métal à recycler
+fr:boîtier métal à recycler
+fr:Boîte plastique à jeter
+fr:boîtier plastique à jeter
+fr:Boîte verre à recycler
+fr:boîtier verre à recycler
+fr:Bol carton à recycler
+fr:coupe carton à recycler
+fr:coupelle carton à recycler
+fr:Bol métal à recycler
+fr:coupe métal à recycler
+fr:coupelle métal à recycler
+fr:Bol plastique à jeter
+fr:coupe plastique à jeter
+fr:coupelle plastique à jeter
+fr:Bol verre à recycler
+fr:coupe verre à recycler
+fr:coupelle verre à recycler
 fr:Bonbonne métal à recycler
 fr:Bonbonne plastique à recycler
 fr:Bonbonne verre à recycler
