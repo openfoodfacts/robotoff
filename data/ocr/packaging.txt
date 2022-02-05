@@ -17,7 +17,7 @@ fr:Ailettes plastique à jeter
 fr:Ampoule verre à recycler
 fr:Applicateur carton à recycler
 fr:Applicateur plastique à jeter
-fr:Bac autres à jeter
+fr:Bac à jeter
 fr:Bac carton à recycler
 fr:Bac métal à recycler
 fr:Bag In Box
@@ -158,7 +158,7 @@ fr:éléments de bourrage plastique à jeter
 fr:éléments de mise en forme plastique à jeter
 fr:éléments de maintien des produits plastique à jeter
 fr:Canette métal à recycler
-fr:Capsule autres à jeter
+fr:Capsule à jeter
 fr:Capsule en métal||capsule metal
 fr:Capsule en métal||capsule métal
 fr:Capsule en métal||capsules metal
@@ -182,7 +182,7 @@ fr:Cavalier papier à recycler
 fr:étui papier à recycler
 fr:fourreau papier à recycler
 fr:cornet papier à recycler
-fr:Cintre autres à jeter
+fr:Cintre à jeter
 fr:Cintre carton à recycler
 fr:Cintre métal à recycler
 fr:Clip en plastique;fr:Sachet en plastique||clip et sachet plastique
@@ -199,22 +199,22 @@ fr:Coiffe plastique à jeter
 fr:collerette plastique à jeter
 fr:Collier plastique à jeter
 fr:Coque en plastique||coque plastique
-fr:Couvercle autres à jeter
+fr:Couvercle à jeter
 fr:Couvercle carton à recycler
 fr:Couvercle en fer||couvercle fer
 fr:Couvercle en métal||couvercle metal
 fr:Couvercle en métal||couvercle métal
 fr:Couvercle métal à recycler
 fr:Couvercle verre à recycler
-fr:Dose individuelle autres à jeter
+fr:Dose individuelle à jeter
 fr:Dose individuelle carton à recycler
 fr:Dose individuelle papier à recycler
-fr:Enveloppage autres à jeter
+fr:Enveloppage à jeter
 fr:Enveloppage métal à recycler
 fr:Enveloppage papier à recycler
 fr:Enveloppe carton à recycler
 fr:Enveloppe papier à recycler
-fr:Étiquette autres à jeter
+fr:Étiquette à jeter
 fr:Étiquette carton à recycler
 fr:Étiquette papier à recycler
 fr:Etui en carton||etui carton
@@ -246,7 +246,7 @@ fr:ruban papier à recycler
 fr:ruban adhésif papier à recycler
 fr:bolduc papier à recycler
 fr:bande papier à recycler
-fr:Filet autres à jeter
+fr:Filet à jeter
 fr:Filet métal à recycler
 fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
 fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
@@ -288,13 +288,17 @@ fr:Flacon roll on (et son bouchon) plastique à recycler
 fr:Flacon roll on (et son bouchon) verre à recycler
 fr:Flacon roll on (et son bouchon) verre à recycler
 fr:Flacon en plastique||flacon plastique
-fr:Gobelet autres à jeter
+fr:Gobelet à jeter
 fr:Gobelet carton à recycler
 fr:Gobelet métal à recycler
 fr:Gobelet papier à recycler
 fr:Gobelet verre à recycler
-fr:Gourde (et son bouchon),doypack, pouch plastique à jeter
-fr:Housse autres à jeter
+fr:Gourde (et son bouchon) à jeter
+fr:Gourde et son bouchon à jeter
+fr:Gourde à jeter
+fr:doypack à jeter
+fr:pouch plastique à jeter
+fr:Housse à jeter
 fr:Housse carton à recycler
 fr:Housse métal à recycler
 fr:Housse papier à recycler
@@ -309,7 +313,7 @@ fr:valisette métal à recycler
 fr:Malette plastique à jeter
 fr:valise plastique à jeter
 fr:valisette plastique à jeter
-fr:Moule autres à jeter
+fr:Moule à jeter
 fr:Moule carton à recycler
 fr:Moule métal à recycler
 fr:Muselet et plaque métal à recycler
@@ -364,9 +368,18 @@ fr:Pot en verre||pot verre
 fr:Pot métal à recycler
 fr:Pot plastique à jeter
 fr:Pot verre à recycler
-fr:Présentoir, socle, casier, chevalet autres à jeter
-fr:Présentoir, socle, casier, chevalet carton à recycler
-fr:Présentoir, socle, casier, chevalet métal à recycler
+fr:Présentoir à jeter
+fr:socle à jeter
+fr:casier à jeter
+fr:chevalet à jeter
+fr:Présentoir carton à recycler
+fr:socle carton à recycler
+fr:casier carton à recycler
+fr:chevalet carton à recycler
+fr:Présentoir métal à recycler
+fr:socle métal à recycler
+fr:casier métal à recycler
+fr:chevalet métal à recycler
 fr:Quadrette en plastique||quadrette plastique
 fr:Sac à jeter
 fr:sachet à jeter
