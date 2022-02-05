@@ -275,9 +275,18 @@ fr:flacon pompe verre à recycler
 fr:flacon pistolet verre à recycler
 fr:flacon spray verre à recycler
 fr:spray verre à recycler
-fr:Flacon bille / roll on (et son bouchon) plastique à recycler
-fr:Flacon bille / roll on (et son bouchon) verre à recycler
-fr:Flacon bille / roll on (et son bouchon) verre à recycler
+fr:Flacon bille et son bouchon plastique à recycler
+fr:Flacon bille et son bouchon verre à recycler
+fr:Flacon bille et son bouchon verre à recycler
+fr:Flacon roll on et son bouchon plastique à recycler
+fr:Flacon roll on et son bouchon verre à recycler
+fr:Flacon roll on et son bouchon verre à recycler
+fr:Flacon bille (et son bouchon) plastique à recycler
+fr:Flacon bille (et son bouchon) verre à recycler
+fr:Flacon bille (et son bouchon) verre à recycler
+fr:Flacon roll on (et son bouchon) plastique à recycler
+fr:Flacon roll on (et son bouchon) verre à recycler
+fr:Flacon roll on (et son bouchon) verre à recycler
 fr:Flacon en plastique||flacon plastique
 fr:Gobelet autres à jeter
 fr:Gobelet carton à recycler
@@ -289,11 +298,17 @@ fr:Housse autres à jeter
 fr:Housse carton à recycler
 fr:Housse métal à recycler
 fr:Housse papier à recycler
-fr:Lien *Si l’élément principal est à jeter : lien à jeter à jeter
-fr:Lien *Si l’élément principal est à recycler : lien à recycler à recycler
-fr:Malette, valise, valisette carton à recycler
-fr:Malette, valise, valisette métal à recycler
-fr:Malette, valise, valisette plastique à jeter
+fr:lien à jeter
+fr:lien à recycler
+fr:Malette carton à recycler
+fr:valise carton à recycler
+fr:valisette carton à recycler
+fr:Malette métal à recycler
+fr:valise métal à recycler
+fr:valisette métal à recycler
+fr:Malette plastique à jeter
+fr:valise plastique à jeter
+fr:valisette plastique à jeter
 fr:Moule autres à jeter
 fr:Moule carton à recycler
 fr:Moule métal à recycler
