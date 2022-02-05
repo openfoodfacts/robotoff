@@ -20,32 +20,49 @@ fr:Applicateur plastique à jeter
 fr:Bac autres à jeter
 fr:Bac carton à recycler
 fr:Bac métal à recycler
-fr:Bag In Box (BIB) boîte carton à recycler, poche plastique à jeter
-fr:Bandelette autres à jeter
+fr:Bag In Box
+fr:boîte carton à recycler
+fr:poche plastique à jeter
+fr:Bandelette à jeter
 fr:Bandelette carton à recycler
 fr:Bandelette métal à recycler
 fr:Bandelette papier à recycler
-fr:Barquette autres à jeter
+fr:Barquette à jeter
 fr:Barquette carton à recycler
 fr:Barquette en carton||barquette carton
 fr:Barquette en plastique||barquette plastique
 fr:Barquette métal à recycler
 fr:Barquette;fr:Film en plastique||barquette et film plastique
 fr:Barquette;fr:Opercule en plastique||barquette et opercule plastique
-fr:Bâtonnet autres à jeter
+fr:Bâtonnet à jeter
 fr:Bâtonnet carton à recycler
 fr:Bâtonnet métal à recycler
-fr:Bidon, Cubitainer métal à recycler
-fr:Bidon, Cubitainer plastique à recycler
-fr:Blister, coque avec chevalet carton
-fr:Blister, coque avec chevalet carton
-fr:Blister, coque carton à recycler
-fr:Blister, coque métal à recycler
-fr:Blister, coque plastique à jeter
-fr:Bobine, rouleau, mandrin autres à jeter
-fr:Bobine, rouleau, mandrin carton à recycler
-fr:Bobine, rouleau, mandrin métal à recycler
-fr:Bobine, rouleau, mandrin papier à recycler
+fr:Bidon métal à recycler
+fr:Cubitainer métal à recycler
+fr:Bidon plastique à recycler
+fr:Cubitainer plastique à recycler
+fr:Blister avec chevalet carton
+fr:coque avec chevalet carton
+fr:Blister avec chevalet carton
+fr:coque avec chevalet carton
+fr:Blister carton à recycler
+fr:coque carton à recycler
+fr:Blister métal à recycler
+fr:coque métal à recycler
+fr:Blister plastique à jeter
+fr:coque plastique à jeter
+fr:Bobine à jeter
+fr:rouleau à jeter
+fr:mandrin à jeter
+fr:Bobine carton à recycler
+fr:rouleau carton à recycler
+fr:mandrin carton à recycler
+fr:Bobine métal à recycler
+fr:rouleau métal à recycler
+fr:mandrin métal à recycler
+fr:Bobine papier à recycler
+fr:rouleau papier à recycler
+fr:mandrin papier à recycler
 fr:Bocal en verre||bocal verre
 fr:Bocal verre à recycler
 fr:Boîte en carton||boite carton
@@ -90,10 +107,36 @@ fr:Caisse, caissette autres à jeter
 fr:Caisse, caissette carton à recycler
 fr:Caisse, caissette métal à recycler
 fr:Caisse, caissette papier à recycler
-fr:Cale, coin, cornière, éléments de bourrage, de mise en forme ou de maintien des produits autres à jeter
-fr:Cale, coin, cornière, éléments de bourrage, de mise en forme ou de maintien des produits carton à recycler
-fr:Cale, coin, cornière, éléments de bourrage, de mise en forme ou de maintien des produits métal à recycler
-fr:Cale, coin, cornière, éléments de bourrage, de mise en forme ou de maintien des produits plastique à jeter
+fr:Cale à jeter
+fr:coin à jeter
+fr:cornière à jeter
+fr:éléments de bourrage à jeter
+fr:éléments de mise en forme à jeter
+fr:éléments de maintien des produits à jeter
+fr:Cale à recycler
+fr:coin à recycler
+fr:cornière à recycler
+fr:éléments de bourrage à recycler
+fr:éléments de mise en forme à recycler
+fr:éléments de maintien des produits à recycler
+fr:Cale métal à recycler
+fr:coin métal à recycler
+fr:cornière métal à recycler
+fr:éléments de bourrage métal à recycler
+fr:éléments de mise en forme métal à recycler
+fr:éléments de maintien des produits métal à recycler
+fr:Cale carton à recycler
+fr:coin carton à recycler
+fr:cornière carton à recycler
+fr:éléments de bourrage carton à recycler
+fr:éléments de mise en forme carton à recycler
+fr:éléments de maintien des produits carton à recycler
+fr:Cale plastique à jeter
+fr:coin plastique à jeter
+fr:cornière plastique à jeter
+fr:éléments de bourrage plastique à jeter
+fr:éléments de mise en forme plastique à jeter
+fr:éléments de maintien des produits plastique à jeter
 fr:Canette métal à recycler
 fr:Capsule autres à jeter
 fr:Capsule en métal||capsule metal
