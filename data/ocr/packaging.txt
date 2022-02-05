@@ -221,10 +221,26 @@ fr:Feuille d’emballage (papier kraft, papier sulfurisé, papier cadeau...), fe
 fr:Feuille en carton||feuille carton
 fr:Feuille en métal||feuille metal
 fr:Feuille en métal||feuille métal
-fr:Ficelle, ruban, ruban adhésif, bolduc, bande autres à jeter
-fr:Ficelle, ruban, ruban adhésif, bolduc, bande carton à recycler
-fr:Ficelle, ruban, ruban adhésif, bolduc, bande métal à recycler
-fr:Ficelle, ruban, ruban adhésif, bolduc, bande papier à recycler
+fr:Ficelle à jeter
+fr:ruban à jeter
+fr:ruban adhésif à jeter
+fr:bolduc à jeter
+fr:bande à jeter
+fr:Ficelle carton à recycler
+fr:ruban carton à recycler
+fr:ruban adhésif carton à recycler
+fr:bolduc carton à recycler
+fr:bande carton à recycler
+fr:Ficelle métal à recycler
+fr:ruban métal à recycler
+fr:ruban adhésif métal à recycler
+fr:bolduc métal à recycler
+fr:bande métal à recycler
+fr:Ficelle papier à recycler
+fr:ruban papier à recycler
+fr:ruban adhésif papier à recycler
+fr:bolduc papier à recycler
+fr:bande papier à recycler
 fr:Filet autres à jeter
 fr:Filet métal à recycler
 fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
@@ -234,10 +250,26 @@ fr:Film, film à bulles plastique à jeter
 fr:Flacon (et son bouchon) métal à recycler
 fr:Flacon (et son bouchon) plastique à recycler
 fr:Flacon (et son bouchon) verre à recycler
-fr:Flacon applicateur, flacon pompe, flacon pistolet/spray métal à recycler
-fr:Flacon applicateur, flacon pompe, flacon pistolet/spray plastique à recycler
-fr:Flacon applicateur, flacon pompe, flacon pistolet/spray plastique à recycler
-fr:Flacon applicateur, flacon pompe, flacon pistolet/spray verre à recycler
+fr:Flacon applicateur à recycler
+fr:flacon pompe à recycler
+fr:flacon pistolet à recycler
+fr:flacon spray à recycler
+fr:spray à recycler
+fr:Flacon applicateur métal à recycler
+fr:flacon pompe métal à recycler
+fr:flacon pistolet métal à recycler
+fr:flacon spray métal à recycler
+fr:spray métal à recycler
+fr:Flacon applicateur plastique à recycler
+fr:flacon pompe plastique à recycler
+fr:flacon pistolet plastique à recycler
+fr:flacon spray plastique à recycler
+fr:spray plastique à recycler
+fr:Flacon applicateur verre à recycler
+fr:flacon pompe verre à recycler
+fr:flacon pistolet verre à recycler
+fr:flacon spray verre à recycler
+fr:spray verre à recycler
 fr:Flacon bille / roll on (et son bouchon) plastique à recycler
 fr:Flacon bille / roll on (et son bouchon) verre à recycler
 fr:Flacon bille / roll on (et son bouchon) verre à recycler
@@ -283,10 +315,26 @@ fr:fermeture blister plastique à jeter
 fr:Panier osier à jeter
 fr:Panier plastique à jeter
 fr:Plaque en carton||plaque carton
-fr:Plat, plateau, plateau alvéolaire, plaque, plaquette autres à jeter
-fr:Plat, plateau, plateau alvéolaire, plaque, plaquette carton à recycler
-fr:Plat, plateau, plateau alvéolaire, plaque, plaquette métal à recycler
-fr:Plat, plateau, plateau alvéolaire, plaque, plaquette papier à recycler
+fr:Plat à jeter
+fr:plateau à jeter
+fr:plateau alvéolaire à jeter
+fr:plaque à jeter
+fr:plaquette à jeter
+fr:Plat carton à recycler
+fr:plateau carton à recycler
+fr:plateau alvéolaire carton à recycler
+fr:plaque carton à recycler
+fr:plaquette carton à recycler
+fr:Plat métal à recycler
+fr:plateau métal à recycler
+fr:plateau alvéolaire métal à recycler
+fr:plaque métal à recycler
+fr:plaquette métal à recycler
+fr:Plat papier à recycler
+fr:plateau papier à recycler
+fr:plateau alvéolaire papier à recycler
+fr:plaque papier à recycler
+fr:plaquette papier à recycler
 fr:Pot autre à jeter
 fr:Pot carton à recycler
 fr:Pot en carton||pot carton
