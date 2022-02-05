@@ -113,13 +113,20 @@ fr:Bouteille en verre||bouteilles verre
 fr:Bouteille||embouteillé
 fr:Brique (et son bouchon) carton à recycler
 fr:Brique en carton||brique carton
-fr:Cageot, cagette autres à jeter
-fr:Cageot, cagette carton à recycler
-fr:Caisse, caissette
-fr:Caisse, caissette autres à jeter
-fr:Caisse, caissette carton à recycler
-fr:Caisse, caissette métal à recycler
-fr:Caisse, caissette papier à recycler
+fr:Cageot à jeter
+fr:cagette à jeter
+fr:Cageot carton à recycler
+fr:cagette carton à recycler
+fr:Caisse
+fr:caissette
+fr:Caisse à jeter
+fr:caissette à jeter
+fr:Caisse carton à recycler
+fr:caissette carton à recycler
+fr:Caisse métal à recycler
+fr:caissette métal à recycler
+fr:Caisse papier à recycler
+fr:caissette papier à recycler
 fr:Cale à jeter
 fr:coin à jeter
 fr:cornière à jeter
@@ -159,10 +166,22 @@ fr:Capsule en métal||capsules métal
 fr:capsule métal
 fr:Capsule métal à recycler
 fr:Cartouche plastique à jeter
-fr:Cavalier, étui, fourreau,cornet autres à jeter
-fr:Cavalier, étui, fourreau,cornet carton à recycler
-fr:Cavalier, étui, fourreau,cornet métal à recycler
-fr:Cavalier, étui, fourreau,cornet papier à recycler
+fr:Cavalier à jeter
+fr:étui à jeter
+fr:fourreau à jeter
+fr:cornet à jeter
+fr:Cavalier carton à recycler
+fr:étui carton à recycler
+fr:fourreau carton à recycler
+fr:cornet carton à recycler
+fr:Cavalier métal à recycler
+fr:étui métal à recycler
+fr:fourreau métal à recycler
+fr:cornet métal à recycler
+fr:Cavalier papier à recycler
+fr:étui papier à recycler
+fr:fourreau papier à recycler
+fr:cornet papier à recycler
 fr:Cintre autres à jeter
 fr:Cintre carton à recycler
 fr:Cintre métal à recycler
@@ -246,11 +265,21 @@ fr:Opercule en aluminium||opercule aluminium
 fr:Opercule en métal||opercule metal
 fr:Opercule en métal||opercule métal
 fr:Opercule en plastique||opercule plastique
-fr:Opercule, fermeture barquette, fermeture blister autres à jeter
-fr:Opercule, fermeture barquette, fermeture blister carton à recycler
-fr:Opercule, fermeture barquette, fermeture blister métal à recycler
-fr:Opercule, fermeture barquette, fermeture blister papier à recycler
-fr:Opercule, fermeture barquette, fermeture blister plastique à jeter
+fr:Opercule à jeter
+fr:fermeture barquette à jeter
+fr:fermeture blister à jeter
+fr:Opercule carton à recycler
+fr:fermeture barquette carton à recycler
+fr:fermeture blister carton à recycler
+fr:Opercule métal à recycler
+fr:fermeture barquette métal à recycler
+fr:fermeture blister métal à recycler
+fr:Opercule papier à recycler
+fr:fermeture barquette papier à recycler
+fr:fermeture blister papier à recycler
+fr:Opercule plastique à jeter
+fr:fermeture barquette plastique à jeter
+fr:fermeture blister plastique à jeter
 fr:Panier osier à jeter
 fr:Panier plastique à jeter
 fr:Plaque en carton||plaque carton
@@ -271,9 +300,18 @@ fr:Présentoir, socle, casier, chevalet autres à jeter
 fr:Présentoir, socle, casier, chevalet carton à recycler
 fr:Présentoir, socle, casier, chevalet métal à recycler
 fr:Quadrette en plastique||quadrette plastique
-fr:Sac, sachet, poche, pochette autres à jeter
-fr:Sac, sachet, poche, pochette métal à recycler
-fr:Sac, sachet, poche, pochette papier à recycler
+fr:Sac à jeter
+fr:sachet à jeter
+fr:poche à jeter
+fr:pochette à jeter
+fr:Sac métal à recycler
+fr:sachet métal à recycler
+fr:poche métal à recycler
+fr:pochette métal à recycler
+fr:Sac papier à recycler
+fr:sachet papier à recycler
+fr:poche papier à recycler
+fr:pochette papier à recycler
 fr:Sachet en plastique||sachet plastique
 fr:Seau métal à recycler
 fr:Seau plastique à jeter
@@ -286,11 +324,21 @@ fr:Tonneau, tonnelet, fût autres à jeter
 fr:Tonneau, tonnelet, fût carton à recycler
 fr:Tonneau, tonnelet, fût métal à recycler
 fr:Tonneau, tonnelet, fût plastique à recycler
-fr:Tube rigide, tube souple, tube-bâton autres à jeter
-fr:Tube rigide, tube souple, tube-bâton carton à recycler
-fr:Tube rigide, tube souple, tube-bâton métal à recycler
-fr:Tube rigide, tube souple, tube-bâton plastique à jeter
-fr:Tube rigide, tube souple, tube-bâton verre à recycler
+fr:Tube rigide à jeter
+fr:tube souple à jeter
+fr:tube-bâton à jeter
+fr:Tube rigide carton à recycler
+fr:tube souple carton à recycler
+fr:tube-bâton carton à recycler
+fr:Tube rigide métal à recycler
+fr:tube souple métal à recycler
+fr:tube-bâton métal à recycler
+fr:Tube rigide plastique à jeter
+fr:tube souple plastique à jeter
+fr:tube-bâton plastique à jeter
+fr:Tube rigide verre à recycler
+fr:tube souple verre à recycler
+fr:tube-bâton verre à recycler
 HDPE||HDPE
 Pak-Lok||pak lok
 Pak-Lok||pak-lok
