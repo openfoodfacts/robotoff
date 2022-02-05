@@ -397,7 +397,7 @@ fr:Sachet en plastique||sachet plastique
 fr:Seau métal à recycler
 fr:Seau plastique à jeter
 fr:Seringue pré-remplie plastique à jeter
-fr:Stick autres à jeter
+fr:Stick à jeter
 fr:Stick métal à recycler
 fr:Terrine céramique à jeter
 fr:Terrine grès à jeter
