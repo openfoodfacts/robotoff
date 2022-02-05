@@ -219,10 +219,23 @@ fr:Étiquette carton à recycler
 fr:Étiquette papier à recycler
 fr:Etui en carton||etui carton
 fr:Etui en carton||étui carton
-fr:Feuille d’emballage (papier kraft, papier sulfurisé, papier cadeau...), feuille plaquette (carton ondulé, fibre) autres à jeter
-fr:Feuille d’emballage (papier kraft, papier sulfurisé, papier cadeau...), feuille plaquette (carton ondulé, fibre) carton à recycler
-fr:Feuille d’emballage (papier kraft, papier sulfurisé, papier cadeau...), feuille plaquette (carton ondulé, fibre) métal à recycler
-fr:Feuille d’emballage (papier kraft, papier sulfurisé, papier cadeau...), feuille plaquette (carton ondulé, fibre) papier à recycler
+fr:Feuille d’emballage à jeter
+fr:papier kraft à jeter
+fr:papier sulfurisé à jeter
+fr:papier cadeau à jeter
+fr:feuille plaquette à jeter
+fr:carton ondulé à jeter
+fr:fibre à jeter
+fr:Feuille d’emballage à recycler
+fr:papier kraft à recycler
+fr:papier sulfurisé à recycler
+fr:papier cadeau à recycler
+fr:feuille plaquette à recycler
+fr:carton ondulé à recycler
+fr:fibre à recycler
+fr:Feuille d’emballage papier à recycler
+fr:feuille plaquette papier à recycler
+fr:fibre papier à recycler
 fr:Feuille en carton||feuille carton
 fr:Feuille en métal||feuille metal
 fr:Feuille en métal||feuille métal
