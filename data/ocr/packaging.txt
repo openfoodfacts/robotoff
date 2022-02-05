@@ -187,11 +187,16 @@ fr:Cintre carton à recycler
 fr:Cintre métal à recycler
 fr:Clip en plastique;fr:Sachet en plastique||clip et sachet plastique
 fr:Clip en plastique||clip plastique
-fr:Coffre, coffret autre à jeter
-fr:Coffre, coffret carton à recycler
-fr:Coffre, coffret métal à recycler
-fr:Coiffe, collerette métal à recycler
-fr:Coiffe, collerette plastique à jeter
+fr:Coffre à jeter
+fr:coffret à jeter
+fr:Coffre carton à recycler
+fr:coffret carton à recycler
+fr:Coffre métal à recycler
+fr:coffret métal à recycler
+fr:Coiffe métal à recycler
+fr:collerette métal à recycler
+fr:Coiffe plastique à jeter
+fr:collerette plastique à jeter
 fr:Collier plastique à jeter
 fr:Coque en plastique||coque plastique
 fr:Couvercle autres à jeter
@@ -368,10 +373,18 @@ fr:Stick autres à jeter
 fr:Stick métal à recycler
 fr:Terrine céramique à jeter
 fr:Terrine grès à jeter
-fr:Tonneau, tonnelet, fût autres à jeter
-fr:Tonneau, tonnelet, fût carton à recycler
-fr:Tonneau, tonnelet, fût métal à recycler
-fr:Tonneau, tonnelet, fût plastique à recycler
+fr:Tonneau à jeter
+fr:tonnelet à jeter
+fr:fût à jeter
+fr:Tonneau carton à recycler
+fr:tonnelet carton à recycler
+fr:fût carton à recycler
+fr:Tonneau métal à recycler
+fr:tonnelet métal à recycler
+fr:fût métal à recycler
+fr:Tonneau plastique à recycler
+fr:tonnelet plastique à recycler
+fr:fût plastique à recycler
 fr:Tube rigide à jeter
 fr:tube souple à jeter
 fr:tube-bâton à jeter
