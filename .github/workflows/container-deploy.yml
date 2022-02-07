@@ -5,7 +5,7 @@ on:
     branches:
       - master
       - deploy-*
-    tags: 
+    tags:
       - v*.*.*
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        env: 
+        env:
           - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
@@ -101,7 +101,7 @@ jobs:
           echo "TF_SERVING_HOST=${{ secrets.TF_SERVING_HOST }}" >> .env
           echo "INFLUXDB_HOST=${{ secrets.INFLUXDB_HOST }}" >> .env
           echo "INFLUXDB_PORT=8086" >> .env
-          echo "INFLUXDB_NAME=db0" >> .env
+          echo "INFLUXDB_DB_NAME=${{ matrix.env == 'robotoff-org' && 'off_metrics' || 'off_net_metrics' }}" >> .env
           echo "INFLUXDB_USERNAME=off" >> .env
           echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
@@ -193,7 +193,7 @@ jobs:
           cd ${{ matrix.env }}
           make prune
 
-    - uses: frankie567/grafana-annotation-action@v1.0.2
+    - uses: frankie567/grafana-annotation-action@v1.0.3
       if: ${{ always() }}
       with:
         apiHost: https://grafana.openfoodfacts.org

@@ -399,7 +399,7 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     params = {
         "type": "edit",
         "code": barcode,
-        "new_code": to,
+        "new_code": str(to),
         **settings.off_credentials(),
     }
     r = http_session.get(url, params=params, timeout=timeout)

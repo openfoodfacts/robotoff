@@ -42,8 +42,7 @@ class TestProductWeightImporter:
             source_image=source_image,
         )
 
-    def test_import_single_insight(self, mocker):
-        batch_insert_mock = mocker.patch("robotoff.insights.importer.batch_insert")
+    def test_generate_insight_single(self, mocker):
         mocker.patch(
             "robotoff.insights.importer.ProductWeightImporter.get_seen_count",
             return_value=0,
@@ -55,21 +54,20 @@ class TestProductWeightImporter:
         predictions = self.get_product_weight_predictions(
             [self.generate_prediction(value, insight_data)], DEFAULT_BARCODE
         )
-        importer.import_insights(
-            [predictions], automatic=True, server_domain=DEFAULT_SERVER_DOMAIN
+        insights = list(
+            importer.generate_insights(
+                [predictions], automatic=True, server_domain=DEFAULT_SERVER_DOMAIN
+            )
         )
-        batch_insert_mock.assert_called_once()
-        _, inserted_insights, __ = batch_insert_mock.call_args[0]
-        assert len(inserted_insights) == 1
-        inserted_insight = inserted_insights[0]
-        assert inserted_insight["latent"] is False
-        assert inserted_insight["automatic_processing"] is True
-        assert inserted_insight["barcode"] == DEFAULT_BARCODE
-        assert inserted_insight["type"] == "product_weight"
-        assert inserted_insight["data"] == insight_data
-        assert inserted_insight["value_tag"] is None
-        assert inserted_insight["reserved_barcode"] is False
-        assert inserted_insight["server_domain"] == DEFAULT_SERVER_DOMAIN
-        assert inserted_insight["server_type"] == "off"
+        assert len(insights) == 1
+        insight = insights[0]
+        assert insight.automatic_processing is True
+        assert insight.barcode == DEFAULT_BARCODE
+        assert insight.type == "product_weight"
+        assert insight.data == insight_data
+        assert insight.value_tag is None
+        assert insight.reserved_barcode is False
+        assert insight.server_domain == DEFAULT_SERVER_DOMAIN
+        assert insight.server_type == "off"
         # check that id is a valid UUID
-        uuid.UUID(inserted_insight["id"])
+        uuid.UUID(insight.id)

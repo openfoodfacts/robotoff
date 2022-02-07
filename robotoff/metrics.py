@@ -74,6 +74,23 @@ def get_influx_client() -> InfluxDBClient:
     )
 
 
+def ensure_influx_database():
+    client = get_influx_client()
+    if client is not None:
+        try:
+            db_names = [data.get("name") for data in client.get_list_database()]
+            if settings.INFLUXDB_DB_NAME not in db_names:
+                # create it
+                client.create_database(settings.INFLUXDB_DB_NAME)
+                logger.warning(
+                    "Creating influxdb database %r as it does not exist yet",
+                    settings.INFLUXDB_DB_NAME,
+                )
+        except Exception:
+            # better be fail safe, our job is not that important !
+            logger.exception("Error on ensure_influx_database")
+
+
 def get_product_count(country_tag: str) -> int:
     r = requests.get(
         settings.BaseURLProvider().country(country_tag).get() + "/3.json?fields=null"

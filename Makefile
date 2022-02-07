@@ -114,7 +114,7 @@ isort:
 
 docs:
 	@echo "🥫 Generationg doc…"
-	${DOCKER_COMPOSE} run --rm api ./build_mkdocs.sh
+	${DOCKER_COMPOSE} run --rm --no-deps api ./build_mkdocs.sh
 
 checks: toml-check flake8 black-check mypy isort-check docs
 
@@ -122,11 +122,9 @@ lint: toml-lint isort black
 
 tests: create_external_networks unit-tests integration-tests
 
-
 health:
 	@echo "🥫 Running health tests …"
 	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
-
 
 unit-tests:
 	@echo "🥫 Running tests …"
@@ -139,7 +137,7 @@ integration-tests:
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
 	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
-	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v
+	( COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v || true )
 
 #------------#
 # Production #

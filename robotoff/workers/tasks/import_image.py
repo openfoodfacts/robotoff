@@ -5,20 +5,19 @@ from typing import Optional
 import requests
 
 from robotoff import settings
-from robotoff.insights.dataclass import InsightType
 from robotoff.insights.extraction import (
     get_predictions_from_image,
     get_source_from_image_url,
     predict_objects,
 )
-from robotoff.insights.importer import BaseInsightImporter, InsightImporterFactory
+from robotoff.insights.importer import import_insights
 from robotoff.logos import (
     LOGO_CONFIDENCE_THRESHOLDS,
     add_logos_to_ann,
     import_logo_insights,
     save_nearest_neighbors,
 )
-from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation
 from robotoff.off import get_server_type
 from robotoff.prediction.types import PredictionType
 from robotoff.products import Product, get_product_store
@@ -48,16 +47,13 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
             )
             continue
 
-        logger.info("Extracting {}".format(prediction_type.name))
-        importer: BaseInsightImporter = InsightImporterFactory.create(
-            InsightType[prediction_type], product_store
-        )
-
-        with db.atomic():
-            imported = importer.import_insights(
-                [product_predictions], server_domain=server_domain, automatic=True
-            )
-            logger.info("Import finished, {} insights imported".format(imported))
+    imported = import_insights(
+        predictions_all.values(),
+        server_domain,
+        automatic=True,
+        product_store=product_store,
+    )
+    logger.info("Import finished, {} insights imported".format(imported))
 
 
 def save_image(

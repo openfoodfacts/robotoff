@@ -7,7 +7,7 @@ from robotoff.workers.tasks.product_updated import add_category_insight
 # without extensive mocking and monkey-patching.
 
 
-def test_add_category_insight_no_ml_insights(mocker):
+def test_add_category_insight_no_insights(mocker):
     mocker.patch(
         "robotoff.workers.tasks.product_updated.predict_category_from_product_es",
         return_value=None,
@@ -16,10 +16,8 @@ def test_add_category_insight_no_ml_insights(mocker):
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
         return_value=None,
     )
-    mocker.patch("robotoff.workers.tasks.product_updated.get_product_store")
     import_insights_mock = mocker.patch(
-        "robotoff.insights.importer.BaseInsightImporter.import_insights",
-        return_value=1,
+        "robotoff.workers.tasks.product_updated.import_insights"
     )
     imported = add_category_insight(
         "123", {"code": "123"}, settings.BaseURLProvider().get()
@@ -38,9 +36,8 @@ def test_add_category_insight_with_ml_insights(mocker):
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
         return_value=[CategoryPrediction("en:chicken", 0.9)],
     )
-    mocker.patch("robotoff.workers.tasks.product_updated.get_product_store")
     import_insights_mock = mocker.patch(
-        "robotoff.insights.importer.BaseInsightImporter.import_insights",
+        "robotoff.workers.tasks.product_updated.import_insights",
         return_value=1,
     )
     server_domain = settings.BaseURLProvider().get()
@@ -56,11 +53,13 @@ def test_add_category_insight_with_ml_insights(mocker):
                         type=PredictionType.category,
                         value_tag="en:chicken",
                         data={"lang": "xx", "model": "neural", "confidence": 0.9},
+                        automatic_processing=True,
                     )
                 ],
             ),
         ],
-        server_domain=server_domain,
-        automatic=False,
+        server_domain,
+        automatic=True,
     )
+
     assert imported

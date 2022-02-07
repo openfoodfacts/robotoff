@@ -1,4 +1,6 @@
 # This package describes the Postgres tables Robotoff is writing to.
+import datetime
+import uuid
 from typing import Dict, Iterable
 
 import peewee
@@ -54,7 +56,7 @@ class ProductInsight(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
 
     # Type represents the insight type - must match one of the types in robotoff.insights.dataclass.InsightType.
-    type = peewee.CharField(max_length=256)
+    type = peewee.CharField(max_length=256, index=True)
 
     # Contains some additional data based on the type of the insight from above.
     # NOTE: there is no 1:1 mapping between the type and the JSON format provided here, for example for
@@ -74,13 +76,15 @@ class ProductInsight(BaseModel):
     # 1 = Validated
     annotation = peewee.IntegerField(null=True, index=True)
 
-    # If the insight was annotated manually, this field stores the username of the annotator.
+    # The number of votes for this annotation.
+    # Stored here for quick sorting.
+    n_votes = peewee.IntegerField(null=False, index=True)
+
+    # If the insight was annotated manually, this field stores the username of the annotator
+    # (or first annotator, if multiple votes were cast).
     username = peewee.TextField(index=True, null=True)
 
-    # Latent insights are insights that should not be applied to the product directly.
-    # These can be 'meta' insights extracted from product images and combined to generate a classic insight
-    # that can be
-    # A latent insight could also be an insight that is no longer valid for a product (e.g. based on an updated state of product).
+    # Latent insights don't exist anymore, this field is kept here for compatibility purpose during the migration
     latent = peewee.BooleanField(null=False, index=True, default=False)
 
     # Stores the list of counties that are associated with the product.
@@ -140,10 +144,38 @@ class ProductInsight(BaseModel):
             **self.data,
         }
 
-    @classmethod
-    def create_from_latent(cls, latent_insight: "ProductInsight", **kwargs):
-        updated_values = {**latent_insight.__data__, **kwargs}
-        return cls.create(**updated_values)
+
+class Prediction(BaseModel):
+    barcode = peewee.CharField(max_length=100, null=False, index=True)
+    type = peewee.CharField(max_length=256, index=True)
+    data = BinaryJSONField(index=True)
+    timestamp = peewee.DateTimeField(index=True)
+    value_tag = peewee.TextField(null=True)
+    value = peewee.TextField(null=True)
+    source_image = peewee.TextField(null=True, index=True)
+    automatic_processing = peewee.BooleanField(null=True)
+    server_domain = peewee.TextField(
+        help_text="server domain linked to the insight", index=True
+    )
+    predictor = peewee.CharField(max_length=100, null=True)
+
+
+class AnnotationVote(BaseModel):
+    id = peewee.UUIDField(primary_key=True, default=uuid.uuid4)
+    # The insight this vote belongs to.
+    insight_id = peewee.ForeignKeyField(ProductInsight, null=False, backref="votes")
+    # The username of the voter - if logged in.
+    # Currently logged in users do not need to vote on an insight for their annotaion to
+    # be applied.
+    username = peewee.TextField(index=True, null=True)
+    # The value of the annotation, see ProductInsight.annotation.
+    value = peewee.IntegerField(
+        null=False, choices=[(-1, "False"), (0, "Unknown"), (1, "True")]
+    )
+    # If the request has a device_id, use that - otherwise use a secure hash of the IP address.
+    device_id = peewee.TextField(index=True, null=False)
+    # Creation date for bookkeeping.
+    timestamp = peewee.DateTimeField(null=False, default=datetime.datetime.utcnow)
 
 
 class ImageModel(BaseModel):
@@ -214,9 +246,11 @@ class LogoConfidenceThreshold(BaseModel):
 
 
 MODELS = [
+    Prediction,
     ProductInsight,
     ImageModel,
     ImagePrediction,
     LogoAnnotation,
     LogoConfidenceThreshold,
+    AnnotationVote,
 ]

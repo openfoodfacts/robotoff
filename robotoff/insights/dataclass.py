@@ -98,7 +98,6 @@ class Insight:
     barcode: str
     type: InsightType
     data: Dict[str, Any]
-    latent: bool
     value_tag: Optional[str] = None
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
@@ -112,6 +111,7 @@ class Insight:
     predictor: Optional[str] = None
     countries: List[str] = dataclasses.field(default_factory=list)
     brands: List[str] = dataclasses.field(default_factory=list)
+    n_votes: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)
@@ -121,10 +121,8 @@ class Insight:
         cls,
         prediction: "Prediction",
         product_predictions: "ProductPredictions",
-        latent: bool,
     ) -> "Insight":
         return cls(
-            latent=latent,
             type=InsightType(prediction.type),
             data=prediction.data,
             value_tag=prediction.value_tag,

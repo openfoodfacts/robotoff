@@ -27,7 +27,7 @@ jobs:
       #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.4.0
       - name: Set up python
         uses: actions/setup-python@v2
         with:
@@ -37,7 +37,7 @@ jobs:
       #  -----  install & configure poetry  -----
       #----------------------------------------------
       - name: Install Poetry
-        uses: snok/install-poetry@v1.1.8
+        uses: snok/install-poetry@v1.3
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
@@ -108,7 +108,7 @@ jobs:
       #----------------------------------------------
       # Upload test coverage
       #----------------------------------------------
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
@@ -125,6 +125,6 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Check out repository
-  #       uses: actions/checkout@v2
+  #       uses: actions/checkout@v2.4.0
   #     - name: Run developer workflow
   #       run: make dev
