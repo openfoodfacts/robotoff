@@ -104,6 +104,7 @@ jobs:
           echo "INFLUXDB_DB_NAME=${{ matrix.env == 'robotoff-org' && 'off_metrics' || 'off_net_metrics' }}" >> .env
           echo "INFLUXDB_USERNAME=off" >> .env
           echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
+          echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
 
 
