@@ -59,17 +59,18 @@ def test_notify_image_flag_no_insights(mocker):
     mock = mocker.patch("robotoff.slack.http_session.post")
 
     notifier = slack.SlackNotifier("")
-
+    # no insights associated to image
     notifier.notify_image_flag(
         [],
         "/source_image",
         "123",
     )
-
+    # wont publish anything
     assert not mock.called
 
 
 def test_notify_image_flag_public(mocker, monkeypatch):
+    """Test notifying a potentially sensitive public image"""
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
@@ -99,6 +100,7 @@ def test_notify_image_flag_public(mocker, monkeypatch):
 
 
 def test_notify_image_flag_private(mocker, monkeypatch):
+    """Test notifying a potentially sensitive private image"""
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
