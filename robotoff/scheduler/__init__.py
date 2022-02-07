@@ -44,38 +44,48 @@ settings.init_sentry()
 logger = get_logger(__name__)
 
 
+def with_db(fn):
+    """Decorator for tasks using database"""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with db:
+            # use atomic to avoid falling in a bad state
+            # (error in the main transaction)
+            with db.atomic():
+                return fn(*args, **kwargs)
+
+    return wrapper
+
+
+@with_db
 def process_insights():
     processed = 0
-    with db:
-        for insight in (
-            ProductInsight.select()
-            .where(
-                ProductInsight.annotation.is_null(),
-                ProductInsight.process_after.is_null(False),
-                ProductInsight.process_after <= datetime.datetime.utcnow(),
-                ProductInsight.latent == False,  # noqa: E712
-            )
-            .iterator()
+    for insight in (
+        ProductInsight.select()
+        .where(
+            ProductInsight.annotation.is_null(),
+            ProductInsight.process_after.is_null(False),
+            ProductInsight.process_after <= datetime.datetime.utcnow(),
+            ProductInsight.latent == False,  # noqa: E712
+        )
+        .iterator()
+    ):
+        annotator = InsightAnnotatorFactory.get(insight.type)
+        logger.info(
+            "Annotating insight {} (product: {})".format(insight.id, insight.barcode)
+        )
+        annotation_result = annotator.annotate(insight, 1, update=True)
+        processed += 1
+
+        if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
+            "notify", False
         ):
-            annotator = InsightAnnotatorFactory.get(insight.type)
-            logger.info(
-                "Annotating insight {} (product: {})".format(
-                    insight.id, insight.barcode
-                )
-            )
-            annotation_result = annotator.annotate(insight, 1, update=True)
-            processed += 1
-
-            if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-                "notify", False
-            ):
-                slack.NotifierFactory.get_notifier().notify_automatic_processing(
-                    insight
-                )
-
+            slack.NotifierFactory.get_notifier().notify_automatic_processing(insight)
     logger.info("{} insights processed".format(processed))
 
 
+@with_db
 def refresh_insights(with_deletion: bool = False):
     deleted = 0
     updated = 0
@@ -94,48 +104,44 @@ def refresh_insights(with_deletion: bool = False):
 
     validators: Dict[str, Optional[InsightValidator]] = {}
 
-    with db:
-        with db.atomic():
-            for insight in (
-                ProductInsight.select()
-                .where(
-                    ProductInsight.annotation.is_null(),
-                    ProductInsight.timestamp <= datetime_threshold,
-                    ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
+    for insight in (
+        ProductInsight.select()
+        .where(
+            ProductInsight.annotation.is_null(),
+            ProductInsight.timestamp <= datetime_threshold,
+            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
+        )
+        .iterator()
+    ):
+        product: Product = product_store[insight.barcode]
+
+        if product is None:
+            if with_deletion:
+                # Product has been deleted from OFF
+                logger.info("Product with barcode {} deleted".format(insight.barcode))
+                deleted += 1
+                insight.delete_instance()
+        else:
+            if insight.type not in validators:
+                validators[insight.type] = InsightValidatorFactory.create(
+                    insight.type, product_store
                 )
-                .iterator()
-            ):
-                product: Product = product_store[insight.barcode]
 
-                if product is None:
-                    if with_deletion:
-                        # Product has been deleted from OFF
-                        logger.info(
-                            "Product with barcode {} deleted".format(insight.barcode)
-                        )
-                        deleted += 1
-                        insight.delete_instance()
-                else:
-                    if insight.type not in validators:
-                        validators[insight.type] = InsightValidatorFactory.create(
-                            insight.type, product_store
-                        )
+            validator = validators[insight.type]
+            result = validate_insight(insight, validator)
 
-                    validator = validators[insight.type]
-                    result = validate_insight(insight, validator)
+            if result == InsightValidationResult.deleted:
+                deleted += 1
+                logger.info(
+                    "invalid insight {} (type: {}), deleting..."
+                    "".format(insight.id, insight.type)
+                )
+                continue
 
-                    if result == InsightValidationResult.deleted:
-                        deleted += 1
-                        logger.info(
-                            "invalid insight {} (type: {}), deleting..."
-                            "".format(insight.id, insight.type)
-                        )
-                        continue
+            insight_updated = update_insight_attributes(product, insight)
 
-                    insight_updated = update_insight_attributes(product, insight)
-
-                    if insight_updated:
-                        updated += 1
+            if insight_updated:
+                updated += 1
 
     logger.info("{} insights deleted".format(deleted))
     logger.info("{} insights updated".format(updated))
@@ -176,29 +182,28 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
     return to_update
 
 
+@with_db
 def mark_insights():
     marked = 0
-    with db:
-        with db.atomic():
-            for insight in (
-                ProductInsight.select()
-                .where(
-                    ProductInsight.automatic_processing == True,  # noqa: E712
-                    ProductInsight.latent == False,  # noqa: E712
-                    ProductInsight.process_after.is_null(),
-                    ProductInsight.annotation.is_null(),
-                )
-                .iterator()
-            ):
-                logger.info(
-                    "Marking insight {} as processable automatically "
-                    "(product: {})".format(insight.id, insight.barcode)
-                )
-                insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(
-                    minutes=10
-                )
-                insight.save()
-                marked += 1
+    for insight in (
+        ProductInsight.select()
+        .where(
+            ProductInsight.automatic_processing == True,  # noqa: E712
+            ProductInsight.latent == False,  # noqa: E712
+            ProductInsight.process_after.is_null(),
+            ProductInsight.annotation.is_null(),
+        )
+        .iterator()
+    ):
+        logger.info(
+            "Marking insight {} as processable automatically "
+            "(product: {})".format(insight.id, insight.barcode)
+        )
+        insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(
+            minutes=10
+        )
+        insight.save()
+        marked += 1
 
     logger.info("{} insights marked".format(marked))
 
@@ -221,6 +226,7 @@ def _refresh_elasticsearch():
         exporter.export_index_data(index)
 
 
+# this job does no use database
 def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
 
