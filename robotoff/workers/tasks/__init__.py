@@ -24,7 +24,10 @@ def run_task(event_type: str, event_kwargs: Dict) -> None:
     func = EVENT_MAPPING[event_type]
 
     try:
-        func(**event_kwargs)
+        # we run task inside transaction to avoid side effects
+        with db:
+            with db.atomic():
+                func(**event_kwargs)
     except Exception as e:
         logger.error(e, exc_info=1)
 
@@ -38,16 +41,15 @@ def delete_product_insights(barcode: str, server_domain: str):
     logger.info(
         "Product {} deleted, deleting associated " "insights...".format(barcode)
     )
-    with db.atomic():
-        deleted = (
-            ProductInsight.delete()
-            .where(
-                ProductInsight.barcode == barcode,
-                ProductInsight.annotation.is_null(),
-                ProductInsight.server_domain == server_domain,
-            )
-            .execute()
+    deleted = (
+        ProductInsight.delete()
+        .where(
+            ProductInsight.barcode == barcode,
+            ProductInsight.annotation.is_null(),
+            ProductInsight.server_domain == server_domain,
         )
+        .execute()
+    )
 
     logger.info("{} insights deleted".format(deleted))
 
