@@ -1,6 +1,5 @@
 import abc
 import datetime
-import pathlib
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional
@@ -23,7 +22,6 @@ from robotoff.off import (
 )
 from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -481,110 +479,3 @@ class InsightAnnotatorFactory:
 
 class InvalidInsight(Exception):
     pass
-
-
-def is_automatically_processable(
-    barcode: str, source_image: Optional[str], max_timedelta: datetime.timedelta
-) -> bool:
-    if not source_image:
-        return False
-
-    image_path = pathlib.Path(source_image)
-    image_id = image_path.stem
-
-    if not image_id.isdigit():
-        return False
-
-    product = get_product(barcode, projection=["images"])
-
-    if product is None:
-        logger.debug("Missing product: {}".format(barcode))
-        raise InvalidInsight()
-
-    if "images" not in product:
-        logger.debug("No images for product {}".format(barcode))
-        raise InvalidInsight()
-
-    product_images = product["images"]
-
-    if image_id not in product_images:
-        logger.debug("Missing image for product {}, ID: {}".format(barcode, image_id))
-        raise InvalidInsight()
-
-    if is_recent_image(product_images, image_id, max_timedelta):
-        return True
-
-    if is_selected_image(product_images, image_id):
-        return True
-
-    return False
-
-
-def is_selected_image(product_images: JSONType, image_id: str) -> bool:
-    for key_prefix in ("nutrition", "front", "ingredients"):
-        for key, image in product_images.items():
-            if key.startswith(key_prefix):
-                if image["imgid"] == image_id:
-                    logger.debug(
-                        "Image {} is a selected image for "
-                        "'{}'".format(image_id, key_prefix)
-                    )
-                    return True
-
-    return False
-
-
-def is_recent_image(
-    product_images: JSONType, image_id: str, max_timedelta: datetime.timedelta
-) -> bool:
-    upload_datetimes = []
-    insight_image_upload_datetime: Optional[datetime.datetime] = None
-
-    for key, image_meta in product_images.items():
-        if not key.isdigit():
-            continue
-
-        upload_datetime = datetime.datetime.utcfromtimestamp(
-            int(image_meta["uploaded_t"])
-        )
-        if key == image_id:
-            insight_image_upload_datetime = upload_datetime
-        else:
-            upload_datetimes.append(upload_datetime)
-
-    if not upload_datetimes:
-        logger.debug("No other images")
-        return True
-
-    if insight_image_upload_datetime is None:
-        raise ValueError("Image with ID {} not found".format(image_id))
-
-    else:
-        for upload_datetime in upload_datetimes:
-            if upload_datetime - insight_image_upload_datetime > max_timedelta:
-                logger.debug(
-                    "More recent image: {} > {}".format(
-                        upload_datetime, insight_image_upload_datetime
-                    )
-                )
-                return False
-
-        sorted_datetimes = [
-            str(x)
-            for x in sorted(set(x.date() for x in upload_datetimes), reverse=True)
-        ]
-        logger.debug(
-            "All images were uploaded the same day or before the target "
-            "image:\n{} >= {}".format(
-                insight_image_upload_datetime.date(), ", ".join(sorted_datetimes)
-            )
-        )
-        return True
-
-    logger.debug(
-        "More recent images: {} < {}".format(
-            insight_image_upload_datetime.date(),
-            max(x.date() for x in upload_datetimes),
-        )
-    )
-    return False

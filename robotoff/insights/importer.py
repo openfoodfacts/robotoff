@@ -3,7 +3,8 @@ import datetime
 import itertools
 import operator
 import uuid
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
+from pathlib import Path
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 
 from playhouse.shortcuts import model_to_dict
 
@@ -28,6 +29,85 @@ def load_authorized_labels() -> Set[str]:
 
 
 AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interval=None)
+
+
+def is_selected_image(images: Dict[str, Any], image_id: str) -> bool:
+    """Return True if the image referenced by `image_id` is selected as a
+    front, ingredients, nutrition or packaging image in any language.
+
+    :param images: The image dict as stored in MongoDB.
+    :param image_id: The image ID to compare, must be a digit.
+    """
+    for key_prefix in ("front", "ingredients", "nutrition", "packaging"):
+        for key, image in images.items():
+            if key.startswith(key_prefix) and image["imgid"] == image_id:
+                return True
+
+    return False
+
+
+def is_recent_image(
+    images: Dict[str, Any], image_id: str, max_timedelta: datetime.timedelta
+) -> bool:
+    """Return True if the image referenced by `image_id` is less than
+    `max_timedelta` older than the most recent image, return False otherwise.
+
+    Only "raw" images (images identified with digits) are compared to the
+    provided `image_id`.
+
+    :param images: The image dict as stored in MongoDB.
+    :param image_id: The image ID to compare, must be a digit.
+    :param max_timedelta: The maximum interval between the upload datetime of
+    the most recent image and the provided image.
+    """
+    image_datetime = datetime.datetime.utcfromtimestamp(
+        int(images[image_id]["uploaded_t"])
+    )
+    remaining_datetimes = []
+    for key, image_meta in images.items():
+        if key.isdigit() and key != image_id:
+            remaining_datetimes.append(
+                datetime.datetime.utcfromtimestamp(int(image_meta["uploaded_t"]))
+            )
+
+    for upload_datetime in remaining_datetimes:
+        if upload_datetime - image_datetime > max_timedelta:
+            logger.info(
+                "More recent image: {} > {}".format(upload_datetime, image_datetime)
+            )
+            return False
+
+    return True
+
+
+def is_valid_insight_image(
+    images: Dict[str, Any],
+    source_image: Optional[str],
+    max_timedelta: datetime.timedelta = settings.IMAGE_MAX_TIMEDELTA,
+):
+    """Return True if the source image is valid for insight generation:
+      - the image ID is a digit and is referenced in `images`
+      - the image is either selected or recent enough
+
+    If `source_image` is None, we always consider the insight as valid.
+
+    :param images: The image dict as stored in MongoDB.
+    :param source_image: The insight source image, should be the path of the
+    image path or None.
+    :param max_timedelta: Maximum timedelta between most recent image and
+    source image, default settings.IMAGE_MAX_TIMEDELTA.
+    """
+    if source_image is None:
+        return True
+
+    image_id = Path(source_image).stem
+
+    if not image_id.isdigit() or image_id not in images:
+        return False
+
+    return is_selected_image(images, image_id) or is_recent_image(
+        images, image_id, max_timedelta
+    )
 
 
 def get_existing_insight(
@@ -145,7 +225,11 @@ class InsightImporter(metaclass=abc.ABCMeta):
             product_predictions = sorted(
                 group, key=lambda insight: insight.data.get("priority", 1)
             )
-            candidates = list(cls.generate_candidates(product, product_predictions))
+            candidates = [
+                insight
+                for insight in cls.generate_candidates(product, product_predictions)
+                if is_valid_insight_image(product.images, insight.source_image)
+            ]
             to_create, to_delete = cls.get_insight_update(candidates, references)
 
             for insight in to_create:

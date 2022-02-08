@@ -16,6 +16,9 @@ from robotoff.insights.importer import (
     ProductWeightImporter,
     StoreInsightImporter,
     import_insights_for_products,
+    is_recent_image,
+    is_selected_image,
+    is_valid_insight_image,
 )
 from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
@@ -23,6 +26,118 @@ from robotoff.products import Product
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
+DEFAULT_UPLOADED_T = "1644332825"
+
+
+@pytest.mark.parametrize(
+    "images,image_id,max_timedelta,expected",
+    [
+        (
+            {"1": {"uploaded_t": DEFAULT_UPLOADED_T}},
+            "1",
+            datetime.timedelta(seconds=10),
+            True,
+        ),
+        (
+            {
+                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
+                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 9)},
+            },
+            "1",
+            datetime.timedelta(seconds=10),
+            True,
+        ),
+        (
+            {
+                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
+                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 11)},
+            },
+            "1",
+            datetime.timedelta(seconds=10),
+            False,
+        ),
+    ],
+)
+def test_is_recent_image(images, image_id, max_timedelta, expected):
+    assert is_recent_image(images, image_id, max_timedelta) is expected
+
+
+@pytest.mark.parametrize(
+    "images,image_id,expected",
+    [
+        (
+            {"1": {}, "2": {}, "front_fr": {"imgid": "2"}},
+            "1",
+            False,
+        ),
+        (
+            {"1": {}, "2": {}, "ingredients_fr": {"imgid": "1"}},
+            "1",
+            True,
+        ),
+    ],
+)
+def test_is_selected_image(images, image_id, expected):
+    assert is_selected_image(images, image_id) is expected
+
+
+@pytest.mark.parametrize(
+    "images,image_id,max_timedelta,expected",
+    [
+        (
+            {"1": {"uploaded_t": DEFAULT_UPLOADED_T}},
+            "1",
+            datetime.timedelta(seconds=10),
+            True,
+        ),
+        (
+            {
+                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
+                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 9)},
+            },
+            "1",
+            datetime.timedelta(seconds=10),
+            True,
+        ),
+        (
+            {
+                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
+                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 11)},
+            },
+            "1",
+            datetime.timedelta(seconds=10),
+            False,
+        ),
+        (
+            {
+                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
+                "2": {"uploaded_t": DEFAULT_UPLOADED_T},
+                "ingredients_fr": {"imgid": "1"},
+            },
+            "1",
+            datetime.timedelta(seconds=10),
+            True,
+        ),
+        (
+            {
+                "2": {"uploaded_t": DEFAULT_UPLOADED_T},
+            },
+            "1",
+            datetime.timedelta(seconds=10),
+            False,
+        ),
+        (
+            {
+                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
+            },
+            "front_fr",
+            datetime.timedelta(seconds=10),
+            False,
+        ),
+    ],
+)
+def test_is_valid_insight_image(images, image_id, max_timedelta, expected):
+    assert is_valid_insight_image(images, image_id, max_timedelta) is expected
 
 
 class FakeProductStore:
@@ -203,6 +318,7 @@ class TestInsightImporter:
             barcode=DEFAULT_BARCODE,
             data={"k": "v"},
             automatic_processing=True,
+            source_image="/images/products/322/982/001/9192/8.jpg",
         )
         generated = list(
             FakeImporter.generate_insights(
@@ -210,7 +326,14 @@ class TestInsightImporter:
                 DEFAULT_SERVER_DOMAIN,
                 automatic=False,
                 product_store=FakeProductStore(
-                    data={DEFAULT_BARCODE: Product({"code": DEFAULT_BARCODE})}
+                    data={
+                        DEFAULT_BARCODE: Product(
+                            {
+                                "code": DEFAULT_BARCODE,
+                                "images": {"8": {"uploaded_t": DEFAULT_UPLOADED_T}},
+                            }
+                        )
+                    }
                 ),
             )
         )
