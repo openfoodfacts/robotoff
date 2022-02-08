@@ -1,11 +1,9 @@
-import datetime
 import operator
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
 from robotoff import settings
-from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
@@ -272,13 +270,6 @@ def generate_insights_from_annotated_logos(
             return
 
         image = logo.image_prediction.image
-
-        try:
-            prediction.automatic_processing = is_automatically_processable(
-                image.barcode, image.source_image, datetime.timedelta(days=30)
-            )
-        except InvalidInsight:
-            return
 
         if prediction.automatic_processing:
             prediction.data["notify"] = True
