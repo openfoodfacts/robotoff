@@ -22,7 +22,7 @@ from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
-    DEFAULT_PREDICTION_TYPES,
+    DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
 )
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
@@ -353,7 +353,7 @@ class OCRInsightsPredictorResource:
         ocr_url = req.get_param("ocr_url", required=True)
 
         try:
-            insights = extract_ocr_predictions(ocr_url, DEFAULT_PREDICTION_TYPES)
+            insights = extract_ocr_predictions(ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
 
         except requests.exceptions.RequestException:
             resp.media = {

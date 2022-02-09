@@ -40,7 +40,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up create_external_networks dl-models
+dev: hello up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
 
 edit_etc_hosts:
@@ -81,9 +81,10 @@ log:
 # Management #
 #------------#
 
-dl-models:
-	@echo "🥫 Downloading models …"
-	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
+# TODO: uncomment once model download CLI is ready 
+# dl-models:
+# 	@echo "🥫 Downloading models …"
+# 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
 
 #------------#
 # Quality    #

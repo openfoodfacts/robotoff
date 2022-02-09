@@ -86,18 +86,6 @@ jobs:
         run: (cd i18n && bash compile.sh)
 
       #----------------------------------------------
-      # Download model weights before running tests
-      #----------------------------------------------
-      - name: Load cache OCR predictor weight file
-        uses: actions/cache@v2
-        with:
-          path: weights/
-          key: ${{ runner.os }}-${{ hashFiles('**/robotoff/ml/category/prediction_from_ocr/constants.py') }}
-
-      - name: Download OCR predictor weight file if not cached
-        run: poetry run robotoff-cli download-models
-
-      #----------------------------------------------
       # Launch tests
       #----------------------------------------------
       - name: Configure docker

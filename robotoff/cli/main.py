@@ -21,14 +21,14 @@ def predict_insight(ocr_url: str) -> None:
     import json
 
     from robotoff.insights.extraction import (
-        DEFAULT_PREDICTION_TYPES,
+        DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
     from robotoff.utils import get_logger
 
     get_logger()
 
-    results = extract_ocr_predictions(ocr_url, DEFAULT_PREDICTION_TYPES)
+    results = extract_ocr_predictions(ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
 
     print(json.dumps(results, indent=4))
 
@@ -176,23 +176,8 @@ def download_models(force: bool = False) -> None:
 
     If models have already been downloaded, the command is skipped unless
     --force option is used.
-
-    TODO: add all models to this CLI.
     """
-    from robotoff.cli.file import download_file
-    from robotoff.prediction.category.prediction_from_ocr.constants import (
-        RIDGE_PREDICTOR_FILEPATH,
-        RIDGE_PREDICTOR_URL,
-    )
-    from robotoff.utils import get_logger
-
-    get_logger()
-
-    download_file(
-        url=RIDGE_PREDICTOR_URL,
-        destination=RIDGE_PREDICTOR_FILEPATH,
-        force=force,
-    )
+    pass
 
 
 @app.command()
