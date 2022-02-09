@@ -1,7 +1,6 @@
 05-PP||05-PP
 05-PP||PP-05
 21-PAP||21-PAP
-21-PAP||21-PAP
 21-PAP||PAP-21
 de:Flasche||abfüller
 Elo-Cap||elo cap
@@ -21,7 +20,7 @@ fr:Bac à jeter||Bac à jeter
 fr:Bac carton à recycler||Bac carton à recycler
 fr:Bac métal à recycler||Bac métal à recycler
 fr:Bag In Box||Bag In Box
-fr:boîte carton à recycler||boîte carton à recycler
+fr:Boîte carton à recycler||boîte carton à recycler
 fr:poche plastique à jeter||poche plastique à jeter
 fr:Bandelette à jeter||Bandelette à jeter
 fr:Bandelette carton à recycler||Bandelette carton à recycler
@@ -42,9 +41,7 @@ fr:Cubitainer métal à recycler||Cubitainer métal à recycler
 fr:Bidon plastique à recycler||Bidon plastique à recycler
 fr:Cubitainer plastique à recycler||Cubitainer plastique à recycler
 fr:Blister avec chevalet carton||Blister avec chevalet carton
-fr:coque avec chevalet carton||coque avec chevalet carton
-fr:Blister avec chevalet carton||Blister avec chevalet carton
-fr:coque avec chevalet carton||coque avec chevalet carton
+fr:Coque avec chevalet carton||coque avec chevalet carton
 fr:Blister carton à recycler||Blister carton à recycler
 fr:coque carton à recycler||coque carton à recycler
 fr:Blister métal à recycler||Blister métal à recycler
@@ -75,7 +72,6 @@ fr:Boîte en plastique||boite plastique
 fr:Boîte en plastique||boîte plastique
 fr:Boîte à jeter||Boîte à jeter
 fr:boîtier à jeter||boîtier à jeter
-fr:Boîte carton à recycler||Boîte carton à recycler
 fr:boîtier carton à recycler||boîtier carton à recycler
 fr:Boîte métal à recycler||Boîte métal à recycler
 fr:boîtier métal à recycler||boîtier métal à recycler
@@ -104,7 +100,6 @@ fr:Bouteille (et son bouchon)||Bouteille (et son bouchon)
 fr:Bouteille (et son bouchon) métal à recycler||Bouteille (et son bouchon) métal à recycler
 fr:Bouteille (et son bouchon) plastique à recycler||Bouteille (et son bouchon) plastique à recycler
 fr:Bouteille (et son bouchon) verre||Bouteille (et son bouchon) verre
-fr:Bouteille (et son bouchon) verre||Bouteille (et son bouchon) verre
 fr:Bouteille et son bouchon||Bouteille et son bouchon
 fr:Bouteille métal et son bouchon à recycler||Bouteille métal et son bouchon à recycler
 fr:Bouteille plastique et son bouchon à recycler||Bouteille plastique et son bouchon à recycler
@@ -115,18 +110,18 @@ fr:Bouteille en verre;fr:Bouchon||bouteille verre et son bouchon
 fr:Bouteille en verre||bouteille verre
 fr:Bouteille en verre||bouteilles verre
 fr:Bouteille||embouteillé
-fr:Brique (et son bouchon) carton à recycler
+fr:Brique en carton à recycler;fr:Bouchon à recycler||Brique (et son bouchon) carton à recycler
 fr:Brique en carton||brique carton
 fr:Cageot à jeter||Cageot à jeter
 fr:cagette à jeter||cagette à jeter
-fr:Cageot carton à recycler||Cageot carton à recycler
-fr:cagette carton à recycler||cagette carton à recycler
+fr:Cageot en carton à recycler||Cageot carton à recycler
+fr:cagette en carton à recycler||cagette carton à recycler
 fr:Caisse||Caisse
 fr:caissette||caissette
 fr:Caisse à jeter||Caisse à jeter
 fr:caissette à jeter||caissette à jeter
-fr:Caisse carton à recycler||Caisse carton à recycler
-fr:caissette carton à recycler||caissette carton à recycler
+fr:Caisse en carton à recycler||Caisse carton à recycler
+fr:caissette en carton à recycler||caissette carton à recycler
 fr:Caisse métal à recycler||Caisse métal à recycler
 fr:caissette métal à recycler||caissette métal à recycler
 fr:Caisse papier à recycler||Caisse papier à recycler
@@ -167,8 +162,7 @@ fr:Capsule en métal||capsule metal
 fr:Capsule en métal||capsule métal
 fr:Capsule en métal||capsules metal
 fr:Capsule en métal||capsules métal
-fr:capsule métal||capsule métal
-fr:Capsule métal à recycler||Capsule métal à recycler
+fr:Capsule en métal à recycler||Capsule métal à recycler
 fr:Cartouche plastique à jeter||Cartouche plastique à jeter
 fr:Cavalier à jeter||Cavalier à jeter
 fr:étui à jeter||étui à jeter
@@ -294,15 +288,11 @@ fr:flacon spray verre à recycler||flacon spray verre à recycler
 fr:spray verre à recycler||spray verre à recycler
 fr:Flacon bille et son bouchon plastique à recycler||Flacon bille et son bouchon plastique à recycler
 fr:Flacon bille et son bouchon verre à recycler||Flacon bille et son bouchon verre à recycler
-fr:Flacon bille et son bouchon verre à recycler||Flacon bille et son bouchon verre à recycler
 fr:Flacon roll on et son bouchon plastique à recycler||Flacon roll on et son bouchon plastique à recycler
-fr:Flacon roll on et son bouchon verre à recycler||Flacon roll on et son bouchon verre à recycler
 fr:Flacon roll on et son bouchon verre à recycler||Flacon roll on et son bouchon verre à recycler
 fr:Flacon bille (et son bouchon) plastique à recycler||Flacon bille (et son bouchon) plastique à recycler
 fr:Flacon bille (et son bouchon) verre à recycler||Flacon bille (et son bouchon) verre à recycler
-fr:Flacon bille (et son bouchon) verre à recycler||Flacon bille (et son bouchon) verre à recycler
 fr:Flacon roll on (et son bouchon) plastique à recycler||Flacon roll on (et son bouchon) plastique à recycler
-fr:Flacon roll on (et son bouchon) verre à recycler||Flacon roll on (et son bouchon) verre à recycler
 fr:Flacon roll on (et son bouchon) verre à recycler||Flacon roll on (et son bouchon) verre à recycler
 fr:Flacon en plastique||flacon plastique
 fr:Gobelet à jeter||Gobelet à jeter
@@ -355,7 +345,7 @@ fr:fermeture barquette plastique à jeter||fermeture barquette plastique à jete
 fr:fermeture blister plastique à jeter||fermeture blister plastique à jeter
 fr:Panier osier à jeter||Panier osier à jeter
 fr:Panier plastique à jeter||Panier plastique à jeter
-fr:Plaque en carton||plaque carton||Plaque en carton||plaque carton
+fr:Plaque en carton||plaque carton
 fr:Plat à jeter||Plat à jeter
 fr:plateau à jeter||plateau à jeter
 fr:plateau alvéolaire à jeter||plateau alvéolaire à jeter
