@@ -4,11 +4,11 @@ Robotoff provides a simple API allowing consumers to fetch predictions and annot
 
 All endpoints must be prefixed with `/api/v1`. The full URL is `https://robotoff.openfoodfacts.org/api/v1/{endpoint}`.
 
-Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all environments (production, development, pro). The `server_domain` field should be used to specify the product/environment: `api.openfoodfacts.org` for OFF-prod, `api.openfoodfacts.net` for OFF-dev, `api.openbeautyfacts.org` for OBF-prod,...
+Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc., and all environments (production, development, pro). The `server_domain` field should be used to specify the product/environment: `api.openfoodfacts.org` for OFF-prod, `api.openfoodfacts.net` for OFF-dev, `api.openbeautyfacts.org` for OBF-prod,...
 
 ## Insights
 
-An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
+An insight is a fact about a product that has been extracted or inferred from the product pictures or characteristics.
 If the insight is correct, the Openfoodfacts DB can be updated accordingly.
 
 Current insight types and their description can be found in [robotoff/insights/dataclass.py](https://github.com/openfoodfacts/robotoff/blob/master/robotoff/insights/dataclass.py).

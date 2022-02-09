@@ -13,8 +13,7 @@ Report bugs at <https://github.com/openfoodfacts/robotoff/issues>.
 If you are reporting a bug, please include:
 
 - Your operating system name and version.
-- Any details about your local setup that might be helpful in
-  troubleshooting.
+- Any details about your local setup that might be helpful in troubleshooting.
 - Detailed steps to reproduce the bug.
 
 ### Fix Bugs
@@ -37,15 +36,12 @@ The best way to send feedback is to file an issue at
 If you are proposing a feature:
 
 - Explain in detail how it would work.
-- Keep the scope as narrow as possible, to make it easier to
-  implement.
-- Remember that this is a volunteer-driven project, and that
-  contributions are welcome
+- Keep the scope as narrow as possible, to make it easier to implement.
+- Remember that this is a volunteer-driven project, and that contributions are welcome.
 
 ## Get Started!
 
-Ready to contribute code? Here's how to set up Robotoff for local
-development.
+Ready to contribute code? Here's how to set up Robotoff for local development.
 
 1.  Fork the robotoff repo on GitHub.
 2.  Clone your fork locally:
@@ -53,10 +49,9 @@ development.
     ```
     git clone git@github.com:your_name_here/robotoff.git
     ```
-3. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md)
-   and run it.
-
-4. code !
+3. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md) and run it.
+   
+4. code!
 
 5.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
 
