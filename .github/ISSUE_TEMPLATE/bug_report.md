@@ -26,4 +26,4 @@ A clear and concise description of what you expected to happen.
  - Platform [e.g. Desktop, Mobile, Hunger Games]
 
 ### Part of
-- Add the issue number preceded by # (that also allows searching by name for similar issues): eg #1
+- Add the issue number preceded by # (that also allows searching by name for similar issues): eg #374
