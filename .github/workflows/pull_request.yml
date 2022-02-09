@@ -6,9 +6,13 @@ on:
       - "**"
     paths:
       - "robotoff/**"
+      - "data/**"
+      - "tests/**"
   pull_request:
     paths:
       - "**/robotoff/**"
+      - "data/**"
+      - "tests/**"
       - "**.pot"
       - "**.po"
 

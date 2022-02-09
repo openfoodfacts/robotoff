@@ -1,26 +1,57 @@
 05-PP||05-PP
 05-PP||PP-05
 21-PAP||21-PAP
-21-PAP||21-PAP
 21-PAP||PAP-21
-es:Envase en cartón||envase cartón
-es:Envase en metal||envase metal
-fr:Barquette en carton||barquette carton
-fr:Barquette;fr:Film en plastique||barquette et film plastique
-fr:Barquette;fr:Opercule en plastique||barquette et opercule plastique
-fr:Barquette en plastique||barquette plastique
-fr:Bocal en verre||bocal verre
-fr:Bouchon en plastique||bouchon plastique
-fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastique
-fr:Bouteille en plastique||bouteille plastique
-fr:Bouteille en verre||bouteille verre
-fr:Bouteille en verre||bouteilles verre
-fr:Bouteille en verre;fr:Bouchon||bouteille verre et son bouchon
-fr:Coque en plastique||coque plastique
+de:Flasche||abfüller
+Elo-Cap||elo cap
+Elo-Cap||elo-cap
+Elopak||elopak
 en:Bottle||bottled
 es:Botella||embotellado
-de:Flasche||abfüller
-fr:Bouteille||embouteillé
+es:Envase en cartón||envase cartón
+es:Envase en metal||envase metal
+fr:Aérosol en métal à recycler||Aérosol métal à recycler
+fr:Ailettes en papier à recycler||Ailettes papier à recycler
+fr:Ailettes en plastique à jeter||Ailettes plastique à jeter
+fr:Ampoule en verre à recycler||Ampoule verre à recycler
+fr:Applicateur en carton à recycler||Applicateur carton à recycler
+fr:Applicateur en plastique à jeter||Applicateur plastique à jeter
+fr:Bac à jeter||Bac à jeter
+fr:Bac en carton à recycler||Bac carton à recycler
+fr:Bac en métal à recycler||Bac métal à recycler
+fr:Bag In Box||Bag In Box
+fr:Bande à jeter||bande à jeter
+fr:Bande en carton à recycler||bande carton à recycler
+fr:Bande en métal à recycler||bande métal à recycler
+fr:Bande en papier à recycler||bande papier à recycler
+fr:Bandelette à jeter||Bandelette à jeter
+fr:Bandelette en carton à recycler||Bandelette carton à recycler
+fr:Bandelette en métal à recycler||Bandelette métal à recycler
+fr:Bandelette en papier à recycler||Bandelette papier à recycler
+fr:Barquette à jeter||Barquette à jeter
+fr:Barquette en carton à recycler||Barquette carton à recycler
+fr:Barquette en carton||barquette carton
+fr:Barquette en plastique||barquette plastique
+fr:Barquette en métal à recycler||Barquette métal à recycler
+fr:Barquette;fr:Film en plastique||barquette et film plastique
+fr:Barquette;fr:Opercule en plastique||barquette et opercule plastique
+fr:Bâtonnet à jeter||Bâtonnet à jeter
+fr:Bâtonnet en carton à recycler||Bâtonnet carton à recycler
+fr:Bâtonnet en métal à recycler||Bâtonnet métal à recycler
+fr:Bidon en métal à recycler||Bidon métal à recycler
+fr:Bidon en plastique à recycler||Bidon plastique à recycler
+fr:Blister avec chevalet en carton||Blister avec chevalet carton
+fr:Blister en carton à recycler||Blister carton à recycler
+fr:Blister en métal à recycler||Blister métal à recycler
+fr:Blister en plastique à jeter||Blister plastique à jeter
+fr:Bobine à jeter||Bobine à jeter
+fr:Bobine en carton à recycler||Bobine carton à recycler
+fr:Bobine en métal à recycler||Bobine métal à recycler
+fr:Bobine en papier à recycler||Bobine papier à recycler
+fr:Bocal en verre||bocal verre
+fr:Bocal en verre à recycler||Bocal verre à recycler
+fr:Boîte à jeter||Boîte à jeter
+fr:Boîte en carton à recycler||boîte carton à recycler
 fr:Boîte en carton||boite carton
 fr:Boîte en carton||boîte carton
 fr:Boîte en métal||boite metal
@@ -29,40 +60,384 @@ fr:Boîte en métal||boîte metal
 fr:Boîte en métal||boîte métal
 fr:Boîte en plastique||boite plastique
 fr:Boîte en plastique||boîte plastique
+fr:Boîte en métal à recycler||Boîte métal à recycler
+fr:Boîte en plastique à jeter||Boîte plastique à jeter
+fr:Boîte en verre à recycler||Boîte verre à recycler
+fr:Boîtier à jeter||boîtier à jeter
+fr:Boîtier en carton à recycler||boîtier carton à recycler
+fr:Boîtier en métal à recycler||boîtier métal à recycler
+fr:Boîtier en plastique à jeter||boîtier plastique à jeter
+fr:Boîtier en verre à recycler||boîtier verre à recycler
+fr:Bol en carton à recycler||Bol carton à recycler
+fr:Bol en métal à recycler||Bol métal à recycler
+fr:Bol en plastique à jeter||Bol plastique à jeter
+fr:Bol en verre à recycler||Bol verre à recycler
+fr:Bolduc à jeter||bolduc à jeter
+fr:Bolduc en carton à recycler||bolduc carton à recycler
+fr:Bolduc en métal à recycler||bolduc métal à recycler
+fr:Bolduc en papier à recycler||bolduc papier à recycler
+fr:Bonbonne en métal à recycler||Bonbonne métal à recycler
+fr:Bonbonne en plastique à recycler||Bonbonne plastique à recycler
+fr:Bonbonne en verre à recycler||Bonbonne verre à recycler
+fr:Bouchon en plastique||bouchon plastique
+fr:Bouchon tous matériaux||Bouchon tous matériaux
+fr:Bouteille en métal à recycler;fr:Bouchon à recycler||Bouteille (et son bouchon) métal à recycler
+fr:Bouteille en métal à recycler;fr:Bouchon à recycler||Bouteille métal et son bouchon à recycler
+fr:Bouteille en plastique à recycler;Bouchon à recycler||Bouteille (et son bouchon) plastique à recycler
+fr:Bouteille en plastique à recycler;fr:Bouchon à recycler||Bouteille plastique et son bouchon à recycler
+fr:Bouteille en plastique;fr:Bouchon en plastique||bouteille et bouchon plastique
+fr:Bouteille en plastique||bouteille plastique
+fr:Bouteille en verre:fr:Bouchon||Bouteille en verre et son bouchon
+fr:Bouteille en verre;fr:Bouchon||Bouteille (et son bouchon) verre
+fr:Bouteille en verre;fr:Bouchon||bouteille verre et son bouchon
+fr:Bouteille en verre||bouteille verre
+fr:Bouteille en verre||bouteilles verre
+fr:Bouteille;fr:Bouchon||Bouteille (et son bouchon)
+fr:Bouteille;fr:Bouchon||Bouteille et son bouchon
+fr:Bouteille||embouteillé
+fr:Brique en carton à recycler;fr:Bouchon à recycler||Brique (et son bouchon) carton à recycler
 fr:Brique en carton||brique carton
+fr:Cageot à jeter||Cageot à jeter
+fr:Cageot en carton à recycler||Cageot carton à recycler
+fr:Cagette à jeter||cagette à jeter
+fr:Cagette en carton à recycler||cagette carton à recycler
+fr:Caisse à jeter||Caisse à jeter
+fr:Caisse en carton à recycler||Caisse carton à recycler
+fr:Caisse en métal à recycler||Caisse métal à recycler
+fr:Caisse en papier à recycler||Caisse papier à recycler
+fr:Caisse||Caisse
+fr:Caissette à jeter||caissette à jeter
+fr:Caissette en carton à recycler||caissette carton à recycler
+fr:Caissette en métal à recycler||caissette métal à recycler
+fr:Caissette en papier à recycler||caissette papier à recycler
+fr:Caissette||caissette
+fr:Cale à jeter||Cale à jeter
+fr:Cale à recycler||Cale à recycler
+fr:Cale en carton à recycler||Cale carton à recycler
+fr:Cale en métal à recycler||Cale métal à recycler
+fr:Cale en plastique à jeter||Cale plastique à jeter
+fr:Canette en métal à recycler||Canette métal à recycler
+fr:Capsule à jeter||Capsule à jeter
+fr:Capsule en métal à recycler||Capsule métal à recycler
 fr:Capsule en métal||capsule metal
 fr:Capsule en métal||capsule métal
 fr:Capsule en métal||capsules metal
 fr:Capsule en métal||capsules métal
+fr:Carton ondulé à jeter||carton ondulé à jeter
+fr:Carton ondulé à recycler||carton ondulé à recycler
+fr:Cartouche en plastique à jeter||Cartouche plastique à jeter
+fr:Casier à jeter||casier à jeter
+fr:Casier en carton à recycler||casier carton à recycler
+fr:Casier en métal à recycler||casier métal à recycler
+fr:Cavalier à jeter||Cavalier à jeter
+fr:Cavalier en carton à recycler||Cavalier carton à recycler
+fr:Cavalier en métal à recycler||Cavalier métal à recycler
+fr:Cavalier en papier à recycler||Cavalier papier à recycler
+fr:Chevalet à jeter||chevalet à jeter
+fr:Chevalet en carton à recycler||chevalet carton à recycler
+fr:Chevalet en métal à recycler||chevalet métal à recycler
+fr:Cintre à jeter||Cintre à jeter
+fr:Cintre en carton à recycler||Cintre carton à recycler
+fr:Cintre en métal à recycler||Cintre métal à recycler
 fr:Clip en plastique;fr:Sachet en plastique||clip et sachet plastique
 fr:Clip en plastique||clip plastique
+fr:Coffre à jeter||Coffre à jeter
+fr:Coffre en carton à recycler||Coffre carton à recycler
+fr:Coffre en métal à recycler||Coffre métal à recycler
+fr:Coffret à jeter||coffret à jeter
+fr:Coffret en carton à recycler||coffret carton à recycler
+fr:Coffret en métal à recycler||coffret métal à recycler
+fr:Coiffe en métal à recycler||Coiffe métal à recycler
+fr:Coiffe en plastique à jeter||Coiffe plastique à jeter
+fr:Coin à jeter||coin à jeter
+fr:Coin à recycler||coin à recycler
+fr:Coin en carton à recycler||coin carton à recycler
+fr:Coin en métal à recycler||coin métal à recycler
+fr:Coin en plastique à jeter||coin plastique à jeter
+fr:Collerette en métal à recycler||collerette métal à recycler
+fr:Collerette en plastique à jeter||collerette plastique à jeter
+fr:Collier en plastique à jeter||Collier plastique à jeter
+fr:Coque avec chevalet en carton||coque avec chevalet carton
+fr:Coque en carton à recycler||coque carton à recycler
+fr:Coque en plastique||coque plastique
+fr:Coque en métal à recycler||coque métal à recycler
+fr:Coque en plastique à jeter||coque plastique à jeter
+fr:Cornet à jeter||cornet à jeter
+fr:Cornet en carton à recycler||cornet carton à recycler
+fr:Cornet en métal à recycler||cornet métal à recycler
+fr:Cornet en papier à recycler||cornet papier à recycler
+fr:Cornière à jeter||cornière à jeter
+fr:Cornière à recycler||cornière à recycler
+fr:Cornière en carton à recycler||cornière carton à recycler
+fr:Cornière en métal à recycler||cornière métal à recycler
+fr:Cornière en plastique à jeter||cornière plastique à jeter
+fr:Coupe en carton à recycler||coupe carton à recycler
+fr:Coupe en métal à recycler||coupe métal à recycler
+fr:Coupe en plastique à jeter||coupe plastique à jeter
+fr:Coupe en verre à recycler||coupe verre à recycler
+fr:Coupelle en carton à recycler||coupelle carton à recycler
+fr:Coupelle en verre à recycler||coupelle verre à recycler
+fr:Coupelle en métal à recycler||coupelle métal à recycler
+fr:Coupelle en plastique à jeter||coupelle plastique à jeter
+fr:Couvercle à jeter||Couvercle à jeter
+fr:Couvercle en carton à recycler||Couvercle carton à recycler
 fr:Couvercle en fer||couvercle fer
 fr:Couvercle en métal||couvercle metal
 fr:Couvercle en métal||couvercle métal
-Elo-Cap||elo cap
-Elo-Cap||elo-cap
-Elopak||elopak
+fr:Couvercle en métal à recycler||Couvercle métal à recycler
+fr:Couvercle en verre à recycler||Couvercle verre à recycler
+fr:Cubitainer en métal à recycler||Cubitainer métal à recycler
+fr:Cubitainer en plastique à recycler||Cubitainer plastique à recycler
+fr:Dose individuelle à jeter||Dose individuelle à jeter
+fr:Dose individuelle en carton à recycler||Dose individuelle carton à recycler
+fr:Dose individuelle en papier à recycler||Dose individuelle papier à recycler
+fr:Doypack à jeter||doypack à jeter
+fr:éléments de bourrage à jeter||éléments de bourrage à jeter
+fr:éléments de bourrage à recycler||éléments de bourrage à recycler
+fr:éléments de bourrage en carton à recycler||éléments de bourrage carton à recycler
+fr:éléments de bourrage en plastique à jeter||éléments de bourrage plastique à jeter
+fr:éléments de bourrage en métal à recycler||éléments de bourrage métal à recycler
+fr:éléments de maintien des produits à jeter||éléments de maintien des produits à jeter
+fr:éléments de maintien des produits à recycler||éléments de maintien des produits à recycler
+fr:éléments de maintien des produits en carton à recycler||éléments de maintien des produits carton à recycler
+fr:éléments de maintien des produits en plastique à jeter||éléments de maintien des produits plastique à jeter
+fr:éléments de maintien des produits en métal à recycler||éléments de maintien des produits métal à recycler
+fr:éléments de mise en forme à jeter||éléments de mise en forme à jeter
+fr:éléments de mise en forme à recycler||éléments de mise en forme à recycler
+fr:éléments de mise en forme en carton à recycler||éléments de mise en forme carton à recycler
+fr:éléments de mise en forme en plastique à jeter||éléments de mise en forme plastique à jeter
+fr:éléments de mise en forme en métal à recycler||éléments de mise en forme métal à recycler
+fr:Enveloppage à jeter||Enveloppage à jeter
+fr:Enveloppage en métal à recycler||Enveloppage métal à recycler
+fr:Enveloppage en papier à recycler||Enveloppage papier à recycler
+fr:Enveloppe en carton à recycler||Enveloppe carton à recycler
+fr:Enveloppe en papier à recycler||Enveloppe papier à recycler
+fr:Étiquette à jeter||Étiquette à jeter
+fr:Étiquette en carton à recycler||Étiquette carton à recycler
+fr:Étiquette en papier à recycler||Étiquette papier à recycler
+fr:Etui à jeter||étui à jeter
+fr:Etui en carton à recycler||étui carton à recycler
 fr:Etui en carton||etui carton
 fr:Etui en carton||étui carton
+fr:Etui en métal à recycler||étui métal à recycler
+fr:Etui en papier à recycler||étui papier à recycler
+fr:Fermeture barquette à jeter||fermeture barquette à jeter
+fr:Fermeture barquette en carton à recycler||fermeture barquette carton à recycler
+fr:Fermeture barquette en métal à recycler||fermeture barquette métal à recycler
+fr:Fermeture barquette en papier à recycler||fermeture barquette papier à recycler
+fr:Fermeture barquette en plastique à jeter||fermeture barquette plastique à jeter
+fr:Fermeture blister à jeter||fermeture blister à jeter
+fr:Fermeture blister en carton à recycler||fermeture blister carton à recycler
+fr:Fermeture blister en métal à recycler||fermeture blister métal à recycler
+fr:Fermeture blister en papier à recycler||fermeture blister papier à recycler
+fr:Fermeture blister en plastique à jeter||fermeture blister plastique à jeter
+fr:Feuille d’emballage à jeter||Feuille d’emballage à jeter
+fr:Feuille d’emballage à recycler||Feuille d’emballage à recycler
+fr:Feuille d’emballage en papier à recycler||Feuille d’emballage papier à recycler
 fr:Feuille en carton||feuille carton
-fr:Feuille en métal||feuille métal
 fr:Feuille en métal||feuille metal
+fr:Feuille en métal||feuille métal
+fr:Feuille plaquette à jeter||feuille plaquette à jeter
+fr:Feuille plaquette à recycler||feuille plaquette à recycler
+fr:Feuille plaquette en papier à recycler||feuille plaquette papier à recycler
+fr:Fibre à jeter||fibre à jeter
+fr:Fibre à recycler||fibre à recycler
+fr:Fibre en papier à recycler||fibre papier à recycler
+fr:Ficelle à jeter||Ficelle à jeter
+fr:Ficelle en carton à recycler||Ficelle carton à recycler
+fr:Ficelle en métal à recycler||Ficelle métal à recycler
+fr:Ficelle en papier à recycler||Ficelle papier à recycler
+fr:Filet à jeter||Filet à jeter
+fr:Filet en métal à recycler||Filet métal à recycler
+fr:Film à bulles en plastique à jeter||film à bulles plastique à jeter
 fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
 fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
 fr:Film en plastique||film plastique
+fr:Flacon en métal à recycler;fr:Bouchon à recycler||Flacon (et son bouchon) métal à recycler
+fr:Flacon en plastique à recycler;fr:Bouchon à recycler||Flacon (et son bouchon) plastique à recycler
+fr:Flacon en verre à recycler;fr:Bouchon à recycler||Flacon (et son bouchon) verre à recycler
+fr:Flacon applicateur à recycler||Flacon applicateur à recycler
+fr:Flacon applicateur en métal à recycler||Flacon applicateur métal à recycler
+fr:Flacon applicateur en plastique à recycler||Flacon applicateur plastique à recycler
+fr:Flacon applicateur en verre à recycler||Flacon applicateur verre à recycler
+fr:Flacon bille à recycler;fr:Bouchon en plastique à recycler||Flacon bille (et son bouchon) plastique à recycler
+fr:Flacon bille à recycler;fr:Bouchon en plastique à recycler||Flacon bille et son bouchon plastique à recycler
+fr:Flacon bille à recycler;fr:Bouchon en verre à recycler||Flacon bille (et son bouchon) verre à recycler
+fr:Flacon bille à recycler;fr:Bouchon en verre à recycler||Flacon bille et son bouchon verre à recycler
 fr:Flacon en plastique||flacon plastique
-HDPE||HDPE
+fr:Flacon pistolet à recycler||flacon pistolet à recycler
+fr:Flacon pistolet en métal à recycler||flacon pistolet métal à recycler
+fr:Flacon pistolet en plastique à recycler||flacon pistolet plastique à recycler
+fr:Flacon pistolet en verre à recycler||flacon pistolet verre à recycler
+fr:Flacon pompe à recycler||flacon pompe à recycler
+fr:Flacon pompe en métal à recycler||flacon pompe métal à recycler
+fr:Flacon pompe en plastique à recycler||flacon pompe plastique à recycler
+fr:Flacon pompe en verre à recycler||flacon pompe verre à recycler
+fr:Flacon roll on à recycler;fr:Bouchon plastique à recycler||Flacon roll on (et son bouchon) plastique à recycler
+fr:Flacon roll on à recycler;fr:Bouchon plastique à recycler||Flacon roll on et son bouchon plastique à recycler
+fr:Flacon roll on à recycler;fr:Bouchon verre à recycler||Flacon roll on (et son bouchon) verre à recycler
+fr:Flacon roll on à recycler;fr:Bouchon verre à recycler||Flacon roll on et son bouchon verre à recycler
+fr:Flacon spray à recycler||flacon spray à recycler
+fr:Flacon spray en métal à recycler||flacon spray métal à recycler
+fr:Flacon spray en plastique à recycler||flacon spray plastique à recycler
+fr:Flacon spray en verre à recycler||flacon spray verre à recycler
+fr:Fourreau à jeter||fourreau à jeter
+fr:Fourreau en carton à recycler||fourreau carton à recycler
+fr:Fourreau en métal à recycler||fourreau métal à recycler
+fr:Fourreau en papier à recycler||fourreau papier à recycler
+fr:Fût à jeter||fût à jeter
+fr:Fût en carton à recycler||fût carton à recycler
+fr:Fût en métal à recycler||fût métal à recycler
+fr:Fût en plastique à recycler||fût plastique à recycler
+fr:Gobelet à jeter||Gobelet à jeter
+fr:Gobelet en carton à recycler||Gobelet carton à recycler
+fr:Gobelet en métal à recycler||Gobelet métal à recycler
+fr:Gobelet en papier à recycler||Gobelet papier à recycler
+fr:Gobelet en verre à recycler||Gobelet verre à recycler
+fr:Gourde à jeter;fr:Bouchon à jeter||Gourde (et son bouchon) à jeter
+fr:Gourde à jeter;fr:Bouchon à jeter||Gourde et son bouchon à jeter
+fr:Gourde à jeter||Gourde à jeter
+fr:Housse à jeter||Housse à jeter
+fr:Housse en carton à recycler||Housse carton à recycler
+fr:Housse en métal à recycler||Housse métal à recycler
+fr:Housse en papier à recycler||Housse papier à recycler
+fr:Lien à jeter||lien à jeter
+fr:Lien à recycler||lien à recycler
+fr:Malette en carton à recycler||Malette carton à recycler
+fr:Malette en métal à recycler||Malette métal à recycler
+fr:Malette en plastique à jeter||Malette plastique à jeter
+fr:Mandrin à jeter||mandrin à jeter
+fr:Mandrin en carton à recycler||mandrin carton à recycler
+fr:Mandrin en métal à recycler||mandrin métal à recycler
+fr:Mandrin en papier à recycler||mandrin papier à recycler
+fr:Moule à jeter||Moule à jeter
+fr:Moule en carton à recycler||Moule carton à recycler
+fr:Moule en métal à recycler||Moule métal à recycler
+fr:Muselet à recycler;fr:Plaque métal à recycler||Muselet et plaque métal à recycler
+fr:Opercule à jeter||Opercule à jeter
+fr:Opercule en carton à recycler||Opercule carton à recycler
 fr:Opercule en aluminium||opercule aluminium
 fr:Opercule en métal||opercule metal
 fr:Opercule en métal||opercule métal
 fr:Opercule en plastique||opercule plastique
-Pak-Lok||pak lok
-Pak-Lok||pak-lok
+fr:Opercule en métal à recycler||Opercule métal à recycler
+fr:Opercule en papier à recycler||Opercule papier à recycler
+fr:Opercule en plastique à jeter||Opercule plastique à jeter
+fr:Panier en osier à jeter||Panier osier à jeter
+fr:Panier en plastique à jeter||Panier plastique à jeter
+fr:Papier cadeau à jeter||papier cadeau à jeter
+fr:Papier cadeau à recycler||papier cadeau à recycler
+fr:Papier kraft à jeter||papier kraft à jeter
+fr:Papier kraft à recycler||papier kraft à recycler
+fr:Papier sulfurisé à jeter||papier sulfurisé à jeter
+fr:Papier sulfurisé à recycler||papier sulfurisé à recycler
+fr:Plaque à jeter||plaque à jeter
+fr:Plaque en carton à recycler||plaque carton à recycler
 fr:Plaque en carton||plaque carton
+fr:Plaque en métal à recycler||plaque métal à recycler
+fr:Plaque en papier à recycler||plaque papier à recycler
+fr:Plaquette à jeter||plaquette à jeter
+fr:Plaquette en carton à recycler||plaquette carton à recycler
+fr:Plaquette en métal à recycler||plaquette métal à recycler
+fr:Plaquette en papier à recycler||plaquette papier à recycler
+fr:Plat à jeter||Plat à jeter
+fr:Plat en carton à recycler||Plat carton à recycler
+fr:Plat en métal à recycler||Plat métal à recycler
+fr:Plat en papier à recycler||Plat papier à recycler
+fr:Plateau à jeter||plateau à jeter
+fr:Plateau alvéolaire à jeter||plateau alvéolaire à jeter
+fr:Plateau alvéolaire en carton à recycler||plateau alvéolaire carton à recycler
+fr:Plateau alvéolaire en métal à recycler||plateau alvéolaire métal à recycler
+fr:Plateau alvéolaire en papier à recycler||plateau alvéolaire papier à recycler
+fr:Plateau en carton à recycler||plateau carton à recycler
+fr:Plateau en métal à recycler||plateau métal à recycler
+fr:Plateau en papier à recycler||plateau papier à recycler
+fr:Poche à jeter||poche à jeter
+fr:Poche en métal à recycler||poche métal à recycler
+fr:Poche en papier à recycler||poche papier à recycler
+fr:Poche en plastique à jeter||poche plastique à jeter
+fr:Pochette à jeter||pochette à jeter
+fr:Pochette en métal à recycler||pochette métal à recycler
+fr:Pochette en papier à recycler||pochette papier à recycler
+fr:Pot autre à jeter||Pot autre à jeter
+fr:Pot en carton à recycler||Pot carton à recycler
 fr:Pot en carton||pot carton
 fr:Pot en plastique;fr:Opercule en plastique||pot et opercule plastique
 fr:Pot en plastique||pot plastique
 fr:Pot en verre||pot verre
+fr:Pot en métal à recycler||Pot métal à recycler
+fr:Pot en plastique à jeter||Pot plastique à jeter
+fr:Pot verre à recycler||Pot verre à recycler
+fr:Pouch en plastique à jeter||pouch plastique à jeter
+fr:Présentoir à jeter||Présentoir à jeter
+fr:Présentoir en carton à recycler||Présentoir carton à recycler
+fr:Présentoir en métal à recycler||Présentoir métal à recycler
+fr:Quadrette en plastique||quadrette plastique
+fr:Rouleau à jeter||rouleau à jeter
+fr:Rouleau en carton à recycler||rouleau carton à recycler
+fr:Rouleau en métal à recycler||rouleau métal à recycler
+fr:Rouleau en papier à recycler||rouleau papier à recycler
+fr:Ruban à jeter||ruban à jeter
+fr:Ruban adhésif à jeter||ruban adhésif à jeter
+fr:Ruban adhésif en carton à recycler||ruban adhésif carton à recycler
+fr:Ruban adhésif en métal à recycler||ruban adhésif métal à recycler
+fr:Ruban adhésif en papier à recycler||ruban adhésif papier à recycler
+fr:Ruban en carton à recycler||ruban carton à recycler
+fr:Ruban en métal à recycler||ruban métal à recycler
+fr:Ruban en papier à recycler||ruban papier à recycler
+fr:Sac à jeter||Sac à jeter
+fr:Sac en métal à recycler||Sac métal à recycler
+fr:Sac en papier à recycler||Sac papier à recycler
+fr:Sachet à jeter||sachet à jeter
+fr:Sachet en plastique||sachet plastique
+fr:Sachet en métal à recycler||sachet métal à recycler
+fr:Sachet en papier à recycler||sachet papier à recycler
+fr:Seau en métal à recycler||Seau métal à recycler
+fr:Seau en plastique à jeter||Seau plastique à jeter
+fr:Seringue pré-remplie en plastique à jeter||Seringue pré-remplie plastique à jeter
+fr:Socle à jeter||socle à jeter
+fr:Socle en carton à recycler||socle carton à recycler
+fr:Socle en métal à recycler||socle métal à recycler
+fr:Spray à recycler||spray à recycler
+fr:Spray en métal à recycler||spray métal à recycler
+fr:Spray en plastique à recycler||spray plastique à recycler
+fr:Spray verre à recycler||spray verre à recycler
+fr:Stick à jeter||Stick à jeter
+fr:Stick en métal à recycler||Stick métal à recycler
+fr:Terrine céramique à jeter||Terrine céramique à jeter
+fr:Terrine grès à jeter||Terrine grès à jeter
+fr:Tonneau à jeter||Tonneau à jeter
+fr:Tonneau en carton à recycler||Tonneau carton à recycler
+fr:Tonneau en métal à recycler||Tonneau métal à recycler
+fr:Tonneau en plastique à recycler||Tonneau plastique à recycler
+fr:Tonnelet à jeter||tonnelet à jeter
+fr:Tonnelet en carton à recycler||tonnelet carton à recycler
+fr:Tonnelet en métal à recycler||tonnelet métal à recycler
+fr:Tonnelet en plastique à recycler||tonnelet plastique à recycler
+fr:Tube rigide à jeter||Tube rigide à jeter
+fr:Tube rigide en carton à recycler||Tube rigide carton à recycler
+fr:Tube rigide en métal à recycler||Tube rigide métal à recycler
+fr:Tube rigide en plastique à jeter||Tube rigide plastique à jeter
+fr:Tube rigide verre à recycler||Tube rigide verre à recycler
+fr:Tube souple à jeter||tube souple à jeter
+fr:Tube souple en carton à recycler||tube souple carton à recycler
+fr:Tube souple en métal à recycler||tube souple métal à recycler
+fr:Tube souple en plastique à jeter||tube souple plastique à jeter
+fr:Tube souple verre à recycler||tube souple verre à recycler
+fr:Tube-bâton à jeter||tube-bâton à jeter
+fr:Tube-bâton en carton à recycler||tube-bâton carton à recycler
+fr:Tube-bâton en métal à recycler||tube-bâton métal à recycler
+fr:Tube-bâton en plastique à jeter||tube-bâton plastique à jeter
+fr:Tube-bâton verre à recycler||tube-bâton verre à recycler
+fr:Valise en carton à recycler||valise carton à recycler
+fr:Valise en métal à recycler||valise métal à recycler
+fr:Valise en plastique à jeter||valise plastique à jeter
+fr:Valisette en carton à recycler||valisette carton à recycler
+fr:Valisette en métal à recycler||valisette métal à recycler
+fr:Valisette en plastique à jeter||valisette plastique à jeter
+HDPE||HDPE
+Pak-Lok||pak lok
+Pak-Lok||pak-lok
 Pure-Cap||pure cap
 Pure-Cap||pure-cap
 Pure-Pak Classic aseptic||pure pak classic aseptic
@@ -81,8 +456,6 @@ Pure-Pak Sense||pure pak sense
 Pure-Pak Sense||pure-pak sense
 Pure-Pak||pure pak
 Pure-Pak||pure-pak
-fr:Quadrette en plastique||quadrette plastique
-fr:Sachet en plastique||sachet plastique
 Tetra Brik Aseptic||tetra brik aseptic
 Tetra Brik||tetra brik
 Tetra Brik||tetrabrik
@@ -90,8 +463,8 @@ Tetra Classic Aseptic||tetra classic aseptic
 Tetra Evero Aseptic||tetra evero aseptic
 Tetra Fino Aseptic||tetra fino aseptic
 Tetra Gemina Aseptic||tetra gemina aseptic
-Tetra Pack||Tetrapack
 Tetra Pack||tetra pack
+Tetra Pack||Tetrapack
 Tetra Pak||tetra pak
 Tetra Pak||tetrapak
 Tetra Prisma Aseptic||tetra prisma aseptic
