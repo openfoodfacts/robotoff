@@ -15,7 +15,10 @@ def test_packaging_format():
         assert "||" in item, f"missing || separator for item {item}"
         splitted = item.split("||")
         assert len(splitted) == 2, f"key||pattern format expected, here: {item}"
-        pattern = splitted[1]
+        key, pattern = splitted
+        assert not any(
+            x.startswith(" ") or x.endswith(" ") for x in key.split(";")
+        ), f"space after ';' separator: {item}"
         pattern = pattern.lower()
         assert pattern not in patterns, f"duplicated pattern: {pattern}"
         patterns.add(pattern)
