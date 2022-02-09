@@ -153,9 +153,9 @@ fr:éléments de maintien des produits carton à recycler||éléments de maintie
 fr:Cale plastique à jeter||Cale plastique à jeter
 fr:coin plastique à jeter||coin plastique à jeter
 fr:cornière plastique à jeter||cornière plastique à jeter
-fr:éléments de bourrage plastique à jeter||éléments de bourrage plastique à jeter
-fr:éléments de mise en forme plastique à jeter||éléments de mise en forme plastique à jeter
-fr:éléments de maintien des produits plastique à jeter||éléments de maintien des produits plastique à jeter
+fr:éléments de bourrage en plastique à jeter||éléments de bourrage plastique à jeter
+fr:éléments de mise en forme en plastique à jeter||éléments de mise en forme plastique à jeter
+fr:éléments de maintien des produits en plastique à jeter||éléments de maintien des produits plastique à jeter
 fr:Canette métal à recycler||Canette métal à recycler
 fr:Capsule à jeter||Capsule à jeter
 fr:Capsule en métal||capsule metal
@@ -262,7 +262,7 @@ fr:Filet métal à recycler||Filet métal à recycler
 fr:Film en plastique;fr:Barquette en plastique||film et barquette plastique
 fr:Film en plastique;fr:Sachet en plastique||film et sachet plastique
 fr:Film en plastique||film plastique
-fr:Film, film à bulles plastique à jeter||Film, film à bulles plastique à jeter
+fr:film à bulles plastique à jeter||film à bulles plastique à jeter
 fr:Flacon (et son bouchon) métal à recycler||Flacon (et son bouchon) métal à recycler
 fr:Flacon (et son bouchon) plastique à recycler||Flacon (et son bouchon) plastique à recycler
 fr:Flacon (et son bouchon) verre à recycler||Flacon (et son bouchon) verre à recycler
@@ -286,21 +286,21 @@ fr:flacon pompe verre à recycler||flacon pompe verre à recycler
 fr:flacon pistolet verre à recycler||flacon pistolet verre à recycler
 fr:flacon spray verre à recycler||flacon spray verre à recycler
 fr:spray verre à recycler||spray verre à recycler
-fr:Flacon bille et son bouchon plastique à recycler||Flacon bille et son bouchon plastique à recycler
-fr:Flacon bille et son bouchon verre à recycler||Flacon bille et son bouchon verre à recycler
-fr:Flacon roll on et son bouchon plastique à recycler||Flacon roll on et son bouchon plastique à recycler
-fr:Flacon roll on et son bouchon verre à recycler||Flacon roll on et son bouchon verre à recycler
-fr:Flacon bille (et son bouchon) plastique à recycler||Flacon bille (et son bouchon) plastique à recycler
-fr:Flacon bille (et son bouchon) verre à recycler||Flacon bille (et son bouchon) verre à recycler
-fr:Flacon roll on (et son bouchon) plastique à recycler||Flacon roll on (et son bouchon) plastique à recycler
-fr:Flacon roll on (et son bouchon) verre à recycler||Flacon roll on (et son bouchon) verre à recycler
+fr:Flacon bille à recycler; fr:bouchon plastique à recycler||Flacon bille et son bouchon plastique à recycler
+fr:Flacon bille à recycler; fr:bouchon verre à recycler||Flacon bille et son bouchon verre à recycler
+fr:Flacon roll on à recycler; fr:bouchon plastique à recycler||Flacon roll on et son bouchon plastique à recycler
+fr:Flacon roll on à recycler; fr:bouchon verre à recycler||Flacon roll on et son bouchon verre à recycler
+fr:Flacon bille à recycler; fr:bouchon plastique à recycler||Flacon bille (et son bouchon) plastique à recycler
+fr:Flacon bille à recycler; fr:bouchon verre à recycler||Flacon bille (et son bouchon) verre à recycler
+fr:Flacon roll on à recycler; fr:bouchon plastique à recycler||Flacon roll on (et son bouchon) plastique à recycler
+fr:Flacon roll on à recycler; fr:bouchon verre à recycler||Flacon roll on (et son bouchon) verre à recycler
 fr:Flacon en plastique||flacon plastique
 fr:Gobelet à jeter||Gobelet à jeter
 fr:Gobelet carton à recycler||Gobelet carton à recycler
 fr:Gobelet métal à recycler||Gobelet métal à recycler
 fr:Gobelet papier à recycler||Gobelet papier à recycler
 fr:Gobelet verre à recycler||Gobelet verre à recycler
-fr:Gourde (et son bouchon) à jeter||Gourde (et son bouchon) à jeter
+fr:Gourde à jeter, fr:bouchon à jeter||Gourde (et son bouchon) à jeter
 fr:Gourde et son bouchon à jeter||Gourde et son bouchon à jeter
 fr:Gourde à jeter||Gourde à jeter
 fr:doypack à jeter||doypack à jeter
@@ -323,7 +323,7 @@ fr:valisette plastique à jeter||valisette plastique à jeter
 fr:Moule à jeter||Moule à jeter
 fr:Moule carton à recycler||Moule carton à recycler
 fr:Moule métal à recycler||Moule métal à recycler
-fr:Muselet et plaque métal à recycler||Muselet et plaque métal à recycler
+fr:Muselet à recycler, fr:plaque métal à recycler||Muselet et plaque métal à recycler
 fr:Opercule en aluminium||opercule aluminium
 fr:Opercule en métal||opercule metal
 fr:Opercule en métal||opercule métal
