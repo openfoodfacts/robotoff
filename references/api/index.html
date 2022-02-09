@@ -919,9 +919,9 @@
                 <h1 id="api-reference">API Reference</h1>
 <p>Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.</p>
 <p>All endpoints must be prefixed with <code>/api/v1</code>. The full URL is <code>https://robotoff.openfoodfacts.org/api/v1/{endpoint}</code>.</p>
-<p>Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all environments (production, development, pro). The <code>server_domain</code> field should be used to specify the product/environment: <code>api.openfoodfacts.org</code> for OFF-prod, <code>api.openfoodfacts.net</code> for OFF-dev, <code>api.openbeautyfacts.org</code> for OBF-prod,...</p>
+<p>Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc., and all environments (production, development, pro). The <code>server_domain</code> field should be used to specify the product/environment: <code>api.openfoodfacts.org</code> for OFF-prod, <code>api.openfoodfacts.net</code> for OFF-dev, <code>api.openbeautyfacts.org</code> for OBF-prod,...</p>
 <h2 id="insights">Insights</h2>
-<p>An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
+<p>An insight is a fact about a product that has been extracted or inferred from the product pictures or characteristics.
 If the insight is correct, the Openfoodfacts DB can be updated accordingly.</p>
 <p>Current insight types and their description can be found in <a href="https://github.com/openfoodfacts/robotoff/blob/master/robotoff/insights/dataclass.py">robotoff/insights/dataclass.py</a>.</p>
 <h3 id="random-insight-insightsrandom">Random insight [/insights/random]</h3>
