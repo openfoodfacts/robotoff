@@ -1,10 +1,11 @@
 # Nutrition Table Annotation Guidelines
 
 Guidelines on what and how to label.
-Adapted from http://host.robots.ox.ac.uk/pascal/VOC/voc2011/guidelines.html
+
+Adapted from <http://host.robots.ox.ac.uk/pascal/VOC/voc2011/guidelines.html>
 
 ## What to label
-	
+
 
 All objects of the defined categories, unless:
 
