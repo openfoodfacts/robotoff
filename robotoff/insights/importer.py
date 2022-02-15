@@ -328,7 +328,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         insight.n_votes = 0
 
         if insight.automatic_processing:
-            insight.process_after = timestamp + datetime.timedelta(minutes=10)
+            insight.process_after = timestamp + datetime.timedelta(
+                minutes=settings.INSIGHT_AUTOMATIC_PROCESSING_WAIT
+            )
 
 
 class PackagerCodeInsightImporter(InsightImporter):
@@ -347,11 +349,11 @@ class PackagerCodeInsightImporter(InsightImporter):
         return candidate.value == reference.value
 
     @staticmethod
-    def ignore_prediction(
+    def is_prediction_valid(
         product: Product,
         emb_code: str,
     ) -> bool:
-        return normalize_emb_code(emb_code) in [
+        return normalize_emb_code(emb_code) not in [
             normalize_emb_code(c) for c in product.emb_codes_tags
         ]
 
@@ -364,7 +366,7 @@ class PackagerCodeInsightImporter(InsightImporter):
         yield from (
             ProductInsight(**prediction.to_dict())
             for prediction in predictions
-            if not cls.ignore_prediction(product, prediction.value)  # type: ignore
+            if cls.is_prediction_valid(product, prediction.value)  # type: ignore
         )
 
 
@@ -386,29 +388,19 @@ class LabelInsightImporter(InsightImporter):
         )
 
     @staticmethod
-    def ignore_prediction(product: Product, tag: str) -> bool:
-        return tag in product.labels_tags or LabelInsightImporter.is_parent_label(
-            tag, set(product.labels_tags)
+    def is_prediction_valid(product: Product, tag: str) -> bool:
+        return not (
+            tag in product.labels_tags
+            or LabelInsightImporter.is_parent_label(tag, set(product.labels_tags))
         )
 
     @classmethod
-    def is_parent_label(cls, tag: str, to_check_labels: Set[str]):
+    def is_parent_label(cls, tag: str, to_check_labels: Set[str]) -> bool:
         # Check that the predicted label is not a parent of a
         # current/already predicted label
-        label_taxonomy: Taxonomy = get_taxonomy(InsightType.label.name)
-
-        if tag in label_taxonomy:
-            label_node: TaxonomyNode = label_taxonomy[tag]
-
-            for other_label_node in (
-                label_taxonomy[to_check_label] for to_check_label in to_check_labels
-            ):
-                if other_label_node is not None and other_label_node.is_child_of(
-                    label_node
-                ):
-                    return True
-
-        return False
+        return get_taxonomy(InsightType.label.name).is_parent_of_any(
+            tag, to_check_labels, raises=False
+        )
 
     @classmethod
     def generate_candidates(
@@ -417,7 +409,7 @@ class LabelInsightImporter(InsightImporter):
         predictions: List[Prediction],
     ) -> Iterator[ProductInsight]:
         for prediction in predictions:
-            if not cls.ignore_prediction(product, prediction.value_tag):  # type: ignore
+            if cls.is_prediction_valid(product, prediction.value_tag):  # type: ignore
                 insight = ProductInsight(**prediction.to_dict())
                 if insight.automatic_processing is None:
                     insight.automatic_processing = (
@@ -447,21 +439,9 @@ class CategoryImporter(InsightImporter):
     def is_parent_category(cls, category: str, to_check_categories: Set[str]):
         # Check that the predicted category is not a parent of a
         # current/already predicted category
-        category_taxonomy: Taxonomy = get_taxonomy(InsightType.category.name)
-
-        if category in category_taxonomy:
-            category_node: TaxonomyNode = category_taxonomy[category]
-
-            for other_category_node in (
-                category_taxonomy[to_check_category]
-                for to_check_category in to_check_categories
-            ):
-                if other_category_node is not None and other_category_node.is_child_of(
-                    category_node
-                ):
-                    return True
-
-        return False
+        return get_taxonomy(InsightType.category.name).is_parent_of_any(
+            category, to_check_categories, raises=False
+        )
 
     @classmethod
     def generate_candidates(
@@ -472,17 +452,17 @@ class CategoryImporter(InsightImporter):
         yield from (
             ProductInsight(**prediction.to_dict())
             for prediction in predictions
-            if not cls.ignore_prediction(product, prediction.value_tag)  # type: ignore
+            if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
         )
 
     @staticmethod
-    def ignore_prediction(
+    def is_prediction_valid(
         product: Product,
         category: str,
-    ):
+    ) -> bool:
         # check whether this is new information or if the predicted category
         # is not a parent of a current/already predicted category
-        return (
+        return not (
             category in product.categories_tags
             or CategoryImporter.is_parent_category(
                 category, set(product.categories_tags)
@@ -691,8 +671,7 @@ def is_valid_product_predictions(
        - if the product was not deleted
 
     :param product_predictions: The ProductPredictions to check
-    :param product_store: The DBProductStore used to fetch the product
-    information
+    :param product: The Product fetched from DBProductStore
     :return: Whether the ProductPredictions is valid
     """
     if not product:
@@ -816,25 +795,31 @@ def import_insights_for_products(
     server_domain: str,
     automatic: bool,
     product_store: DBProductStore,
-):
+) -> int:
+    """Re-compute insights for products with new predictions.
+
+    :param prediction_types_by_barcode: a dict that associates each barcode
+    with a set of prediction type that were updated
+    :return: Number of imported insights
+    """
     imported = 0
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
+        selected_barcodes: List[str] = []
         for barcode, prediction_types in prediction_types_by_barcode.items():
-            selected_barcodes: List[str] = []
             if prediction_types >= required_prediction_types:
                 selected_barcodes.append(barcode)
 
-            if selected_barcodes:
-                predictions = [
-                    Prediction(**p)
-                    for p in get_product_predictions(
-                        selected_barcodes, list(required_prediction_types)
-                    )
-                ]
-                imported += importer.import_insights(
-                    predictions, server_domain, automatic, product_store
+        if selected_barcodes:
+            predictions = [
+                Prediction(**p)
+                for p in get_product_predictions(
+                    selected_barcodes, list(required_prediction_types)
                 )
+            ]
+            imported += importer.import_insights(
+                predictions, server_domain, automatic, product_store
+            )
     return imported
 
 
@@ -843,7 +828,14 @@ def import_predictions(
     product_store: DBProductStore,
     server_domain: str,
 ) -> Dict[str, Set[PredictionType]]:
-    """Check validity and import provided ProductPredictions."""
+    """Check validity and import provided ProductPredictions.
+
+    :param product_predictions: the ProductPredictions to import
+    :param product_store: The product store to use
+    :param server_domain: The server domain associated with the predictions
+    :return: Dict associating each barcode with prediction types that where
+    updated in order to re-compute associated insights
+    """
     product_predictions = [
         p
         for p in product_predictions
@@ -860,8 +852,7 @@ def import_predictions(
         predictions_imported += import_product_predictions(
             barcode, product_predictions_group, server_domain
         )
-        updated_prediction_types_by_barcode.setdefault(barcode, set())
-        updated_prediction_types_by_barcode[barcode] |= set(
+        updated_prediction_types_by_barcode[barcode] = set(
             itertools.chain.from_iterable(
                 (prediction.type for prediction in x.predictions)
                 for x in product_predictions_group
@@ -882,6 +873,11 @@ def refresh_insights(
     All predictions are fetched, and insights are created/deleted by each
     InsightImporter.
 
+    This is different from `import_insights`, because here, there is no
+    prediction creation.  It's just an refresh based on current database
+    predictions. It's useful to refresh insights after an Product Opener
+    update (some insights may be invalid).
+
     :param barcode: Barcode of the product.
     :param server_domain: The server domain associated with the predictions.
     :param automatic: If False, no insight is applied automatically.
@@ -892,11 +888,12 @@ def refresh_insights(
         product_store = get_product_store()
 
     predictions = [Prediction(**p) for p in get_product_predictions([barcode])]
+    prediction_types = set(p.type for p in predictions)
 
     imported = 0
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
-        if set(p.type for p in predictions) >= required_prediction_types:
+        if prediction_types >= required_prediction_types:
             imported += importer.import_insights(
                 predictions, server_domain, automatic, product_store
             )

@@ -262,3 +262,8 @@ TEST_DATA_DIR = TEST_DIR / "unit/data"
 # less than 120 days older than the most recent product image will be
 # generated as candidate.
 IMAGE_MAX_TIMEDELTA = datetime.timedelta(days=120)
+
+# Number of minutes to wait before processing an insight automatically
+INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
+    os.environ.get("INSIGHT_AUTOMATIC_PROCESSING_WAIT", 10)
+)
