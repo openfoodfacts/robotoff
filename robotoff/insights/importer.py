@@ -230,6 +230,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 for insight in cls.generate_candidates(product, product_predictions)
                 if is_valid_insight_image(product.images, insight.source_image)
             ]
+            for candidate in candidates:
+                if candidate.automatic_processing is None:
+                    logger.warning(
+                        f"Insight with automatic_processing=None: {candidate.__data__}"
+                    )
+
             to_create, to_delete = cls.get_insight_update(candidates, references)
 
             for insight in to_create:
