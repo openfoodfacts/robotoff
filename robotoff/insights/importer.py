@@ -17,7 +17,7 @@ from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.products import DBProductStore, Product, get_product_store, is_valid_image
-from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
+from robotoff.taxonomy import get_taxonomy
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
