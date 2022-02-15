@@ -18,7 +18,9 @@ from robotoff.insights.importer import (
     import_insights_for_products,
     is_recent_image,
     is_selected_image,
+    is_trustworthy_insight_image,
     is_valid_insight_image,
+    sort_predictions,
 )
 from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
@@ -136,8 +138,77 @@ def test_is_selected_image(images, image_id, expected):
         ),
     ],
 )
-def test_is_valid_insight_image(images, image_id, max_timedelta, expected):
-    assert is_valid_insight_image(images, image_id, max_timedelta) is expected
+def test_is_trustworthy_insight_image(images, image_id, max_timedelta, expected):
+    assert is_trustworthy_insight_image(images, image_id, max_timedelta) is expected
+
+
+@pytest.mark.parametrize(
+    "images,image_id,expected",
+    [
+        (
+            {"1": {}, "2": {}},
+            "1",
+            True,
+        ),
+        (
+            {"2": {}},
+            "1",
+            False,
+        ),
+        (
+            {"1": {}, "front_fr": {}},
+            "front_fr",
+            False,
+        ),
+    ],
+)
+def test_is_valid_insight_image(images, image_id, expected):
+    assert is_valid_insight_image(images, image_id) is expected
+
+
+@pytest.mark.parametrize(
+    "predictions,order",
+    [
+        (
+            [
+                Prediction(
+                    PredictionType.category,
+                    data={"priority": 2},
+                    source_image="/123/fr_front.jpg",
+                ),
+                Prediction(
+                    PredictionType.category, data={"priority": 3}, source_image=None
+                ),
+                Prediction(
+                    PredictionType.category,
+                    data={"priority": 2},
+                    source_image="/123/3.jpg",
+                ),
+                Prediction(
+                    PredictionType.category, data={"priority": 1}, source_image=None
+                ),
+                Prediction(
+                    PredictionType.category,
+                    data={"priority": 4},
+                    source_image="/123/1.jpg",
+                ),
+                Prediction(
+                    PredictionType.category,
+                    data={"priority": 1},
+                    source_image="/123/3.jpg",
+                ),
+                Prediction(
+                    PredictionType.category,
+                    data={"priority": 8},
+                    source_image="/123/2.jpg",
+                ),
+            ],
+            [5, 3, 2, 0, 1, 4, 6],
+        ),
+    ],
+)
+def test_sort_predictions(predictions, order):
+    assert sort_predictions(predictions) == [predictions[idx] for idx in order]
 
 
 class FakeProductStore:
