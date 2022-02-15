@@ -16,7 +16,13 @@ from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
-from robotoff.products import DBProductStore, Product, get_product_store, is_valid_image
+from robotoff.products import (
+    DBProductStore,
+    Product,
+    get_image_id,
+    get_product_store,
+    is_valid_image,
+)
 from robotoff.taxonomy import get_taxonomy
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
@@ -80,16 +86,34 @@ def is_recent_image(
     return True
 
 
-def is_valid_insight_image(
+def is_valid_insight_image(images: Dict[str, Any], source_image: Optional[str]):
+    """Return True if the source image is valid for insight generation,
+    i.e. the image ID is a digit and is referenced in `images`.
+
+    If `source_image` is None, we always consider the insight as valid.
+
+    :param images: The image dict as stored in MongoDB.
+    :param source_image: The insight source image, should be the path of the
+    image path or None.
+    """
+    if source_image is None:
+        return True
+
+    image_id = Path(source_image).stem
+    return image_id.isdigit() and image_id in images
+
+
+def is_trustworthy_insight_image(
     images: Dict[str, Any],
     source_image: Optional[str],
     max_timedelta: datetime.timedelta = settings.IMAGE_MAX_TIMEDELTA,
 ):
-    """Return True if the source image is valid for insight generation:
+    """Return True if the source image is trustworthy for insight generation,
       - the image ID is a digit and is referenced in `images`
       - the image is either selected or recent enough
 
-    If `source_image` is None, we always consider the insight as valid.
+    If `source_image` is None, we always consider the insight as trustworthy.
+    Insights considered as trustworthy can have automatic_processing = True.
 
     :param images: The image dict as stored in MongoDB.
     :param source_image: The insight source image, should be the path of the
@@ -131,6 +155,28 @@ def is_reserved_barcode(barcode: str) -> bool:
         barcode = barcode[1:]
 
     return barcode.startswith("2")
+
+
+def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
+    """Sort predictions by priority, using as keys:
+    - priority, specified by data["priority"], prediction with lowest priority
+    values (high priority) come first
+    - source image upload datetime (most recent first): images IDs are
+    auto-incremented integers, so the most recent images have the highest IDs.
+    Images with `source_image = None` have a lower priority that images with a
+    source image.
+
+    :param predictions: The predictions to sort
+    """
+    return sorted(
+        predictions,
+        key=lambda prediction: (
+            prediction.data.get("priority", 1),
+            -int(get_image_id(prediction.source_image) or 0)
+            if prediction.source_image
+            else 0,
+        ),
+    )
 
 
 class InsightImporter(metaclass=abc.ABCMeta):
@@ -222,19 +268,24 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     yield [], references
                 continue
 
-            product_predictions = sorted(
-                group, key=lambda insight: insight.data.get("priority", 1)
-            )
+            product_predictions = sort_predictions(group)
             candidates = [
-                insight
-                for insight in cls.generate_candidates(product, product_predictions)
-                if is_valid_insight_image(product.images, insight.source_image)
+                candidate
+                for candidate in cls.generate_candidates(product, product_predictions)
+                if is_valid_insight_image(product.images, candidate.source_image)
             ]
             for candidate in candidates:
                 if candidate.automatic_processing is None:
                     logger.warning(
                         f"Insight with automatic_processing=None: {candidate.__data__}"
                     )
+
+                if not is_trustworthy_insight_image(
+                    product.images, candidate.source_image
+                ):
+                    # Don't process automatically if the insight image is not
+                    # trustworthy (too old and not selected)
+                    candidate.automatic_processing = False
 
             to_create, to_delete = cls.get_insight_update(candidates, references)
 
