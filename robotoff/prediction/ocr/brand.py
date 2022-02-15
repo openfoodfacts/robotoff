@@ -55,7 +55,10 @@ BRAND_PROCESSOR = generate_brand_keyword_processor(
 
 
 def extract_brands(
-    processor: KeywordProcessor, text: str, data_source_name: str
+    processor: KeywordProcessor,
+    text: str,
+    data_source_name: str,
+    automatic_processing: bool,
 ) -> List[Prediction]:
     predictions = []
 
@@ -68,7 +71,7 @@ def extract_brands(
                 type=PredictionType.brand,
                 value=brand,
                 value_tag=brand_tag,
-                automatic_processing=False,
+                automatic_processing=automatic_processing,
                 predictor=data_source_name,
                 data={"text": match_str, "notify": False},
             )
@@ -102,8 +105,12 @@ def find_brands(content: Union[OCRResult, str]) -> List[Prediction]:
     text = get_text(content)
 
     if text:
-        predictions += extract_brands(BRAND_PROCESSOR, text, "curated-list")
-        predictions += extract_brands(TAXONOMY_BRAND_PROCESSOR, text, "taxonomy")
+        predictions += extract_brands(
+            BRAND_PROCESSOR, text, "curated-list", automatic_processing=True
+        )
+        predictions += extract_brands(
+            TAXONOMY_BRAND_PROCESSOR, text, "taxonomy", automatic_processing=False
+        )
 
     if isinstance(content, OCRResult):
         predictions += extract_brands_google_cloud_vision(content)
