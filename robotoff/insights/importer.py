@@ -570,8 +570,12 @@ class ExpirationDateImporter(InsightImporter):
         if (product and product.expiration_date) or not predictions:
             return
 
-        prediction = predictions[0]
-        if len(set((prediction.value for prediction in predictions))):
+        # expiration date values are formatted according to ISO 8601, so we
+        # can sort them in descending order to get the most recent one
+        prediction = sorted(
+            predictions, key=operator.attrgetter("value"), reverse=True
+        )[0]
+        if any(prediction.value != other.value for other in predictions):
             prediction.automatic_processing = False
         yield ProductInsight(**prediction.to_dict())
 
