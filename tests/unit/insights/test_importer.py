@@ -232,6 +232,7 @@ class TestInsightImporter:
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(
             candidates, references
         )
+        # only the insight with a different value_tag is removed / created
         assert to_create == [candidates[1]]
         assert to_delete == [references[1]]
 
@@ -294,7 +295,15 @@ class TestInsightImporter:
         assert generated == [([], [reference])]
         get_existing_insight_mock.assert_called_once()
 
-    def test_generate_insights_missing_product_creation_and_deletion(self, mocker):
+    def test_generate_insights_creation_and_deletion(self, mocker):
+        """Test `get_insight_update` method in the following case:
+
+        - product exists
+        - an insight of the same type already exists for this product
+        - the insight update triggers the deletion of the old insight and
+        the creation of a new one
+        """
+
         class FakeImporter(InsightImporter):
             @classmethod
             def generate_candidates(cls, product, predictions):
@@ -316,6 +325,7 @@ class TestInsightImporter:
         prediction = Prediction(
             type=PredictionType.category,
             barcode=DEFAULT_BARCODE,
+            value_tag="tag2",
             data={"k": "v"},
             automatic_processing=True,
             source_image="/images/products/322/982/001/9192/8.jpg",
@@ -345,15 +355,17 @@ class TestInsightImporter:
         assert created_insight.automatic_processing is False
         assert isinstance(created_insight.timestamp, datetime.datetime)
         assert created_insight.type == "category"
+        assert created_insight.value_tag == "tag2"
         assert created_insight.data == {"k": "v"}
         assert created_insight.barcode == DEFAULT_BARCODE
         assert created_insight.server_domain == DEFAULT_SERVER_DOMAIN
         assert created_insight.server_type == "off"
+        assert created_insight.process_after is None
         uuid.UUID(created_insight.id)
         assert to_delete == [reference]
         get_existing_insight_mock.assert_called_once()
 
-    def test_generate_insights_missing_automatic_processing(self, mocker):
+    def test_generate_insights_automatic_processing(self, mocker):
         class FakeImporter(InsightImporter):
             @classmethod
             def generate_candidates(cls, product, predictions):
@@ -465,17 +477,22 @@ class TestPackagerCodeInsightImporter:
     @pytest.mark.parametrize(
         "product,emb_code,expected",
         [
-            (Product({"emb_codes_tags": ["FR 40.261.001 CE"]}), "fr 40261001 ce", True),
+            (
+                Product({"emb_codes_tags": ["FR 40.261.001 CE"]}),
+                "fr 40261001 ce",
+                False,
+            ),
             (
                 Product({"emb_codes_tags": ["FR 40.261.001 CE"]}),
                 "fr 50262601 ce",
-                False,
+                True,
             ),
         ],
     )
-    def test_ignore_prediction(self, product, emb_code, expected):
+    def test_is_prediction_valid(self, product, emb_code, expected):
         assert (
-            PackagerCodeInsightImporter.ignore_prediction(product, emb_code) is expected
+            PackagerCodeInsightImporter.is_prediction_valid(product, emb_code)
+            is expected
         )
 
     def test_generate_candidates(self):

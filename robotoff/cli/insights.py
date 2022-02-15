@@ -3,7 +3,7 @@ import datetime
 import json
 import pathlib
 import sys
-from typing import Dict, Iterable, List, Optional, Set, TextIO, Union
+from typing import Iterable, List, Optional, Set, TextIO, Union
 
 import click
 from more_itertools import chunked
@@ -13,6 +13,7 @@ from robotoff.insights import InsightType
 from robotoff.insights.annotate import InsightAnnotatorFactory
 from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.insights.importer import import_insights as import_insights_
+from robotoff.insights.importer import is_recent_image, is_selected_image
 from robotoff.models import ProductInsight, db
 from robotoff.off import get_product
 from robotoff.prediction.ocr import (
@@ -149,76 +150,6 @@ def is_automatically_processable(
     if is_selected_image(product_images, image_id):
         return True
 
-    return False
-
-
-def is_selected_image(product_images: Dict, image_id: str) -> bool:
-    for key_prefix in ("nutrition", "front", "ingredients"):
-        for key, image in product_images.items():
-            if key.startswith(key_prefix):
-                if image["imgid"] == image_id:
-                    logger.info(
-                        "Image {} is a selected image for "
-                        "'{}'".format(image_id, key_prefix)
-                    )
-                    return True
-
-    return False
-
-
-def is_recent_image(
-    product_images: Dict, image_id: str, max_timedelta: datetime.timedelta
-) -> bool:
-    upload_datetimes = []
-    insight_image_upload_datetime: Optional[datetime.datetime] = None
-
-    for key, image_meta in product_images.items():
-        if not key.isdigit():
-            continue
-
-        upload_datetime = datetime.datetime.utcfromtimestamp(
-            int(image_meta["uploaded_t"])
-        )
-        if key == image_id:
-            insight_image_upload_datetime = upload_datetime
-        else:
-            upload_datetimes.append(upload_datetime)
-
-    if not upload_datetimes:
-        logger.info("No other images")
-        return True
-
-    if insight_image_upload_datetime is None:
-        raise ValueError("Image with ID {} not found".format(image_id))
-
-    else:
-        for upload_datetime in upload_datetimes:
-            if upload_datetime - insight_image_upload_datetime > max_timedelta:
-                logger.info(
-                    "More recent image: {} > {}".format(
-                        upload_datetime, insight_image_upload_datetime
-                    )
-                )
-                return False
-
-        sorted_datetimes = [
-            str(x)
-            for x in sorted(set(x.date() for x in upload_datetimes), reverse=True)
-        ]
-        logger.info(
-            "All images were uploaded the same day or before the target "
-            "image:\n{} >= {}".format(
-                insight_image_upload_datetime.date(), ", ".join(sorted_datetimes)
-            )
-        )
-        return True
-
-    logger.info(
-        "More recent images: {} < {}".format(
-            insight_image_upload_datetime.date(),
-            max(x.date() for x in upload_datetimes),
-        )
-    )
     return False
 
 
