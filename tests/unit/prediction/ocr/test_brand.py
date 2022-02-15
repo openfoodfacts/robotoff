@@ -1,3 +1,4 @@
+from enum import auto
 from typing import Dict, Set
 
 import pytest
@@ -41,6 +42,7 @@ def brand_keyword_processor():
                 "value_tag": "le-comptoir-de-mathilde",
                 "predictor": "test",
                 "data": {"text": "Le comptoir de Mathilde", "notify": False},
+                "automatic_processing": False,
             },
         ),
         ("Netto gewitch: 450 g", None),
@@ -52,6 +54,7 @@ def brand_keyword_processor():
                 "value_tag": "alpina-savoie",
                 "predictor": "test",
                 "data": {"text": "Alpina savoie", "notify": False},
+                "automatic_processing": False,
             },
         ),
     ],
@@ -59,7 +62,9 @@ def brand_keyword_processor():
 def test_extract_brand_taxonomy(
     brand_taxonomy_keyword_processor, text: str, expected: Dict
 ):
-    insights = extract_brands(brand_taxonomy_keyword_processor, text, "test")
+    insights = extract_brands(
+        brand_taxonomy_keyword_processor, text, "test", automatic_processing=False
+    )
 
     if not expected:
         assert not insights
@@ -79,12 +84,15 @@ def test_extract_brand_taxonomy(
                 "value_tag": "coca-cola",
                 "predictor": "test",
                 "data": {"text": "cocacola", "notify": False},
+                "automatic_processing": True,
             },
         ),
     ],
 )
 def test_extract_brand(brand_keyword_processor, text: str, expected):
-    insights = extract_brands(brand_keyword_processor, text, "test")
+    insights = extract_brands(
+        brand_keyword_processor, text, "test", automatic_processing=True
+    )
 
     if not expected:
         assert not insights
