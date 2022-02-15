@@ -79,6 +79,7 @@ def find_expiration_date(content: Union[OCRResult, str]) -> List[Prediction]:
                     value=value,
                     type=PredictionType.expiration_date,
                     data={"raw": raw, "type": type_, "notify": ocr_regex.notify},
+                    automatic_processing=True,
                 )
             )
 
