@@ -105,7 +105,10 @@ def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
 
 
 def process_product_weight(
-    match: Match, prompt: bool, ending_prompt: bool = False
+    match: Match,
+    prompt: bool,
+    automatic_processing: bool,
+    ending_prompt: bool = False,
 ) -> Optional[Dict]:
     raw = match.group()
 
@@ -138,6 +141,11 @@ def process_product_weight(
     text = "{} {}".format(value, unit)
     normalized_value, normalized_unit = normalize_weight(value, unit)
 
+    if is_suspicious_weight(normalized_value, normalized_unit):
+        # Don't process the prediction automatically if the value
+        # is suspicious (very high, low,...)
+        automatic_processing = False
+
     result = {
         "text": text,
         "raw": raw,
@@ -145,12 +153,8 @@ def process_product_weight(
         "unit": unit,
         "normalized_value": normalized_value,
         "normalized_unit": normalized_unit,
+        "automatic_processing": automatic_processing,
     }
-
-    if is_suspicious_weight(normalized_value, normalized_unit):
-        # Don't process the prediction automatically if the value
-        # is suspicious (very high, low,...)
-        result["automatic_processing"] = False
 
     if prompt_str is not None:
         result["prompt"] = prompt_str
@@ -183,12 +187,12 @@ def process_multi_packaging(match) -> Optional[Dict]:
         "count": count,
         "normalized_value": normalized_value,
         "normalized_unit": normalized_unit,
-    }
-
-    if is_suspicious_weight(normalized_value, normalized_unit):
         # Don't process the prediction automatically if the value
         # is suspiciously high
-        result["automatic_processing"] = False
+        "automatic_processing": not is_suspicious_weight(
+            normalized_value, normalized_unit
+        ),
+    }
 
     return result
 
@@ -200,7 +204,9 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
         ),
         field=OCRField.full_text_contiguous,
         lowercase=True,
-        processing_func=functools.partial(process_product_weight, prompt=True),
+        processing_func=functools.partial(
+            process_product_weight, prompt=True, automatic_processing=True
+        ),
         priority=1,
     ),
     "with_ending_mention": OCRRegex(
@@ -210,7 +216,10 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
         field=OCRField.full_text_contiguous,
         lowercase=True,
         processing_func=functools.partial(
-            process_product_weight, prompt=True, ending_prompt=True
+            process_product_weight,
+            prompt=True,
+            ending_prompt=True,
+            automatic_processing=True,
         ),
         priority=1,
     ),
@@ -229,7 +238,9 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
         ),
         field=OCRField.full_text_contiguous,
         lowercase=True,
-        processing_func=functools.partial(process_product_weight, prompt=False),
+        processing_func=functools.partial(
+            process_product_weight, prompt=False, automatic_processing=False
+        ),
         priority=3,
     ),
 }
@@ -257,12 +268,11 @@ def find_product_weight(content: Union[OCRResult, str]) -> List[Prediction]:
             result["priority"] = ocr_regex.priority
             result["notify"] = ocr_regex.notify
             value = result.pop("text")
-            automatic_processing = result.pop("automatic_processing", None)
             results.append(
                 Prediction(
                     value=value,
                     type=PredictionType.product_weight,
-                    automatic_processing=automatic_processing,
+                    automatic_processing=result["automatic_processing"],
                     data=result,
                 )
             )
