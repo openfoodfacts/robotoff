@@ -1,4 +1,3 @@
-from enum import auto
 from typing import Dict, Set
 
 import pytest
