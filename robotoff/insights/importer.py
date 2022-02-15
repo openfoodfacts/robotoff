@@ -522,19 +522,25 @@ class ProductWeightImporter(InsightImporter):
         product: Product,
         predictions: List[Prediction],
     ) -> Iterator[ProductInsight]:
-        if (product and product.quantity is not None) or not predictions:
+        if product.quantity is not None or not predictions:
+            # Don't generate candidates if the product weight is already
+            # specified or if there are no predictions
             return
 
-        insights_by_subtype = cls.group_by_subtype(predictions)
-        insight_subtype = predictions[0].data["matcher_type"]
+        # Only generate a single prediction at a time.
+        # Predictions are sorted by ascending priority, so the first
+        # prediction is assumed to be the best one
         prediction = predictions[0]
+        insights_by_subtype = cls.group_by_subtype(predictions)
 
         insight = ProductInsight(**prediction.to_dict())
         if (
-            insight_subtype != "with_mention"
-            and len(insights_by_subtype[insight_subtype]) > 1
+            len(set(x.value for x in insights_by_subtype[insight.data["matcher_type"]]))
+            > 1
         ) or insight.data.get("source") == "product_name":
-            # Multiple candidates, don't process automatically
+            # Multiple candidates with the same subtype and value, or product
+            # weight coming from the product name (less accurate that OCR data)
+            # -> don't process automatically
             insight.automatic_processing = False
 
         yield insight
