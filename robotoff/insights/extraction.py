@@ -42,7 +42,6 @@ IMAGE_IMPORT_PREDICTION_TYPES: List[PredictionType] = [
     PredictionType.nutrient_mention,
     PredictionType.image_lang,
     PredictionType.image_orientation,
-    PredictionType.category,
 ]
 
 
