@@ -144,7 +144,7 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
         return
 
     timestamp = datetime.datetime.utcnow()
-    results = predict_objects(barcode, image_url, server_domain)
+    results = predict_objects(image_url)
 
     logos = []
     for model_name, result in results.items():
