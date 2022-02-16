@@ -18,7 +18,7 @@ from robotoff.utils import get_image_from_url, get_logger, http_session
 logger = get_logger(__name__)
 
 
-DEFAULT_PREDICTION_TYPES: List[PredictionType] = [
+DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
     PredictionType.label,
     PredictionType.packager_code,
     PredictionType.product_weight,
@@ -27,7 +27,6 @@ DEFAULT_PREDICTION_TYPES: List[PredictionType] = [
     PredictionType.brand,
     PredictionType.store,
     PredictionType.packaging,
-    PredictionType.category,
 ]
 
 IMAGE_IMPORT_PREDICTION_TYPES: List[PredictionType] = [

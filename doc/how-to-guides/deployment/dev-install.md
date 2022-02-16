@@ -42,11 +42,6 @@ After cloning the repository:
 
 2.  Configure files required for the tests to run locally:
 
-    Download the Robotoff models:
-    ```
-    poetry run robotoff-cli download-models
-    ```
-
     Compile the i18n files:
     ```
     cd i18n && bash compile.sh && cd ..
