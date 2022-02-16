@@ -19,7 +19,7 @@ if root_logger.level == logging.NOTSET:
 
 def run_task(event_type: str, event_kwargs: Dict) -> None:
     if event_type not in EVENT_MAPPING:
-        raise ValueError("unknown event type: '{}".format(event_type))
+        raise ValueError(f"unknown event type: '{event_type}")
 
     func = EVENT_MAPPING[event_type]
 
@@ -38,9 +38,7 @@ def download_product_dataset():
 
 
 def delete_product_insights(barcode: str, server_domain: str):
-    logger.info(
-        "Product {} deleted, deleting associated " "insights...".format(barcode)
-    )
+    logger.info(f"Product {barcode} deleted, deleting associated insights...")
     deleted_predictions = (
         Prediction.delete()
         .where(

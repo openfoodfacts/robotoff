@@ -29,10 +29,16 @@ logger = get_logger(__name__)
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
-    logger.info(f"Detect insights for product {barcode} image {image_url}")
+    logger.info(
+        f"Running `import_image` for product {barcode} ({server_domain}), image {image_url}"
+    )
     product_store = get_product_store()
     product = product_store[barcode]
-    save_image(barcode, image_url, product, server_domain)
+    image = save_image(barcode, image_url, product, server_domain)
+
+    if image is not None:
+        logger.info(f"New image {image.id} created in DB")
+
     launch_object_detection_job(barcode, image_url, server_domain)
     predictions_all = get_predictions_from_image(barcode, image_url, ocr_url)
 
@@ -51,7 +57,7 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
         automatic=True,
         product_store=product_store,
     )
-    logger.info("Import finished, {} insights imported".format(imported))
+    logger.info(f"Import finished, {imported} insights imported")
 
 
 def save_image(
@@ -60,9 +66,7 @@ def save_image(
     """Save imported image details in DB."""
     if product is None:
         logger.warning(
-            "Product {} does not exist during image import ({})".format(
-                barcode, image_url
-            )
+            f"Product {barcode} does not exist during image import ({image_url})"
         )
         return None
 
@@ -70,31 +74,31 @@ def save_image(
     image_id = pathlib.Path(source_image).stem
 
     if not image_id.isdigit():
-        logger.warning("Non raw image was sent: {}".format(image_url))
+        logger.warning(f"Non raw image was sent: {image_url}")
         return None
 
     if image_id not in product.images:
-        logger.warning("Unknown image for product {}: {}".format(barcode, image_url))
+        logger.warning(f"Unknown image for product {barcode}: {image_url}")
         return None
 
     image = product.images[image_id]
     sizes = image.get("sizes", {}).get("full")
 
     if not sizes:
-        logger.warning("Image with missing size information: {}".format(image))
+        logger.warning(f"Image with missing size information: {image}")
         return None
 
     width = sizes["w"]
     height = sizes["h"]
 
     if "uploaded_t" not in image:
-        logger.warning("Missing uploaded_t field: {}".format(image.keys()))
+        logger.warning(f"Missing uploaded_t field: {image.keys()}")
         return None
 
     uploaded_t = image["uploaded_t"]
     if isinstance(uploaded_t, str):
         if not uploaded_t.isdigit():
-            logger.warning("Non digit uploaded_t value: {}".format(uploaded_t))
+            logger.warning(f"Non digit uploaded_t value: {uploaded_t}")
             return None
 
         uploaded_t = int(uploaded_t)
@@ -113,6 +117,7 @@ def save_image(
 
 
 def launch_object_detection_job(barcode: str, image_url: str, server_domain: str):
+    logger.info(f"Scheduling object detection job on image {image_url}")
     send_ipc_event(
         "object_detection",
         {"barcode": barcode, "image_url": image_url, "server_domain": server_domain},
@@ -120,11 +125,15 @@ def launch_object_detection_job(barcode: str, image_url: str, server_domain: str
 
 
 def run_object_detection(barcode: str, image_url: str, server_domain: str):
+    logger.info(
+        f"Running `object_detection` for product {barcode} ({server_domain}), "
+        f"image {image_url}"
+    )
     source_image = get_source_from_image_url(image_url)
     image_instance = ImageModel.get_or_none(source_image=source_image)
 
     if image_instance is None:
-        logger.warning("Missing image in DB for image {}".format(image_url))
+        logger.warning(f"Missing image in DB for image {image_url}")
         return
 
     timestamp = datetime.datetime.utcnow()
@@ -153,6 +162,7 @@ def run_object_detection(barcode: str, image_url: str, server_domain: str):
                 )
                 logos.append(logo)
 
+    logger.info(f"{len(logos)} logos found for image {image_url}")
     if logos:
         add_logos_to_ann(image_instance, logos)
 

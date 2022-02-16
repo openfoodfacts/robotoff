@@ -24,7 +24,7 @@ def run():
     ) as listener:
         while True:
             try:
-                logger.info("Waiting for a connection...")
+                logger.debug("Waiting for a connection...")
 
                 with listener.accept() as conn:
                     event = conn.recv()
@@ -32,8 +32,8 @@ def run():
                     logger.info(f"New '{event_type}' event received")
                     event_kwargs: Dict = event.get("meta", {})
 
-                    logger.info("Sending task to pool...")
+                    logger.debug("Sending task to pool...")
                     pool.apply_async(run_task, (event_type, event_kwargs))
-                    logger.info("Task sent")
+                    logger.debug("Task sent")
             except Exception:
                 capture_exception()

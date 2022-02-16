@@ -22,6 +22,8 @@ logger = get_logger(__name__)
 def update_insights(barcode: str, server_domain: str):
     # Sleep 10s to let the OFF update request that triggered the webhook call
     # to finish
+    logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
+
     time.sleep(settings.UPDATED_PRODUCT_WAIT)
     product_dict = get_product(barcode)
 
@@ -29,12 +31,10 @@ def update_insights(barcode: str, server_domain: str):
         logger.warning(f"Updated product does not exist: {barcode}")
         return
 
-    updated = updated_product_predict_insights(barcode, product_dict, server_domain)
-
-    if updated:
-        logger.info("Product {} updated".format(barcode))
-
-    refresh_insights(barcode, server_domain, automatic=True)
+    updated_product_predict_insights(barcode, product_dict, server_domain)
+    logger.info("Refreshing insights...")
+    imported = refresh_insights(barcode, server_domain, automatic=True)
+    logger.info(f"{imported} insights created after refresh")
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
@@ -48,6 +48,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if get_server_type(server_domain) != ServerType.off:
         return False
 
+    logger.info("Predicting product categories...")
     # predict category using Elasticsearch on title
     product_predictions = []
     product_insight = predict_category_from_product_es(product)
@@ -68,15 +69,16 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
         )
 
     if category_predictions is not None:
-        product_insight = ProductPredictions(
-            barcode=product["code"],
-            type=PredictionType.category,
-            predictions=[
-                category_prediction.to_prediction()
-                for category_prediction in category_predictions
-            ],
+        product_predictions.append(
+            ProductPredictions(
+                barcode=product["code"],
+                type=PredictionType.category,
+                predictions=[
+                    category_prediction.to_prediction()
+                    for category_prediction in category_predictions
+                ],
+            )
         )
-        product_predictions.append(product_insight)
 
     if len(product_predictions) < 1:
         return False
@@ -85,9 +87,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     imported = import_insights(
         [merged_product_prediction], server_domain, automatic=True
     )
-
-    if imported:
-        logger.info(f"Category insight imported for product {barcode}")
+    logger.info(f"{imported} category insight imported for product {barcode}")
 
     return bool(imported)
 
@@ -101,12 +101,14 @@ def updated_product_predict_insights(
     if not product_name:
         return updated
 
+    logger.info("Generating predictions from product name...")
     predictions_all = get_predictions_from_product_name(barcode, product_name)
     imported = import_insights(
         list(predictions_all.values()), server_domain, automatic=False
     )
+    logger.info(f"{imported} insights imported for product {barcode}")
+
     if imported:
-        logger.info("{} insights imported for product {}".format(imported, barcode))
         updated = True
 
     return updated

@@ -76,6 +76,7 @@ def get_predictions_from_product_name(
 def get_predictions_from_image(
     barcode: str, image_url: str, ocr_url: str
 ) -> Dict[PredictionType, ProductPredictions]:
+    logger.info(f"Generating OCR predictions from OCR {ocr_url}")
     try:
         ocr_predictions = extract_ocr_predictions(
             ocr_url, IMAGE_IMPORT_PREDICTION_TYPES
