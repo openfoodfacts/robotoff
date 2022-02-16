@@ -952,7 +952,10 @@ def refresh_insights(
         required_prediction_types = importer.get_required_prediction_types()
         if prediction_types >= required_prediction_types:
             imported += importer.import_insights(
-                predictions, server_domain, automatic, product_store
+                [p for p in predictions if p.type in required_prediction_types],
+                server_domain,
+                automatic,
+                product_store,
             )
 
     return imported
