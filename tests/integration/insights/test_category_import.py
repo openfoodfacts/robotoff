@@ -140,7 +140,7 @@ class TestCategoryImporter:
         imported = self._run_import(predictions)
         assert imported == 1
         # no insight created
-        assert ProductInsight.select().count() == 2
+        assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
         assert inserted.value_tag == "en:smoked-salmons"
         assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
@@ -152,7 +152,7 @@ class TestCategoryImporter:
         )
         assert imported == 1
         # no insight created
-        assert ProductInsight.select().count() == 2
+        assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
         assert inserted.value_tag == "en:smoked-salmons"
         assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
