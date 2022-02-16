@@ -20,11 +20,13 @@ from robotoff.insights.importer import (
     is_selected_image,
     is_trustworthy_insight_image,
     is_valid_insight_image,
+    select_deepest_taxonomized_candidates,
     sort_predictions,
 )
 from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.products import Product
+from robotoff.taxonomy import get_taxonomy
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
@@ -211,6 +213,47 @@ def test_sort_predictions(predictions, order):
     assert sort_predictions(predictions) == [predictions[idx] for idx in order]
 
 
+@pytest.mark.parametrize(
+    "candidates,taxonomy_name,kept_indices",
+    [
+        (
+            [
+                Prediction(PredictionType.category, value_tag="en:meats"),
+                Prediction(PredictionType.category, value_tag="en:pork"),
+            ],
+            "category",
+            [1],
+        ),
+        (
+            [
+                Prediction(PredictionType.category, value_tag="en:plant-based-foods"),
+                Prediction(
+                    PredictionType.category,
+                    value_tag="en:plant-based-foods-and-beverages",
+                ),
+            ],
+            "category",
+            [0],
+        ),
+        (
+            [
+                Prediction(PredictionType.category, value_tag="en:miso-soup"),
+                Prediction(PredictionType.category, value_tag="en:meats"),
+                Prediction(PredictionType.category, value_tag="en:soups"),
+                Prediction(PredictionType.category, value_tag="en:apricots"),
+            ],
+            "category",
+            [0, 1, 3],
+        ),
+    ],
+)
+def test_select_deepest_taxonomized_candidates(candidates, taxonomy_name, kept_indices):
+    taxonomy = get_taxonomy(taxonomy_name)
+    assert select_deepest_taxonomized_candidates(candidates, taxonomy) == [
+        candidates[idx] for idx in kept_indices
+    ]
+
+
 class FakeProductStore:
     def __init__(self, data: Optional[Dict] = None):
         self.data = data or {}
@@ -306,6 +349,39 @@ class TestInsightImporter:
         # only the insight with a different value_tag is removed / created
         assert to_create == [candidates[1]]
         assert to_delete == [references[1]]
+
+    def test_get_insight_update_annotated_reference(self):
+        class TestInsightImporter(InsightImporter):
+            @classmethod
+            def is_conflicting_insight(cls, candidate, reference):
+                return candidate.value_tag == reference.value_tag
+
+        references = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
+                annotation=0,
+            ),
+        ]
+        candidates = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag2",
+                id=uuid.UUID("c984b252-fb31-41ea-b78e-6ca08b9f5e4b"),
+            ),
+        ]
+        (
+            to_create,
+            to_delete,
+        ) = InsightImporterWithIsConflictingInsight.get_insight_update(
+            candidates, references
+        )
+        assert to_create == candidates
+        # Annotated existing insight should not be deleted
+        assert to_delete == []
 
     def test_generate_insights_no_predictions(self):
         assert (
@@ -604,6 +680,62 @@ class TestLabelInsightImporter:
     def test_is_parent_label(self, label, to_check_labels, expected):
         assert LabelInsightImporter.is_parent_label(label, to_check_labels) is expected
 
+    @pytest.mark.parametrize(
+        "predictions,product,expected",
+        [
+            (
+                [
+                    Prediction(PredictionType.label, value_tag="en:organic"),
+                ],
+                Product({"code": DEFAULT_BARCODE, "labels_tags": ["en:organic"]}),
+                [],
+            ),
+            (
+                [
+                    Prediction(PredictionType.label, value_tag="en:non-existing-tag"),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                [],
+            ),
+            (
+                [
+                    Prediction(PredictionType.label, value_tag="en:organic"),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                [("en:organic", True)],
+            ),
+            (
+                [
+                    Prediction(PredictionType.label, value_tag="en:organic"),
+                    Prediction(PredictionType.label, value_tag="en:ecoveg"),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                [("en:ecoveg", False)],
+            ),
+            (
+                [
+                    Prediction(PredictionType.label, value_tag="en:vegan"),
+                    Prediction(PredictionType.label, value_tag="en:ecoveg"),
+                    Prediction(PredictionType.label, value_tag="en:non-existing-tag"),
+                    Prediction(PredictionType.label, value_tag="en:max-havelaar"),
+                    Prediction(PredictionType.label, value_tag="en:organic"),
+                ],
+                Product({"code": DEFAULT_BARCODE, "labels_tags": ["en:vegan"]}),
+                [("en:ecoveg", False), ("en:max-havelaar", True)],
+            ),
+        ],
+    )
+    def test_generate_candidates(self, predictions, product, expected):
+        candidates = list(
+            LabelInsightImporter.generate_candidates(product, predictions)
+        )
+        assert all(isinstance(c, ProductInsight) for c in candidates)
+        assert len(candidates) == len(expected)
+
+        for candidate, (value_tag, automatic_processing) in zip(candidates, expected):
+            assert candidate.value_tag == value_tag
+            assert candidate.automatic_processing is automatic_processing
+
 
 class TestCategoryImporter:
     def test_get_type(self):
@@ -628,6 +760,60 @@ class TestCategoryImporter:
             CategoryImporter.is_parent_category(category, to_check_categories)
             is expected
         )
+
+    @pytest.mark.parametrize(
+        "predictions,product,expected_value_tags",
+        [
+            (
+                [
+                    Prediction(PredictionType.category, value_tag="en:meats"),
+                ],
+                Product({"code": DEFAULT_BARCODE, "categories_tags": ["en:meats"]}),
+                [],
+            ),
+            (
+                [
+                    Prediction(
+                        PredictionType.category, value_tag="en:non-existing-tag"
+                    ),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                [],
+            ),
+            (
+                [
+                    Prediction(PredictionType.category, value_tag="en:meats"),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                ["en:meats"],
+            ),
+            (
+                [
+                    Prediction(PredictionType.category, value_tag="en:meats"),
+                    Prediction(PredictionType.category, value_tag="en:pork"),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                ["en:pork"],
+            ),
+            (
+                [
+                    Prediction(PredictionType.category, value_tag="en:miso-soup"),
+                    Prediction(PredictionType.category, value_tag="en:meats"),
+                    Prediction(PredictionType.category, value_tag="en:soups"),
+                    Prediction(PredictionType.category, value_tag="en:apricots"),
+                ],
+                Product({"code": DEFAULT_BARCODE, "categories_tags": ["en:apricots"]}),
+                ["en:miso-soup", "en:meats"],
+            ),
+        ],
+    )
+    def test_generate_candidates(self, predictions, product, expected_value_tags):
+        candidates = list(CategoryImporter.generate_candidates(product, predictions))
+        assert all(isinstance(c, ProductInsight) for c in candidates)
+        assert len(candidates) == len(expected_value_tags)
+
+        for candidate, expected_value_tag in zip(candidates, expected_value_tags):
+            assert candidate.value_tag == expected_value_tag
 
 
 class TestProductWeightImporter:

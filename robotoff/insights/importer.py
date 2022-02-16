@@ -23,7 +23,7 @@ from robotoff.products import (
     get_product_store,
     is_valid_image,
 )
-from robotoff.taxonomy import get_taxonomy
+from robotoff.taxonomy import Taxonomy, get_taxonomy
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -177,6 +177,35 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
             else 0,
         ),
     )
+
+
+def select_deepest_taxonomized_candidates(
+    candidates: List[Prediction], taxonomy: Taxonomy
+):
+    """Filter predictions to only keep the deepest items in the taxonomy.
+
+    For instance, for a list of category predictions, the prediction with
+    `value_tag` 'en:meat' will be removed if a prediction with `value_tag`
+    'en:pork' is in the `candidates` list.
+
+    :param candidates: The list of candidates to filter
+    :param taxonomy: The taxonomy to use
+    """
+    value_tags = set()
+
+    for candidate in candidates:
+        if candidate.value_tag is None:
+            logger.warning(f"Unexpected None `value_tag` (candidate: {candidate})")
+        else:
+            value_tags.add(candidate.value_tag)
+
+    nodes = [taxonomy[node] for node in value_tags if node in taxonomy]
+    selected_node_ids = set(node.id for node in taxonomy.find_deepest_nodes(nodes))
+    return [
+        candidate
+        for candidate in candidates
+        if candidate.value_tag in selected_node_ids
+    ]
 
 
 class InsightImporter(metaclass=abc.ABCMeta):
@@ -333,8 +362,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
             match = False
             for reference in reference_insights:
                 if cls.is_conflicting_insight(candidate, reference):
+                    # Candidate conflicts with existing insight, keeping
+                    # existing insight and discarding candidate
                     to_keep_ids.add(reference.id)
                     match = True
+                elif reference.annotation is not None:
+                    # Keep already annotated insights in DB
+                    to_keep_ids.add(reference.id)
 
             if not match:
                 for selected in to_create:
@@ -465,14 +499,19 @@ class LabelInsightImporter(InsightImporter):
         product: Product,
         predictions: List[Prediction],
     ) -> Iterator[ProductInsight]:
-        for prediction in predictions:
-            if cls.is_prediction_valid(product, prediction.value_tag):  # type: ignore
-                insight = ProductInsight(**prediction.to_dict())
-                if insight.automatic_processing is None:
-                    insight.automatic_processing = (
-                        prediction.value_tag in AUTHORIZED_LABELS_STORE.get()
-                    )
-                yield insight
+        candidates = [
+            prediction
+            for prediction in predictions
+            if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
+        ]
+        taxonomy = get_taxonomy(InsightType.label.name)
+        for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy):
+            insight = ProductInsight(**candidate.to_dict())
+            if insight.automatic_processing is None:
+                insight.automatic_processing = (
+                    candidate.value_tag in AUTHORIZED_LABELS_STORE.get()
+                )
+            yield insight
 
 
 class CategoryImporter(InsightImporter):
@@ -506,10 +545,15 @@ class CategoryImporter(InsightImporter):
         product: Product,
         predictions: List[Prediction],
     ) -> Iterator[ProductInsight]:
-        yield from (
-            ProductInsight(**prediction.to_dict())
+        candidates = [
+            prediction
             for prediction in predictions
             if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
+        ]
+        taxonomy = get_taxonomy(InsightType.category.name)
+        yield from (
+            ProductInsight(**candidate.to_dict())
+            for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
         )
 
     @staticmethod
