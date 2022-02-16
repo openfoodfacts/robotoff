@@ -141,7 +141,10 @@ def get_existing_insight(
     `insight_type`."""
     return list(
         ProductInsight.select(
-            ProductInsight.id, ProductInsight.value, ProductInsight.value_tag
+            ProductInsight.annotation,
+            ProductInsight.id,
+            ProductInsight.value,
+            ProductInsight.value_tag,
         ).where(
             ProductInsight.type == insight_type.name,
             ProductInsight.barcode == barcode,
@@ -254,7 +257,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         ):
             if to_delete:
                 to_delete_ids = [insight.id for insight in to_delete]
-                logger.info(f"Deleting insight IDs: {to_delete_ids}")
+                logger.info(f"Deleting insight IDs: {[str(x) for x in to_delete_ids]}")
                 ProductInsight.delete().where(
                     ProductInsight.id.in_(to_delete_ids)
                 ).execute()
@@ -358,12 +361,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
         """
-        if not candidates:
-            # No candidates, nothing to do
-            return [], []
-
         to_create: List[ProductInsight] = []
-        to_keep_ids = set()
+        # Keep already annotated insights in DB
+        to_keep_ids = set(
+            reference.id
+            for reference in reference_insights
+            if reference.annotation is not None
+        )
         for candidate in candidates:
             match = False
             for reference in reference_insights:
@@ -372,9 +376,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     # existing insight and discarding candidate
                     to_keep_ids.add(reference.id)
                     match = True
-                elif reference.annotation is not None:
-                    # Keep already annotated insights in DB
-                    to_keep_ids.add(reference.id)
 
             if not match:
                 for selected in to_create:

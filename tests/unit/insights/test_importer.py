@@ -271,7 +271,7 @@ class InsightImporterWithIsConflictingInsight(InsightImporter):
 
 
 class TestInsightImporter:
-    def test_get_insight_update_no_candidate(self):
+    def test_get_insight_update_annotated_references(self):
         candidates = []
         references = [
             ProductInsight(
@@ -279,6 +279,7 @@ class TestInsightImporter:
                 type=InsightType.label,
                 value_tag="tag1",
                 id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
+                annotation=-1,
             ),
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
@@ -294,7 +295,7 @@ class TestInsightImporter:
             candidates, references
         )
         assert to_create == candidates
-        assert to_delete == []
+        assert to_delete == [references[1]]
 
     def test_get_insight_update_no_reference(self):
         candidates = [
