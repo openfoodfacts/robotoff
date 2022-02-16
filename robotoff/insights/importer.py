@@ -253,8 +253,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
             predictions, server_domain, automatic, product_store
         ):
             if to_delete:
+                to_delete_ids = [insight.id for insight in to_delete]
+                logger.info(f"Deleting insight IDs: {to_delete_ids}")
                 ProductInsight.delete().where(
-                    ProductInsight.id.in_([insight.id for insight in to_delete])
+                    ProductInsight.id.in_(to_delete_ids)
                 ).execute()
             if to_create:
                 inserts += batch_insert(
