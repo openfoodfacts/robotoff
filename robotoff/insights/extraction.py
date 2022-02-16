@@ -268,14 +268,12 @@ def extract_nutriscore_label(
     )
 
 
-def predict_objects(
-    barcode: str, image_url: str, server_domain: str
-) -> Dict[str, ObjectDetectionRawResult]:
-    image = get_image_from_url(image_url, error_raise=True, session=http_session)
+def predict_objects(image_url: str) -> Dict[str, ObjectDetectionRawResult]:
+    image = get_image_from_url(image_url, error_raise=False, session=http_session)
     results: Dict[str, ObjectDetectionRawResult] = {}
 
     if image is None:
-        logger.warning("Invalid image: {}".format(image_url))
+        logger.warning(f"Invalid image: {image_url}")
         return results
 
     image.load()
