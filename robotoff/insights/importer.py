@@ -358,6 +358,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
         """
+        if not candidates:
+            # No candidates, nothing to do
+            return [], []
+
         to_create: List[ProductInsight] = []
         to_keep_ids = set()
         for candidate in candidates:

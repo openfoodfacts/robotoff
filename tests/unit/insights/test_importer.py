@@ -271,6 +271,31 @@ class InsightImporterWithIsConflictingInsight(InsightImporter):
 
 
 class TestInsightImporter:
+    def test_get_insight_update_no_candidate(self):
+        candidates = []
+        references = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
+            ),
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag2",
+                id=uuid.UUID("f3fca6c5-15be-4bd7-bd72-90c7abd2ed4c"),
+            ),
+        ]
+        (
+            to_create,
+            to_delete,
+        ) = InsightImporterWithIsConflictingInsight.get_insight_update(
+            candidates, references
+        )
+        assert to_create == candidates
+        assert to_delete == []
+
     def test_get_insight_update_no_reference(self):
         candidates = [
             ProductInsight(
