@@ -17,21 +17,29 @@ from robotoff.logos import (
     import_logo_insights,
     save_nearest_neighbors,
 )
-from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, with_db
 from robotoff.off import get_server_type
 from robotoff.prediction.types import PredictionType
 from robotoff.products import Product, get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger
-from robotoff.workers.client import send_ipc_event
 
 logger = get_logger(__name__)
 
 
-def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
+def run_import_image_job(
+    barcode: str, image_url: str, ocr_url: str, server_domain: str
+):
     logger.info(
         f"Running `import_image` for product {barcode} ({server_domain}), image {image_url}"
     )
+    import_image(barcode, image_url, ocr_url, server_domain)
+    # Launch object detection in a new SQL transaction
+    run_object_detection(barcode, image_url, server_domain)
+
+
+@with_db
+def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
     product_store = get_product_store()
     product = product_store[barcode]
     image = save_image(barcode, image_url, product, server_domain)
@@ -39,7 +47,6 @@ def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str)
     if image is not None:
         logger.info(f"New image {image.id} created in DB")
 
-    launch_object_detection_job(barcode, image_url, server_domain)
     predictions_all = get_predictions_from_image(barcode, image_url, ocr_url)
 
     for prediction_type, product_predictions in predictions_all.items():
@@ -116,17 +123,17 @@ def save_image(
     )
 
 
-def launch_object_detection_job(barcode: str, image_url: str, server_domain: str):
-    logger.info(f"Scheduling object detection job on image {image_url}")
-    send_ipc_event(
-        "object_detection",
-        {"barcode": barcode, "image_url": image_url, "server_domain": server_domain},
-    )
-
-
+@with_db
 def run_object_detection(barcode: str, image_url: str, server_domain: str):
+    """Detect logos using the universal logo detector model and generate
+    logo-related insights.
+
+    :param barcode: Product barcode
+    :param image_url: URL of the image to use
+    :param server_domain: The server domain associated with the image
+    """
     logger.info(
-        f"Running `object_detection` for product {barcode} ({server_domain}), "
+        f"Running object detection for product {barcode} ({server_domain}), "
         f"image {image_url}"
     )
     source_image = get_source_from_image_url(image_url)

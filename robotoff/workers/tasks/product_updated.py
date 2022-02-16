@@ -8,6 +8,7 @@ from robotoff.elasticsearch.category.predict import (
 )
 from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import import_insights, refresh_insights
+from robotoff.models import with_db
 from robotoff.off import ServerType, get_server_type
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.prediction.types import PredictionType, ProductPredictions
@@ -19,6 +20,7 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
+@with_db
 def update_insights(barcode: str, server_domain: str):
     # Sleep 10s to let the OFF update request that triggered the webhook call
     # to finish

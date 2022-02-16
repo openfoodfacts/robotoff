@@ -1,5 +1,6 @@
 # This package describes the Postgres tables Robotoff is writing to.
 import datetime
+import functools
 import uuid
 from typing import Dict, Iterable
 
@@ -17,6 +18,20 @@ db = PostgresqlExtDatabase(
     host=settings.POSTGRES_HOST,
     port=5432,
 )
+
+
+def with_db(fn):
+    """Run function inside a SQL transaction."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        with db:
+            # use atomic to avoid falling in a bad state
+            # (error in the main transaction)
+            with db.atomic():
+                return fn(*args, **kwargs)
+
+    return wrapper
 
 
 def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
