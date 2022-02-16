@@ -19,7 +19,7 @@ from robotoff.insights.annotate import (
 )
 from robotoff.insights.importer import import_insights
 from robotoff.metrics import ensure_influx_database, save_facet_metrics
-from robotoff.models import ProductInsight, db
+from robotoff.models import ProductInsight, with_db
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
     Product,
@@ -35,20 +35,6 @@ from .latent import generate_quality_facets
 settings.init_sentry()
 
 logger = get_logger(__name__)
-
-
-def with_db(fn):
-    """Decorator for tasks using database"""
-
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        with db:
-            # use atomic to avoid falling in a bad state
-            # (error in the main transaction)
-            with db.atomic():
-                return fn(*args, **kwargs)
-
-    return wrapper
 
 
 @with_db

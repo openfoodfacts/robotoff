@@ -2,11 +2,11 @@ import logging
 import multiprocessing
 from typing import Callable, Dict
 
-from robotoff.models import Prediction, ProductInsight, db
+from robotoff.models import Prediction, ProductInsight, db, with_db
 from robotoff.products import fetch_dataset, has_dataset_changed
 from robotoff.utils import configure_root_logger, get_logger
 
-from .import_image import import_image, run_object_detection
+from .import_image import run_import_image_job
 from .product_updated import update_insights
 from .update_recycle import update_recycling
 
@@ -32,11 +32,13 @@ def run_task(event_type: str, event_kwargs: Dict) -> None:
         logger.error(e, exc_info=1)
 
 
+@with_db
 def download_product_dataset():
     if has_dataset_changed():
         fetch_dataset()
 
 
+@with_db
 def delete_product_insights(barcode: str, server_domain: str):
     logger.info(f"Product {barcode} deleted, deleting associated insights...")
     deleted_predictions = (
@@ -72,7 +74,7 @@ EVENT_MAPPING: Dict[str, Callable] = {
     #  3. Triggers the 'object_detection' task, which is described below.
     #  4. Stores the imported image metadata in the Robotoff DB.
     #
-    "import_image": import_image,
+    "import_image": run_import_image_job,
     # 'download_dataset' is triggered via /api/v1/products/dataset and causes Robotoff to re-import the Product Opener product dump.
     #
     "download_dataset": download_product_dataset,
@@ -87,10 +89,6 @@ EVENT_MAPPING: Dict[str, Callable] = {
     # 2. Regenerate all insights from the product associated predictions.
     #
     "product_updated": update_insights,
-    # 'object_detection' consists of logo detection: extracting logos from product images and generating logo-related insights.
-    # This task is triggered by the 'import_image' task above.
-    #
-    "object_detection": run_object_detection,
     # 'update_recycling' auto-selects the recycling photos for a given product.
     # NOTE: currently this task is not being triggered from anywhere.
     #
