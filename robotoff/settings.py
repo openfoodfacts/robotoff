@@ -1,10 +1,12 @@
 import datetime
+import logging
 import os
 from pathlib import Path
-from typing import Dict, Sequence, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import sentry_sdk
 from sentry_sdk.integrations import Integration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 _robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
@@ -180,8 +182,15 @@ def slack_token() -> str:
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
 
-def init_sentry(integrations: Sequence[Integration] = ()):
+def init_sentry(integrations: Optional[List[Integration]] = None):
     if _sentry_dsn:
+        integrations = integrations or []
+        integrations.append(
+            LoggingIntegration(
+                level=logging.INFO,  # Capture info and above as breadcrumbs
+                event_level=logging.WARNING,  # Send warning and errors as events
+            )
+        )
         sentry_sdk.init(
             _sentry_dsn,
             environment=_robotoff_instance,
