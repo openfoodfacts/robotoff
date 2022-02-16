@@ -688,7 +688,7 @@ class BrandInsightImporter(InsightImporter):
         brand_prefix: Set[Tuple[str, str]] = BRAND_PREFIX_STORE.get()
 
         if not in_barcode_range(brand_prefix, tag, barcode):
-            logger.warning(f"Barcode {barcode} of brand {tag} not in barcode range")
+            logger.info(f"Barcode {barcode} of brand {tag} not in barcode range")
             return False
 
         return True
