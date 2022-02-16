@@ -16,7 +16,7 @@ logger = get_logger()
 def run():
     pool: Pool = Pool(settings.WORKER_COUNT, maxtasksperchild=30)
 
-    logger.info("Starting listener server on {}:{}" "".format(*settings.IPC_ADDRESS))
+    logger.info("Starting listener server on {}:{}".format(*settings.IPC_ADDRESS))
     logger.info("Starting listener server")
 
     with Listener(
@@ -29,7 +29,7 @@ def run():
                 with listener.accept() as conn:
                     event = conn.recv()
                     event_type: str = event["type"]
-                    logger.info("New '{}' event received".format(event_type))
+                    logger.info(f"New '{event_type}' event received")
                     event_kwargs: Dict = event.get("meta", {})
 
                     logger.info("Sending task to pool...")

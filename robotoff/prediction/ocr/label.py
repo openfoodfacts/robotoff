@@ -203,7 +203,7 @@ def get_logo_annotation_labels() -> Dict[str, str]:
         if "||" in item:
             logo_description, label_tag = item.split("||")
         else:
-            logger.warn("'||' separator expected!")
+            logger.warning("'||' separator expected!")
             continue
 
         labels[logo_description] = label_tag

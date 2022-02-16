@@ -335,7 +335,7 @@ def add_logo_to_ann(sleep_time: float = 0.5) -> None:
             try:
                 added = add_logos_to_ann(image, logos)
             except requests.exceptions.ReadTimeout:
-                logger.warn("Request timed-out during logo addition")
+                logger.warning("Request timed-out during logo addition")
                 continue
 
             logger.info(f"Added: {added}")

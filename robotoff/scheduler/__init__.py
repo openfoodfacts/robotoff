@@ -91,7 +91,9 @@ def refresh_insights(with_deletion: bool = False):
     )
 
     if dataset_datetime.date() != datetime_threshold.date():
-        logger.warn("Dataset version is not up to date, aborting insight removal job")
+        logger.warning(
+            "Dataset version is not up to date, aborting insight removal job"
+        )
         return
 
     for insight in (

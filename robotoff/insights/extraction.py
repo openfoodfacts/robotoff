@@ -244,7 +244,7 @@ def extract_nutriscore_label(
         return None
 
     if len(results) > 1:
-        logger.warn("more than one nutriscore detected, discarding detections")
+        logger.warning("more than one nutriscore detected, discarding detections")
         return None
 
     result = results[0]

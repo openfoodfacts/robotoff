@@ -388,7 +388,7 @@ def update_product(
     status = json.get("status_verbose")
 
     if status != "fields saved":
-        logger.warn("Unexpected status during product update: {}".format(status))
+        logger.warning(f"Unexpected status during product update: {status}")
 
 
 def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:

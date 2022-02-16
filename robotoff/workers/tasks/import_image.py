@@ -29,9 +29,7 @@ logger = get_logger(__name__)
 
 
 def import_image(barcode: str, image_url: str, ocr_url: str, server_domain: str):
-    logger.info(
-        "Detect insights for product {}, " "image {}".format(barcode, image_url)
-    )
+    logger.info(f"Detect insights for product {barcode} image {image_url}")
     product_store = get_product_store()
     product = product_store[barcode]
     save_image(barcode, image_url, product, server_domain)

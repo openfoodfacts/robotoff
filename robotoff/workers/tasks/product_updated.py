@@ -26,7 +26,7 @@ def update_insights(barcode: str, server_domain: str):
     product_dict = get_product(barcode)
 
     if product_dict is None:
-        logger.warn("Updated product does not exist: {}".format(barcode))
+        logger.warning(f"Updated product does not exist: {barcode}")
         return
 
     updated = updated_product_predict_insights(barcode, product_dict, server_domain)
@@ -87,7 +87,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     )
 
     if imported:
-        logger.info("Category insight imported for product {}".format(barcode))
+        logger.info(f"Category insight imported for product {barcode}")
 
     return bool(imported)
 
