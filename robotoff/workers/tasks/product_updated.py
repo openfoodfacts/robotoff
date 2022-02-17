@@ -73,7 +73,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     if category_predictions is not None:
         product_predictions.append(
             ProductPredictions(
-                barcode=product["code"],
+                barcode=barcode,
                 type=PredictionType.category,
                 predictions=[
                     category_prediction.to_prediction()
