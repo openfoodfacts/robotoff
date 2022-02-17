@@ -15,13 +15,8 @@ from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.insights.importer import import_insights as import_insights_
 from robotoff.insights.importer import is_recent_image, is_selected_image
 from robotoff.models import ProductInsight, db
-from robotoff.off import get_product
-from robotoff.prediction.ocr import (
-    OCRResult,
-    extract_predictions,
-    get_barcode_from_path,
-    ocr_iter,
-)
+from robotoff.off import get_barcode_from_path, get_product
+from robotoff.prediction.ocr import OCRResult, extract_predictions, ocr_iter
 from robotoff.prediction.types import PredictionType, ProductPredictions
 from robotoff.products import get_product_store
 from robotoff.utils import get_logger, jsonl_iter

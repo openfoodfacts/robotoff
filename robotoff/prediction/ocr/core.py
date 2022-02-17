@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
 
-from robotoff.off import generate_json_ocr_url, split_barcode
+from robotoff.off import generate_json_ocr_url, get_barcode_from_path, split_barcode
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
@@ -25,18 +25,6 @@ from .store import find_stores
 from .trace import find_traces
 
 logger = get_logger(__name__)
-
-
-def get_barcode_from_path(path: str) -> Optional[str]:
-    barcode = ""
-
-    for parent in pathlib.Path(path).parents:
-        if parent.name.isdigit():
-            barcode = parent.name + barcode
-        else:
-            break
-
-    return barcode or None
 
 
 def fetch_images_for_ean(ean: str):
