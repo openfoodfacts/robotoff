@@ -1,13 +1,11 @@
-import pathlib
 from typing import Dict, Iterable, List, Optional
-from urllib.parse import urlparse
 
 from PIL import Image
 
+from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.core import get_ocr_result
-from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.utils import get_logger, http_session
 
@@ -92,27 +90,6 @@ def get_predictions_from_image(
     return results
 
 
-def get_source_from_image_url(image_url: str) -> str:
-    image_url_path = urlparse(image_url).path
-
-    if image_url_path.startswith("/images/products"):
-        image_url_path = image_url_path[len("/images/products") :]
-
-    return image_url_path
-
-
-def get_source_from_ocr_url(ocr_url: str) -> str:
-    url_path = urlparse(ocr_url).path
-
-    if url_path.startswith("/images/products"):
-        url_path = url_path[len("/images/products") :]
-
-    if url_path.endswith(".json"):
-        url_path = str(pathlib.Path(url_path).with_suffix(".jpg"))
-
-    return url_path
-
-
 def extract_image_ml_predictions(
     barcode: str, image: Image.Image, source_image: str, extract_nutriscore: bool = True
 ) -> Dict[PredictionType, ProductPredictions]:
@@ -145,7 +122,7 @@ def extract_ocr_predictions(
     barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
 ) -> Dict[PredictionType, ProductPredictions]:
     results: Dict[PredictionType, ProductPredictions] = {}
-    source_image = get_source_from_ocr_url(ocr_url)
+    source_image = get_source_from_url(ocr_url)
     ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
 
     if ocr_result is None:
