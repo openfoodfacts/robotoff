@@ -6,14 +6,11 @@ import requests
 from PIL import Image
 
 from robotoff.prediction import ocr
-from robotoff.prediction.object_detection import (
-    ObjectDetectionModelRegistry,
-    ObjectDetectionRawResult,
-)
+from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.core import get_barcode_from_path
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
 
@@ -62,7 +59,7 @@ def get_predictions_from_product_name(
 
 
 def get_predictions_from_image(
-    barcode: str, image_url: str, ocr_url: str
+    barcode: str, image: Image.Image, source_image: str, ocr_url: str
 ) -> Dict[PredictionType, ProductPredictions]:
     logger.info(f"Generating OCR predictions from OCR {ocr_url}")
     try:
@@ -78,7 +75,7 @@ def get_predictions_from_image(
         ocr_predictions.get(PredictionType.label, None)
     )
     image_ml_predictions = extract_image_ml_predictions(
-        image_url, extract_nutriscore=extract_nutriscore
+        barcode, image, source_image, extract_nutriscore=extract_nutriscore
     )
 
     prediction_types = set(ocr_predictions.keys()).union(image_ml_predictions.keys())
@@ -137,16 +134,11 @@ def get_barcode_from_url(ocr_url: str) -> Optional[str]:
 
 
 def extract_image_ml_predictions(
-    image_url: str, extract_nutriscore: bool = True
+    barcode: str, image: Image.Image, source_image: str, extract_nutriscore: bool = True
 ) -> Dict[PredictionType, ProductPredictions]:
-    barcode = get_barcode_from_url(image_url)
-    if barcode is None:
-        raise ValueError("cannot extract barcode from URL: {}".format(barcode))
-
     results: Dict[PredictionType, ProductPredictions] = {}
 
     if extract_nutriscore:
-        image = get_image_from_url(image_url, error_raise=True, session=http_session)
         # Currently all of the automatic processing for the Nutri-Score grades has been
         # disabled due to a prediction quality issue.
         # Last automatic processing threshold was set to 0.9 - resulting in ~70% incorrect
@@ -159,7 +151,6 @@ def extract_image_ml_predictions(
         if not nutriscore_prediction:
             return results
 
-        source_image = get_source_from_image_url(image_url)
         results[PredictionType.label] = ProductPredictions(
             predictions=[nutriscore_prediction],
             barcode=barcode,
@@ -253,20 +244,3 @@ def extract_nutriscore_label(
             "notify": True,
         },
     )
-
-
-def predict_objects(image_url: str) -> Dict[str, ObjectDetectionRawResult]:
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
-    results: Dict[str, ObjectDetectionRawResult] = {}
-
-    if image is None:
-        logger.warning(f"Invalid image: {image_url}")
-        return results
-
-    image.load()
-
-    for model_name in ("universal-logo-detector",):
-        model = ObjectDetectionModelRegistry.get(model_name)
-        results[model_name] = model.detect_from_image(image, output_image=False)
-
-    return results
