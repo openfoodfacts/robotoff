@@ -2,11 +2,11 @@ import pathlib
 from typing import Dict, Iterable, List, Optional
 from urllib.parse import urlparse
 
-import requests
 from PIL import Image
 
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
+from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.utils import get_logger, http_session
@@ -61,15 +61,9 @@ def get_predictions_from_image(
     barcode: str, image: Image.Image, source_image: str, ocr_url: str
 ) -> Dict[PredictionType, ProductPredictions]:
     logger.info(f"Generating OCR predictions from OCR {ocr_url}")
-    try:
-        ocr_predictions = extract_ocr_predictions(ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
-    except requests.exceptions.RequestException as e:
-        logger.info("error during OCR JSON download", exc_info=e)
-        return {}
-    except OCRParsingException as e:
-        logger.error("OCR JSON Parsing error", exc_info=e)
-        return {}
-
+    ocr_predictions = extract_ocr_predictions(
+        barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+    )
     extract_nutriscore = has_nutriscore_prediction(
         ocr_predictions.get(PredictionType.label, None)
     )
@@ -158,14 +152,12 @@ def extract_image_ml_predictions(
 def extract_ocr_predictions(
     barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
 ) -> Dict[PredictionType, ProductPredictions]:
+    results: Dict[PredictionType, ProductPredictions] = {}
     source_image = get_source_from_ocr_url(ocr_url)
-    ocr_result = get_ocr_result(ocr_url)
+    ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
 
     if ocr_result is None:
-        logger.info("Error during OCR extraction: {}".format(ocr_url))
-        return {}
-
-    results = {}
+        return results
 
     for prediction_type in prediction_types:
         predictions = ocr.extract_predictions(ocr_result, prediction_type)
@@ -179,14 +171,6 @@ def extract_ocr_predictions(
             )
 
     return results
-
-
-def get_ocr_result(ocr_url: str) -> Optional[ocr.OCRResult]:
-    r = http_session.get(ocr_url)
-    r.raise_for_status()
-
-    ocr_data: Dict = r.json()
-    return ocr.OCRResult.from_json(ocr_data)
 
 
 NUTRISCORE_LABELS: Dict[str, str] = {

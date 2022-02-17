@@ -1,7 +1,9 @@
+import json
 import pathlib
 from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
+import requests
 
 from robotoff.off import generate_json_ocr_url, get_barcode_from_path, split_barcode
 from robotoff.prediction.types import Prediction, PredictionType
@@ -10,7 +12,7 @@ from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
 from .brand import find_brands
-from .dataclass import OCRResult
+from .dataclass import OCRParsingException, OCRResult, OCRResultGenerationException
 from .expiration_date import find_expiration_date
 from .image_flag import flag_image
 from .image_lang import get_image_lang
@@ -41,6 +43,39 @@ def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
         return None
 
     return r.json()
+
+
+def get_ocr_result(
+    ocr_url: str, session: requests.Session, error_raise: bool = True
+) -> Optional[OCRResult]:
+    try:
+        r = session.get(ocr_url)
+    except requests.exceptions.RequestException as e:
+        error_message = f"HTTP Error when fetching OCR URL {ocr_url}"
+        if error_raise:
+            raise OCRResultGenerationException(error_message) from e
+
+        logger.warning(error_message, exc_info=e)
+        return None
+
+    try:
+        ocr_data: Dict = r.json()
+    except json.JSONDecodeError as e:
+        error_message = f"Error while decoding OCR JSON from {ocr_url}"
+        if error_raise:
+            raise OCRResultGenerationException(error_message) from e
+
+        logger.warning(error_message, exc_info=e)
+        return None
+
+    try:
+        return OCRResult.from_json(ocr_data)
+    except OCRParsingException as e:
+        if error_raise:
+            raise OCRResultGenerationException(str(e)) from e
+
+        logger.warning(f"Error while parsing OCR JSON from {ocr_url}", exc_info=e)
+        return None
 
 
 def extract_predictions(
