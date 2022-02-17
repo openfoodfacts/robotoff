@@ -37,6 +37,7 @@ from robotoff.models import (
 from robotoff.off import (
     OFFAuthentication,
     generate_image_path,
+    get_barcode_from_url,
     get_product,
     get_server_type,
 )
@@ -319,9 +320,14 @@ class NutrientPredictorResource:
         if not ocr_url.endswith(".json"):
             raise falcon.HTTPBadRequest("a JSON file is expected")
 
+        barcode = get_barcode_from_url(ocr_url)
+
+        if barcode is None:
+            raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
+
         try:
             product_predictions = extract_ocr_predictions(
-                ocr_url, [PredictionType.nutrient]
+                barcode, ocr_url, [PredictionType.nutrient]
             )
 
         except requests.exceptions.RequestException:
@@ -351,9 +357,14 @@ class NutrientPredictorResource:
 class OCRInsightsPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
+        barcode = get_barcode_from_url(ocr_url)
+        if barcode is None:
+            raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
 
         try:
-            insights = extract_ocr_predictions(ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
+            insights = extract_ocr_predictions(
+                barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+            )
 
         except requests.exceptions.RequestException:
             resp.media = {

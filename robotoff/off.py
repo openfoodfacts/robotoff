@@ -2,7 +2,9 @@
 """
 import enum
 import re
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
+from urllib.parse import urlparse
 
 from robotoff import settings
 from robotoff.utils import get_logger, http_session
@@ -70,6 +72,23 @@ API_URLS: Dict[ServerType, str] = {
 
 
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
+
+
+def get_barcode_from_url(url: str) -> Optional[str]:
+    url_path = urlparse(url).path
+    return get_barcode_from_path(url_path)
+
+
+def get_barcode_from_path(path: str) -> Optional[str]:
+    barcode = ""
+
+    for parent in Path(path).parents:
+        if parent.name.isdigit():
+            barcode = parent.name + barcode
+        else:
+            break
+
+    return barcode or None
 
 
 def get_product_update_url(server: Union[ServerType, str]) -> str:

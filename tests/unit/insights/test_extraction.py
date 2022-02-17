@@ -6,7 +6,6 @@ from PIL import Image
 
 from robotoff.insights.extraction import (
     extract_nutriscore_label,
-    get_barcode_from_url,
     get_source_from_ocr_url,
 )
 from robotoff.prediction.object_detection.core import (
@@ -14,19 +13,6 @@ from robotoff.prediction.object_detection.core import (
     RemoteModel,
 )
 from robotoff.prediction.types import Prediction, PredictionType
-
-
-@pytest.mark.parametrize(
-    "url,output",
-    [
-        ("/541/012/672/6954/1.jpg", "5410126726954"),
-        ("/541/012/672/6954/1.json", "5410126726954"),
-        ("/invalid/1.json", None),
-        ("/252/535.bk/1.jpg", None),
-    ],
-)
-def test_get_barcode_from_url(url: str, output: Optional[str]):
-    assert get_barcode_from_url(url) == output
 
 
 @pytest.mark.parametrize(

@@ -24,11 +24,16 @@ def predict_insight(ocr_url: str) -> None:
         DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
+    from robotoff.off import get_barcode_from_url
     from robotoff.utils import get_logger
 
     get_logger()
 
-    results = extract_ocr_predictions(ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
+    barcode = get_barcode_from_url(ocr_url)
+    if barcode is None:
+        raise ValueError(f"invalid OCR URL: {ocr_url}")
+
+    results = extract_ocr_predictions(barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
 
     print(json.dumps(results, indent=4))
 

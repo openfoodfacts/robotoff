@@ -7,7 +7,6 @@ from PIL import Image
 
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
-from robotoff.prediction.ocr.core import get_barcode_from_path
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
 from robotoff.utils import get_logger, http_session
@@ -128,11 +127,6 @@ def get_source_from_ocr_url(ocr_url: str) -> str:
     return url_path
 
 
-def get_barcode_from_url(ocr_url: str) -> Optional[str]:
-    url_path = urlparse(ocr_url).path
-    return get_barcode_from_path(url_path)
-
-
 def extract_image_ml_predictions(
     barcode: str, image: Image.Image, source_image: str, extract_nutriscore: bool = True
 ) -> Dict[PredictionType, ProductPredictions]:
@@ -162,14 +156,9 @@ def extract_image_ml_predictions(
 
 
 def extract_ocr_predictions(
-    ocr_url: str, prediction_types: Iterable[PredictionType]
+    barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
 ) -> Dict[PredictionType, ProductPredictions]:
     source_image = get_source_from_ocr_url(ocr_url)
-    barcode = get_barcode_from_url(ocr_url)
-
-    if barcode is None:
-        raise ValueError("cannot extract barcode fro URL: {}".format(ocr_url))
-
     ocr_result = get_ocr_result(ocr_url)
 
     if ocr_result is None:
