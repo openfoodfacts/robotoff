@@ -7,6 +7,7 @@ from io import BytesIO
 from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 import orjson
+import PIL
 import requests
 from PIL import Image
 
@@ -46,6 +47,9 @@ def configure_root_logger(logger, level: int = 20):
     handler.setFormatter(formatter)
     handler.setLevel(level)
     logger.addHandler(handler)
+
+
+logger = get_logger(__name__)
 
 
 def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
@@ -112,23 +116,54 @@ def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):
             f.write(item + "\n")
 
 
+class ImageLoadingException(Exception):
+    """Exception raised by `get_image_from_url`` when image cannot be fetched
+    from URL or if loading failed.
+    """
+
+    pass
+
+
 def get_image_from_url(
     image_url: str,
-    error_raise: bool = False,
+    error_raise: bool = True,
     session: Optional[requests.Session] = None,
 ) -> Optional[Image.Image]:
+    """Fetch an image from `image_url` and load it.
+
+    :param image_url: URL of the image to load
+    :param error_raise: if True, raises a `ImageLoadingException` if an error
+    occured, defaults to False. If False, None is returned if an error occurs.
+    :param session: requests Session to use, by default no session is used.
+    :raises ImageLoadingException: _description_
+    :return: the Pillow Image or None.
+    """
     if session:
         r = session.get(image_url)
     else:
         r = requests.get(image_url)
 
-    if error_raise:
-        r.raise_for_status()
-
-    if r.status_code != 200:
+    if not r.ok:
+        error_message = f"Cannot load image {image_url}: HTTP {r.status_code}"
+        if error_raise:
+            raise ImageLoadingException(error_message)
+        logger.warning(error_message)
         return None
 
-    return Image.open(BytesIO(r.content))
+    try:
+        return Image.open(BytesIO(r.content))
+    except PIL.UnidentifiedImageError:
+        error_message = f"Cannot identify image {image_url}"
+        if error_raise:
+            raise ImageLoadingException(error_message)
+        logger.warning(error_message)
+    except PIL.Image.DecompressionBombError:
+        error_message = f"Decompression bomb error for image {image_url}"
+        if error_raise:
+            raise ImageLoadingException(error_message)
+        logger.warning(error_message)
+
+    return None
 
 
 http_session = requests.Session()
