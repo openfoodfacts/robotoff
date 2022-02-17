@@ -74,6 +74,18 @@ API_URLS: Dict[ServerType, str] = {
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 
+def get_source_from_url(ocr_url: str) -> str:
+    url_path = urlparse(ocr_url).path
+
+    if url_path.startswith("/images/products"):
+        url_path = url_path[len("/images/products") :]
+
+    if url_path.endswith(".json"):
+        url_path = str(Path(url_path).with_suffix(".jpg"))
+
+    return url_path
+
+
 def get_barcode_from_url(url: str) -> Optional[str]:
     url_path = urlparse(url).path
     return get_barcode_from_path(url_path)

@@ -6,10 +6,7 @@ import requests
 from PIL import Image
 
 from robotoff import settings
-from robotoff.insights.extraction import (
-    get_predictions_from_image,
-    get_source_from_image_url,
-)
+from robotoff.insights.extraction import get_predictions_from_image
 from robotoff.insights.importer import import_insights
 from robotoff.logos import (
     LOGO_CONFIDENCE_THRESHOLDS,
@@ -18,7 +15,7 @@ from robotoff.logos import (
     save_nearest_neighbors,
 )
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, with_db
-from robotoff.off import get_server_type
+from robotoff.off import get_server_type, get_source_from_url
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.types import PredictionType
 from robotoff.products import Product, get_product_store
@@ -39,7 +36,7 @@ def run_import_image_job(
     if image is None:
         return
 
-    source_image = get_source_from_image_url(image_url)
+    source_image = get_source_from_url(image_url)
     import_image(barcode, image, source_image, ocr_url, server_domain)
     # Launch object detection in a new SQL transaction
     run_object_detection(barcode, image, source_image, server_domain)

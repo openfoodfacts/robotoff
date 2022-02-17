@@ -1,35 +1,13 @@
-from typing import Optional
-
 import numpy as np
 import pytest
 from PIL import Image
 
-from robotoff.insights.extraction import (
-    extract_nutriscore_label,
-    get_source_from_ocr_url,
-)
+from robotoff.insights.extraction import extract_nutriscore_label
 from robotoff.prediction.object_detection.core import (
     ObjectDetectionRawResult,
     RemoteModel,
 )
 from robotoff.prediction.types import Prediction, PredictionType
-
-
-@pytest.mark.parametrize(
-    "url,output",
-    [
-        (
-            "https://static.openfoodfacts.org/images/products/359/671/046/5248/3.jpg",
-            "/359/671/046/5248/3.jpg",
-        ),
-        (
-            "https://static.openfoodfacts.org/images/products/2520549/1.jpg",
-            "/2520549/1.jpg",
-        ),
-    ],
-)
-def test_get_source_from_ocr_url(url: str, output: str):
-    assert get_source_from_ocr_url(url) == output
 
 
 class FakeNutriscoreModel(RemoteModel):
