@@ -72,6 +72,10 @@ class OrientationResult:
         }
 
 
+class OCRResultGenerationException(Exception):
+    pass
+
+
 class OCRResult:
     __slots__ = (
         "text_annotations",
