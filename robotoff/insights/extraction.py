@@ -64,8 +64,11 @@ def get_predictions_from_image(
     ocr_predictions = extract_ocr_predictions(
         barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
     )
-    extract_nutriscore = has_nutriscore_prediction(
-        ocr_predictions.get(PredictionType.label, None)
+    extract_nutriscore = any(
+        prediction.value_tag == "en:nutriscore"
+        for prediction in getattr(
+            ocr_predictions.get(PredictionType.label), "predictions", []
+        )
     )
     image_ml_predictions = extract_image_ml_predictions(
         barcode, image, source_image, extract_nutriscore=extract_nutriscore
@@ -87,17 +90,6 @@ def get_predictions_from_image(
         results[prediction_type] = ProductPredictions.merge(product_predictions)
 
     return results
-
-
-def has_nutriscore_prediction(label_predictions: Optional[ProductPredictions]) -> bool:
-    if label_predictions is None:
-        return False
-
-    for prediction in label_predictions.predictions:
-        if prediction.value_tag == "en:nutriscore":
-            return True
-
-    return False
 
 
 def get_source_from_image_url(image_url: str) -> str:
