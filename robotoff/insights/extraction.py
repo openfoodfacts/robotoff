@@ -27,17 +27,6 @@ DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
     PredictionType.brand,
     PredictionType.store,
     PredictionType.packaging,
-]
-
-IMAGE_IMPORT_PREDICTION_TYPES: List[PredictionType] = [
-    PredictionType.label,
-    PredictionType.packager_code,
-    PredictionType.product_weight,
-    PredictionType.image_flag,
-    PredictionType.expiration_date,
-    PredictionType.brand,
-    PredictionType.store,
-    PredictionType.packaging,
     PredictionType.nutrient,
     PredictionType.nutrient_mention,
     PredictionType.image_lang,
@@ -77,9 +66,7 @@ def get_predictions_from_image(
 ) -> Dict[PredictionType, ProductPredictions]:
     logger.info(f"Generating OCR predictions from OCR {ocr_url}")
     try:
-        ocr_predictions = extract_ocr_predictions(
-            ocr_url, IMAGE_IMPORT_PREDICTION_TYPES
-        )
+        ocr_predictions = extract_ocr_predictions(ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
     except requests.exceptions.RequestException as e:
         logger.info("error during OCR JSON download", exc_info=e)
         return {}
