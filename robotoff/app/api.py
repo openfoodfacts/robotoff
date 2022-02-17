@@ -450,10 +450,10 @@ class ImageCropResource:
         x_min = req.get_param_as_float("x_min", required=True)
         y_max = req.get_param_as_float("y_max", required=True)
         x_max = req.get_param_as_float("x_max", required=True)
-        image = get_image_from_url(image_url)
+        image = get_image_from_url(image_url, session=http_session, error_raise=False)
 
         if image is None:
-            raise falcon.HTTPBadRequest("invalid image")
+            raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
 
         (left, right, top, bottom) = (
             x_min * image.width,
@@ -564,11 +564,10 @@ class ImagePredictorResource:
                 "when `output_image` is True",
             )
 
-        image = get_image_from_url(image_url, session=http_session)
+        image = get_image_from_url(image_url, session=http_session, error_raise=False)
 
         if image is None:
-            logger.info("Could not fetch image: {}".format(image_url))
-            return
+            raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
 
         predictions = {}
 
