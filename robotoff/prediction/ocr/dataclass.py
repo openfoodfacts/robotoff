@@ -194,24 +194,22 @@ class OCRResult:
 
     @classmethod
     def from_json(cls, data: JSONType, **kwargs) -> Optional["OCRResult"]:
-        responses = data.get("responses", [])
+        if "responses" not in data or not isinstance(data["responses"], list):
+            raise OCRParsingException("Responses field (list) expected in OCR JSON")
+
+        responses = data["responses"]
 
         if not responses:
-            return None
+            raise OCRParsingException(f"Empty OCR response")
 
-        try:
-            response = responses[0]
-        except IndexError:
-            return None
-
+        response = responses[0]
         if "error" in response:
-            logger.info("error in OCR response: " "{}".format(response["error"]))
-            return None
+            raise OCRParsingException(f"Error in OCR response: {response['error']}")
 
         try:
             return OCRResult(response, **kwargs)
         except Exception as e:
-            raise OCRParsingException("error during OCR parsing") from e
+            raise OCRParsingException("Error during OCR parsing") from e
 
     def get_languages(self) -> Optional[Dict[str, int]]:
         if self.full_text_annotation is not None:
