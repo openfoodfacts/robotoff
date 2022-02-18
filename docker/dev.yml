@@ -18,6 +18,8 @@ x-robotoff-dev: &robotoff-dev
       # make tests available
       - ./tests:/opt/robotoff/tests
       - ./.cov:/opt/robotoff/.cov
+      # make data available
+      - ./data:/opt/robotoff/data
       # make doc generation available
       - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
       - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh

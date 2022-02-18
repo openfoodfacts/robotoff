@@ -285,7 +285,7 @@ def test_annotate_insight_opposite_votes(client):
 
 # This test checks for handling of cases where we have 3 votes for one annotation,
 # but the follow-up has 2 votes.
-def test_annotate_insight_majority_vote_overriden(client):
+def test_annotate_insight_majority_vote_overridden(client):
     # Add pre-existing insight votes.
     AnnotationVote.create(
         insight_id=insight_id,

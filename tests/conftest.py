@@ -13,7 +13,7 @@ def peewee_db_create():
 
 @pytest.fixture()
 def peewee_db(peewee_db_create):
-    yield
+    yield models.db
     # issue a rollback to cope with cases of failures
     # to avoid reusing same transaction next time
     models.db.rollback()
