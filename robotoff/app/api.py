@@ -326,7 +326,7 @@ class NutrientPredictorResource:
             raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
 
         try:
-            product_predictions = extract_ocr_predictions(
+            predictions = extract_ocr_predictions(
                 barcode, ocr_url, [PredictionType.nutrient]
             )
 
@@ -345,13 +345,7 @@ class NutrientPredictorResource:
             }
             return
 
-        if not product_predictions:
-            resp.media = {
-                "nutrients": {},
-            }
-        else:
-            nutrient_predictions = product_predictions[PredictionType.nutrient]
-            resp.media = nutrient_predictions.to_dict()
+        resp.media = {"nutrients": [p.to_dict() for p in predictions]}
 
 
 class OCRInsightsPredictorResource:
@@ -395,18 +389,10 @@ class CategoryPredictorResource:
 
         product = get_product(barcode)
         if product:
-            predicted = CategoryClassifier(
+            predictions = CategoryClassifier(
                 get_taxonomy(TaxonomyType.category.name)
             ).predict(product, deepest_only)
-
-            if predicted:
-                categories = [
-                    {
-                        "category": prediction.category,
-                        "confidence": prediction.confidence,
-                    }
-                    for prediction in predicted
-                ]
+            categories = [p.to_dict() for p in predictions]
 
         resp.media = {"categories": categories}
 

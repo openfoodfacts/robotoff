@@ -65,18 +65,14 @@ def import_image(
         logger.info(f"New image {image.id} created in DB")
 
     predictions_all = get_predictions_from_image(barcode, image, source_image, ocr_url)
-
-    for prediction_type, product_predictions in predictions_all.items():
-        if prediction_type == PredictionType.image_flag:
-            NotifierFactory.get_notifier().notify_image_flag(
-                product_predictions.predictions,
-                product_predictions.source_image,  # type: ignore
-                product_predictions.barcode,
-            )
-            continue
+    NotifierFactory.get_notifier().notify_image_flag(
+        [p for p in predictions_all if p.type == PredictionType.image_flag],
+        source_image,
+        barcode,
+    )
 
     imported = import_insights(
-        predictions_all.values(),
+        predictions_all,
         server_domain,
         automatic=True,
         product_store=product_store,

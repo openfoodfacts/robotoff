@@ -6,7 +6,7 @@ from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import Product
 
 insight_id1 = "94371643-c2bc-4291-a585-af2cb1a5270a"
@@ -50,6 +50,7 @@ def _set_up_and_tear_down(peewee_db):
 
 def matcher_prediction(category):
     return Prediction(
+        barcode=barcode1,
         type=PredictionType.category,
         value_tag=category,
         data={
@@ -63,6 +64,7 @@ def matcher_prediction(category):
 
 def neural_prediction(category, confidence=0.7, auto=False):
     return Prediction(
+        barcode=barcode1,
         type=PredictionType.category,
         value_tag=category,
         data={"lang": "xx", "model": "neural", "confidence": confidence},
@@ -83,13 +85,7 @@ class TestCategoryImporter:
         if product_store is None:
             product_store = self.fake_product_store()
         imported = import_insights(
-            [
-                ProductPredictions(
-                    barcode=barcode1,
-                    type=PredictionType.category,
-                    predictions=predictions,
-                )
-            ],
+            predictions,
             server_domain=settings.OFF_SERVER_DOMAIN,
             automatic=True,
             product_store=product_store,

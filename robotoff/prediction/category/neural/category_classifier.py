@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
@@ -43,9 +43,7 @@ class CategoryClassifier:
     def __init__(self, category_taxonomy: Taxonomy):
         self.taxonomy = category_taxonomy
 
-    def predict(
-        self, product: Dict, deepest_only: bool = False
-    ) -> Optional[List[CategoryPrediction]]:
+    def predict(self, product: Dict, deepest_only: bool = False) -> List[Prediction]:
         """Returns an unordered list of category predictions for the given product.
 
         :param deepest_only: controls whether the returned list should only contain the deepmost categories
@@ -57,7 +55,7 @@ class CategoryClassifier:
 
         # model was train with product having a name
         if not product.get("product_name"):
-            return None
+            return []
         # ingredients are not mandatory, just insure correct type
         product.setdefault("ingredients_tags", [])
 
@@ -94,12 +92,12 @@ class CategoryClassifier:
         #
         # The model only returns top 50 predictions.
 
-        predictions = []
+        category_predictions = []
 
         # We only consider predictions with a confidence score of 0.5 and above.
         for idx, confidence in enumerate(prediction["output_mapper_layer"]):
             if confidence >= 0.5:
-                predictions.append(
+                category_predictions.append(
                     CategoryPrediction(
                         category=prediction["output_mapper_layer_1"][idx],
                         confidence=prediction["output_mapper_layer"][idx],
@@ -109,14 +107,15 @@ class CategoryClassifier:
                 break
 
         if deepest_only:
-            predicted_dict = {p.category: p for p in predictions}
-            taxonomy_nodes = [self.taxonomy[p.category] for p in predictions]
+            predicted_dict = {p.category: p for p in category_predictions}
+            taxonomy_nodes = [self.taxonomy[p.category] for p in category_predictions]
 
-            predictions = [
+            category_predictions = [
                 predicted_dict[x.id]
                 for x in self.taxonomy.find_deepest_nodes(taxonomy_nodes)
             ]
 
-        if len(predictions) == 0:
-            return None
-        return predictions
+        return [
+            category_prediction.to_prediction()
+            for category_prediction in category_predictions
+        ]

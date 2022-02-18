@@ -1,5 +1,5 @@
 import operator
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 import numpy as np
 
@@ -7,7 +7,7 @@ from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
@@ -248,8 +248,8 @@ def import_logo_insights(
         selected_logos.append(logo)
         logo_probs.append(probs)
 
-    product_predictions = predict_logo_predictions(selected_logos, logo_probs)
-    imported = import_insights(product_predictions, server_domain, automatic=True)
+    predictions = predict_logo_predictions(selected_logos, logo_probs)
+    imported = import_insights(predictions, server_domain, automatic=True)
 
     for logo, probs in zip(selected_logos, logo_probs):
         NotifierFactory.get_notifier().send_logo_notification(logo, probs)
@@ -260,30 +260,25 @@ def import_logo_insights(
 def generate_insights_from_annotated_logos(
     logos: List[LogoAnnotation], server_domain: str
 ):
-    product_predictions: List[ProductPredictions] = []
+    predictions = []
     for logo in logos:
         prediction = generate_prediction(
             logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
         )
 
         if prediction is None:
-            return
+            continue
 
         image = logo.image_prediction.image
 
         if prediction.automatic_processing:
             prediction.data["notify"] = True
 
-        product_predictions.append(
-            ProductPredictions(
-                predictions=[prediction],
-                type=prediction.type,
-                barcode=image.barcode,
-                source_image=image.source_image,
-            )
-        )
+        prediction.barcode = image.barcode
+        prediction.source_image = image.source_image
+        predictions.append(prediction)
 
-    imported = import_insights(product_predictions, server_domain, automatic=True)
+    imported = import_insights(predictions, server_domain, automatic=True)
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")
@@ -292,8 +287,8 @@ def generate_insights_from_annotated_logos(
 def predict_logo_predictions(
     logos: List[LogoAnnotation],
     logo_probs: List[Dict[LogoLabelType, float]],
-) -> List[ProductPredictions]:
-    grouped_predictions: Dict[Tuple[str, str, PredictionType], List[Prediction]] = {}
+) -> List[Prediction]:
+    predictions = []
 
     for logo, probs in zip(logos, logo_probs):
         if not probs:
@@ -314,28 +309,11 @@ def predict_logo_predictions(
 
         if prediction is not None:
             image = logo.image_prediction.image
-            source_image = image.source_image
-            barcode = image.barcode
-            key = (barcode, source_image, prediction.type)
-            grouped_predictions.setdefault(key, [])
-            grouped_predictions[key].append(prediction)
+            prediction.barcode = image.barcode
+            prediction.source_image = image.source_image
+            predictions.append(prediction)
 
-    product_predictions: List[ProductPredictions] = []
-
-    for (
-        (barcode, source_image, prediction_type),
-        predictions,
-    ) in grouped_predictions.items():
-        product_predictions.append(
-            ProductPredictions(
-                predictions=predictions,
-                type=prediction_type,
-                barcode=barcode,
-                source_image=source_image,
-            )
-        )
-
-    return product_predictions
+    return predictions
 
 
 def generate_prediction(
