@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pytest
 
@@ -24,7 +24,7 @@ from robotoff.insights.importer import (
     sort_predictions,
 )
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import Product
 from robotoff.taxonomy import get_taxonomy
 
@@ -875,19 +875,6 @@ class TestProductWeightImporter:
     @staticmethod
     def get_product(quantity: Optional[str] = None):
         return Product({"code": DEFAULT_BARCODE, "quantity": quantity})
-
-    @staticmethod
-    def get_product_weight_predictions(
-        predictions: List[Prediction],
-        barcode: Optional[str] = None,
-        source_image: Optional[str] = None,
-    ):
-        return ProductPredictions(
-            predictions=predictions,
-            barcode=barcode or DEFAULT_BARCODE,
-            type=PredictionType.product_weight,
-            source_image=source_image,
-        )
 
     def test_generate_candidates_product_with_weight(self):
         value = "30 g"

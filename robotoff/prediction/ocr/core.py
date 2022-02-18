@@ -1,6 +1,6 @@
 import json
 import pathlib
-from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
 import orjson
 import requests
@@ -27,6 +27,26 @@ from .store import find_stores
 from .trace import find_traces
 
 logger = get_logger(__name__)
+
+
+PREDICTION_TYPE_TO_FUNC: Dict[
+    str, Callable[[Union[OCRResult, str]], List[Prediction]]
+] = {
+    PredictionType.packager_code: find_packager_codes,
+    PredictionType.label: find_labels,
+    PredictionType.expiration_date: find_expiration_date,
+    PredictionType.image_flag: flag_image,
+    PredictionType.image_orientation: find_image_orientation,
+    PredictionType.product_weight: find_product_weight,
+    PredictionType.trace: find_traces,
+    PredictionType.nutrient: find_nutrient_values,
+    PredictionType.nutrient_mention: find_nutrient_mentions,
+    PredictionType.brand: find_brands,
+    PredictionType.store: find_stores,
+    PredictionType.packaging: find_packaging,
+    PredictionType.location: find_locations,
+    PredictionType.image_lang: get_image_lang,
+}
 
 
 def fetch_images_for_ean(ean: str):
@@ -79,53 +99,27 @@ def get_ocr_result(
 
 
 def extract_predictions(
-    content: Union[OCRResult, str], prediction_type: PredictionType
+    content: Union[OCRResult, str],
+    prediction_type: PredictionType,
+    barcode: Optional[str] = None,
+    source_image: Optional[str] = None,
 ) -> List[Prediction]:
-    """Proxy to each predictor, depending on prediction type."""
-    if prediction_type == PredictionType.packager_code:
-        return find_packager_codes(content)
+    """Extract predictions from OCR using for provided prediction type.
 
-    elif prediction_type == PredictionType.label:
-        return find_labels(content)
-
-    elif prediction_type == PredictionType.expiration_date:
-        return find_expiration_date(content)
-
-    elif prediction_type == PredictionType.image_flag:
-        return flag_image(content)
-
-    elif prediction_type == PredictionType.image_orientation:
-        return find_image_orientation(content)
-
-    elif prediction_type == PredictionType.product_weight:
-        return find_product_weight(content)
-
-    elif prediction_type == PredictionType.trace:
-        return find_traces(content)
-
-    elif prediction_type == PredictionType.nutrient:
-        return find_nutrient_values(content)
-
-    elif prediction_type == PredictionType.nutrient_mention:
-        return find_nutrient_mentions(content)
-
-    elif prediction_type == PredictionType.brand:
-        return find_brands(content)
-
-    elif prediction_type == PredictionType.store:
-        return find_stores(content)
-
-    elif prediction_type == PredictionType.packaging:
-        return find_packaging(content)
-
-    elif prediction_type == PredictionType.location:
-        return find_locations(content)
-
-    elif prediction_type == PredictionType.image_lang:
-        return get_image_lang(content)
-
+    :param content: OCR output to extract predictions from.
+    :param barcode: Barcode to add to each prediction, defaults to None.
+    :param source_image: `source_image`to add to each prediction, defaults to
+    None.
+    :return: The generated predictions.
+    """
+    if prediction_type in PREDICTION_TYPE_TO_FUNC:
+        predictions = PREDICTION_TYPE_TO_FUNC[prediction_type](content)
+        for prediction in predictions:
+            prediction.barcode = barcode
+            prediction.source_image = source_image
+        return predictions
     else:
-        raise ValueError("unknown prediction type: {}".format(prediction_type))
+        raise ValueError(f"unknown prediction type: {prediction_type}")
 
 
 def is_barcode(text: str):

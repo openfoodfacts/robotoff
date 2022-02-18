@@ -6,6 +6,7 @@ import sys
 from typing import Iterable, List, Optional, Set, TextIO, Union
 
 import click
+import dacite
 from more_itertools import chunked
 from peewee import fn
 
@@ -17,7 +18,7 @@ from robotoff.insights.importer import is_recent_image, is_selected_image
 from robotoff.models import ProductInsight, db
 from robotoff.off import get_barcode_from_path, get_product
 from robotoff.prediction.ocr import OCRResult, extract_predictions, ocr_iter
-from robotoff.prediction.types import PredictionType, ProductPredictions
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import get_product_store
 from robotoff.utils import get_logger, jsonl_iter
 
@@ -28,9 +29,8 @@ def run_from_ocr_archive(
     input_: Union[str, TextIO],
     prediction_type: PredictionType,
     output: Optional[pathlib.Path] = None,
-    keep_empty: bool = False,
 ):
-    predictions = generate_from_ocr_archive(input_, prediction_type, keep_empty)
+    predictions = generate_from_ocr_archive(input_, prediction_type)
 
     if output is not None:
         output_f = output.open("w")
@@ -45,8 +45,7 @@ def run_from_ocr_archive(
 def generate_from_ocr_archive(
     input_: Union[str, TextIO, pathlib.Path],
     prediction_type: PredictionType,
-    keep_empty: bool = False,
-) -> Iterable[ProductPredictions]:
+) -> Iterable[Prediction]:
     for source_image, ocr_json in ocr_iter(input_):
         if source_image is None:
             continue
@@ -65,34 +64,29 @@ def generate_from_ocr_archive(
         if ocr_result is None:
             continue
 
-        predictions = extract_predictions(ocr_result, prediction_type)
-
-        # Do not produce output if predictions is empty and we don't want to keep it
-        if not keep_empty and not predictions:
-            continue
-
-        yield ProductPredictions(
-            predictions=predictions,
-            barcode=barcode,
-            type=prediction_type,
-            source_image=source_image,
+        yield from extract_predictions(
+            ocr_result, prediction_type, barcode=barcode, source_image=source_image
         )
 
 
-def insights_iter(file_path: pathlib.Path) -> Iterable[ProductPredictions]:
-    for insight in jsonl_iter(file_path):
-        yield ProductPredictions.from_dict(insight)
+def insights_iter(file_path: pathlib.Path) -> Iterable[Prediction]:
+    for prediction in jsonl_iter(file_path):
+        yield dacite.from_dict(
+            data_class=Prediction,
+            data=prediction,
+            config=dacite.Config(cast=[PredictionType]),
+        )
 
 
 def import_insights(
-    predictions: Iterable[ProductPredictions],
+    predictions: Iterable[Prediction],
     server_domain: str,
     batch_size: int = 1024,
 ) -> int:
     product_store = get_product_store()
     imported: int = 0
 
-    prediction_batch: List[ProductPredictions]
+    prediction_batch: List[Prediction]
     for prediction_batch in chunked(predictions, batch_size):
         with db.atomic():
             imported += import_insights_(

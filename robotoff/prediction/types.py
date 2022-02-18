@@ -1,10 +1,7 @@
 import dataclasses
 import datetime
-import itertools
 from enum import Enum, unique
-from typing import Any, Dict, Iterable, List, Optional
-
-import dacite
+from typing import Any, Dict, Optional
 
 
 @unique
@@ -56,53 +53,3 @@ def dict_factory(*args, **kwargs):
             d[key] = value.name
 
     return d
-
-
-@dataclasses.dataclass
-class ProductPredictions:
-    """Represent a list of prediction on a single product for a single type"""
-
-    #: the prediction list
-    predictions: List[Prediction]
-    #: product barcode
-    barcode: str
-    #: type of prediction
-    type: PredictionType
-    #: optional image
-    source_image: Optional[str] = None
-
-    @classmethod
-    def merge(cls, items: Iterable["ProductPredictions"]) -> "ProductPredictions":
-        """Merge predictions into one object, checking compatibility."""
-        items = list(items)
-        if len(items) == 0:
-            raise ValueError("no items to merge")
-
-        elif len(items) == 1:
-            return items[0]
-
-        for field_name in ("type", "barcode", "source_image"):
-            values = set(getattr(x, field_name) for x in items)
-            if len(values) > 1:
-                raise ValueError(
-                    "more than one value for '{}': {}".format(field_name, values)
-                )
-        item = items[0]
-        predictions = list(
-            itertools.chain.from_iterable((item.predictions for item in items))
-        )
-        return cls(
-            predictions=predictions,
-            barcode=item.barcode,
-            type=item.type,
-            source_image=item.source_image,
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dataclasses.asdict(self, dict_factory=dict_factory)
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ProductPredictions":
-        return dacite.from_dict(
-            data_class=cls, data=data, config=dacite.Config(cast=[PredictionType])
-        )

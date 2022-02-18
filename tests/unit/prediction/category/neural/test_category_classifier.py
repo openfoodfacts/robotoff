@@ -76,7 +76,10 @@ def test_predict_ingredients_only(mocker, data):
     )
     classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
     predictions = classifier.predict(data)
-    assert predictions == [CategoryPrediction("en:meat", 0.99)]
+    assert len(predictions) == 1
+    prediction = predictions[0]
+    assert prediction.value_tag == "en:meat"
+    assert prediction.data.get("confidence") == 0.99
 
 
 @pytest.mark.parametrize(
@@ -97,31 +100,31 @@ def test_predict_product_no_title(mocker, data):
     )
     classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
     predictions = classifier.predict(data)
-    assert predictions is None
+    assert len(predictions) == 0
 
 
 @pytest.mark.parametrize(
-    "deepest_only,mock_response,want_predictions",
+    "deepest_only,mock_response,expected_values",
     [
         # Nothing predicted - nothing returned.
-        (False, _prediction_resp([], []), None),
+        (False, _prediction_resp([], []), []),
         # Low prediction confidences - nothing returned.
-        (False, _prediction_resp(["en:meat", "en:fish"], [0.3, 0.3]), None),
+        (False, _prediction_resp(["en:meat", "en:fish"], [0.3, 0.3]), []),
         # Only the high confidence prediction is returned.
         (
             False,
             _prediction_resp(["en:fish", "en:meat"], [0.7, 0.3]),
-            [CategoryPrediction("en:fish", 0.7)],
+            [("en:fish", 0.7)],
         ),
         # Only the leaves of the taxonomy are returned.
         (
             True,
             _prediction_resp(["en:fish", "en:smoked-salmon"], [0.8, 0.8]),
-            [CategoryPrediction("en:smoked-salmon", 0.8)],
+            [("en:smoked-salmon", 0.8)],
         ),
     ],
 )
-def test_predict(mocker, deepest_only, mock_response, want_predictions):
+def test_predict(mocker, deepest_only, mock_response, expected_values):
     category_taxonomy = Taxonomy.from_dict(
         {
             "en:meat": {
@@ -153,4 +156,8 @@ def test_predict(mocker, deepest_only, mock_response, want_predictions):
         deepest_only,
     )
 
-    assert predictions == want_predictions
+    assert len(predictions) == len(expected_values)
+
+    for prediction, (value_tag, confidence) in zip(predictions, expected_values):
+        assert prediction.value_tag == value_tag
+        assert prediction.data.get("confidence") == confidence

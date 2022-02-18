@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
-from typer import Argument, Option
+from typer import Option
 
 app = typer.Typer()
 
@@ -48,7 +48,6 @@ def generate_ocr_insights(
         dir_okay=False,
         writable=True,
     ),
-    keep_empty: bool = Argument(..., help="Keep documents with empty insight"),
 ) -> None:
     """Generate OCR insights of the requested type.
 
@@ -69,9 +68,7 @@ def generate_ocr_insights(
     input_: Union[str, TextIO] = sys.stdin if source == "-" else source
 
     get_logger()
-    insights.run_from_ocr_archive(
-        input_, PredictionType[prediction_type], output, keep_empty
-    )
+    insights.run_from_ocr_archive(input_, PredictionType[prediction_type], output)
 
 
 @app.command()
@@ -207,13 +204,13 @@ def categorize(
         print(f"Product {barcode} not found")
         return
 
-    predicted = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
+    predictions = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
         product, deepest_only
     )
 
-    if predicted:
-        for prediction in predicted:
-            print(f"{prediction.category}: {prediction.confidence}")
+    if predictions:
+        for prediction in predictions:
+            print(f"{prediction.value_tag}: {prediction.data['confidence']}")
     else:
         print(f"Nothing predicted for product {barcode}")
 

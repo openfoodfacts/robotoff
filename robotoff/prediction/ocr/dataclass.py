@@ -200,7 +200,7 @@ class OCRResult:
         responses = data["responses"]
 
         if not responses:
-            raise OCRParsingException(f"Empty OCR response")
+            raise OCRParsingException("Empty OCR response")
 
         response = responses[0]
         if "error" in response:

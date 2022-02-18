@@ -15,7 +15,7 @@ from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import (
     DBProductStore,
     Product,
@@ -771,27 +771,27 @@ class PackagingInsightImporter(InsightImporter):
 
 
 def is_valid_product_predictions(
-    product_predictions: ProductPredictions, product: Optional[Product] = None
+    prediction: Prediction, product: Optional[Product] = None
 ) -> bool:
-    """Return True if the ProductPredictions is valid and can be imported,
+    """Return True if the Prediction is valid and can be imported,
     i.e:
        - if the source image (if any) is valid
        - if the product was not deleted
 
-    :param product_predictions: The ProductPredictions to check
+    :param prediction: The Prediction to check
     :param product: The Product fetched from DBProductStore
-    :return: Whether the ProductPredictions is valid
+    :return: Whether the Prediction is valid
     """
     if not product:
         # the product does not exist (deleted)
-        logger.info(f"Prediction of deleted product {product_predictions.barcode}")
+        logger.info(f"Prediction of deleted product {prediction.barcode}")
         return False
 
-    if product_predictions.source_image and not is_valid_image(
-        product.images, product_predictions.source_image
+    if prediction.source_image and not is_valid_image(
+        product.images, prediction.source_image
     ):
         logger.info(
-            f"Invalid image for product {product.barcode}: {product_predictions.source_image}"
+            f"Invalid image for product {product.barcode}: {prediction.source_image}"
         )
         return False
 
@@ -800,18 +800,17 @@ def is_valid_product_predictions(
 
 def create_prediction_model(
     prediction: Prediction,
-    product_predictions: ProductPredictions,
     server_domain: str,
     timestamp: datetime.datetime,
 ):
     return {
-        "barcode": product_predictions.barcode,
-        "type": product_predictions.type.name,
+        "barcode": prediction.barcode,
+        "type": prediction.type.name,
         "data": prediction.data,
         "timestamp": timestamp,
         "value_tag": prediction.value_tag,
         "value": prediction.value,
-        "source_image": product_predictions.source_image,
+        "source_image": prediction.source_image,
         "automatic_processing": prediction.automatic_processing,
         "server_domain": server_domain,
         "predictor": prediction.predictor,
@@ -820,17 +819,17 @@ def create_prediction_model(
 
 def import_product_predictions(
     barcode: str,
-    product_predictions_iter: Iterable[ProductPredictions],
+    product_predictions_iter: Iterable[Prediction],
     server_domain: str,
 ):
-    """Import product predictions.
+    """Import predictions for a specific product.
 
     If a prediction already exists in DB (same (barcode, type, server_domain,
     source_image, value, value_tag)), it won't be imported.
 
     :param barcode: Barcode of the product. All `product_predictions` must
     have the same barcode.
-    :param product_predictions_iter: Iterable of ProductPredictions.
+    :param product_predictions_iter: Iterable of Predictions.
     :param server_domain: The server domain associated with the predictions.
     :return: The number of items imported in DB.
     """
@@ -847,24 +846,17 @@ def import_product_predictions(
         .tuples()
     )
 
-    to_import = itertools.chain.from_iterable(
-        (
-            (
-                create_prediction_model(
-                    prediction, product_predictions, server_domain, timestamp
-                )
-                for prediction in product_predictions.predictions
-                if (
-                    product_predictions.type,
-                    server_domain,
-                    product_predictions.source_image,
-                    prediction.value_tag,
-                    prediction.value,
-                )
-                not in existing_predictions
-            )
-            for product_predictions in product_predictions_iter
+    to_import = (
+        create_prediction_model(prediction, server_domain, timestamp)
+        for prediction in product_predictions_iter
+        if (
+            prediction.type,
+            server_domain,
+            prediction.source_image,
+            prediction.value_tag,
+            prediction.value,
         )
+        not in existing_predictions
     )
     return batch_insert(PredictionModel, to_import, 50)
 
@@ -882,7 +874,7 @@ IMPORTERS: List[Type[InsightImporter]] = [
 
 
 def import_insights(
-    product_predictions: Iterable[ProductPredictions],
+    predictions: Iterable[Prediction],
     server_domain: str,
     automatic: bool,
     product_store: Optional[DBProductStore] = None,
@@ -891,7 +883,7 @@ def import_insights(
         product_store = get_product_store()
 
     updated_prediction_types_by_barcode = import_predictions(
-        product_predictions, product_store, server_domain
+        predictions, product_store, server_domain
     )
     return import_insights_for_products(
         updated_prediction_types_by_barcode, server_domain, automatic, product_store
@@ -932,28 +924,28 @@ def import_insights_for_products(
 
 
 def import_predictions(
-    product_predictions: Iterable[ProductPredictions],
+    predictions: Iterable[Prediction],
     product_store: DBProductStore,
     server_domain: str,
 ) -> Dict[str, Set[PredictionType]]:
-    """Check validity and import provided ProductPredictions.
+    """Check validity and import provided Prediction.
 
-    :param product_predictions: the ProductPredictions to import
+    :param predictions: the Predictions to import
     :param product_store: The product store to use
     :param server_domain: The server domain associated with the predictions
     :return: Dict associating each barcode with prediction types that where
     updated in order to re-compute associated insights
     """
-    product_predictions = [
+    predictions = [
         p
-        for p in product_predictions
-        if is_valid_product_predictions(p, product_store[p.barcode])
+        for p in predictions
+        if is_valid_product_predictions(p, product_store[p.barcode])  # type: ignore
     ]
 
     predictions_imported = 0
     updated_prediction_types_by_barcode: Dict[str, Set[PredictionType]] = {}
     for barcode, product_predictions_iter in itertools.groupby(
-        sorted(product_predictions, key=operator.attrgetter("barcode")),
+        sorted(predictions, key=operator.attrgetter("barcode")),
         operator.attrgetter("barcode"),
     ):
         product_predictions_group = list(product_predictions_iter)
@@ -961,10 +953,7 @@ def import_predictions(
             barcode, product_predictions_group, server_domain
         )
         updated_prediction_types_by_barcode[barcode] = set(
-            itertools.chain.from_iterable(
-                (prediction.type for prediction in x.predictions)
-                for x in product_predictions_group
-            )
+            prediction.type for prediction in product_predictions_group
         )
     logger.info(f"{predictions_imported} predictions imported")
     return updated_prediction_types_by_barcode

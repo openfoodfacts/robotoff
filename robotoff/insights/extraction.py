@@ -6,7 +6,7 @@ from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.core import get_ocr_result
-from robotoff.prediction.types import Prediction, PredictionType, ProductPredictions
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -37,64 +37,40 @@ PRODUCT_NAME_PREDICTION_TYPES: List[PredictionType] = [
 
 def get_predictions_from_product_name(
     barcode: str, product_name: str
-) -> Dict[PredictionType, ProductPredictions]:
-    results = {}
+) -> List[Prediction]:
+    predictions_all = []
     for prediction_type in PRODUCT_NAME_PREDICTION_TYPES:
-        predictions = ocr.extract_predictions(product_name, prediction_type)
+        predictions = ocr.extract_predictions(
+            product_name, prediction_type, barcode=barcode
+        )
+        for prediction in predictions:
+            prediction.data["source"] = "product_name"
+        predictions_all += predictions
 
-        if predictions:
-            for prediction in predictions:
-                prediction.data["source"] = "product_name"
-
-            results[prediction_type] = ProductPredictions(
-                predictions=predictions,
-                barcode=barcode,
-                type=prediction_type,
-            )
-
-    return results
+    return predictions_all
 
 
 def get_predictions_from_image(
     barcode: str, image: Image.Image, source_image: str, ocr_url: str
-) -> Dict[PredictionType, ProductPredictions]:
+) -> List[Prediction]:
     logger.info(f"Generating OCR predictions from OCR {ocr_url}")
     ocr_predictions = extract_ocr_predictions(
         barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
     )
     extract_nutriscore = any(
         prediction.value_tag == "en:nutriscore"
-        for prediction in getattr(
-            ocr_predictions.get(PredictionType.label), "predictions", []
-        )
+        and prediction.type == PredictionType.label
+        for prediction in ocr_predictions
     )
     image_ml_predictions = extract_image_ml_predictions(
         barcode, image, source_image, extract_nutriscore=extract_nutriscore
     )
-
-    prediction_types = set(ocr_predictions.keys()).union(image_ml_predictions.keys())
-
-    results: Dict[PredictionType, ProductPredictions] = {}
-
-    for prediction_type in prediction_types:
-        product_predictions: List[ProductPredictions] = []
-
-        if prediction_type in ocr_predictions:
-            product_predictions.append(ocr_predictions[prediction_type])
-
-        if prediction_type in image_ml_predictions:
-            product_predictions.append(image_ml_predictions[prediction_type])
-
-        results[prediction_type] = ProductPredictions.merge(product_predictions)
-
-    return results
+    return ocr_predictions + image_ml_predictions
 
 
 def extract_image_ml_predictions(
     barcode: str, image: Image.Image, source_image: str, extract_nutriscore: bool = True
-) -> Dict[PredictionType, ProductPredictions]:
-    results: Dict[PredictionType, ProductPredictions] = {}
-
+) -> List[Prediction]:
     if extract_nutriscore:
         # Currently all of the automatic processing for the Nutri-Score grades has been
         # disabled due to a prediction quality issue.
@@ -105,41 +81,30 @@ def extract_image_ml_predictions(
             manual_threshold=0.5,
         )
 
-        if not nutriscore_prediction:
-            return results
+        if nutriscore_prediction:
+            nutriscore_prediction.barcode = barcode
+            nutriscore_prediction.source_image = source_image
+            return [nutriscore_prediction]
 
-        results[PredictionType.label] = ProductPredictions(
-            predictions=[nutriscore_prediction],
-            barcode=barcode,
-            source_image=source_image,
-            type=PredictionType.label,
-        )
-
-    return results
+    return []
 
 
 def extract_ocr_predictions(
     barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
-) -> Dict[PredictionType, ProductPredictions]:
-    results: Dict[PredictionType, ProductPredictions] = {}
+) -> List[Prediction]:
+    predictions_all: List[Prediction] = []
     source_image = get_source_from_url(ocr_url)
     ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
 
     if ocr_result is None:
-        return results
+        return predictions_all
 
     for prediction_type in prediction_types:
-        predictions = ocr.extract_predictions(ocr_result, prediction_type)
+        predictions_all += ocr.extract_predictions(
+            ocr_result, prediction_type, barcode=barcode, source_image=source_image
+        )
 
-        if predictions:
-            results[prediction_type] = ProductPredictions(
-                barcode=barcode,
-                predictions=predictions,
-                source_image=source_image,
-                type=prediction_type,
-            )
-
-    return results
+    return predictions_all
 
 
 NUTRISCORE_LABELS: Dict[str, str] = {
