@@ -14,7 +14,7 @@ from robotoff.logos import (
     import_logo_insights,
     save_nearest_neighbors,
 )
-from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, with_db
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import get_server_type, get_source_from_url
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.types import PredictionType
@@ -37,46 +37,39 @@ def run_import_image_job(
         return
 
     source_image = get_source_from_url(image_url)
-    import_image(barcode, image, source_image, ocr_url, server_domain)
-    # Launch object detection in a new SQL transaction
-    run_object_detection(barcode, image, source_image, server_domain)
 
-
-@with_db
-def import_image(
-    barcode: str,
-    image: Image.Image,
-    source_image: str,
-    ocr_url: str,
-    server_domain: str,
-):
-    product_store = get_product_store()
-    product = product_store[barcode]
-
+    product = get_product_store()[barcode]
     if product is None:
         logger.warning(
             f"Product {barcode} does not exist during image import ({source_image})"
         )
         return
 
-    image_model = save_image(barcode, source_image, product, server_domain)
+    with db:
+        with db.atomic():
+            save_image(barcode, source_image, product, server_domain)
+            import_insights_from_image(
+                barcode, image, source_image, ocr_url, server_domain
+            )
+        with db.atomic():
+            # Launch object detection in a new SQL transaction
+            run_object_detection(barcode, image, source_image, server_domain)
 
-    if image_model is not None:
-        logger.info(f"New image {image.id} created in DB")
 
+def import_insights_from_image(
+    barcode: str,
+    image: Image.Image,
+    source_image: str,
+    ocr_url: str,
+    server_domain: str,
+):
     predictions_all = get_predictions_from_image(barcode, image, source_image, ocr_url)
     NotifierFactory.get_notifier().notify_image_flag(
         [p for p in predictions_all if p.type == PredictionType.image_flag],
         source_image,
         barcode,
     )
-
-    imported = import_insights(
-        predictions_all,
-        server_domain,
-        automatic=True,
-        product_store=product_store,
-    )
+    imported = import_insights(predictions_all, server_domain, automatic=True)
     logger.info(f"Import finished, {imported} insights imported")
 
 
@@ -117,7 +110,7 @@ def save_image(
         uploaded_t = int(uploaded_t)
 
     uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
-    return ImageModel.create(
+    image_model = ImageModel.create(
         barcode=barcode,
         image_id=image_id,
         width=width,
@@ -127,9 +120,11 @@ def save_image(
         server_domain=server_domain,
         server_type=get_server_type(server_domain).name,
     )
+    if image_model is not None:
+        logger.info(f"New image {image_model.id} created in DB")
+    return image_model
 
 
-@with_db
 def run_object_detection(
     barcode: str, image: Image.Image, source_image: str, server_domain: str
 ):
