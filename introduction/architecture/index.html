@@ -661,10 +661,12 @@
 <li>the <em>workers</em>, responsible for all long-lasting tasks</li>
 </ul>
 <p>Communication between API and Workers happens through ipc events. <sup id="fnref:ipc_events"><a class="footnote-ref" href="#fn:ipc_events">2</a></sup></p>
-<p>Robotoff allows to predict many information (also called <em>insights</em>), mostly from the product images.</p>
-<p>Each time a contributor uploads a new image on Open Food Facts, the text on this image is extracted using Google Cloud Vision, an OCR (Optical Character Recognition) service. Robotoff receives a new event through a webhook each time this occurs, with the URLs of the image and the resulting OCR (as a JSON file).</p>
-<p>We use the image to detect the grade of the nutriscore (A to E) with a computer vision model (object detection).</p>
-<p>The OCR JSON is used to extract many types of insights:</p>
+<p>Robotoff allows to predict many information (also called <em>insights</em>), mostly from the product images or OCR.</p>
+<p>Each time a contributor uploads a new image on Open Food Facts, the text on this image is extracted using Google Cloud Vision, an OCR (Optical Character Recognition) service. Robotoff receives a new event through a webhook each time this occurs, with the URLs of the image and the resulting OCR (as a JSON file).
+We use simple string matching algorithms to find patterns in the OCR text to generate new predictions <sup id="fnref:predictions"><a class="footnote-ref" href="#fn:predictions">3</a></sup>.</p>
+<p>We also use a ML model to extract logos from images. These logos are then embedded in a vector space using a pre-trained model. In this space we use a k-nearest-neighbor approach to try to classify the logo, predicting a brand or a label <sup id="fnref:logos"><a class="footnote-ref" href="#fn:logos">5</a></sup>.</p>
+<p>We use the image to detect the grade of the Nutri-Score (A to E) with a computer vision model (object detection).</p>
+<p>The above detections generate predictions which in turn generate many types of insights <sup id="fnref:insights"><a class="footnote-ref" href="#fn:insights">4</a></sup>:</p>
 <ul>
 <li>labels</li>
 <li>stores</li>
@@ -675,19 +677,21 @@
 <li>brand</li>
 <li>...</li>
 </ul>
-<p>We use simple string matching algorithms to find patterns in the OCR text to generate new insights <sup id="fnref:insights"><a class="footnote-ref" href="#fn:insights">3</a></sup>. These insights are stored in the PostgreSQL database.</p>
-<p>These new insights are then accessible to all annotation tools (Hunger Games, mobile apps,...), that can validate or not the insight. If the insight is validated, it's applied immediately and the product is updated through Product Opener API. Otherwise, no update is performed. In all cases, the insight is marked as annotated, so that it is not suggested to another annotater.
-Some insights with high confidence are applied automatically, 10 minutes after import.</p>
-<p>Robotoff is also notified by Product Opener every time a product is updated or deleted <sup id="fnref:product_update"><a class="footnote-ref" href="#fn:product_update">4</a></sup>. This is used to delete insights associated with deleted products, or to update them accordingly.</p>
+<p>Predictions, as well as insights are stored in the PostgreSQL database.</p>
+<p>These new insights are then accessible to all annotation tools (Hunger Games, mobile apps,...), that can validate or not the insight. </p>
+<p>If the insight is validated by an authenticated user, it's applied immediately and the product is updated through Product Opener API <sup id="fnref:annotate"><a class="footnote-ref" href="#fn:annotate">7</a></sup>. If it's reported as invalid, no update is performed, but the insight is marked as annotated so that it is not suggested to another annotator. If the user is not authenticated, a system of votes is used (3 consistent votes trigger the insight application).</p>
+<p>Some insights with high confidence are applied automatically, 10 minutes after import.</p>
+<p>Robotoff is also notified by Product Opener every time a product is updated or deleted <sup id="fnref:product_update"><a class="footnote-ref" href="#fn:product_update">6</a></sup>. This is used to delete insights associated with deleted products, or to update them accordingly.</p>
 <h2 id="other-services">Other services</h2>
 <p>Robotoff also depends on the following services:</p>
 <ul>
 <li>a single node Elasticsearch instance, used to:<ul>
-<li>infer the product category from the product name, using an improved string matching algorithm. <sup id="fnref:predict_category"><a class="footnote-ref" href="#fn:predict_category">5</a></sup></li>
-<li>perform spellcheck on ingredient lists <sup id="fnref:spellcheck_ingredients"><a class="footnote-ref" href="#fn:spellcheck_ingredients">6</a></sup></li>
+<li>infer the product category from the product name, using an improved string matching algorithm. <sup id="fnref:predict_category"><a class="footnote-ref" href="#fn:predict_category">8</a></sup> (used in conjunction with ML detection)</li>
+<li>perform spellcheck on ingredient lists <sup id="fnref:spellcheck_ingredients"><a class="footnote-ref" href="#fn:spellcheck_ingredients">10</a></sup></li>
 </ul>
 </li>
-<li>a Tensorflow Serving instance, used to serve object detection models (currently, only nutriscore).</li>
+<li>a Tensorflow Serving instance, used to serve object detection models (currently, only nutriscore and category), which is identified as <code>robotoff-ml</code><sup id="fnref:robotoff_ml"><a class="footnote-ref" href="#fn:robotoff_ml">9</a></sup>.</li>
+<li><a href="https://github.com/openfoodfacts/robotoff-ann/">robotoff-ann</a> which uses an approximate KNN approach to predict logo label</li>
 <li>MongoDB, to fetch the product latest version without querying Product Opener API.</li>
 </ul>
 <div class="footnote">
@@ -699,17 +703,29 @@ Some insights with high confidence are applied automatically, 10 minutes after i
 <li id="fn:ipc_events">
 <p>See <code>robotoff.workers.client</code> and <code>robotoff.workers.listener</code>&#160;<a class="footnote-backref" href="#fnref:ipc_events" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
+<li id="fn:predictions">
+<p>see <code>robotoff.models.Prediction</code>&#160;<a class="footnote-backref" href="#fnref:predictions" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
 <li id="fn:insights">
-<p>see <code>models.ProductInsight</code>&#160;<a class="footnote-backref" href="#fnref:insights" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+<p>see <code>robotoff.models.ProductInsight</code>&#160;<a class="footnote-backref" href="#fnref:insights" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:logos">
+<p>see <code>robotoff.logos</code>&#160;<a class="footnote-backref" href="#fnref:logos" title="Jump back to footnote 5 in the text">&#8617;</a></p>
 </li>
 <li id="fn:product_update">
-<p>see <code>workers.tasks.product_updated</code> and <code>workers.tasks.delete_product_insights</code>&#160;<a class="footnote-backref" href="#fnref:product_update" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+<p>see <code>workers.tasks.product_updated</code> and <code>workers.tasks.delete_product_insights</code>&#160;<a class="footnote-backref" href="#fnref:product_update" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:annotate">
+<p>see <code>robotoff.insights.annotate</code>&#160;<a class="footnote-backref" href="#fnref:annotate" title="Jump back to footnote 7 in the text">&#8617;</a></p>
 </li>
 <li id="fn:predict_category">
-<p>see <code>robotoff.elasticsearch.predict</code>&#160;<a class="footnote-backref" href="#fnref:predict_category" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+<p>see <code>robotoff.elasticsearch.predict</code>&#160;<a class="footnote-backref" href="#fnref:predict_category" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:robotoff_ml">
+<p>see <code>docker/ml.yml</code>&#160;<a class="footnote-backref" href="#fnref:robotoff_ml" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 <li id="fn:spellcheck_ingredients">
-<p>see <code>robotoff.spellcheck.elasticsearch.es_handler.ElasticsearchHandler</code>&#160;<a class="footnote-backref" href="#fnref:spellcheck_ingredients" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+<p>see <code>robotoff.spellcheck.elasticsearch.es_handler.ElasticsearchHandler</code>&#160;<a class="footnote-backref" href="#fnref:spellcheck_ingredients" title="Jump back to footnote 10 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
