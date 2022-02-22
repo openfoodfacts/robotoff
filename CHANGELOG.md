@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/openfoodfacts/robotoff/compare/v1.2.0...v1.3.0) (2022-02-22)
+
+
+### Features
+
+* Update doc and prepare release ([#633](https://github.com/openfoodfacts/robotoff/issues/633)) ([c5180d7](https://github.com/openfoodfacts/robotoff/commit/c5180d7b68a50763afdb0592ff1503713c69fe88))
+
 ## [1.3.0](https://www.github.com/openfoodfacts/robotoff/compare/v1.2.0...v1.3.0) (2022-02-22)
 
 ### Features
