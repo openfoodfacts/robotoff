@@ -21,7 +21,10 @@ jobs:
           types: |
             fix
             feat
+            doc
+            refactor
+            ops
           # Configure which scopes are allowed.
-          scopes: |
-            core
-            ui
+          #scopes: |
+           # core
+           # ui
