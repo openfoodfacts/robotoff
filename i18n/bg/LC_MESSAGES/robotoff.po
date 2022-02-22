@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2021-07-09 08:30\n"
+"PO-Revision-Date: 2022-02-01 09:50\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Bulgarian\n"
 "Language: bg\n"
@@ -23,17 +23,17 @@ msgstr "Продуктът принадлежи ли към тази катег�
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr "Дали продуктът има този етикет?"
+msgstr "Продуктът има ли този етикет?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "Продуктът принадлежи ли на тази марка?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Това тегло съвпада ли с теглото, показано на продукта?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Тази снимка хранителна снимка за този език ли е?"
 

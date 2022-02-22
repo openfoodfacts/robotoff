@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2021-07-09 08:37\n"
+"PO-Revision-Date: 2022-02-01 10:39\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Lithuanian\n"
 "Language: lt\n"
@@ -19,11 +19,11 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "Ar produktas priklauso šiai kategorijai?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "Ar produktas turi šią etiketę?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
@@ -31,9 +31,9 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Ar šis svoris atitinka ant produkto nurodytą svorį?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Ar ši nuotrauka yra maistingumo šia kalba nuotrauka?"
 

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2021-07-09 08:33\n"
+"PO-Revision-Date: 2022-02-01 10:36\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Estonian\n"
 "Language: et\n"
@@ -27,7 +27,7 @@ msgstr "Kas tootel on see silt?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr "Kas toode kuulub sellele brändile?"
+msgstr "Kas toode kuulub sellele kaubamärgile?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
