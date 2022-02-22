@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0](https://www.github.com/openfoodfacts/robotoff/compare/v1.2.0...v1.3.0) (2022-02-22)
+
+### Features
+
+* continue structural changes to have insights derived from predictions
+
 ## [1.2.0](https://www.github.com/openfoodfacts/robotoff/compare/v1.1.0...v1.2.0) (2022-02-07)
 
 
