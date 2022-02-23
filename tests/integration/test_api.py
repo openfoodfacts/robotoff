@@ -3,9 +3,10 @@ import base64
 import pytest
 from falcon import testing
 
-from robotoff import settings
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
+
+from .models_utils import AnnotationVoteFactory, ProductInsightFactory
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -16,18 +17,7 @@ def _set_up_and_tear_down(peewee_db):
     AnnotationVote.delete().execute()
     ProductInsight.delete().execute()
     # Set up.
-    ProductInsight.create(
-        id=insight_id,
-        data="{}",
-        barcode=1,
-        type="category",
-        n_votes=0,
-        value_tag="en:seeds",
-        server_domain=settings.OFF_SERVER_DOMAIN,
-        automatic_processing=False,
-        unique_scans_n=0,
-        reserved_barcode=False,
-    )
+    ProductInsightFactory(id=insight_id, barcode=1)
 
     # Run the test case.
     yield
@@ -68,9 +58,8 @@ def test_random_question(client, mocker):
 
 def test_random_question_user_has_already_seen(client, mocker):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
-        value=1,
         device_id="device1",
     )
 
@@ -194,17 +183,17 @@ def test_annotate_insight_not_enough_votes(client):
 
 def test_annotate_insight_majority_annotation(client):
     # Add pre-existing insight votes.
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter2",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter1",
@@ -240,17 +229,17 @@ def test_annotate_insight_majority_annotation(client):
 # This test checks for handling of cases where we have 2 votes for 2 different annotations.
 def test_annotate_insight_opposite_votes(client):
     # Add pre-existing insight votes.
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter2",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter1",
@@ -287,22 +276,22 @@ def test_annotate_insight_opposite_votes(client):
 # but the follow-up has 2 votes.
 def test_annotate_insight_majority_vote_overridden(client):
     # Add pre-existing insight votes.
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter2",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter2",

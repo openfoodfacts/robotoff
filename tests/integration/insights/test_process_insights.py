@@ -6,6 +6,8 @@ from robotoff import settings
 from robotoff.models import ProductInsight
 from robotoff.scheduler import process_insights
 
+from ..models_utils import ProductInsightFactory
+
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
@@ -22,28 +24,19 @@ _id_count = 0
 
 
 def _create_insight(**kwargs):
-    global _id_count
-    _id_count += 1
-    barcode = f"{_id_count:08}" or kwargs.pop("barcode")
-    insight_id = f"94371643-c2bc-4291-a585-af2c{_id_count:08}"
     data = dict(
         {
-            "id": insight_id,
             "data": {"notify": False},  # we do not test notification
-            "barcode": barcode,
             "type": "category",
             "value_tag": "en:Salmons",
-            "server_domain": settings.OFF_SERVER_DOMAIN,
             "automatic_processing": True,
             "process_after": datetime.now() - timedelta(minutes=12),
-            "unique_scans_n": 100,
             "n_votes": 3,
-            "reserved_barcode": False,
         },
         **kwargs,
     )
-    ProductInsight.create(**data)
-    return insight_id, barcode
+    insight = ProductInsightFactory(**data)
+    return insight.id, insight.barcode
 
 
 def test_process_insight_category(mocker):
