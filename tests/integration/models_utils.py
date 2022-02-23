@@ -5,6 +5,7 @@ although archived, this is lightweight, and should be easy to maintain if needed
 """
 import uuid
 from datetime import datetime
+from typing import Any, Dict, List
 
 import factory
 from factory_peewee import PeeweeModelFactory
@@ -35,17 +36,17 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     class Meta:
         model = ProductInsight
 
-    id = factory.LazyFunction(uuid.uuid4)
+    id = factory.LazyFunction(uuid.uuid4)  # type: ignore
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
-    data = {}
-    timestamp = factory.LazyFunction(datetime.utcnow)
+    data: Dict[str, Any] = {}
+    timestamp: datetime = factory.LazyFunction(datetime.utcnow)
     countries = ["en:france"]
-    brands = []
+    brands: List[str] = []
     n_votes = 0
     value_tag = "en:seeds"
     # we uses a lazy function for settings can change in a test
-    server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
+    server_domain: str = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     server_type = "off"
     unique_scans_n = 10
 
@@ -56,7 +57,7 @@ class PredictionFactory(PeeweeModelFactory):
 
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
-    data = {}
+    data: Dict[str, Any] = {}
     timestamp = factory.LazyFunction(datetime.now)
     value_tag = "en:seeds"
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
@@ -81,7 +82,7 @@ class ImageModelFactory(PeeweeModelFactory):
     barcode = factory.Sequence(lambda n: f"{n:013}")
     uploaded_at = factory.LazyFunction(datetime.utcnow)
     image_id = factory.Sequence(lambda n: f"image-{n:02}")
-    source_image = factory.Sequence(lambda n: f"/image-{n:02}.jpg")
+    source_image = factory.Sequence(lambda n: f"/images/{n:02}.jpg")
     width = 400
     height = 400
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
@@ -124,3 +125,17 @@ class LogoConfidenceThresholdFactory(PeeweeModelFactory):
         model = LogoConfidenceThreshold
 
     threshold = 0.7
+
+
+def clean_db():
+    # remove all models
+    for model in (
+        AnnotationVote,
+        ImageModel,
+        ImagePrediction,
+        LogoAnnotation,
+        LogoConfidenceThreshold,
+        Prediction,
+        ProductInsight,
+    ):
+        model.delete()
