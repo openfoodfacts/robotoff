@@ -259,7 +259,7 @@ def import_logo_insights(
 
 def generate_insights_from_annotated_logos(
     logos: List[LogoAnnotation], server_domain: str
-):
+) -> int:
     predictions = []
     for logo in logos:
         prediction = generate_prediction(
@@ -282,6 +282,7 @@ def generate_insights_from_annotated_logos(
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")
+    return imported
 
 
 def predict_logo_predictions(
@@ -328,7 +329,7 @@ def generate_prediction(
     value = None
 
     if prediction_type == PredictionType.brand:
-        value = logo_value
+        value_tag = value = logo_value
         if value is None:
             return None
 

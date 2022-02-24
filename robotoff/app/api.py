@@ -745,7 +745,6 @@ class ImageLogoAnnotateResource:
             type_ = annotation["type"]
             value = annotation["value"] or None
             logo = LogoAnnotation.get_by_id(logo_id)
-
             if value is not None:
                 logo.annotation_value = value
                 value_tag = get_tag(value)
@@ -758,7 +757,8 @@ class ImageLogoAnnotateResource:
             logo.save()
             annotated_logos.append(logo)
 
-        generate_insights_from_annotated_logos(annotated_logos, server_domain)
+        created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
+        resp.media = {"created insights": created}
 
 
 class ImageLogoUpdateResource:
