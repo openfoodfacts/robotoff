@@ -49,7 +49,7 @@ def _fake_store(monkeypatch, barcode):
 @pytest.fixture
 def fake_taxonomy(monkeypatch):
     def fetch_taxonomy_mock(url: str, *args, **kwargs):
-        data : Any = None
+        data: Any = None
         if "/brands." in url:
             data = {"en:etorki": {"name": {"en": "Etorki"}}}
         elif "/labels." in url:

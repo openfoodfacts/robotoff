@@ -166,7 +166,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
 
     notifier.notify_automatic_processing(
         ProductInsight(
-            barcode="123", source_image="/image/1", type="label", value="en:vegan"
+            barcode="123", source_image="/image/1", type="label", value_tag="en:vegan"
         )
     )
 
