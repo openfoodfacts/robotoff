@@ -167,14 +167,15 @@ class SlackNotifier(SlackNotifierInterface):
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
+        value = insight.value or insight.value_tag
 
         if insight.type in {
             InsightType.product_weight.name,
             InsightType.expiration_date.name,
         }:
-            text = f"The {insight.type} `{insight.value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
+            text = f"The {insight.type} `{value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
         else:
-            text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
+            text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
         message = _slack_message_block(text + " " + metadata_text)
 
