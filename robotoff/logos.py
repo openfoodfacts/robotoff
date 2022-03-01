@@ -258,12 +258,19 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos(
-    logos: List[LogoAnnotation], server_domain: str
+    logos: List[LogoAnnotation],
+    server_domain: str,
 ) -> int:
     predictions = []
     for logo in logos:
         prediction = generate_prediction(
-            logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
+            logo.annotation_type,
+            logo.taxonomy_value,
+            confidence=1.0,
+            logo_id=logo.id,
+            username=logo.username,
+            is_annotation=True,  # explicit is better than implicit
+            automatic_processing=True,  # this is a user annotation !
         )
 
         if prediction is None:
@@ -318,7 +325,10 @@ def predict_logo_predictions(
 
 
 def generate_prediction(
-    logo_type: str, logo_value: Optional[str], **kwargs
+    logo_type: str,
+    logo_value: Optional[str],
+    automatic_processing: Optional[bool] = False,
+    **kwargs,
 ) -> Optional[Prediction]:
     if logo_type not in LOGO_TYPE_MAPPING:
         return None
@@ -342,7 +352,7 @@ def generate_prediction(
         type=prediction_type,
         value_tag=value_tag,
         value=value,
-        automatic_processing=False,
+        automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
         data=kwargs,
     )
