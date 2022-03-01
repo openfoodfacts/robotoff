@@ -770,7 +770,7 @@ class PackagingInsightImporter(InsightImporter):
             yield insight
 
 
-def is_valid_product_predictions(
+def is_valid_product_prediction(
     prediction: Prediction, product: Optional[Product] = None
 ) -> bool:
     """Return True if the Prediction is valid and can be imported,
@@ -939,7 +939,7 @@ def import_predictions(
     predictions = [
         p
         for p in predictions
-        if is_valid_product_predictions(p, product_store[p.barcode])  # type: ignore
+        if is_valid_product_prediction(p, product_store[p.barcode])  # type: ignore
     ]
 
     predictions_imported = 0

@@ -80,31 +80,31 @@ def save_image(
     image_id = pathlib.Path(source_image).stem
 
     if not image_id.isdigit():
-        logger.warning(f"Non raw image was sent: {source_image}")
+        logger.warning("Non raw image was sent: %s", source_image)
         return None
 
     if image_id not in product.images:
-        logger.warning(f"Unknown image for product {barcode}: {source_image}")
+        logger.warning("Unknown image for product %s: %s", barcode, source_image)
         return None
 
     image = product.images[image_id]
     sizes = image.get("sizes", {}).get("full")
 
     if not sizes:
-        logger.warning(f"Image with missing size information: {image}")
+        logger.warning("Image with missing size information: %s", image)
         return None
 
     width = sizes["w"]
     height = sizes["h"]
 
     if "uploaded_t" not in image:
-        logger.warning(f"Missing uploaded_t field: {image.keys()}")
+        logger.warning("Missing uploaded_t field: %s", list(image))
         return None
 
     uploaded_t = image["uploaded_t"]
     if isinstance(uploaded_t, str):
         if not uploaded_t.isdigit():
-            logger.warning(f"Non digit uploaded_t value: {uploaded_t}")
+            logger.warning("Non digit uploaded_t value: %s", uploaded_t)
             return None
 
         uploaded_t = int(uploaded_t)
@@ -121,7 +121,7 @@ def save_image(
         server_type=get_server_type(server_domain).name,
     )
     if image_model is not None:
-        logger.info(f"New image {image_model.id} created in DB")
+        logger.info("New image %s created in DB", image_model.id)
     return image_model
 
 
