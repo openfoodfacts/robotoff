@@ -106,24 +106,37 @@ def test_image_brand_annotation(client, monkeypatch, fake_taxonomy):
     assert len(predictions) == 1
     (prediction,) = predictions
     assert prediction.type == "brand"
-    assert prediction.data == {"logo_id": ann.id, "confidence": 1.0}
+    assert prediction.data == {
+        "logo_id": ann.id,
+        "confidence": 1.0,
+        "username": "a",
+        "is_annotation": True,
+        "notify": True,
+    }
     assert prediction.value == "Etorki"
     assert prediction.value_tag == "Etorki"
     assert prediction.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
+    assert prediction.automatic_processing
     # that in turn generated an insight
     insights = list(ProductInsight.select().filter(barcode=barcode).execute())
     assert len(insights) == 1
     (insight,) = insights
     assert insight.type == "brand"
-    assert insight.data == {"logo_id": ann.id, "confidence": 1.0}
+    assert insight.data == {
+        "logo_id": ann.id,
+        "confidence": 1.0,
+        "username": "a",
+        "is_annotation": True,
+        "notify": True,
+    }
     assert insight.value == "Etorki"
     assert insight.value_tag == "Etorki"
     assert insight.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
-    # NOTE: we loose the user on insight (), this is a known NON feature (TBD)
-    assert insight.username is None
-    assert insight.completed_at is None
+    assert insight.automatic_processing
+    assert insight.username == "a"
+    assert insight.completed_at is None  # we did not run annotate yet
 
 
 def test_image_label_annotation(client, monkeypatch, fake_taxonomy):
@@ -156,21 +169,34 @@ def test_image_label_annotation(client, monkeypatch, fake_taxonomy):
     assert len(predictions) == 1
     (prediction,) = predictions
     assert prediction.type == "label"
-    assert prediction.data == {"logo_id": ann.id, "confidence": 1.0}
+    assert prediction.data == {
+        "logo_id": ann.id,
+        "confidence": 1.0,
+        "username": "a",
+        "is_annotation": True,
+        "notify": True,
+    }
     assert prediction.value is None
     assert prediction.value_tag == "en:eu-organic"
     assert prediction.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
+    assert prediction.automatic_processing
     # that in turn generated an insight
     insights = list(ProductInsight.select().filter(barcode=barcode).execute())
     assert len(insights) == 1
     (insight,) = insights
     assert insight.type == "label"
-    assert insight.data == {"logo_id": ann.id, "confidence": 1.0}
+    assert insight.data == {
+        "logo_id": ann.id,
+        "confidence": 1.0,
+        "username": "a",
+        "is_annotation": True,
+        "notify": True,
+    }
     assert insight.value is None
     assert insight.value_tag == "en:eu-organic"
     assert insight.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
-    # NOTE: we loose the user on insight (), this is a known NON feature (TBD)
-    assert insight.username is None
+    assert insight.automatic_processing
+    assert insight.username == "a"
     assert insight.completed_at is None
