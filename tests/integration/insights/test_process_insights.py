@@ -106,21 +106,30 @@ def test_process_insight_non_existing_product(mocker):
 
 
 def test_process_insight_update_product_raises(mocker):
+    def raise_for_salmons(params, *args, **kwargs):
+        if "en:Salmons" in params.values():
+            raise Exception("Boom !")
+        else:
+            return
+
     mocker.patch(
         "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
     )
-    mock = mocker.patch("robotoff.off.update_product", side_effect=Exception("Boom !"))
-    # an insight to be processed
+    mock = mocker.patch("robotoff.off.update_product", side_effect=raise_for_salmons)
+    # an insight to be processed, that will raise
     id1, code1 = _create_insight(type="category")
+    # add another insight that should pass
+    id2, code2 = _create_insight(type="category", value_tag="en:Tuna")
     # run process
-    with pytest.raises(Exception):
-        process_insights()
-    # insight not marked processed
+    start = datetime.utcnow()
+    process_insights()
+    end = datetime.utcnow()
+    # insight1 not marked processed
     insight = ProductInsight.get(id=id1)
     assert insight.completed_at is None
     assert insight.annotation is None
     # but update_product was called
-    mock.assert_called_once_with(
+    mock.assert_any_call(
         {
             "code": code1,
             "add_categories": "en:Salmons",
@@ -129,6 +138,23 @@ def test_process_insight_update_product_raises(mocker):
         auth=None,
         server_domain=settings.OFF_SERVER_DOMAIN,
     )
+    # insight2 processed
+    # and update_product was called
+    insight = ProductInsight.get(id=id2)
+    assert insight.completed_at is not None
+    assert start < insight.completed_at < end
+    assert insight.annotation == 1
+    mock.assert_any_call(
+        {
+            "code": code2,
+            "add_categories": "en:Tuna",
+            "comment": f"[robotoff] Adding category 'en:Tuna', ID: {id2}",
+        },
+        auth=None,
+        server_domain=settings.OFF_SERVER_DOMAIN,
+    )
+    # we add only two calls
+    assert mock.call_count == 2
 
 
 def test_process_insight_same_product(mocker):

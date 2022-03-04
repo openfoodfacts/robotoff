@@ -81,14 +81,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
-        with db.atomic() as transaction:
-            try:
-                return self._annotate(
-                    insight, annotation, update, data, auth, automatic
-                )
-            except Exception as e:
-                transaction.rollback()
-                raise e
+        with db.atomic():
+            return self._annotate(insight, annotation, update, data, auth, automatic)
 
     def _annotate(
         self,
