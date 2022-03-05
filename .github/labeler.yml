@@ -3,3 +3,6 @@ github_actions:
 
 crowdin:
 - crowdin.yml
+
+tests:
+tests/integration/**/*
