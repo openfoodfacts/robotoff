@@ -1,0 +1,321 @@
+
+api:
+    - '(api)'
+
+
+auth:
+    - '(auth)'
+
+
+autorelease: pending:
+    - '(autorelease: pending)'
+
+
+autorelease: tagged:
+    - '(autorelease: tagged)'
+
+
+best-before-dates:
+    - '(best-before-dates)'
+
+
+blacklists:
+    - '(blacklists)'
+
+
+brand prediction:
+    - '(brand prediction)'
+
+
+bug:
+    - '(bug)'
+
+
+category prediction:
+    - '(category prediction)'
+
+
+cloud vision:
+    - '(cloud vision)'
+
+
+computer-vision:
+    - '(computer-vision)'
+
+
+data4good-environment:
+    - '(data4good-environment)'
+
+
+database:
+    - '(database)'
+
+
+dependencies:
+    - '(dependencies)'
+
+
+devops:
+    - '(devops)'
+
+
+doc:
+    - '(doc)'
+
+
+does not require ML knowledge:
+    - '(does not require ML knowledge)'
+
+
+dumps:
+    - '(dumps)'
+
+
+duplicate:
+    - '(duplicate)'
+
+
+ecoscore:
+    - '(ecoscore)'
+
+
+elasticsearch:
+    - '(elasticsearch)'
+
+
+enhancement:
+    - '(enhancement)'
+
+
+Epic:
+    - '(Epic)'
+
+
+♞ epic:
+    - '(♞ epic)'
+
+
+fixed ?:
+    - '(fixed ?)'
+
+
+flashtext:
+    - '(flashtext)'
+
+
+from-product-name:
+    - '(from-product-name)'
+
+
+github_actions:
+    - '(github_actions)'
+
+
+gluten:
+    - '(gluten)'
+
+
+good first issue:
+    - '(good first issue)'
+
+
+hacktoberfest:
+    - '(hacktoberfest)'
+
+
+help wanted:
+    - '(help wanted)'
+
+
+image-autoselect:
+    - '(image-autoselect)'
+
+
+ingredients:
+    - '(ingredients)'
+
+
+insights:
+    - '(insights)'
+
+
+invalid:
+    - '(invalid)'
+
+
+labels prediction:
+    - '(labels prediction)'
+
+
+languages:
+    - '(languages)'
+
+
+Large impact:
+    - '(Large impact)'
+
+
+location:
+    - '(location)'
+
+
+logos & labels:
+    - '(logos & labels)'
+
+
+low-hanging-fruit:
+    - '(low-hanging-fruit)'
+
+
+maintenance:
+    - '(maintenance)'
+
+
+ML:
+    - '(ML)'
+
+
+MLOps:
+    - '(MLOps)'
+
+
+models:
+    - '(models)'
+
+
+monitoring:
+    - '(monitoring)'
+
+
+notifications:
+    - '(notifications)'
+
+
+nutriscore model:
+    - '(nutriscore model)'
+
+
+nutrition prediction:
+    - '(nutrition prediction)'
+
+
+onboarding:
+    - '(onboarding)'
+
+
+origins:
+    - '(origins)'
+
+
+P0:
+    - '(P0)'
+
+
+P1:
+    - '(P1)'
+
+
+packager-codes:
+    - '(packager-codes)'
+
+
+packaging prediction:
+    - '(packaging prediction)'
+
+
+peewee:
+    - '(peewee)'
+
+
+performance:
+    - '(performance)'
+
+
+portions:
+    - '(portions)'
+
+
+proposal:
+    - '(proposal)'
+
+
+python:
+    - '(python)'
+
+
+quality:
+    - '(quality)'
+
+
+quantities:
+    - '(quantities)'
+
+
+question:
+    - '(question)'
+
+
+refactoring:
+    - '(refactoring)'
+
+
+regex-based detection:
+    - '(regex-based detection)'
+
+
+retraining:
+    - '(retraining)'
+
+
+robotoff-cli:
+    - '(robotoff-cli)'
+
+
+security:
+    - '(security)'
+
+
+sentry:
+    - '(sentry)'
+
+
+settings:
+    - '(settings)'
+
+
+spellcheck:
+    - '(spellcheck)'
+
+
+stores:
+    - '(stores)'
+
+
+📝 story:
+    - '(📝 story)'
+
+
+✔ task:
+    - '(✔ task)'
+
+
+taxonomies:
+    - '(taxonomies)'
+
+
+tests:
+    - '(tests)'
+
+
+translations:
+    - '(translations)'
+
+
+UI:
+    - '(UI)'
+
+
+wontfix:
+    - '(wontfix)'
+
+
