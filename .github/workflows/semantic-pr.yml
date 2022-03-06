@@ -24,6 +24,7 @@ jobs:
             doc
             refactor
             ops
+            chore
           # Configure which scopes are allowed.
           #scopes: |
            # core
