@@ -853,8 +853,8 @@ def import_product_predictions(
         .tuples()
     )
 
-    # note: there are some case
-    # when we could decide to replace old prediction of same key.
+    # note: there are some cases
+    # when we could decide to replace old predictions of the same key.
     # It's not yet implemented.
     to_import = (
         create_prediction_model(prediction, server_domain, timestamp)

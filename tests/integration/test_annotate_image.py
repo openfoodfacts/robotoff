@@ -118,7 +118,7 @@ def test_image_brand_annotation(client, monkeypatch, fake_taxonomy):
     assert prediction.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
     assert prediction.automatic_processing
-    # that in turn generated an insight
+    # We check that this prediction in turn generates an insight
     insights = list(ProductInsight.select().filter(barcode=barcode).execute())
     assert len(insights) == 1
     (insight,) = insights
@@ -140,6 +140,9 @@ def test_image_brand_annotation(client, monkeypatch, fake_taxonomy):
 
 
 def test_image_label_annotation(client, monkeypatch, fake_taxonomy):
+    """This test will check that, given an image with a logo above the confidence threshold,
+    that is then fed into the ANN logos and labels model, we annotate properly a product.
+    """
     ann = LogoAnnotationFactory(image_prediction__image__source_image="/images/2.jpg")
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
@@ -181,7 +184,7 @@ def test_image_label_annotation(client, monkeypatch, fake_taxonomy):
     assert prediction.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
     assert prediction.automatic_processing
-    # that in turn generated an insight
+    # We check that this prediction in turn generates an insight
     insights = list(ProductInsight.select().filter(barcode=barcode).execute())
     assert len(insights) == 1
     (insight,) = insights
