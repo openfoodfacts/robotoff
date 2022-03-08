@@ -178,6 +178,7 @@ def mark_insights():
         marked += 1
 
     logger.info("{} insights marked".format(marked))
+    return marked  # useful for tests
 
 
 def _download_product_dataset():
