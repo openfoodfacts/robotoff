@@ -1,7 +1,7 @@
 """Some factories for easy creation of models
 
-we use https://github.com/cam-stitt/factory_boy-peewee,
-although archived, this is lightweight, and should be easy to maintain if needed
+We use https://github.com/cam-stitt/factory_boy-peewee,
+although archived, this is lightweight, and should be easy to maintain or replace if needed
 """
 import uuid
 from datetime import datetime
@@ -27,7 +27,7 @@ class UuidSequencer:
 
     @classmethod
     def _setup_next_sequence(cls):
-        # we can't rely on id for sequence, us a count
+        # we can't rely on id for sequence, thus a count
         model = cls._meta.model
         return model.select().count() + 1
 
@@ -45,7 +45,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     brands: List[str] = []
     n_votes = 0
     value_tag = "en:seeds"
-    # we uses a lazy function for settings can change in a test
+    # we use a lazy function for settings can change in a test
     server_domain: str = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     server_type = "off"
     unique_scans_n = 10

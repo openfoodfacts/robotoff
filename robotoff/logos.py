@@ -269,8 +269,8 @@ def generate_insights_from_annotated_logos(
             confidence=1.0,
             logo_id=logo.id,
             username=logo.username,
-            is_annotation=True,  # explicit is better than implicit
-            automatic_processing=True,  # this is a user annotation !
+            is_annotation=True,  # it's worth restating it
+            automatic_processing=True,  # because this is a user annotation, which we trust.
         )
 
         if prediction is None:
