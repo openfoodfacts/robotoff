@@ -31,7 +31,7 @@ jobs:
       #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
       - name: Set up python
         uses: actions/setup-python@v2
         with:
@@ -117,6 +117,6 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Check out repository
-  #       uses: actions/checkout@v2.4.0
+  #       uses: actions/checkout@v3
   #     - name: Run developer workflow
   #       run: make dev
