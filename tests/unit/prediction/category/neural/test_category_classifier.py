@@ -12,6 +12,18 @@ from robotoff.taxonomy import Taxonomy
 
 
 def test_category_prediction_to_prediction():
+    category_prediction = CategoryPrediction("category", 0.5)
+
+    assert category_prediction.to_prediction() == Prediction(
+        type=InsightType.category,
+        value_tag="category",
+        data={"lang": "xx", "model": "neural", "confidence": 0.5},
+        automatic_processing=False,
+    )
+
+
+def test_category_prediction_to_prediction_auto(monkeypatch):
+    monkeypatch.setattr(CategoryPrediction, "NEURAL_CONFIDENCE_THRESHOLD", 0.9)
     category_prediction = CategoryPrediction("category", 0.9)
 
     assert category_prediction.to_prediction() == Prediction(
