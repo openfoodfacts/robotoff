@@ -794,6 +794,10 @@ class ImageLogoUpdateResource:
 
 
 class WebhookProductResource:
+    """This handles requests from product opener
+    that act as webhooks on product update or deletion.
+    """
+
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         action = req.get_param("action", required=True)
@@ -810,7 +814,6 @@ class WebhookProductResource:
             "New webhook event received for product {} (action: {}, "
             "domain: {})".format(barcode, action, server_domain)
         )
-
         if action not in ("updated", "deleted"):
             raise falcon.HTTPBadRequest(
                 title="invalid_action",
@@ -819,7 +822,13 @@ class WebhookProductResource:
 
         if action == "updated":
             send_ipc_event(
-                "product_updated", {"barcode": barcode, "server_domain": server_domain}
+                "product_updated",
+                {
+                    "barcode": barcode,
+                    "server_domain": server_domain,
+                    # add some latency
+                    "task_delay": settings.UPDATED_PRODUCT_WAIT,
+                },
             )
 
         elif action == "deleted":
