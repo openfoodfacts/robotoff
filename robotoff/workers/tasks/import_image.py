@@ -143,7 +143,7 @@ def run_object_detection(
     image_instance = ImageModel.get_or_none(source_image=source_image)
 
     if image_instance is None:
-        logger.warning(f"Missing image in DB for image {source_image}")
+        logger.warning("Missing image in DB for image %s", source_image)
         return
 
     timestamp = datetime.datetime.utcnow()
