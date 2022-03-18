@@ -273,10 +273,10 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) -> Optional[Taxo
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = http_session.get(url, timeout=5)
+        r = http_session.get(url, timeout=120)  # might take some time
         data = r.json()
     except Exception:
-        logger.warning("Timeout while fetching '{}' taxonomy".format(url))
+        logger.warning("Timeout while fetching taxonomy at %s", url)
         if fallback_path:
             return Taxonomy.from_json(fallback_path)
         else:
