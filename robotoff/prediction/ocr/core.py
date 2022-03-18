@@ -94,7 +94,7 @@ def get_ocr_result(
         if error_raise:
             raise OCRResultGenerationException(str(e)) from e
 
-        logger.warning(f"Error while parsing OCR JSON from {ocr_url}", exc_info=e)
+        logger.warning("Error while parsing OCR JSON from %s", ocr_url, exc_info=e)
         return None
 
 

@@ -198,7 +198,7 @@ def select_deepest_taxonomized_candidates(
 
     for candidate in candidates:
         if candidate.value_tag is None:
-            logger.warning(f"Unexpected None `value_tag` (candidate: {candidate})")
+            logger.warning("Unexpected None `value_tag` (candidate: %s)", candidate)
         else:
             value_tags.add(candidate.value_tag)
 
