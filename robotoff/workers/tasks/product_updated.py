@@ -1,8 +1,5 @@
-import time
-
 import requests
 
-from robotoff import settings
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
@@ -25,7 +22,6 @@ def update_insights(barcode: str, server_domain: str):
     # to finish
     logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
 
-    time.sleep(settings.UPDATED_PRODUCT_WAIT)
     product_dict = get_product(barcode)
 
     if product_dict is None:
