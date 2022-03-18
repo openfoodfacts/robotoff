@@ -71,28 +71,28 @@ def get_ocr_result(
     try:
         r = session.get(ocr_url)
     except requests.exceptions.RequestException as e:
-        error_message = f"HTTP Error when fetching OCR URL {ocr_url}"
+        error_message = "HTTP Error when fetching OCR URL"
         if error_raise:
-            raise OCRResultGenerationException(error_message) from e
+            raise OCRResultGenerationException(error_message, ocr_url) from e
 
-        logger.warning(error_message, exc_info=e)
+        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
         return None
 
     try:
         ocr_data: Dict = r.json()
     except json.JSONDecodeError as e:
-        error_message = f"Error while decoding OCR JSON from {ocr_url}"
+        error_message = "Error while decoding OCR JSON"
         if error_raise:
-            raise OCRResultGenerationException(error_message) from e
+            raise OCRResultGenerationException(error_message, ocr_url) from e
 
-        logger.warning(error_message, exc_info=e)
+        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
         return None
 
     try:
         return OCRResult.from_json(ocr_data)
     except OCRParsingException as e:
         if error_raise:
-            raise OCRResultGenerationException(str(e)) from e
+            raise OCRResultGenerationException(str(e), ocr_url) from e
 
         logger.warning("Error while parsing OCR JSON from %s", ocr_url, exc_info=e)
         return None

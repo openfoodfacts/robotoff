@@ -73,6 +73,10 @@ class OrientationResult:
 
 
 class OCRResultGenerationException(Exception):
+    """An Error occurred while analyzing OCR
+
+    args may contain ocr_url"""
+
     pass
 
 
