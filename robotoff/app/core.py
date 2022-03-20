@@ -111,7 +111,8 @@ def get_insights(
 
     if order_by is not None:
         if order_by == "random":
-            query = query.order_by((peewee.fn.Random() * ProductInsight.n_votes).desc())
+            # The +1 is here to avoid 0*rand() = 0
+            query = query.order_by((peewee.fn.Random() * (ProductInsight.n_votes + 1)).desc())
 
         elif order_by == "popularity":
             query = query.order_by(ProductInsight.unique_scans_n.desc())
