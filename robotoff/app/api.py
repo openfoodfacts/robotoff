@@ -166,6 +166,10 @@ class InsightCollection:
 
 class RandomInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        
         insight_type: Optional[str] = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
@@ -173,19 +177,28 @@ class RandomInsightResource:
         count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
 
         keep_types = [insight_type] if insight_type else None
-        insights: List[ProductInsight] = list(
-            get_insights(
-                keep_types=keep_types,
-                country=country,
-                value_tag=value_tag,
-                order_by="random",
-                server_domain=server_domain,
-                limit=count,
-            )
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=keep_types,
+            country=country,
+            server_domain=server_domain,
+            value_tag=value_tag,
+            order_by="random",
+            server_domain=server_domain,
         )
 
-        resp.media = {"insights": [insight.serialize() for insight in insights]}
+        offset: int = (page - 1) * count
+        insights = [i.serialize() for i in get_insights_(limit=count, offset=offset)]
+        response["count"] = get_insights_(count=True)
 
+        if not insights:
+            response["insights"] = []
+            response["status"] = "no_insights"
+        else:
+            response["insights"] = insights
+            response["status"] = "found"
+
+        resp.media = response
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     session_cookie = req.get_cookie_values("session")
@@ -903,6 +916,7 @@ def get_questions_resource_on_get(
     req: falcon.Request, resp: falcon.Response, order_by: str
 ):
     response: JSONType = {}
+    page: int = req.get_param_as_int("page", min_value=1, default=1)       
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
     keep_types: Optional[List[str]] = req.get_param_as_list(
@@ -948,7 +962,8 @@ def get_questions_resource_on_get(
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
     )
 
-    insights = list(get_insights_(limit=count))
+    offset: int = (page - 1) * count
+    insights = list(get_insights_(limit=count, offset=offset))
     response["count"] = get_insights_(count=True)
     # This code should be merged with the one in ProductQuestionsResource.get
     if not insights:
