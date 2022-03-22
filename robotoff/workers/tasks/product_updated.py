@@ -62,7 +62,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     except requests.exceptions.HTTPError as e:
         resp = e.response
         logger.error(
-            f"Category classifier returned an error: {resp.status_code}: {resp.text}"
+            f"Category classifier returned an error: {resp.status_code}: %s", resp.text
         )
 
     for neural_prediction in neural_predictions:

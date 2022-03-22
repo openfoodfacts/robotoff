@@ -237,7 +237,7 @@ class SlackNotifier(SlackNotifierInterface):
             return response_json
         except Exception as e:
             logger.error(
-                "An exception occurred when sending a Slack " "notification", exc_info=e
+                "An exception occurred when sending a Slack notification", exc_info=e
             )
 
 

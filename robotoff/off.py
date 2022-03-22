@@ -48,9 +48,8 @@ class OFFAuthentication:
                             break
 
             logger.warning(
-                "Unable to extract username from session cookie: {}".format(
-                    self.session_cookie
-                )
+                "Unable to extract username from session cookie: %s",
+                self.session_cookie,
             )
 
         return None

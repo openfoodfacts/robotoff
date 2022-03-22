@@ -599,8 +599,9 @@ class BoundingPoly:
 
         else:
             logger.error(
-                "Unknown orientation: edge {}, vertices {}"
-                "".format(first_edge, self.vertices)
+                "Unknown orientation: edge %s, vertices %s",
+                first_edge,
+                self.vertices,
             )
             return ImageOrientation.unknown
 

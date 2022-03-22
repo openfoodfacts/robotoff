@@ -222,7 +222,8 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         if expected_ingredients != original_ingredients:
             logger.warning(
                 "ingredients have changed since spellcheck insight "
-                "creation (product {})".format(barcode)
+                "creation (product %s)",
+                barcode,
             )
             return AnnotationResult(
                 status=AnnotationStatus.error_updated_product.name,

@@ -178,9 +178,9 @@ def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
 
     if count < settings.DATASET_CHECK_MIN_PRODUCT_COUNT:
         logger.error(
-            "Dataset has {} products, less than minimum of {} products".format(
-                count, settings.DATASET_CHECK_MIN_PRODUCT_COUNT
-            )
+            "Dataset has %s products, less than minimum of %s products",
+            count,
+            settings.DATASET_CHECK_MIN_PRODUCT_COUNT,
         )
         return False
 
