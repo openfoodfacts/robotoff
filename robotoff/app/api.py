@@ -167,9 +167,7 @@ class InsightCollection:
 class RandomInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
-        count: int = req.get_param_as_int("count", min_value=1, default=25)
-        page: int = req.get_param_as_int("page", min_value=1, default=1)
-        
+
         insight_type: Optional[str] = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
@@ -181,14 +179,12 @@ class RandomInsightResource:
             get_insights,
             keep_types=keep_types,
             country=country,
-            server_domain=server_domain,
             value_tag=value_tag,
             order_by="random",
             server_domain=server_domain,
         )
 
-        offset: int = (page - 1) * count
-        insights = [i.serialize() for i in get_insights_(limit=count, offset=offset)]
+        insights = [i.serialize() for i in get_insights_(limit=count)]
         response["count"] = get_insights_(count=True)
 
         if not insights:
@@ -199,6 +195,7 @@ class RandomInsightResource:
             response["status"] = "found"
 
         resp.media = response
+
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     session_cookie = req.get_cookie_values("session")
@@ -916,7 +913,7 @@ def get_questions_resource_on_get(
     req: falcon.Request, resp: falcon.Response, order_by: str
 ):
     response: JSONType = {}
-    page: int = req.get_param_as_int("page", min_value=1, default=1)       
+    page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
     keep_types: Optional[List[str]] = req.get_param_as_list(

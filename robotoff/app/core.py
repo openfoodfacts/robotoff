@@ -107,12 +107,17 @@ def get_insights(
         return query.count()
 
     if limit is not None:
-        query = query.limit(limit).offset(offset)
+        query = query.limit(limit)
+
+    if offset is not None and order_by != "random":
+        query = query.offset(offset)
 
     if order_by is not None:
         if order_by == "random":
             # The +1 is here to avoid 0*rand() = 0
-            query = query.order_by((peewee.fn.Random() * (ProductInsight.n_votes + 1)).desc())
+            query = query.order_by(
+                (peewee.fn.Random() * (ProductInsight.n_votes + 1)).desc()
+            )
 
         elif order_by == "popularity":
             query = query.order_by(ProductInsight.unique_scans_n.desc())
