@@ -18,13 +18,7 @@ jobs:
         with:
           # Configure which types are allowed.
           # Default: https://github.com/commitizen/conventional-commit-types
-          types: |
-            fix
-            feat
-            doc
-            refactor
-            ops
-            chore
+          types: feat
           # Configure which scopes are allowed.
           #scopes: |
            # core
