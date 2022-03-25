@@ -106,6 +106,7 @@ jobs:
           echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
+          test "${{ secrets.ROBOTOFF_DOMAIN }}" == "openfoodfacts.net" && echo STATIC_OFF_DOMAIN="static.openfoodfacts.org" >> .env
 
 
     - name: Create Docker volumes
