@@ -50,7 +50,7 @@ paths:
           description: The server domain
           required: false
           schema:
-            type: string
+            type: string 
             default: api.openfoodfacts.org
       responses:
         "200":
