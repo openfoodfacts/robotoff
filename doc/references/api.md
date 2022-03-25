@@ -1,3 +1,4 @@
+openapi: 3.0.0
 # API Reference
 
 Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.
@@ -21,13 +22,71 @@ Fetch a random insight.
 
 - Parameters:
 
-  - type (str, optional) - the type of insight. If not provided, an insight from any type will be returned.
-  - country (str, optional) - Only return predictions with products from a specific country (ex: `en:france`)
-  - value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
-  - server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
-  - count (int, optional) - number of results to return (default: 1)
+        - name: lang
+          in: query
+          description: The language of the question/value
+          required: false
+          schema:
+            type: string
+            default: en
+        - name: count
+          in: query
+          description: The number of questions to return
+          required: false
+          schema:
+            type: number
+            default: 1
+            minimum: 1
+        - name: server_domain
+          in: query
+          description: The server domain
+          required: false
+          schema:
+            type: string
+            default: api.openfoodfacts.org
+        - name: insight_types
+          in: query
+          description: Comma-separated list, filter by insight types
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: Filter by country tag
+          required: false
+          schema:
+            type: string
+        - name: brands
+          in: query
+          description: Comma-separated list, filter by brands
+          required: false
+          schema:
+            type: string
+        - name: value_tag
+          in: query
+          description: Filter by value tag, i.e the value that is going to be sent to Openfoodfacts
+          required: false
+          schema:
+            type: string
 
-- Response 200 (application/json)
+-  responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ### Product insights [/insights/{barcode}]
 
@@ -38,9 +97,26 @@ Return all insights associated with a specific product.
 - Parameters
 
   - barcode: Product barcode
-  - server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
+  - name: server_domain
 
-- Response 200 (application/json)
+-  responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ### Insight detail [/insights/detail/{id}]
 
@@ -50,9 +126,26 @@ Return a specific insight.
 
 - Parameters:
 
-  - id: ID of the insight
+  - name: id
 
-- Response 200 (application/json)
+-  responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ### Insight annotations [/insights/annotate]
 
@@ -62,11 +155,44 @@ Submit an annotation, given the `insight_id`. The request type must be `applicat
 
 - Parameters:
 
-  - insight_id (str, required) - ID of the insight
-  - annotation (int, required) - Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for "unknown".
-  - update (int, optional) - Send the update to Openfoodfacts if `update=1`, don't send the update otherwise. This parameter is useful if the update is performed client-side.
-
-- Response 200 (application/json)
+                insight_id:
+                  type: string
+                  description: ID of the insight
+                annotation:
+                  type: integer
+                  description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for `unknown`"
+                  enum:
+                    - 0
+                    - 1
+                    - -1
+                update:
+                  type: integer
+                  description: "Send the update to Openfoodfacts if `update=1`, don't send the update otherwise. This parameter is useful if the update is performed client-side"
+                  default: 1
+                  enum:
+                    - 0
+                    - 1
+              required:
+                - "insight_id"
+                - "annotation"
+     responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ## Questions
 
@@ -83,12 +209,55 @@ Current question types:
 
 - Parameters:
 
-  - lang (str, optional) - the language of the question/value. 'en' by default.
-  - count (int, optional) - Number of questions to return. Default to 1.
-  - server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
-  - barcode: Product barcode
+   parameters:
+        - name: barcode
+          in: path
+          description: The product barcode
+          required: true
+          style: simple
+          schema:
+            type: string
+        - name: lang
+          in: query
+          description: The language of the question/value
+          required: false
+          schema:
+            type: string
+            default: en
+        - name: count
+          in: query
+          description: The number of questions to return
+          required: false
+          schema:
+            type: number
+            default: 1
+            minimum: 1
+        - name: server_domain
+          in: query
+          description: The server domain
+          required: false
+          schema:
+            type: string 
+            default: api.openfoodfacts.org
 
-- Response 200 (application/json)
+-  responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ### Random questions [/questions/random]
 
@@ -96,15 +265,71 @@ Current question types:
 
 - Parameters:
 
-  - lang (str, optional) - the language of the question/value. 'en' by default.
-  - count (int, optional) - Number of questions to return. Default to 1.
-  - insight_types (list, optional) - comma-separated list, filter by insight types.
-  - country (str, optional) - filter by country tag.
-  - brands (str, optional) - filter by brands, comma-separated list of brand tags.
-  - value_tag (str, optional) - filter by value tag, i.e the value that is going to be sent to Openfoodfacts
-  - server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
+          - name: lang
+          in: query
+          description: The language of the question/value
+          required: false
+          schema:
+            type: string
+            default: en
+        - name: count
+          in: query
+          description: The number of questions to return
+          required: false
+          schema:
+            type: number
+            default: 1
+            minimum: 1
+        - name: server_domain
+          in: query
+          description: The server domain
+          required: false
+          schema:
+            type: string
+            default: api.openfoodfacts.org
+        - name: insight_types
+          in: query
+          description: Comma-separated list, filter by insight types
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: Filter by country tag
+          required: false
+          schema:
+            type: string
+        - name: brands
+          in: query
+          description: Comma-separated list, filter by brands
+          required: false
+          schema:
+            type: string
+        - name: value_tag
+          in: query
+          description: Filter by value tag, i.e the value that is going to be sent to Openfoodfacts
+          required: false
+          schema:
+            type: string
 
-- Response 200 (application/json)
+-  responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ## Predictions
 
@@ -116,10 +341,31 @@ Generate spellcheck corrections. Either the barcode or the text to correct must 
 
 - Parameters:
 
-  - text (str, optional) - the ingredient text to spellcheck.
-  - barcode (str, optional) - the barcode of the product.
+  - text:
+          type: string
+          description: the ingredient text to spellcheck.
+  - barcode:
+          type: integer
+          description: Barcode of the product
 
-- Response 200 (application/json)
+-  responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ```json
 {
@@ -145,9 +391,28 @@ Generate spellcheck corrections. Either the barcode or the text to correct must 
 
 #### Predict nutrient from OCR JSON [GET]
 
-- ocr_url (str, required) - the url of the OCR JSON
+- ocr_url :
+       type: string
+       description: the url of the OCR JSON.
 
-- Response 200 (application/json)
+- responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
 
 ```json
 {
