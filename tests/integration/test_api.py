@@ -1,15 +1,15 @@
-import pytest
-import logging
 import base64
+import logging
 import uuid
-
-from urllib.parse import urlencode
-from falcon import testing
-from robotoff.app.api import api
-from robotoff import models
 from functools import singledispatch
 from types import SimpleNamespace
+from urllib.parse import urlencode
 
+import pytest
+from falcon import testing
+
+from robotoff import models
+from robotoff.app.api import api
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
@@ -51,6 +51,7 @@ def _setup_database():
         reserved_barcode=False,
     )
 
+
 def test_random_question():
     _setup_database()
 
@@ -68,6 +69,7 @@ def test_random_question():
     assert js.questions[0].question == "Does the product belong to this category?"
     assert js.questions[0].insight_id == "id"
     assert js.questions[0].insight_type == "category"
+
 
 def test_popular_question():
     _setup_database()
@@ -112,9 +114,10 @@ def test_barcode_question():
     assert js.questions[0].insight_id == "id"
     assert js.questions[0].insight_type == "category"
 
-# authenticated | leads to annotation | will be annotated as 0              
+
+# authenticated | leads to annotation | will be annotated as 0
 # Y               Y
-# N               N 
+# N               N
 # N               Y                     N
 # N               Y                     Y
 
@@ -126,8 +129,7 @@ def test_barcode_question():
 #         "insight_id": "id",
 #         "annotation": -1,
 #         }), headers= {"Authorization" : "Basic " + base64.b64encode(b"a:b").decode("ascii")})
-    
+
 #     assert result.status_code == 200
 
 # def test_annotate_insight_
-

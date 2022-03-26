@@ -1,9 +1,9 @@
-import elasticsearch as es
 import pathlib
 import sys
 from pathlib import Path
 from typing import Optional
 
+import elasticsearch as es
 import typer
 from typer import Argument, Option
 

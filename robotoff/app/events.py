@@ -1,5 +1,7 @@
-import requests
 from multiprocessing import Process
+
+import requests
+
 from robotoff.settings import EVENTS_API_URL
 from robotoff.utils import get_logger
 
