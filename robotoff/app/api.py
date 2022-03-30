@@ -20,7 +20,6 @@ from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
-from robotoff.app.events import send_event_async
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -265,7 +264,6 @@ class AnnotateInsightResource:
             device_id=device_id,
             trusted_annotator=trusted_annotator,
         )
-        send_event_async("question_answered", username, device_id)
 
         resp.media = {
             "status": annotation_result.status,
