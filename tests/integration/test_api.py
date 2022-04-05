@@ -91,6 +91,38 @@ def test_popular_question(client, mocker):
     }
 
 
+def test_popular_question_pagination(client, mocker):
+    mocker.patch("robotoff.insights.question.get_product", return_value={})
+    ProductInsight.delete().execute()
+    for i in range(0, 12):
+        ProductInsightFactory(barcode=i, unique_scans_n=100 - i)
+
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=1")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["0", "1", "2", "3", "4"]
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=2")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["5", "6", "7", "8", "9"]
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=3")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["10", "11"]
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=4")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "no_questions"
+    assert len(data["questions"]) == 0
+
+
 def test_barcode_question_not_found(client):
     result = client.simulate_get("/api/v1/questions/2")
 
