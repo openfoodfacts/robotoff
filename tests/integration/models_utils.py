@@ -58,7 +58,7 @@ class PredictionFactory(PeeweeModelFactory):
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
     data: Dict[str, Any] = {}
-    timestamp = factory.LazyFunction(datetime.now)
+    timestamp = factory.LazyFunction(datetime.utcnow)
     value_tag = "en:seeds"
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
 

@@ -17,7 +17,7 @@ def _set_up_and_tear_down(peewee_db):
 
 
 def test_mark_insights():
-    now = datetime.now()
+    now = datetime.utcnow()
     # not automatic
     not_auto = ProductInsightFactory(automatic_processing=False)
     # already marked
