@@ -82,7 +82,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     poetry run pytest tests
     ```
 
-    Before running the test cases make sure you have a database created. Have a look at [settings.py](../../robotoff/settings.py#L131) the default database name, user, and password is
+    Before running the test cases make sure you have a database created. Have a look at [.env](../../robotoff/settings.py#L131) the default database name, user, and password is
 
     ```
     postgres
