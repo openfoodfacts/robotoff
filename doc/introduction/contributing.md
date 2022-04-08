@@ -68,7 +68,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     docker-compose up
     ```
 
-    You can make a post request through [Postman] (https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
+    You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
 
     The mapping of functions and API path is [here](../../robotoff/app/api.py#L1083) 
 
