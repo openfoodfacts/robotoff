@@ -62,15 +62,6 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     make checks
     make tests
     ```
-    To test the APIs on your localhost run 
-
-    ```
-    docker-compose up
-    ```
-
-    You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
-
-    The mapping of functions and API path is [here](../../robotoff/app/api.py#L1083) 
 
     If you are on a local install:
 
@@ -81,13 +72,6 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     isort --check .
     poetry run pytest tests
     ```
-
-    Before running the test cases make sure you have a database created. Have a look at [.env](../../robotoff/settings.py#L131) the default database name, user, and password is
-
-    ```
-    postgres
-    ```
-    Configure them as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.
 
 6.  Commit your changes and push your branch to GitHub:
 
