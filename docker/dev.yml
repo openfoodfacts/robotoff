@@ -44,6 +44,12 @@ services:
   scheduler:
     <<: *networks-productopener-local
     <<: *robotoff-dev
+  mongodb:
+    # Note: keep it as close a possible to mongodb.yml
+    image: mongo:4.4
+    command: mongod --wiredTigerCacheSizeGB 1.5
+    ports:
+      - "127.0.0.1:${MONGO_EXPOSE_PORT:-27017}:27017"
 
 networks:
   # this links to the product opener dev environment on local machine
