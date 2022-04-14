@@ -5,6 +5,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 import peewee
 
 from robotoff import settings
+from robotoff.app import events
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
     SAVED_ANNOTATION_VOTE_RESULT,
@@ -208,4 +209,9 @@ def save_annotation(
             return SAVED_ANNOTATION_VOTE_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(insight, annotation, update, data=data, auth=auth)
+    result = annotator.annotate(insight, annotation, update, data=data, auth=auth)
+    username = auth.get_username() if auth else "unknown annotator"
+    events.event_processor.send_async(
+        "question_answered", username, device_id, insight.barcode
+    )
+    return result

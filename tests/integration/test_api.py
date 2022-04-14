@@ -3,6 +3,8 @@ import base64
 import pytest
 from falcon import testing
 
+from robotoff import settings
+from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
 
@@ -354,3 +356,33 @@ def test_annotate_insight_majority_vote_overridden(client):
     # The insight should be annoted with '0', with a None username since this was resolved with an
     # anonymous vote.
     assert insight.items() > {"annotation": 0, "username": None, "n_votes": 5}.items()
+
+
+def test_annotation_event(client, monkeypatch, httpserver):
+    """Test that annotation sends an event"""
+    monkeypatch.setattr(settings, "EVENTS_API_URL", httpserver.url_for("/"))
+    # setup a new event_processor, to be sure settings is taken into account
+    monkeypatch.setattr(events, "event_processor", events.EventProcessor())
+    # We expect to have a call to events server
+    expected_event = {
+        "event_type": "question_answered",
+        "user_id": "a",
+        "device_id": "test-device",
+        "barcode": "1",
+    }
+    httpserver.expect_oneshot_request(
+        "/", method="POST", json=expected_event
+    ).respond_with_data("Done")
+    with httpserver.wait(raise_assertions=True, stop_on_nohandler=True, timeout=2):
+        result = client.simulate_post(
+            "/api/v1/insights/annotate",
+            params={
+                "insight_id": insight_id,
+                "annotation": -1,
+                "device_id": "test-device",
+            },
+            headers={
+                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
+            },
+        )
+    assert result.status_code == 200
