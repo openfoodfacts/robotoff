@@ -84,4 +84,4 @@ After cloning the repository:
     ```
     docker-compose run --rm api poetry run python
     ```
-    Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb)\](https://docs.python.org/3/library/pdb.html) or play with the code. 
+    Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb](https://docs.python.org/3/library/pdb.html) or play with the code. 
