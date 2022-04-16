@@ -53,34 +53,35 @@ After cloning the repository:
 
 5. To configure MongoDB for docker, start with installing [official MongoDB image](https://hub.docker.com/_/mongo)
 
-Start the MongoDB container
+    Start the MongoDB container with
 
-```docker start mongodb
-```
+    ```
+    docker start mongodb
+    ```
 
-Your MongoDB has been installed sucessfully  and is up and running. Congratulations!
+    Your MongoDB has been installed sucessfully  and is up and running. Congratulations!
 
-Once you have the Robotoff services running with `docker-compose up` along with MongoDB container, proceed with the next steps.
+    Once you have the Robotoff services running with `docker-compose up` along with MongoDB container, proceed with the next steps.
 
-Our MongoDB does not have a database right now. So we restore it.
+    Our MongoDB does not have a database right now. So we restore it.
 
-```
-tar xzf off-dev-mongo-dump.tar.gz
-docker cp -a dump robotoff_mongodb_1:/var/tmp/
-docker exec mongodb mongorestore /var/tmp/dump
+    ```
+    tar xzf off-dev-mongo-dump.tar.gz
+    docker cp -a dump robotoff_mongodb_1:/var/tmp/
+    docker exec mongodb mongorestore /var/tmp/dump
 
-```
+    ```
 
-First we have extracted the zip file. Next we copy the dump in our running MongoDB service in Robotoff `robotoff_mongodb_1`. Lastly, we restore the dump from Robotoff's service to `mongodb` container.
+    First we have extracted the zip file. Next we copy the dump in our running MongoDB service in Robotoff `robotoff_mongodb_1`. Lastly, we restore the dump from Robotoff's service to `mongodb` container.
 
-Your patience has paid off. The MongoDB configuration is compelete. 
+    The MongoDB configuration is now compelete. 
 
-You can now work with Robotoff seamlessly, any services that require to connect with MongoDB are taken care of.
+    You can now work with Robotoff seamlessly.
 
 
 6. To debug in a running container, you need to run poetry in the container. For example:
 
-```
-docker-compose run --rm api poetry run python
-```
-Here we run the `api` service. This opens a Python command prompt, you may debug with (pdb)[https://docs.python.org/3/library/pdb.html] or play with the code. 
+    ```
+    docker-compose run --rm api poetry run python
+    ```
+    Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb)\](https://docs.python.org/3/library/pdb.html) or play with the code. 
