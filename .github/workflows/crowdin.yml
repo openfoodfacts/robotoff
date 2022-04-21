@@ -5,6 +5,8 @@ on:
     #paths:
     #  - 'i18n/robotoff.pot'
     branches: [ 'crowdin-trigger' ]
+  schedule:
+  - cron: "0 14 * * *"
 jobs:
   synchronize-with-crowdin:
     runs-on: ubuntu-latest
