@@ -87,7 +87,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     ```
     postgres
     ```
-    Configure them as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.
+    Configure them through environment (you may use `.env` if you use docker) as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.
 
 6.  Commit your changes and push your branch to GitHub:
 
