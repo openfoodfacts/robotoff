@@ -93,7 +93,7 @@ mdx-truly-sane-lists = "~1.2"
 mkdocs-awesome-pages-plugin = "~2.6.1"
 typer-cli = "~0.0.11"
 coverage = { extras = ["toml"], version = "~6.2" }
-types-requests = "~2.26.0"
+types-requests = "~2.27.23"
 types-six = "^1.16.10"
 types-protobuf = "^3.17.3"
 types-certifi = "^2021.10.8"
