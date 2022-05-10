@@ -1327,7 +1327,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-protobuf"
-version = "3.19.12"
+version = "3.19.19"
 description = "Typing stubs for protobuf"
 category = "dev"
 optional = false
@@ -1486,7 +1486,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "6753686cd12d55906981e6cc4efb6612a97bb729938d9185fde5ca808c3ec0e1"
+content-hash = "7e7df7b2a113e9e56dbd0bff7c435e17cf63ea182d7a38233c11adce0ad86330"
 
 [metadata.files]
 apscheduler = [
@@ -2581,8 +2581,8 @@ types-certifi = [
     {file = "types_certifi-2021.10.8.1-py3-none-any.whl", hash = "sha256:2290008f32e6ac7c69e779d04fa1bc4c6bb4c7200aa3b3b072ad5475a8968aa5"},
 ]
 types-protobuf = [
-    {file = "types-protobuf-3.19.12.tar.gz", hash = "sha256:b022247347471219acbe2fe68d2f3623d788252e99e9b97358b7ab904d268a78"},
-    {file = "types_protobuf-3.19.12-py3-none-any.whl", hash = "sha256:130bf00e688ae9376682ac8f3d6610be797d8a6072f102f530ca1d579b52e54b"},
+    {file = "types-protobuf-3.19.19.tar.gz", hash = "sha256:c040828ff12685ec6884d2c985ed05adcbef233620290b830c8a79fbed26c3fa"},
+    {file = "types_protobuf-3.19.19-py3-none-any.whl", hash = "sha256:2f7a000395668178569476b63fc3152d22fd932a27a2e1041d69b9ea4e62aee3"},
 ]
 types-requests = [
     {file = "types-requests-2.26.3.tar.gz", hash = "sha256:d63fa617846dcefff5aa2d59e47ab4ffd806e4bb0567115f7adbb5e438302fe4"},
