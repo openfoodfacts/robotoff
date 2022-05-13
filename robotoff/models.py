@@ -210,7 +210,14 @@ class ImageModel(BaseModel):
 
 class ImagePrediction(BaseModel):
     """Table to store computer vision predictions (object detection,
-    image segmentation,...) made by custom models."""
+    image segmentation,...) made by custom models.
+
+    They are created by api `ImagePredictorResource`, `ImagePredictionImporterResource`
+    or cli `import_logos`
+
+    Predictions come from a model, from settings `OBJECT_DETECTION_TF_SERVING_MODELS`
+    this can be a nutriscore, a logo, etc...
+    """
 
     type = peewee.CharField(max_length=256)
     model_name = peewee.CharField(max_length=100, null=False, index=True)
@@ -227,6 +234,15 @@ class ImagePrediction(BaseModel):
 
 
 class LogoAnnotation(BaseModel):
+    """Annotation(s) for an image prediction
+    (an image prediction might lead to several annotations)
+
+    At the moment, this is mostly for logo (see run_object_detection),
+    when we have a logo prediction above a certain threshold we create an entry,
+    to ask user for annotation on the logo (https://hunger.openfoodfacts.org/logos)
+    and eventual annotation will land there.
+    """
+
     image_prediction = peewee.ForeignKeyField(
         ImagePrediction, null=False, backref="logo_detections"
     )
