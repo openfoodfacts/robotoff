@@ -55,6 +55,12 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
 5.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
 
+    If you are on Windows, make sure you have [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) installed. Don't forget to add its path in your [system environment variables](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417).
+
+    A sample path may look like this: `C:\Program Files (x86)\GnuWin32\bin`
+    
+    It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  
+
     If you are using docker:
 
     ```
@@ -71,7 +77,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     mypy .
     isort --check .
     poetry run pytest tests
-    ```
+    ```    
 
 6.  Commit your changes and push your branch to GitHub:
 
