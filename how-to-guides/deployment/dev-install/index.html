@@ -686,6 +686,10 @@ You should, consider those changes:</p>
 </code></pre></div>
 <p>This will build containers, pull images based containers, create containers and run them.
 It will also download models.</p>
+<p>Verify whether robotoff is running as expected, by executing the following command in CLI,
+<div class="highlight"><pre><span></span><code>curl http://robotoff.openfoodfacts.localhost:5500/api/v1/status
+</code></pre></div>
+The expected response is <code>{"status":"running"}</code>.</p>
 <p>Also take a look at <a href="../maintenance/">maintenance</a></p>
 <h2 id="local-install-with-poetry">Local install with poetry</h2>
 <p>This is an alternative if you are reluctant to use Docker, or have some other reasons to prefer manual install.</p>
