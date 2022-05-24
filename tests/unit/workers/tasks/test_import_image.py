@@ -1,22 +1,16 @@
 from PIL import Image
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from tests import data
+from robotoff.insights.extraction import get_predictions_from_image
+from robotoff.insights.importer import import_insights
+from unittest.mock import Mock
 
-image = get_image_from_url('https://world.openfoodfacts.org/images/products/802/509/314/0251/4.jpg', error_raise=False)
 
-
-def test_import_insights_from_image(mocker):
-    barcode = "4640028621441"
-    source_image = 'https://world.openfoodfacts.org/images/products/802/509/314/0251/4.jpg'
+def test_import_insights_from_image(mock):
+    barcode = "3302740030949"
+    source_image = '/330/274/003/0949/6.jpg '
     ocr_url = 'https://world.openfoodfacts.org/images/products/802/509/314/0251/4.json'
-    sever_domain = 'http://openfoodfacts.org/'
+    server_domain = 'api.openfoodfacts.org'
     
-    expected_predictions_all = get_predictions_from_image(barcode, image, source_image, ocr_url, sever_domain)
+    expected_predictions_all = get_predictions_from_image(barcode, data.image, source_image, ocr_url)
 
-    predictions_all_mock = mocker.patch(
-        "robotoff.workers.tasks.import_image.import_insights_from_image.get_predictions_from_image",
-        return_value=[expected_predictions_all],
-    )
-
-    imported_mock = import_insights(predictions_all, server_domain, automatic=True)
-
-    
+    get_predictions_from_image = mock.Mock(return_value=data.expected_predictions_all)
