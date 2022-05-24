@@ -50,7 +50,9 @@ edit_etc_hosts:
 # Docker Compose #
 #----------------#
 up:
+# creates a docker network and runs docker-compose
 	@echo "🥫 Building and starting containers …"
+	docker network create po_default || true  
 	${DOCKER_COMPOSE} up -d --build 2>&1
 
 down:

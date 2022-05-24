@@ -79,7 +79,7 @@ extras = ["falcon"]
 flake8 = "4.0.1"
 black = "21.12b0"                                  # If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml and in .pre-commit-config.yaml
 factory_boy-peewee = "0.0.4"  # This package is archived and not maintained anymore but works and is very lightweight.
-mypy = "0.931"
+mypy = "0.950"
 pytest = "~6.2.5"
 pytest-mock = "~3.6.1"
 pre-commit = "~2.17.0"
@@ -92,7 +92,7 @@ mkdocs-material = "~7.2.3"
 mdx-truly-sane-lists = "~1.2"
 mkdocs-awesome-pages-plugin = "~2.6.1"
 typer-cli = "~0.0.11"
-coverage = { extras = ["toml"], version = "~6.2" }
+coverage = { extras = ["toml"], version = "~6.3" }
 types-requests = "~2.26.0"
 types-six = "^1.16.10"
 types-protobuf = "^3.17.3"
