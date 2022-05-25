@@ -97,7 +97,7 @@ types-requests = "~2.26.0"
 types-six = "^1.16.10"
 types-protobuf = "^3.17.3"
 types-certifi = "^2021.10.8"
-types-setuptools = "^57.4.8"
+types-setuptools = "^57.4.16"
 types-toml = "^0.10.3"
 pytest-httpserver = "^1.0.4"
 
