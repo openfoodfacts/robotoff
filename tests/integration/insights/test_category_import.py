@@ -66,7 +66,6 @@ class TestCategoryImporter:
 
     We only test the scenarios that are of actual use
     """
-
     def fake_product_store(self):
         return {barcode1: Product({"categories_tags": ["en:Fish"]})}
 
@@ -132,6 +131,7 @@ class TestCategoryImporter:
         assert not inserted.automatic_processing
 
     def test_import_auto(self):
+        import pdb; pdb.set_trace()
         imported = self._run_import(
             [neural_prediction("en:smoked-salmons", confidence=0.91, auto=True)]
         )
