@@ -161,12 +161,15 @@ class SlackNotifier(SlackNotifierInterface):
 
     def notify_automatic_processing(self, insight: ProductInsight):
         product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
+        edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
 
         if insight.source_image:
             image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
+
+        edit_text = f"(<{edit_url}|edit>)"
         value = insight.value or insight.value_tag
 
         if insight.type in {
@@ -177,7 +180,7 @@ class SlackNotifier(SlackNotifierInterface):
         else:
             text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        message = _slack_message_block(text + " " + metadata_text)
+        message = _slack_message_block(text + " " + metadata_text + " "+edit_text)
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
             self._post_message(

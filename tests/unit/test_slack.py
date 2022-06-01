@@ -198,3 +198,25 @@ def test_noop_slack_notifier_logging(caplog):
 
     (logged,) = caplog.records
     assert logged.msg.startswith("Alerting on slack channel")
+
+def test_notify_automatic_processing(mocker, monkeypatch):
+    mock = mocker.patch(
+        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+    )
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
+
+    notifier = slack.SlackNotifier("")
+
+    notifier.notify_automatic_processing(
+        ProductInsight(
+            barcode="123", source_image="/image/1", type="label", value_tag="en:nutriscore"
+        )
+    )
+
+    mock.assert_called_once_with(
+        notifier.POST_MESSAGE_URL,
+        data=PartialRequestMatcher(
+            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <{settings.OFF_IMAGE_BASE_URL}/image/1|source image>) (<https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
+            notifier.NUTRISCORE_ALERT_CHANNEL,
+        ),
+    )
