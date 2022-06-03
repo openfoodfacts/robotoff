@@ -11,6 +11,10 @@ from robotoff.models import LogoAnnotation, ProductInsight
 from robotoff.prediction.types import Prediction
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
+from robotoff.insights.extraction import extract_nutriscore_label
+
+import urllib.request
+import io
 
 logger = get_logger(__name__)
 
@@ -170,6 +174,22 @@ class SlackNotifier(SlackNotifierInterface):
             metadata_text = f"(<{product_url}|product>)"
 
         edit_text = f"(<{edit_url}|edit>)"
+
+        # converting image_url to PIL Image
+
+        with urllib.request.urlopen(image_url) as url:
+            f = io.BytesIO(url.read())
+        img = Image.open(f)
+             
+        nutriscore_prediction = extract_nutriscore_label(
+            img,
+            manual_threshold=0.5,
+        )
+
+        if(nutriscore_prediction.data.bounding_box):
+            cropped_img = LogoAnnotation.get_crop_image_url()
+       
+
         value = insight.value or insight.value_tag
 
         if insight.type in {
