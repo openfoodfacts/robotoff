@@ -118,6 +118,7 @@ NUTRISCORE_LABELS: Dict[str, str] = {
 
 def extract_nutriscore_label(
     image: Image.Image,
+    source_image: str,
     manual_threshold: float,
     automatic_threshold: Optional[float] = None,
 ) -> Optional[Prediction]:
@@ -142,6 +143,7 @@ def extract_nutriscore_label(
 
     return Prediction(
         type=PredictionType.label,
+        source_image = source_image,
         value_tag=label_tag,
         automatic_processing=automatic_processing,
         data={

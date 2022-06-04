@@ -7,7 +7,7 @@ import requests
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import LogoAnnotation, ProductInsight
+from robotoff.models import LogoAnnotation, ProductInsight, Prediction as PredictionModel
 from robotoff.prediction.types import Prediction
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
@@ -168,6 +168,8 @@ class SlackNotifier(SlackNotifierInterface):
         edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
 
         if insight.source_image:
+            if "bounding_box" in insight.data:
+                image_url =  PredictionModel.crop_image_url(insight.source_image)
             image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
@@ -175,24 +177,9 @@ class SlackNotifier(SlackNotifierInterface):
 
         edit_text = f"(<{edit_url}|edit>)"
 
-        # converting image_url to PIL Image
-
-        with urllib.request.urlopen(image_url) as url:
-            f = io.BytesIO(url.read())
-        img = Image.open(f)
-             
-        nutriscore_prediction = extract_nutriscore_label(
-            img,
-            manual_threshold=0.5,
-        )
-
-        if(nutriscore_prediction.data.bounding_box):
-            cropped_img = LogoAnnotation.get_crop_image_url()
-       
-
         value = insight.value or insight.value_tag
 
-        if insight.type in {
+        if insight.type in { 
             InsightType.product_weight.name,
             InsightType.expiration_date.name,
         }:

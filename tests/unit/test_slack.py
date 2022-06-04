@@ -209,7 +209,8 @@ def test_notify_automatic_processing(mocker, monkeypatch):
 
     notifier.notify_automatic_processing(
         ProductInsight(
-            barcode="123", source_image="/image/1", type="label", value_tag="en:nutriscore"
+            barcode="123", source_image="/image/1", type="label", value_tag="en:nutriscore",
+            data={"bounding_box":{2,2,4,4}}
         )
     )
 
