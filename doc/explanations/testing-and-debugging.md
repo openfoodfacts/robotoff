@@ -8,7 +8,7 @@ Robotoff is an API that pulls prediction data, annotation data, product data, nu
 
 > **_NOTE:_** If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
-# How to generate data
+# How to generate data?
 We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create some data in your local.
 
 If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
