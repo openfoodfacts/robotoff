@@ -78,6 +78,7 @@ def extract_image_ml_predictions(
         # detection.
         nutriscore_prediction = extract_nutriscore_label(
             image,
+            source_image,
             manual_threshold=0.5,
         )
 

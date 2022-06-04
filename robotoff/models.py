@@ -52,6 +52,13 @@ def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
     return rows
 
 
+def crop_image_url(source_image, bounding_box) -> str:
+    base_url = settings.OFF_IMAGE_BASE_URL + source_image
+    y_min, x_min, y_max, x_max = bounding_box
+    base_robotoff_url = settings.BaseURLProvider().robotoff().get()
+    return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
+
+
 class BaseModel(peewee.Model):
     class Meta:
         database = db
@@ -170,12 +177,6 @@ class Prediction(BaseModel):
         help_text="server domain linked to the insight", index=True
     )
     predictor = peewee.CharField(max_length=100, null=True)
-
-    def crop_image_url(self, source_image) -> str:
-        base_url = settings.OFF_IMAGE_BASE_URL + source_image
-        y_min, x_min, y_max, x_max = self.bounding_box
-        base_robotoff_url = settings.BaseURLProvider().robotoff().get()
-        return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
 class AnnotationVote(BaseModel):

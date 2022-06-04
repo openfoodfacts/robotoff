@@ -171,7 +171,8 @@ class SlackNotifier(SlackNotifierInterface):
         if insight.source_image:
             if "bounding_box" in insight.data:
                 image_url = PredictionModel.crop_image_url(insight.source_image)
-            image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
+            else:
+                image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
