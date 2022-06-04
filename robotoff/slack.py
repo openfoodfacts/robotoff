@@ -1,20 +1,21 @@
+import io
 import json
 import operator
+import urllib.request
 from typing import Dict, List, Optional
 
 import requests
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
+from robotoff.insights.extraction import extract_nutriscore_label
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import LogoAnnotation, ProductInsight, Prediction as PredictionModel
+from robotoff.models import LogoAnnotation
+from robotoff.models import Prediction as PredictionModel
+from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
-from robotoff.insights.extraction import extract_nutriscore_label
-
-import urllib.request
-import io
 
 logger = get_logger(__name__)
 
@@ -169,7 +170,7 @@ class SlackNotifier(SlackNotifierInterface):
 
         if insight.source_image:
             if "bounding_box" in insight.data:
-                image_url =  PredictionModel.crop_image_url(insight.source_image)
+                image_url = PredictionModel.crop_image_url(insight.source_image)
             image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
@@ -179,7 +180,7 @@ class SlackNotifier(SlackNotifierInterface):
 
         value = insight.value or insight.value_tag
 
-        if insight.type in { 
+        if insight.type in {
             InsightType.product_weight.name,
             InsightType.expiration_date.name,
         }:
@@ -187,7 +188,7 @@ class SlackNotifier(SlackNotifierInterface):
         else:
             text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        message = _slack_message_block(text + " " + metadata_text + " "+edit_text)
+        message = _slack_message_block(text + " " + metadata_text + " " + edit_text)
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
             self._post_message(

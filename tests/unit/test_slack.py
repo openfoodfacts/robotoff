@@ -199,6 +199,7 @@ def test_noop_slack_notifier_logging(caplog):
     (logged,) = caplog.records
     assert logged.msg.startswith("Alerting on slack channel")
 
+
 def test_notify_automatic_processing(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
@@ -209,8 +210,11 @@ def test_notify_automatic_processing(mocker, monkeypatch):
 
     notifier.notify_automatic_processing(
         ProductInsight(
-            barcode="123", source_image="/image/1", type="label", value_tag="en:nutriscore",
-            data={"bounding_box":{2,2,4,4}}
+            barcode="123",
+            source_image="/image/1",
+            type="label",
+            value_tag="en:nutriscore",
+            data={"bounding_box": {2, 2, 4, 4}},
         )
     )
 

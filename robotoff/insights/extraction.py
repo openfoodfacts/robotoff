@@ -143,7 +143,7 @@ def extract_nutriscore_label(
 
     return Prediction(
         type=PredictionType.label,
-        source_image = source_image,
+        source_image=source_image,
         value_tag=label_tag,
         automatic_processing=automatic_processing,
         data={
