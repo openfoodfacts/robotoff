@@ -11,8 +11,7 @@ from robotoff.insights.dataclass import InsightType
 from robotoff.insights.extraction import extract_nutriscore_label
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation
-from robotoff.models import Prediction as PredictionModel
-from robotoff.models import ProductInsight
+from robotoff.models import ProductInsight, crop_image_url
 from robotoff.prediction.types import Prediction
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
@@ -170,7 +169,7 @@ class SlackNotifier(SlackNotifierInterface):
 
         if insight.source_image:
             if "bounding_box" in insight.data:
-                image_url = PredictionModel.crop_image_url(insight.source_image)
+                image_url = crop_image_url(insight.source_image, insight.data.bounding_box)
             else:
                 image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
