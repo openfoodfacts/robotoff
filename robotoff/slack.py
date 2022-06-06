@@ -1,14 +1,11 @@
-import io
 import json
 import operator
-import urllib.request
 from typing import Dict, List, Optional
 
 import requests
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
-from robotoff.insights.extraction import extract_nutriscore_label
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation, ProductInsight, crop_image_url
 from robotoff.prediction.types import Prediction
@@ -189,11 +186,14 @@ class SlackNotifier(SlackNotifierInterface):
         else:
             text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        message = _slack_message_block(f"{text} {metadata_text} {edit_text}")
+        message = _slack_message_block(f"{text} {metadata_text}")
+        nutriscore_message = _slack_message_block(f"{text} {metadata_text} {edit_text}")
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
             self._post_message(
-                message, self.NUTRISCORE_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+                nutriscore_message,
+                self.NUTRISCORE_ALERT_CHANNEL,
+                **self.COLLAPSE_LINKS_PARAMS,
             )
             return
 

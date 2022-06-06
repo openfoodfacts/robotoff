@@ -34,7 +34,7 @@ class FakeNutriscoreModel(RemoteModel):
     ],
 )
 def test_extract_nutriscore_label_automatic(
-    mocker, automatic_threshold, processed_automatically
+    mocker, source_image, automatic_threshold, processed_automatically
 ):
     raw_result = ObjectDetectionRawResult(
         num_detections=1,
@@ -49,7 +49,10 @@ def test_extract_nutriscore_label_automatic(
     )
 
     insight = extract_nutriscore_label(
-        Image.Image, manual_threshold=0.5, automatic_threshold=automatic_threshold
+        Image.Image,
+        source_image="/image/1",
+        manual_threshold=0.5,
+        automatic_threshold=automatic_threshold,
     )
 
     assert insight == Prediction(
