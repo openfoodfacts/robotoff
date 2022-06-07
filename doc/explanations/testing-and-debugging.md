@@ -80,3 +80,10 @@ We encourage using PDB to debug. You can add the following lines in your functio
 ```
 import pdb; pdb.set_trace()
 ```
+
+and then run the pytest, with the --pdb option:
+
+
+```
+COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest path/to/test.py::test_xxx --pdb
+```
