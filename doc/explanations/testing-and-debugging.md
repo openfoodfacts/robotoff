@@ -68,7 +68,7 @@ There are even cases where automated tests are your only chance to test you code
 
 There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. For local testing we do not yet provide a standarized approach to add a MongoDB Docker in the same network and configure Robotoff to use it.
 
-In such cases we recommend either you write a test case of your own or use an existing one. 
+In such cases you will have to mock the function which calls MongoDB. You might look at existing tests.
 
 To identify when Robotoff connects to MongoDB keep an eye for variables like `server_url`, `server_domain` or `settings.OFF_SERVER_DOMAIN`.
 
