@@ -51,7 +51,7 @@ You need to specify the name of the test case you want to invoke.
 Here is the syntax:
 
 ```
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest  your.package.name::the_function_name
+$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest  path/to/test_file.py::the_function_name
 ```
 
 In this example we call `test_get_type()` from `tests/unit/insights/test_importer.py`
