@@ -21,16 +21,10 @@ class FakeNutriscoreModel(RemoteModel):
 
 
 @pytest.mark.parametrize(
-    "automatic_threshold, processed_automatically",
+    "automatic_threshold, processed_automatically, source_image",
     [
-        (
-            None,
-            False,
-        ),
-        (
-            0.7,
-            True,
-        ),
+        (None, False, "/image/1"),
+        (0.7, True, "/image/1"),
     ],
 )
 def test_extract_nutriscore_label_automatic(
@@ -50,7 +44,7 @@ def test_extract_nutriscore_label_automatic(
 
     insight = extract_nutriscore_label(
         Image.Image,
-        source_image="/image/1",
+        source_image=source_image,
         manual_threshold=0.5,
         automatic_threshold=automatic_threshold,
     )
@@ -63,6 +57,7 @@ def test_extract_nutriscore_label_automatic(
             "model": "nutriscore",
             "notify": True,
         },
+        source_image=source_image,
         value_tag="en:nutriscore-grade-a",
         automatic_processing=processed_automatically,
     )

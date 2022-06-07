@@ -164,9 +164,9 @@ class SlackNotifier(SlackNotifierInterface):
         edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
 
         if insight.source_image:
-            if "bounding_box" in insight.data:
+            if insight.data and "bounding_box" in insight.data:
                 image_url = crop_image_url(
-                    insight.source_image, insight.data.bounding_box
+                    insight.source_image, insight.data.get("bounding_box")
                 )
             else:
                 image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
