@@ -62,7 +62,9 @@ $ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run 
 
 # When to write your own test cases?
 
-Write test cases to test and to understand the working of the function. For example: when you write code to post notifications on Slack channel you can test them only by writing a unit test case. 
+Write test cases every time you write a new feature, or to test and to understand the working of an existing function. Automated testing really help to prevent future bugs as we introduce new features or refactor the code.
+
+There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
 
 There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. For local testing we do not yet provide a standarized approach to add a MongoDB Docker in the same network and configure Robotoff to use it.
 
