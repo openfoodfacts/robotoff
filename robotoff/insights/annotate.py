@@ -101,16 +101,16 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             username = auth.get_username()
 
         insight.username = username
-        insight.annotation = annotation
         insight.completed_at = datetime.datetime.utcnow()
 
         if automatic:
             insight.automatic_processing = True
 
-        insight.save()
-
         if annotation == 1 and update:
             return self.process_annotation(insight, data=data, auth=auth)
+
+        insight.annotation = 1
+        insight.save()
 
         return SAVED_ANNOTATION_RESULT
 
@@ -158,6 +158,9 @@ class PackagerCodeAnnotator(InsightAnnotator):
             insight_id=insight.id,
             auth=auth,
         )
+
+        insight.annotation = 2
+        insight.save()
         return UPDATED_ANNOTATION_RESULT
 
     @staticmethod
