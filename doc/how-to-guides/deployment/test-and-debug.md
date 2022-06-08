@@ -1,6 +1,3 @@
-Robotoff is an API that pulls prediction data, annotation data, product data, nutrition data from MongoDB database in Open Food Facts server.
-
-
 # This documentation intends to:
 1) Familiarize you on running our test cases.
 2) Give you some tips from getting stuck if you are working only on Robotoff and don't need complete installation of Open Food Facts server.
@@ -9,6 +6,9 @@ Robotoff is an API that pulls prediction data, annotation data, product data, nu
 > **_NOTE:_** If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to generate data?
+
+Robotoff is an API that pulls prediction data, annotation data, product data, nutrition data from MongoDB database in Open Food Facts server.
+
 We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create some data in your local.
 
 If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
@@ -18,18 +18,6 @@ $ docker-compose run --rm api poetry run python
 > from tests.integration.models_utils import *
 > PredictionFactory()
 ````
-
-Another way to run Factory is to use [PDB](https://docs.python.org/3/library/pdb.html):
-
-```
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest --pdb terminal.
-```
-
-This will start a PDB console. You can then run your Factory - 
-```
-(Pdb) from tests.integration.models_utils import *
-(Pdb) PredictionFactory()
-```
 
 # How to run test cases?
 We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [makefile](../../../robotoff/Makefile) to run our commands. In makefile you will find all the commands used to run Robotoff. 
@@ -68,7 +56,8 @@ To identify when Robotoff connects to MongoDB keep an eye for variables like `se
 
 # Debugging
 
-We encourage using PDB to debug. You can add the following lines in your function to find out what your it does and where it breaks.
+We encourage using [PDB](https://docs.python.org/3/library/pdb.html)
+ to debug. You can add the following lines in your function to find out what your code does and where it breaks.
 
 
 ```
