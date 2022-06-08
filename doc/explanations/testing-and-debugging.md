@@ -70,7 +70,7 @@ There are instances when Robotoff tries to connect to MongoDB via Open Food Fact
 
 In such cases you will have to mock the function which calls MongoDB. You might look at existing tests.
 
-To identify when Robotoff connects to MongoDB keep an eye for variables like `server_url`, `server_domain` or `settings.OFF_SERVER_DOMAIN`.
+To identify parts of the code where Robotoff connects to MongoDB or to Open Food Facts server (which are part you should mock), keep an eye for variables like `server_url`, `server_domain` or `settings.OFF_SERVER_DOMAIN`.
 
 # Debugging
 
