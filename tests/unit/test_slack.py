@@ -143,14 +143,14 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
             source_image="/image/1",
             type="weight",
             value="200g",
-            data={"raw": "en:200g"},
+            data={"raw": "en:200g", "bounding_box": (2, 2, 4, 4)},
         )
     )
 
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <<https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image&y_min=1&x_min=1&y_max=2&x_max=2|source image>))",
+            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image&y_min=2&x_min=2&y_max=4&x_max=4|source image>, <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
@@ -177,7 +177,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `en:vegan` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <<https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image&y_min=1&x_min=1&y_max=2&x_max=2|source image>)",
+            f"The `en:vegan` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image&y_min=2&x_min=2&y_max=4&x_max=4|source image>, <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
@@ -225,7 +225,7 @@ def test_notify_automatic_processing(mocker, monkeypatch):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, (<https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image&y_min=1&x_min=1&y_max=2&x_max=2|source image>) (<https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
+            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image&y_min=2&x_min=2&y_max=4&x_max=4|source image>, <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
             notifier.NUTRISCORE_ALERT_CHANNEL,
         ),
     )
