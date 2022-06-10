@@ -11,7 +11,7 @@ Robotoff is an API that pulls prediction data, annotation data, product data, nu
 If your development instance is not connected to a product-opener instance 
 (which happens automatically if you have a running product-opener instance), 
 you won't have a MongoDB instance. This means you won't have any product data on your local set up.
-Though you may populate your database with some objects.
+Though you may populate your postgres database with some predictions, insights, images references, etc.
 
 We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create some data in your local database.
 
