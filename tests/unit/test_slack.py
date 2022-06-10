@@ -143,7 +143,7 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
             source_image="/image/1",
             type="weight",
             value="200g",
-            data={"raw": "en:200g", "bounding_box": (2, 2, 4, 4)},
+            data={"raw": "en:200g"},
         )
     )
 
@@ -169,8 +169,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
             barcode="123",
             source_image="/image/1",
             type="label",
-            value_tag="en:vegan",
-            data={"bounding_box": (2, 2, 4, 4)},
+            value_tag="en:vegan"
         )
     )
 
