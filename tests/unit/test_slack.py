@@ -221,7 +221,7 @@ def test_notify_automatic_processing_nutriscore(mocker, monkeypatch):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/images/products/image/1&y_min=2&x_min=2&y_max=4&x_max=4|source image>) (<https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
+            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image/1&y_min=2&x_min=2&y_max=4&x_max=4|source image>) (<https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
             notifier.NUTRISCORE_ALERT_CHANNEL,
         ),
     )
