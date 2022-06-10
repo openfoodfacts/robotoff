@@ -26,7 +26,7 @@ $ docker-compose run --rm api poetry run python
 > **_NOTE:_** If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../../robotoff/Makefile) to run our commands. In `Makefile` you will find all the commands used to run Robotoff. 
+We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. In `Makefile` you will find all the commands used to run Robotoff. 
 
 The following command will run all the test cases one by one:
 
