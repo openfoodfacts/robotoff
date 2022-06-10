@@ -10,7 +10,7 @@ Robotoff is an API that pulls prediction data, annotation data, product data, nu
 
 If your development instance is not connected to a product-opener instance 
 (which happens automatically if you have a running product-opener instance), 
-you won't have a MongoDB instance. This means you won't have any data on your local set up.
+you won't have a MongoDB instance. This means you won't have any product data on your local set up.
 Though you may populate your database with some objects.
 
 We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create some data in your local database.
@@ -26,7 +26,7 @@ $ docker-compose run --rm api poetry run python
 > **_NOTE:_** If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [makefile](../../../robotoff/Makefile) to run our commands. In `makefile` you will find all the commands used to run Robotoff. 
+We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../../robotoff/Makefile) to run our commands. In `Makefile` you will find all the commands used to run Robotoff. 
 
 The following command will run all the test cases one by one:
 
@@ -78,3 +78,5 @@ and then run the `pytest`, with the `--pdb` option:
 ```
 COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest path/to/test.py::test_xxx --pdb
 ```
+
+Also runnning with `--pdb` flag will stop on every test failure, even if you didn't set any `pdb.set_trace()` this can be a good way to try to understand why a test is failing.
