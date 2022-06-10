@@ -204,7 +204,7 @@ def test_noop_slack_notifier_logging(caplog):
     assert logged.msg.startswith("Alerting on slack channel")
 
 
-def test_notify_automatic_processing(mocker, monkeypatch):
+def test_notify_automatic_processing_nutriscore(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
