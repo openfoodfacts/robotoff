@@ -123,13 +123,17 @@ checks: toml-check flake8 black-check mypy isort-check docs
 
 lint: toml-lint isort black
 
-tests: create_external_networks unit-tests integration-tests
+tests: create_external_networks i18n-compile unit-tests integration-tests
 
 quality: lint checks tests
 
 health:
 	@echo "🥫 Running health tests …"
 	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
+
+i18n-compile:
+	@echo "🥫 Compiling translations …"
+	${DOCKER_COMPOSE} run --rm --entrypoint bash workers -c "cd i18n && . compile.sh"
 
 unit-tests:
 	@echo "🥫 Running tests …"

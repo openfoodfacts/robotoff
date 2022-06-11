@@ -18,6 +18,8 @@ x-robotoff-dev: &robotoff-dev
       # make tests available
       - ./tests:/opt/robotoff/tests
       - ./.cov:/opt/robotoff/.cov
+      # make i18N available
+      - ./i18n:/opt/robotoff/i18n
       # make data available
       - ./data:/opt/robotoff/data
       # make doc generation available
