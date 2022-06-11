@@ -131,11 +131,11 @@ def clean_db():
     # remove all models
     for model in (
         AnnotationVote,
-        ImageModel,
-        ImagePrediction,
         LogoAnnotation,
+        ImagePrediction,
+        ImageModel,
         LogoConfidenceThreshold,
         Prediction,
         ProductInsight,
     ):
-        model.delete()
+        model.delete().execute()
