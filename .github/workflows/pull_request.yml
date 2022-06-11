@@ -93,7 +93,9 @@ jobs:
       # Launch tests
       #----------------------------------------------
       - name: Configure docker
-        run: echo "OFF_UID=$UID" >> .env
+        run: |
+          echo "OFF_UID=$UID" >> .env
+          echo "PYTHON_VERSION=${{ matrix.python-version }}" >> .env
       - name: Launch tests
         run: make tests
 
