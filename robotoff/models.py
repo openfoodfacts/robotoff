@@ -91,6 +91,10 @@ class ProductInsight(BaseModel):
     # 1 = Validated
     annotation = peewee.IntegerField(null=True, index=True)
 
+    # Saves the value returned by Annotator.annotate
+    # The value is mapped at `AnnotationStatus(enum)` class in annotate.py
+    annotated_result = peewee.IntegerField(null=True, index=True)
+
     # The number of votes for this annotation.
     # Stored here for quick sorting.
     n_votes = peewee.IntegerField(null=False, index=True)
