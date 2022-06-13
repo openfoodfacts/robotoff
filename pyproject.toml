@@ -94,7 +94,7 @@ mkdocs-awesome-pages-plugin = "~2.6.1"
 typer-cli = "~0.0.11"
 coverage = { extras = ["toml"], version = "~6.3" }
 types-requests = "~2.26.0"
-types-six = "^1.16.10"
+types-six = "^1.16.16"
 types-protobuf = "^3.17.3"
 types-certifi = "^2021.10.8"
 types-setuptools = "^57.4.8"
