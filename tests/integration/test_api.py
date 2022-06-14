@@ -420,9 +420,9 @@ def test_annotate_insight_anonymous_then_authenticated(client):
         "description": "the annotation was saved",
         "status": "saved",
     }
-    # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
+    # We have the previous vote, but the last request should validate the insight directly
     votes = list(AnnotationVote.select())
-    assert len(votes) == 0
+    assert len(votes) == 1  # this is the previous vote
 
     insight = next(
         ProductInsight.select()
