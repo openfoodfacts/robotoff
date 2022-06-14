@@ -387,8 +387,9 @@ def test_annotation_event(client, monkeypatch, httpserver):
         )
     assert result.status_code == 200
 
+
 def test_annotate_insight_with_user_id(client):
-    # to test annotation insight when the user is authenticated and less votes are provided
+    # to test annotation insight when the user is authenticated with less votes are provided
     result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -401,7 +402,6 @@ def test_annotate_insight_with_user_id(client):
     assert result.status_code == 200
     assert result.json == {"description": "the annotation was saved", "status": "saved"}
 
-    
     authenticated_result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -413,7 +413,10 @@ def test_annotate_insight_with_user_id(client):
     )
 
     assert authenticated_result.status_code == 200
-    assert authenticated_result.json == {"description": "the annotation was saved", "status": "saved"}
+    assert authenticated_result.json == {
+        "description": "the annotation was saved",
+        "status": "saved",
+    }
     # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
     votes = list(AnnotationVote.select())
     assert len(votes) == 0
@@ -426,7 +429,3 @@ def test_annotate_insight_with_user_id(client):
     )
     assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
     assert "completed_at" in insight
-
-
-
-
