@@ -133,7 +133,8 @@ health:
 
 i18n-compile:
 	@echo "🥫 Compiling translations …"
-	${DOCKER_COMPOSE} run --rm --entrypoint bash workers -c "cd i18n && . compile.sh"
+# Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
+	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps workers -c "cd i18n && . compile.sh"
 
 unit-tests:
 	@echo "🥫 Running tests …"
