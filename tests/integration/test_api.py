@@ -404,6 +404,7 @@ def test_annotate_insight_anonymous_then_authenticated(client):
     assert result.status_code == 200
     assert result.json == {"description": "the annotation was saved", "status": "saved"}
 
+    # then the user connects and vote for same insights
     authenticated_result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
