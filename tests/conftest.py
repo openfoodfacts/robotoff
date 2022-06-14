@@ -21,3 +21,4 @@ def peewee_db(peewee_db_create):
     # to avoid reusing same transaction next time
     if not models.db.is_closed():
         models.db.rollback()
+        models.db.close()
