@@ -391,7 +391,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
 def test_annotate_insight_anonymous_then_authenticated(client):
     """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
 
-    # first the user validate annotation without being connected
+    # first the user validates annotation without being connected
     result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -404,12 +404,30 @@ def test_annotate_insight_anonymous_then_authenticated(client):
     assert result.status_code == 200
     assert result.json == {"description": "the annotation was saved", "status": "saved"}
 
+    # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
+    votes = list(AnnotationVote.select().dicts())
+    assert len(votes) == 1
+
+    assert votes[0]["value"] == -1
+    assert votes[0]["username"] is None
+    assert votes[0]["device_id"] == "voter1"
+
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+
+    assert not any(insight[key] for key in ("username", "completed_at", "annotation"))
+    assert insight.items() > {"n_votes": 1}.items()
+
     # then the user connects and vote for same insights
     authenticated_result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
-            "annotation": 1, 
+            "annotation": 1,
             "device_id": "voter1",
         },
         headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
@@ -430,5 +448,5 @@ def test_annotate_insight_anonymous_then_authenticated(client):
         .dicts()
         .iterator()
     )
-    assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
+    assert insight.items() > {"username": "a", "annotation": 1, "n_votes": 1}.items()
     assert "completed_at" in insight
