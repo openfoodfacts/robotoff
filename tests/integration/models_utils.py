@@ -11,6 +11,7 @@ import factory
 from factory_peewee import PeeweeModelFactory
 
 from robotoff import settings
+from robotoff import models
 from robotoff.models import (
     AnnotationVote,
     ImageModel,
@@ -128,6 +129,7 @@ class LogoConfidenceThresholdFactory(PeeweeModelFactory):
 
 
 def clean_db():
+    print("DEBUG: Before cleaning: ", models.db.get_tables())
     # remove all models
     for model in (
         AnnotationVote,
@@ -139,3 +141,4 @@ def clean_db():
         ProductInsight,
     ):
         model.delete().execute()
+    print("DEBUG: After cleaning: ", models.db.get_tables())

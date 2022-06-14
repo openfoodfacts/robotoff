@@ -7,9 +7,10 @@ from robotoff import models
 
 @pytest.fixture(scope="session")
 def peewee_db_create():
-    with models.db:
-        with models.db.atomic():
-            models.db.create_tables(models.MODELS, safe=True)
+    with models.db as db:
+        with db.atomic():
+            db.create_tables(models.MODELS, safe=True)
+        print("DEBUG: models created ", db.get_tables())
     # create new connection, to avoid schema not being commited if first test fails
     models.db.close()
     models.db.connect(reuse_if_open=False)
