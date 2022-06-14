@@ -388,7 +388,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
     assert result.status_code == 200
 
 
-def test_annotate_insight_with_user_id(client):
+def test_annotate_insight_anonymous_then_authenticated(client):
     """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
 
     # first the user validate annotation without being connected
