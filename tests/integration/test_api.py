@@ -396,7 +396,7 @@ def test_annotate_insight_anonymous_then_authenticated(client):
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
-            "annotation": -1,
+            "annotation": 1,
             "device_id": "voter1",
         },
     )
