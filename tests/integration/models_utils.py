@@ -10,8 +10,7 @@ from typing import Any, Dict, List
 import factory
 from factory_peewee import PeeweeModelFactory
 
-from robotoff import settings
-from robotoff import models
+from robotoff import models, settings
 from robotoff.models import (
     AnnotationVote,
     ImageModel,
