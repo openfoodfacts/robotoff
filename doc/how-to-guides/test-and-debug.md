@@ -82,7 +82,7 @@ This can be a good way to try to understand why a test is failing.
 ```bash
 make pytest args="path/to/test.py --pdb"
 ```
-
+If it's a `mock.assert_called_with`, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.
 If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.
 
 ```python
@@ -92,7 +92,7 @@ import pdb; pdb.set_trace()
 and then run the `pytest`, with the `--pdb` option (as above).
 
 > **Note**  
-> we need the "--pdb" option because without it,
-> pytest capture inputs and outputs during tests,
-> and thus you can't get the pdb console.
+> we need the `--pdb` option,
+to view the inputs and outputs captured by pytest
+> and access the pdb console.
 
