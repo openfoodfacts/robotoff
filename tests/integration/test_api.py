@@ -402,15 +402,14 @@ def test_annotate_insight_anonymous_then_authenticated(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {"description": "the annotation was saved", "status": "saved"}
+    assert result.json == {
+        "description": "the annotation vote was saved",
+        "status": "vote_saved",
+    }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
-    votes = list(AnnotationVote.select().dicts())
+    votes = list(AnnotationVote.select())
     assert len(votes) == 1
-
-    assert votes[0]["value"] == -1
-    assert votes[0]["username"] is None
-    assert votes[0]["device_id"] == "voter1"
 
     insight = next(
         ProductInsight.select()
