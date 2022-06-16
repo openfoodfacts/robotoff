@@ -422,30 +422,36 @@ def test_annotate_insight_anonymous_then_authenticated(client):
     assert insight.items() > {"n_votes": 1}.items()
 
     # then the user connects and vote for same insights
-    authenticated_result = client.simulate_post(
-        "/api/v1/insights/annotate",
-        params={
-            "insight_id": insight_id,
-            "annotation": 1,
-            "device_id": "voter1",
-        },
-        headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
-    )
 
-    assert authenticated_result.status_code == 200
-    assert authenticated_result.json == {
-        "description": "the annotation was saved",
-        "status": "saved",
-    }
-    # We have the previous vote, but the last request should validate the insight directly
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 1  # this is the previous vote
+    if insight["process_after"] != None:
+        authenticated_result = client.simulate_post(
+            "/api/v1/insights/annotate",
+            params={
+                "insight_id": insight_id,
+                "annotation": 1,
+                "device_id": "voter1",
+            },
+            headers={
+                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
+            },
+        )
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
-    assert insight.items() > {"username": "a", "annotation": 1, "n_votes": 1}.items()
-    assert "completed_at" in insight
+        assert authenticated_result.status_code == 200
+        assert authenticated_result.json == {
+            "description": "the annotation was saved",
+            "status": "saved",
+        }
+        # We have the previous vote, but the last request should validate the insight directly
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 1  # this is the previous vote
+
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
+        assert (
+            insight.items() > {"username": "a", "annotation": 1, "n_votes": 1}.items()
+        )
+        assert "completed_at" in insight
