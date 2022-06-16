@@ -9,7 +9,7 @@ Robotoff is an API that pulls prediction data, annotation data, product data, nu
 
 
 If your development instance is not connected to a product-opener instance 
-(which happens automatically if you have a running product-opener instance), 
+(which happens automatically if you have a running product-opener instance),
 you won't have a MongoDB instance. This means you won't have any product data on your local set up.
 Though you may populate your postgres database with some predictions, insights, images references, etc.
 
@@ -23,32 +23,40 @@ $ docker-compose run --rm api poetry run python
 > PredictionFactory()
 ````
 
-> **_NOTE:_** If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
+> **NOTE:**  
+> If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. In `Makefile` you will find all the commands used to run Robotoff. 
+We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. 
 
 The following command will run all the test cases one by one:
 
-```
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest
+```bash
+$ make tests
 ```
 
 ## How to run a single test case?
 
-You need to specify the name of the test case you want to invoke.
+The simplest is to use the *pytest* make target for that:
 
-Here is the syntax:
-
-```
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest path/to/test_file.py::the_function_name
+```bash
+make pytest args='path/to/test_file.py::the_function_name'
 ```
 
-In this example we call `test_get_type()` from `tests/unit/insights/test_importer.py`
+For example,
+to call `test_get_type()` from `tests/unit/insights/test_importer.py`:
 
+```bash
+$ make pytest args="tests/unit/insights/test_importer.py::TestLabelInsightImporter::test_get_type"
 ```
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest tests/unit/insights/test_importer.py::TestLabelInsightImporter::test_get_type
-```
+
+Remember to put quotes especially if you have multiple arguments.
+
+
+> **NOTE**:  
+> Be sure to rum `make create_external_networks` before if needed (especially if you get `Network po_test declared as external, but could not be found`)
+
+
 
 # When to write your own test cases?
 
@@ -65,18 +73,26 @@ To identify parts of the code where Robotoff connects to MongoDB or to Open Food
 # Debugging guide
 
 We encourage using [PDB](https://docs.python.org/3/library/pdb.html)
- to debug. You can add the following lines in your function to find out what your code does and where it breaks.
+to debug.
+
+Running test with `--pdb` flags, pytest will stop and open the pdb console as soon as there is an error or an assert fails.
+This can be a good way to try to understand why a test is failing.
 
 
+```bash
+make pytest args="path/to/test.py --pdb"
 ```
+If it's a `mock.assert_called_with`, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.
+If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.
+
+```python
 import pdb; pdb.set_trace()
 ```
 
-and then run the `pytest`, with the `--pdb` option:
+and then run the `pytest`, with the `--pdb` option (as above).
 
+> **Note**  
+> we need the `--pdb` option,
+to view the inputs and outputs captured by pytest
+> and access the pdb console.
 
-```
-COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest path/to/test.py::test_xxx --pdb
-```
-
-Also runnning with `--pdb` flag will stop on every test failure, even if you didn't set any `pdb.set_trace()` this can be a good way to try to understand why a test is failing.
