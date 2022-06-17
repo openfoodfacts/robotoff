@@ -451,7 +451,7 @@ def test_annotate_insight_anonymous_then_authenticated(client):
             .dicts()
             .iterator()
         )
-        assert (
-            insight.items() > {"username": "a", "annotation": 1, "n_votes": 1}.items()
-        )
-        assert "completed_at" in insight
+# we still have the vote, but we also have an authenticated validation
+assert insight.items() > {"username": "a", "n_votes": 1}.items()
+# process after is not None so that it would be picked by scheduler process_insight
+assert insight["process_after"] is not None
