@@ -150,9 +150,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
         if emb_codes_str:
             emb_codes = emb_codes_str.split(",")
 
-        if self.already_exists(emb_code, emb_codes):
-            insight.annotated_result = 5
-            insight.save()
+        if self.already_exists(emb_code, emb_codes):            
             return ALREADY_ANNOTATED_RESULT
 
         emb_codes.append(emb_code)
@@ -163,10 +161,6 @@ class PackagerCodeAnnotator(InsightAnnotator):
             insight_id=insight.id,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
-
         return UPDATED_ANNOTATION_RESULT
 
     @staticmethod
@@ -207,9 +201,6 @@ class LabelAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -225,9 +216,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         field_name = "ingredients_text_{}".format(lang)
         product = get_product(barcode, [field_name])
 
-        if product is None:
-            insight.annotated_result = 3
-            insight.save()
+        if product is None:           
             return MISSING_PRODUCT_RESULT
 
         original_ingredients = insight.data["text"]
@@ -240,14 +229,11 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
                 "creation (product %s)",
                 barcode,
             )
-
-            insight.annotated_result = 4
-            insight.save()
-
             return AnnotationResult(
                 status=AnnotationStatus.error_updated_product.name,
                 description="the ingredient list has been updated since spellcheck",
             )
+
 
         save_ingredients(
             barcode,
@@ -256,10 +242,6 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
             insight_id=insight.id,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -279,9 +261,7 @@ class CategoryAnnotator(InsightAnnotator):
 
         categories_tags: List[str] = product.get("categories_tags") or []
 
-        if insight.value_tag in categories_tags:
-            insight.annotated_result = 5
-            insight.save()
+        if insight.value_tag in categories_tags:            
             return ALREADY_ANNOTATED_RESULT
 
         category_tag = insight.value_tag
@@ -292,10 +272,6 @@ class CategoryAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -308,16 +284,12 @@ class ProductWeightAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["quantity"])
 
-        if product is None:
-            insight.annotated_result = 3
-            insight.save()
+        if product is None:            
             return MISSING_PRODUCT_RESULT
 
         quantity: Optional[str] = product.get("quantity") or None
 
-        if quantity is not None:
-            insight.annotated_result = 5
-            insight.save()
+        if quantity is not None:            
             return ALREADY_ANNOTATED_RESULT
 
         update_quantity(
@@ -327,10 +299,6 @@ class ProductWeightAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -343,16 +311,12 @@ class ExpirationDateAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["expiration_date"])
 
-        if product is None:
-            insight.annotated_result = 3
-            insight.save()
+        if product is None:            
             return MISSING_PRODUCT_RESULT
 
         current_expiration_date = product.get("expiration_date") or None
 
-        if current_expiration_date:
-            insight.annotated_result = 5
-            insight.save()
+        if current_expiration_date:            
             return ALREADY_ANNOTATED_RESULT
 
         update_expiration_date(
@@ -361,9 +325,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
             insight_id=insight.id,
             server_domain=insight.server_domain,
             auth=auth,
-        )
-        insight.annotated_result = 2
-        insight.save()
+        )       
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -376,9 +338,7 @@ class BrandAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["brands_tags"])
 
-        if product is None:
-            insight.annotated_result = 3
-            insight.save()
+        if product is None:           
             return MISSING_PRODUCT_RESULT
 
         add_brand(
@@ -389,10 +349,7 @@ class BrandAnnotator(InsightAnnotator):
             auth=auth,
         )
 
-        insight.annotated_result = 2
-        insight.save()
         return UPDATED_ANNOTATION_RESULT
-
 
 class StoreAnnotator(InsightAnnotator):
     def process_annotation(
@@ -403,16 +360,12 @@ class StoreAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["stores_tags"])
 
-        if product is None:
-            insight.annotated_result = 3
-            insight.save()
+        if product is None:           
             return MISSING_PRODUCT_RESULT
 
         stores_tags: List[str] = product.get("stores_tags") or []
 
         if insight.value_tag in stores_tags:
-            insight.annotated_result = 5
-            insight.save()
             return ALREADY_ANNOTATED_RESULT
 
         add_store(
@@ -422,9 +375,6 @@ class StoreAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -444,9 +394,7 @@ class PackagingAnnotator(InsightAnnotator):
 
         packaging_tags: List[str] = product.get("packaging_tags") or []
 
-        if packaging_tag in packaging_tags:
-            insight.annotated_result = 5
-            insight.save()
+        if packaging_tag in packaging_tags:            
             return ALREADY_ANNOTATED_RESULT
 
         add_packaging(
@@ -456,9 +404,6 @@ class PackagingAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -471,17 +416,12 @@ class NutritionImageAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["code"])
 
-        if product is None:
-            insight.annotated_result = 3
-            insight.save()
+        if product is None:           
             return MISSING_PRODUCT_RESULT
 
         image_id = get_image_id(insight.source_image or "")
 
         if not image_id:
-            insight.annotated_result = 8
-            insight.save()
-
             return AnnotationResult(
                 status="error_invalid_image",
                 description="the image is invalid",
@@ -495,9 +435,6 @@ class NutritionImageAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
-        insight.annotated_result = 2
-        insight.save()
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -510,10 +447,6 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         insight.data["annotation"] = data
         insight.save()
-
-        insight.annotated_result = 1
-        insight.save()
-
         return SAVED_ANNOTATION_RESULT
 
     def is_data_required(self):
