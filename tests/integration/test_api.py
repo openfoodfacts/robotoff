@@ -423,35 +423,31 @@ def test_annotate_insight_anonymous_then_authenticated(client):
 
     # then the user connects and vote for same insights
 
-    if insight["process_after"] != None:
-        authenticated_result = client.simulate_post(
-            "/api/v1/insights/annotate",
-            params={
-                "insight_id": insight_id,
-                "annotation": 1,
-                "device_id": "voter1",
-            },
-            headers={
-                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
-            },
-        )
+    authenticated_result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": insight_id,
+            "annotation": 1,
+            "device_id": "voter1",
+        },
+    )
 
-        assert authenticated_result.status_code == 200
-        assert authenticated_result.json == {
-            "description": "the annotation was saved",
-            "status": "saved",
-        }
-        # We have the previous vote, but the last request should validate the insight directly
-        votes = list(AnnotationVote.select())
-        assert len(votes) == 1  # this is the previous vote
+    assert authenticated_result.status_code == 200
+    assert authenticated_result.json == {
+        "description": "the annotation vote was saved",
+        "status": "vote_saved",
+    }
+    # We have the previous vote, but the last request should validate the insight directly
+    votes = list(AnnotationVote.select())
+    assert len(votes) == 2  # this is the previous vote
 
-        insight = next(
-            ProductInsight.select()
-            .where(ProductInsight.id == insight_id)
-            .dicts()
-            .iterator()
-        )
-# we still have the vote, but we also have an authenticated validation
-assert insight.items() > {"username": "a", "n_votes": 1}.items()
-# process after is not None so that it would be picked by scheduler process_insight
-assert insight["process_after"] is not None
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+    # we still have the vote, but we also have an authenticated validation
+    assert insight.items() > {"username": "a", "n_votes": 2}.items()
+    # process after is not None so that it would be picked by scheduler process_insight
+    assert insight["process_after"] is not None
