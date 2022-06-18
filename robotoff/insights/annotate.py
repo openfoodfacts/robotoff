@@ -114,7 +114,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
         insight.annotated_result = 1
-        insight.save()  # second call to save annotated_result
+        insight.save()  # second call to save annotated_result
         return annotation_result
 
     @abc.abstractmethod
@@ -150,7 +150,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
         if emb_codes_str:
             emb_codes = emb_codes_str.split(",")
 
-        if self.already_exists(emb_code, emb_codes):            
+        if self.already_exists(emb_code, emb_codes):
             return ALREADY_ANNOTATED_RESULT
 
         emb_codes.append(emb_code)
@@ -216,7 +216,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         field_name = "ingredients_text_{}".format(lang)
         product = get_product(barcode, [field_name])
 
-        if product is None:           
+        if product is None:
             return MISSING_PRODUCT_RESULT
 
         original_ingredients = insight.data["text"]
@@ -233,7 +233,6 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
                 status=AnnotationStatus.error_updated_product.name,
                 description="the ingredient list has been updated since spellcheck",
             )
-
 
         save_ingredients(
             barcode,
@@ -261,7 +260,7 @@ class CategoryAnnotator(InsightAnnotator):
 
         categories_tags: List[str] = product.get("categories_tags") or []
 
-        if insight.value_tag in categories_tags:            
+        if insight.value_tag in categories_tags:
             return ALREADY_ANNOTATED_RESULT
 
         category_tag = insight.value_tag
@@ -284,12 +283,12 @@ class ProductWeightAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["quantity"])
 
-        if product is None:            
+        if product is None:
             return MISSING_PRODUCT_RESULT
 
         quantity: Optional[str] = product.get("quantity") or None
 
-        if quantity is not None:            
+        if quantity is not None:
             return ALREADY_ANNOTATED_RESULT
 
         update_quantity(
@@ -311,12 +310,12 @@ class ExpirationDateAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["expiration_date"])
 
-        if product is None:            
+        if product is None:
             return MISSING_PRODUCT_RESULT
 
         current_expiration_date = product.get("expiration_date") or None
 
-        if current_expiration_date:            
+        if current_expiration_date:
             return ALREADY_ANNOTATED_RESULT
 
         update_expiration_date(
@@ -325,7 +324,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
             insight_id=insight.id,
             server_domain=insight.server_domain,
             auth=auth,
-        )       
+        )
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -338,7 +337,7 @@ class BrandAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["brands_tags"])
 
-        if product is None:           
+        if product is None:
             return MISSING_PRODUCT_RESULT
 
         add_brand(
@@ -351,6 +350,7 @@ class BrandAnnotator(InsightAnnotator):
 
         return UPDATED_ANNOTATION_RESULT
 
+
 class StoreAnnotator(InsightAnnotator):
     def process_annotation(
         self,
@@ -360,7 +360,7 @@ class StoreAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["stores_tags"])
 
-        if product is None:           
+        if product is None:
             return MISSING_PRODUCT_RESULT
 
         stores_tags: List[str] = product.get("stores_tags") or []
@@ -394,7 +394,7 @@ class PackagingAnnotator(InsightAnnotator):
 
         packaging_tags: List[str] = product.get("packaging_tags") or []
 
-        if packaging_tag in packaging_tags:            
+        if packaging_tag in packaging_tags:
             return ALREADY_ANNOTATED_RESULT
 
         add_packaging(
@@ -416,7 +416,7 @@ class NutritionImageAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["code"])
 
-        if product is None:           
+        if product is None:
             return MISSING_PRODUCT_RESULT
 
         image_id = get_image_id(insight.source_image or "")
