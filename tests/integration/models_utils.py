@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 import factory
 from factory_peewee import PeeweeModelFactory
 
-from robotoff import settings
+from robotoff import models, settings
 from robotoff.models import (
     AnnotationVote,
     ImageModel,
@@ -128,14 +128,16 @@ class LogoConfidenceThresholdFactory(PeeweeModelFactory):
 
 
 def clean_db():
+    print("DEBUG: Before cleaning: ", models.db.get_tables())
     # remove all models
     for model in (
         AnnotationVote,
-        ImageModel,
-        ImagePrediction,
         LogoAnnotation,
+        ImagePrediction,
+        ImageModel,
         LogoConfidenceThreshold,
         Prediction,
         ProductInsight,
     ):
-        model.delete()
+        model.delete().execute()
+    print("DEBUG: After cleaning: ", models.db.get_tables())

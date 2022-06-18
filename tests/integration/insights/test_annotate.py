@@ -3,17 +3,15 @@ import pytest
 from robotoff.insights.annotate import CategoryAnnotator
 from robotoff.models import ProductInsight
 
-from ..models_utils import ProductInsightFactory
+from ..models_utils import ProductInsightFactory, clean_db
 
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    ProductInsight.delete().execute()
+    clean_db()
     # Run the test case.
     yield
-    # Tear down.
-    ProductInsight.delete().execute()
+    clean_db()
 
 
 def test_annotation_fails_is_rolledback(mocker):

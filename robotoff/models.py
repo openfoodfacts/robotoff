@@ -52,6 +52,13 @@ def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
     return rows
 
 
+def crop_image_url(source_image, bounding_box) -> str:
+    base_url = settings.OFF_IMAGE_BASE_URL + source_image
+    y_min, x_min, y_max, x_max = bounding_box
+    base_robotoff_url = settings.BaseURLProvider().robotoff().get()
+    return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
+
+
 class BaseModel(peewee.Model):
     class Meta:
         database = db
@@ -265,12 +272,9 @@ class LogoAnnotation(BaseModel):
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
 
     def get_crop_image_url(self) -> str:
-        base_url = (
-            settings.OFF_IMAGE_BASE_URL + self.image_prediction.image.source_image
+        return crop_image_url(
+            self.image_prediction.image.source_image, self.bounding_box
         )
-        y_min, x_min, y_max, x_max = self.bounding_box
-        base_robotoff_url = settings.BaseURLProvider().robotoff().get()
-        return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
 class LogoConfidenceThreshold(BaseModel):
