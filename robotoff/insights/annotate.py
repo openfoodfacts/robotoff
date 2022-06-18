@@ -108,13 +108,14 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if automatic:
             insight.automatic_processing = True
 
+        insight.save()
         if annotation == 1 and update:
-            return self.process_annotation(insight, data=data, auth=auth)
-
+            annotation_result = self.process_annotation(insight, data=data, auth=auth)
+        else:
+            annotation_result = SAVED_ANNOTATION_RESULT
         insight.annotated_result = 1
-        insight.save
-
-        return SAVED_ANNOTATION_RESULT
+        insight.save()  # second call to save annotated_result
+        return annotation_result
 
     @abc.abstractmethod
     def process_annotation(
