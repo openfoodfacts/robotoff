@@ -686,8 +686,6 @@ class TestPackagerCodeInsightImporter:
 
 
 class TestLabelInsightImporter:
-    import pdb;pdb.set_trace();
-
     def test_get_type(self):
         assert LabelInsightImporter.get_type() == InsightType.label
 
