@@ -433,9 +433,7 @@ def test_annotate_insight_anonymous_then_authenticated(client):
             "annotation": 1,
             "device_id": "voter1",
         },
-        headers={
-            "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
-        }
+        headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
     )
 
     assert authenticated_result.status_code == 200
