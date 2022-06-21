@@ -418,7 +418,10 @@ def test_annotate_insight_anonymous_then_authenticated(client):
         .iterator()
     )
 
-    assert not any(insight[key] for key in ("username", "completed_at", "annotation", "process_after"))
+    assert not any(
+        insight[key]
+        for key in ("username", "completed_at", "annotation", "process_after")
+    )
     assert insight.items() > {"n_votes": 1}.items()
 
     # then the user connects and vote for same insights
