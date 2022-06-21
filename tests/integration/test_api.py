@@ -8,7 +8,7 @@ from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
 
-from .models_utils import AnnotationVoteFactory, ProductInsightFactory
+from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -16,17 +16,12 @@ insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
     # clean db
-    AnnotationVote.delete().execute()
-    ProductInsight.delete().execute()
+    clean_db()
     # Set up.
     ProductInsightFactory(id=insight_id, barcode=1)
-
     # Run the test case.
     yield
-
-    # Tear down.
-    AnnotationVote.delete().execute()
-    ProductInsight.delete().execute()
+    clean_db()
 
 
 @pytest.fixture()
@@ -95,7 +90,7 @@ def test_popular_question(client, mocker):
 
 def test_popular_question_pagination(client, mocker):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
-    ProductInsight.delete().execute()
+    ProductInsight.delete().execute()  # remove default sample
     for i in range(0, 12):
         ProductInsightFactory(barcode=i, unique_scans_n=100 - i)
 

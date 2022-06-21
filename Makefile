@@ -15,7 +15,7 @@ ENV_FILE ?= .env
 MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
-
+DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker-compose --env-file=${ENV_FILE}
 
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
@@ -123,7 +123,7 @@ checks: toml-check flake8 black-check mypy isort-check docs
 
 lint: toml-lint isort black
 
-tests: create_external_networks unit-tests integration-tests
+tests: create_external_networks i18n-compile unit-tests integration-tests
 
 quality: lint checks tests
 
@@ -131,18 +131,29 @@ health:
 	@echo "🥫 Running health tests …"
 	@curl --fail --fail-early 127.0.0.1:5500/api/v1/health
 
+i18n-compile:
+	@echo "🥫 Compiling translations …"
+# Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
+	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps workers -c "cd i18n && . compile.sh"
+
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit 
+	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
-integration-tests: 
+integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
-	( COMPOSE_PROJECT_NAME=robotoff_test ${DOCKER_COMPOSE} down -v || true )
+	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	( ${DOCKER_COMPOSE_TEST} down -v || true )
+
+# interactive testings
+# usage: make pytest args='test/unit/my-test.py --pdb'
+pytest: guard-args
+	@echo "🥫 Running test: ${args} …"
+	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest ${args}
 
 #------------#
 # Production #
@@ -156,6 +167,8 @@ create_external_volumes:
 create_external_networks:
 	@echo "🥫 Creating external networks if needed … (dev only)"
 	( docker network create ${PO_LOCAL_NET} || true )
+# for tests
+	( docker network create po_test || true )
 
 #---------#
 # Cleanup #
@@ -169,3 +182,14 @@ prune_cache:
 	docker builder prune -f
 
 clean: goodbye hdown prune prune_cache
+
+#-----------#
+# Utilities #
+#-----------#
+
+guard-%: # guard clause for targets that require an environment variable (usually used as an argument)
+	@ if [ "${${*}}" = "" ]; then \
+   		echo "Environment variable '$*' is mandatory"; \
+   		echo use "make ${MAKECMDGOALS} $*=you-args"; \
+   		exit 1; \
+	fi;
