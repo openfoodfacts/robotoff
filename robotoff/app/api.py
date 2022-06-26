@@ -1054,6 +1054,26 @@ class UserStatisticsResource:
         )
         resp.media = {"count": {"annotations": annotation_count}}
 
+class DisplayInsightPredictionForProducts:
+    def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
+        server_domain: Optional[str] = req.get_param("server_domain")
+        response: JSONType = {}
+        insights = [
+            i.serialize()
+            for i in get_insights(
+                barcode=barcode, server_domain=server_domain, limit=None
+            )
+        ]
+
+        if not insights:
+            response["status"] = "no_insights"
+        else:
+            response["insights"] = insights
+            response["status"] = "found"
+
+        resp.media = response
+
+
 
 cors = CORS(
     allow_all_origins=True,
