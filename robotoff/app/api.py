@@ -1054,6 +1054,7 @@ class UserStatisticsResource:
         )
         resp.media = {"count": {"annotations": annotation_count}}
 
+
 class DisplayInsightPredictionForProducts:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         server_domain: Optional[str] = req.get_param("server_domain")
@@ -1072,7 +1073,6 @@ class DisplayInsightPredictionForProducts:
             response["status"] = "found"
 
         resp.media = response
-
 
 
 cors = CORS(

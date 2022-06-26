@@ -384,9 +384,9 @@ def test_annotation_event(client, monkeypatch, httpserver):
 
 
 def test_display_insight_prediction_for_products(client, mocker):
-    result = client.simulate_get("/api/v1/insights?barcode=4026913121706&page=1&count=25")
+    result = client.simulate_get(
+        "/api/v1/insights?barcode=4026913121706&page=1&count=25"
+    )
     assert result.status_code == 200
     data = result.json
     print(data)
-    
-

@@ -125,7 +125,7 @@ def get_insights(
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
-    
+
     query = query.order_by(ProductInsight.timestamp.desc())
 
     if as_dict:
