@@ -475,4 +475,3 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
         server_domain=settings.OFF_SERVER_DOMAIN,
         auth=OFFAuthentication(username="a", password="b"),
     )
-

@@ -31,9 +31,9 @@ class OFFAuthentication:
     def __eq__(self, other):
         """equality - we may use it in tests"""
         return (
-            self.username == other.username and
-            self.password == other.password and
-            self.session_cookie == other.session_cookie
+            self.username == other.username
+            and self.password == other.password
+            and self.session_cookie == other.session_cookie
         )
 
     def get_username(self) -> Optional[str]:
