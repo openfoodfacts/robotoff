@@ -10,7 +10,9 @@ from robotoff.prediction.ocr.packager_code import find_packager_codes
     [
         ("Sustainable palm oil RSPO-5068502 ", ["RSPO-5068502"]),
         ("RSPO-50685022", []),
-        ("QRSPO-2404885", []),
+        ("QRSPO-2404885", []),       
+        ("FR-012-345", ["FR-012-345"]),
+
     ],
 )
 def test_find_packager_codes(text: str, values: List[str]):
