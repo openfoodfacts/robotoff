@@ -14,7 +14,7 @@
     
     
       
-        <title>This documentation intends to: - Robotoff</title>
+        <title>Test and debug - Robotoff</title>
       
     
     
@@ -61,7 +61,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#this-documentation-intends-to" class="md-skip">
+        <a href="#test-and-debug" class="md-skip">
           Skip to content
         </a>
       
@@ -91,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              This documentation intends to:
+              Test and debug
             
           </span>
         </div>
@@ -281,7 +281,7 @@
       
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        This documentation intends to:
+        Test and debug
       </a>
       
     </li>
@@ -619,13 +619,14 @@
                   </a>
                 
                 
-                <h1 id="this-documentation-intends-to">This documentation intends to:</h1>
+                <h1 id="test-and-debug">Test and debug</h1>
+<h1 id="this-documentation-intends-to">This documentation intends to:</h1>
 <p>1) Familiarize you on running our test cases.
 2) Give you some tips from getting stuck if you are working only on Robotoff and don't need complete installation of Open Food Facts server.</p>
 <h1 id="how-to-generate-data">How to generate data?</h1>
 <p>Robotoff is an API that pulls prediction data, annotation data, product data, nutrition data from MongoDB database in Open Food Facts server.</p>
 <p>If your development instance is not connected to a product-opener instance 
-(which happens automatically if you have a running product-opener instance), 
+(which happens automatically if you have a running product-opener instance),
 you won't have a MongoDB instance. This means you won't have any product data on your local set up.
 Though you may populate your postgres database with some predictions, insights, images references, etc.</p>
 <p>We recommend  <a href="https://factoryboy.readthedocs.io/en/stable/">Factory</a> to create some data in your local database.</p>
@@ -636,47 +637,54 @@ Though you may populate your postgres database with some predictions, insights, 
 &gt; PredictionFactory()
 ````
 
-&gt; **_NOTE:_** If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
+&gt; **NOTE:**  
+&gt; If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. In `Makefile` you will find all the commands used to run Robotoff. 
+We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. 
 
 The following command will run all the test cases one by one:
+
+```bash
+$ make tests
+</code></pre></div></p>
+<h2 id="how-to-run-a-single-test-case">How to run a single test case?</h2>
+<p>The simplest is to use the <em>pytest</em> make target for that:</p>
+<div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s1">&#39;path/to/test_file.py::the_function_name&#39;</span>
 </code></pre></div>
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest
-<div class="highlight"><pre><span></span><code>## How to run a single test case?
-
-You need to specify the name of the test case you want to invoke.
-
-Here is the syntax:
+<p>For example,
+to call <code>test_get_type()</code> from <code>tests/unit/insights/test_importer.py</code>:</p>
+<div class="highlight"><pre><span></span><code>$ make pytest <span class="nv">args</span><span class="o">=</span><span class="s2">&quot;tests/unit/insights/test_importer.py::TestLabelInsightImporter::test_get_type&quot;</span>
 </code></pre></div>
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest path/to/test_file.py::the_function_name
-<div class="highlight"><pre><span></span><code>In this example we call `test_get_type()` from `tests/unit/insights/test_importer.py`
+<p>Remember to put quotes especially if you have multiple arguments.</p>
+<blockquote>
+<p><strong>NOTE</strong>:<br />
+Be sure to run <code>make create_external_networks</code> before if needed (especially if you get <code>Network po_test declared as external, but could not be found</code>)</p>
+</blockquote>
+<h1 id="when-to-write-your-own-test-cases">When to write your own test cases?</h1>
+<p>Write test cases every time you write a new feature, to test a feature or to understand the working of an existing function. Automated testing really helps to prevent future bugs as we introduce new features or refactor the code.</p>
+<p>There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. </p>
+<p>There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. For local testing we do not yet provide a standarized approach to add a MongoDB Docker in the same network and configure Robotoff to use it.</p>
+<p>In such cases you will have to mock the function which calls MongoDB. Feel free to reuse the existing test cases.</p>
+<p>To identify parts of the code where Robotoff connects to MongoDB or to Open Food Facts server (the part you should mock), keep an eye for variables like <code>server_url</code>, <code>server_domain</code> or <code>settings.OFF_SERVER_DOMAIN</code>.</p>
+<h1 id="debugging-guide">Debugging guide</h1>
+<p>We encourage using <a href="https://docs.python.org/3/library/pdb.html">PDB</a>
+to debug.</p>
+<p>Running test with <code>--pdb</code> flags, pytest will stop and open the pdb console as soon as there is an error or an assert fails.
+This can be a good way to try to understand why a test is failing.</p>
+<p><div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s2">&quot;path/to/test.py --pdb&quot;</span>
 </code></pre></div>
-$ COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest tests/unit/insights/test_importer.py::TestLabelInsightImporter::test_get_type
-<div class="highlight"><pre><span></span><code># When to write your own test cases?
-
-Write test cases every time you write a new feature, to test a feature or to understand the working of an existing function. Automated testing really helps to prevent future bugs as we introduce new features or refactor the code.
-
-There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
-
-There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. For local testing we do not yet provide a standarized approach to add a MongoDB Docker in the same network and configure Robotoff to use it.
-
-In such cases you will have to mock the function which calls MongoDB. Feel free to reuse the existing test cases.
-
-To identify parts of the code where Robotoff connects to MongoDB or to Open Food Facts server (the part you should mock), keep an eye for variables like `server_url`, `server_domain` or `settings.OFF_SERVER_DOMAIN`.
-
-# Debugging guide
-
-We encourage using [PDB](https://docs.python.org/3/library/pdb.html)
- to debug. You can add the following lines in your function to find out what your code does and where it breaks.
+If it's a <code>mock.assert_called_with</code>, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.
+If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">pdb</span><span class="p">;</span> <span class="n">pdb</span><span class="o">.</span><span class="n">set_trace</span><span class="p">()</span>
 </code></pre></div>
-import pdb; pdb.set_trace()
-<div class="highlight"><pre><span></span><code>and then run the `pytest`, with the `--pdb` option:
-</code></pre></div>
-COMPOSE_PROJECT_NAME=robotoff_test docker-compose run --rm workers poetry run pytest path/to/test.py::test_xxx --pdb
-```</p>
-<p>Also runnning with <code>--pdb</code> flag will stop on every test failure, even if you didn't set any <code>pdb.set_trace()</code> this can be a good way to try to understand why a test is failing.</p>
+<p>and then run the <code>pytest</code>, with the <code>--pdb</code> option (as above).</p>
+<blockquote>
+<p><strong>Note</strong><br />
+we need the <code>--pdb</code> option,
+to view the inputs and outputs captured by pytest
+and access the pdb console.</p>
+</blockquote>
                 
               
               

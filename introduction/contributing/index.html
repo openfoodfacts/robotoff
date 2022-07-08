@@ -367,7 +367,7 @@
   
     <li class="md-nav__item">
       <a href="../../how-to-guides/test-and-debug/" class="md-nav__link">
-        This documentation intends to:
+        Test and debug
       </a>
     </li>
   
@@ -820,10 +820,15 @@
 <p>A sample path may look like this: <code>C:\Program Files (x86)\GnuWin32\bin</code></p>
 <p>It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  </p>
 <p>If you are using docker:</p>
-<div class="highlight"><pre><span></span><code>make lint
+<p><div class="highlight"><pre><span></span><code>make lint
 make checks
 make tests
 </code></pre></div>
+  To test the APIs on your localhost run </p>
+<div class="highlight"><pre><span></span><code>docker-compose up
+</code></pre></div>
+<p>You can make a post request through <a href="https://www.postman.com/">Postman</a> or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/</p>
+<p>The mapping of functions and API path is at the end of robotoff/app/api.py</p>
 <p>If you are on a local install:</p>
 <div class="highlight"><pre><span></span><code>flake8
 black --check .
@@ -831,6 +836,10 @@ mypy .
 isort --check .
 poetry run pytest tests
 </code></pre></div>
+<p>Before running the test cases make sure you have a database created. Have a look at .env and robotoff/settings.py the default database name, user, and password is</p>
+<p><div class="highlight"><pre><span></span><code>postgres
+</code></pre></div>
+  Configure them through environment (you may use <code>.env</code> if you use docker) as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.</p>
 </li>
 <li>
 <p>Commit your changes and push your branch to GitHub:</p>
