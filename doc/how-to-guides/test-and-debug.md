@@ -1,3 +1,5 @@
+# Test and debug
+
 # This documentation intends to:
 1) Familiarize you on running our test cases.
 2) Give you some tips from getting stuck if you are working only on Robotoff and don't need complete installation of Open Food Facts server.
@@ -54,7 +56,7 @@ Remember to put quotes especially if you have multiple arguments.
 
 
 > **NOTE**:  
-> Be sure to rum `make create_external_networks` before if needed (especially if you get `Network po_test declared as external, but could not be found`)
+> Be sure to run `make create_external_networks` before if needed (especially if you get `Network po_test declared as external, but could not be found`)
 
 
 
