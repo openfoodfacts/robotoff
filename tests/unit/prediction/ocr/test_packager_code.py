@@ -13,6 +13,7 @@ from robotoff.prediction.ocr.packager_code import find_packager_codes
         ("QRSPO-2404885", []),
         ("FR-012-345", ["FR-012-345"]),
         ("FR-AB0-123", []),
+        ("fr-098-123", []),
         ("Gluten code is FR-234-234 ", ["FR-234-234"]),
     ],
 )
