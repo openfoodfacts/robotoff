@@ -13,7 +13,7 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, ProductInsight, db
+from robotoff.models import AnnotationVote, Prediction, ProductInsight, db
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -125,11 +125,33 @@ def get_insights(
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
-
-    query = query.order_by(ProductInsight.timestamp.desc())
-
     if as_dict:
         query = query.dicts()
+
+    return query.iterator()
+
+
+def get_predictions(
+    barcode: Optional[str] = None,
+    type: Optional[str] = None,
+    value_tag: Optional[str] = None,
+    server_domain: Optional[str] = None,
+) -> Iterable[Prediction]:
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [Prediction.server_domain == server_domain]
+
+    if barcode:
+        where_clauses.append(Prediction.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(Prediction.value_tag == value_tag)
+
+    query = Prediction.select()
+
+    if where_clauses:
+        query = query.where(*where_clauses)
 
     return query.iterator()
 

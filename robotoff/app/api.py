@@ -1056,20 +1056,45 @@ class UserStatisticsResource:
 
 
 class DisplayInsightPredictionForProducts:
-    def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
-        server_domain: Optional[str] = req.get_param("server_domain")
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
-        insights = [
-            i.serialize()
-            for i in get_insights(
-                barcode=barcode, server_domain=server_domain, limit=None
-            )
-        ]
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            "insight_types", required=False
+        )
+        barcode: Optional[str] = req.get_param("barcode")
+        value_tag: str = req.get_param("value_tag")
+        brands = req.get_param_as_list("brands") or None
+        server_domain: Optional[str] = req.get_param("server_domain")
 
-        if not insights:
-            response["status"] = "no_insights"
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        if brands is not None:
+            # Limit the number of brands to prevent slow SQL queries
+            brands = brands[:10]
+
+        get_predictions_ = functools.partial(
+            get_predictions,
+            keep_types=keep_types,
+            server_domain=server_domain,
+            value_tag=value_tag,
+            brands=brands,
+            barcode=barcode,
+        )
+
+        offset: int = (page - 1) * count
+        predictions = [
+            i.to_dict() for i in get_predictions_(limit=count, offset=offset)
+        ]
+        response["count"] = get_predictions_(count=True)
+
+        if not predictions:
+            response["predictions"] = []
+            response["status"] = "no_predictions"
         else:
-            response["insights"] = insights
+            response["predictions"] = predictions
             response["status"] = "found"
 
         resp.media = response
