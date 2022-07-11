@@ -946,17 +946,18 @@ def get_questions_resource_on_get(
         # Limit the number of brands to prevent slow SQL queries
         brands = brands[:10]
 
-    get_insights_ = functools.partial(
-        get_insights,
-        keep_types=keep_types,
-        country=country,
-        server_domain=server_domain,
-        value_tag=value_tag,
-        brands=brands,
-        order_by=order_by,
-        reserved_barcode=reserved_barcode,
-        avoid_voted_on=_get_skip_voted_on(auth, device_id),
-    )
+    query_parameters = {
+        "keep_types": keep_types,
+        "country": country,
+        "server_domain": server_domain,
+        "value_tag": value_tag,
+        "brands": brands,
+        "order_by": order_by,
+        "reserved_barcode": reserved_barcode,
+        "avoid_voted_on": _get_skip_voted_on(auth, device_id),
+    }
+
+    get_insights_ = functools.partial(get_insights, **query_parameters)
 
     offset: int = (page - 1) * count
     insights = list(get_insights_(limit=count, offset=offset))
@@ -1151,3 +1152,6 @@ api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
+api.add_route(
+    "/api/v1/insights/predictions/display", DisplayInsightPredictionForProducts()
+)
