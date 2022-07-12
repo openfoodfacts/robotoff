@@ -133,9 +133,11 @@ def get_insights(
 
 def get_predictions(
     barcode: Optional[str] = None,
-    type: Optional[str] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
+    limit: Optional[int] = 25,
+    offset: Optional[int] = None,
+    count: bool = False,
 ) -> Iterable[Prediction]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN

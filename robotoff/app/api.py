@@ -19,7 +19,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
+from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, get_predictions, save_annotation
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -946,18 +946,17 @@ def get_questions_resource_on_get(
         # Limit the number of brands to prevent slow SQL queries
         brands = brands[:10]
 
-    query_parameters = {
-        "keep_types": keep_types,
-        "country": country,
-        "server_domain": server_domain,
-        "value_tag": value_tag,
-        "brands": brands,
-        "order_by": order_by,
-        "reserved_barcode": reserved_barcode,
-        "avoid_voted_on": _get_skip_voted_on(auth, device_id),
-    }
-
-    get_insights_ = functools.partial(get_insights, **query_parameters)
+    get_insights_ = functools.partial(
+        get_insights,
+        keep_types=keep_types,
+        country=country,
+        server_domain=server_domain,
+        value_tag=value_tag,
+        brands=brands,
+        order_by=order_by,
+        reserved_barcode=reserved_barcode,
+        avoid_voted_on=_get_skip_voted_on(auth, device_id),
+    )
 
     offset: int = (page - 1) * count
     insights = list(get_insights_(limit=count, offset=offset))
@@ -1059,36 +1058,28 @@ class UserStatisticsResource:
 class DisplayInsightPredictionForProducts:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
-        keep_types: Optional[List[str]] = req.get_param_as_list(
-            "insight_types", required=False
-        )
         barcode: Optional[str] = req.get_param("barcode")
         value_tag: str = req.get_param("value_tag")
         brands = req.get_param_as_list("brands") or None
         server_domain: Optional[str] = req.get_param("server_domain")
 
-        if keep_types:
-            # Limit the number of types to prevent slow SQL queries
-            keep_types = keep_types[:10]
-
         if brands is not None:
             # Limit the number of brands to prevent slow SQL queries
             brands = brands[:10]
 
-        get_predictions_ = functools.partial(
-            get_predictions,
-            keep_types=keep_types,
-            server_domain=server_domain,
-            value_tag=value_tag,
-            brands=brands,
-            barcode=barcode,
-        )
+        query_parameters = {
+            "server_domain": server_domain,
+            "value_tag": value_tag,
+            "barcode": barcode            
+        }
 
-        offset: int = (page - 1) * count
-        predictions = [
-            i.to_dict() for i in get_predictions_(limit=count, offset=offset)
-        ]
+        get_predictions_ = functools.partial(get_predictions, **query_parameters)            
+
+        offset: int = (page - 1) * count       
+        predictions = [i.to_dict() for i in get_predictions_(limit=count, offset=offset)]
+
         response["count"] = get_predictions_(count=True)
 
         if not predictions:
@@ -1152,6 +1143,5 @@ api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
-api.add_route(
-    "/api/v1/insights/predictions/display", DisplayInsightPredictionForProducts()
-)
+api.add_route("/api/v1/insights/predictions/display", DisplayInsightPredictionForProducts())
+
