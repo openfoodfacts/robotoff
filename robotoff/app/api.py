@@ -19,7 +19,13 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, get_predictions, save_annotation
+from robotoff.app.core import (
+    SkipVotedOn,
+    SkipVotedType,
+    get_insights,
+    get_predictions,
+    save_annotation,
+)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -1072,13 +1078,15 @@ class DisplayInsightPredictionForProducts:
         query_parameters = {
             "server_domain": server_domain,
             "value_tag": value_tag,
-            "barcode": barcode            
+            "barcode": barcode,
         }
 
-        get_predictions_ = functools.partial(get_predictions, **query_parameters)            
+        get_predictions_ = functools.partial(get_predictions, **query_parameters)
 
-        offset: int = (page - 1) * count       
-        predictions = [i.to_dict() for i in get_predictions_(limit=count, offset=offset)]
+        offset: int = (page - 1) * count
+        predictions = [
+            i.to_dict() for i in get_predictions_(limit=count, offset=offset)
+        ]
 
         response["count"] = get_predictions_(count=True)
 
@@ -1143,5 +1151,6 @@ api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
-api.add_route("/api/v1/insights/predictions/display", DisplayInsightPredictionForProducts())
-
+api.add_route(
+    "/api/v1/insights/predictions/display", DisplayInsightPredictionForProducts()
+)
