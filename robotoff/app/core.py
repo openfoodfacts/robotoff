@@ -155,7 +155,10 @@ def get_predictions(
     if where_clauses:
         query = query.where(*where_clauses)
 
-    return query.iterator()
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
 
 
 def save_annotation(
