@@ -156,7 +156,7 @@ def get_predictions(
         query = query.where(*where_clauses)
 
     if count:
-         return query.count()
+        return query.count()
     else:
         return query.iterator()
 
