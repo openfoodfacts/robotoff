@@ -1061,7 +1061,7 @@ class UserStatisticsResource:
         resp.media = {"count": {"annotations": annotation_count}}
 
 
-class DisplayInsightPredictionForProducts:
+class PredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
         page: int = req.get_param_as_int("page", min_value=1, default=1)
@@ -1094,7 +1094,7 @@ class DisplayInsightPredictionForProducts:
             response["predictions"] = []
             response["status"] = "no_predictions"
         else:
-            response["predictions"] = predictions
+            response["predictions"] = list(predictions)
             response["status"] = "found"
 
         resp.media = response
@@ -1152,5 +1152,5 @@ api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route(
-    "/api/v1/insights/predictions/display", DisplayInsightPredictionForProducts()
+    "/api/v1/insights/predictions/", PredictionCollection()
 )
