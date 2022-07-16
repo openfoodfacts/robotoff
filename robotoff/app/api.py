@@ -1068,8 +1068,15 @@ class PredictionCollection:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         barcode: Optional[str] = req.get_param("barcode")
         value_tag: str = req.get_param("value_tag")
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            "insight_types", required=False
+        )
         brands = req.get_param_as_list("brands") or None
         server_domain: Optional[str] = req.get_param("server_domain")
+
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
 
         if brands is not None:
             # Limit the number of brands to prevent slow SQL queries
@@ -1077,8 +1084,10 @@ class PredictionCollection:
 
         query_parameters = {
             "server_domain": server_domain,
+            "keep_types": keep_types,
             "value_tag": value_tag,
             "barcode": barcode,
+            "brands": brands,
         }
 
         get_predictions_ = functools.partial(get_predictions, **query_parameters)

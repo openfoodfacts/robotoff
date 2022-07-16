@@ -6,9 +6,15 @@ from falcon import testing
 from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
+from robotoff.app.core import get_predictions
 from robotoff.models import AnnotationVote, ProductInsight
 
-from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
+from .models_utils import (
+    AnnotationVoteFactory,
+    PredictionFactory,
+    ProductInsightFactory,
+    clean_db,
+)
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -383,6 +389,39 @@ def test_annotation_event(client, monkeypatch, httpserver):
     assert result.status_code == 200
 
 
-def test_display_insight_prediction_for_products(client, mocker):
+def test_insight_prediction(client, mocker):
     result = client.simulate_get("/api/v1/insights/predictions")
     assert result.status_code == 200
+    assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
+
+    PredictionFactory(barcode="123")
+    result = client.simulate_get("/api/v1/insights/predictions")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["status"] == "found"
+    predictions_data = data["predictions"]
+    assert predictions_data[0]["barcode"] == "123"
+    assert predictions_data[0]["type"] == "category"
+    assert predictions_data[0]["value_tag"] == "en:seeds"
+
+    PredictionFactory(value_tag="en:seeds")
+    result = client.simulate_get("/api/v1/insights/predictions")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 2
+    assert data["status"] == "found"
+    predictions_data = data["predictions"]
+    assert predictions_data[0]["type"] == "category"
+    assert predictions_data[1]["type"] == "category"
+    assert predictions_data[0]["value_tag"] == "en:seeds"
+    assert predictions_data[1]["value_tag"] == "en:seeds"
+
+
+def test_get_predictions():
+    PredictionFactory(barcode="123")
+    actual = get_predictions(barcode="123")
+    actual_items = [item.to_dict() for item in actual]
+    assert actual_items[0]["barcode"] == "123"
+    assert actual_items[0]["type"] == "category"
+    assert actual_items[0]["value_tag"] == "en:seeds"
