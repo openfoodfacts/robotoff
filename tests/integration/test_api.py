@@ -389,7 +389,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
     assert result.status_code == 200
 
 
-def test_insight_prediction(client, mocker):
+def test_prediction_collection_no_filter(client):
     result = client.simulate_get("/api/v1/insights/predictions")
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
