@@ -1087,7 +1087,6 @@ class PredictionCollection:
             "keep_types": keep_types,
             "value_tag": value_tag,
             "barcode": barcode,
-            "brands": brands,
         }
 
         get_predictions_ = functools.partial(get_predictions, **query_parameters)

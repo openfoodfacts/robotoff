@@ -135,7 +135,6 @@ def get_predictions(
     barcode: Optional[str] = None,
     keep_types: List[str] = None,
     value_tag: Optional[str] = None,
-    brands: Optional[str] = None,
     server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
@@ -151,9 +150,6 @@ def get_predictions(
 
     if value_tag:
         where_clauses.append(Prediction.value_tag == value_tag)
-
-    if brands:
-        where_clauses.append(Prediction.brands == brands)
 
     if keep_types:
         where_clauses.append(Prediction.type.in_(keep_types))

@@ -394,34 +394,57 @@ def test_insight_prediction(client, mocker):
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
 
-    PredictionFactory(barcode="123")
+    prediction1 = PredictionFactory(value_tag="en:seeds")
     result = client.simulate_get("/api/v1/insights/predictions")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
     assert data["status"] == "found"
-    predictions_data = data["predictions"]
-    assert predictions_data[0]["barcode"] == "123"
-    assert predictions_data[0]["type"] == "category"
-    assert predictions_data[0]["value_tag"] == "en:seeds"
+    prediction_data = data["predictions"]
+    assert prediction_data[0]["id"] == prediction1.id
+    assert prediction_data[0]["type"] == "category"
+    assert prediction_data[0]["value_tag"] == "en:seeds"
 
-    PredictionFactory(value_tag="en:seeds")
+    prediction2 = PredictionFactory(
+        value_tag="en:beers", data={"sample": 1}, type="brand"
+    )
     result = client.simulate_get("/api/v1/insights/predictions")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 2
     assert data["status"] == "found"
-    predictions_data = data["predictions"]
-    assert predictions_data[0]["type"] == "category"
-    assert predictions_data[1]["type"] == "category"
-    assert predictions_data[0]["value_tag"] == "en:seeds"
-    assert predictions_data[1]["value_tag"] == "en:seeds"
+    prediction_data = data["predictions"]
+    assert prediction_data[1]["id"] == prediction2.id
+    assert prediction_data[1]["type"] == "brand"
+    assert prediction_data[1]["value_tag"] == "en:beers"
 
 
 def test_get_predictions():
-    PredictionFactory(barcode="123")
-    actual = get_predictions(barcode="123")
-    actual_items = [item.to_dict() for item in actual]
-    assert actual_items[0]["barcode"] == "123"
-    assert actual_items[0]["type"] == "category"
-    assert actual_items[0]["value_tag"] == "en:seeds"
+    prediction1 = PredictionFactory(barcode="123")
+    prediction2 = PredictionFactory(type="category")
+    prediction3 = PredictionFactory(value_tag="en:seeds")
+    prediction4 = PredictionFactory(type="brand")
+
+    actual_prediction1 = get_predictions(barcode="123")
+    actual_items1 = [item.to_dict() for item in actual_prediction1]
+    assert actual_items1[0]["barcode"] == "123"
+    assert actual_items1[0]["type"] == "category"
+    assert actual_items1[0]["value_tag"] == "en:seeds"
+
+    import pdb; pdb.set_trace()
+
+    actual_prediction2 = get_predictions(keep_types="category")
+    actual_items2 = [item.to_dict() for item in actual_prediction2]
+    assert actual_items2[0]["barcode"] == "123"
+    assert actual_items2[0]["type"] == "category"
+    assert actual_items2[0]["value_tag"] == "en:seeds"
+
+    actual_prediction3 = get_predictions(value_tag="en:seeds")
+    actual_items3 = [item.to_dict() for item in actual_prediction3]
+    assert actual_items3[0]["barcode"] == "123"
+    assert actual_items3[0]["type"] == "label"
+    assert actual_items3[0]["value_tag"] == "en:seeds"
+
+    actual_prediction4 = get_predictions(keep_types="brand")
+    actual_items4 = [item.to_dict() for item in actual_prediction4]
+    assert actual_items4[0] == None
