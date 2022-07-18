@@ -390,12 +390,12 @@ def test_annotation_event(client, monkeypatch, httpserver):
 
 
 def test_prediction_collection_no_filter(client):
-    result = client.simulate_get("/api/v1/insights/predictions")
+    result = client.simulate_get("/api/v1/predictions/")
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
 
     prediction1 = PredictionFactory(value_tag="en:seeds")
-    result = client.simulate_get("/api/v1/insights/predictions")
+    result = client.simulate_get("/api/v1/predictions/")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
@@ -408,7 +408,7 @@ def test_prediction_collection_no_filter(client):
     prediction2 = PredictionFactory(
         value_tag="en:beers", data={"sample": 1}, type="brand"
     )
-    result = client.simulate_get("/api/v1/insights/predictions")
+    result = client.simulate_get("/api/v1/predictions/")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 2
@@ -430,8 +430,6 @@ def test_get_predictions():
     assert actual_items1[0]["barcode"] == "123"
     assert actual_items1[0]["type"] == "category"
     assert actual_items1[0]["value_tag"] == "en:seeds"
-
-    import pdb; pdb.set_trace()
 
     actual_prediction2 = get_predictions(keep_types="category")
     actual_items2 = [item.to_dict() for item in actual_prediction2]
