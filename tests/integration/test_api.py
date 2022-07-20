@@ -420,31 +420,49 @@ def test_prediction_collection_no_filter(client):
 
 
 def test_get_predictions():
-    PredictionFactory(barcode="123", keep_types="category", value_tag="en:seeds")
-    PredictionFactory(type="category")
-    PredictionFactory(value_tag="en:seeds")
-    PredictionFactory(type="brand")
+    prediction1 = PredictionFactory(
+        barcode="123", keep_types="category", value_tag="en:seeds"
+    )
+    prediction2 = PredictionFactory(
+        barcode="123", keep_types="category", value_tag="en:beers"
+    )
+    prediction3 = PredictionFactory(
+        barcode="123", keep_types="label", value_tag="en:eu-organic"
+    )
+    prediction4 = PredictionFactory(
+        barcode="456", keep_types="label", value_tag="en:eu-organic"
+    )
 
     actual_prediction1 = get_predictions(barcode="123")
     actual_items1 = [item.to_dict() for item in actual_prediction1]
+    assert actual_items1[0]["id"] == prediction1.id
     assert actual_items1[0]["barcode"] == "123"
     assert actual_items1[0]["type"] == "category"
     assert actual_items1[0]["value_tag"] == "en:seeds"
-    assert len(actual_items1) == 1
+    assert actual_items1[1]["value_tag"] == "en:beers"
+    assert actual_items1[2]["value_tag"] == "en:eu-organic"
+    assert len(actual_items1) == 3
 
     actual_prediction2 = get_predictions(keep_types=["brand"])
     actual_items2 = [item.to_dict() for item in actual_prediction2]
-    assert actual_items2[0]["barcode"] == "123"
-    assert actual_items2[0]["type"] == "brand"
-    assert actual_items2[0]["value_tag"] == "en:seeds"
+    assert prediction2.id == prediction1.id + 1
+    assert len(actual_items2) == 0
 
-    actual_prediction3 = get_predictions(value_tag="en:seeds")
+    actual_prediction3 = get_predictions(value_tag="en:eu-organic")
     actual_items3 = [item.to_dict() for item in actual_prediction3]
-    assert actual_items3[1]["barcode"] == "0000000000002"
-    assert actual_items3[3]["type"] == "brand"
-    assert actual_items3[3]["value_tag"] == "en:seeds"
-    assert len(actual_items3) == 4
+    assert actual_items3[0]["id"] == prediction3.id
+    assert actual_items3[0]["barcode"] == "123"
+    assert actual_items3[0]["type"] == "category"
+    assert actual_items3[0]["value_tag"] == "en:eu-organic"
+    assert len(actual_items3) == 2
 
-    actual_prediction4 = get_predictions(barcode="123", value_tag="en:organic")
+    actual_prediction4 = get_predictions(
+        barcode="123", value_tag="en:eu-organic", keep_types=["category"]
+    )
     actual_items4 = [item.to_dict() for item in actual_prediction4]
-    assert len(actual_items4) == 0
+    assert actual_items4[0]["id"] == prediction3.id
+    assert len(actual_items4) == 1
+
+    actual_prediction5 = get_predictions(keep_types=["label", "category"])
+    actual_items5 = [item.to_dict() for item in actual_prediction5]
+    assert len(actual_items5) == 4
