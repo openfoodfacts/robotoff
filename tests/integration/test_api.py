@@ -389,10 +389,12 @@ def test_annotation_event(client, monkeypatch, httpserver):
     assert result.status_code == 200
 
 
-def test_prediction_collection_no_filter(client):
+def test_prediction_collection_no_result(client):
     result = client.simulate_get("/api/v1/predictions/")
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
+
+def test_prediction_collection_no_filter(client):
 
     prediction1 = PredictionFactory(value_tag="en:seeds")
     result = client.simulate_get("/api/v1/predictions/")
