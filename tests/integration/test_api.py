@@ -447,9 +447,7 @@ def test_get_predictions():
     assert len(actual_items1) == 3
 
     actual_prediction2 = get_predictions(keep_types=["brand"])
-    actual_items2 = [item.to_dict() for item in actual_prediction2]
-    assert prediction2.id == prediction1.id + 1
-    assert len(actual_items2) == 0
+    assert actual_items2 == []
 
     actual_prediction3 = get_predictions(value_tag="en:eu-organic")
     actual_items3 = [item.to_dict() for item in actual_prediction3]
