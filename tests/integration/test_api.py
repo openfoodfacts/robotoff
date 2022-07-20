@@ -394,6 +394,7 @@ def test_prediction_collection_no_result(client):
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
 
+
 def test_prediction_collection_no_filter(client):
 
     prediction1 = PredictionFactory(value_tag="en:seeds")
