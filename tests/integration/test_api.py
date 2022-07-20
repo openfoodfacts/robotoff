@@ -443,7 +443,9 @@ def test_get_predictions():
     assert actual_items1[0]["type"] == "category"
     assert actual_items1[0]["value_tag"] == "en:seeds"
     assert actual_items1[1]["value_tag"] == "en:beers"
+    assert actual_items1[1].id == prediction2.id
     assert actual_items1[2]["value_tag"] == "en:eu-organic"
+    assert actual_items1[2].id == prediction3.id
     assert len(actual_items1) == 3
 
     # test that as we have no "brand" prediction, returned list is empty
