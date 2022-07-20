@@ -446,6 +446,7 @@ def test_get_predictions():
     assert actual_items1[2]["value_tag"] == "en:eu-organic"
     assert len(actual_items1) == 3
 
+    # test that as we have no "brand" prediction, returned list is empty
     actual_prediction2 = get_predictions(keep_types=["brand"])
     assert actual_items2 == []
 
