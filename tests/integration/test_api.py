@@ -456,7 +456,8 @@ def test_get_predictions():
     assert actual_items3[0]["barcode"] == "123"
     assert actual_items3[0]["type"] == "category"
     assert actual_items3[0]["value_tag"] == "en:eu-organic"
-    assert len(actual_items3) == 2
+assert len(actual_items3) == 2
+assert actual_items3[1].id == prediction4.id
 
     actual_prediction4 = get_predictions(
         barcode="123", value_tag="en:eu-organic", keep_types=["category"]
