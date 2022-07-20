@@ -432,7 +432,7 @@ def test_get_predictions():
     assert actual_items1[0]["value_tag"] == "en:seeds"
     assert len(actual_items1) == 1
 
-    actual_prediction2 = get_predictions(keep_types="brand")
+    actual_prediction2 = get_predictions(keep_types=["brand"])
     actual_items2 = [item.to_dict() for item in actual_prediction2]
     assert actual_items2[0]["barcode"] == "123"
     assert actual_items2[0]["type"] == "brand"
