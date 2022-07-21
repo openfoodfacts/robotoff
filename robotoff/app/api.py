@@ -19,7 +19,13 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation, get_images
+from robotoff.app.core import (
+    SkipVotedOn,
+    SkipVotedType,
+    get_images,
+    get_insights,
+    save_annotation,
+)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -1054,16 +1060,14 @@ class UserStatisticsResource:
         )
         resp.media = {"count": {"annotations": annotation_count}}
 
-def get_image_list_on_get(
-    req: falcon.Request, resp: falcon.Response
-):
+
+def get_image_list_on_get(req: falcon.Request, resp: falcon.Response):
     response: JSONType = {}
     count: int = req.get_param_as_int("count", min_value=1, default=25)
-    page: int = req.get_param_as_int("page", min_value=1, default=1)       
+    page: int = req.get_param_as_int("page", min_value=1, default=1)
     with_predicted: Optional[int] = req.get_param_as_int("with_predicted", default=1)
     barcode: Optional[str] = req.get_param("barcode")
     server_domain = settings.OFF_SERVER_DOMAIN
-
 
     get_images_ = functools.partial(
         get_images,
@@ -1086,13 +1090,10 @@ def get_image_list_on_get(
     resp.media = response
 
 
-
-
-
-
 class ImageCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        get_image_list_on_get(req,resp)
+        get_image_list_on_get(req, resp)
+
 
 cors = CORS(
     allow_all_origins=True,

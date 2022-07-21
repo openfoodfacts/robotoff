@@ -13,7 +13,7 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, ProductInsight, ImageModel, db
+from robotoff.models import AnnotationVote, ImageModel, ProductInsight, db
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -131,6 +131,7 @@ def get_insights(
 
     return query.iterator()
 
+
 def get_images(
     with_predicted: Optional[int] = 1,
     barcode: Optional[str] = None,
@@ -155,17 +156,8 @@ def get_images(
     if with_predicted == 1:
         # return all images
         return query.iterator()
-    
+
     return query.iterator()
-
-
-
-
-
-
-
-
-
 
 
 def save_annotation(
