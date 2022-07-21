@@ -361,6 +361,7 @@ def test_annotate_insight_majority_vote_overridden(client):
     # anonymous vote.
     assert insight.items() > {"annotation": 0, "username": None, "n_votes": 5}.items()
 
+
 def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
 
@@ -505,10 +506,10 @@ def test_prediction_collection_no_filter(client):
     assert data["count"] == 2
     assert data["status"] == "found"
     prediction_data = data["predictions"]
-# we still have first prediction
-assert prediction_data[0]["id"] == prediction1.id
-# but also the second
-assert prediction_data[1]["id"] == prediction2.id
+    # we still have first prediction
+    assert prediction_data[0]["id"] == prediction1.id
+    # but also the second
+    assert prediction_data[1]["id"] == prediction2.id
     assert prediction_data[1]["type"] == "brand"
     assert prediction_data[1]["value_tag"] == "en:beers"
 
