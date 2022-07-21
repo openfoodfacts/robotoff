@@ -13,7 +13,7 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, ProductInsight, db
+from robotoff.models import AnnotationVote, ProductInsight, ImageModel, db
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -130,6 +130,42 @@ def get_insights(
         query = query.dicts()
 
     return query.iterator()
+
+def get_images(
+    with_predicted: Optional[int] = 1,
+    barcode: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    offset: Optional[int] = None,
+    count: bool = False,
+    limit: Optional[int] = 25,
+) -> Iterable[ImageModel]:
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [ImageModel.server_domain == server_domain]
+
+    if barcode:
+        where_clauses.append(ImageModel.barcode == barcode)
+
+    query = ImageModel.select()
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if with_predicted == 1:
+        # return all images
+        return query.iterator()
+    
+    return query.iterator()
+
+
+
+
+
+
+
+
+
 
 
 def save_annotation(
