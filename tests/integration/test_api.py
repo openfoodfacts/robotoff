@@ -473,7 +473,5 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
 
 
 def test_get_images(client):
-    result = client.simulate_get(
-        "/api/v1/images?page=1&count=25"
-    )
+    result = client.simulate_get("/api/v1/images?page=1&count=25")
     assert result.status_code == 200
