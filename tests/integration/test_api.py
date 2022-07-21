@@ -1,4 +1,6 @@
 import base64
+import uuid
+from datetime import datetime
 
 import pytest
 from falcon import testing
@@ -7,6 +9,7 @@ from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
+from robotoff.off import OFFAuthentication
 
 from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
 
@@ -381,3 +384,89 @@ def test_annotation_event(client, monkeypatch, httpserver):
             },
         )
     assert result.status_code == 200
+
+
+def test_annotate_insight_anonymous_then_authenticated(client, mocker):
+    """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
+
+    # mock because as we validate the insight, we will ask mongo for product
+    mocker.patch(
+        "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
+    )
+    add_category = mocker.patch("robotoff.insights.annotate.add_category")
+
+    # first the user validates annotation without being connected
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": insight_id,
+            "annotation": 1,
+            "device_id": "voter1",
+        },
+    )
+
+    assert result.status_code == 200
+    assert result.json == {
+        "description": "the annotation vote was saved",
+        "status": "vote_saved",
+    }
+
+    # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
+    votes = list(AnnotationVote.select())
+    assert len(votes) == 1
+    # no category added
+    add_category.assert_not_called()
+
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+
+    assert not any(
+        insight[key]
+        for key in ("username", "completed_at", "annotation", "process_after")
+    )
+    assert insight.items() > {"n_votes": 1}.items()
+
+    # then the user connects and vote for same insights
+
+    auth = base64.b64encode(b"a:b").decode("ascii")
+    authenticated_result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": insight_id,
+            "annotation": 1,
+            "device_id": "voter1",
+        },
+        headers={"Authorization": "Basic " + auth},
+    )
+
+    assert authenticated_result.status_code == 200
+    assert authenticated_result.json == {
+        "description": "the annotation was saved and sent to OFF",
+        "status": "updated",
+    }
+    # We have the previous vote, but the last request should validate the insight directly
+    votes = list(AnnotationVote.select())
+    assert len(votes) == 1  # this is the previous vote
+
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+    # we still have the vote, but we also have an authenticated validation
+    assert insight.items() > {"username": "a", "n_votes": 1, "annotation": 1}.items()
+    assert insight.get("completed_at") is not None
+    assert insight.get("completed_at") <= datetime.utcnow()
+    # update was done
+    add_category.assert_called_once_with(
+        "1",  # barcode
+        "en:seeds",  # category_tag
+        insight_id=uuid.UUID(insight_id),
+        server_domain=settings.OFF_SERVER_DOMAIN,
+        auth=OFFAuthentication(username="a", password="b"),
+    )
