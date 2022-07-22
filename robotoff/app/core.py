@@ -133,7 +133,7 @@ def get_insights(
 
 
 def get_images(
-    with_predicted: Optional[int] = 1,
+    with_predicted: Optional[bool] = False,
     barcode: Optional[str] = None,
     server_domain: Optional[str] = None,
     offset: Optional[int] = None,
@@ -153,7 +153,7 @@ def get_images(
     if where_clauses:
         query = query.where(*where_clauses)
 
-    if with_predicted == 1:
+    if with_predicted:
         # return all images
         pass
 
@@ -161,6 +161,7 @@ def get_images(
         return query.count()
     else:
         return query.iterator()
+
 
 def save_annotation(
     insight_id: str,
