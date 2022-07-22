@@ -155,10 +155,12 @@ def get_images(
 
     if with_predicted == 1:
         # return all images
+        pass
+
+    if count:
+        return query.count()
+    else:
         return query.iterator()
-
-    return query.iterator()
-
 
 def save_annotation(
     insight_id: str,
