@@ -1065,7 +1065,7 @@ def get_image_list_on_get(req: falcon.Request, resp: falcon.Response):
     response: JSONType = {}
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     page: int = req.get_param_as_int("page", min_value=1, default=1)
-    with_predicted: Optional[int] = req.get_param_as_int("with_predicted", default=1)
+    with_predicted: Optional[bool] = req.get_param_as_bool("with_predicted", default=False)
     barcode: Optional[str] = req.get_param("barcode")
     server_domain = settings.OFF_SERVER_DOMAIN
 
