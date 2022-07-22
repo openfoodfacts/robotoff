@@ -505,8 +505,8 @@ def test_prediction_collection_no_filter(client):
     data = result.json
     assert data["count"] == 2
     assert data["status"] == "found"
-    prediction_data = data["predictions"]
-    # we still have first prediction
+    prediction_data = sorted(data["predictions"], key=lambda d: d["id"])
+    # we still have both predictions
     assert prediction_data[0]["id"] == prediction1.id
     # but also the second
     assert prediction_data[1]["id"] == prediction2.id
@@ -530,6 +530,7 @@ def test_get_predictions():
 
     actual_prediction1 = get_predictions(barcode="123")
     actual_items1 = [item.to_dict() for item in actual_prediction1]
+    actual_items1.sort(key=lambda d: d["id"])
     assert len(actual_items1) == 3
     assert actual_items1[0]["id"] == prediction1.id
     assert actual_items1[0]["barcode"] == "123"
@@ -542,12 +543,13 @@ def test_get_predictions():
 
     # test that as we have no "brand" prediction, returned list is empty
     actual_prediction2 = get_predictions(keep_types=["brand"])
-    actual_items2 = [item.to_dict() for item in actual_prediction2]
-    assert actual_items2 == []
+    assert list(actual_prediction2) == []
 
-    # test that predictions are filtered based on "value_tag=en:eu-organic", returns only "en:eu-organic" predictions
+    # test that predictions are filtered based on "value_tag=en:eu-organic",
+    # returns only "en:eu-organic" predictions
     actual_prediction3 = get_predictions(value_tag="en:eu-organic")
     actual_items3 = [item.to_dict() for item in actual_prediction3]
+    actual_items3.sort(key=lambda d: d["id"])
     assert len(actual_items3) == 2
     assert actual_items3[0]["id"] == prediction3.id
     assert actual_items3[0]["barcode"] == "123"
