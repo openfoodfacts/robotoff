@@ -8,10 +8,16 @@ from falcon import testing
 from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
+from robotoff.app.core import get_predictions
 from robotoff.models import AnnotationVote, ProductInsight
 from robotoff.off import OFFAuthentication
 
-from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
+from .models_utils import (
+    AnnotationVoteFactory,
+    PredictionFactory,
+    ProductInsightFactory,
+    clean_db,
+)
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -356,36 +362,6 @@ def test_annotate_insight_majority_vote_overridden(client):
     assert insight.items() > {"annotation": 0, "username": None, "n_votes": 5}.items()
 
 
-def test_annotation_event(client, monkeypatch, httpserver):
-    """Test that annotation sends an event"""
-    monkeypatch.setattr(settings, "EVENTS_API_URL", httpserver.url_for("/"))
-    # setup a new event_processor, to be sure settings is taken into account
-    monkeypatch.setattr(events, "event_processor", events.EventProcessor())
-    # We expect to have a call to events server
-    expected_event = {
-        "event_type": "question_answered",
-        "user_id": "a",
-        "device_id": "test-device",
-        "barcode": "1",
-    }
-    httpserver.expect_oneshot_request(
-        "/", method="POST", json=expected_event
-    ).respond_with_data("Done")
-    with httpserver.wait(raise_assertions=True, stop_on_nohandler=True, timeout=2):
-        result = client.simulate_post(
-            "/api/v1/insights/annotate",
-            params={
-                "insight_id": insight_id,
-                "annotation": -1,
-                "device_id": "test-device",
-            },
-            headers={
-                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
-            },
-        )
-    assert result.status_code == 200
-
-
 def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
 
@@ -470,3 +446,126 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
         server_domain=settings.OFF_SERVER_DOMAIN,
         auth=OFFAuthentication(username="a", password="b"),
     )
+
+
+def test_annotation_event(client, monkeypatch, httpserver):
+    """Test that annotation sends an event"""
+    monkeypatch.setattr(settings, "EVENTS_API_URL", httpserver.url_for("/"))
+    # setup a new event_processor, to be sure settings is taken into account
+    monkeypatch.setattr(events, "event_processor", events.EventProcessor())
+    # We expect to have a call to events server
+    expected_event = {
+        "event_type": "question_answered",
+        "user_id": "a",
+        "device_id": "test-device",
+        "barcode": "1",
+    }
+    httpserver.expect_oneshot_request(
+        "/", method="POST", json=expected_event
+    ).respond_with_data("Done")
+    with httpserver.wait(raise_assertions=True, stop_on_nohandler=True, timeout=2):
+        result = client.simulate_post(
+            "/api/v1/insights/annotate",
+            params={
+                "insight_id": insight_id,
+                "annotation": -1,
+                "device_id": "test-device",
+            },
+            headers={
+                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
+            },
+        )
+    assert result.status_code == 200
+
+
+def test_prediction_collection_no_result(client):
+    result = client.simulate_get("/api/v1/predictions/")
+    assert result.status_code == 200
+    assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
+
+
+def test_prediction_collection_no_filter(client):
+
+    prediction1 = PredictionFactory(value_tag="en:seeds")
+    result = client.simulate_get("/api/v1/predictions/")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["status"] == "found"
+    prediction_data = data["predictions"]
+    assert prediction_data[0]["id"] == prediction1.id
+    assert prediction_data[0]["type"] == "category"
+    assert prediction_data[0]["value_tag"] == "en:seeds"
+
+    prediction2 = PredictionFactory(
+        value_tag="en:beers", data={"sample": 1}, type="brand"
+    )
+    result = client.simulate_get("/api/v1/predictions/")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 2
+    assert data["status"] == "found"
+    prediction_data = sorted(data["predictions"], key=lambda d: d["id"])
+    # we still have both predictions
+    assert prediction_data[0]["id"] == prediction1.id
+    # but also the second
+    assert prediction_data[1]["id"] == prediction2.id
+    assert prediction_data[1]["type"] == "brand"
+    assert prediction_data[1]["value_tag"] == "en:beers"
+
+
+def test_get_predictions():
+    prediction1 = PredictionFactory(
+        barcode="123", keep_types="category", value_tag="en:seeds"
+    )
+    prediction2 = PredictionFactory(
+        barcode="123", keep_types="category", value_tag="en:beers"
+    )
+    prediction3 = PredictionFactory(
+        barcode="123", keep_types="label", value_tag="en:eu-organic"
+    )
+    prediction4 = PredictionFactory(
+        barcode="456", keep_types="label", value_tag="en:eu-organic"
+    )
+
+    actual_prediction1 = get_predictions(barcode="123")
+    actual_items1 = [item.to_dict() for item in actual_prediction1]
+    actual_items1.sort(key=lambda d: d["id"])
+    assert len(actual_items1) == 3
+    assert actual_items1[0]["id"] == prediction1.id
+    assert actual_items1[0]["barcode"] == "123"
+    assert actual_items1[0]["type"] == "category"
+    assert actual_items1[0]["value_tag"] == "en:seeds"
+    assert actual_items1[1]["value_tag"] == "en:beers"
+    assert actual_items1[1]["id"] == prediction2.id
+    assert actual_items1[2]["value_tag"] == "en:eu-organic"
+    assert actual_items1[2]["id"] == prediction3.id
+
+    # test that as we have no "brand" prediction, returned list is empty
+    actual_prediction2 = get_predictions(keep_types=["brand"])
+    assert list(actual_prediction2) == []
+
+    # test that predictions are filtered based on "value_tag=en:eu-organic",
+    # returns only "en:eu-organic" predictions
+    actual_prediction3 = get_predictions(value_tag="en:eu-organic")
+    actual_items3 = [item.to_dict() for item in actual_prediction3]
+    actual_items3.sort(key=lambda d: d["id"])
+    assert len(actual_items3) == 2
+    assert actual_items3[0]["id"] == prediction3.id
+    assert actual_items3[0]["barcode"] == "123"
+    assert actual_items3[0]["type"] == "category"
+    assert actual_items3[0]["value_tag"] == "en:eu-organic"
+    assert actual_items3[1]["id"] == prediction4.id
+
+    # test that we can filter "barcode", "value_tag", "keep_types" prediction
+    actual_prediction4 = get_predictions(
+        barcode="123", value_tag="en:eu-organic", keep_types=["category"]
+    )
+    actual_items4 = [item.to_dict() for item in actual_prediction4]
+    assert actual_items4[0]["id"] == prediction3.id
+    assert len(actual_items4) == 1
+
+    # test to filter results with "label" and "category" prediction
+    actual_prediction5 = get_predictions(keep_types=["label", "category"])
+    actual_items5 = [item.to_dict() for item in actual_prediction5]
+    assert len(actual_items5) == 4
