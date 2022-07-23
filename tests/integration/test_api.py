@@ -9,12 +9,13 @@ from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.app.core import get_images
-from robotoff.models import AnnotationVote, ProductInsight
+from robotoff.models import AnnotationVote, ImagePrediction, ProductInsight
 from robotoff.off import OFFAuthentication
 
 from .models_utils import (
     AnnotationVoteFactory,
     ImageModelFactory,
+    ImagePredictionFactory,
     ProductInsightFactory,
     clean_db,
 )
@@ -482,11 +483,39 @@ def test_get_images(client):
     result = client.simulate_get("/api/v1/images?page=1&count=25")
     assert result.status_code == 200
 
-    prediction_factory = ImageModelFactory(barcode="123")
+    image_model_factory1 = ImageModelFactory(barcode="123")
+    image_model_factory2 = ImageModelFactory(barcode="456")
 
-    image_prediction = get_images(barcode="123")
-    prediction_items = [item.to_dict() for item in image_prediction]
-    prediction_items.sort(key=lambda d: d["id"])
-    assert len(prediction_items) == 1
-    assert prediction_items[0]["id"] == prediction_factory.id
-    assert prediction_items[0]["barcode"] == "123"
+    image_prediction_factory1 = ImagePredictionFactory(image=image_model_factory1.id)
+    image_prediction_factory2 = ImagePredictionFactory(image=image_model_factory2.id)
+    image_prediction_factory3 = ImagePredictionFactory()
+
+    # test with "barcode" filter
+    image_model_data = get_images(barcode="123")
+    image_model_items = [item.to_dict() for item in image_model_data]
+    assert len(image_model_items) == 1
+    assert image_model_items[0]["id"] == image_model_factory1.id
+    assert image_model_items[0]["barcode"] == "123"
+
+    # test if "image_prediction" foreign key matches "image_model"
+    assert image_prediction_factory1.image.id == image_model_factory1.id
+    assert image_prediction_factory2.image.id == image_model_factory2.id
+
+    # test if foreign key does not match as not parameter is passed to image_prediction_factory3
+    assert not (image_prediction_factory3.image.id == image_model_factory1.id)
+    assert not (image_prediction_factory3.image.id == image_model_factory2.id)
+
+    # test filter with "barcode" and "with_predicted=False"
+    image_prediction_data = get_images(barcode="123", with_predicted=False)
+    image_prediction_items = [item.to_dict() for item in image_prediction_data]
+    assert len(image_prediction_items) == 1
+
+    # test filter with "with_predicted=False"
+    image_prediction_data = get_images(with_predicted=False)
+    image_prediction_items = [item.to_dict() for item in image_prediction_data]
+    assert len(image_prediction_items) == 3
+
+    # test filter with "with_predicted=True"
+    image_prediction_data = get_images(with_predicted=True)
+    image_prediction_items = [item.to_dict() for item in image_prediction_data]
+    assert image_prediction_items == []

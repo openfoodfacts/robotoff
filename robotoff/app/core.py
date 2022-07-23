@@ -13,7 +13,13 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, ImageModel, ProductInsight, db
+from robotoff.models import (
+    AnnotationVote,
+    ImageModel,
+    ImagePrediction,
+    ProductInsight,
+    db,
+)
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -150,12 +156,14 @@ def get_images(
 
     query = ImageModel.select()
 
-    if where_clauses:
-        query = query.where(*where_clauses)
-
     if with_predicted:
         # return all images
-        pass
+        query = query.join(ImagePrediction).where(ImagePrediction.image.is_null(True))
+    else:
+        query = query.join(ImagePrediction)
+
+    if where_clauses:
+        query = query.where(*where_clauses)
 
     if count:
         return query.count()
