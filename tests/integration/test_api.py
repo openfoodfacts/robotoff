@@ -497,14 +497,6 @@ def test_get_images(client):
     assert image_model_items[0]["id"] == image_model_factory1.id
     assert image_model_items[0]["barcode"] == "123"
 
-    # test if "image_prediction" foreign key matches "image_model"
-    assert image_prediction_factory1.image.id == image_model_factory1.id
-    assert image_prediction_factory2.image.id == image_model_factory2.id
-
-    # test if foreign key does not match as not parameter is passed to image_prediction_factory3
-    assert not (image_prediction_factory3.image.id == image_model_factory1.id)
-    assert not (image_prediction_factory3.image.id == image_model_factory2.id)
-
     # test filter with "barcode" and "with_predicted=False"
     image_prediction_data = get_images(barcode="123", with_predicted=False)
     image_prediction_items = [item.to_dict() for item in image_prediction_data]

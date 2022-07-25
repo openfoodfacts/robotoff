@@ -159,9 +159,7 @@ def get_images(
     if with_predicted:
         # return all images
         query = query.join(ImagePrediction).where(ImagePrediction.image.is_null(True))
-    else:
-        query = query.join(ImagePrediction)
-
+    
     if where_clauses:
         query = query.where(*where_clauses)
 
