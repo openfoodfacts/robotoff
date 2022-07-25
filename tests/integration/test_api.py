@@ -487,7 +487,7 @@ def test_get_images(client):
     image_model1 = image_prediction1.image
     image_prediction2 = ImagePredictionFactory(image__barcode="456")
     image_model2 = image_prediction2.image
-    image_prediction_factory3 = ImagePredictionFactory()
+    image_model3 = ImageModelFactory(barcode="123")
 
     # test with "barcode" filter
     image_model_data = get_images(barcode="123")
