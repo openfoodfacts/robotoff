@@ -483,11 +483,10 @@ def test_get_images(client):
     result = client.simulate_get("/api/v1/images?page=1&count=25")
     assert result.status_code == 200
 
-    image_model_factory1 = ImageModelFactory(barcode="123")
-    image_model_factory2 = ImageModelFactory(barcode="456")
-
-    image_prediction_factory1 = ImagePredictionFactory(image=image_model_factory1.id)
-    image_prediction_factory2 = ImagePredictionFactory(image=image_model_factory2.id)
+    image_prediction1 = ImagePredictionFactory(image__barcode="123")
+    image_model1 = image_prediction1.image
+    image_prediction2 = ImagePredictionFactory(image__barcode="456")
+    image_model2 = image_prediction2.image
     image_prediction_factory3 = ImagePredictionFactory()
 
     # test with "barcode" filter
