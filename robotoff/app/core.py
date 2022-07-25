@@ -156,8 +156,8 @@ def get_images(
 
     query = ImageModel.select()
 
-    if with_predicted:
-        # return all images
+    if not with_predicted:
+        # return only images without prediction
         query = query.join(ImagePrediction).where(ImagePrediction.image.is_null(True))
     else:
         query = query.join(ImagePrediction)
