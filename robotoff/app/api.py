@@ -1066,15 +1066,15 @@ class ImageCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_predicted: Optional[bool] = req.get_param_as_bool(
-            "with_predicted", default=False
+        with_predictions: Optional[bool] = req.get_param_as_bool(
+            "with_predictions", default=False
         )
         barcode: Optional[str] = req.get_param("barcode")
         server_domain = settings.OFF_SERVER_DOMAIN
 
         get_images_ = functools.partial(
             get_images,
-            with_predicted=with_predicted,
+            with_predictions=with_predictions,
             barcode=barcode,
             server_domain=server_domain,
         )

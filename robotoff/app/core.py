@@ -139,7 +139,7 @@ def get_insights(
 
 
 def get_images(
-    with_predicted: Optional[bool] = False,
+    with_predictions: Optional[bool] = False,
     barcode: Optional[str] = None,
     server_domain: Optional[str] = None,
     offset: Optional[int] = None,
@@ -156,10 +156,10 @@ def get_images(
 
     query = ImageModel.select()
 
-    if not with_predicted:
+    if not with_predictions:
         # return only images without prediction
-        query = query.join(ImagePrediction).where(ImagePrediction.image.is_null(True))
-    
+        query = query.join(ImagePrediction).where(ImagePrediction.image.is_null(False))
+
     if where_clauses:
         query = query.where(*where_clauses)
 

@@ -8,17 +8,10 @@ from falcon import testing
 from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
-from robotoff.app.core import get_images
-from robotoff.models import AnnotationVote, ImagePrediction, ProductInsight
+from robotoff.models import AnnotationVote, ProductInsight
 from robotoff.off import OFFAuthentication
 
-from .models_utils import (
-    AnnotationVoteFactory,
-    ImageModelFactory,
-    ImagePredictionFactory,
-    ProductInsightFactory,
-    clean_db,
-)
+from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -479,34 +472,6 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     )
 
 
-def test_get_images(client):
+def test_image_collection(client):
     result = client.simulate_get("/api/v1/images?page=1&count=25")
     assert result.status_code == 200
-
-    image_prediction1 = ImagePredictionFactory(image__barcode="123")
-    image_model1 = image_prediction1.image
-    image_prediction2 = ImagePredictionFactory(image__barcode="456")
-    image_model2 = image_prediction2.image
-    image_model3 = ImageModelFactory(barcode="123")
-
-    # test with "barcode" filter
-    image_model_data = get_images(barcode="123")
-    image_model_items = [item.to_dict() for item in image_model_data]
-    assert len(image_model_items) == 1
-    assert image_model_items[0]["id"] == image_model_factory1.id
-    assert image_model_items[0]["barcode"] == "123"
-
-    # test filter with "barcode" and "with_predicted=False"
-    image_prediction_data = get_images(barcode="123", with_predicted=False)
-    image_prediction_items = [item.to_dict() for item in image_prediction_data]
-    assert len(image_prediction_items) == 1
-
-    # test filter with "with_predicted=False"
-    image_prediction_data = get_images(with_predicted=False)
-    image_prediction_items = [item.to_dict() for item in image_prediction_data]
-    assert len(image_prediction_items) == 3
-
-    # test filter with "with_predicted=True"
-    image_prediction_data = get_images(with_predicted=True)
-    image_prediction_items = [item.to_dict() for item in image_prediction_data]
-    assert image_prediction_items == []
