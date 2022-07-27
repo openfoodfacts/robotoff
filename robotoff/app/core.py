@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
-from peewee import *
+from peewee import JOIN
 
 from robotoff import settings
 from robotoff.app import events

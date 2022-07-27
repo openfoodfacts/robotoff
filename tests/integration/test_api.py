@@ -11,7 +11,13 @@ from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
 from robotoff.off import OFFAuthentication
 
-from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
+from .models_utils import (
+    AnnotationVoteFactory,
+    ImageModelFactory,
+    ImagePredictionFactory,
+    ProductInsightFactory,
+    clean_db,
+)
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -475,3 +481,17 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
 def test_image_collection(client):
     result = client.simulate_get("/api/v1/images?page=1&count=25")
     assert result.status_code == 200
+    ImageModelFactory(barcode="012")
+    ImagePredictionFactory(image__barcode="123")
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "barcode": "123",
+        },
+    )
+
+    assert result.status_code == 200
+    assert result.json == {"count": 0, "images": [], "status": "no_images"}
