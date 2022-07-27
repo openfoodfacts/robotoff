@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
+from peewee import *
 
 from robotoff import settings
 from robotoff.app import events
@@ -158,7 +159,9 @@ def get_images(
 
     if not with_predictions:
         # return only images without prediction
-        query = query.join(ImagePrediction).where(ImagePrediction.image.is_null(False))
+        query = query.join(ImagePrediction, JOIN.LEFT_OUTER).where(
+            ImagePrediction.image.is_null()
+        )
 
     if where_clauses:
         query = query.where(*where_clauses)

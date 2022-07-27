@@ -23,10 +23,6 @@ def test_get_images():
 
     # test with "barcode" filter
 
-    import pdb
-
-    pdb.set_trace()
-
     image_model_data = get_images(barcode="123")
     image_model_items = [item.to_dict() for item in image_model_data]
 
@@ -37,14 +33,22 @@ def test_get_images():
     # test filter with "barcode" and "with_predictions=True"
     image_model_data = get_images(barcode="123", with_predictions=True)
     image_model_items = [item.to_dict() for item in image_model_data]
+    image_model_items.sort(key=lambda d: d["id"])
     assert len(image_model_items) == 2
+    assert image_model_items[0]["id"] == image_model1.id
+    assert image_model_items[1]["id"] == image_model3.id
 
     # test filter with "with_predictions=True"
     image_model_data = get_images(with_predictions=True)
     image_model_items = [item.to_dict() for item in image_model_data]
+    image_model_items.sort(key=lambda d: d["id"])
     assert len(image_model_items) == 3
+    assert image_model_items[0]["id"] == image_model1.id
+    assert image_model_items[1]["id"] == image_model2.id
+    assert image_model_items[2]["id"] == image_model3.id
 
     # test filter with "barcode" and "with_predictions=True"
     image_model_data = get_images(barcode="456", with_predictions=True)
     image_model_items = [item.to_dict() for item in image_model_data]
     assert len(image_model_items) == 1
+    assert image_model_items[0]["id"] == image_model2.id
