@@ -505,7 +505,7 @@ def test_image_collection(client):
             "count": "25",
             "page": "1",
             "barcode": "456",
-            "with_predictions": False,
+            "with_predictions": True,
         },
     )
 
@@ -523,16 +523,14 @@ def test_image_collection(client):
 
     assert result.status_code == 200
     assert data["count"] == 1
-
-    import pdb; pdb.set_trace();
     
     result = client.simulate_get(
         "/api/v1/images",
         params={
             "count": "25",
             "page": "1",
-            "barcode": "456",
-            "with_predictions": False,
+            "barcode": "000",
+
         },
     )
 
