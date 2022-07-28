@@ -481,8 +481,8 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
 def test_image_collection(client):
     result = client.simulate_get("/api/v1/images?page=1&count=25")
     assert result.status_code == 200
-    ImageModelFactory(barcode="012")
-    ImagePredictionFactory(image__barcode="123")
+    image_model = ImageModelFactory(barcode="123")
+    ImagePredictionFactory(image__barcode="456")
 
     result = client.simulate_get(
         "/api/v1/images",
@@ -494,4 +494,45 @@ def test_image_collection(client):
     )
 
     assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == image_model.id
+    assert data["status"] == "found"
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "barcode": "456",
+            "with_predictions": False,
+        },
+    )
+
+    assert result.status_code == 200
     assert result.json == {"count": 0, "images": [], "status": "no_images"}
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "with_predictions": True,
+        },
+    )
+
+    assert result.status_code == 200
+    assert data["count"] == 1
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "barcode": "456",
+            "with_predictions": False,
+        },
+    )
+
+    assert result.status_code == 200
+    assert data["count"] == 1
