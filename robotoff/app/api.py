@@ -1089,6 +1089,7 @@ class ImageCollection:
         else:
             response["images"] = images
 
+
 class PredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}

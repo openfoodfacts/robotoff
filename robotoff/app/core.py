@@ -14,7 +14,6 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-
 from robotoff.models import (
     AnnotationVote,
     ImageModel,
@@ -162,7 +161,8 @@ def get_images(
         query = query.join(ImagePrediction, JOIN.LEFT_OUTER).where(
             ImagePrediction.image.is_null()
         )
-        
+
+
 def get_predictions(
     barcode: Optional[str] = None,
     keep_types: List[str] = None,

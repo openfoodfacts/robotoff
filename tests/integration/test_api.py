@@ -514,6 +514,7 @@ def test_image_collection(client):
     assert data["count"] == 1
     assert data["images"][0]["barcode"] == "123"
 
+
 def test_annotation_event(client, monkeypatch, httpserver):
     """Test that annotation sends an event"""
     monkeypatch.setattr(settings, "EVENTS_API_URL", httpserver.url_for("/"))
