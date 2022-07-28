@@ -18,6 +18,7 @@ from robotoff.models import (
     AnnotationVote,
     ImageModel,
     ImagePrediction,
+    Prediction,
     ProductInsight,
     db,
 )
@@ -132,7 +133,6 @@ def get_insights(
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
-
     if as_dict:
         query = query.dicts()
 
@@ -162,6 +162,40 @@ def get_images(
         query = query.join(ImagePrediction, JOIN.LEFT_OUTER).where(
             ImagePrediction.image.is_null()
         )
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
+
+
+def get_predictions(
+    barcode: Optional[str] = None,
+    keep_types: List[str] = None,
+    value_tag: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    limit: Optional[int] = 25,
+    offset: Optional[int] = None,
+    count: bool = False,
+) -> Iterable[Prediction]:
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [Prediction.server_domain == server_domain]
+
+    if barcode:
+        where_clauses.append(Prediction.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(Prediction.value_tag == value_tag)
+
+    if keep_types:
+        where_clauses.append(Prediction.type.in_(keep_types))
+
+    query = Prediction.select()
 
     if where_clauses:
         query = query.where(*where_clauses)
