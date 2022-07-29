@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
+from peewee import JOIN
 
 from robotoff import settings
 from robotoff.app import events
@@ -13,7 +14,7 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, Prediction, ProductInsight, db
+from robotoff.models import AnnotationVote, Prediction, ProductInsight, LogoAnnotation, ImagePrediction, db
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -164,6 +165,39 @@ def get_predictions(
     else:
         return query.iterator()
 
+
+def get_image_predictions(
+    with_logo: Optional[bool] = False,
+    barcode: Optional[str] = None,
+    type: Optional[str] = None,
+    offset: Optional[int] = None,
+    count: bool = False,
+    limit: Optional[int] = 25,
+) -> Iterable[LogoAnnotation]:
+
+    where_clauses = []
+    
+    if barcode:
+        where_clauses.append(ImagePrediction.image.barcode == barcode)
+
+    if type:
+        where_clauses.append(LogoAnnotation.annotation_type == type)
+
+    query = LogoAnnotation.select()
+
+    if not with_logo:
+        # return only images without prediction
+        query = query.join(ImagePrediction, JOIN.LEFT_OUTER).where(
+            ImagePrediction.image.is_null()
+        )
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
 
 def save_annotation(
     insight_id: str,

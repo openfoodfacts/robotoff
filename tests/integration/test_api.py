@@ -569,3 +569,8 @@ def test_get_predictions():
     actual_prediction5 = get_predictions(keep_types=["label", "category"])
     actual_items5 = [item.to_dict() for item in actual_prediction5]
     assert len(actual_items5) == 4
+
+
+def test_image_prediction_collection(client):
+    result = client.simulate_get("/api/v1/images/prediction/collection/")
+    assert result.status_code == 200
