@@ -2,7 +2,12 @@ import pytest
 
 from robotoff.app.core import get_image_predictions
 
-from .models_utils import ImageModelFactory, ImagePredictionFactory, LogoAnnotationFactory, clean_db
+from .models_utils import (
+    ImageModelFactory,
+    ImagePredictionFactory,
+    LogoAnnotationFactory,
+    clean_db,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -63,4 +68,3 @@ def test_get_image_predictions():
     image_model_data = get_image_predictions(type="label", with_logo=False)
     image_model_items = [item.to_dict() for item in image_model_data]
     assert len(image_model_items) == 0
-

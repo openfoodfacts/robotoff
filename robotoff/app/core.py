@@ -193,12 +193,9 @@ def get_image_predictions(
     if type:
         where_clauses.append(LogoAnnotation.annotation_type == type)
 
-
     if not with_logo:
         # return only images without logo
-        query = query.where(
-            ImagePrediction.image.is_null()
-        )
+        query = query.where(ImagePrediction.image.is_null())
 
     if where_clauses:
         query = query.where(*where_clauses)
