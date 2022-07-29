@@ -14,7 +14,14 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, Prediction, ProductInsight, LogoAnnotation, ImagePrediction, db
+from robotoff.models import (
+    AnnotationVote,
+    ImagePrediction,
+    LogoAnnotation,
+    Prediction,
+    ProductInsight,
+    db,
+)
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -176,7 +183,7 @@ def get_image_predictions(
 ) -> Iterable[LogoAnnotation]:
 
     where_clauses = []
-    
+
     if barcode:
         where_clauses.append(ImagePrediction.image.barcode == barcode)
 
@@ -198,6 +205,7 @@ def get_image_predictions(
         return query.count()
     else:
         return query.iterator()
+
 
 def save_annotation(
     insight_id: str,

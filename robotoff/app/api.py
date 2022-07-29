@@ -22,10 +22,10 @@ from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
+    get_image_predictions,
     get_insights,
     get_predictions,
     save_annotation,
-    get_image_predictions,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
@@ -1114,9 +1114,7 @@ class ImagePredictionCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_logo: Optional[bool] = req.get_param_as_bool(
-            "with_logo", default=False
-        )
+        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
         barcode: Optional[str] = req.get_param("barcode")
         type: Optional[str] = req.get_param("type")
 
@@ -1127,7 +1125,9 @@ class ImagePredictionCollection:
         )
 
         offset: int = (page - 1) * count
-        images = [i.to_dict() for i in get_image_predictions_(limit=count, offset=offset)]
+        images = [
+            i.to_dict() for i in get_image_predictions_(limit=count, offset=offset)
+        ]
         response["count"] = get_image_predictions_(count=True)
 
         if not images:
@@ -1193,4 +1193,3 @@ api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions/", PredictionCollection())
 api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
-
