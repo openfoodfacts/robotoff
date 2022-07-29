@@ -16,6 +16,7 @@ from robotoff.insights.annotate import (
 )
 from robotoff.models import (
     AnnotationVote,
+    ImageModel,
     ImagePrediction,
     LogoAnnotation,
     Prediction,
@@ -182,19 +183,20 @@ def get_image_predictions(
     limit: Optional[int] = 25,
 ) -> Iterable[LogoAnnotation]:
 
+    query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+
     where_clauses = []
 
     if barcode:
-        where_clauses.append(ImagePrediction.image.barcode == barcode)
+        where_clauses.append(ImageModel.barcode == barcode)
 
     if type:
         where_clauses.append(LogoAnnotation.annotation_type == type)
 
-    query = LogoAnnotation.select()
 
     if not with_logo:
-        # return only images without prediction
-        query = query.join(ImagePrediction, JOIN.LEFT_OUTER).where(
+        # return only images without logo
+        query = query.where(
             ImagePrediction.image.is_null()
         )
 
