@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
-from peewee import JOIN
 
 from robotoff import settings
 from robotoff.app import events
@@ -193,12 +192,9 @@ def get_image_predictions(
     if type:
         where_clauses.append(LogoAnnotation.annotation_type == type)
 
-
     if not with_logo:
         # return only images without logo
-        query = query.where(
-            ImagePrediction.image.is_null()
-        )
+        query = query.where(ImagePrediction.image.is_null())
 
     if where_clauses:
         query = query.where(*where_clauses)

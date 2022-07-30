@@ -14,6 +14,7 @@ from robotoff.off import OFFAuthentication
 
 from .models_utils import (
     AnnotationVoteFactory,
+    LogoAnnotationFactory,
     PredictionFactory,
     ProductInsightFactory,
     clean_db,
@@ -574,3 +575,68 @@ def test_get_predictions():
 def test_image_prediction_collection(client):
     result = client.simulate_get("/api/v1/images/prediction/collection/")
     assert result.status_code == 200
+
+    logo_annotation_with_barcode = LogoAnnotationFactory(
+        image_prediction__image__barcode="123"
+    )
+    logo_annotation_with_type = LogoAnnotationFactory(
+        type="label", image_prediction__image__barcode="456"
+    )
+
+    # test with "barcode=123" and "with_logo=True"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "barcode": "123",
+            "with_logo": True,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == logo_annotation_with_barcode.id
+    assert data["images"][0]["image_prediction"]["image"]["barcode"] == "123"
+
+    # test with "type=label" and "with_logo=True"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "type": "label",
+            "with_logo": True,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    data["images"].sort(key=lambda d: d["id"])
+    assert data["count"] == 2
+    assert data["images"][0]["id"] == logo_annotation_with_barcode.id
+    assert data["images"][1]["id"] == logo_annotation_with_type.id
+
+    # test with "barcode=456" and "with_logo=True"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "barcode": "456",
+            "with_logo": True,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == logo_annotation_with_type.id
+
+    # test with "type=label" and "with_logo=False"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "type": "label",
+            "with_logo": False,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 0

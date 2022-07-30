@@ -1122,6 +1122,7 @@ class ImagePredictionCollection:
             get_image_predictions,
             with_logo=with_logo,
             barcode=barcode,
+            type=type,
         )
 
         offset: int = (page - 1) * count
