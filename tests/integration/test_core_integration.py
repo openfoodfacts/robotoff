@@ -52,11 +52,6 @@ def test_get_image_predictions():
     image_model_items = [item.to_dict() for item in image_model_data]
     assert len(image_model_items) == 3
 
-    # test filter with "type=insight"
-    image_model_data = get_image_predictions(type="insight")
-    image_model_items = [item.to_dict() for item in image_model_data]
-    assert len(image_model_items) == 0
-
     # test filter with "type=label" and "with_logo=False"
     image_model_data = get_image_predictions(type="label", with_logo=False)
     image_model_items = [item.to_dict() for item in image_model_data]
