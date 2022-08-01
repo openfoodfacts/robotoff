@@ -14,6 +14,8 @@ from robotoff.off import OFFAuthentication
 
 from .models_utils import (
     AnnotationVoteFactory,
+    ImageModelFactory,
+    ImagePredictionFactory,
     LogoAnnotationFactory,
     PredictionFactory,
     ProductInsightFactory,
@@ -447,6 +449,62 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
         server_domain=settings.OFF_SERVER_DOMAIN,
         auth=OFFAuthentication(username="a", password="b"),
     )
+
+
+def test_image_collection_no_result(client):
+    result = client.simulate_get("/api/v1/images")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 0
+    assert data["images"] == []
+    assert data["status"] == "no_images"
+
+
+def test_image_collection(client):
+    image_model = ImageModelFactory(barcode="123")
+    ImagePredictionFactory(image__barcode="456")
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "barcode": "123",
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == image_model.id
+    assert data["status"] == "found"
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "barcode": "456",
+            "with_predictions": True,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["barcode"] == "456"
+    assert data["status"] == "found"
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "with_predictions": False,
+        },
+    )
+
+    assert result.status_code == 200
+    assert data["count"] == 1
+    assert data["images"][0]["barcode"] == "456"
 
 
 def test_annotation_event(client, monkeypatch, httpserver):

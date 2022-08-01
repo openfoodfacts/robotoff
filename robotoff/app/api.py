@@ -23,6 +23,7 @@ from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
     get_image_predictions,
+    get_images,
     get_insights,
     get_predictions,
     save_annotation,
@@ -1062,6 +1063,38 @@ class UserStatisticsResource:
         resp.media = {"count": {"annotations": annotation_count}}
 
 
+class ImageCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        with_predictions: Optional[bool] = req.get_param_as_bool(
+            "with_predictions", default=False
+        )
+        barcode: Optional[str] = req.get_param("barcode")
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+        get_images_ = functools.partial(
+            get_images,
+            with_predictions=with_predictions,
+            barcode=barcode,
+            server_domain=server_domain,
+        )
+
+        offset: int = (page - 1) * count
+        images = [i.to_dict() for i in get_images_(limit=count, offset=offset)]
+        response["count"] = get_images_(count=True)
+
+        if not images:
+            response["images"] = []
+            response["status"] = "no_images"
+        else:
+            response["images"] = images
+            response["status"] = "found"
+
+        resp.media = response
+
+
 class PredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
@@ -1194,3 +1227,4 @@ api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions/", PredictionCollection())
 api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
+api.add_route("/api/v1/images", ImageCollection())
