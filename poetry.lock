@@ -1010,7 +1010,7 @@ testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtuale
 
 [[package]]
 name = "pytest-httpserver"
-version = "1.0.4"
+version = "1.0.5"
 description = "pytest-httpserver is a httpserver for pytest"
 category = "dev"
 optional = false
@@ -1020,9 +1020,9 @@ python-versions = ">=3.6,<4.0"
 Werkzeug = ">=2.0.0"
 
 [package.extras]
-dev = ["types-requests", "sphinx-rtd-theme", "sphinx", "requests", "reno", "pytest", "pytest-cov", "mypy", "ipdb", "flake8 (>4.0.0)", "coverage", "autopep8"]
-test = ["types-requests", "requests", "pytest", "pytest-cov", "mypy", "flake8 (>4.0.0)", "coverage"]
-doc = ["sphinx-rtd-theme", "sphinx", "reno"]
+dev = ["types-requests", "mypy", "reno", "sphinx-rtd-theme", "sphinx", "requests", "ipdb", "coverage", "pytest-cov", "pytest"]
+test = ["types-requests", "mypy", "requests", "coverage", "pytest-cov", "pytest"]
+doc = ["sphinx-rtd-theme", "sphinx"]
 
 [[package]]
 name = "pytest-mock"
@@ -1488,7 +1488,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "cff863598d9c2044c039623b9549bd50d88afa9468cce6c7f9a2fc25626ad491"
+content-hash = "71c508eb3bc1e78e6324e077a4df59a31be8661512049f2e0500a7bf2f87da99"
 
 [metadata.files]
 apscheduler = [
@@ -2419,8 +2419,8 @@ pytest-cov = [
     {file = "pytest_cov-2.12.1-py2.py3-none-any.whl", hash = "sha256:261bb9e47e65bd099c89c3edf92972865210c36813f80ede5277dceb77a4a62a"},
 ]
 pytest-httpserver = [
-    {file = "pytest_httpserver-1.0.4-py3-none-any.whl", hash = "sha256:17396350d7c0dec067bc8c5ceca7e1137aa0e3395468a9c179bdfc5ede9027a5"},
-    {file = "pytest_httpserver-1.0.4.tar.gz", hash = "sha256:6de464ba5f74628d6182ebbdcb56783edf2c9b0caf598dc35c11f014f24a3f0d"},
+    {file = "pytest_httpserver-1.0.5-py3-none-any.whl", hash = "sha256:9a4c5308da1482e0b2d792278518d400cf4043746e3da0fdb05747f56d6f80b2"},
+    {file = "pytest_httpserver-1.0.5.tar.gz", hash = "sha256:ae3296626d0a10e835a9f423c61b4540547d582422be054c3fcc08626baa1024"},
 ]
 pytest-mock = [
     {file = "pytest-mock-3.6.1.tar.gz", hash = "sha256:40217a058c52a63f1042f0784f62009e976ba824c418cced42e88d5f40ab0e62"},
