@@ -216,7 +216,7 @@ def get_image_predictions(
     limit: Optional[int] = 25,
 ) -> Iterable[LogoAnnotation]:
 
-    #query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel
+    # query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel
     query = ImagePrediction.select()
 
     where_clauses = []
