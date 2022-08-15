@@ -1,6 +1,6 @@
 import pytest
 
-from robotoff.app.core import get_images, get_predictions, get_insights
+from robotoff.app.core import get_images, get_insights, get_predictions
 
 from .models_utils import (
     ImageModelFactory,
@@ -116,6 +116,7 @@ def test_get_images():
     assert len(image_model_items) == 1
     assert image_model_items[0]["id"] == image_model2.id
 
+
 def test_get_unanswered_questions_list():
     product1 = ProductInsightFactory(type="category", value_tag="en:beer")
     insight_data1 = get_insights(keep_types=["category"])
@@ -141,15 +142,10 @@ def test_get_unanswered_questions_list():
     assert insight_data_items4[0]["id"] == product4.id
     # assert insight_data_items4[0]["type"] == []
 
-
     insight_data5 = get_insights(keep_types=["category"])
     insight_data_items5 = [item.to_dict() for item in insight_data5]
     assert len(insight_data_items5) == 2
 
-    import pdb; pdb.set_trace();
+    import pdb
 
-    
-    
-
-
-
+    pdb.set_trace()

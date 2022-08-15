@@ -578,7 +578,8 @@ def test_get_unanswered_questions_api(client):
     assert result.json == {"questions": [], "status": "no_questions"}
 
     product1 = ProductInsightFactory(type="category", annotation=0)
-    result = client.simulate_get("/api/v1/questions/unanswered/", 
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered/",
         params={
             "count": 5,
             "page": 1,
@@ -588,21 +589,16 @@ def test_get_unanswered_questions_api(client):
     assert result.status_code == 200
     data = result.json
     assert len(data) == 2
-    assert len(data["questions"])==1
+    assert len(data["questions"]) == 1
     assert data["status"] == "found"
     product_data = sorted(data["questions"], key=lambda d: d["id"])
 
     product1 = ProductInsightFactory(type="label", annotation=0)
-    result = client.simulate_get("/api/v1/questions/unanswered/", 
-        params={
-            "question_type": "label"
-        }
-    )    
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered/", params={"question_type": "label"}
+    )
     assert result.status_code == 200
     data = result.json
     assert len(data) == 2
-    assert len(data["questions"])==1
+    assert len(data["questions"]) == 1
     product_data = sorted(data["questions"], key=lambda d: d["id"])
-    
-    
-
