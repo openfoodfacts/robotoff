@@ -61,6 +61,8 @@ from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 from robotoff.workers.client import send_ipc_event
+from collections import Counter
+
 
 logger = get_logger()
 
@@ -1140,6 +1142,38 @@ class PredictionCollection:
 
         resp.media = response
 
+class UnansweredQuestionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        question_type: str = req.get_param("question_type")
+        
+        insights = list(
+            get_insights(
+                keep_types=[question_type],
+                annotation=0,
+                limit=count,
+            )
+        )
+
+
+        if not insights:
+            response["questions"] = []
+            response["status"] = "no_questions"
+        else:
+            response = Counter(insights[0].values())
+
+        resp.media = response
+
+
+
+
+
+
+        
+
+    
 
 cors = CORS(
     allow_all_origins=True,
@@ -1194,3 +1228,4 @@ api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions/", PredictionCollection())
 api.add_route("/api/v1/images", ImageCollection())
+api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())

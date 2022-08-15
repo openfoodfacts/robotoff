@@ -1,11 +1,12 @@
 import pytest
 
-from robotoff.app.core import get_images, get_predictions
+from robotoff.app.core import get_images, get_predictions, get_insights
 
 from .models_utils import (
     ImageModelFactory,
     ImagePredictionFactory,
     PredictionFactory,
+    ProductInsightFactory,
     clean_db,
 )
 
@@ -114,3 +115,41 @@ def test_get_images():
     image_model_items = [item.to_dict() for item in image_model_data]
     assert len(image_model_items) == 1
     assert image_model_items[0]["id"] == image_model2.id
+
+def test_get_unanswered_questions_list():
+    product1 = ProductInsightFactory(type="category", value_tag="en:beer")
+    insight_data1 = get_insights(keep_types=["category"])
+    insight_data_items1 = [item.to_dict() for item in insight_data1]
+    assert insight_data_items1[0]["id"] == product1.id
+    # assert insight_data_items1[0]["type"] == []
+
+    product2 = ProductInsightFactory(type="label", value_tag="en:apricots")
+    insight_data2 = get_insights(keep_types=["label"], value_tag="en:apricots")
+    insight_data_items2 = [item.to_dict() for item in insight_data2]
+    assert insight_data_items2[0]["id"] == product2.id
+    # assert insight_data_items2[0]["type"] == []
+
+    product3 = ProductInsightFactory(type="label", value_tag="en:soups")
+    insight_data3 = get_insights(keep_types=["label"], value_tag="en:soups")
+    insight_data_items3 = [item.to_dict() for item in insight_data3]
+    assert insight_data_items3[0]["id"] == product3.id
+    # assert insight_data_items3[0]["type"] == []
+
+    product4 = ProductInsightFactory(type="category", value_tag="en:chicken")
+    insight_data4 = get_insights(keep_types=["category"], value_tag="en:chicken")
+    insight_data_items4 = [item.to_dict() for item in insight_data4]
+    assert insight_data_items4[0]["id"] == product4.id
+    # assert insight_data_items4[0]["type"] == []
+
+
+    insight_data5 = get_insights(keep_types=["category"])
+    insight_data_items5 = [item.to_dict() for item in insight_data5]
+    assert len(insight_data_items5) == 2
+
+    import pdb; pdb.set_trace();
+
+    
+    
+
+
+
