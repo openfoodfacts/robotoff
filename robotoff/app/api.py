@@ -1152,6 +1152,7 @@ class UnansweredQuestionCollection:
         insights = list(
             get_insights(
                 keep_types=[question_type],
+                group_by=True,
                 annotation=0,
                 limit=count,
             )
