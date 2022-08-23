@@ -573,61 +573,6 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["value_tag"] == "en:beers"
 
 
-def test_get_predictions():
-    prediction1 = PredictionFactory(
-        barcode="123", keep_types="category", value_tag="en:seeds"
-    )
-    prediction2 = PredictionFactory(
-        barcode="123", keep_types="category", value_tag="en:beers"
-    )
-    prediction3 = PredictionFactory(
-        barcode="123", keep_types="label", value_tag="en:eu-organic"
-    )
-    prediction4 = PredictionFactory(
-        barcode="456", keep_types="label", value_tag="en:eu-organic"
-    )
-
-    actual_prediction1 = get_predictions(barcode="123")
-    actual_items1 = [item.to_dict() for item in actual_prediction1]
-    actual_items1.sort(key=lambda d: d["id"])
-    assert len(actual_items1) == 3
-    assert actual_items1[0]["id"] == prediction1.id
-    assert actual_items1[0]["barcode"] == "123"
-    assert actual_items1[0]["type"] == "category"
-    assert actual_items1[0]["value_tag"] == "en:seeds"
-    assert actual_items1[1]["value_tag"] == "en:beers"
-    assert actual_items1[1]["id"] == prediction2.id
-    assert actual_items1[2]["value_tag"] == "en:eu-organic"
-    assert actual_items1[2]["id"] == prediction3.id
-
-    # test that as we have no "brand" prediction, returned list is empty
-    actual_prediction2 = get_predictions(keep_types=["brand"])
-    assert list(actual_prediction2) == []
-
-    # test that predictions are filtered based on "value_tag=en:eu-organic",
-    # returns only "en:eu-organic" predictions
-    actual_prediction3 = get_predictions(value_tag="en:eu-organic")
-    actual_items3 = [item.to_dict() for item in actual_prediction3]
-    actual_items3.sort(key=lambda d: d["id"])
-    assert len(actual_items3) == 2
-    assert actual_items3[0]["id"] == prediction3.id
-    assert actual_items3[0]["barcode"] == "123"
-    assert actual_items3[0]["type"] == "category"
-    assert actual_items3[0]["value_tag"] == "en:eu-organic"
-    assert actual_items3[1]["id"] == prediction4.id
-
-    # test that we can filter "barcode", "value_tag", "keep_types" prediction
-    actual_prediction4 = get_predictions(
-        barcode="123", value_tag="en:eu-organic", keep_types=["category"]
-    )
-    actual_items4 = [item.to_dict() for item in actual_prediction4]
-    assert actual_items4[0]["id"] == prediction3.id
-    assert len(actual_items4) == 1
-
-    # test to filter results with "label" and "category" prediction
-    actual_prediction5 = get_predictions(keep_types=["label", "category"])
-    actual_items5 = [item.to_dict() for item in actual_prediction5]
-    assert len(actual_items5) == 4
 
 
 def test_image_prediction_collection(client):
