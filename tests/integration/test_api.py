@@ -571,6 +571,8 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["id"] == prediction2.id
     assert prediction_data[1]["type"] == "brand"
     assert prediction_data[1]["value_tag"] == "en:beers"
+
+
 def test_image_prediction_collection(client):
     result = client.simulate_get("/api/v1/images/prediction/collection/")
     assert result.status_code == 200
