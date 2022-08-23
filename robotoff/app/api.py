@@ -1147,7 +1147,7 @@ class UnansweredQuestionCollection:
         response: JSONType = {}
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
-        question_type: str = req.get_param("question_type")
+        question_type: str = req.get_param("type")
 
         insights = list(
             get_insights(
