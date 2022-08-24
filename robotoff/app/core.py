@@ -123,7 +123,7 @@ def get_insights(
         query = query.offset(offset)
 
     if group_by:
-        query = query.group_by(keep_types)
+        query = query.group_by(ProductInsight.value_tag)
 
     if order_by is not None:
         if order_by == "random":
