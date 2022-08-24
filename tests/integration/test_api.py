@@ -580,9 +580,12 @@ def test_image_prediction_collection(client):
     logo_annotation_with_barcode = LogoAnnotationFactory(
         image_prediction__image__barcode="123"
     )
-    logo_annotation_with_type = LogoAnnotationFactory(
-        type="label", image_prediction__image__barcode="456"
+    logo_annotation_with_barcode = LogoAnnotationFactory(
+        image_prediction__type="456"
     )
+
+    image_prediction = ImagePredictionFactory(image__barcode="789", type="label")
+
 
     # test with "barcode=123" and "with_logo=True"
     result = client.simulate_get(

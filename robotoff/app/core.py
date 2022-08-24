@@ -216,7 +216,6 @@ def get_image_predictions(
     limit: Optional[int] = 25,
 ) -> Iterable[LogoAnnotation]:
 
-    # query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel
     query = ImagePrediction.select()
 
     where_clauses = []
@@ -226,7 +225,7 @@ def get_image_predictions(
         where_clauses.append(ImagePrediction.image.barcode == barcode)
 
     if type:
-        where_clauses.append(LogoAnnotation.annotation_type == type)
+        where_clauses.append(ImagePrediction.type == type)
 
     if not with_logo:
         # return only images without logo
