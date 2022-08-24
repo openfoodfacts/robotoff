@@ -571,11 +571,13 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["value_tag"] == "en:beers"
 
 
-def test_get_unanswered_questions_api(client):
+def test_get_unanswered_questions_api_empty(client):
     result = client.simulate_get("/api/v1/questions/unanswered/")
 
     assert result.status_code == 200
     assert result.json == {"questions": [], "status": "no_questions"}
+
+def test_get_unanswered_questions_api(client):
 
     product1 = ProductInsightFactory(type="category", annotation=0)
     result = client.simulate_get(
