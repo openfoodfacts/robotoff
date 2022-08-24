@@ -577,6 +577,7 @@ def test_get_unanswered_questions_api_empty(client):
     assert result.status_code == 200
     assert result.json == {"questions": [], "status": "no_questions"}
 
+
 def test_get_unanswered_questions_api(client):
 
     product1 = ProductInsightFactory(type="category", annotation=0)
