@@ -1150,7 +1150,6 @@ class UnansweredQuestionCollection:
         question_type: str = req.get_param("type")
         value_tag: str = req.get_param("value_tag")
 
-
         insights = list(
             get_insights(
                 keep_types=[question_type],
