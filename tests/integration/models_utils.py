@@ -49,7 +49,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     server_domain: str = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     server_type = "off"
     unique_scans_n = 10
-    annotation = 0
+    annotation = None
 
 
 class PredictionFactory(PeeweeModelFactory):

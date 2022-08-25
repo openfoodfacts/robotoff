@@ -1148,12 +1148,15 @@ class UnansweredQuestionCollection:
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         question_type: str = req.get_param("type")
+        value_tag: str = req.get_param("value_tag")
+
 
         insights = list(
             get_insights(
                 keep_types=[question_type],
-                group_by=True,
-                annotation=0,
+                group_by_value_tag=True,
+                annotation=None,
+                value_tag=value_tag,
                 limit=count,
             )
         )

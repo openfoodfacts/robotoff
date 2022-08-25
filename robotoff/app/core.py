@@ -77,7 +77,7 @@ def get_insights(
     offset: Optional[int] = None,
     count: bool = False,
     avoid_voted_on: Optional[SkipVotedOn] = None,
-    group_by: Optional[bool] = False,
+    group_by_value_tag: Optional[bool] = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -122,7 +122,7 @@ def get_insights(
     if offset is not None and order_by != "random":
         query = query.offset(offset)
 
-    if group_by:
+    if group_by_value_tag:
         query = query.group_by(ProductInsight.value_tag)
 
     if order_by is not None:
