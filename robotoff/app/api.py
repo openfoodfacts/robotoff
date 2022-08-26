@@ -1154,7 +1154,6 @@ class UnansweredQuestionCollection:
             get_insights(
                 keep_types=[question_type],
                 group_by_value_tag=True,
-                annotation=None,
                 value_tag=value_tag,
                 limit=count,
             )
@@ -1163,8 +1162,6 @@ class UnansweredQuestionCollection:
         if not insights:
             response["questions"] = []
             response["status"] = "no_questions"
-        else:
-            response = Counter(insights[0].values())
 
         resp.media = response
 

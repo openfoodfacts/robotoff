@@ -580,31 +580,28 @@ def test_get_unanswered_questions_api_empty(client):
 
 def test_get_unanswered_questions_api(client):
 
-    product1 = ProductInsightFactory(
-        type="category", value_tag="en:apricot", barcode="123"
-    )
-    product2 = ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
-    product3 = ProductInsightFactory(
-        type="nutrition", value_tag="en:soups", barcode="789"
-    )
-    product4 = ProductInsightFactory(
-        type="category", value_tag="en:meat", barcode="194"
-    )
-    product5 = ProductInsightFactory(type="weight", value_tag="en:beer", barcode="039")
-    product6 = ProductInsightFactory(
-        type="label", value_tag="en:soups", annotation=1, barcode="780"
-    )
-    product7 = ProductInsightFactory(
-        type="nutrition", value_tag="en:apricot", annotation=0, barcode="983"
-    )
+    product1 = ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
 
+    product2 = ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
+
+    product3 = ProductInsightFactory(type="nutrition", value_tag="en:soups", barcode="789")
+
+    product4 = ProductInsightFactory(type="category", value_tag="en:meat", barcode="194")
+
+    product5 = ProductInsightFactory(type="weight", value_tag="en:beer", barcode="039")
+
+    product6 = ProductInsightFactory(type="label", value_tag="en:soups", barcode="780", annotation=1,)
+    
+    product7 = ProductInsightFactory( type="nutrition", value_tag="en:apricot", barcode="983", annotation=0)
+    
     result = client.simulate_get(
         "/api/v1/questions/unanswered/",
         params={
             "count": 5,
             "page": 1,
+            "barcode":"123",
             "type": "category",
-            "value_tag": "en:apricot",
+            "value_tag":"en:apricot",
         },
     )
     assert result.status_code == 200
