@@ -3,8 +3,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
-from peewee import JOIN
-from peewee import fn
+from peewee import JOIN, fn
 
 from robotoff import settings
 from robotoff.app import events
@@ -122,7 +121,7 @@ def get_insights(
 
     if offset is not None and order_by != "random":
         query = query.offset(offset)
-  
+
     # if group_by_value_tag:
     #     query = query.group_by(ProductInsight.value_tag)
     #     query = query.select(ProductInsight.value_tag, fn.Count(ProductInsight.id))
