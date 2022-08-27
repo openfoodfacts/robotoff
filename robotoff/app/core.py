@@ -123,7 +123,9 @@ def get_insights(
         query = query.offset(offset)
 
     if group_by_value_tag:
-        query = query.group_by(ProductInsight.value_tag).order_by(fn.COUNT(ProductInsight.id).desc())
+        query = query.group_by(ProductInsight.value_tag).order_by(
+            fn.COUNT(ProductInsight.id).desc()
+        )
         query = query.select(
             ProductInsight.value_tag, fn.Count(ProductInsight.id)
         ).tuples()
