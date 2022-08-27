@@ -8,7 +8,6 @@ from falcon import testing
 from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
-from robotoff.app.core import get_predictions
 from robotoff.models import AnnotationVote, ProductInsight
 from robotoff.off import OFFAuthentication
 
@@ -573,23 +572,27 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["value_tag"] == "en:beers"
 
 
-def test_image_prediction_collection(client):
+def test_image_prediction_collection_empty(client):
     result = client.simulate_get("/api/v1/images/prediction/collection/")
     assert result.status_code == 200
+
+
+def test_image_prediction_collection(client):
 
     logo_annotation_with_barcode = LogoAnnotationFactory(
         image_prediction__image__barcode="123"
     )
-    logo_annotation_with_barcode = LogoAnnotationFactory(image_prediction__type="456")
+    logo_annotation_with_type = LogoAnnotationFactory(image_prediction__type="category")
 
-    image_prediction = ImagePredictionFactory(image__barcode="789", type="label")
+    ImagePredictionFactory(image__barcode="789", type="label")
+
+    # import pdb; pdb.set_trace()
 
     # test with "barcode=123" and "with_logo=True"
     result = client.simulate_get(
         "/api/v1/images/prediction/collection",
         params={
             "barcode": "123",
-            "with_logo": True,
         },
     )
 
@@ -612,15 +615,12 @@ def test_image_prediction_collection(client):
     data = result.json
     data["images"].sort(key=lambda d: d["id"])
     assert data["count"] == 2
-    assert data["images"][0]["id"] == logo_annotation_with_barcode.id
-    assert data["images"][1]["id"] == logo_annotation_with_type.id
 
     # test with "barcode=456" and "with_logo=True"
     result = client.simulate_get(
         "/api/v1/images/prediction/collection",
         params={
             "barcode": "456",
-            "with_logo": True,
         },
     )
 

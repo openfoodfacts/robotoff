@@ -1149,13 +1149,16 @@ class ImagePredictionCollection:
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
         barcode: Optional[str] = req.get_param("barcode")
-        keep_types: Optional[List[str]] = req.get_param_as_list("types", required=False)
+        type: Optional[str] = req.get_param("type")
+
+        query_parameters = {
+            "with_logo": with_logo,
+            "barcode": barcode,
+            "type": type,
+        }
 
         get_image_predictions_ = functools.partial(
-            get_image_predictions,
-            with_logo=with_logo,
-            barcode=barcode,
-            type=type,
+            get_image_predictions, **query_parameters
         )
 
         offset: int = (page - 1) * count
