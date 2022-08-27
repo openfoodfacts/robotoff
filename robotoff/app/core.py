@@ -122,9 +122,11 @@ def get_insights(
     if offset is not None and order_by != "random":
         query = query.offset(offset)
 
-    # if group_by_value_tag:
-    #     query = query.group_by(ProductInsight.value_tag)
-    #     query = query.select(ProductInsight.value_tag, fn.Count(ProductInsight.id))
+    if group_by_value_tag:
+        query = query.group_by(ProductInsight.value_tag)
+        query = query.select(
+            ProductInsight.value_tag, fn.Count(ProductInsight.id)
+        ).tuples()
 
     if order_by is not None:
         if order_by == "random":

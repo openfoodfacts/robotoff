@@ -580,58 +580,68 @@ def test_get_unanswered_questions_api_empty(client):
 
 def test_get_unanswered_questions_api(client):
 
-    product1 = ProductInsightFactory(
-        type="category", value_tag="en:apricot", barcode="123"
-    )
+    ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
 
-    product2 = ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
+    ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
 
-    product3 = ProductInsightFactory(
-        type="nutrition", value_tag="en:soups", barcode="789"
-    )
+    ProductInsightFactory(type="nutrition", value_tag="en:soups", barcode="789")
 
-    product4 = ProductInsightFactory(
-        type="category", value_tag="en:meat", barcode="194"
-    )
+    ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="302")
 
-    product5 = ProductInsightFactory(type="weight", value_tag="en:beer", barcode="039")
+    ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="403")
 
-    product6 = ProductInsightFactory(
-        type="label",
-        value_tag="en:soups",
+    ProductInsightFactory(type="category", value_tag="en:soups", barcode="194")
+
+    ProductInsightFactory(type="category", value_tag="en:soups", barcode="967")
+
+    ProductInsightFactory(type="label", value_tag="en:beer", barcode="039")
+
+    ProductInsightFactory(type="category", value_tag="en:apricot", barcode="492")
+
+    ProductInsightFactory(type="category", value_tag="en:soups", barcode="594")
+
+    ProductInsightFactory(
+        type="category",
+        value_tag="en:apricot",
         barcode="780",
         annotation=1,
     )
 
-    product7 = ProductInsightFactory(
-        type="nutrition", value_tag="en:apricot", barcode="983", annotation=0
+    ProductInsightFactory(
+        type="category", value_tag="en:apricot", barcode="983", annotation=0
     )
+
+    # test to get all "category" with "annotation=None"
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered/",
         params={
             "count": 5,
             "page": 1,
-            "barcode": "123",
             "type": "category",
-            "value_tag": "en:apricot",
         },
     )
     assert result.status_code == 200
     data = result.json
+
     assert len(data) == 2
-    assert len(data["questions"]) == 1
+    questions_list = data["questions"]
+    questions_list.sort(key=lambda x: x[1])
+    assert questions_list == [["en:seeds", 1], ["en:apricot", 2], ["en:soups", 3]]
     assert data["status"] == "found"
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
+
+    # test to get all "label" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"question_type": "label"}
+        "/api/v1/questions/unanswered/", params={"type": "label"}
     )
     assert result.status_code == 200
     data = result.json
     assert len(data) == 2
     assert len(data["questions"]) == 1
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
+    assert data["questions"] == [["en:beer", 2]]
+
+    # test to get all "nutrition" with "annotation=None"
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered/", params={"type": "nutrition"}
@@ -639,41 +649,8 @@ def test_get_unanswered_questions_api(client):
     assert result.status_code == 200
     data = result.json
     assert len(data) == 2
-    assert len(data["questions"]) == 1
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
-
-    result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "label"}
-    )
-    assert result.status_code == 200
-    data = result.json
-    assert len(data) == 2
-    assert len(data["questions"]) == 1
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
-
-    result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "label"}
-    )
-    assert result.status_code == 200
-    data = result.json
-    assert len(data) == 2
-    assert len(data["questions"]) == 1
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
-
-    result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "label"}
-    )
-    assert result.status_code == 200
-    data = result.json
-    assert len(data) == 2
-    assert len(data["questions"]) == 1
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
-
-    result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "label"}
-    )
-    assert result.status_code == 200
-    data = result.json
-    assert len(data) == 2
-    assert len(data["questions"]) == 1
-    product_data = sorted(data["questions"], key=lambda d: d["id"])
+    assert len(data["questions"]) == 2
+    questions_list = data["questions"]
+    questions_list.sort(key=lambda x: x[1])
+    assert questions_list == [["en:soups", 1], ["en:salad", 2]]
+    assert data["status"] == "found"

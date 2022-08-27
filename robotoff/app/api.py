@@ -4,7 +4,6 @@ import functools
 import hashlib
 import io
 import tempfile
-from collections import Counter
 from typing import List, Optional
 
 import falcon
@@ -1162,6 +1161,9 @@ class UnansweredQuestionCollection:
         if not insights:
             response["questions"] = []
             response["status"] = "no_questions"
+        else:
+            response["questions"] = insights
+            response["status"] = "found"
 
         resp.media = response
 
