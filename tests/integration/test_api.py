@@ -625,7 +625,7 @@ def test_get_unanswered_questions_api(client):
     data = result.json
 
     assert len(data) == 2
-    assert data["questions"] == [['en:soups', 3], ['en:apricot', 2], ['en:seeds', 1]]
+    assert data["questions"] == [["en:soups", 3], ["en:apricot", 2], ["en:seeds", 1]]
     assert data["status"] == "found"
 
     # test to get all "label" with "annotation=None"
