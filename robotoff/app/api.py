@@ -1162,6 +1162,7 @@ class UnansweredQuestionCollection:
             response["questions"] = []
             response["status"] = "no_questions"
         else:
+            insights.sort(key=lambda x: x[1], reverse=True)
             response["questions"] = insights
             response["status"] = "found"
 
