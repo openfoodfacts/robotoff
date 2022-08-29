@@ -76,7 +76,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
     You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
 
-    The mapping of functions and API path is [here](../../robotoff/app/api.py#L1083) 
+    The mapping of functions and API path is at the end of robotoff/app/api.py
 
     If you are on a local install:
 
@@ -88,7 +88,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     poetry run pytest tests
     ```    
 
-    Before running the test cases make sure you have a database created. Have a look at [.env](../../robotoff/settings.py#L131) the default database name, user, and password is
+    Before running the test cases make sure you have a database created. Have a look at .env and robotoff/settings.py the default database name, user, and password is
 
     ```
     postgres
