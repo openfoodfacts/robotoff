@@ -159,6 +159,12 @@ class SlackNotifier(SlackNotifierInterface):
 
         self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
+        # This add notification to alexandre server.
+        # TODO: remove this url when we have a proper server running for this purpose
+        image_id = int(image_url.split('/')[-1].split('.')[0])
+        params= { 'imgid': image_id, 'url': image_url }
+        http_session.put("https://amathjourney.com/api/off-annotation/flag-image/%s" % barcode, data=params)
+
     def notify_automatic_processing(self, insight: ProductInsight):
         product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
         edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
