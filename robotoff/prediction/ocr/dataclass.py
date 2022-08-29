@@ -73,6 +73,10 @@ class OrientationResult:
 
 
 class OCRResultGenerationException(Exception):
+    """An Error occurred while analyzing OCR
+
+    args may contain ocr_url"""
+
     pass
 
 
@@ -595,8 +599,9 @@ class BoundingPoly:
 
         else:
             logger.error(
-                "Unknown orientation: edge {}, vertices {}"
-                "".format(first_edge, self.vertices)
+                "Unknown orientation: edge %s, vertices %s",
+                first_edge,
+                self.vertices,
             )
             return ImageOrientation.unknown
 

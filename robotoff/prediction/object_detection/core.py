@@ -49,13 +49,14 @@ class ObjectDetectionRawResult:
             selected_boxes, selected_scores, selected_classes
         ):
             label_int = int(label)
-            label_str = self.category_index[label_int]["name"]
-            result = ObjectDetectionResult(
-                bounding_box=tuple(bounding_box.tolist()),
-                score=float(score),
-                label=label_str,
-            )
-            results.append(result)
+            label_str = self.category_index.get(label_int, {}).get("name")
+            if label_str is not None:
+                result = ObjectDetectionResult(
+                    bounding_box=tuple(bounding_box.tolist()),
+                    score=float(score),
+                    label=label_str,
+                )
+                results.append(result)
 
         return results
 

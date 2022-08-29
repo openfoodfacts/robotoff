@@ -106,6 +106,9 @@ def off_credentials() -> Dict[str, str]:
 
 
 OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
+EVENTS_API_URL = os.environ.get(
+    "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
+)
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
@@ -191,7 +194,7 @@ def init_sentry(integrations: Optional[List[Integration]] = None):
                 event_level=logging.WARNING,  # Send warning and errors as events
             )
         )
-        sentry_sdk.init(
+        sentry_sdk.init(  # type:ignore # mypy say it's abstract
             _sentry_dsn,
             environment=_robotoff_instance,
             integrations=integrations,

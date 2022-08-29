@@ -81,14 +81,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
-        with db.atomic() as transaction:
-            try:
-                return self._annotate(
-                    insight, annotation, update, data, auth, automatic
-                )
-            except Exception as e:
-                transaction.rollback()
-                raise e
+        with db.atomic():
+            return self._annotate(insight, annotation, update, data, auth, automatic)
 
     def _annotate(
         self,
@@ -228,7 +222,8 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         if expected_ingredients != original_ingredients:
             logger.warning(
                 "ingredients have changed since spellcheck insight "
-                "creation (product {})".format(barcode)
+                "creation (product %s)",
+                barcode,
             )
             return AnnotationResult(
                 status=AnnotationStatus.error_updated_product.name,

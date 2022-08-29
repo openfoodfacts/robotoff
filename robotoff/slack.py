@@ -7,7 +7,7 @@ import requests
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import LogoAnnotation, ProductInsight
+from robotoff.models import LogoAnnotation, ProductInsight, crop_image_url
 from robotoff.prediction.types import Prediction
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
@@ -161,26 +161,39 @@ class SlackNotifier(SlackNotifierInterface):
 
     def notify_automatic_processing(self, insight: ProductInsight):
         product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
+        edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
 
         if insight.source_image:
-            image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
+            if insight.data and "bounding_box" in insight.data:
+                image_url = crop_image_url(
+                    insight.source_image, insight.data.get("bounding_box")
+                )
+            else:
+                image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
+
+        edit_text = f"(<{edit_url}|edit>)"
+
+        value = insight.value or insight.value_tag
 
         if insight.type in {
             InsightType.product_weight.name,
             InsightType.expiration_date.name,
         }:
-            text = f"The {insight.type} `{insight.value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
+            text = f"The {insight.type} `{value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
         else:
-            text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
+            text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        message = _slack_message_block(text + " " + metadata_text)
+        message = _slack_message_block(f"{text} {metadata_text}")
+        nutriscore_message = _slack_message_block(f"{text} {metadata_text} {edit_text}")
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
             self._post_message(
-                message, self.NUTRISCORE_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+                nutriscore_message,
+                self.NUTRISCORE_ALERT_CHANNEL,
+                **self.COLLAPSE_LINKS_PARAMS,
             )
             return
 
@@ -236,7 +249,7 @@ class SlackNotifier(SlackNotifierInterface):
             return response_json
         except Exception as e:
             logger.error(
-                "An exception occurred when sending a Slack " "notification", exc_info=e
+                "An exception occurred when sending a Slack notification", exc_info=e
             )
 
 

@@ -1,47 +1,31 @@
 import pytest
 
-from robotoff import settings
 from robotoff.models import AnnotationVote, ProductInsight
 
-insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
+from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
 
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
     # clean db
-    AnnotationVote.delete().execute()
-    ProductInsight.delete().execute()
+    clean_db()
     # Run the test case.
     yield
     # Tear down.
-    AnnotationVote.delete().execute()
-    ProductInsight.delete().execute()
+    clean_db()
 
 
 def test_vote_cascade_on_insight_deletion(peewee_db):
     """Test AnnotationVote is cascading on insight deletion"""
     with peewee_db.atomic():
-        insight = ProductInsight.create(
-            id=insight_id,
-            data="{}",
-            barcode=1,
-            type="category",
+        insight = ProductInsightFactory(
             n_votes=2,
-            value_tag="en:seeds",
-            server_domain=settings.OFF_SERVER_DOMAIN,
-            automatic_processing=False,
-            unique_scans_n=0,
-            reserved_barcode=False,
         )
-        AnnotationVote.create(
-            insight_id=insight_id,
-            value=1,
-            device_id="device1",
+        AnnotationVoteFactory(
+            insight_id=insight,
         )
-        AnnotationVote.create(
-            insight_id=insight_id,
-            value=1,
-            device_id="device2",
+        AnnotationVoteFactory(
+            insight_id=insight,
         )
 
     with peewee_db.atomic():

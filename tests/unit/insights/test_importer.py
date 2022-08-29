@@ -686,6 +686,8 @@ class TestPackagerCodeInsightImporter:
 
 
 class TestLabelInsightImporter:
+    # TODO: this test currently depends on external data, it should not !
+
     def test_get_type(self):
         assert LabelInsightImporter.get_type() == InsightType.label
 
@@ -731,6 +733,7 @@ class TestLabelInsightImporter:
                 [("en:organic", True)],
             ),
             (
+                # en:organic is a parent of en:ecoveg
                 [
                     Prediction(PredictionType.label, value_tag="en:organic"),
                     Prediction(PredictionType.label, value_tag="en:ecoveg"),
@@ -739,6 +742,8 @@ class TestLabelInsightImporter:
                 [("en:ecoveg", False)],
             ),
             (
+                # en:organic and en:vagan are both parents of en:ecoveg
+                # we add a non existing tag and an independent label
                 [
                     Prediction(PredictionType.label, value_tag="en:vegan"),
                     Prediction(PredictionType.label, value_tag="en:ecoveg"),
@@ -757,7 +762,7 @@ class TestLabelInsightImporter:
         )
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected)
-
+        candidates.sort(key=lambda c: c.value_tag)
         for candidate, (value_tag, automatic_processing) in zip(candidates, expected):
             assert candidate.value_tag == value_tag
             assert candidate.automatic_processing is automatic_processing

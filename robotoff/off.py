@@ -28,6 +28,14 @@ class OFFAuthentication:
         self.username = username
         self.password = password
 
+    def __eq__(self, other):
+        """equality - we may use it in tests"""
+        return (
+            self.username == other.username
+            and self.password == other.password
+            and self.session_cookie == other.session_cookie
+        )
+
     def get_username(self) -> Optional[str]:
         if self.username is not None:
             return self.username
@@ -48,9 +56,8 @@ class OFFAuthentication:
                             break
 
             logger.warning(
-                "Unable to extract username from session cookie: {}".format(
-                    self.session_cookie
-                )
+                "Unable to extract username from session cookie: %s",
+                self.session_cookie,
             )
 
         return None

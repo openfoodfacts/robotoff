@@ -198,7 +198,7 @@ def select_deepest_taxonomized_candidates(
 
     for candidate in candidates:
         if candidate.value_tag is None:
-            logger.warning(f"Unexpected None `value_tag` (candidate: {candidate})")
+            logger.warning("Unexpected None `value_tag` (candidate: %s)", candidate)
         else:
             value_tags.add(candidate.value_tag)
 
@@ -311,7 +311,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for candidate in candidates:
                 if candidate.automatic_processing is None:
                     logger.warning(
-                        f"Insight with automatic_processing=None: {candidate.__data__}"
+                        "Insight with automatic_processing=None: %s", candidate.__data__
                     )
 
                 if not is_trustworthy_insight_image(
@@ -320,6 +320,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     # Don't process automatically if the insight image is not
                     # trustworthy (too old and not selected)
                     candidate.automatic_processing = False
+                if candidate.data.get("is_annotation"):
+                    username = candidate.data.get("username")
+                    if username:
+                        # logo annotation by a user
+                        candidate.username = username
+                    # Note: we could add vote annotation for anonymous user,
+                    # but it should be done outside this loop. It's not yet implemented
 
             to_create, to_delete = cls.get_insight_update(candidates, references)
 
@@ -846,6 +853,9 @@ def import_product_predictions(
         .tuples()
     )
 
+    # note: there are some cases
+    # when we could decide to replace old predictions of the same key.
+    # It's not yet implemented.
     to_import = (
         create_prediction_model(prediction, server_domain, timestamp)
         for prediction in product_predictions_iter

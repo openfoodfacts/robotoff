@@ -1,11 +1,24 @@
 import base64
+import uuid
+from datetime import datetime
 
 import pytest
 from falcon import testing
 
 from robotoff import settings
+from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, ProductInsight
+from robotoff.off import OFFAuthentication
+
+from .models_utils import (
+    AnnotationVoteFactory,
+    ImageModelFactory,
+    ImagePredictionFactory,
+    PredictionFactory,
+    ProductInsightFactory,
+    clean_db,
+)
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
@@ -13,28 +26,12 @@ insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
     # clean db
-    AnnotationVote.delete().execute()
-    ProductInsight.delete().execute()
+    clean_db()
     # Set up.
-    ProductInsight.create(
-        id=insight_id,
-        data="{}",
-        barcode=1,
-        type="category",
-        n_votes=0,
-        value_tag="en:seeds",
-        server_domain=settings.OFF_SERVER_DOMAIN,
-        automatic_processing=False,
-        unique_scans_n=0,
-        reserved_barcode=False,
-    )
-
+    ProductInsightFactory(id=insight_id, barcode=1)
     # Run the test case.
     yield
-
-    # Tear down.
-    AnnotationVote.delete().execute()
-    ProductInsight.delete().execute()
+    clean_db()
 
 
 @pytest.fixture()
@@ -68,9 +65,8 @@ def test_random_question(client, mocker):
 
 def test_random_question_user_has_already_seen(client, mocker):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
-        value=1,
         device_id="device1",
     )
 
@@ -100,6 +96,38 @@ def test_popular_question(client, mocker):
         ],
         "status": "found",
     }
+
+
+def test_popular_question_pagination(client, mocker):
+    mocker.patch("robotoff.insights.question.get_product", return_value={})
+    ProductInsight.delete().execute()  # remove default sample
+    for i in range(0, 12):
+        ProductInsightFactory(barcode=i, unique_scans_n=100 - i)
+
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=1")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["0", "1", "2", "3", "4"]
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=2")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["5", "6", "7", "8", "9"]
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=3")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["10", "11"]
+    result = client.simulate_get("/api/v1/questions/popular?count=5&page=4")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "no_questions"
+    assert len(data["questions"]) == 0
 
 
 def test_barcode_question_not_found(client):
@@ -194,17 +222,17 @@ def test_annotate_insight_not_enough_votes(client):
 
 def test_annotate_insight_majority_annotation(client):
     # Add pre-existing insight votes.
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter2",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter1",
@@ -240,17 +268,17 @@ def test_annotate_insight_majority_annotation(client):
 # This test checks for handling of cases where we have 2 votes for 2 different annotations.
 def test_annotate_insight_opposite_votes(client):
     # Add pre-existing insight votes.
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter2",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter1",
@@ -287,22 +315,22 @@ def test_annotate_insight_opposite_votes(client):
 # but the follow-up has 2 votes.
 def test_annotate_insight_majority_vote_overridden(client):
     # Add pre-existing insight votes.
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=1,
         device_id="yes-voter2",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter1",
     )
-    AnnotationVote.create(
+    AnnotationVoteFactory(
         insight_id=insight_id,
         value=-1,
         device_id="no-voter2",
@@ -333,3 +361,211 @@ def test_annotate_insight_majority_vote_overridden(client):
     # The insight should be annoted with '0', with a None username since this was resolved with an
     # anonymous vote.
     assert insight.items() > {"annotation": 0, "username": None, "n_votes": 5}.items()
+
+
+def test_annotate_insight_anonymous_then_authenticated(client, mocker):
+    """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
+
+    # mock because as we validate the insight, we will ask mongo for product
+    mocker.patch(
+        "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
+    )
+    add_category = mocker.patch("robotoff.insights.annotate.add_category")
+
+    # first the user validates annotation without being connected
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": insight_id,
+            "annotation": 1,
+            "device_id": "voter1",
+        },
+    )
+
+    assert result.status_code == 200
+    assert result.json == {
+        "description": "the annotation vote was saved",
+        "status": "vote_saved",
+    }
+
+    # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
+    votes = list(AnnotationVote.select())
+    assert len(votes) == 1
+    # no category added
+    add_category.assert_not_called()
+
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+
+    assert not any(
+        insight[key]
+        for key in ("username", "completed_at", "annotation", "process_after")
+    )
+    assert insight.items() > {"n_votes": 1}.items()
+
+    # then the user connects and vote for same insights
+
+    auth = base64.b64encode(b"a:b").decode("ascii")
+    authenticated_result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": insight_id,
+            "annotation": 1,
+            "device_id": "voter1",
+        },
+        headers={"Authorization": "Basic " + auth},
+    )
+
+    assert authenticated_result.status_code == 200
+    assert authenticated_result.json == {
+        "description": "the annotation was saved and sent to OFF",
+        "status": "updated",
+    }
+    # We have the previous vote, but the last request should validate the insight directly
+    votes = list(AnnotationVote.select())
+    assert len(votes) == 1  # this is the previous vote
+
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+    # we still have the vote, but we also have an authenticated validation
+    assert insight.items() > {"username": "a", "n_votes": 1, "annotation": 1}.items()
+    assert insight.get("completed_at") is not None
+    assert insight.get("completed_at") <= datetime.utcnow()
+    # update was done
+    add_category.assert_called_once_with(
+        "1",  # barcode
+        "en:seeds",  # category_tag
+        insight_id=uuid.UUID(insight_id),
+        server_domain=settings.OFF_SERVER_DOMAIN,
+        auth=OFFAuthentication(username="a", password="b"),
+    )
+
+
+def test_image_collection_no_result(client):
+    result = client.simulate_get("/api/v1/images")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 0
+    assert data["images"] == []
+    assert data["status"] == "no_images"
+
+
+def test_image_collection(client):
+    image_model = ImageModelFactory(barcode="123")
+    ImagePredictionFactory(image__barcode="456")
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "barcode": "123",
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == image_model.id
+    assert data["status"] == "found"
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "barcode": "456",
+            "with_predictions": True,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["barcode"] == "456"
+    assert data["status"] == "found"
+
+    result = client.simulate_get(
+        "/api/v1/images",
+        params={
+            "count": "25",
+            "page": "1",
+            "with_predictions": False,
+        },
+    )
+
+    assert result.status_code == 200
+    assert data["count"] == 1
+    assert data["images"][0]["barcode"] == "456"
+
+
+def test_annotation_event(client, monkeypatch, httpserver):
+    """Test that annotation sends an event"""
+    monkeypatch.setattr(settings, "EVENTS_API_URL", httpserver.url_for("/"))
+    # setup a new event_processor, to be sure settings is taken into account
+    monkeypatch.setattr(events, "event_processor", events.EventProcessor())
+    # We expect to have a call to events server
+    expected_event = {
+        "event_type": "question_answered",
+        "user_id": "a",
+        "device_id": "test-device",
+        "barcode": "1",
+    }
+    httpserver.expect_oneshot_request(
+        "/", method="POST", json=expected_event
+    ).respond_with_data("Done")
+    with httpserver.wait(raise_assertions=True, stop_on_nohandler=True, timeout=2):
+        result = client.simulate_post(
+            "/api/v1/insights/annotate",
+            params={
+                "insight_id": insight_id,
+                "annotation": -1,
+                "device_id": "test-device",
+            },
+            headers={
+                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
+            },
+        )
+    assert result.status_code == 200
+
+
+def test_prediction_collection_no_result(client):
+    result = client.simulate_get("/api/v1/predictions/")
+    assert result.status_code == 200
+    assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
+
+
+def test_prediction_collection_no_filter(client):
+
+    prediction1 = PredictionFactory(value_tag="en:seeds")
+    result = client.simulate_get("/api/v1/predictions/")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["status"] == "found"
+    prediction_data = data["predictions"]
+    assert prediction_data[0]["id"] == prediction1.id
+    assert prediction_data[0]["type"] == "category"
+    assert prediction_data[0]["value_tag"] == "en:seeds"
+
+    prediction2 = PredictionFactory(
+        value_tag="en:beers", data={"sample": 1}, type="brand"
+    )
+    result = client.simulate_get("/api/v1/predictions/")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 2
+    assert data["status"] == "found"
+    prediction_data = sorted(data["predictions"], key=lambda d: d["id"])
+    # we still have both predictions
+    assert prediction_data[0]["id"] == prediction1.id
+    # but also the second
+    assert prediction_data[1]["id"] == prediction2.id
+    assert prediction_data[1]["type"] == "brand"
+    assert prediction_data[1]["value_tag"] == "en:beers"

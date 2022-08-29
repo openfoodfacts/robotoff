@@ -21,7 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version:
+        - "3.7"
+        - "3.8"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -31,9 +33,9 @@ jobs:
       #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
       - name: Set up python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -51,7 +53,7 @@ jobs:
       #----------------------------------------------
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
@@ -93,14 +95,16 @@ jobs:
       # Launch tests
       #----------------------------------------------
       - name: Configure docker
-        run: echo "OFF_UID=$UID" >> .env
+        run: |
+          echo "OFF_UID=$UID" >> .env
+          echo "PYTHON_VERSION=${{ matrix.python-version }}" >> .env
       - name: Launch tests
         run: make tests
 
       #----------------------------------------------
       # Upload test coverage
       #----------------------------------------------
-      - uses: codecov/codecov-action@v2.1.0
+      - uses: codecov/codecov-action@v3.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
@@ -117,6 +121,6 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Check out repository
-  #       uses: actions/checkout@v2.4.0
+  #       uses: actions/checkout@v3
   #     - name: Run developer workflow
   #       run: make dev

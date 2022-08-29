@@ -19,7 +19,14 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import SkipVotedOn, SkipVotedType, get_insights, save_annotation
+from robotoff.app.core import (
+    SkipVotedOn,
+    SkipVotedType,
+    get_images,
+    get_insights,
+    get_predictions,
+    save_annotation,
+)
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -166,6 +173,8 @@ class InsightCollection:
 
 class RandomInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+
         insight_type: Optional[str] = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
@@ -173,18 +182,26 @@ class RandomInsightResource:
         count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
 
         keep_types = [insight_type] if insight_type else None
-        insights: List[ProductInsight] = list(
-            get_insights(
-                keep_types=keep_types,
-                country=country,
-                value_tag=value_tag,
-                order_by="random",
-                server_domain=server_domain,
-                limit=count,
-            )
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=keep_types,
+            country=country,
+            value_tag=value_tag,
+            order_by="random",
+            server_domain=server_domain,
         )
 
-        resp.media = {"insights": [insight.serialize() for insight in insights]}
+        insights = [i.serialize() for i in get_insights_(limit=count)]
+        response["count"] = get_insights_(count=True)
+
+        if not insights:
+            response["insights"] = []
+            response["status"] = "no_insights"
+        else:
+            response["insights"] = insights
+            response["status"] = "found"
+
+        resp.media = response
 
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
@@ -745,7 +762,6 @@ class ImageLogoAnnotateResource:
             type_ = annotation["type"]
             value = annotation["value"] or None
             logo = LogoAnnotation.get_by_id(logo_id)
-
             if value is not None:
                 logo.annotation_value = value
                 value_tag = get_tag(value)
@@ -758,7 +774,8 @@ class ImageLogoAnnotateResource:
             logo.save()
             annotated_logos.append(logo)
 
-        generate_insights_from_annotated_logos(annotated_logos, server_domain)
+        created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
+        resp.media = {"created insights": created}
 
 
 class ImageLogoUpdateResource:
@@ -794,11 +811,14 @@ class ImageLogoUpdateResource:
 
 
 class WebhookProductResource:
+    """This handles requests from product opener
+    that act as webhooks on product update or deletion.
+    """
+
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         action = req.get_param("action", required=True)
         server_domain = req.get_param("server_domain", required=True)
-
         if server_domain != settings.OFF_SERVER_DOMAIN:
             logger.info("Rejecting webhook event from {}".format(server_domain))
             resp.media = {
@@ -810,7 +830,6 @@ class WebhookProductResource:
             "New webhook event received for product {} (action: {}, "
             "domain: {})".format(barcode, action, server_domain)
         )
-
         if action not in ("updated", "deleted"):
             raise falcon.HTTPBadRequest(
                 title="invalid_action",
@@ -819,7 +838,13 @@ class WebhookProductResource:
 
         if action == "updated":
             send_ipc_event(
-                "product_updated", {"barcode": barcode, "server_domain": server_domain}
+                "product_updated",
+                {
+                    "barcode": barcode,
+                    "server_domain": server_domain,
+                    # add some latency
+                    "task_delay": settings.UPDATED_PRODUCT_WAIT,
+                },
             )
 
         elif action == "deleted":
@@ -894,6 +919,7 @@ def get_questions_resource_on_get(
     req: falcon.Request, resp: falcon.Response, order_by: str
 ):
     response: JSONType = {}
+    page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
     keep_types: Optional[List[str]] = req.get_param_as_list(
@@ -939,7 +965,8 @@ def get_questions_resource_on_get(
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
     )
 
-    insights = list(get_insights_(limit=count))
+    offset: int = (page - 1) * count
+    insights = list(get_insights_(limit=count, offset=offset))
     response["count"] = get_insights_(count=True)
     # This code should be merged with the one in ProductQuestionsResource.get
     if not insights:
@@ -1035,6 +1062,85 @@ class UserStatisticsResource:
         resp.media = {"count": {"annotations": annotation_count}}
 
 
+class ImageCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        with_predictions: Optional[bool] = req.get_param_as_bool(
+            "with_predictions", default=False
+        )
+        barcode: Optional[str] = req.get_param("barcode")
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+        get_images_ = functools.partial(
+            get_images,
+            with_predictions=with_predictions,
+            barcode=barcode,
+            server_domain=server_domain,
+        )
+
+        offset: int = (page - 1) * count
+        images = [i.to_dict() for i in get_images_(limit=count, offset=offset)]
+        response["count"] = get_images_(count=True)
+
+        if not images:
+            response["images"] = []
+            response["status"] = "no_images"
+        else:
+            response["images"] = images
+            response["status"] = "found"
+
+        resp.media = response
+
+
+class PredictionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        barcode: Optional[str] = req.get_param("barcode")
+        value_tag: str = req.get_param("value_tag")
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            "insight_types", required=False
+        )
+        brands = req.get_param_as_list("brands") or None
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        if brands is not None:
+            # Limit the number of brands to prevent slow SQL queries
+            brands = brands[:10]
+
+        query_parameters = {
+            "server_domain": server_domain,
+            "keep_types": keep_types,
+            "value_tag": value_tag,
+            "barcode": barcode,
+        }
+
+        get_predictions_ = functools.partial(get_predictions, **query_parameters)
+
+        offset: int = (page - 1) * count
+        predictions = [
+            i.to_dict() for i in get_predictions_(limit=count, offset=offset)
+        ]
+
+        response["count"] = get_predictions_(count=True)
+
+        if not predictions:
+            response["predictions"] = []
+            response["status"] = "no_predictions"
+        else:
+            response["predictions"] = list(predictions)
+            response["status"] = "found"
+
+        resp.media = response
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -1086,3 +1192,5 @@ api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
+api.add_route("/api/v1/predictions/", PredictionCollection())
+api.add_route("/api/v1/images", ImageCollection())

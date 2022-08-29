@@ -1,13 +1,12 @@
-import datetime
-
 import pytest
 
 from robotoff import settings
 from robotoff.insights.importer import import_insights
-from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import Product
+
+from ..models_utils import PredictionFactory, ProductInsightFactory, clean_db
 
 insight_id1 = "94371643-c2bc-4291-a585-af2cb1a5270a"
 barcode1 = "00001"
@@ -16,36 +15,23 @@ barcode1 = "00001"
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
     # clean db
-    ProductInsight.delete().execute()
-    PredictionModel.delete().execute()
+    clean_db()
     # a category already exists
-    PredictionModel.create(
-        data={},
+    PredictionFactory(
         barcode=barcode1,
         type="category",
         value_tag="en:salmons",
-        server_domain=settings.OFF_SERVER_DOMAIN,
-        automatic_processing=False,
-        timestamp=datetime.datetime.utcnow(),
     )
-    ProductInsight.create(
+    ProductInsightFactory(
         id=insight_id1,
-        data={},
         barcode=barcode1,
         type="category",
         value_tag="en:salmons",
-        server_domain=settings.OFF_SERVER_DOMAIN,
-        automatic_processing=False,
-        unique_scans_n=0,
-        n_votes=0,
-        reserved_barcode=False,
-        timestamp=datetime.datetime.utcnow(),
     )
     # Run the test case.
     yield
     # Tear down.
-    ProductInsight.delete().execute()
-    PredictionModel.delete().execute()
+    clean_db()
 
 
 def matcher_prediction(category):

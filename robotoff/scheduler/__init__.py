@@ -37,7 +37,7 @@ settings.init_sentry()
 logger = get_logger(__name__)
 
 
-@with_db
+# Note: we do not use with_db, for atomicity is handled in annotator
 def process_insights():
     processed = 0
     for insight in (
@@ -49,18 +49,29 @@ def process_insights():
         )
         .iterator()
     ):
-        annotator = InsightAnnotatorFactory.get(insight.type)
-        logger.info(
-            "Annotating insight {} (product: {})".format(insight.id, insight.barcode)
-        )
-        annotation_result = annotator.annotate(insight, 1, update=True)
-        processed += 1
+        try:
+            annotator = InsightAnnotatorFactory.get(insight.type)
+            logger.info(
+                "Annotating insight %s (product: %s)", insight.id, insight.barcode
+            )
+            annotation_result = annotator.annotate(insight, 1, update=True)
+            processed += 1
 
-        if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-            "notify", False
-        ):
-            slack.NotifierFactory.get_notifier().notify_automatic_processing(insight)
-    logger.info("{} insights processed".format(processed))
+            if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
+                "notify", False
+            ):
+                slack.NotifierFactory.get_notifier().notify_automatic_processing(
+                    insight
+                )
+        except Exception as e:
+            # continue to the next one
+            # Note: annotator already rolled-back the transaction
+            logger.exception(
+                f"exception {e} while handling annotation of insight %s (product) %s",
+                insight.id,
+                insight.barcode,
+            )
+    logger.info("%d insights processed", processed)
 
 
 @with_db
@@ -167,6 +178,7 @@ def mark_insights():
         marked += 1
 
     logger.info("{} insights marked".format(marked))
+    return marked  # useful for tests
 
 
 def _download_product_dataset():

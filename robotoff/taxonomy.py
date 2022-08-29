@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 import orjson
+import requests
 
 from robotoff import settings
 from robotoff.utils import get_logger, http_session
@@ -273,10 +274,14 @@ def fetch_taxonomy(url: str, fallback_path: str, offline=False) -> Optional[Taxo
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = http_session.get(url, timeout=5)
+        r = http_session.get(url, timeout=120)  # might take some time
+        if r.status_code >= 300:
+            raise requests.HTTPError(
+                "Taxonomy download at %s returned status code {r.status_code}", url
+            )
         data = r.json()
-    except Exception:
-        logger.warning("Timeout while fetching '{}' taxonomy".format(url))
+    except Exception as e:
+        logger.exception(f"{type(e)} exception while fetching taxonomy at %s", url)
         if fallback_path:
             return Taxonomy.from_json(fallback_path)
         else:

@@ -106,6 +106,7 @@ jobs:
           echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
+          echo "EVENTS_API_URL=https://event.${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
 
 
     - name: Create Docker volumes

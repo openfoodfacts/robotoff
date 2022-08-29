@@ -1,8 +1,5 @@
-import time
-
 import requests
 
-from robotoff import settings
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
@@ -25,11 +22,10 @@ def update_insights(barcode: str, server_domain: str):
     # to finish
     logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
 
-    time.sleep(settings.UPDATED_PRODUCT_WAIT)
     product_dict = get_product(barcode)
 
     if product_dict is None:
-        logger.warning(f"Updated product does not exist: {barcode}")
+        logger.warning("Updated product does not exist: %s", barcode)
         return
 
     updated_product_predict_insights(barcode, product_dict, server_domain)
@@ -66,7 +62,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     except requests.exceptions.HTTPError as e:
         resp = e.response
         logger.error(
-            f"Category classifier returned an error: {resp.status_code}: {resp.text}"
+            f"Category classifier returned an error: {resp.status_code}: %s", resp.text
         )
 
     for neural_prediction in neural_predictions:

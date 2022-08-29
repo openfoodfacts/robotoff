@@ -44,7 +44,7 @@ def get_stored_logo_ids() -> Set[int]:
 
     if not r.ok:
         logger.warning(
-            f"error while fetching stored logo IDs ({r.status_code}): {r.text}"
+            f"error while fetching stored logo IDs ({r.status_code}): %s", r.text
         )
         return set()
 
@@ -68,7 +68,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
     )
 
     if not r.ok:
-        logger.warning(f"error while adding image to ANN ({r.status_code}): {r.text}")
+        logger.warning(f"error while adding image to ANN ({r.status_code}): %s", r.text)
         return 0
 
     return r.json()["added"]
@@ -92,7 +92,7 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     missing_logo_ids = set(logo_id_to_logo.keys()).difference(set(results.keys()))
 
     if missing_logo_ids:
-        logger.warning(f"Missing logo IDs in response: {missing_logo_ids}")
+        logger.warning("Missing logo IDs in response: %s", missing_logo_ids)
 
     saved = 0
     for logo_id, logo_results in results.items():
@@ -258,12 +258,19 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos(
-    logos: List[LogoAnnotation], server_domain: str
-):
+    logos: List[LogoAnnotation],
+    server_domain: str,
+) -> int:
     predictions = []
     for logo in logos:
         prediction = generate_prediction(
-            logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
+            logo.annotation_type,
+            logo.taxonomy_value,
+            confidence=1.0,
+            logo_id=logo.id,
+            username=logo.username,
+            is_annotation=True,  # it's worth restating it
+            automatic_processing=True,  # because this is a user annotation, which we trust.
         )
 
         if prediction is None:
@@ -282,6 +289,7 @@ def generate_insights_from_annotated_logos(
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")
+    return imported
 
 
 def predict_logo_predictions(
@@ -317,7 +325,10 @@ def predict_logo_predictions(
 
 
 def generate_prediction(
-    logo_type: str, logo_value: Optional[str], **kwargs
+    logo_type: str,
+    logo_value: Optional[str],
+    automatic_processing: Optional[bool] = False,
+    **kwargs,
 ) -> Optional[Prediction]:
     if logo_type not in LOGO_TYPE_MAPPING:
         return None
@@ -328,7 +339,7 @@ def generate_prediction(
     value = None
 
     if prediction_type == PredictionType.brand:
-        value = logo_value
+        value_tag = value = logo_value
         if value is None:
             return None
 
@@ -341,7 +352,7 @@ def generate_prediction(
         type=prediction_type,
         value_tag=value_tag,
         value=value,
-        automatic_processing=False,
+        automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
         data=kwargs,
     )
