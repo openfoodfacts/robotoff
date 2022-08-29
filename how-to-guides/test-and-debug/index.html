@@ -635,19 +635,16 @@ Though you may populate your postgres database with some predictions, insights, 
 ...
 &gt; from tests.integration.models_utils import *
 &gt; PredictionFactory()
-````
-
-&gt; **NOTE:**  
-&gt; If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
-
-# How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. 
-
-The following command will run all the test cases one by one:
-
-```bash
-$ make tests
 </code></pre></div></p>
+<blockquote>
+<p><strong>NOTE:</strong><br />
+If you are on Windows we recommend using <a href="https://git-scm.com/downloads">Git bash</a> to run commands.</p>
+</blockquote>
+<h1 id="how-to-run-test-cases">How to run test cases?</h1>
+<p>We use <a href="https://docs.pytest.org/en/7.1.x/">pytest</a> to run test cases and <a href="../../Makefile">Makefile</a> to run our commands. </p>
+<p>The following command will run all the test cases one by one:</p>
+<div class="highlight"><pre><span></span><code>$ make tests
+</code></pre></div>
 <h2 id="how-to-run-a-single-test-case">How to run a single test case?</h2>
 <p>The simplest is to use the <em>pytest</em> make target for that:</p>
 <div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s1">&#39;path/to/test_file.py::the_function_name&#39;</span>
@@ -674,8 +671,8 @@ to debug.</p>
 This can be a good way to try to understand why a test is failing.</p>
 <p><div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s2">&quot;path/to/test.py --pdb&quot;</span>
 </code></pre></div>
-If it's a <code>mock.assert_called_with</code>, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.
-If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.</p>
+If it's a <code>mock.assert_called_with</code>, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.</p>
+<p>If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">pdb</span><span class="p">;</span> <span class="n">pdb</span><span class="o">.</span><span class="n">set_trace</span><span class="p">()</span>
 </code></pre></div>
 <p>and then run the <code>pytest</code>, with the <code>--pdb</code> option (as above).</p>
