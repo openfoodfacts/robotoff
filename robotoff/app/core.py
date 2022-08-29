@@ -229,7 +229,6 @@ def get_image_predictions(
     if type:
         where_clauses.append(ImagePrediction.type == type)
 
-
     if not with_logo:
         # return only images without logo
         query = (
