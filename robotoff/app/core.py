@@ -3,8 +3,10 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
+from peewee import JOIN
 
 from robotoff import settings
+from robotoff.app import events
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
     SAVED_ANNOTATION_VOTE_RESULT,
@@ -12,7 +14,14 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     InsightAnnotatorFactory,
 )
-from robotoff.models import AnnotationVote, ProductInsight, db
+from robotoff.models import (
+    AnnotationVote,
+    ImageModel,
+    ImagePrediction,
+    Prediction,
+    ProductInsight,
+    db,
+)
 from robotoff.off import OFFAuthentication
 from robotoff.utils import get_logger
 
@@ -124,11 +133,77 @@ def get_insights(
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
-
     if as_dict:
         query = query.dicts()
 
     return query.iterator()
+
+
+def get_images(
+    with_predictions: Optional[bool] = False,
+    barcode: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    offset: Optional[int] = None,
+    count: bool = False,
+    limit: Optional[int] = 25,
+) -> Iterable[ImageModel]:
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [ImageModel.server_domain == server_domain]
+
+    if barcode:
+        where_clauses.append(ImageModel.barcode == barcode)
+
+    query = ImageModel.select()
+
+    if not with_predictions:
+        # return only images without prediction
+        query = query.join(ImagePrediction, JOIN.LEFT_OUTER).where(
+            ImagePrediction.image.is_null()
+        )
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
+
+
+def get_predictions(
+    barcode: Optional[str] = None,
+    keep_types: List[str] = None,
+    value_tag: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    limit: Optional[int] = 25,
+    offset: Optional[int] = None,
+    count: bool = False,
+) -> Iterable[Prediction]:
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    where_clauses = [Prediction.server_domain == server_domain]
+
+    if barcode:
+        where_clauses.append(Prediction.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(Prediction.value_tag == value_tag)
+
+    if keep_types:
+        where_clauses.append(Prediction.type.in_(keep_types))
+
+    query = Prediction.select()
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
 
 
 def save_annotation(
@@ -208,4 +283,9 @@ def save_annotation(
             return SAVED_ANNOTATION_VOTE_RESULT
 
     annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(insight, annotation, update, data=data, auth=auth)
+    result = annotator.annotate(insight, annotation, update, data=data, auth=auth)
+    username = auth.get_username() if auth else "unknown annotator"
+    events.event_processor.send_async(
+        "question_answered", username, device_id, insight.barcode
+    )
+    return result

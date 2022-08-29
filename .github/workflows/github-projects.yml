@@ -10,6 +10,7 @@ on:
 jobs:
   add-to-project:
     name: Add issue to project
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/add-to-project@main

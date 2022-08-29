@@ -5,6 +5,7 @@ import pathlib
 import sys
 from typing import Iterable, List, Optional, Set, TextIO, Union
 
+import _io
 import click
 import dacite
 from more_itertools import chunked
@@ -31,6 +32,7 @@ def run_from_ocr_archive(
     output: Optional[pathlib.Path] = None,
 ):
     predictions = generate_from_ocr_archive(input_, prediction_type)
+    output_f: _io._TextIOBase
 
     if output is not None:
         output_f = output.open("w")

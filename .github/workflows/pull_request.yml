@@ -21,7 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version:
+        - "3.7"
+        - "3.8"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -93,7 +95,9 @@ jobs:
       # Launch tests
       #----------------------------------------------
       - name: Configure docker
-        run: echo "OFF_UID=$UID" >> .env
+        run: |
+          echo "OFF_UID=$UID" >> .env
+          echo "PYTHON_VERSION=${{ matrix.python-version }}" >> .env
       - name: Launch tests
         run: make tests
 

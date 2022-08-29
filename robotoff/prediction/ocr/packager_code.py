@@ -68,6 +68,11 @@ PACKAGER_CODE: Dict[str, OCRRegex] = {
         field=OCRField.full_text_contiguous,
         lowercase=False,
     ),
+    "fr_gluten": OCRRegex(
+        re.compile(r"FR-\d{3}-\d{3}"),
+        field=OCRField.full_text_contiguous,
+        lowercase=False,
+    ),
 }
 
 

@@ -55,6 +55,12 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
 5.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
 
+    If you are on Windows, make sure you have [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) installed. Don't forget to add its path in your [system environment variables](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417).
+
+    A sample path may look like this: `C:\Program Files (x86)\GnuWin32\bin`
+    
+    It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  
+
     If you are using docker:
 
     ```
@@ -62,6 +68,15 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     make checks
     make tests
     ```
+    To test the APIs on your localhost run 
+
+    ```
+    docker-compose up
+    ```
+
+    You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
+
+    The mapping of functions and API path is at the end of robotoff/app/api.py
 
     If you are on a local install:
 
@@ -71,7 +86,14 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     mypy .
     isort --check .
     poetry run pytest tests
+    ```    
+
+    Before running the test cases make sure you have a database created. Have a look at .env and robotoff/settings.py the default database name, user, and password is
+
     ```
+    postgres
+    ```
+    Configure them through environment (you may use `.env` if you use docker) as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.
 
 6.  Commit your changes and push your branch to GitHub:
 

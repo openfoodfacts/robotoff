@@ -23,7 +23,7 @@ jobs:
             feat
             doc
             refactor
-            ops
+            ci
             chore
           # Configure which scopes are allowed.
           #scopes: |
