@@ -572,13 +572,15 @@ def test_prediction_collection_no_filter(client):
 
 
 def test_get_unanswered_questions_api_empty(client):
+    ProductInsight.delete().execute()  # remove default sample
     result = client.simulate_get("/api/v1/questions/unanswered/")
 
     assert result.status_code == 200
-    assert result.json == {"questions": [], "status": "no_questions"}
+    assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
 
 
 def test_get_unanswered_questions_api(client):
+    ProductInsight.delete().execute()  # remove default sample
 
     ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
 
@@ -625,7 +627,7 @@ def test_get_unanswered_questions_api(client):
     data = result.json
 
     assert len(data) == 3
-    assert data["questions"] == [["en:soups", 3], ["en:apricot", 2], ["en:seeds", 1]]
+    assert data["questions"] == [["en:soups", 3], ["en:apricot", 2]]
     assert data["status"] == "found"
 
     # test to get all "label" with "annotation=None"
@@ -655,7 +657,7 @@ def test_get_unanswered_questions_api(client):
 def test_get_unanswered_questions_pagination(client):
     ProductInsight.delete().execute()  # remove default sample
     for i in range(0, 12):
-        ProductInsightFactory(type="nutrition", value_tag=f'"en:soups-{i}"')
+        ProductInsightFactory(type="nutrition", value_tag=f"en:soups-{i:02}")
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered?count=5&page=1&type=nutrition"
@@ -664,15 +666,8 @@ def test_get_unanswered_questions_pagination(client):
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
+    assert len(data["questions"]) == 5
     questions = data["questions"]
-    sorted(questions)
-    assert questions == [
-        ['"en:soups-1"', 1],
-        ['"en:soups-10"', 1],
-        ['"en:soups-11"', 1],
-        ['"en:soups-2"', 1],
-        ['"en:soups-0"', 1],
-    ]
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered?count=5&page=2&type=nutrition"
@@ -681,15 +676,8 @@ def test_get_unanswered_questions_pagination(client):
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
-    questions = data["questions"]
-    sorted(questions)
-    assert questions == [
-        ['"en:soups-3"', 1],
-        ['"en:soups-4"', 1],
-        ['"en:soups-5"', 1],
-        ['"en:soups-6"', 1],
-        ['"en:soups-7"', 1],
-    ]
+    assert len(data["questions"]) == 5
+    questions.extend(data["questions"])
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered?count=5&page=3&type=nutrition"
@@ -698,6 +686,21 @@ def test_get_unanswered_questions_pagination(client):
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
-    questions = data["questions"]
-    sorted(questions)
-    assert questions == [['"en:soups-8"', 1], ['"en:soups-9"', 1]]
+    assert len(data["questions"]) == 2
+    questions.extend(data["questions"])
+
+    questions.sort()
+    assert questions == [
+        ["en:soups-00", 1],
+        ["en:soups-01", 1],
+        ["en:soups-02", 1],
+        ["en:soups-03", 1],
+        ["en:soups-04", 1],
+        ["en:soups-05", 1],
+        ["en:soups-06", 1],
+        ["en:soups-07", 1],
+        ["en:soups-08", 1],
+        ["en:soups-09", 1],
+        ["en:soups-10", 1],
+        ["en:soups-11", 1],
+    ]

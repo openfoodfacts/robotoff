@@ -145,7 +145,3 @@ def test_get_unanswered_questions_list():
     insight_data5 = get_insights(keep_types=["category"])
     insight_data_items5 = [item.to_dict() for item in insight_data5]
     assert len(insight_data_items5) == 2
-
-    import pdb
-
-    pdb.set_trace()
