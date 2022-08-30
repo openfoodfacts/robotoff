@@ -705,7 +705,8 @@ def test_get_unanswered_questions_pagination(client):
         ["en:soups-10", 1],
         ["en:soups-11", 1],
     ]
-    
+
+
 def test_image_prediction_collection_empty(client):
     result = client.simulate_get("/api/v1/images/prediction/collection/")
     assert result.status_code == 200
