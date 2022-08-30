@@ -1,10 +1,11 @@
 import pytest
 
-from robotoff.app.core import get_images, get_predictions
+from robotoff.app.core import get_image_predictions, get_images, get_predictions
 
 from .models_utils import (
     ImageModelFactory,
     ImagePredictionFactory,
+    LogoAnnotationFactory,
     PredictionFactory,
     clean_db,
 )
@@ -17,6 +18,49 @@ def _set_up_and_tear_down(peewee_db):
     # Run the test case.
     yield
     clean_db()
+
+
+def prediction_ids(data):
+    return {prediction.id for prediction in data}
+
+
+def test_get_image_predictions():
+    logo_annotation1 = LogoAnnotationFactory(image_prediction__image__barcode="123")
+    image_prediction1 = logo_annotation1.image_prediction
+    logo_annotation2 = LogoAnnotationFactory(
+        image_prediction__image__barcode="456", image_prediction__type="label"
+    )
+    image_prediction2 = logo_annotation2.image_prediction
+    image_prediction3 = ImagePredictionFactory(image__barcode="123", type="label")
+    image_prediction4 = ImagePredictionFactory(image__barcode="123", type="category")
+
+    # test with "barcode" filter
+    data = list(get_image_predictions(barcode="123"))
+    assert len(data) == 2
+    assert prediction_ids(data) == {image_prediction3.id, image_prediction4.id}
+
+    # test filter with "barcode" and "with_logo=True"
+    data = list(get_image_predictions(barcode="123", with_logo=True))
+    assert len(data) == 3
+    assert prediction_ids(data) == {
+        image_prediction1.id,
+        image_prediction3.id,
+        image_prediction4.id,
+    }
+
+    # test filter with "with_logo=True"
+    data = list(get_image_predictions(with_logo=True))
+    assert len(data) == 4  # we have them all
+
+    # test filter with "type=label" and "with_logo=True"
+    data = list(get_image_predictions(type="label", with_logo=True))
+    assert len(data) == 2
+    assert prediction_ids(data) == {image_prediction2.id, image_prediction3.id}
+
+    # test filter with "type=label" and "with_logo=False"
+    data = list(get_image_predictions(type="label", with_logo=False))
+    assert len(data) == 1
+    assert prediction_ids(data) == {image_prediction3.id}
 
 
 def test_get_predictions():
