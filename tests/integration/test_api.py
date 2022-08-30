@@ -664,10 +664,15 @@ def test_get_unanswered_questions_pagination(client):
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
-
-    import pdb
-
-    pdb.set_trace()
+    questions = data["questions"]
+    sorted(questions)
+    assert questions == [
+        ['"en:soups-1"', 1],
+        ['"en:soups-10"', 1],
+        ['"en:soups-11"', 1],
+        ['"en:soups-2"', 1],
+        ['"en:soups-0"', 1],
+    ]
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered?count=5&page=2&type=nutrition"
@@ -676,3 +681,23 @@ def test_get_unanswered_questions_pagination(client):
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
+    questions = data["questions"]
+    sorted(questions)
+    assert questions == [
+        ['"en:soups-3"', 1],
+        ['"en:soups-4"', 1],
+        ['"en:soups-5"', 1],
+        ['"en:soups-6"', 1],
+        ['"en:soups-7"', 1],
+    ]
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered?count=5&page=3&type=nutrition"
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    questions = data["questions"]
+    sorted(questions)
+    assert questions == [['"en:soups-8"', 1], ['"en:soups-9"', 1]]
