@@ -20,48 +20,47 @@ def _set_up_and_tear_down(peewee_db):
     clean_db()
 
 
+def prediction_ids(data):
+    return {prediction.id for prediction in data}
+
+
 def test_get_image_predictions():
     logo_annotation1 = LogoAnnotationFactory(image_prediction__image__barcode="123")
-    logo_annotation2 = LogoAnnotationFactory(image_prediction__image__barcode="456")
-    logo_annotation = LogoAnnotationFactory(type="label")
+    image_prediction1 = logo_annotation1.image_prediction
+    logo_annotation2 = LogoAnnotationFactory(
+        image_prediction__image__barcode="456", image_prediction__type="label"
+    )
+    image_prediction2 = logo_annotation2.image_prediction
+    image_prediction3 = ImagePredictionFactory(image__barcode="123", type="label")
+    image_prediction4 = ImagePredictionFactory(image__barcode="123", type="category")
 
     # test with "barcode" filter
-
-    image_model_data = get_image_predictions(barcode="123")
-    image_model_items = [item.to_dict() for item in image_model_data]
-    assert len(image_model_items) == 0
-
-    # test filter with "barcode" and "with_predictions=True"
-    image_model_data = get_image_predictions(barcode="123", with_logo=True)
-    image_model_items = [item.to_dict() for item in image_model_data]
-    image_model_items.sort(key=lambda d: d["id"])
-    assert len(image_model_items) == 1
-    assert image_model_items[0]["id"] == logo_annotation1.id
-
-    # test filter with "with_logo=True"
-    image_model_data = get_image_predictions(with_logo=True)
-    image_model_items = [item.to_dict() for item in image_model_data]
-    image_model_items.sort(key=lambda d: d["id"])
-    assert len(image_model_items) == 3
-    assert image_model_items[0]["id"] == logo_annotation1.id
-    assert image_model_items[1]["id"] == logo_annotation2.id
-    assert image_model_items[2]["id"] == logo_annotation.id
+    data = list(get_image_predictions(barcode="123"))
+    assert len(data) == 2
+    assert prediction_ids(data) == {image_prediction3.id, image_prediction4.id}
 
     # test filter with "barcode" and "with_logo=True"
-    image_model_data = get_image_predictions(barcode="456", with_logo=True)
-    image_model_items = [item.to_dict() for item in image_model_data]
-    assert len(image_model_items) == 1
-    assert image_model_items[0]["id"] == logo_annotation2.id
+    data = list(get_image_predictions(barcode="123", with_logo=True))
+    assert len(data) == 3
+    assert prediction_ids(data) == {
+        image_prediction1.id,
+        image_prediction3.id,
+        image_prediction4.id,
+    }
+
+    # test filter with "with_logo=True"
+    data = list(get_image_predictions(with_logo=True))
+    assert len(data) == 4  # we have them all
 
     # test filter with "type=label" and "with_logo=True"
-    image_model_data = get_image_predictions(type="label", with_logo=True)
-    image_model_items = [item.to_dict() for item in image_model_data]
-    assert len(image_model_items) == 3
+    data = list(get_image_predictions(type="label", with_logo=True))
+    assert len(data) == 2
+    assert prediction_ids(data) == {image_prediction2.id, image_prediction3.id}
 
     # test filter with "type=label" and "with_logo=False"
-    image_model_data = get_image_predictions(type="label", with_logo=False)
-    image_model_items = [item.to_dict() for item in image_model_data]
-    assert len(image_model_items) == 0
+    data = list(get_image_predictions(type="label", with_logo=False))
+    assert len(data) == 1
+    assert prediction_ids(data) == {image_prediction3.id}
 
 
 def test_get_predictions():

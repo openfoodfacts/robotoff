@@ -218,8 +218,6 @@ def get_image_predictions(
 
     query = ImagePrediction.select()
 
-    # import pdb; pdb.set_trace()
-
     where_clauses = []
 
     if barcode:
@@ -232,8 +230,10 @@ def get_image_predictions(
     if not with_logo:
         # return only images without logo
         query = (
-            query.switch(ImagePrediction)
-            .join(LogoAnnotation)
+            query.switch(
+                ImagePrediction
+            )  # we need this because we may have joined with ImageModel
+            .join(LogoAnnotation, JOIN.LEFT_OUTER)
             .where(LogoAnnotation.image_prediction.is_null())
         )
 
