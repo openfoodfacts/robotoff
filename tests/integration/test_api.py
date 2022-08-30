@@ -624,7 +624,7 @@ def test_get_unanswered_questions_api(client):
     assert result.status_code == 200
     data = result.json
 
-    assert len(data) == 2
+    assert len(data) == 3
     assert data["questions"] == [["en:soups", 3], ["en:apricot", 2], ["en:seeds", 1]]
     assert data["status"] == "found"
 
@@ -635,7 +635,7 @@ def test_get_unanswered_questions_api(client):
     )
     assert result.status_code == 200
     data = result.json
-    assert len(data) == 2
+    assert len(data) == 3
     assert len(data["questions"]) == 1
     assert data["questions"] == [["en:beer", 2]]
 
@@ -646,7 +646,33 @@ def test_get_unanswered_questions_api(client):
     )
     assert result.status_code == 200
     data = result.json
-    assert len(data) == 2
+    assert len(data) == 3
     assert len(data["questions"]) == 2
     assert data["questions"] == [["en:salad", 2], ["en:soups", 1]]
+    assert data["status"] == "found"
+
+
+def test_get_unanswered_questions_pagination(client):
+    ProductInsight.delete().execute()  # remove default sample
+    for i in range(0, 12):
+        ProductInsightFactory(type="nutrition", value_tag=f'"en:soups-{i}"')
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered?count=5&page=1&type=nutrition"
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+
+    import pdb
+
+    pdb.set_trace()
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered?count=5&page=2&type=nutrition"
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
     assert data["status"] == "found"

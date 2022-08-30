@@ -1149,14 +1149,19 @@ class UnansweredQuestionCollection:
         question_type: str = req.get_param("type")
         value_tag: str = req.get_param("value_tag")
 
-        insights = list(
-            get_insights(
-                keep_types=[question_type],
-                group_by_value_tag=True,
-                value_tag=value_tag,
-                limit=count,
-            )
-        )
+        query_parameters = {
+            "keep_types": [question_type],
+            "group_by_value_tag": True,
+            "value_tag": value_tag,
+            "limit": count,
+        }
+
+        get_insights_ = functools.partial(get_insights, **query_parameters)
+
+        offset: int = (page - 1) * count
+        insights = [i for i in get_insights_(limit=count, offset=offset)]
+
+        response["count"] = get_insights_(count=True)
 
         if not insights:
             response["questions"] = []
