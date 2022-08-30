@@ -18,6 +18,7 @@ from robotoff.models import (
     AnnotationVote,
     ImageModel,
     ImagePrediction,
+    LogoAnnotation,
     Prediction,
     ProductInsight,
     db,
@@ -205,6 +206,45 @@ def get_predictions(
         where_clauses.append(Prediction.type.in_(keep_types))
 
     query = Prediction.select()
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
+
+
+def get_image_predictions(
+    with_logo: Optional[bool] = False,
+    barcode: Optional[str] = None,
+    type: Optional[str] = None,
+    offset: Optional[int] = None,
+    count: bool = False,
+    limit: Optional[int] = 25,
+) -> Iterable[LogoAnnotation]:
+
+    query = ImagePrediction.select()
+
+    where_clauses = []
+
+    if barcode:
+        query = query.join(ImageModel)
+        where_clauses.append(ImagePrediction.image.barcode == barcode)
+
+    if type:
+        where_clauses.append(ImagePrediction.type == type)
+
+    if not with_logo:
+        # return only images without logo
+        query = (
+            query.switch(
+                ImagePrediction
+            )  # we need this because we may have joined with ImageModel
+            .join(LogoAnnotation, JOIN.LEFT_OUTER)
+            .where(LogoAnnotation.image_prediction.is_null())
+        )
 
     if where_clauses:
         query = query.where(*where_clauses)

@@ -25,13 +25,13 @@ msgstr "क्या उत्पाद में यह लेबल है?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "क्या उत्पाद इस ब्रांड का है?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "क्या यह वजन उत्पाद पर प्रदर्शित वजन से मेल खाता है?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "क्या यह छवि इस भाषा के लिए nutrition संबंधी छवि है?"
 

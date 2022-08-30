@@ -22,6 +22,7 @@ from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
+    get_image_predictions,
     get_images,
     get_insights,
     get_predictions,
@@ -1140,7 +1141,6 @@ class PredictionCollection:
 
         resp.media = response
 
-
 class UnansweredQuestionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
@@ -1168,6 +1168,37 @@ class UnansweredQuestionCollection:
             response["status"] = "no_questions"
         else:
             response["questions"] = insights
+
+class ImagePredictionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
+        barcode: Optional[str] = req.get_param("barcode")
+        type: Optional[str] = req.get_param("type")
+
+        query_parameters = {
+            "with_logo": with_logo,
+            "barcode": barcode,
+            "type": type,
+        }
+
+        get_image_predictions_ = functools.partial(
+            get_image_predictions, **query_parameters
+        )
+
+        offset: int = (page - 1) * count
+        images = [
+            i.to_dict() for i in get_image_predictions_(limit=count, offset=offset)
+        ]
+        response["count"] = get_image_predictions_(count=True)
+
+        if not images:
+            response["image_predictions"] = []
+            response["status"] = "no_image_predictions"
+        else:
+            response["images"] = images
             response["status"] = "found"
 
         resp.media = response
@@ -1225,5 +1256,6 @@ api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions/", PredictionCollection())
+api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
 api.add_route("/api/v1/images", ImageCollection())
 api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())
