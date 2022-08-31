@@ -329,3 +329,35 @@ def save_annotation(
         "question_answered", username, device_id, insight.barcode
     )
     return result
+
+
+def get_logo_annotation(
+    barcode: Optional[str] = None,
+    keep_types: List[str] = None,
+    value_tag: Optional[str] = None,
+    limit: Optional[int] = 25,
+    offset: Optional[int] = None,
+    count: bool = False,
+) -> Iterable[LogoAnnotation]:
+
+    query = LogoAnnotation.select()
+
+    where_clauses = []
+
+    if barcode:
+        query = query.join(ImagePrediction).join(ImageModel)
+        where_clauses.append(LogoAnnotation.image_prediction.image.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
+
+    if keep_types:
+        where_clauses.append(LogoAnnotation.annotation_type.in_(keep_types))
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
