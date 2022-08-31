@@ -1169,6 +1169,9 @@ class UnansweredQuestionCollection:
             response["status"] = "no_questions"
         else:
             response["questions"] = insights
+            response["status"] = "found"
+
+        resp.media = response
 
 
 class ImagePredictionCollection:
