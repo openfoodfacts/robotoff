@@ -1141,6 +1141,7 @@ class PredictionCollection:
 
         resp.media = response
 
+
 class UnansweredQuestionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
@@ -1168,6 +1169,7 @@ class UnansweredQuestionCollection:
             response["status"] = "no_questions"
         else:
             response["questions"] = insights
+
 
 class ImagePredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):

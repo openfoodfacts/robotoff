@@ -1,7 +1,11 @@
 import pytest
 
-from robotoff.app.core import get_images, get_insights, get_images, get_predictions, get_image_predictions
-
+from robotoff.app.core import (
+    get_image_predictions,
+    get_images,
+    get_insights,
+    get_predictions,
+)
 
 from .models_utils import (
     ImageModelFactory,
