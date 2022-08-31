@@ -357,6 +357,12 @@ def get_logo_annotation(
     if where_clauses:
         query = query.where(*where_clauses)
 
+    if limit is not None:
+        query = query.limit(limit)
+
+    if offset is not None:
+        query = query.offset(offset)
+
     if count:
         return query.count()
     else:

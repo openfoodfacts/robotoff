@@ -742,10 +742,41 @@ def test_logo_annotation_collection_pagination(client):
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
+    assert len(data["annotation"]) == 5
     assert [q["annotation_value_tag"] for q in data["annotation"]] == [
         "no lactose-00",
         "no lactose-01",
         "no lactose-02",
         "no lactose-03",
         "no lactose-04",
+    ]
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=2&keep_types=label"
+    )
+
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 5
+    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
+        "no lactose-05",
+        "no lactose-06",
+        "no lactose-07",
+        "no lactose-08",
+        "no lactose-09",
+    ]
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=3&keep_types=label"
+    )
+
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 2
+
+    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
+        "no lactose-10",
+        "no lactose-11",
     ]
