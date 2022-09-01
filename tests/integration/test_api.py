@@ -807,6 +807,8 @@ def test_logo_annotation_collection_pagination(client):
         "no lactose-11",
     ]
 
+    # test for multiple values in "types"
+
     result = client.simulate_get(
         "/api/v1/annotation/collection?count=5&page=1&types=category&types=vegan"
     )
@@ -816,9 +818,11 @@ def test_logo_annotation_collection_pagination(client):
     assert data["status"] == "found"
     assert len(data["annotation"]) == 4
 
-    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
-        "truffle cake-00",
-        "truffle cake-01",
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotation_data.sort()
+    assert annotation_data == [
         "sea food-00",
         "sea food-01",
+        "truffle cake-00",
+        "truffle cake-01",
     ]
