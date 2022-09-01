@@ -678,19 +678,19 @@ def test_logo_annotation_collection_api(client):
         annotation_type="dairies",
     )
 
-    LogoAnnotationFactory(
+    annotation_789 = LogoAnnotationFactory(
         image_prediction__image__barcode="789",
         annotation_value_tag="creme",
         annotation_type="dairies",
     )
 
-    LogoAnnotationFactory(
+    annotation_306 = LogoAnnotationFactory(
         image_prediction__image__barcode="306",
         annotation_value_tag="yoghurt",
         annotation_type="dairies",
     )
 
-    LogoAnnotationFactory(
+    annotation_604 = LogoAnnotationFactory(
         image_prediction__image__barcode="604",
         annotation_value_tag="meat",
         annotation_type="category",
@@ -736,12 +736,20 @@ def test_logo_annotation_collection_api(client):
     result = client.simulate_get(
         "/api/v1/annotation/collection",
         params={
-            "types": ["category", "diaries"],
+            "types": ["category", "dairies"],
         },
     )
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 4
+    assert data["annotation"][0]["id"] == annotation_295.id
+    assert data["annotation"][0]["image_prediction"]["image"]["barcode"] == "295"
+    assert data["annotation"][1]["id"] == annotation_789.id
+    assert data["annotation"][1]["image_prediction"]["image"]["barcode"] == "789"
+    assert data["annotation"][2]["id"] == annotation_306.id
+    assert data["annotation"][2]["image_prediction"]["image"]["barcode"] == "306"
+    assert data["annotation"][3]["id"] == annotation_604.id
+    assert data["annotation"][3]["image_prediction"]["image"]["barcode"] == "604"
 
 
 def test_logo_annotation_collection_pagination(client):
