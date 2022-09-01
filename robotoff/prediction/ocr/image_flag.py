@@ -40,6 +40,7 @@ LABELS_TO_FLAG = {
     "Computer",
     "Laptop",
     "Refrigerator",
+    "Cat", # https://world.openfoodfacts.org/images/products/761/002/911/3600/1.json
 }
 
 
