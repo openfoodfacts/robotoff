@@ -660,7 +660,13 @@ def test_logo_annotation_collection_empty(client):
 
 
 def test_logo_annotation_collection_api(client):
-    annotation_123 = LogoAnnotationFactory(
+    annotation_123_1 = LogoAnnotationFactory(
+        image_prediction__image__barcode="123",
+        annotation_value_tag="etorki",
+        annotation_type="brand",
+    )
+
+    annotation_123_2 = LogoAnnotationFactory(
         image_prediction__image__barcode="123",
         annotation_value_tag="etorki",
         annotation_type="brand",
@@ -684,22 +690,32 @@ def test_logo_annotation_collection_api(client):
         annotation_type="dairies",
     )
 
-    # test with "barcode" and "keep_types"
+    LogoAnnotationFactory(
+        image_prediction__image__barcode="604",
+        annotation_value_tag="meat",
+        annotation_type="category",
+    )
+
+    # test with "barcode"
 
     result = client.simulate_get(
         "/api/v1/annotation/collection",
         params={
             "barcode": "123",
-            "keep_types": "brand",
         },
     )
     assert result.status_code == 200
     data = result.json
-    assert data["count"] == 1
-    assert data["annotation"][0]["id"] == annotation_123.id
-    assert data["annotation"][0]["image_prediction"]["image"]["barcode"] == "123"
-    assert data["annotation"][0]["annotation_type"] == "brand"
-    assert data["annotation"][0]["annotation_value_tag"] == "etorki"
+    assert data["count"] == 2
+    annotation_data = sorted(data["annotation"], key=lambda d: d["id"])
+    assert annotation_data[0]["id"] == annotation_123_1.id
+    assert annotation_data[1]["id"] == annotation_123_2.id
+    assert annotation_data[0]["image_prediction"]["image"]["barcode"] == "123"
+    assert annotation_data[1]["image_prediction"]["image"]["barcode"] == "123"
+    assert annotation_data[0]["annotation_type"] == "brand"
+    assert annotation_data[1]["annotation_type"] == "brand"
+    assert annotation_data[0]["annotation_value_tag"] == "etorki"
+    assert annotation_data[1]["annotation_value_tag"] == "etorki"
 
     # test with "value_tag"
 
@@ -715,12 +731,12 @@ def test_logo_annotation_collection_api(client):
     assert data["annotation"][0]["annotation_type"] == "dairies"
     assert data["annotation"][0]["annotation_value_tag"] == "cheese"
 
-    # test with "keep_types"
+    # test with "types"
 
     result = client.simulate_get(
         "/api/v1/annotation/collection",
         params={
-            "keep_types": "brand,diaries",
+            "types": ["category", "diaries"],
         },
     )
     assert result.status_code == 200
@@ -735,8 +751,18 @@ def test_logo_annotation_collection_pagination(client):
             annotation_type="label", annotation_value_tag=f"no lactose-{i:02}"
         )
 
+    for i in range(0, 2):
+        LogoAnnotationFactory(
+            annotation_type="vegan", annotation_value_tag=f"truffle cake-{i:02}"
+        )
+
+    for i in range(0, 2):
+        LogoAnnotationFactory(
+            annotation_type="category", annotation_value_tag=f"sea food-{i:02}"
+        )
+
     result = client.simulate_get(
-        "/api/v1/annotation/collection?count=5&page=1&keep_types=label"
+        "/api/v1/annotation/collection?count=5&page=1&types=label"
     )
 
     data = result.json
@@ -752,7 +778,7 @@ def test_logo_annotation_collection_pagination(client):
     ]
 
     result = client.simulate_get(
-        "/api/v1/annotation/collection?count=5&page=2&keep_types=label"
+        "/api/v1/annotation/collection?count=5&page=2&types=label"
     )
 
     data = result.json
@@ -768,7 +794,7 @@ def test_logo_annotation_collection_pagination(client):
     ]
 
     result = client.simulate_get(
-        "/api/v1/annotation/collection?count=5&page=3&keep_types=label"
+        "/api/v1/annotation/collection?count=5&page=3&types=label"
     )
 
     data = result.json
@@ -779,4 +805,20 @@ def test_logo_annotation_collection_pagination(client):
     assert [q["annotation_value_tag"] for q in data["annotation"]] == [
         "no lactose-10",
         "no lactose-11",
+    ]
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=1&types=category&types=vegan"
+    )
+
+    data = result.json
+    assert data["count"] == 4
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 4
+
+    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
+        "truffle cake-00",
+        "truffle cake-01",
+        "sea food-00",
+        "sea food-01",
     ]
