@@ -777,13 +777,8 @@ def test_logo_annotation_collection_pagination(client):
     assert data["count"] == 12
     assert data["status"] == "found"
     assert len(data["annotation"]) == 5
-    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
-        "no lactose-00",
-        "no lactose-01",
-        "no lactose-02",
-        "no lactose-03",
-        "no lactose-04",
-    ]
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations = annotation_data
 
     result = client.simulate_get(
         "/api/v1/annotation/collection?count=5&page=2&types=label"
@@ -793,13 +788,8 @@ def test_logo_annotation_collection_pagination(client):
     assert data["count"] == 12
     assert data["status"] == "found"
     assert len(data["annotation"]) == 5
-    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
-        "no lactose-05",
-        "no lactose-06",
-        "no lactose-07",
-        "no lactose-08",
-        "no lactose-09",
-    ]
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations.extend(annotation_data)
 
     result = client.simulate_get(
         "/api/v1/annotation/collection?count=5&page=3&types=label"
@@ -809,11 +799,8 @@ def test_logo_annotation_collection_pagination(client):
     assert data["count"] == 12
     assert data["status"] == "found"
     assert len(data["annotation"]) == 2
-
-    assert [q["annotation_value_tag"] for q in data["annotation"]] == [
-        "no lactose-10",
-        "no lactose-11",
-    ]
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations.extend(annotation_data)
 
     # test for multiple values in "types"
 
@@ -825,10 +812,23 @@ def test_logo_annotation_collection_pagination(client):
     assert data["count"] == 4
     assert data["status"] == "found"
     assert len(data["annotation"]) == 4
-
     annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
-    annotation_data.sort()
-    assert annotation_data == [
+    annotations.extend(annotation_data)
+
+    annotations.sort()
+    assert annotations == [
+        "no lactose-00",
+        "no lactose-01",
+        "no lactose-02",
+        "no lactose-03",
+        "no lactose-04",
+        "no lactose-05",
+        "no lactose-06",
+        "no lactose-07",
+        "no lactose-08",
+        "no lactose-09",
+        "no lactose-10",
+        "no lactose-11",
         "sea food-00",
         "sea food-01",
         "truffle cake-00",
