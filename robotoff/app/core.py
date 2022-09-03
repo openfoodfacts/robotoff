@@ -221,7 +221,7 @@ def get_image_predictions(
 
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
-    
+
     query = query.switch(ImagePrediction).join(ImageModel)
     where_clauses = [ImagePrediction.image.server_domain == server_domain]
 
@@ -240,7 +240,6 @@ def get_image_predictions(
             .join(LogoAnnotation, JOIN.LEFT_OUTER)
             .where(LogoAnnotation.image_prediction.is_null())
         )
-    
 
     if where_clauses:
         query = query.where(*where_clauses)
@@ -351,7 +350,9 @@ def get_logo_annotation(
 
     query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 
-    where_clauses = [LogoAnnotation.image_prediction.image.server_domain == server_domain]
+    where_clauses = [
+        LogoAnnotation.image_prediction.image.server_domain == server_domain
+    ]
 
     if barcode:
         where_clauses.append(LogoAnnotation.image_prediction.image.barcode == barcode)

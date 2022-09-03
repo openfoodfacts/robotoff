@@ -1153,7 +1153,6 @@ class ImagePredictionCollection:
         type: Optional[str] = req.get_param("type")
         server_domain: Optional[str] = req.get_param("server_domain")
 
-
         query_parameters = {
             "with_logo": with_logo,
             "barcode": barcode,
@@ -1190,7 +1189,6 @@ class LogoAnnotationCollection:
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         server_domain: Optional[str] = req.get_param("server_domain")
-
 
         if keep_types:
             # Limit the number of types to prevent slow SQL queries
