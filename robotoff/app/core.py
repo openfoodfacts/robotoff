@@ -215,7 +215,7 @@ def get_image_predictions(
     offset: Optional[int] = None,
     count: bool = False,
     limit: Optional[int] = 25,
-) -> Iterable[LogoAnnotation]:
+) -> Iterable[ImagePrediction]:
 
     query = ImagePrediction.select()
 
