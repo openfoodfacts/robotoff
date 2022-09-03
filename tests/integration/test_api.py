@@ -660,6 +660,8 @@ def test_logo_annotation_collection_empty(client):
 
 
 def test_logo_annotation_collection_api(client):
+    LogoAnnotation.delete().execute()  # remove default sample
+
     annotation_123_1 = LogoAnnotationFactory(
         image_prediction__image__barcode="123",
         annotation_value_tag="etorki",

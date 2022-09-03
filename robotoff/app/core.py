@@ -134,6 +134,9 @@ def get_insights(
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
+    else:
+        query = query.order_by(ProductInsight.timestamp.desc())
+
     if as_dict:
         query = query.dicts()
 
@@ -201,6 +204,8 @@ def get_predictions(
     if where_clauses:
         query = query.where(*where_clauses)
 
+    query = query.order_by(Prediction.timestamp.desc())
+
     if count:
         return query.count()
     else:
@@ -239,6 +244,8 @@ def get_image_predictions(
 
     if where_clauses:
         query = query.where(*where_clauses)
+
+    query = query.order_by(LogoAnnotation.image_prediction.timestamp.desc())
 
     if count:
         return query.count()
@@ -340,12 +347,11 @@ def get_logo_annotation(
     count: bool = False,
 ) -> Iterable[LogoAnnotation]:
 
-    query = LogoAnnotation.select()
+    query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 
     where_clauses = []
 
     if barcode:
-        query = query.join(ImagePrediction).join(ImageModel)
         where_clauses.append(LogoAnnotation.image_prediction.image.barcode == barcode)
 
     if value_tag:
@@ -362,6 +368,8 @@ def get_logo_annotation(
 
     if offset is not None:
         query = query.offset(offset)
+
+    query = query.order_by(LogoAnnotation.image_prediction.timestamp.desc())
 
     if count:
         return query.count()
