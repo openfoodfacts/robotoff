@@ -1151,11 +1151,13 @@ class ImagePredictionCollection:
         with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
         barcode: Optional[str] = req.get_param("barcode")
         type: Optional[str] = req.get_param("type")
+        server_domain: Optional[str] = req.get_param("server_domain")
 
         query_parameters = {
             "with_logo": with_logo,
             "barcode": barcode,
             "type": type,
+            "server_domain": server_domain,
         }
 
         get_image_predictions_ = functools.partial(
@@ -1186,12 +1188,14 @@ class LogoAnnotationCollection:
         value_tag: str = req.get_param("value_tag")
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
+        server_domain: Optional[str] = req.get_param("server_domain")
 
         if keep_types:
             # Limit the number of types to prevent slow SQL queries
             keep_types = keep_types[:10]
 
         query_parameters = {
+            "server_domain": server_domain,
             "barcode": barcode,
             "keep_types": keep_types,
             "value_tag": value_tag,

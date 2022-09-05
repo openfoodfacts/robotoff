@@ -211,17 +211,21 @@ def get_image_predictions(
     with_logo: Optional[bool] = False,
     barcode: Optional[str] = None,
     type: Optional[str] = None,
+    server_domain: Optional[str] = None,
     offset: Optional[int] = None,
     count: bool = False,
     limit: Optional[int] = 25,
-) -> Iterable[LogoAnnotation]:
+) -> Iterable[ImagePrediction]:
 
     query = ImagePrediction.select()
 
-    where_clauses = []
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    query = query.switch(ImagePrediction).join(ImageModel)
+    where_clauses = [ImagePrediction.image.server_domain == server_domain]
 
     if barcode:
-        query = query.join(ImageModel)
         where_clauses.append(ImagePrediction.image.barcode == barcode)
 
     if type:
@@ -335,17 +339,22 @@ def get_logo_annotation(
     barcode: Optional[str] = None,
     keep_types: List[str] = None,
     value_tag: Optional[str] = None,
+    server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
 ) -> Iterable[LogoAnnotation]:
 
-    query = LogoAnnotation.select()
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
 
-    where_clauses = []
+    query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+
+    where_clauses = [
+        LogoAnnotation.image_prediction.image.server_domain == server_domain
+    ]
 
     if barcode:
-        query = query.join(ImagePrediction).join(ImageModel)
         where_clauses.append(LogoAnnotation.image_prediction.image.barcode == barcode)
 
     if value_tag:
