@@ -742,14 +742,15 @@ def test_logo_annotation_collection_api(client):
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 4
-    assert data["annotation"][0]["id"] == annotation_295.id
-    assert data["annotation"][0]["image_prediction"]["image"]["barcode"] == "295"
-    assert data["annotation"][1]["id"] == annotation_789.id
-    assert data["annotation"][1]["image_prediction"]["image"]["barcode"] == "789"
-    assert data["annotation"][2]["id"] == annotation_306.id
-    assert data["annotation"][2]["image_prediction"]["image"]["barcode"] == "306"
-    assert data["annotation"][3]["id"] == annotation_604.id
-    assert data["annotation"][3]["image_prediction"]["image"]["barcode"] == "604"
+    annotations = sorted(data["annotation"], key=lambda a: a["id"])
+    assert annotations[0]["id"] == annotation_295.id
+    assert annotations[0]["image_prediction"]["image"]["barcode"] == "295"
+    assert annotations[1]["id"] == annotation_789.id
+    assert annotations[1]["image_prediction"]["image"]["barcode"] == "789"
+    assert annotations[2]["id"] == annotation_306.id
+    assert annotations[2]["image_prediction"]["image"]["barcode"] == "306"
+    assert annotations[3]["id"] == annotation_604.id
+    assert annotations[3]["image_prediction"]["image"]["barcode"] == "604"
 
 
 def test_logo_annotation_collection_pagination(client):
