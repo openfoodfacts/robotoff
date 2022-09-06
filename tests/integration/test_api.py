@@ -8,13 +8,14 @@ from falcon import testing
 from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
-from robotoff.models import AnnotationVote, ProductInsight
+from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
 
 from .models_utils import (
     AnnotationVoteFactory,
     ImageModelFactory,
     ImagePredictionFactory,
+    LogoAnnotationFactory,
     PredictionFactory,
     ProductInsightFactory,
     clean_db,
@@ -569,3 +570,270 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["id"] == prediction2.id
     assert prediction_data[1]["type"] == "brand"
     assert prediction_data[1]["value_tag"] == "en:beers"
+
+
+def test_image_prediction_collection_empty(client):
+    result = client.simulate_get("/api/v1/images/prediction/collection/")
+    assert result.status_code == 200
+
+
+def test_image_prediction_collection(client):
+
+    logo_annotation_category_123 = LogoAnnotationFactory(
+        image_prediction__image__barcode="123",
+        image_prediction__type="category",
+    )
+    prediction_category_123 = logo_annotation_category_123.image_prediction
+    logo_annotation_label_789 = LogoAnnotationFactory(
+        image_prediction__image__barcode="789",
+        image_prediction__type="label",
+    )
+    prediction_label_789 = logo_annotation_label_789.image_prediction
+
+    prediction_label_789_no_logo = ImagePredictionFactory(
+        image__barcode="789", type="label"
+    )
+
+    # test with "barcode=123" and "with_logo=True"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "barcode": "123",
+            "with_logo": 1,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == prediction_category_123.id
+    assert data["images"][0]["image"]["barcode"] == "123"
+
+    # test with "type=label" and "with_logo=True"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "type": "label",
+            "with_logo": 1,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    data["images"].sort(key=lambda d: d["id"])
+    assert data["count"] == 2
+    assert data["images"][0]["id"] == prediction_label_789.id
+    assert data["images"][1]["id"] == prediction_label_789_no_logo.id
+
+    # test with "barcode=456" and "with_logo=True"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "barcode": "456",
+            "with_logo": 1,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 0
+    assert data["image_predictions"] == []
+
+    # test with "type=label" and "with_logo=False"
+    result = client.simulate_get(
+        "/api/v1/images/prediction/collection",
+        params={
+            "type": "label",
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["images"][0]["id"] == prediction_label_789_no_logo.id
+
+
+def test_logo_annotation_collection_empty(client):
+    result = client.simulate_get("/api/v1/annotation/collection/")
+    assert result.status_code == 200
+    assert result.json == {"count": 0, "annotation": [], "status": "no_annotation"}
+
+
+def test_logo_annotation_collection_api(client):
+    LogoAnnotation.delete().execute()  # remove default sample
+
+    annotation_123_1 = LogoAnnotationFactory(
+        image_prediction__image__barcode="123",
+        annotation_value_tag="etorki",
+        annotation_type="brand",
+    )
+
+    annotation_123_2 = LogoAnnotationFactory(
+        image_prediction__image__barcode="123",
+        annotation_value_tag="etorki",
+        annotation_type="brand",
+    )
+
+    annotation_295 = LogoAnnotationFactory(
+        image_prediction__image__barcode="295",
+        annotation_value_tag="cheese",
+        annotation_type="dairies",
+    )
+
+    annotation_789 = LogoAnnotationFactory(
+        image_prediction__image__barcode="789",
+        annotation_value_tag="creme",
+        annotation_type="dairies",
+    )
+
+    annotation_306 = LogoAnnotationFactory(
+        image_prediction__image__barcode="306",
+        annotation_value_tag="yoghurt",
+        annotation_type="dairies",
+    )
+
+    annotation_604 = LogoAnnotationFactory(
+        image_prediction__image__barcode="604",
+        annotation_value_tag="meat",
+        annotation_type="category",
+    )
+
+    # test with "barcode"
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection",
+        params={
+            "barcode": "123",
+        },
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 2
+    annotation_data = sorted(data["annotation"], key=lambda d: d["id"])
+    assert annotation_data[0]["id"] == annotation_123_1.id
+    assert annotation_data[1]["id"] == annotation_123_2.id
+    assert annotation_data[0]["image_prediction"]["image"]["barcode"] == "123"
+    assert annotation_data[1]["image_prediction"]["image"]["barcode"] == "123"
+    assert annotation_data[0]["annotation_type"] == "brand"
+    assert annotation_data[1]["annotation_type"] == "brand"
+    assert annotation_data[0]["annotation_value_tag"] == "etorki"
+    assert annotation_data[1]["annotation_value_tag"] == "etorki"
+
+    # test with "value_tag"
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection",
+        params={"value_tag": "cheese"},
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 1
+    assert data["annotation"][0]["id"] == annotation_295.id
+    assert data["annotation"][0]["image_prediction"]["image"]["barcode"] == "295"
+    assert data["annotation"][0]["annotation_type"] == "dairies"
+    assert data["annotation"][0]["annotation_value_tag"] == "cheese"
+
+    # test with "types"
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection",
+        params={
+            "types": ["category", "dairies"],
+        },
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 4
+    annotations = sorted(data["annotation"], key=lambda a: a["id"])
+    assert annotations[0]["id"] == annotation_295.id
+    assert annotations[0]["image_prediction"]["image"]["barcode"] == "295"
+    assert annotations[1]["id"] == annotation_789.id
+    assert annotations[1]["image_prediction"]["image"]["barcode"] == "789"
+    assert annotations[2]["id"] == annotation_306.id
+    assert annotations[2]["image_prediction"]["image"]["barcode"] == "306"
+    assert annotations[3]["id"] == annotation_604.id
+    assert annotations[3]["image_prediction"]["image"]["barcode"] == "604"
+
+
+def test_logo_annotation_collection_pagination(client):
+    LogoAnnotation.delete().execute()  # remove default sample
+    for i in range(0, 12):
+        LogoAnnotationFactory(
+            annotation_type="label", annotation_value_tag=f"no lactose-{i:02}"
+        )
+
+    for i in range(0, 2):
+        LogoAnnotationFactory(
+            annotation_type="vegan", annotation_value_tag=f"truffle cake-{i:02}"
+        )
+
+    for i in range(0, 2):
+        LogoAnnotationFactory(
+            annotation_type="category", annotation_value_tag=f"sea food-{i:02}"
+        )
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=1&types=label"
+    )
+
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 5
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations = annotation_data
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=2&types=label"
+    )
+
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 5
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations.extend(annotation_data)
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=3&types=label"
+    )
+
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 2
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations.extend(annotation_data)
+
+    # test for multiple values in "types"
+
+    result = client.simulate_get(
+        "/api/v1/annotation/collection?count=5&page=1&types=category&types=vegan"
+    )
+
+    data = result.json
+    assert data["count"] == 4
+    assert data["status"] == "found"
+    assert len(data["annotation"]) == 4
+    annotation_data = [q["annotation_value_tag"] for q in data["annotation"]]
+    annotations.extend(annotation_data)
+
+    annotations.sort()
+    assert annotations == [
+        "no lactose-00",
+        "no lactose-01",
+        "no lactose-02",
+        "no lactose-03",
+        "no lactose-04",
+        "no lactose-05",
+        "no lactose-06",
+        "no lactose-07",
+        "no lactose-08",
+        "no lactose-09",
+        "no lactose-10",
+        "no lactose-11",
+        "sea food-00",
+        "sea food-01",
+        "truffle cake-00",
+        "truffle cake-01",
+    ]

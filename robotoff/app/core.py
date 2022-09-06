@@ -18,6 +18,7 @@ from robotoff.models import (
     AnnotationVote,
     ImageModel,
     ImagePrediction,
+    LogoAnnotation,
     Prediction,
     ProductInsight,
     db,
@@ -133,6 +134,7 @@ def get_insights(
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
+
     if as_dict:
         query = query.dicts()
 
@@ -199,6 +201,53 @@ def get_predictions(
 
     if where_clauses:
         query = query.where(*where_clauses)
+
+    query = query.order_by(Prediction.id.desc())
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
+
+
+def get_image_predictions(
+    with_logo: Optional[bool] = False,
+    barcode: Optional[str] = None,
+    type: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    offset: Optional[int] = None,
+    count: bool = False,
+    limit: Optional[int] = 25,
+) -> Iterable[ImagePrediction]:
+
+    query = ImagePrediction.select()
+
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    query = query.switch(ImagePrediction).join(ImageModel)
+    where_clauses = [ImagePrediction.image.server_domain == server_domain]
+
+    if barcode:
+        where_clauses.append(ImagePrediction.image.barcode == barcode)
+
+    if type:
+        where_clauses.append(ImagePrediction.type == type)
+
+    if not with_logo:
+        # return only images without logo
+        query = (
+            query.switch(
+                ImagePrediction
+            )  # we need this because we may have joined with ImageModel
+            .join(LogoAnnotation, JOIN.LEFT_OUTER)
+            .where(LogoAnnotation.image_prediction.is_null())
+        )
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    query = query.order_by(LogoAnnotation.image_prediction.id.desc())
 
     if count:
         return query.count()
@@ -289,3 +338,48 @@ def save_annotation(
         "question_answered", username, device_id, insight.barcode
     )
     return result
+
+
+def get_logo_annotation(
+    barcode: Optional[str] = None,
+    keep_types: List[str] = None,
+    value_tag: Optional[str] = None,
+    server_domain: Optional[str] = None,
+    limit: Optional[int] = 25,
+    offset: Optional[int] = None,
+    count: bool = False,
+) -> Iterable[LogoAnnotation]:
+
+    if server_domain is None:
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+    query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
+
+    where_clauses = [
+        LogoAnnotation.image_prediction.image.server_domain == server_domain
+    ]
+
+    if barcode:
+        where_clauses.append(LogoAnnotation.image_prediction.image.barcode == barcode)
+
+    if value_tag:
+        where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
+
+    if keep_types:
+        where_clauses.append(LogoAnnotation.annotation_type.in_(keep_types))
+
+    if where_clauses:
+        query = query.where(*where_clauses)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    if offset is not None:
+        query = query.offset(offset)
+
+    query = query.order_by(LogoAnnotation.image_prediction.id.desc())
+
+    if count:
+        return query.count()
+    else:
+        return query.iterator()
