@@ -144,16 +144,24 @@ class ImageModerationNotifier(NotifierInterface):
     """
 
     def __init__(self, service_url):
-        self.service_url = service_url
+        self.service_url = service_url.rstrip("/")
 
     def notify_image_flag(
         self, predictions: List[Prediction], source_image: str, barcode: str
     ):
         """Send image to the moderation server so that a human can moderate it"""
-        image_url = settings.OFF_IMAGE_BASE_URL + source_image
+        if not predictions:
+            return
+        image_url = f"{settings.OFF_IMAGE_BASE_URL}/{source_image.lstrip('/')}"
         image_id = int(source_image.rsplit("/", 1)[-1].split(".", 1)[0])
         params = {"imgid": image_id, "url": image_url}
-        http_session.put(f"{self.service_url}/{barcode}", data=params)
+        try:
+            http_session.put(f"{self.service_url}/{barcode}", data=params)
+        except Exception:
+            logger.exception(
+                "Error while notifying image to moderation service",
+                extra={"params": params, "url": image_url, "barcode": barcode},
+            )
 
 
 class SlackNotifier(NotifierInterface):
@@ -191,7 +199,7 @@ class SlackNotifier(NotifierInterface):
         self, predictions: List[Prediction], source_image: str, barcode: str
     ):
         """Sends alerts to Slack channels for flagged images."""
-        if len(predictions) < 1:
+        if not predictions:
             return
 
         text = ""
