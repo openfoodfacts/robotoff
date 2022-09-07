@@ -113,7 +113,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             annotation_result = self.process_annotation(insight, data=data, auth=auth)
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
-        insight.annotated_result = 1
+        insight.annotated_result = annontation_result
         insight.save()  # second call to save annotated_result
         return annotation_result
 
