@@ -190,8 +190,6 @@ class LabelAnnotator(InsightAnnotator):
         labels_tags: List[str] = product.get("labels_tags") or []
 
         if insight.value_tag in labels_tags:
-            insight.annotated_result = 5
-            insight.save()
             return ALREADY_ANNOTATED_RESULT
 
         add_label_tag(
