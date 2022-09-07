@@ -252,8 +252,6 @@ class CategoryAnnotator(InsightAnnotator):
         product = get_product(insight.barcode, ["categories_tags"])
 
         if product is None:
-            insight.annotated_result = 3
-            insight.save()
             return MISSING_PRODUCT_RESULT
 
         categories_tags: List[str] = product.get("categories_tags") or []
