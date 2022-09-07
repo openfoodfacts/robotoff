@@ -163,6 +163,11 @@ class ElasticsearchIndex:
     }
 
 
+# image moderation service
+IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
+    "IMAGE_MODERATION_SERVICE_URL", None
+)
+
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
 

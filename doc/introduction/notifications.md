@@ -7,4 +7,7 @@ It currently does so in the:
 - #moderation-off-alerts (for problematic images like selfies and nudity)
 - #moderation-off-image-alerts (seems a duplication of the previous one)
 
+It can also sends images to a moderation service[^imagenotifier]
+
 [^slack]: see `robotoff.slack.SlackNotifier`
+[^imagenotifier]: see `robotoff.slack.ImageModerationNotifier`
