@@ -222,6 +222,7 @@ OCR_PACKAGING_DATA_PATH = OCR_DATA_DIR / "packaging.txt"
 OCR_TRACE_ALLERGEN_DATA_PATH = OCR_DATA_DIR / "trace_allergen.txt"
 # Try to detect postal codes in France
 OCR_CITIES_FR_PATH = OCR_DATA_DIR / "cities_laposte_hexasmal.json.gz"
+OCR_COUNTRIES_IN_ALL_LANGS = OCR_DATA_DIR / "countries.json"
 
 BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json"
 

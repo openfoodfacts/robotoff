@@ -365,6 +365,40 @@ class NutrientPredictorResource:
         resp.media = {"nutrients": [p.to_dict() for p in predictions]}
 
 
+class OriginPredictorResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        ocr_url = req.get_param("ocr_url", required=True)
+
+        if not ocr_url.endswith(".json"):
+            raise falcon.HTTPBadRequest("a JSON file is expected")
+
+        barcode = get_barcode_from_url(ocr_url)
+
+        if barcode is None:
+            raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
+
+        try:
+            predictions = extract_ocr_predictions(
+                barcode, ocr_url, [PredictionType.origin]
+            )
+
+        except requests.exceptions.RequestException:
+            resp.media = {
+                "error": "download_error",
+                "error_description": "an error occurred during OCR JSON download",
+            }
+            return
+
+        except OCRParsingException as e:
+            logger.error(e)
+            resp.media = {
+                "error": "invalid_ocr",
+                "error_description": "an error occurred during OCR parsing",
+            }
+            return
+
+        resp.media = {"origin": [p.to_dict() for p in predictions]}
+
 class OCRInsightsPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
@@ -1172,6 +1206,7 @@ api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
 api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
 api.add_route("/api/v1/predict/nutrient", NutrientPredictorResource())
+api.add_route("/api/v1/predict/origin", OriginPredictorResource())
 api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())

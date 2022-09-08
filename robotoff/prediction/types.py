@@ -19,6 +19,7 @@ class PredictionType(str, Enum):
     image_orientation = "image_orientation"
     store = "store"
     nutrient = "nutrient"
+    origin = "origin"
     trace = "trace"
     packaging = "packaging"
     location = "location"

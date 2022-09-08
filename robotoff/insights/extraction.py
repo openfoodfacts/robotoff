@@ -22,6 +22,7 @@ DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
     PredictionType.store,
     PredictionType.packaging,
     PredictionType.nutrient,
+    PredictionType.origin,
     PredictionType.nutrient_mention,
     PredictionType.image_lang,
     PredictionType.image_orientation,
