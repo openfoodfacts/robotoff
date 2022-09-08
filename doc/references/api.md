@@ -163,3 +163,19 @@ Generate spellcheck corrections. Either the barcode or the text to correct must 
   }
 }
 ```
+
+### Orgin prediction [/predict/origin]
+
+#### Predict origin from OCR JSON [GET]
+
+- ocr_url (str, required) - the url of the OCR JSON
+
+- Response 200 (application/json)
+
+```json
+[{
+  "origin": "en:france",
+  "same_for_all_ingredients": False, //if true, all ingredients have the same origin
+  "concerned_ingredients": ["en:quinoa"] // if same_for_all_ingredients is True, this field is null
+}]
+```

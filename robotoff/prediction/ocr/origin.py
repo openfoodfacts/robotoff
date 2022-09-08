@@ -1,11 +1,10 @@
-from difflib import Match
+
 import re
 from typing import Dict, List, Union, Any
 
 from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.utils.types import JSONType
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text, OCRResultGenerationException
+from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 from robotoff import settings
 import json
@@ -14,7 +13,10 @@ EXTRACTOR_VERSION = "1"
 
 
 # French ----------------
-INGREDIENTS = json.loads(open(settings.TAXONOMY_CATEGORY_PATH, "r").read())
+INGREDIENTS = {}
+with open(settings.TAXONOMY_CATEGORY_PATH, "r") as file:
+   INGREDIENTS = json.loads(file.read())
+
 INGREDIENTS_SYNONIMS_FR = [ingredient["synonyms"]["fr"] 
 for ingredient in INGREDIENTS.values() 
 if "synonyms" in ingredient and "fr" in ingredient["synonyms"]]
@@ -23,7 +25,9 @@ GENERAL_WORDS_FR = ["ingredients?", "[ée]lements?", "composition", "production"
 INGREDIENTS_FR.extend(["ingr[ée]dients?", "[ée]l[ée]ments?", "composition", "production", "mati[èe]res? premi[èe]res?"])
 INGREDIENTS_FR_JOINED = "|".join(INGREDIENTS_FR)
 
-COUNTRIES_IN_ALL_LANGS = json.loads(open(settings.OCR_COUNTRIES_IN_ALL_LANGS, "r").read())
+COUNTRIES_IN_ALL_LANGS = {}
+with open(settings.OCR_COUNTRIES_IN_ALL_LANGS, "r") as file:
+   COUNTRIES_IN_ALL_LANGS = json.loads(file.read())
 
 COUNTRIES_FR = [coutry["name"]["fr"]
 for coutry in COUNTRIES_IN_ALL_LANGS.values() 
@@ -37,12 +41,13 @@ COUNTRIES_NATIONALITY_ADJECTIVES_FR.append("européen(?:ne)?s?")
 COUNTRIES_ADJECTIVES_FR_JOINED = "|".join(COUNTRIES_NATIONALITY_ADJECTIVES_FR)
 VERBS_FR_JOINED = "|".join(["fabriqu[ée]e?s?", "pr[ée]par[ée]?e?s?", "faite?s?", "produite?s?", "cuisin[ée]e?s?", "cr[ée][ée]e?s?", "cultiv[ée]e?s?", "[ée]lev[ée]e?s?", "provient", "proviennent",  "vient", "viennent", "a", "ont"])
 
-COUNTRY_ADJECTIVE_FR_TO_COUNTRY_NAME_FR = dict([(COUNTRIES_IN_ALL_LANGS[country_id]["nationalities"]["fr"], country_id) 
+COUNTRY_ADJECTIVE_FR_TO_COUNTRY_NAME_FR = {
+    COUNTRIES_IN_ALL_LANGS[country_id]["nationalities"]["fr"]:country_id 
     for country_id in COUNTRIES_IN_ALL_LANGS.keys() 
     if country_id in COUNTRIES_IN_ALL_LANGS
     and "nationalities" in COUNTRIES_IN_ALL_LANGS[country_id]
     and "fr" in COUNTRIES_IN_ALL_LANGS[country_id]["nationalities"]
-])
+}
 
 OUTSIDE_WORDS_FR = ["hors", "en dehors"]
 
@@ -101,12 +106,13 @@ VERBS_EN_JOINED = "|".join([
     "comes?", "ha(?:s|ve)"
 ])
 
-COUNTRY_ADJECTIVE_EN_TO_COUNTRY_NAME_EN = dict([(COUNTRIES_IN_ALL_LANGS[country_id]["nationalities"]["en"], country_id) 
+COUNTRY_ADJECTIVE_EN_TO_COUNTRY_NAME_EN = {
+    COUNTRIES_IN_ALL_LANGS[country_id]["nationalities"]["en"]:country_id 
     for country_id in COUNTRIES_IN_ALL_LANGS.keys() 
     if country_id in COUNTRIES_IN_ALL_LANGS
     and "nationalities" in COUNTRIES_IN_ALL_LANGS[country_id]
     and "en" in COUNTRIES_IN_ALL_LANGS[country_id]["nationalities"]
-])
+}
 
 OUTSIDE_WORDS_EN = ["outside"]
 
@@ -196,8 +202,10 @@ def find_origin(content: Union[OCRResult, str]) -> List[Prediction]:
     ]
 
 def check_if_general_word_in_ingredients(general_words_regex: List[str], ingredients: str):
-    """Utility function for checking if one of the general words like 'elements' or 'ingredients' is 
-  present in the list of ingredients returned by extract_ingredients_from_match_string"""
+    """
+    Utility function for checking if one of the general words like 'elements' or 'ingredients' is 
+    present in the list of ingredients returned by extract_ingredients_from_match_string
+    """
     for reg in general_words_regex:
         if re.search(reg, ingredients) is not None:
             return True
@@ -211,13 +219,17 @@ def extract_origin_from_match (origin_match, lang: str) -> str:
         return LARGE_ORIGIN # the sentence tells that the product is not made in the specified zone, 
         # so the only thing we can extract is that it has a large origin
     elif origin_match.group("country") is not None:
-        standardize = lambda s: " ".join((word[0].upper() + word[1:].lower() for word in s.split(" ")))
+        def standardize (s):
+            return " ".join((word[0].upper() + word[1:].lower() for word in s.split(" ")))
         standardized_name = standardize(origin_match.group("country"))
-        return next( #find the translation in english of the specified country name 
-            country_id
-            for country_id, country_content in COUNTRIES_IN_ALL_LANGS.items()
-            if country_content["name"][lang] == standardized_name
-        )
+        try:
+            return next( #find the translation in english of the specified country name 
+                country_id
+                for country_id, country_content in COUNTRIES_IN_ALL_LANGS.items()
+                if country_content["name"][lang] == standardized_name
+            )
+        except StopIteration: #impossible, if the regex matched with the group country, the country with this name exists
+            standardized_name
     elif origin_match.group("country_adj") is not None and origin_match.group("country") in COUNTRY_ADJECTIVE_TO_COUNTRY_NAME_BY_LANG[lang]:
         return COUNTRY_ADJECTIVE_TO_COUNTRY_NAME_BY_LANG[lang][origin_match.group("country_adj").lower()]
     elif origin_match.group("large_origin") is not None:
@@ -232,17 +244,21 @@ def extract_ingredients_from_match_string (ingredients_text: str, lang) -> List[
     It match the whole "quinoa and rice " string, and this function splits each ingredients.
     """
     splitted = ingredients_text.split(" ")
-    is_not_empty = lambda s: s != ""
+    def is_not_empty (s):
+        return s != ""
     splitted = filter(is_not_empty, splitted)
-    standardize_ingredient = lambda s: s[0].upper() + s[1:].lower()
+    def standardize_ingredient (s):
+        return s[0].upper() + s[1:].lower()
     standardized = map(standardize_ingredient, splitted) 
-    to_id = lambda s: next(ingredient_id for ingredient_id, ingredient in INGREDIENTS.items() 
-        if lang in ingredient["name"]
-        and ingredient["name"][lang] == s
-    )    
+    def to_id (s):
+        try:
+            return next(ingredient_id for ingredient_id, ingredient in INGREDIENTS.items() 
+                if lang in ingredient["name"]
+                and ingredient["name"][lang] == s
+            )
+        except StopIteration:
+            return s
+        
     ingredients_ids = map(to_id, standardized)
     return list(ingredients_ids)
 
-
-
-#TODO : Update the doc
