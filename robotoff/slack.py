@@ -20,7 +20,13 @@ class SlackException(Exception):
 
 
 class NotifierInterface:
-    """NotifierInterface is an interface for posting Robotoff-related alerts and notifications to the OFF Slack channels."""
+    """NotifierInterface is an interface for posting
+    Robotoff-related alerts and notifications
+    to various channels.
+    """
+
+    # Note: we do not use abstract methods,
+    # for a notifier might choose to only implements a few
 
     def notify_image_flag(
         self, predictions: List[Prediction], source_image: str, barcode: str
@@ -165,7 +171,7 @@ class ImageModerationNotifier(NotifierInterface):
 
 
 class SlackNotifier(NotifierInterface):
-    """SlackNotifier implements the real SlackNotifier."""
+    """Notifier to send messages on specific slack channels"""
 
     # Slack channel IDs.
     ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
