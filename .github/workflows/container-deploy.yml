@@ -107,6 +107,8 @@ jobs:
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
           echo "EVENTS_API_URL=https://event.${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
+          # TODO: remove this url when we have a proper server running for this purpose
+          echo "IMAGE_MODERATION_SERVICE_URL=https://amathjourney.com/api/off-annotation/flag-image"
 
 
     - name: Create Docker volumes
