@@ -11,6 +11,7 @@ from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
+from .category_from_AOC import find_category_from_AOC
 from .brand import find_brands
 from .dataclass import OCRParsingException, OCRResult, OCRResultGenerationException
 from .expiration_date import find_expiration_date
@@ -26,12 +27,14 @@ from .product_weight import find_product_weight
 from .store import find_stores
 from .trace import find_traces
 
+
 logger = get_logger(__name__)
 
 
 PREDICTION_TYPE_TO_FUNC: Dict[
     str, Callable[[Union[OCRResult, str]], List[Prediction]]
 ] = {
+    PredictionType.category: find_category_from_AOC,
     PredictionType.packager_code: find_packager_codes,
     PredictionType.label: find_labels,
     PredictionType.expiration_date: find_expiration_date,
