@@ -1,10 +1,14 @@
+from locale import normalize
 import re
-from typing import Dict, Iterable, List, Optional, Union
+from tabnanny import check
+from typing import List, Optional, Union
 
-from robotoff import settings
+import pytest
+
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger
-from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
+from robotoff.taxonomy import get_taxonomy
+from robotoff.off import normalizing
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
@@ -12,47 +16,75 @@ from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 logger = get_logger(__name__)
 
 
-def process_category(lang, match) -> Optional[str]:
-    '''Function to process the name of the category extracted from the AOC
-    recognition. We want it to match categories found in the categories 
-    taxonomy database. If nothing is found, we don't return the category.'''
+def category_taxonomisation(lang, match) -> Optional[str]:
+    '''Function to match categories detected via AOP REGEX with categories
+    taxonomy database. If no match is possible, we return None.'''
 
-    unchecked_category = str(lang) + ":" + match.group().replace(' ', '-')
+    unchecked_category = lang + normalizing(match.group("category"))
 
-    checked_category = get_taxonomy("category").__getitem__(unchecked_category)
+    checked_category = get_taxonomy("category").nodes.get(unchecked_category)
 
     if checked_category is not None:
-        return unchecked_category
+        return checked_category.id
 
     return None
 
 
-'''We must increase the scale of prediction of our REGEX 
-Many names of AOC products are written this way : 
+'''We must increase the scale of prediction of our REGEX
+Many names of AOC products are written this way :
 "AMARONE della VALPONE"
 "Denominazione di Origine Controllata"
 '''
 AOC_REGEX = {
-    "fr": [
+    "fr:": [
         OCRRegex(
-            re.compile(r"(?<=appellation\s).*(?=(\scontr[ôo]l[ée]e)|(\sprot[ée]g[ée]e))"),
+            # re.compile(r"(?<=appellation\s).*(?=(\scontr[ôo]l[ée]e)|(\sprot[ée]g[ée]e))"),
+            re.compile(r"(appellation)\s*(?P<category>.+)\s*(contr[ôo]l[ée]e|prot[ée]g[ée]e)"),
             field=OCRField.full_text_contiguous,
             lowercase=True,
-            processing_func=process_category,
+            processing_func=category_taxonomisation,
         ),
         OCRRegex(
-            re.compile(r"^.*(?=\sappellation d'origine contr[ôo]l[ée]e|\sappellation d'origine prot[ée]g[ée]e)"),
+            re.compile(r"(?P<category>.+)\s*(appellation d'origine contr[ôo]l[ée]e|appellation d'origine prot[ée]g[ée]e)"),
             field=OCRField.full_text_contiguous,
             lowercase=True,
-            processing_func=process_category,
+            processing_func=category_taxonomisation,
+        ),
+    ],
+    "es:": [
+        OCRRegex(
+            re.compile(r"(?P<category>.+)(\s*denominacion de origen protegida)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+            processing_func=category_taxonomisation,
+        ),
+        OCRRegex(
+            re.compile(r"(denominacion de origen protegida\s*)(?P<category>.+)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+            processing_func=category_taxonomisation,
+        ),
+    ],
+    "en:": [
+        OCRRegex(
+            re.compile(r"(?P<category>.+)\s*(aop|dop|pdo)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+            processing_func=category_taxonomisation,
+        ),
+        OCRRegex(
+            re.compile(r"(aop|dop|pdo)\s*(?P<category>.+)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+            processing_func=category_taxonomisation,
         ),
     ],
 }
 
 
 def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
-    '''This function returns a prediction of the category of the product 
-    by detecting an AOC syntax which allows an easy category 
+    '''This function returns a prediction of the category of the product
+    by detecting an AOC syntax which allows an easy category
     prediction with REGEX'''
 
     predictions = []
@@ -65,6 +97,7 @@ def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
                 continue
 
             for match in ocr_regex.regex.finditer(text):
+
                 category_value = ocr_regex.processing_func(lang, match)
 
                 if category_value is not None :
@@ -77,5 +110,4 @@ def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
                             data={"text": match.group(), "notify": ocr_regex.notify},
                         )
                     )
-
     return predictions
