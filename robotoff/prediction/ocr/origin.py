@@ -229,7 +229,7 @@ def extract_origin_from_match (origin_match, lang: str) -> str:
                 if country_content["name"][lang] == standardized_name
             )
         except StopIteration: #impossible, if the regex matched with the group country, the country with this name exists
-            standardized_name
+            return standardized_name
     elif origin_match.group("country_adj") is not None and origin_match.group("country") in COUNTRY_ADJECTIVE_TO_COUNTRY_NAME_BY_LANG[lang]:
         return COUNTRY_ADJECTIVE_TO_COUNTRY_NAME_BY_LANG[lang][origin_match.group("country_adj").lower()]
     elif origin_match.group("large_origin") is not None:

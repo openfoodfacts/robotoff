@@ -3,7 +3,6 @@ from typing import Dict, List, Union
 import pytest
 
 from robotoff.prediction.ocr.origin import LARGE_ORIGIN, find_origin
-from robotoff.utils.types import JSONType
 
 
 @pytest.mark.parametrize(
