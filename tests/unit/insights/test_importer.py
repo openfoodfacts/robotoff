@@ -27,6 +27,17 @@ from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import Product
 from robotoff.taxonomy import get_taxonomy
+from tests.integration.models_utils import clean_db
+
+
+@pytest.fixture(autouse=True)
+def _set_up_and_tear_down(peewee_db):
+    # clean db
+    clean_db()
+    # Run the test case.
+    yield
+    clean_db()
+
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
@@ -603,7 +614,7 @@ class TestInsightImporter:
             ):
                 yield [
                     ProductInsight(
-                        barcode=DEFAULT_BARCODE,
+                        packager_code="packager_code",
                         type=InsightType.label.name,
                         value_tag="tag1",
                     )
@@ -628,6 +639,53 @@ class TestInsightImporter:
         assert imported == 1
         batch_insert_mock.assert_called_once()
         product_insight_delete_mock.assert_called_once()
+
+    def test_import_msc_insights(self, mocker):
+        class FakeImporter(InsightImporter):
+            @staticmethod
+            def is_prediction_valid(
+                product: Product,
+                emb_code: str,
+            ):
+                return True
+
+            @classmethod
+            def generate_insights(cls, product, predictions):
+                yield [
+                    ProductInsight(
+                        barcode="4316268664431",
+                        type=InsightType.packager_code.name,
+                        value_tag="",
+                        value="ASC-C-00654",
+                        data={"raw": "asc-c-00654", "type": "fishing", "notify": False},
+                    )
+                ], [
+                    ProductInsight(
+                        barcode="0218978911697",
+                        type=InsightType.packager_code.name,
+                        value_tag="",
+                        value="ASC-C-00518",
+                        data={"raw": "asc-c-00518", "type": "fishing", "notify": False},
+                    )
+                ]
+
+        imported1 = FakeImporter.import_insights(
+            [Prediction(type="packager_code", value="ASC-C-00654")],
+            DEFAULT_SERVER_DOMAIN,
+            automatic=True,
+            product_store=FakeProductStore(),
+        )
+
+        assert imported1 == 1
+
+        imported2 = FakeImporter.import_insights(
+            [Prediction(type="packager_code", value="ASC-C-00518")],
+            DEFAULT_SERVER_DOMAIN,
+            automatic=True,
+            product_store=FakeProductStore(),
+        )
+
+        assert imported2 == 2
 
 
 class TestPackagerCodeInsightImporter:
