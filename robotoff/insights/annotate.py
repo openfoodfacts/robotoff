@@ -41,7 +41,6 @@ class AnnotationStatus(Enum):
     error_already_annotated = 5
     error_unknown_insight = 6
     error_missing_data = 7
-    error_image_unknown = 8
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -109,12 +108,11 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             insight.automatic_processing = True
 
         insight.save()
+
         if annotation == 1 and update:
             annotation_result = self.process_annotation(insight, data=data, auth=auth)
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
-        insight.annotated_result = annontation_result
-        insight.save()  # second call to save annotated_result
         return annotation_result
 
     @abc.abstractmethod
