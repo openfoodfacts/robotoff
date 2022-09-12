@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, NamedTuple, Optional, Union
 
 import peewee
-from peewee import JOIN
+from peewee import JOIN, fn
 
 from robotoff import settings
 from robotoff.app import events
@@ -78,6 +78,7 @@ def get_insights(
     offset: Optional[int] = None,
     count: bool = False,
     avoid_voted_on: Optional[SkipVotedOn] = None,
+    group_by_value_tag: Optional[bool] = False,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -121,6 +122,14 @@ def get_insights(
 
     if offset is not None and order_by != "random":
         query = query.offset(offset)
+
+    if group_by_value_tag:
+        query = query.group_by(ProductInsight.value_tag).order_by(
+            fn.COUNT(ProductInsight.id).desc()
+        )
+        query = query.select(
+            ProductInsight.value_tag, fn.Count(ProductInsight.id)
+        ).tuples()
 
     if order_by is not None:
         if order_by == "random":
