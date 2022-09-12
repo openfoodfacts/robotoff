@@ -4,6 +4,7 @@ from robotoff.app.core import (
     get_image_predictions,
     get_images,
     get_insights,
+    get_logo_annotation,
     get_predictions,
 )
 
@@ -194,3 +195,72 @@ def test_get_unanswered_questions_list():
     insight_data5 = get_insights(keep_types=["category"])
     insight_data_items5 = [item.to_dict() for item in insight_data5]
     assert len(insight_data_items5) == 2
+
+
+def test_get_logo_annotation():
+    annotation_123 = LogoAnnotationFactory(
+        image_prediction__image__barcode="123",
+        annotation_value_tag="etorki",
+        annotation_type="brand",
+    )
+
+    annotation_789 = LogoAnnotationFactory(
+        image_prediction__image__barcode="789",
+        annotation_value_tag="creme",
+        annotation_type="dairies",
+    )
+
+    annotation_295 = LogoAnnotationFactory(
+        image_prediction__image__barcode="295",
+        annotation_value_tag="cheese",
+        annotation_type="dairies",
+    )
+
+    annotation_396 = LogoAnnotationFactory(
+        image_prediction__image__barcode="396",
+        annotation_type="label",
+    )
+
+    LogoAnnotationFactory(
+        image_prediction__image__barcode="306",
+        annotation_value_tag="yoghurt",
+        annotation_type="dairies",
+    )
+
+    # tests for "barcode"
+
+    annotation_data = get_logo_annotation(barcode="123")
+    annotation_data_items = [item.to_dict() for item in annotation_data]
+    assert annotation_data_items[0]["id"] == annotation_123.id
+    assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "123"
+    assert annotation_data_items[0]["annotation_type"] == "brand"
+
+    annotation_data = get_logo_annotation(barcode="789")
+    annotation_data_items = [item.to_dict() for item in annotation_data]
+    assert annotation_data_items[0]["id"] == annotation_789.id
+    assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "789"
+    assert annotation_data_items[0]["annotation_type"] == "dairies"
+
+    annotation_data = get_logo_annotation(barcode="396")
+    annotation_data_items = [item.to_dict() for item in annotation_data]
+    assert annotation_data_items[0]["id"] == annotation_396.id
+    assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "396"
+    assert annotation_data_items[0]["annotation_type"] == "label"
+
+    # test for "keep_types"
+
+    annotation_data = get_logo_annotation(keep_types=["dairies"])
+    annotation_data_items = [item.to_dict() for item in annotation_data]
+    annotation_data_items.sort(key=lambda d: d["id"])
+    assert annotation_data_items[0]["annotation_type"] == "dairies"
+    assert annotation_data_items[1]["annotation_type"] == "dairies"
+    assert annotation_data_items[2]["annotation_type"] == "dairies"
+
+    # tests for "value_tag"
+
+    annotation_data = get_logo_annotation(value_tag="cheese")
+    annotation_data_items = [item.to_dict() for item in annotation_data]
+    assert annotation_data_items[0]["id"] == annotation_295.id
+    assert annotation_data_items[0]["annotation_value_tag"] == "cheese"
+    assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "295"
+    assert annotation_data_items[0]["annotation_type"] == "dairies"

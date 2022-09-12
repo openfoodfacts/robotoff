@@ -25,6 +25,7 @@ from robotoff.app.core import (
     get_image_predictions,
     get_images,
     get_insights,
+    get_logo_annotation,
     get_predictions,
     save_annotation,
 )
@@ -1182,11 +1183,13 @@ class ImagePredictionCollection:
         with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
         barcode: Optional[str] = req.get_param("barcode")
         type: Optional[str] = req.get_param("type")
+        server_domain: Optional[str] = req.get_param("server_domain")
 
         query_parameters = {
             "with_logo": with_logo,
             "barcode": barcode,
             "type": type,
+            "server_domain": server_domain,
         }
 
         get_image_predictions_ = functools.partial(
@@ -1204,6 +1207,43 @@ class ImagePredictionCollection:
             response["status"] = "no_image_predictions"
         else:
             response["images"] = images
+            response["status"] = "found"
+
+        resp.media = response
+
+
+class LogoAnnotationCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        barcode: Optional[str] = req.get_param("barcode")
+        keep_types: Optional[List[str]] = req.get_param_as_list("types", required=False)
+        value_tag: str = req.get_param("value_tag")
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        query_parameters = {
+            "server_domain": server_domain,
+            "barcode": barcode,
+            "keep_types": keep_types,
+            "value_tag": value_tag,
+        }
+
+        get_annotation_ = functools.partial(get_logo_annotation, **query_parameters)
+
+        offset: int = (page - 1) * count
+        annotation = [i.to_dict() for i in get_annotation_(limit=count, offset=offset)]
+        response["count"] = get_annotation_(count=True)
+
+        if not annotation:
+            response["annotation"] = []
+            response["status"] = "no_annotation"
+        else:
+            response["annotation"] = annotation
             response["status"] = "found"
 
         resp.media = response
@@ -1256,6 +1296,7 @@ api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
+api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
@@ -1263,4 +1304,4 @@ api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions/", PredictionCollection())
 api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
 api.add_route("/api/v1/images", ImageCollection())
-api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())
+api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
