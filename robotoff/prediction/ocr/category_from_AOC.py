@@ -30,7 +30,7 @@ def category_taxonomisation(lang, match) -> Optional[str]:
 Many names of AOC products are written this way :
 "AMARONE della VALPONE"
 "Denominazione di Origine Controllata"
-"""
+'''
 AOC_REGEX = {
     "fr:": [
         OCRRegex(
@@ -79,9 +79,6 @@ AOC_REGEX = {
 
 
 def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
-    '''This function returns a prediction of the category of the product
-    by detecting an AOC syntax which allows an easy category
-    prediction with REGEX'''
 
     predictions = []
 
@@ -107,3 +104,8 @@ def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
                         )
                     )
     return predictions
+
+
+'''This function returns a prediction of the category of the product
+by detecting an AOC syntax which allows an easy category
+prediction with REGEX'''
