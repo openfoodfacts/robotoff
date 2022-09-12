@@ -1,9 +1,6 @@
-from locale import normalize
 import re
-from tabnanny import check
 from typing import List, Optional, Union
 
-import pytest
 
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger
