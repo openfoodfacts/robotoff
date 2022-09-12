@@ -1,11 +1,10 @@
 import re
 from typing import List, Optional, Union
 
-
-from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.utils import get_logger
-from robotoff.taxonomy import get_taxonomy
 from robotoff.off import normalizing
+from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.taxonomy import get_taxonomy
+from robotoff.utils import get_logger
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
@@ -13,8 +12,8 @@ logger = get_logger(__name__)
 
 
 def category_taxonomisation(lang, match) -> Optional[str]:
-    '''Function to match categories detected via AOP REGEX with categories
-    taxonomy database. If no match is possible, we return None.'''
+    """Function to match categories detected via AOP REGEX with categories
+    taxonomy database. If no match is possible, we return None."""
 
     unchecked_category = lang + normalizing(match.group("category"))
 
@@ -26,22 +25,26 @@ def category_taxonomisation(lang, match) -> Optional[str]:
     return None
 
 
-'''We must increase the scale of prediction of our REGEX
+"""We must increase the scale of prediction of our REGEX
 Many names of AOC products are written this way :
 "AMARONE della VALPONE"
 "Denominazione di Origine Controllata"
-'''
+"""
 AOC_REGEX = {
     "fr:": [
         OCRRegex(
             # re.compile(r"(?<=appellation\s).*(?=(\scontr[ôo]l[ée]e)|(\sprot[ée]g[ée]e))"),
-            re.compile(r"(appellation)\s*(?P<category>.+)\s*(contr[ôo]l[ée]e|prot[ée]g[ée]e)"),
+            re.compile(
+                r"(appellation)\s*(?P<category>.+)\s*(contr[ôo]l[ée]e|prot[ée]g[ée]e)"
+            ),
             field=OCRField.full_text_contiguous,
             lowercase=True,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
-            re.compile(r"(?P<category>.+)\s*(appellation d'origine contr[ôo]l[ée]e|appellation d'origine prot[ée]g[ée]e)"),
+            re.compile(
+                r"(?P<category>.+)\s*(appellation d'origine contr[ôo]l[ée]e|appellation d'origine prot[ée]g[ée]e)"
+            ),
             field=OCRField.full_text_contiguous,
             lowercase=True,
             processing_func=category_taxonomisation,
@@ -106,6 +109,6 @@ def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
     return predictions
 
 
-'''This function returns a prediction of the category of the product
+"""This function returns a prediction of the category of the product
 by detecting an AOC syntax which allows an easy category
-prediction with REGEX'''
+prediction with REGEX"""
