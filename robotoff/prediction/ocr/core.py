@@ -11,8 +11,8 @@ from robotoff.settings import BaseURLProvider
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
-from .category_from_AOC import find_category_from_AOC
 from .brand import find_brands
+from .category_from_AOC import find_category_from_AOC
 from .dataclass import OCRParsingException, OCRResult, OCRResultGenerationException
 from .expiration_date import find_expiration_date
 from .image_flag import flag_image
@@ -26,7 +26,6 @@ from .packaging import find_packaging
 from .product_weight import find_product_weight
 from .store import find_stores
 from .trace import find_traces
-
 
 logger = get_logger(__name__)
 

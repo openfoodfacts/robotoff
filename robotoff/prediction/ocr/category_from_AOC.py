@@ -9,7 +9,6 @@ from robotoff.off import normalizing
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
-
 logger = get_logger(__name__)
 
 
@@ -31,7 +30,7 @@ def category_taxonomisation(lang, match) -> Optional[str]:
 Many names of AOC products are written this way :
 "AMARONE della VALPONE"
 "Denominazione di Origine Controllata"
-'''
+"""
 AOC_REGEX = {
     "fr:": [
         OCRRegex(
@@ -97,7 +96,7 @@ def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
 
                 category_value = ocr_regex.processing_func(lang, match)
 
-                if category_value is not None :
+                if category_value is not None:
 
                     predictions.append(
                         Prediction(
