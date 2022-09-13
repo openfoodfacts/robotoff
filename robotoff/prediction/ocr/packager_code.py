@@ -53,10 +53,13 @@ def generate_USDA_code_keyword_processor() -> KeywordProcessor:
 
 
 def extract_USDA_code(processor: KeywordProcessor, text: str) -> List[Prediction]:
+    USDA_code = None
+
     for (USDA_code_keyword, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
-        return USDA_code_keyword
+        USDA_code = USDA_code_keyword
+    return USDA_code
 
 
 USDA_CODE_KEYWORD_PROCESSOR_STORE = CachedStore(
@@ -150,18 +153,19 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[Predict
                 else:
                     value = ocr_regex.processing_func(match)
 
-                results.append(
-                    Prediction(
-                        value=value,
-                        data={
-                            "raw": match.group(0),
-                            "type": regex_code,
-                            "notify": ocr_regex.notify,
-                        },
-                        type=PredictionType.packager_code,
-                        automatic_processing=True,
+                if value is not None :
+                    results.append(
+                        Prediction(
+                            value=value,
+                            data={
+                                "raw": match.group(0),
+                                "type": regex_code,
+                                "notify": ocr_regex.notify,
+                            },
+                            type=PredictionType.packager_code,
+                            automatic_processing=True,
+                        )
                     )
-                )
 
     return results
 
