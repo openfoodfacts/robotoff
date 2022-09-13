@@ -35,8 +35,8 @@ def process_fsc_match(match) -> str:
 
 
 def process_USDA_match_to_flashtext(match) -> str:
-    '''this functions returns the USDA code matched by REGEX the same way it exists 
-    in the USDA database (1st column of USDA_code_flashtext.txt)'''
+    """this functions returns the USDA code matched by REGEX the same way it exists
+    in the USDA database (1st column of USDA_code_flashtext.txt)"""
 
     unchecked_code = match.group().upper()
     unchecked_code = re.sub(r"\s*\.*", "", unchecked_code)
@@ -153,7 +153,7 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[Predict
                 else:
                     value = ocr_regex.processing_func(match)
 
-                if value is not None :
+                if value is not None:
                     results.append(
                         Prediction(
                             value=value,
