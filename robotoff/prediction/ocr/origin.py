@@ -205,10 +205,7 @@ def check_if_general_word_in_ingredients(general_words_regex: List[str], ingredi
     Utility function for checking if one of the general words like 'elements' or 'ingredients' is 
     present in the list of ingredients returned by extract_ingredients_from_match_string
     """
-    for reg in general_words_regex:
-        if re.search(reg, ingredients) is not None:
-            return True
-    return False
+    return any(re.search(reg, ingredients) is not None for reg in general_words_regex)
 
 def extract_origin_from_match (origin_match, lang: str) -> str:
     if origin_match.group("in_or_outside") is not None and origin_match.group("in_or_outside") in OUTSIDE_WORDS_BY_LANG[lang]:
