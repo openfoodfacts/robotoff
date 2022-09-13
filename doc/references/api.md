@@ -163,3 +163,234 @@ Generate spellcheck corrections. Either the barcode or the text to correct must 
   }
 }
 ```
+
+## Collection
+
+### Prediction Collection [/predictions/]
+Get all the predictions [GET]
+
+The page, count, value_tag to the predictions must be supplied.
+
+- Parameters:
+  - page (int) - the page number to return (default: 1)
+  - count (int) - number of results to return (default: 25)
+  
+  - barcode (str, optional) - the barcode of the product.
+  - value_tag (str) - the value_tag of the product.
+  - keep_types (List[str], optional) -  a list of insight types
+
+- Response 200 (application/json)
+
+```
+{
+	'count': 2,
+	'predictions': [{
+		'id': 33,
+		'barcode': '0000000000002',
+		'type': 'brand',
+		'data': {
+			'sample': 1
+		},
+		'timestamp': '2022-09-13T15:24:11.764995',
+		'value_tag': 'en:beers',
+		'value': None,
+		'source_image': None,
+		'automatic_processing': None,
+		'server_domain': 'api.openfoodfacts.localhost',
+		'predictor': None
+	}, {
+		'id': 32,
+		'barcode': '0000000000001',
+		'type': 'category',
+		'data': {},
+		'timestamp': '2022-09-13T15:24:11.758110',
+		'value_tag': 'en:seeds',
+		'value': None,
+		'source_image': None,
+		'automatic_processing': None,
+		'server_domain': 'api.openfoodfacts.localhost',
+		'predictor': None
+	}],
+	'status': 'found'
+}
+```
+
+### Image Prediction Collection [/images/prediction/collection/]
+
+Get all image predictions [GET]
+
+The page, count must be supplied
+
+- Parameters:
+  - page (int) - the page number to return (default: 1)
+  
+  - count (int) - number of results to return (default: 25)
+  - barcode (str, optional) - the barcode of the product.
+  - with_logo (bool, optional) - whether to return with or without logos (default=False)
+  - type (str, optional) -  an insight types
+  - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
+
+- Response 200 (application/json)
+
+```
+{
+	'count': 1,
+	'images': [{
+		'id': 10,
+		'type': 'category',
+		'model_name': 'universal-logo-detector',
+		'model_version': 'tf-universal-logo-detector-1.0',
+		'data': {
+			'objects': [{
+				'label': 'brand',
+				'score': 0.2,
+				'bounding_box': [0.4, 0.4, 0.6, 0.6]
+			}]
+		},
+		'timestamp': '2022-09-13T15:40:46.071377',
+		'image': {
+			'id': 11,
+			'barcode': '123',
+			'uploaded_at': '2022-09-13T15:40:46.072360',
+			'image_id': 'image-01',
+			'source_image': '/images/01.jpg',
+			'width': 400,
+			'height': 400,
+			'deleted': False,
+			'server_domain': 'api.openfoodfacts.localhost',
+			'server_type': 'off'
+		},
+		'max_confidence': None
+	}],
+	'status': 'found'
+}
+```
+
+### Image Collection[/images/]
+
+Get all images [GET]
+
+The count, page must be supplied
+
+- Parameters
+  - page (int) - the page number to return (default: 1)
+  - count (int) - number of results to return (default: 25)
+  - barcode (str, optional) - the barcode of the product.
+  - with_predictions (bool, optional) - whether to return images with or without predictions (default=False)
+
+  - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
+
+- Response 200 (application/json)
+
+  ```
+  {
+	'count': 1,
+	'images': [{
+		'id': 14,
+		'barcode': '123',
+		'uploaded_at': '2022-09-13T16:11:39.272087',
+		'image_id': 'image-01',
+		'source_image': '/images/01.jpg',
+		'width': 400,
+		'height': 400,
+		'deleted': False,
+		'server_domain': 'api.openfoodfacts.localhost',
+		'server_type': 'off'
+	}],
+	'status': 'found'
+  }
+  ```
+
+### Logo Annotation Collection[/annotation/collection/]
+
+Get all images [GET]
+
+The count, page, value tag must be supplied
+
+- Parameters
+  - page (int) - the page number to return (default: 1)
+
+  - count (int) - number of results to return (default: 25)
+  - barcode (str, optional) - the barcode of the product.
+  - value_tag (str) - the value_tag of the product.
+  - keep_types (List[str], optional) -  a list of insight types
+  - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
+
+
+- Response 200 (application/json)
+
+  ```
+  {
+	'count': 1,
+	'annotation': [{
+		'id': 9,
+		'image_prediction': {
+			'id': 16,
+			'type': 'object_detection',
+			'model_name': 'universal-logo-detector',
+			'model_version': 'tf-universal-logo-detector-1.0',
+			'data': {
+				'objects': [{
+					'label': 'brand',
+					'score': 0.2,
+					'bounding_box': [0.4, 0.4, 0.6, 0.6]
+				}]
+			},
+			'timestamp': '2022-09-13T16:17:04.447213',
+			'image': {
+				'id': 18,
+				'barcode': '295',
+				'uploaded_at': '2022-09-13T16:17:04.447316',
+				'image_id': 'image-03',
+				'source_image': '/images/03.jpg',
+				'width': 400,
+				'height': 400,
+				'deleted': False,
+				'server_domain': 'api.openfoodfacts.localhost',
+				'server_type': 'off'
+			},
+			'max_confidence': None
+		},
+		'index': 0,
+		'bounding_box': [0.4, 0.4, 0.6, 0.6],
+		'score': 0.7,
+		'annotation_value': 'ab agriculture biologique',
+		'annotation_value_tag': 'cheese',
+		'taxonomy_value': 'en:ab-agriculture-biologique',
+		'annotation_type': 'dairies',
+		'username': None,
+		'completed_at': None,
+		'nearest_neighbors': {
+			'logo_ids': [111111, 222222],
+			'distances': [11.1, 12.4]
+		}
+	}],
+	'status': 'found'
+  }
+  ```
+### Unanswered question Collection[/questions/unanswered/]
+
+Get all images [GET]
+
+The count, page must be supplied
+
+- Parameters
+  - page (int) - the page number to return (default: 1)
+  - count (int) - number of results to return (default: 25)
+ 
+  - type (str, optional) -  an insight type
+  - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
+
+- Response 200 (application/json)
+
+```
+ {
+	'count': 5,
+	'questions': [
+		['en:soups', 3],
+		['en:apricot', 2]
+	],
+	'status': 'found'
+}
+```
+
