@@ -239,10 +239,7 @@ def extract_ingredients_from_match_string (ingredients_text: str, lang) -> List[
     the regex matches with sentence with several ingredients, like 'quinoa and rice are made in France'
     It match the whole "quinoa and rice " string, and this function splits each ingredients.
     """
-    splitted = ingredients_text.split(" ")
-    def is_not_empty (s):
-        return s != ""
-    splitted = filter(is_not_empty, splitted)
+    splitted = ingredients_text.split()
     def standardize_ingredient (s):
         return s[0].upper() + s[1:].lower()
     standardized = map(standardize_ingredient, splitted) 
