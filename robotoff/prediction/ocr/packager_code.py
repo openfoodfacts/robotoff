@@ -34,75 +34,134 @@ def process_fsc_match(match) -> str:
     return "FSC-{}".format(fsc_code).upper()
 
 
-PACKAGER_CODE: Dict[str, OCRRegex] = {
-    "fr_emb": OCRRegex(
-        re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
-        field=OCRField.text_annotations,
-        lowercase=True,
-        processing_func=process_fr_emb_match,
-    ),
-    "fsc": OCRRegex(
-        re.compile(r"fsc.? ?(c\d{6})"),
-        field=OCRField.text_annotations,
-        lowercase=True,
-        processing_func=process_fsc_match,
-    ),
-    "eu_fr": OCRRegex(
-        re.compile(
-            r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"
+def process_USDA_match_to_flashtext(match) -> str:
+    '''this functions returns the USDA code matched by REGEX the same way it exists 
+    in the USDA database (1st column of USDA_code_flashtext.txt)'''
+
+    unchecked_code = match.group().upper()
+    unchecked_code = re.sub(r"\s*\.*", "", unchecked_code)
+
+    processor = USDA_CODE_KEYWORD_PROCESSOR_STORE.get()
+    USDA_code = extract_USDA_code(processor, unchecked_code)
+    return USDA_code
+
+
+def generate_USDA_code_keyword_processor() -> KeywordProcessor:
+
+    codes = text_file_iter(settings.OCR_USDA_CODE_FLASHTEXT_DATA_PATH)
+    return generate_keyword_processor(codes)
+
+
+def extract_USDA_code(processor: KeywordProcessor, text: str) -> List[Prediction]:
+    for (USDA_code_keyword, _), span_start, span_end in processor.extract_keywords(
+        text, span_info=True
+    ):
+        return USDA_code_keyword
+
+
+USDA_CODE_KEYWORD_PROCESSOR_STORE = CachedStore(
+    fetch_func=generate_USDA_code_keyword_processor, expiration_interval=None
+)
+
+
+PACKAGER_CODE = {
+    "fr_emb": [
+        OCRRegex(
+            re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
+            field=OCRField.text_annotations,
+            lowercase=True,
+            processing_func=process_fr_emb_match,
         ),
-        field=OCRField.full_text_contiguous,
-        lowercase=True,
-        processing_func=process_fr_packaging_match,
-    ),
-    "eu_de": OCRRegex(
-        re.compile(
-            r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"
+    ],
+    "fsc": [
+        OCRRegex(
+            re.compile(r"fsc.? ?(c\d{6})"),
+            field=OCRField.text_annotations,
+            lowercase=True,
+            processing_func=process_fsc_match,
         ),
-        field=OCRField.full_text_contiguous,
-        lowercase=True,
-        processing_func=process_de_packaging_match,
-    ),
-    "rspo": OCRRegex(
-        re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)"),
-        field=OCRField.full_text_contiguous,
-        lowercase=False,
-    ),
-    "fr_gluten": OCRRegex(
-        re.compile(r"FR-\d{3}-\d{3}"),
-        field=OCRField.full_text_contiguous,
-        lowercase=False,
-    ),
+    ],
+    "eu_fr": [
+        OCRRegex(
+            re.compile(
+                r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"
+            ),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+            processing_func=process_fr_packaging_match,
+        ),
+    ],
+    "eu_de": [
+        OCRRegex(
+            re.compile(
+                r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"
+            ),
+            field=OCRField.full_text_contiguous,
+            lowercase=True,
+            processing_func=process_de_packaging_match,
+        ),
+    ],
+    "rspo": [
+        OCRRegex(
+            re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False,
+        ),
+    ],
+    "fr_gluten": [
+        OCRRegex(
+            re.compile(r"FR-\d{3}-\d{3}"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False,
+        ),
+    ],
+    "USDA": [
+        # To match the USDA like "EST. 522"
+        OCRRegex(
+            re.compile(r"EST\.*\s*\d{1,5}[A-Z]{0,3}\.*"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False,
+            processing_func=process_USDA_match_to_flashtext,
+        ),
+        # To match the USDA like "V34626" or "M34614 + P34614 + V34614"
+        OCRRegex(
+            re.compile(r"[A-Z]\d{1,5}[A-Z]?(\s*\+\s*[A-Z]\d{1,5}[A-Z]?){0,3}"),
+            field=OCRField.full_text_contiguous,
+            lowercase=False,
+            processing_func=process_USDA_match_to_flashtext,
+        ),
+    ],
 }
 
 
 def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
     results: List[Prediction] = []
 
-    for regex_code, ocr_regex in PACKAGER_CODE.items():
-        text = get_text(ocr_result, ocr_regex, ocr_regex.lowercase)
+    for regex_code, regex_list in PACKAGER_CODE.items():
+        for ocr_regex in regex_list:
+            text = get_text(ocr_result, ocr_regex, ocr_regex.lowercase)
 
-        if not text:
-            continue
+            if not text:
+                continue
 
-        for match in ocr_regex.regex.finditer(text):
-            if ocr_regex.processing_func is None:
-                value = match.group(0)
-            else:
-                value = ocr_regex.processing_func(match)
+            for match in ocr_regex.regex.finditer(text):
+                if ocr_regex.processing_func is None:
+                    value = match.group(0)
+                else:
+                    value = ocr_regex.processing_func(match)
 
-            results.append(
-                Prediction(
-                    value=value,
-                    data={
-                        "raw": match.group(0),
-                        "type": regex_code,
-                        "notify": ocr_regex.notify,
-                    },
-                    type=PredictionType.packager_code,
-                    automatic_processing=True,
+                results.append(
+                    Prediction(
+                        value=value,
+                        data={
+                            "raw": match.group(0),
+                            "type": regex_code,
+                            "notify": ocr_regex.notify,
+                        },
+                        type=PredictionType.packager_code,
+                        automatic_processing=True,
+                    )
                 )
-            )
 
     return results
 

@@ -15,6 +15,8 @@ from robotoff.prediction.ocr.packager_code import find_packager_codes
         ("FR-AB0-123", []),
         ("fr-098-123", []),
         ("Gluten code is FR-234-234 ", ["FR-234-234"]),
+        ("EST  \n 31778", ["EST. 31778"]),
+        ("M31779+  P31779+  \tV31779", ["M31779 + P31779 + V31779"]),
     ],
 )
 def test_find_packager_codes(text: str, values: List[str]):
