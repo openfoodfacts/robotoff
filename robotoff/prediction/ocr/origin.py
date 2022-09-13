@@ -14,8 +14,7 @@ EXTRACTOR_VERSION = "1"
 
 # French ----------------
 INGREDIENTS = {}
-with open(settings.TAXONOMY_CATEGORY_PATH, "r") as file:
-   INGREDIENTS = json.loads(file.read())
+INGREDIENTS = json.load(open(settings.TAXONOMY_CATEGORY_PATH))
 
 INGREDIENTS_SYNONIMS_FR = [ingredient["synonyms"]["fr"] 
 for ingredient in INGREDIENTS.values() 
