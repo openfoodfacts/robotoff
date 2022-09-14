@@ -25,11 +25,6 @@ def category_taxonomisation(lang, match) -> Optional[str]:
     return None
 
 
-"""We must increase the scale of prediction of our REGEX
-Many names of AOC products are written this way :
-"AMARONE della VALPONE"
-"Denominazione di Origine Controllata"
-"""
 AOC_REGEX = {
     "fr:": [
         OCRRegex(
