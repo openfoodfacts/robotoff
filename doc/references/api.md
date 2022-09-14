@@ -311,7 +311,11 @@ The count, page must be supplied
 
 ### Logo Annotation Collection[/annotation/collection/]
 
-Get all images [GET]
+Get all Logo annotations [GET]
+
+The list is ordered with the most recent first.
+
+Logo Annotations are annotations on image predictions to associate part of an image, which is a logo, to a characteristic of the product (eg: logo for eu organic, or QR-code, or logo for Lidl, etc.).
 
 The count, page, value tag must be supplied
 
