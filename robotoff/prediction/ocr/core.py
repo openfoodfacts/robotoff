@@ -20,12 +20,12 @@ from .image_orientation import find_image_orientation
 from .label import find_labels
 from .location import find_locations
 from .nutrient import find_nutrient_mentions, find_nutrient_values
+from .origin import origin_parser
 from .packager_code import find_packager_codes
 from .packaging import find_packaging
 from .product_weight import find_product_weight
 from .store import find_stores
 from .trace import find_traces
-from .origin import find_origin
 
 logger = get_logger(__name__)
 
@@ -42,7 +42,7 @@ PREDICTION_TYPE_TO_FUNC: Dict[
     PredictionType.trace: find_traces,
     PredictionType.nutrient: find_nutrient_values,
     PredictionType.nutrient_mention: find_nutrient_mentions,
-    PredictionType.origin: find_origin,
+    PredictionType.origin: origin_parser.find_origin,
     PredictionType.brand: find_brands,
     PredictionType.store: find_stores,
     PredictionType.packaging: find_packaging,

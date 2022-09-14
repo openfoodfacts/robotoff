@@ -399,6 +399,7 @@ class OriginPredictorResource:
 
         resp.media = {"origin": [p.to_dict() for p in predictions]}
 
+
 class OCRInsightsPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
