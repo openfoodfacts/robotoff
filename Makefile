@@ -2,7 +2,7 @@
 
 # nice way to have our .env in environment for use in makefile
 # see https://lithic.tech/blog/2020-05/makefile-dot-env
-# Note: this will mask environment variable as opposed to docker-compose priority
+# Note: this will mask environment variable as opposed to docker compose priority
 # yet most developper should'nt bump into this
 ifneq (,$(wildcard ./.env))
     -include .env
@@ -14,8 +14,8 @@ NAME = "robotoff"
 ENV_FILE ?= .env
 MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
-DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
-DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker-compose --env-file=${ENV_FILE}
+DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
+DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker compose --env-file=${ENV_FILE}
 
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
@@ -50,7 +50,7 @@ edit_etc_hosts:
 # Docker Compose #
 #----------------#
 up:
-# creates a docker network and runs docker-compose
+# creates a docker network and runs docker compose
 	@echo "🥫 Building and starting containers …"
 	docker network create po_default || true  
 	${DOCKER_COMPOSE} up -d --build 2>&1
@@ -76,7 +76,7 @@ livecheck:
 	docker/docker-livecheck.sh
 
 log:
-	@echo "🥫 Reading logs (docker-compose) …"
+	@echo "🥫 Reading logs (docker compose) …"
 	${DOCKER_COMPOSE} logs -f
 
 #------------#

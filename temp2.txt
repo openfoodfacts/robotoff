@@ -1,0 +1,113 @@
+England/britannique 
+Denmark/danois
+Scotland/britannique 
+Estonia/estonien
+Finland/finlandais
+Ireland/irlandais
+Northern Ireland/britannique
+Iceland/islandais
+Latvia/letton
+Lithuania/lituanien
+Norway/norvégien
+Wales/britannique 
+United Kingdom/britannique
+Sweden/suédois
+Germany/allemand
+Austria/autrichien
+Belgium/belge
+France/français
+Netherlands/hollandais
+Switzerland/suisse
+Albania/albanais
+Cyprus/chypriote
+Croatia/croate
+Spain/espagnol
+Greece/grec
+Italy/italien
+Portugal/portugais
+Serbia/serbe
+Slovenia/slovène
+Belarus/biélorusse
+Bulgaria/bulgare
+Hungary/hongrois
+Poland/polonais
+Czech Republic/tchèque
+Romania/roumain
+Russia/russe
+Slovakia/slovaque
+Ukraine/ukrainien
+Canada/canadien
+United States/américain
+Mexico/mexicain
+Cuba/cubain
+Guatemala/guatémaltèque
+Jamaica/jamaïquain
+Argentina/argentin
+Bolivia/bolivien
+Brazil/brésilien
+Chile/chilien
+Colombia/colombien
+Ecuador/équatorien
+Paraguay/paraguayen
+Peru/péruvien
+Uruguay/uruguayen
+Venezuela/vénézuélien
+Saudi Arabia/saoudien
+Georgia/géorgien
+Iraq /irakien
+Iran/iranien
+Israel/israélien
+Jordan/jordanien
+Kuwait/koweitien
+Lebanon/libanais
+Syria/syrien
+Turkey/turc
+Yemen/yéménite
+Afghanistan/afghan
+Bangladesh/bangladais
+India/indien
+Kazakhstan/kazakh
+Nepal/népalais
+Pakistan/pakistanais
+Sri Lanka/sri-lankais
+China/chinois
+North Korea/nord-coréen
+South Korea/sud-coréen
+Japan/japonais
+Mongolia/mongol
+Taiwan/taïwanais
+Cambodia/cambodgien
+Indonesia/indonésien
+Laos/laotien
+Malaysia/malais
+Myanmar/birman
+Philippines/philippin
+Singapore/singapourien
+Thailand/thaïlandais
+Vietnam/vietnamien
+Australia/australien
+Fiji/fidjien
+New Zealand/néo-zélandais
+Algeria/algérien
+Ivory Coast/ivoirien
+Egypt/égyptien
+Ghana/ghanéen
+Libya/libyen
+Morocco/marocain
+Nigeria/nigérian
+Tunisia/tunisien
+Ethiopia/éthiopien
+Kenya/kényan
+Uganda/ougandais
+Somalia/somalien
+Sudan/soudanais
+Tanzania/tanzanien
+South Africa/sud-africain
+Angola/angolais
+Botswana/botswanais
+Madagascar/malgache
+Mozambique/mozambicain
+Namibia/namibien
+Democratic Republic of the Congo/congolais
+Zambia/zambien
+Zimbabwe/zimbabwéen

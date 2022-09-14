@@ -329,10 +329,6 @@ class OriginParser:
 
             standardized_name = standardize(origin_match.group("country"))
             try:
-                print(len(self.COUNTRIES_IN_ALL_LANGS))
-                print(self.COUNTRIES_IN_ALL_LANGS["en:france"])
-                print(self.COUNTRIES_IN_ALL_LANGS["en:france"]["name"])
-                print(self.COUNTRIES_IN_ALL_LANGS["en:france"]["name"][])
                 return next(  # find the translation in english of the specified country name
                     country_id
                     for country_id, country_content in self.COUNTRIES_IN_ALL_LANGS.items()
