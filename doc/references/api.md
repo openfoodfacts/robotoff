@@ -176,7 +176,7 @@ The page, count, value_tag to the predictions must be supplied.
   - count (int) - number of results to return (default: 25)
   
   - barcode (str, optional) - the barcode of the product.
-  - value_tag (str) - the value_tag of the product.
+  - value_tag (str) - the value_tag of the insight
   - keep_types (List[str], optional) -  a list of insight types
 
 - Response 200 (application/json)
