@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Union
+from typing import List, Union
 
 from flashtext import KeywordProcessor
 
