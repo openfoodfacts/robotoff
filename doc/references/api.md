@@ -233,7 +233,7 @@ The page, count must be supplied
   - with_logo (bool, optional) - 
     if false (the default) returns only images predictions that have no logo annotation,
     if true, returns all images predictions corresponding to criterias
-  - type (str, optional) -  an insight types
+  - type (str, optional) -  an insight type to filter on
   - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
 
 - Response 200 (application/json)
