@@ -504,17 +504,17 @@ def select_rotate_image(
 
 def normalizing(line, lowercase=True):
     # removing accents
-    line = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", '-', line)
-    line = re.sub(r"[éè]", 'e', line)
-    line = re.sub(r"[à]", 'a', line)
-    line = re.sub(r"[ù]", 'u', line)
+    line = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", "-", line)
+    line = re.sub(r"[éè]", "e", line)
+    line = re.sub(r"[à]", "a", line)
+    line = re.sub(r"[ù]", "u", line)
     # changing unwanted character to "-"
     line = re.sub(r"&\w+;", "-", line)
     line = re.sub(
-                r"[\s!\"#\$%&'()*+,\/:;<=>?@\[\\\]^_`{\|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿×ˆ˜–—‘’‚“”„†‡•…‰‹›€™\t]",  # noqa: E501
-                "-",
-                line,
-            )
+        r"[\s!\"#\$%&'()*+,\/:;<=>?@\[\\\]^_`{\|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿×ˆ˜–—‘’‚“”„†‡•…‰‹›€™\t]",  # noqa: E501
+        "-",
+        line,
+    )
     # lowering the line if wanted
     if lowercase:
         line = line.lower()

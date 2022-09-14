@@ -12,7 +12,10 @@ from robotoff.prediction.ocr.category_from_AOC import find_category_from_AOC
         ("Appellation Clairette de Die Protégée", ["fr:clairette-de-die"]),
         ("Appellation    Clairette \tde Die\n Protégée", ["fr:clairette-de-die"]),
         ("Chinon appellation d'origine protégée", ["fr:chinon"]),
-        ("Denominacion de Origen ProtegidA PIMENTON de la VERA", ["es:pimenton-de-la-vera"]),
+        (
+            "Denominacion de Origen ProtegidA PIMENTON de la VERA",
+            ["es:pimenton-de-la-vera"],
+        ),
         ("DOP Mozzarella    di bufala campana", ["en:mozzarella-di-bufala-campana"]),
         ("Mixed puffed cereals    AOP", ["en:mixed-puffed-cereals"]),
     ],
