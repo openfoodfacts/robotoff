@@ -276,6 +276,8 @@ The page, count must be supplied
 
 Get all images [GET]
 
+The list is ordered with the most recent first.
+
 The count, page must be supplied
 
 - Parameters
