@@ -1,5 +1,5 @@
 import re
-from typing import List, Union
+from typing import Any, List, Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -34,7 +34,7 @@ def process_fsc_match(match) -> str:
     return "FSC-{}".format(fsc_code).upper()
 
 
-def process_USDA_match_to_flashtext(match) -> str:
+def process_USDA_match_to_flashtext(match) -> Optional[Any]:
     """this functions returns the USDA code matched by REGEX the same way it exists
     in the USDA database (1st column of USDA_code_flashtext.txt)"""
 
@@ -52,7 +52,7 @@ def generate_USDA_code_keyword_processor() -> KeywordProcessor:
     return generate_keyword_processor(codes)
 
 
-def extract_USDA_code(processor: KeywordProcessor, text: str) -> List[Prediction]:
+def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[Any]:
     USDA_code = None
 
     for (USDA_code_keyword, _) in processor.extract_keywords(
