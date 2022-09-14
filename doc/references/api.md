@@ -223,8 +223,8 @@ The page, count must be supplied
 
 - Parameters:
   - page (int) - the page number to return (default: 1)
-  
   - count (int) - number of results to return (default: 25)
+
   - barcode (str, optional) - the barcode of the product.
   - with_logo (bool, optional) - whether to return with or without logos (default=False)
   - type (str, optional) -  an insight types
