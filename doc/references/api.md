@@ -217,7 +217,11 @@ The page, count, value_tag to the predictions must be supplied.
 
 ### Image Prediction Collection [/images/prediction/collection/]
 
-Get all image predictions [GET]
+Get all image predictions [GET].
+
+The list is ordered with the most recent first.
+
+Images predictions are predictions found in images, generally corresponding to a crop (part of the image). Like a nutriscore, a logo, etc...
 
 The page, count must be supplied
 
