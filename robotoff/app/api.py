@@ -1150,12 +1150,14 @@ class UnansweredQuestionCollection:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         question_type: str = req.get_param("type")
         value_tag: str = req.get_param("value_tag")
+        server_domain: Optional[str] = req.get_param("server_domain")
 
         query_parameters = {
             "keep_types": [question_type],
             "group_by_value_tag": True,
             "value_tag": value_tag,
             "limit": count,
+            "server_domain": server_domain,
         }
 
         get_insights_ = functools.partial(get_insights, **query_parameters)
