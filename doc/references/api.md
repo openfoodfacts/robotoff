@@ -215,63 +215,6 @@ The page, count, value_tag to the predictions must be supplied.
 }
 ```
 
-### Image Prediction Collection [/images/prediction/collection/]
-
-Get all image predictions [GET].
-
-The list is ordered with the most recent first.
-
-Images predictions are predictions found in images, generally corresponding to a crop (part of the image). Like a nutriscore, a logo, etc...
-
-The page, count must be supplied
-
-- Parameters:
-  - page (int) - the page number to return (default: 1)
-  - count (int) - number of results to return (default: 25)
-
-  - barcode (str, optional) - the barcode of the product.
-  - with_logo (bool, optional) - 
-    if false (the default) returns only images predictions that have no logo annotation,
-    if true, returns all images predictions corresponding to criterias
-  - type (str, optional) -  an insight type to filter on
-  - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
-
-- Response 200 (application/json)
-
-```
-{
-	'count': 1,
-	'images': [{
-		'id': 10,
-		'type': 'category',
-		'model_name': 'universal-logo-detector',
-		'model_version': 'tf-universal-logo-detector-1.0',
-		'data': {
-			'objects': [{
-				'label': 'brand',
-				'score': 0.2,
-				'bounding_box': [0.4, 0.4, 0.6, 0.6]
-			}]
-		},
-		'timestamp': '2022-09-13T15:40:46.071377',
-		'image': {
-			'id': 11,
-			'barcode': '123',
-			'uploaded_at': '2022-09-13T15:40:46.072360',
-			'image_id': 'image-01',
-			'source_image': '/images/01.jpg',
-			'width': 400,
-			'height': 400,
-			'deleted': False,
-			'server_domain': 'api.openfoodfacts.localhost',
-			'server_type': 'off'
-		},
-		'max_confidence': None
-	}],
-	'status': 'found'
-}
-```
-
 ### Image Collection[/images/]
 
 Get all images [GET]
@@ -310,6 +253,63 @@ The count, page must be supplied
 	'status': 'found'
   }
   ```
+
+### Image Prediction Collection [/images/prediction/collection/]
+
+Get all image predictions [GET].
+
+The list is ordered with the most recent first.
+
+Images predictions are predictions found in images, generally corresponding to a crop (part of the image). Like a nutriscore, a logo, etc...
+
+The page, count must be supplied
+
+- Parameters:
+  - page (int) - the page number to return (default: 1)
+  - count (int) - number of results to return (default: 25)
+
+  - barcode (str, optional) - the barcode of the product.
+  - with_logo (bool, optional) - 
+    if false (the default) returns only images predictions that have no logo annotation,
+    if true, returns all images predictions corresponding to criterias
+  - type (str, optional) -  an insight type to filter on
+  - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
+
+- Response 200 (application/json)
+
+```
+{
+	'count': 1,
+	'image_predictions': [{
+		'id': 20,
+		'type': 'category',
+		'model_name': 'universal-logo-detector',
+		'model_version': 'tf-universal-logo-detector-1.0',
+		'data': {
+			'objects': [{
+				'label': 'brand',
+				'score': 0.2,
+				'bounding_box': [0.4, 0.4, 0.6, 0.6]
+			}]
+		},
+		'timestamp': '2022-09-14T14:57:33.952455',
+		'image': {
+			'id': 22,
+			'barcode': '123',
+			'uploaded_at': '2022-09-14T14:57:33.953365',
+			'image_id': 'image-01',
+			'source_image': '/images/01.jpg',
+			'width': 400,
+			'height': 400,
+			'deleted': False,
+			'server_domain': 'api.openfoodfacts.localhost',
+			'server_type': 'off'
+		},
+		'max_confidence': None
+	}],
+	'status': 'found'
+}
+```
 
 ### Logo Annotation Collection[/annotation/collection/]
 
