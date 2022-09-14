@@ -384,7 +384,9 @@ The count, page, value tag must be supplied
   ```
 ### Unanswered question Collection[/questions/unanswered/]
 
-Get all images [GET]
+Get the number unanswered questions for each tag_value for a given type of question [GET]
+
+The list is ordered from highest count to lowest.
 
 The count, page must be supplied
 
