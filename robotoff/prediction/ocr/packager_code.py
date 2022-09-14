@@ -55,7 +55,7 @@ def generate_USDA_code_keyword_processor() -> KeywordProcessor:
 def extract_USDA_code(processor: KeywordProcessor, text: str) -> List[Prediction]:
     USDA_code = None
 
-    for (USDA_code_keyword, _), span_start, span_end in processor.extract_keywords(
+    for (USDA_code_keyword, _), _span_start, _span_end in processor.extract_keywords(
         text, span_info=True
     ):
         USDA_code = USDA_code_keyword
