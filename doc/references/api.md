@@ -282,7 +282,9 @@ The count, page must be supplied
   - page (int) - the page number to return (default: 1)
   - count (int) - number of results to return (default: 25)
   - barcode (str, optional) - the barcode of the product.
-  - with_predictions (bool, optional) - whether to return images with or without predictions (default=False)
+  - with_predictions (bool, optional) - 
+    if false (the default) returns only images where no prediction was made
+    if true, returns all images corresponding to criterias
 
   - server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'
 
