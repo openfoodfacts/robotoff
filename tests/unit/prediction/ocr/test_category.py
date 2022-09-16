@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from robotoff.prediction.ocr.category_from_AOC import find_category_from_AOC
+from robotoff.prediction.ocr.category import find_category
 
 
 @pytest.mark.parametrize(
@@ -21,6 +21,6 @@ from robotoff.prediction.ocr.category_from_AOC import find_category_from_AOC
     ],
 )
 def test_find_category_from_AOC(text: str, value_tags: List[str]):
-    insights = find_category_from_AOC(text)
+    insights = find_category(text)
     detected_value_tags = set(i.value_tag for i in insights)
     assert detected_value_tags == set(value_tags)

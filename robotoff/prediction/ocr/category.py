@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional, Union
 
-from robotoff.off import normalizing
+from robotoff.off import normalize_tag
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.taxonomy import get_taxonomy
 from robotoff.utils import get_logger
@@ -16,7 +16,7 @@ def category_taxonomisation(lang, match) -> Optional[str]:
     taxonomy database. If no match is possible, we return None.
     """
 
-    unchecked_category = lang + normalizing(match.group("category"))
+    unchecked_category = lang + normalize_tag(match.group("category"))
 
     checked_category = get_taxonomy("category").nodes.get(unchecked_category)
 
