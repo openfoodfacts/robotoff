@@ -1,5 +1,5 @@
-from curses import echo
 import re
+from curses import echo
 from typing import List, Optional, Union
 
 from flashtext import KeywordProcessor
