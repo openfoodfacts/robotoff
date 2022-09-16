@@ -629,6 +629,54 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#collection" class="md-nav__link">
+    Collection
+  </a>
+  
+    <nav class="md-nav" aria-label="Collection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prediction-collection-predictions" class="md-nav__link">
+    Prediction Collection [/predictions/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#image-collectionimages" class="md-nav__link">
+    Image Collection[/images/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#image-prediction-collection-imagespredictioncollection" class="md-nav__link">
+    Image Prediction Collection [/images/prediction/collection/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logo-annotation-collectionannotationcollection" class="md-nav__link">
+    Logo Annotation Collection[/annotation/collection/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unanswered-question-collectionquestionsunanswered" class="md-nav__link">
+    Unanswered question Collection[/questions/unanswered/]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1065,6 +1113,54 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#collection" class="md-nav__link">
+    Collection
+  </a>
+  
+    <nav class="md-nav" aria-label="Collection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prediction-collection-predictions" class="md-nav__link">
+    Prediction Collection [/predictions/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#image-collectionimages" class="md-nav__link">
+    Image Collection[/images/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#image-prediction-collection-imagespredictioncollection" class="md-nav__link">
+    Image Prediction Collection [/images/prediction/collection/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#logo-annotation-collectionannotationcollection" class="md-nav__link">
+    Logo Annotation Collection[/annotation/collection/]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unanswered-question-collectionquestionsunanswered" class="md-nav__link">
+    Unanswered question Collection[/questions/unanswered/]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1249,6 +1345,260 @@ questions.</p>
 <span class="w">    </span><span class="p">]</span><span class="w"></span>
 <span class="w">  </span><span class="p">}</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<h2 id="collection">Collection</h2>
+<h3 id="prediction-collection-predictions">Prediction Collection [/predictions/]</h3>
+<p>Get all the predictions [GET]</p>
+<p>The page, count, value_tag to the predictions must be supplied.</p>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>page (int) - the page number to return (default: 1)</li>
+<li>count (int) - number of results to return (default: 25)</li>
+</ul>
+<ul>
+<li>barcode (str, optional) - the barcode of the product.</li>
+<li>value_tag (str) - the value_tag of the insight</li>
+<li>keep_types (List[str], optional) -  a list of insight types</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<div class="highlight"><pre><span></span><code>{
+    &#39;count&#39;: 2,
+    &#39;predictions&#39;: [{
+        &#39;id&#39;: 33,
+        &#39;barcode&#39;: &#39;0000000000002&#39;,
+        &#39;type&#39;: &#39;brand&#39;,
+        &#39;data&#39;: {
+            &#39;sample&#39;: 1
+        },
+        &#39;timestamp&#39;: &#39;2022-09-13T15:24:11.764995&#39;,
+        &#39;value_tag&#39;: &#39;en:beers&#39;,
+        &#39;value&#39;: None,
+        &#39;source_image&#39;: None,
+        &#39;automatic_processing&#39;: None,
+        &#39;server_domain&#39;: &#39;api.openfoodfacts.localhost&#39;,
+        &#39;predictor&#39;: None
+    }, {
+        &#39;id&#39;: 32,
+        &#39;barcode&#39;: &#39;0000000000001&#39;,
+        &#39;type&#39;: &#39;category&#39;,
+        &#39;data&#39;: {},
+        &#39;timestamp&#39;: &#39;2022-09-13T15:24:11.758110&#39;,
+        &#39;value_tag&#39;: &#39;en:seeds&#39;,
+        &#39;value&#39;: None,
+        &#39;source_image&#39;: None,
+        &#39;automatic_processing&#39;: None,
+        &#39;server_domain&#39;: &#39;api.openfoodfacts.localhost&#39;,
+        &#39;predictor&#39;: None
+    }],
+    &#39;status&#39;: &#39;found&#39;
+}
+</code></pre></div>
+<h3 id="image-collectionimages">Image Collection[/images/]</h3>
+<p>Get all images [GET]</p>
+<p>The list is ordered with the most recent first.</p>
+<p>The count, page must be supplied</p>
+<ul>
+<li>
+<p>Parameters</p>
+<ul>
+<li>page (int) - the page number to return (default: 1)</li>
+<li>count (int) - number of results to return (default: 25)</li>
+<li>barcode (str, optional) - the barcode of the product.</li>
+<li>with_predictions (bool, optional) - 
+  if false (the default) returns only images where no prediction was made
+  if true, returns all images corresponding to criterias</li>
+</ul>
+<ul>
+<li>server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p>Response 200 (application/json)</p>
+<div class="highlight"><pre><span></span><code>{
+  &#39;count&#39;: 1,
+  &#39;images&#39;: [{
+      &#39;id&#39;: 14,
+      &#39;barcode&#39;: &#39;123&#39;,
+      &#39;uploaded_at&#39;: &#39;2022-09-13T16:11:39.272087&#39;,
+      &#39;image_id&#39;: &#39;image-01&#39;,
+      &#39;source_image&#39;: &#39;/images/01.jpg&#39;,
+      &#39;width&#39;: 400,
+      &#39;height&#39;: 400,
+      &#39;deleted&#39;: False,
+      &#39;server_domain&#39;: &#39;api.openfoodfacts.localhost&#39;,
+      &#39;server_type&#39;: &#39;off&#39;
+  }],
+  &#39;status&#39;: &#39;found&#39;
+}
+</code></pre></div>
+</li>
+</ul>
+<h3 id="image-prediction-collection-imagespredictioncollection">Image Prediction Collection [/images/prediction/collection/]</h3>
+<p>Get all image predictions [GET].</p>
+<p>The list is ordered with the most recent first.</p>
+<p>Images predictions are predictions found in images, generally corresponding to a crop (part of the image). Like a nutriscore, a logo, etc...</p>
+<p>The page, count must be supplied</p>
+<ul>
+<li>
+<p>Parameters:</p>
+<ul>
+<li>page (int) - the page number to return (default: 1)</li>
+<li>count (int) - number of results to return (default: 25)</li>
+</ul>
+<ul>
+<li>barcode (str, optional) - the barcode of the product.</li>
+<li>with_logo (bool, optional) - 
+  if false (the default) returns only images predictions that have no logo annotation,
+  if true, returns all images predictions corresponding to criterias</li>
+<li>type (str, optional) -  an insight type to filter on</li>
+<li>server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<div class="highlight"><pre><span></span><code>{
+    &#39;count&#39;: 1,
+    &#39;image_predictions&#39;: [{
+        &#39;id&#39;: 20,
+        &#39;type&#39;: &#39;category&#39;,
+        &#39;model_name&#39;: &#39;universal-logo-detector&#39;,
+        &#39;model_version&#39;: &#39;tf-universal-logo-detector-1.0&#39;,
+        &#39;data&#39;: {
+            &#39;objects&#39;: [{
+                &#39;label&#39;: &#39;brand&#39;,
+                &#39;score&#39;: 0.2,
+                &#39;bounding_box&#39;: [0.4, 0.4, 0.6, 0.6]
+            }]
+        },
+        &#39;timestamp&#39;: &#39;2022-09-14T14:57:33.952455&#39;,
+        &#39;image&#39;: {
+            &#39;id&#39;: 22,
+            &#39;barcode&#39;: &#39;123&#39;,
+            &#39;uploaded_at&#39;: &#39;2022-09-14T14:57:33.953365&#39;,
+            &#39;image_id&#39;: &#39;image-01&#39;,
+            &#39;source_image&#39;: &#39;/images/01.jpg&#39;,
+            &#39;width&#39;: 400,
+            &#39;height&#39;: 400,
+            &#39;deleted&#39;: False,
+            &#39;server_domain&#39;: &#39;api.openfoodfacts.localhost&#39;,
+            &#39;server_type&#39;: &#39;off&#39;
+        },
+        &#39;max_confidence&#39;: None
+    }],
+    &#39;status&#39;: &#39;found&#39;
+}
+</code></pre></div>
+<h3 id="logo-annotation-collectionannotationcollection">Logo Annotation Collection[/annotation/collection/]</h3>
+<p>Get all Logo annotations [GET]</p>
+<p>The list is ordered with the most recent first.</p>
+<p>Logo Annotations are annotations on image predictions to associate part of an image, which is a logo, to a characteristic of the product (eg: logo for eu organic, or QR-code, or logo for Lidl, etc.).</p>
+<p>The count, page, value tag must be supplied</p>
+<ul>
+<li>
+<p>Parameters</p>
+<ul>
+<li>page (int) - the page number to return (default: 1)</li>
+</ul>
+<ul>
+<li>count (int) - number of results to return (default: 25)</li>
+<li>barcode (str, optional) - the barcode of the product.</li>
+<li>value_tag (str) - the value_tag of the product.</li>
+<li>keep_types (List[str], optional) -  a list of insight types</li>
+<li>server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<p>Response 200 (application/json)</p>
+<div class="highlight"><pre><span></span><code>{
+  &#39;count&#39;: 1,
+  &#39;annotation&#39;: [{
+      &#39;id&#39;: 9,
+      &#39;image_prediction&#39;: {
+          &#39;id&#39;: 16,
+          &#39;type&#39;: &#39;object_detection&#39;,
+          &#39;model_name&#39;: &#39;universal-logo-detector&#39;,
+          &#39;model_version&#39;: &#39;tf-universal-logo-detector-1.0&#39;,
+          &#39;data&#39;: {
+              &#39;objects&#39;: [{
+                  &#39;label&#39;: &#39;brand&#39;,
+                  &#39;score&#39;: 0.2,
+                  &#39;bounding_box&#39;: [0.4, 0.4, 0.6, 0.6]
+              }]
+          },
+          &#39;timestamp&#39;: &#39;2022-09-13T16:17:04.447213&#39;,
+          &#39;image&#39;: {
+              &#39;id&#39;: 18,
+              &#39;barcode&#39;: &#39;295&#39;,
+              &#39;uploaded_at&#39;: &#39;2022-09-13T16:17:04.447316&#39;,
+              &#39;image_id&#39;: &#39;image-03&#39;,
+              &#39;source_image&#39;: &#39;/images/03.jpg&#39;,
+              &#39;width&#39;: 400,
+              &#39;height&#39;: 400,
+              &#39;deleted&#39;: False,
+              &#39;server_domain&#39;: &#39;api.openfoodfacts.localhost&#39;,
+              &#39;server_type&#39;: &#39;off&#39;
+          },
+          &#39;max_confidence&#39;: None
+      },
+      &#39;index&#39;: 0,
+      &#39;bounding_box&#39;: [0.4, 0.4, 0.6, 0.6],
+      &#39;score&#39;: 0.7,
+      &#39;annotation_value&#39;: &#39;ab agriculture biologique&#39;,
+      &#39;annotation_value_tag&#39;: &#39;cheese&#39;,
+      &#39;taxonomy_value&#39;: &#39;en:ab-agriculture-biologique&#39;,
+      &#39;annotation_type&#39;: &#39;dairies&#39;,
+      &#39;username&#39;: None,
+      &#39;completed_at&#39;: None,
+      &#39;nearest_neighbors&#39;: {
+          &#39;logo_ids&#39;: [111111, 222222],
+          &#39;distances&#39;: [11.1, 12.4]
+      }
+  }],
+  &#39;status&#39;: &#39;found&#39;
+}
+</code></pre></div>
+<h3 id="unanswered-question-collectionquestionsunanswered">Unanswered question Collection[/questions/unanswered/]</h3>
+</li>
+</ul>
+<p>Get the number unanswered questions for each tag_value for a given type of question [GET]</p>
+<p>The list is ordered from highest count to lowest.</p>
+<p>The count, page must be supplied</p>
+<ul>
+<li>
+<p>Parameters</p>
+<ul>
+<li>page (int) - the page number to return (default: 1)</li>
+<li>count (int) - number of results to return (default: 25)</li>
+</ul>
+<ul>
+<li>type (str, optional) -  an insight type</li>
+<li>server_domain (str, optional) -   server domain. Default to 'api.openfoodfacts.org'</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>Response 200 (application/json)</li>
+</ul>
+<div class="highlight"><pre><span></span><code> {
+    &#39;count&#39;: 5,
+    &#39;questions&#39;: [
+        [&#39;en:soups&#39;, 3],
+        [&#39;en:apricot&#39;, 2]
+    ],
+    &#39;status&#39;: &#39;found&#39;
+}
 </code></pre></div>
                 
               
