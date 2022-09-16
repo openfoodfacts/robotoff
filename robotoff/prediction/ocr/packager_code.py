@@ -34,9 +34,10 @@ def process_fsc_match(match) -> str:
     return "FSC-{}".format(fsc_code).upper()
 
 
-def process_USDA_match_to_flashtext(match) -> Optional[Any]:
-    """this functions returns the USDA code matched by REGEX the same way it exists
-    in the USDA database (1st column of USDA_code_flashtext.txt)"""
+def process_USDA_match_to_flashtext(match) -> Optional[str]:
+    """Returns the USDA code matched by REGEX the same way it exists
+    in the USDA database (1st column of USDA_code_flashtext.txt)
+    """
 
     unchecked_code = match.group().upper()
     unchecked_code = re.sub(r"\s*\.*", "", unchecked_code)
@@ -47,16 +48,25 @@ def process_USDA_match_to_flashtext(match) -> Optional[Any]:
 
 
 def generate_USDA_code_keyword_processor() -> KeywordProcessor:
+    """Builds the KeyWordProcessor for USDA codes
+
+    This will be called only once thanks to CachedStore
+    """
 
     codes = text_file_iter(settings.OCR_USDA_CODE_FLASHTEXT_DATA_PATH)
     return generate_keyword_processor(codes)
 
 
-def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[Any]:
+def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[str]:
+    """Given a string, returns the USDA code it contains or None
+    """
     USDA_code = None
 
     for (USDA_code_keyword, _) in processor.extract_keywords(text):
         USDA_code = USDA_code_keyword
+        # Once we found a match we can return the code
+        # as there should not be more than one match
+        break
     return USDA_code
 
 
