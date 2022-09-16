@@ -83,9 +83,9 @@ AOC_REGEX = {
 def find_category(content: Union[OCRResult, str]) -> List[Prediction]:
     """This function returns a prediction of the category of the product
     by detecting an AOP syntax which allows an easy category
-    prediction with REGEX. 
-    For now we are extracting categories via REGEX 
-    only thanks to an AOP syntax but we may find in the future 
+    prediction with REGEX.
+    For now we are extracting categories via REGEX
+    only thanks to an AOP syntax but we may find in the future
     other ways to get sure prediction of categories.
     """
 
