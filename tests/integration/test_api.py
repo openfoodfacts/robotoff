@@ -741,8 +741,8 @@ def test_image_prediction_collection(client):
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
-    assert data["images"][0]["id"] == prediction_category_123.id
-    assert data["images"][0]["image"]["barcode"] == "123"
+    assert data["image_predictions"][0]["id"] == prediction_category_123.id
+    assert data["image_predictions"][0]["image"]["barcode"] == "123"
 
     # test with "type=label" and "with_logo=True"
     result = client.simulate_get(
@@ -755,10 +755,10 @@ def test_image_prediction_collection(client):
 
     assert result.status_code == 200
     data = result.json
-    data["images"].sort(key=lambda d: d["id"])
+    data["image_predictions"].sort(key=lambda d: d["id"])
     assert data["count"] == 2
-    assert data["images"][0]["id"] == prediction_label_789.id
-    assert data["images"][1]["id"] == prediction_label_789_no_logo.id
+    assert data["image_predictions"][0]["id"] == prediction_label_789.id
+    assert data["image_predictions"][1]["id"] == prediction_label_789_no_logo.id
 
     # test with "barcode=456" and "with_logo=True"
     result = client.simulate_get(
@@ -785,7 +785,7 @@ def test_image_prediction_collection(client):
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
-    assert data["images"][0]["id"] == prediction_label_789_no_logo.id
+    assert data["image_predictions"][0]["id"] == prediction_label_789_no_logo.id
 
 
 def test_logo_annotation_collection_empty(client):

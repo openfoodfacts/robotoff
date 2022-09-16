@@ -1208,7 +1208,7 @@ class ImagePredictionCollection:
             response["image_predictions"] = []
             response["status"] = "no_image_predictions"
         else:
-            response["images"] = images
+            response["image_predictions"] = images
             response["status"] = "found"
 
         resp.media = response
