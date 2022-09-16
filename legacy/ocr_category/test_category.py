@@ -92,7 +92,7 @@ from robotoff.prediction.ocr.category import find_category
 def test_predict_ocr_categories(
     text: str, predicted_category: str, confidence: float
 ) -> None:
-    insights = predict_ocr_categories(text)
+    insights = find_category(text)
 
     # No hesitation in the examples
     assert len(insights) == 1
