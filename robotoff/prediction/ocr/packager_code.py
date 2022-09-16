@@ -1,3 +1,4 @@
+from curses import echo
 import re
 from typing import List, Optional, Union
 
@@ -133,9 +134,9 @@ PACKAGER_CODE = {
             lowercase=False,
             processing_func=process_USDA_match_to_flashtext,
         ),
-        # To match the USDA like "V34626" or "M34614 + P34614 + V34614"
+        # To match the USDA like "V34626"
         OCRRegex(
-            re.compile(r"[A-Z]\d{1,5}[A-Z]?(\s*\+\s*[A-Z]\d{1,5}[A-Z]?){0,3}"),
+            re.compile(r"[A-Z]\d{1,5}[A-Z]?"),
             field=OCRField.full_text_contiguous,
             lowercase=False,
             processing_func=process_USDA_match_to_flashtext,
