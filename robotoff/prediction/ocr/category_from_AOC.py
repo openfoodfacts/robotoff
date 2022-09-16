@@ -13,11 +13,15 @@ logger = get_logger(__name__)
 
 def category_taxonomisation(lang, match) -> Optional[str]:
     """Function to match categories detected via AOP REGEX with categories
-    taxonomy database. If no match is possible, we return None."""
+    taxonomy database. If no match is possible, we return None.
+    """
 
     unchecked_category = lang + normalizing(match.group("category"))
 
     checked_category = get_taxonomy("category").nodes.get(unchecked_category)
+
+    # TODO: We may want to create a utility function in Taxonomy  to match
+    # also with synonyms of the category existing in the taxonomy
 
     if checked_category is not None:
         return checked_category.id
@@ -76,7 +80,14 @@ AOC_REGEX = {
 }
 
 
-def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_category(content: Union[OCRResult, str]) -> List[Prediction]:
+    """This function returns a prediction of the category of the product
+    by detecting an AOP syntax which allows an easy category
+    prediction with REGEX. 
+    For now we are extracting categories via REGEX 
+    only thanks to an AOP syntax but we may find in the future 
+    other ways to get sure prediction of categories.
+    """
 
     predictions = []
 
@@ -102,8 +113,3 @@ def find_category_from_AOC(content: Union[OCRResult, str]) -> List[Prediction]:
                         )
                     )
     return predictions
-
-
-"""This function returns a prediction of the category of the product
-by detecting an AOC syntax which allows an easy category
-prediction with REGEX"""

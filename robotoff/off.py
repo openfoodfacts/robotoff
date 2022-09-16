@@ -502,23 +502,27 @@ def select_rotate_image(
     return r
 
 
-def normalizing(line, lowercase=True):
+def normalize_tag(value, lowercase=True):
+    """given a value normalize it to a tag (as in taxonomies)
+
+    This means removing accents, lowercasing, replacing spaces with dashes, etc..
+    """
     # removing accents
-    line = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", "-", line)
-    line = re.sub(r"[éè]", "e", line)
-    line = re.sub(r"[à]", "a", line)
-    line = re.sub(r"[ù]", "u", line)
+    value = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", "-", value)
+    value = re.sub(r"[éè]", "e", value)
+    value = re.sub(r"[à]", "a", value)
+    value = re.sub(r"[ù]", "u", value)
     # changing unwanted character to "-"
-    line = re.sub(r"&\w+;", "-", line)
-    line = re.sub(
+    value = re.sub(r"&\w+;", "-", value)
+    value = re.sub(
         r"[\s!\"#\$%&'()*+,\/:;<=>?@\[\\\]^_`{\|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿×ˆ˜–—‘’‚“”„†‡•…‰‹›€™\t]",  # noqa: E501
         "-",
-        line,
+        value,
     )
-    # lowering the line if wanted
+    # lowering the value if wanted
     if lowercase:
-        line = line.lower()
+        value = value.lower()
     # removing excess "-"
-    line = re.sub(r"-+", "-", line)
-    line = line.strip("-")
-    return line
+    value = re.sub(r"-+", "-", value)
+    value = value.strip("-")
+    return value
