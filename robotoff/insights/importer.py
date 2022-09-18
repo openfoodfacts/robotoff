@@ -458,9 +458,14 @@ class PackagerCodeInsightImporter(InsightImporter):
         product: Product,
         emb_code: str,
     ) -> bool:
-        return normalize_emb_code(emb_code) not in [
+        x = [
             normalize_emb_code(c) for c in product.emb_codes_tags
         ]
+        y =  normalize_emb_code(emb_code) 
+
+        z = y not in x
+
+        return z
 
     @classmethod
     def generate_candidates(
