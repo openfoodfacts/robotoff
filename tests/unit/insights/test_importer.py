@@ -703,7 +703,6 @@ class TestPackagerCodeInsightImporter:
         assert asc_insight.type == InsightType.packager_code
 
 
-
 class TestLabelInsightImporter:
     # TODO: this test currently depends on external data, it should not !
 
