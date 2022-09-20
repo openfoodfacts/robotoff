@@ -100,6 +100,8 @@ def get_insights(
     if keep_types:
         where_clauses.append(ProductInsight.type.in_(keep_types))
 
+    # import pdb; pdb.set_trace()
+
     if country is not None:
         where_clauses.append(ProductInsight.countries.contains(country))
 

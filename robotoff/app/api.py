@@ -1150,13 +1150,17 @@ class UnansweredQuestionCollection:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         question_type: str = req.get_param("type")
         value_tag: str = req.get_param("value_tag")
+        country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
+
+        import pdb; pdb.set_trace()
 
         query_parameters = {
             "keep_types": [question_type],
             "group_by_value_tag": True,
             "value_tag": value_tag,
             "limit": count,
+            "country": country,
             "server_domain": server_domain,
         }
 
