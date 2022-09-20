@@ -700,7 +700,6 @@ class TestPackagerCodeInsightImporter:
         assert insight.type == InsightType.packager_code
         assert insight.data == {"type": "fishing"}
 
-
 class TestLabelInsightImporter:
     # TODO: this test currently depends on external data, it should not !
 
