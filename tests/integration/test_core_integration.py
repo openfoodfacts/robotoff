@@ -200,7 +200,6 @@ def test_get_unanswered_questions_list():
     assert insight_data_items6[0]["countries"] == "en:india"
 
 
-
 def test_get_logo_annotation():
     annotation_123 = LogoAnnotationFactory(
         image_prediction__image__barcode="123",
