@@ -672,36 +672,33 @@ class TestPackagerCodeInsightImporter:
         prediction = Prediction(
             type=PredictionType.packager_code, value="fr 40.261.001 ce"
         )
-        asc_prediction = Prediction(
-            type=PredictionType.packager_code, value="ASC-C-00654"
-        )
-
         selected = list(
             PackagerCodeInsightImporter.generate_candidates(
                 Product({"emb_codes_tags": ["FR 50.200.000 CE"]}),
                 [prediction],
             )
         )
-
-        asc_data = list(
-            PackagerCodeInsightImporter.generate_candidates(
-                Product({"emb_codes_tags": ["ASC-C-00518"]}),
-                [asc_prediction],
-            )
-        )
-
         assert len(selected) == 1
         insight = selected[0]
         assert isinstance(insight, ProductInsight)
         assert insight.value == prediction.value
         assert insight.type == InsightType.packager_code
+    
+    def test_generate_asc_candidates(self):
+        prediction = Prediction(
+            type=PredictionType.packager_code, value="ASC-C-00026"
+        )
 
-        assert len(asc_data) == 1
-        asc_insight = asc_data[0]
-        assert isinstance(asc_insight, ProductInsight)
-        assert asc_insight.value == asc_prediction.value
-        assert asc_insight.type == InsightType.packager_code
+        product = Product({"emb_codes_tags": ["ASC-C-00950"]})
 
+        insight_data = list(PackagerCodeInsightImporter().generate_candidates(product, [prediction]))
+
+        assert len(insight_data) == 1
+        insight = insight_data[0]
+        assert isinstance(insight, ProductInsight)
+        assert insight.value == prediction.value
+        assert insight.type == InsightType.packager_code
+        assert insight.data == {"type": "fishing"}
 
 
 class TestLabelInsightImporter:
