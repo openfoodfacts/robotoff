@@ -572,6 +572,141 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["value_tag"] == "en:beers"
 
 
+def test_get_unanswered_questions_api_empty(client):
+    ProductInsight.delete().execute()  # remove default sample
+    result = client.simulate_get("/api/v1/questions/unanswered/")
+
+    assert result.status_code == 200
+    assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
+
+
+def test_get_unanswered_questions_api(client):
+    ProductInsight.delete().execute()  # remove default sample
+
+    ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
+
+    ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
+
+    ProductInsightFactory(type="nutrition", value_tag="en:soups", barcode="789")
+
+    ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="302")
+
+    ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="403")
+
+    ProductInsightFactory(type="category", value_tag="en:soups", barcode="194")
+
+    ProductInsightFactory(type="category", value_tag="en:soups", barcode="967")
+
+    ProductInsightFactory(type="label", value_tag="en:beer", barcode="039")
+
+    ProductInsightFactory(type="category", value_tag="en:apricot", barcode="492")
+
+    ProductInsightFactory(type="category", value_tag="en:soups", barcode="594")
+
+    ProductInsightFactory(
+        type="category",
+        value_tag="en:apricot",
+        barcode="780",
+        annotation=1,
+    )
+
+    ProductInsightFactory(
+        type="category", value_tag="en:apricot", barcode="983", annotation=0
+    )
+
+    # test to get all "category" with "annotation=None"
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered/",
+        params={
+            "count": 5,
+            "page": 1,
+            "type": "category",
+        },
+    )
+    assert result.status_code == 200
+    data = result.json
+
+    assert len(data) == 3
+    assert data["questions"] == [["en:soups", 3], ["en:apricot", 2]]
+    assert data["status"] == "found"
+
+    # test to get all "label" with "annotation=None"
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered/", params={"type": "label"}
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert len(data) == 3
+    assert len(data["questions"]) == 1
+    assert data["questions"] == [["en:beer", 2]]
+
+    # test to get all "nutrition" with "annotation=None"
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered/", params={"type": "nutrition"}
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert len(data) == 3
+    assert len(data["questions"]) == 2
+    assert data["questions"] == [["en:salad", 2], ["en:soups", 1]]
+    assert data["status"] == "found"
+
+
+def test_get_unanswered_questions_pagination(client):
+    ProductInsight.delete().execute()  # remove default sample
+    for i in range(0, 12):
+        ProductInsightFactory(type="nutrition", value_tag=f"en:soups-{i:02}")
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered?count=5&page=1&type=nutrition"
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["questions"]) == 5
+    questions = data["questions"]
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered?count=5&page=2&type=nutrition"
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["questions"]) == 5
+    questions.extend(data["questions"])
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered?count=5&page=3&type=nutrition"
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 12
+    assert data["status"] == "found"
+    assert len(data["questions"]) == 2
+    questions.extend(data["questions"])
+
+    questions.sort()
+    assert questions == [
+        ["en:soups-00", 1],
+        ["en:soups-01", 1],
+        ["en:soups-02", 1],
+        ["en:soups-03", 1],
+        ["en:soups-04", 1],
+        ["en:soups-05", 1],
+        ["en:soups-06", 1],
+        ["en:soups-07", 1],
+        ["en:soups-08", 1],
+        ["en:soups-09", 1],
+        ["en:soups-10", 1],
+        ["en:soups-11", 1],
+    ]
+
+
 def test_image_prediction_collection_empty(client):
     result = client.simulate_get("/api/v1/images/prediction/collection/")
     assert result.status_code == 200
@@ -606,8 +741,8 @@ def test_image_prediction_collection(client):
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
-    assert data["images"][0]["id"] == prediction_category_123.id
-    assert data["images"][0]["image"]["barcode"] == "123"
+    assert data["image_predictions"][0]["id"] == prediction_category_123.id
+    assert data["image_predictions"][0]["image"]["barcode"] == "123"
 
     # test with "type=label" and "with_logo=True"
     result = client.simulate_get(
@@ -620,10 +755,10 @@ def test_image_prediction_collection(client):
 
     assert result.status_code == 200
     data = result.json
-    data["images"].sort(key=lambda d: d["id"])
+    data["image_predictions"].sort(key=lambda d: d["id"])
     assert data["count"] == 2
-    assert data["images"][0]["id"] == prediction_label_789.id
-    assert data["images"][1]["id"] == prediction_label_789_no_logo.id
+    assert data["image_predictions"][0]["id"] == prediction_label_789.id
+    assert data["image_predictions"][1]["id"] == prediction_label_789_no_logo.id
 
     # test with "barcode=456" and "with_logo=True"
     result = client.simulate_get(
@@ -650,7 +785,7 @@ def test_image_prediction_collection(client):
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
-    assert data["images"][0]["id"] == prediction_label_789_no_logo.id
+    assert data["image_predictions"][0]["id"] == prediction_label_789_no_logo.id
 
 
 def test_logo_annotation_collection_empty(client):

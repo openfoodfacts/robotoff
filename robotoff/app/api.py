@@ -1143,6 +1143,40 @@ class PredictionCollection:
         resp.media = response
 
 
+class UnansweredQuestionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        question_type: str = req.get_param("type")
+        value_tag: str = req.get_param("value_tag")
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        query_parameters = {
+            "keep_types": [question_type],
+            "group_by_value_tag": True,
+            "value_tag": value_tag,
+            "limit": count,
+            "server_domain": server_domain,
+        }
+
+        get_insights_ = functools.partial(get_insights, **query_parameters)
+
+        offset: int = (page - 1) * count
+        insights = [i for i in get_insights_(limit=count, offset=offset)]
+
+        response["count"] = get_insights_(count=True)
+
+        if not insights:
+            response["questions"] = []
+            response["status"] = "no_questions"
+        else:
+            response["questions"] = insights
+            response["status"] = "found"
+
+        resp.media = response
+
+
 class ImagePredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
@@ -1174,7 +1208,7 @@ class ImagePredictionCollection:
             response["image_predictions"] = []
             response["status"] = "no_image_predictions"
         else:
-            response["images"] = images
+            response["image_predictions"] = images
             response["status"] = "found"
 
         resp.media = response
@@ -1264,6 +1298,7 @@ api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
+api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
