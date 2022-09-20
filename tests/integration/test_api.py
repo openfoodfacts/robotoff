@@ -654,6 +654,25 @@ def test_get_unanswered_questions_api(client):
     assert data["questions"] == [["en:salad", 2], ["en:soups", 1]]
     assert data["status"] == "found"
 
+    
+def test_get_unanswered_questions_api_with_country_filter(client):
+    ProductInsight.delete().execute()  # remove default sample
+
+    # test for filter with "country"    
+
+    d = ProductInsightFactory(type="location", value_tag="en:dates", barcode="032", countries=["en:india"])
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered/", params={"country": "en:india"}
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert len(data) == 1
+    assert len(data["questions"]) == 1
+    assert data["questions"] == [["en:dates", 1]]
+    assert data["status"] == "found"
+
+
 
 def test_get_unanswered_questions_pagination(client):
     ProductInsight.delete().execute()  # remove default sample
