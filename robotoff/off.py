@@ -125,7 +125,8 @@ def get_api_product_url(server: Union[ServerType, str]) -> str:
 def get_base_url(server: Union[ServerType, str]) -> str:
     if isinstance(server, str):
         server = server.replace("api", "world")
-        return "https://{}".format(server)
+        scheme = settings.BaseURLProvider().scheme
+        return f"{scheme}://{server}"
     else:
         if server not in API_URLS:
             raise ValueError("unsupported server type: {}".format(server))
