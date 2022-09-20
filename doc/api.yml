@@ -33,14 +33,12 @@ paths:
         - name: lang
           in: query
           description: The language of the question/value
-          required: false
           schema:
             type: string
             default: en
         - name: count
           in: query
           description: The number of questions to return
-          required: false
           schema:
             type: number
             default: 1
@@ -48,7 +46,6 @@ paths:
         - name: server_domain
           in: query
           description: The server domain
-          required: false
           schema:
             type: string
             default: api.openfoodfacts.org
@@ -79,69 +76,70 @@ paths:
       summary: Get random questions
       operationId: getQuestionsRandom
       parameters:
-        - name: lang
-          in: query
-          description: The language of the question/value
-          required: false
-          schema:
-            type: string
-            default: en
-        - name: count
-          in: query
-          description: The number of questions to return
-          required: false
-          schema:
-            type: number
-            default: 1
-            minimum: 1
-        - name: server_domain
-          in: query
-          description: The server domain
-          required: false
-          schema:
-            type: string
-            default: api.openfoodfacts.org
-        - name: insight_types
-          in: query
-          description: Comma-separated list, filter by insight types
-          required: false
-          schema:
-            type: string
-        - name: country
-          in: query
-          description: Filter by country tag
-          required: false
-          schema:
-            type: string
-        - name: brands
-          in: query
-          description: Comma-separated list, filter by brands
-          required: false
-          schema:
-            type: string
-        - name: value_tag
-          in: query
-          description: Filter by value tag, i.e the value that is going to be sent to Openfoodfacts
-          required: false
-          schema:
-            type: string
+        - $ref: "#/components/parameters/lang"
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/insight_types"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/brands"
+        - $ref: "#/components/parameters/value_tag"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/reserved_barcode"
+      responses:
+        "200":
+          description: The queried insights
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
+
+      deprecated: false
+  /questions/popular:
+    get:
+      tags:
+        - Questions
+      summary: Get questions about products ranked by popularity (scan count)
+      operationId: GetQuestionsPopular
+      parameters:
+        - $ref: "#/components/parameters/lang"
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/insight_types"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/brands"
+        - $ref: "#/components/parameters/value_tag"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/reserved_barcode"
       responses:
         "200":
           description: ""
           headers: {}
           content: {}
-      deprecated: false
+
   /insights/random:
     get:
       tags:
         - Insights
       summary: Get a random insight
-      operationId: Getarandominsight
+      operationId: GetInsightsRandom
       parameters:
         - name: count
           in: query
           description: The number of results to return
-          required: false
           schema:
             type: number
             default: 1
@@ -149,26 +147,22 @@ paths:
         - name: server_domain
           in: query
           description: The server domain
-          required: false
           schema:
             type: string
             default: api.openfoodfacts.org
         - name: type
           in: query
           description: filter by insight type
-          required: false
           schema:
             type: string
         - name: country
           in: query
           description: Filter by country tag
-          required: false
           schema:
             type: string
         - name: value_tag
           in: query
           description: Filter by value_tag
-          required: false
           schema:
             type: string
       responses:
@@ -216,7 +210,7 @@ paths:
       tags:
         - Insights
       summary: Get a specific insight
-      operationId: Getaspecificinsight
+      operationId: GetInsightsDetail
       parameters:
         - name: id
           in: path
@@ -270,6 +264,137 @@ paths:
           headers: {}
           content: {}
       deprecated: false
+
+  /images/crop:
+    get:
+      summary: Crop an image
+      description: |
+        This endpoint is currently only used to generate cropped logos on Hunger Games from a
+        base image and cropping coordinates. Cropping coordinates are relative (between 0.
+        and 1. inclusive), with (0, 0) being the upper left corner.
+      tags:
+        - Images
+      parameters:
+        - name: image_url
+          in: query
+          example: https://static.openfoodfacts.org/images/products/211/123/200/5508/3.jpg
+          schema:
+            type: string
+            format: uri
+        - name: y_min
+          in: query
+          example: 0.47795143723487854
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - name: x_min
+          in: query
+          example: 0.5583494305610657
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - name: y_max
+          in: query
+          example: 0.5653171539306641
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - name: x_max
+          in: query
+          example: 0.6795185804367065
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+      responses:
+        "200":
+          description: ""
+          headers: {}
+          content:
+            image/jpeg: {}
+  /images/logos:
+    get:
+      tags:
+        - Images
+      summary: Search or fetch logo annotations
+      description: |
+        If `logo_ids` parameter is provided, return logo annotation about requested logos.
+        Otherwise search logos with the specific filter provided. `logo_ids` and the
+        remaining parameters are mutually exclusive.
+      parameters:
+        - name: logo_ids
+          description: Comma-separated string of logo IDs. Mutually exclusive with the other parameters.
+          in: query
+          schema:
+            type: string
+        - name: count
+          description: Number of results to return
+          in: query
+          schema:
+            type: number
+            default: 25
+            minimum: 1
+            maximum: 2000
+        - name: type
+          description: Filter by logo type
+          in: query
+          schema:
+            type: string
+          example: packager_code
+        - name: barcode
+          description: Filter by barcode
+          in: query
+          schema:
+            type: number
+        - name: value
+          description: Filter by annotated value
+          in: query
+          example: en:organic
+          schema:
+            type: string
+        - name: min_confidence
+          description: Filter logos that have a confidence score above a threshold
+          in: query
+          schema:
+            type: number
+        - name: random
+          description: If true, randomized result order
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: server_domain
+          in: query
+          description: The server domain
+          schema:
+            type: string
+        - name: annotated
+          description: If true, only return annotated logos, otherwise only return non-annotated ones.
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: "The search/fetch results"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logos:
+                    type: array
+                    description: Found logo annotations
+                  count:
+                    type: number
+                    description: Number of returned results
+                required:
+                  - logos
+                  - count
+
 components:
   schemas:
     InsightSearchResult:
@@ -299,6 +424,69 @@ components:
         id: 3cd5aecd-edcc-4237-87d0-6595fc4e53c9
         type: label
         barcode: 9782012805866
+  parameters:
+    lang:
+      name: lang
+      in: query
+      description: The language of the question/value
+      schema:
+        type: string
+        default: en
+    count:
+      name: count
+      in: query
+      description: The number of questions to return
+      schema:
+        type: number
+        default: 1
+        minimum: 1
+    server_domain:
+      name: server_domain
+      in: query
+      description: The server domain
+      schema:
+        type: string
+        default: api.openfoodfacts.org
+    insight_types:
+      name: insight_types
+      in: query
+      description: Comma-separated list, filter by insight types
+      schema:
+        type: string
+    country:
+      name: country
+      in: query
+      description: Filter by country tag
+      schema:
+        type: string
+      example: en:france
+    brands:
+      name: brands
+      in: query
+      description: Comma-separated list, filter by brands
+      schema:
+        type: string
+    value_tag:
+      name: value_tag
+      in: query
+      description: Filter by value tag, i.e the value that is going to be sent to Openfoodfacts
+      schema:
+        type: string
+      example: en:organic
+    page:
+      name: page
+      in: query
+      description: Page index to return (starting at 1)
+      schema:
+        type: integer
+        default: 1
+    reserved_barcode:
+      name: reserved_barcode
+      in: query
+      description: If true, also return questions about products with reserved barcodes
+      schema:
+        type: boolean
+        default: false
 
 tags:
   - name: Questions
