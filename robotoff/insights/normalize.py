@@ -12,8 +12,9 @@ def normalize_emb_code(emb_code: str):
 
     emb_code = strip_accents_ascii(emb_code)
 
-    # if the code ends with "ce" replace it to "ec"
-    # here "fr40261001ce" becomes "fr40261001ec"
+    """if the code ends with "ce" replace it with "ec"
+    here "fr40261001ce" becomes "fr40261001ec"
+    """
 
     if emb_code.endswith("ce"):
         emb_code = emb_code[:-2] + "ec"
