@@ -2,8 +2,9 @@ from robotoff.utils.text import strip_accents_ascii
 
 
 def normalize_emb_code(emb_code: str):
-    # replacing space, hyphen, and dot
-    # so that "fr 40.261.001 ce" changes to "fr40261001ce'"
+    """replacing space, hyphen, and dot
+    so that "fr 40.261.001 ce" changes to "fr40261001ce'"
+    """
 
     emb_code = (
         emb_code.strip().lower().replace(" ", "").replace("-", "").replace(".", "")
