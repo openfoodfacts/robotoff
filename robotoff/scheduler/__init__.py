@@ -205,7 +205,8 @@ def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
     try:
         _download_product_dataset()
-        # Elasticsearch is dependent on the availability of the PO product dump, i.e.
+        # Elasticsearch is dependent on the availability of the product dump from Product Opener 
+        # (main Open Food Facts backend) 
         # it it called after the download product dataset call.
         _refresh_elasticsearch()
     except requests.exceptions.ConnectionError:
