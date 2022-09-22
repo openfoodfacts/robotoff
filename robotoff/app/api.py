@@ -1158,7 +1158,7 @@ class UnansweredQuestionCollection:
         pdb.set_trace()
 
         query_parameters = {
-            "keep_types": [question_type],
+            "keep_types": [question_type] if question_type else None,
             "group_by_value_tag": True,
             "value_tag": value_tag,
             "limit": count,
