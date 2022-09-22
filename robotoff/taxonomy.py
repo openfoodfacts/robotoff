@@ -316,7 +316,7 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_BRAND_URL,
-            fallback_path=settings.TAXONOMY_LABEL_PATH,
+            fallback_path=settings.TAXONOMY_BRAND_PATH,
         )
     ),
 }
