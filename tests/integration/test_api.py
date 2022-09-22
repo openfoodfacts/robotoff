@@ -660,7 +660,7 @@ def test_get_unanswered_questions_api_with_country_filter(client):
 
     # test for filter with "country"
 
-    d = ProductInsightFactory(
+    ProductInsightFactory(
         type="location", value_tag="en:dates", barcode="032", countries=["en:india"]
     )
 
@@ -669,7 +669,7 @@ def test_get_unanswered_questions_api_with_country_filter(client):
     )
     assert result.status_code == 200
     data = result.json
-    assert len(data) == 1
+    assert len(data) == 3
     assert len(data["questions"]) == 1
     assert data["questions"] == [["en:dates", 1]]
     assert data["status"] == "found"

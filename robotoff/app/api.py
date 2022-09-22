@@ -1153,10 +1153,6 @@ class UnansweredQuestionCollection:
         country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
 
-        import pdb
-
-        pdb.set_trace()
-
         query_parameters = {
             "keep_types": [question_type] if question_type else None,
             "group_by_value_tag": True,
