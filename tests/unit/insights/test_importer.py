@@ -705,7 +705,8 @@ class TestLabelInsightImporter:
     )
     def test_is_parent_label(self, label, to_check_labels, expected, mocker):
         mocker.patch(
-            "robotoff.insights.importer.get_taxonomy", return_value=get_taxonomy("label", offline=True)
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("label", offline=True),
         )
         assert LabelInsightImporter.is_parent_label(label, to_check_labels) is expected
 
@@ -759,7 +760,8 @@ class TestLabelInsightImporter:
     )
     def test_generate_candidates(self, predictions, product, expected, mocker):
         mocker.patch(
-            "robotoff.insights.importer.get_taxonomy", return_value=get_taxonomy("label", offline=True)
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("label", offline=True),
         )
         candidates = list(
             LabelInsightImporter.generate_candidates(product, predictions)
@@ -792,7 +794,8 @@ class TestCategoryImporter:
     )
     def test_is_parent_category(self, category, to_check_categories, expected, mocker):
         mocker.patch(
-            "robotoff.insights.importer.get_taxonomy", return_value=get_taxonomy("category", offline=True)
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("category", offline=True),
         )
         assert (
             CategoryImporter.is_parent_category(category, to_check_categories)
@@ -845,9 +848,12 @@ class TestCategoryImporter:
             ),
         ],
     )
-    def test_generate_candidates(self, predictions, product, expected_value_tags, mocker):
+    def test_generate_candidates(
+        self, predictions, product, expected_value_tags, mocker
+    ):
         mocker.patch(
-            "robotoff.insights.importer.get_taxonomy", return_value=get_taxonomy("category", offline=True)
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("category", offline=True),
         )
         candidates = list(CategoryImporter.generate_candidates(product, predictions))
         assert all(isinstance(c, ProductInsight) for c in candidates)
