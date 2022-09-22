@@ -259,7 +259,13 @@ class LogoAnnotation(BaseModel):
     annotation_value = peewee.CharField(null=True, index=True)
     annotation_value_tag = peewee.CharField(null=True, index=True)
     taxonomy_value = peewee.CharField(null=True, index=True)
-    annotation_type = peewee.CharField(null=True, index=True)
+    annotation_type = peewee.CharField(
+        null=True,
+        index=True,
+        help_text="Category of the annotation. Current possible values: brand, "
+        "category, label, no_logo, nutrition_label, packager_code, packaging, "
+        "qr_code, store",
+    )
     username = peewee.TextField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True, index=True)
     nearest_neighbors = BinaryJSONField(null=True)
