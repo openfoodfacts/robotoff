@@ -98,16 +98,18 @@ def find_category(content: Union[OCRResult, str]) -> List[Prediction]:
 
             for match in ocr_regex.regex.finditer(text):
 
-                category_value = ocr_regex.processing_func(lang, match)
+                if ocr_regex.processing_func:
+                    category_value = ocr_regex.processing_func(lang, match)
 
-                if category_value is not None:
+                if category_value is None:
+                    continue
 
-                    predictions.append(
-                        Prediction(
-                            type=PredictionType.category,
-                            value_tag=category_value,
-                            predictor="regex",
-                            data={"text": match.group(), "notify": ocr_regex.notify},
-                        )
+                predictions.append(
+                    Prediction(
+                        type=PredictionType.category,
+                        value_tag=category_value,
+                        predictor="regex",
+                        data={"text": match.group(), "notify": ocr_regex.notify},
                     )
+                )
     return predictions
