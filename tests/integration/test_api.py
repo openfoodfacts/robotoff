@@ -160,23 +160,6 @@ def test_barcode_question(client, mocker):
 
 
 def test_annotate_insight_authenticated(client):
-
-    # test to "save AnnotationResult" for Robotoff quality monitoring
-    result = client.simulate_post(
-        "/api/v1/insights/annotate",
-        params={
-            "insight_id": insight_id,
-            "annotation": 1,
-            "update": False,
-        },
-        headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
-    )
-
-    assert result.status_code == 200
-    assert result.json == {"status": "saved", "description": "the annotation was saved"}
-
-    # test with "annotation = -1" for already annotated insight
-
     result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -187,26 +170,7 @@ def test_annotate_insight_authenticated(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {
-        "status": "error_already_annotated",
-        "description": "the insight has already been annotated",
-    }
-
-    # test with "annotation = 1"
-
-    insights = ProductInsightFactory(id="a47e0554-2ae6-4521-9d54-c6ecb3568162")
-
-    result = client.simulate_post(
-        "/api/v1/insights/annotate",
-        params={
-            "insight_id": "a47e0554-2ae6-4521-9d54-c6ecb3568162",
-            "annotation": 1,
-        },
-        headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
-    )
-
-    assert result.status_code == 200
-    # assert result.json == {'status': 'error_already_annotated', 'description': 'the insight has already been annotated'}
+    assert result.json == {"description": "the annotation was saved", "status": "saved"}
 
     # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
     votes = list(AnnotationVote.select())
@@ -215,6 +179,16 @@ def test_annotate_insight_authenticated(client):
     insight = next(
         ProductInsight.select()
         .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+    assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
+    assert "completed_at" in insight
+
+    # to test if "annotated_result" is being saved in the database
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.annotated_result.is_null(False))
         .dicts()
         .iterator()
     )

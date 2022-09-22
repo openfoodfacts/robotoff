@@ -107,12 +107,14 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if automatic:
             insight.automatic_processing = True
 
-        insight.save()
-
         if annotation == 1 and update:
             annotation_result = self.process_annotation(insight, data=data, auth=auth)
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
+
+        insight.annotated_result = annotation_result
+        insight.save()
+
         return annotation_result
 
     @abc.abstractmethod

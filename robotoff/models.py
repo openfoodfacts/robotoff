@@ -98,6 +98,9 @@ class ProductInsight(BaseModel):
     # 1 = Validated
     annotation = peewee.IntegerField(null=True, index=True)
 
+    # Saves the value returned by Annotator.annotate
+    annotated_result = peewee.TextField(index=True, null=True)
+
     # The number of votes for this annotation.
     # Stored here for quick sorting.
     n_votes = peewee.IntegerField(null=False, index=True)
