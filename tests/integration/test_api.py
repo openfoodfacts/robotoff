@@ -663,6 +663,9 @@ def test_get_unanswered_questions_api_with_country_filter(client):
     ProductInsightFactory(
         type="location", value_tag="en:dates", barcode="032", countries=["en:india"]
     )
+    ProductInsightFactory(
+        type="location", value_tag="en:dates", barcode="033", countries=["en:france"]
+    )
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered/", params={"country": "en:india"}
