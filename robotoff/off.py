@@ -500,3 +500,29 @@ def select_rotate_image(
 
     r.raise_for_status()
     return r
+
+
+def normalize_tag(value, lowercase=True):
+    """given a value normalize it to a tag (as in taxonomies)
+
+    This means removing accents, lowercasing, replacing spaces with dashes, etc..
+    """
+    # removing accents
+    value = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", "-", value)
+    value = re.sub(r"[éè]", "e", value)
+    value = re.sub(r"[à]", "a", value)
+    value = re.sub(r"[ù]", "u", value)
+    # changing unwanted character to "-"
+    value = re.sub(r"&\w+;", "-", value)
+    value = re.sub(
+        r"[\s!\"#\$%&'()*+,\/:;<=>?@\[\\\]^_`{\|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿×ˆ˜–—‘’‚“”„†‡•…‰‹›€™\t]",  # noqa: E501
+        "-",
+        value,
+    )
+    # lowering the value if wanted
+    if lowercase:
+        value = value.lower()
+    # removing excess "-"
+    value = re.sub(r"-+", "-", value)
+    value = value.strip("-")
+    return value
