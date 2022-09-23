@@ -112,7 +112,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
 
-        insight.annotated_result = annotation_result
+        insight.annotated_result = annotation_result.status
         insight.save()
 
         return annotation_result
