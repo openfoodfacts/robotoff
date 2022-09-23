@@ -398,6 +398,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#database-backup-and-restore" class="md-nav__link">
+    Database backup and restore
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -697,6 +704,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#database-backup-and-restore" class="md-nav__link">
+    Database backup and restore
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -749,6 +763,11 @@ robotoff_postgres_1    docker-entrypoint.sh postg ...   Up      127.0.0.1:5432-&
 robotoff_scheduler_1   /bin/sh -c /docker-entrypo ...   Up                                          
 robotoff_workers_1     /bin/sh -c /docker-entrypo ...   Up                              
 </code></pre></div>
+<h2 id="database-backup-and-restore">Database backup and restore</h2>
+<p>To backup the PostgreSQL database, run the following command:
+<code>docker exec -i robotoff_postgres_1 pg_dump -U postgres postgres | gzip &gt; $(date +%Y-%m-%d)_robotoff_postgres.sql.gz</code></p>
+<p>You can restore it easily locally by running:
+<code>zcat dump.sql.gz | docker exec -i robotoff_postgres_1 psql -U postgres</code></p>
                 
               
               
