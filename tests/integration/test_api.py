@@ -170,7 +170,11 @@ def test_annotate_insight_authenticated(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {'status_code': 1, 'status': 'saved', 'description': 'the annotation was saved'}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
     votes = list(AnnotationVote.select())
@@ -186,7 +190,7 @@ def test_annotate_insight_authenticated(client):
     assert "completed_at" in insight
 
     # check if "annotated_result" is saved
-    assert insight['annotated_result'] == 1
+    assert insight["annotated_result"] == 1
 
 
 def test_annotate_insight_not_enough_votes(client):
@@ -203,7 +207,7 @@ def test_annotate_insight_not_enough_votes(client):
     assert result.json == {
         "description": "the annotation vote was saved",
         "status": "vote_saved",
-        'status_code': 9
+        "status_code": 9,
     }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
@@ -254,7 +258,11 @@ def test_annotate_insight_majority_annotation(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {'status_code': 1, 'status': 'saved', 'description': 'the annotation was saved'}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     votes = list(AnnotationVote.select())
     assert len(votes) == 4
@@ -300,7 +308,11 @@ def test_annotate_insight_opposite_votes(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {'status_code': 1, 'status': 'saved', 'description': 'the annotation was saved'}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     votes = list(AnnotationVote.select())
     assert len(votes) == 4
@@ -352,7 +364,11 @@ def test_annotate_insight_majority_vote_overridden(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {'status_code': 1, 'status': 'saved', 'description': 'the annotation was saved'}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     votes = list(AnnotationVote.select())
     assert len(votes) == 5
@@ -388,8 +404,11 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     )
 
     assert result.status_code == 200
-    assert result.json == {'status_code': 9, 'status': 'vote_saved', 'description': 'the annotation vote was saved'}
-
+    assert result.json == {
+        "status_code": 9,
+        "status": "vote_saved",
+        "description": "the annotation vote was saved",
+    }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
     votes = list(AnnotationVote.select())
@@ -427,7 +446,7 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     assert authenticated_result.json == {
         "description": "the annotation was saved and sent to OFF",
         "status": "updated",
-        'status_code': 2
+        "status_code": 2,
     }
     # We have the previous vote, but the last request should validate the insight directly
     votes = list(AnnotationVote.select())

@@ -45,8 +45,8 @@ class AnnotationStatus(Enum):
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
-    status_code=AnnotationStatus.saved.value, 
-    status=AnnotationStatus.saved.name, 
+    status_code=AnnotationStatus.saved.value,
+    status=AnnotationStatus.saved.name,
     description="the annotation was saved",
 )
 UPDATED_ANNOTATION_RESULT = AnnotationResult(
@@ -66,7 +66,7 @@ ALREADY_ANNOTATED_RESULT = AnnotationResult(
 )
 UNKNOWN_INSIGHT_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_unknown_insight.value,
-    status=AnnotationStatus.error_unknown_insight.name, 
+    status=AnnotationStatus.error_unknown_insight.name,
     description="unknown insight ID",
 )
 DATA_REQUIRED_RESULT = AnnotationResult(
