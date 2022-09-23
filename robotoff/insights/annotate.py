@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 
 @dataclass
 class AnnotationResult:
+    status_code: int
     status: str
     description: Optional[str] = None
 
@@ -44,28 +45,37 @@ class AnnotationStatus(Enum):
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
-    status=AnnotationStatus.saved.name, description="the annotation was saved"
+    status_code=AnnotationStatus.saved.value, 
+    status=AnnotationStatus.saved.name, 
+    description="the annotation was saved",
 )
 UPDATED_ANNOTATION_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.updated.value,
     status=AnnotationStatus.updated.name,
     description="the annotation was saved and sent to OFF",
 )
 MISSING_PRODUCT_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_missing_product.value,
     status=AnnotationStatus.error_missing_product.name,
     description="the product could not be found on OFF",
 )
 ALREADY_ANNOTATED_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_already_annotated.value,
     status=AnnotationStatus.error_already_annotated.name,
     description="the insight has already been annotated",
 )
 UNKNOWN_INSIGHT_RESULT = AnnotationResult(
-    status=AnnotationStatus.error_unknown_insight.name, description="unknown insight ID"
+    status_code=AnnotationStatus.error_unknown_insight.value,
+    status=AnnotationStatus.error_unknown_insight.name, 
+    description="unknown insight ID",
 )
 DATA_REQUIRED_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_missing_data.value,
     status=AnnotationStatus.error_missing_data.name,
     description="annotation data is required as JSON in `data` field",
 )
 SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.vote_saved.value,
     status=AnnotationStatus.vote_saved.name,
     description="the annotation vote was saved",
 )
@@ -112,7 +122,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
 
-        insight.annotated_result = annotation_result.status
+        insight.annotated_result = annotation_result.status_code
         insight.save()
 
         return annotation_result
