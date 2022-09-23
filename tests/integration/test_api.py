@@ -185,15 +185,7 @@ def test_annotate_insight_authenticated(client):
     assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
     assert "completed_at" in insight
 
-    # to test if "annotated_result" is being saved in the database
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.annotated_result.is_null(False))
-        .dicts()
-        .iterator()
-    )
-    assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
-    assert "completed_at" in insight
+    assert insight.annotated_result == "updated"
 
 
 def test_annotate_insight_not_enough_votes(client):
