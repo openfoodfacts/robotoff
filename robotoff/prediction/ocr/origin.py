@@ -27,13 +27,13 @@ class OriginParser:
         INGREDIENTS = json.load(open(settings.TAXONOMY_CATEGORY_PATH, "r"))
 
         # French ----------------
-        INGREDIENTS_SYNONIMS_FR = [
+         INGREDIENTS_SYNONYMS_FR = [
             ingredient["synonyms"]["fr"]
             for ingredient in INGREDIENTS.values()
             if "synonyms" in ingredient and "fr" in ingredient["synonyms"]
         ]
         INGREDIENTS_FR = [
-            synonym for synonyms in INGREDIENTS_SYNONIMS_FR for synonym in synonyms
+            synonym for synonyms in  INGREDIENTS_SYNONYMS_FR for synonym in synonyms
         ]
         GENERAL_WORDS_FR = [
             "ingredients?",
@@ -147,13 +147,13 @@ class OriginParser:
 
         # English -----------------------
 
-        INGREDIENTS_SYNONIMS_EN = [
+         INGREDIENTS_SYNONYMS_EN = [
             ingredient["synonyms"]["en"]
             for ingredient in INGREDIENTS.values()
             if "synonyms" in ingredient and "en" in ingredient["synonyms"]
         ]
         INGREDIENTS_EN = [
-            synonym for synonyms in INGREDIENTS_SYNONIMS_EN for synonym in synonyms
+            synonym for synonyms in  INGREDIENTS_SYNONYMS_EN for synonym in synonyms
         ]  # flatten the array
         GENERAL_WORDS_EN = ["ingredients?", "elements?", "composition", "production"]
         INGREDIENTS_EN.extend(GENERAL_WORDS_EN)
@@ -283,9 +283,6 @@ class OriginParser:
                         ingredients_origins[origin]["concerned_ingredients"].append(
                             ingredient
                         )
-
-        if len(ingredients_origins) == 0:
-            return []
 
         return [
             Prediction(
