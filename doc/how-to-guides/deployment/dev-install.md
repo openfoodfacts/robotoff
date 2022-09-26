@@ -26,6 +26,12 @@ make dev
 This will build containers, pull images based containers, create containers and run them.
 It will also download models.
 
+Verify whether robotoff is running as expected, by executing the following command in CLI,
+```bash
+curl http://robotoff.openfoodfacts.localhost:5500/api/v1/status
+```
+The expected response is `{"status":"running"}`.
+
 Also take a look at [maintenance](./maintenance.md)
 
 ## Local install with poetry

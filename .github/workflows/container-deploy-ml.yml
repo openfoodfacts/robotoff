@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - master
-      - deploy-*
-    tags: 
-      - v*.*.*
+      - tf-serving-deploy-*
+    # only update on push if ml.yml changed (does not apply to tags)
+    paths:
+      - docker/ml.yml
+      - .github/workflows/container-deploy-ml.yml
+    # we also deploy ml on specific tags, starting with ml-
+    tags:
+      - ml-*
+
 
 jobs:
   deploy:

@@ -76,7 +76,9 @@ _AUTH_HEADER = {"Authorization": "Basic " + base64.b64encode(b"a:b").decode("asc
 
 
 def test_image_brand_annotation(client, monkeypatch, fake_taxonomy):
-    ann = LogoAnnotationFactory(image_prediction__image__source_image="/images/2.jpg")
+    ann = LogoAnnotationFactory(
+        image_prediction__image__source_image="/images/2.jpg", annotation_type="brand"
+    )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
     monkeypatch.setattr(

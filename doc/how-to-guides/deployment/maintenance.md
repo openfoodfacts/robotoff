@@ -49,3 +49,10 @@ robotoff_scheduler_1   /bin/sh -c /docker-entrypo ...   Up
 robotoff_workers_1     /bin/sh -c /docker-entrypo ...   Up                              
 ```
 
+## Database backup and restore
+
+To backup the PostgreSQL database, run the following command:
+`docker exec -i robotoff_postgres_1 pg_dump -U postgres postgres | gzip > $(date +%Y-%m-%d)_robotoff_postgres.sql.gz`
+
+You can restore it easily locally by running:
+`zcat dump.sql.gz | docker exec -i robotoff_postgres_1 psql -U postgres`

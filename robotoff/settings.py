@@ -106,6 +106,9 @@ def off_credentials() -> Dict[str, str]:
 
 
 OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
+EVENTS_API_URL = os.environ.get(
+    "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
+)
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
@@ -160,6 +163,11 @@ class ElasticsearchIndex:
     }
 
 
+# image moderation service
+IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
+    "IMAGE_MODERATION_SERVICE_URL", None
+)
+
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
 
@@ -191,7 +199,7 @@ def init_sentry(integrations: Optional[List[Integration]] = None):
                 event_level=logging.WARNING,  # Send warning and errors as events
             )
         )
-        sentry_sdk.init(
+        sentry_sdk.init(  # type:ignore # mypy say it's abstract
             _sentry_dsn,
             environment=_robotoff_instance,
             integrations=integrations,
@@ -208,6 +216,7 @@ OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
+OCR_USDA_CODE_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "USDA_code_flashtext.txt"
 OCR_LABEL_WHITELIST_DATA_PATH = OCR_DATA_DIR / "label_whitelist.txt"
 # Try to detect MSC codes
 OCR_FISHING_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_flashtext.txt"

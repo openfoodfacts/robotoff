@@ -52,6 +52,13 @@ def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
     return rows
 
 
+def crop_image_url(source_image, bounding_box) -> str:
+    base_url = settings.OFF_IMAGE_BASE_URL + source_image
+    y_min, x_min, y_max, x_max = bounding_box
+    base_robotoff_url = settings.BaseURLProvider().robotoff().get()
+    return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
+
+
 class BaseModel(peewee.Model):
     class Meta:
         database = db
@@ -210,7 +217,14 @@ class ImageModel(BaseModel):
 
 class ImagePrediction(BaseModel):
     """Table to store computer vision predictions (object detection,
-    image segmentation,...) made by custom models."""
+    image segmentation,...) made by custom models.
+
+    They are created by api `ImagePredictorResource`, `ImagePredictionImporterResource`
+    or cli `import_logos`
+
+    Predictions come from a model, from settings `OBJECT_DETECTION_TF_SERVING_MODELS`
+    this can be a nutriscore, a logo, etc...
+    """
 
     type = peewee.CharField(max_length=256)
     model_name = peewee.CharField(max_length=100, null=False, index=True)
@@ -227,6 +241,15 @@ class ImagePrediction(BaseModel):
 
 
 class LogoAnnotation(BaseModel):
+    """Annotation(s) for an image prediction
+    (an image prediction might lead to several annotations)
+
+    At the moment, this is mostly for logo (see run_object_detection),
+    when we have a logo prediction above a certain threshold we create an entry,
+    to ask user for annotation on the logo (https://hunger.openfoodfacts.org/logos)
+    and eventual annotation will land there.
+    """
+
     image_prediction = peewee.ForeignKeyField(
         ImagePrediction, null=False, backref="logo_detections"
     )
@@ -245,12 +268,9 @@ class LogoAnnotation(BaseModel):
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
 
     def get_crop_image_url(self) -> str:
-        base_url = (
-            settings.OFF_IMAGE_BASE_URL + self.image_prediction.image.source_image
+        return crop_image_url(
+            self.image_prediction.image.source_image, self.bounding_box
         )
-        y_min, x_min, y_max, x_max = self.bounding_box
-        base_robotoff_url = settings.BaseURLProvider().robotoff().get()
-        return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
 class LogoConfidenceThreshold(BaseModel):
