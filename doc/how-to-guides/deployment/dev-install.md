@@ -59,7 +59,7 @@ After cloning the repository:
     docker start mongodb
     ```
 
-    Your MongoDB has been installed sucessfully  and is up and running. Congratulations!
+    Your MongoDB has been installed successfully  and is up and running. Congratulations!
 
     Once you have the Robotoff services running with `docker-compose up` along with MongoDB container, proceed with the next steps.
 
@@ -74,7 +74,7 @@ After cloning the repository:
 
     First we have extracted the zip file. Next we copy the dump in our running MongoDB service in Robotoff `robotoff_mongodb_1`. Lastly, we restore the dump from Robotoff's service to `mongodb` container.
 
-    The MongoDB configuration is now compelete. 
+    The MongoDB configuration is now complete. 
 
     You can now work with Robotoff seamlessly.
 
