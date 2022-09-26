@@ -56,7 +56,7 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
+from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_taxonomized_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -743,7 +743,7 @@ class ImageLogoDetailResource:
             if value is not None:
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
             else:
                 logo.annotation_value_tag = None
                 logo.taxonomy_value = None
@@ -778,7 +778,7 @@ class ImageLogoAnnotateResource:
                 logo.annotation_value = value
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
 
             logo.annotation_type = type_
             logo.username = username
@@ -807,7 +807,7 @@ class ImageLogoUpdateResource:
 
         target_value_tag = get_tag(target_value)
         source_value_tag = get_tag(source_value)
-        taxonomy_value = match_unprefixed_value(target_value_tag, target_type)
+        taxonomy_value = match_taxonomized_value(target_value_tag, target_type)
 
         query = LogoAnnotation.update(
             {
