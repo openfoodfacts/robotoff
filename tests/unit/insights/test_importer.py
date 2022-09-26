@@ -698,7 +698,7 @@ class TestPackagerCodeInsightImporter:
         assert isinstance(insight, ProductInsight)
         assert insight.value == prediction.value
         assert insight.type == InsightType.packager_code
-        assert insight.data == {"type": "fishing"}
+        assert insight.data == {}
 
 
 class TestLabelInsightImporter:
