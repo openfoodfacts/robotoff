@@ -376,6 +376,16 @@ UNPREFIXED_MAPPING_STORE: Dict[str, CachedStore] = {
 
 
 def match_unprefixed_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
+    """From an unprefixed `value_tag`, return the taxonomized value in the
+    taxonomy (if any) or return None if no match was found.
+
+    Currently this only works for labels and brands:
+    - for label, from unprefixed `value_tag` (ex: en-organic), we return the
+    prefixed label (ex: en:eu-organic)
+    - for brand, we return the correctly capitalize brand name
+    (ex: carrefour-bio -> Carrefour Bio), as Product Opener does not have a
+    brand taxonomy so far
+    """
     unprefixed_mapping_cache = UNPREFIXED_MAPPING_STORE.get(taxonomy_type)
 
     if unprefixed_mapping_cache is None:
@@ -383,3 +393,20 @@ def match_unprefixed_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
 
     unprefixed_mapping = unprefixed_mapping_cache.get()
     return unprefixed_mapping.get(value_tag)
+
+
+def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
+    """Return the taxonomized value of a `value_tag` (if any) or return
+    None if no match was found.
+
+    Currently it only works for brand and label.
+    """
+    if taxonomy_type not in (TaxonomyType.brand.name, TaxonomyType.label.name):
+        return None
+
+    taxonomy = get_taxonomy(taxonomy_type)
+
+    if value_tag in taxonomy:
+        return value_tag
+
+    return match_unprefixed_value(value_tag, taxonomy_type)
