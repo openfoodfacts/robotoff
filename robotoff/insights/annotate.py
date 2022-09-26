@@ -42,6 +42,8 @@ class AnnotationStatus(Enum):
     error_already_annotated = 5
     error_unknown_insight = 6
     error_missing_data = 7
+    error_invalid_image = 8
+
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -238,6 +240,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
                 barcode,
             )
             return AnnotationResult(
+                status_code=AnnotationStatus.error_updated_product.value,
                 status=AnnotationStatus.error_updated_product.name,
                 description="the ingredient list has been updated since spellcheck",
             )
@@ -429,7 +432,8 @@ class NutritionImageAnnotator(InsightAnnotator):
 
         if not image_id:
             return AnnotationResult(
-                status="error_invalid_image",
+                status_code=AnnotationStatus.error_invalid_image.value,
+                status=AnnotationStatus.error_invalid_image.name,
                 description="the image is invalid",
             )
         image_key = "nutrition_{}".format(insight.value_tag)
