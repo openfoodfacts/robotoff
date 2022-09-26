@@ -45,7 +45,6 @@ class AnnotationStatus(Enum):
     error_invalid_image = 8
 
 
-
 SAVED_ANNOTATION_RESULT = AnnotationResult(
     status_code=AnnotationStatus.saved.value,
     status=AnnotationStatus.saved.name,
