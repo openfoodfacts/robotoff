@@ -275,6 +275,7 @@ class AnnotateInsightResource:
         )
 
         resp.media = {
+            "status_code": annotation_result.status_code,
             "status": annotation_result.status,
             "description": annotation_result.description,
         }
