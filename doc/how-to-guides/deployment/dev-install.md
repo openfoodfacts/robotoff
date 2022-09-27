@@ -9,6 +9,7 @@ customize parameters by editing the `.env` file.
 You should, consider those changes:
 
 - if you want to use tensorflow models, add `docker/ml.yml` to `COMPOSE_FILE`
+- if you don't work on Product Opener, you should launch MongoDB by adding `docker/mongodb.yml` to `COMPOSE_FILE`
 - change `OFF_UID` and `OFF_GID` to match your own user UID/GID.
   (see [Getting developper uid for docker](https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e))
 
