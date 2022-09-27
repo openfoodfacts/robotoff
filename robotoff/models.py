@@ -100,7 +100,7 @@ class ProductInsight(BaseModel):
 
     # Saves the value returned by Annotator.annotate
     # The value is mapped at `AnnotationStatus(enum)` class in annotate.py
-    annotated_result = peewee.IntegerField(null=True, index=True)
+    annotated_result = peewee.IntegerField(null=True, index=False)
 
     # The number of votes for this annotation.
     # Stored here for quick sorting.
