@@ -85,3 +85,40 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
         },
     ],
 }
+
+
+ANNOTATE_LOGO_SCHEMA: JSONType = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Annotate Logo",
+    "type": "object",
+    "properties": {
+        "annotations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": ["string", "null"],
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "brand",
+                            "category",
+                            "label",
+                            "no_logo",
+                            "nutritional_label",
+                            "packager_code",
+                            "packaging",
+                            "qr_code",
+                            "store",
+                        ],
+                    },
+                    "logo_id": {"type": "integer"},
+                },
+                "required": ["value", "type", "logo_id"],
+            },
+        },
+    },
+    "required": ["annotations"],
+}
