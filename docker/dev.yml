@@ -44,6 +44,9 @@ services:
       po_local:
         aliases:
         # trick: make robotoff available outside and inside with same name
+        # with this alias, we can call it from inside docker with same name as outside
+        # and Product Opener will call it from a browser (outside)
+        # or from within perl code (inside)
         - robotoff.openfoodfacts.localhost
         - api
       webnet:

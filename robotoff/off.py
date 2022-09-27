@@ -125,6 +125,7 @@ def get_api_product_url(server: Union[ServerType, str]) -> str:
 def get_base_url(server: Union[ServerType, str]) -> str:
     if isinstance(server, str):
         server = server.replace("api", "world")
+        # get scheme, https on prod, but http in dev
         scheme = settings.BaseURLProvider().scheme
         return f"{scheme}://{server}"
     else:

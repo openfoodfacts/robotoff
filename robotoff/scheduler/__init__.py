@@ -209,7 +209,7 @@ def _update_data():
         # (main Open Food Facts backend)
         # it it called after the download product dataset call.
         _refresh_elasticsearch()
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.RequestException:
         logger.exception("Exception while running ES updates for categories")
 
 
