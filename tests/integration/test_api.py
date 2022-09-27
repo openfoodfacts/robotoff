@@ -559,7 +559,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
 
 
 def test_prediction_collection_no_result(client):
-    result = client.simulate_get("/api/v1/predictions/")
+    result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
 
@@ -567,7 +567,7 @@ def test_prediction_collection_no_result(client):
 def test_prediction_collection_no_filter(client):
 
     prediction1 = PredictionFactory(value_tag="en:seeds")
-    result = client.simulate_get("/api/v1/predictions/")
+    result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
@@ -580,7 +580,7 @@ def test_prediction_collection_no_filter(client):
     prediction2 = PredictionFactory(
         value_tag="en:beers", data={"sample": 1}, type="brand"
     )
-    result = client.simulate_get("/api/v1/predictions/")
+    result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 2
@@ -596,7 +596,7 @@ def test_prediction_collection_no_filter(client):
 
 def test_get_unanswered_questions_api_empty(client):
     ProductInsight.delete().execute()  # remove default sample
-    result = client.simulate_get("/api/v1/questions/unanswered/")
+    result = client.simulate_get("/api/v1/questions/unanswered")
 
     assert result.status_code == 200
     assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
@@ -639,7 +639,7 @@ def test_get_unanswered_questions_api(client):
     # test to get all "category" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/",
+        "/api/v1/questions/unanswered",
         params={
             "count": 5,
             "page": 1,
@@ -656,7 +656,7 @@ def test_get_unanswered_questions_api(client):
     # test to get all "label" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "label"}
+        "/api/v1/questions/unanswered", params={"type": "label"}
     )
     assert result.status_code == 200
     data = result.json
@@ -667,7 +667,7 @@ def test_get_unanswered_questions_api(client):
     # test to get all "nutrition" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "nutrition"}
+        "/api/v1/questions/unanswered", params={"type": "nutrition"}
     )
     assert result.status_code == 200
     data = result.json
@@ -690,7 +690,7 @@ def test_get_unanswered_questions_api_with_country_filter(client):
     )
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"country": "en:india"}
+        "/api/v1/questions/unanswered", params={"country": "en:india"}
     )
     assert result.status_code == 200
     data = result.json
