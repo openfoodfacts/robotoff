@@ -758,6 +758,28 @@ The expected response is <code>{"status":"running"}</code>.</p>
 <li>
 <p>If you want to use Elasticsearch predictions, you'll also have to set an Elasticsearch instance</p>
 </li>
+<li>
+<p>To configure MongoDB for docker, start with installing <a href="https://hub.docker.com/_/mongo">official MongoDB image</a></p>
+<p>Start the MongoDB container with</p>
+<div class="highlight"><pre><span></span><code>docker start mongodb
+</code></pre></div>
+<p>Your MongoDB has been installed successfully  and is up and running. Congratulations!</p>
+<p>Once you have the Robotoff services running with <code>docker-compose up</code> along with MongoDB container, proceed with the next steps.</p>
+<p>Our MongoDB does not have a database right now. So we restore it.</p>
+<div class="highlight"><pre><span></span><code>tar xzf off-dev-mongo-dump.tar.gz
+docker cp -a dump robotoff_mongodb_1:/var/tmp/
+docker exec mongodb mongorestore /var/tmp/dump
+</code></pre></div>
+<p>First we have extracted the zip file. Next we copy the dump in our running MongoDB service in Robotoff <code>robotoff_mongodb_1</code>. Lastly, we restore the dump from Robotoff's service to <code>mongodb</code> container.</p>
+<p>The MongoDB configuration is now complete. </p>
+<p>You can now work with Robotoff seamlessly.</p>
+</li>
+<li>
+<p>To debug in a running container, you need to run poetry in the container. For example:</p>
+<p><div class="highlight"><pre><span></span><code>docker-compose run --rm api poetry run python
+</code></pre></div>
+  Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code. </p>
+</li>
 </ol>
                 
               
