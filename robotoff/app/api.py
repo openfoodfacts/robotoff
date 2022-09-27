@@ -642,6 +642,8 @@ class ImageLogoResource:
             join_image_model = True
 
         if min_confidence is not None:
+            # TODO(raphael): We should filter based on individual logo object confidence
+            # and not on image object with the maximum confidence
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
             join_image_prediction = True
 
@@ -783,6 +785,10 @@ class ImageLogoAnnotateResource:
 
 class ImageLogoUpdateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Bulk update logo annotations: change type and value of logos that have specific
+        types and values.
+
+        Because this endpoint mass-update annotations, leave it out of API documentation."""
         source_value = req.get_param("source_value", required=True)
         source_type = req.get_param("source_type", required=True)
         target_value = req.get_param("target_value", required=True)
