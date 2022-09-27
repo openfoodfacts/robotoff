@@ -761,6 +761,7 @@ class ImageLogoDetailResource:
 
 
 class ImageLogoAnnotateResource:
+    @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
@@ -773,18 +774,28 @@ class ImageLogoAnnotateResource:
             logo_id = annotation["logo_id"]
             type_ = annotation["type"]
             value = annotation["value"] or None
-            logo = LogoAnnotation.get_by_id(logo_id)
+            try:
+                logo = LogoAnnotation.get_by_id(logo_id)
+            except LogoAnnotation.DoesNotExist:
+                raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
+
             if value is not None:
                 logo.annotation_value = value
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
                 logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
+            elif type_ in ("brand", "category", "label", "store"):
+                raise falcon.HTTPBadRequest(
+                    description=f"value required for type {type_} (logo {logo_id})"
+                )
 
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at
-            logo.save()
             annotated_logos.append(logo)
+
+        for logo in annotated_logos:
+            logo.save()
 
         created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
         resp.media = {"created insights": created}
