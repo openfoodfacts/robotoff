@@ -2,10 +2,7 @@ import functools
 import re
 import unicodedata
 
-from spacy.lang.en import English
-from spacy.lang.fr import French
-
-from robotoff.utils import cache
+import spacy
 
 from .fold_to_ascii import fold
 
@@ -41,13 +38,19 @@ def strip_consecutive_spaces(text: str) -> str:
     return CONSECUTIVE_SPACES_REGEX.sub(" ", text)
 
 
-def get_nlp(lang: str):
-    if lang == "fr":
-        return French()
-    elif lang == "en":
-        return English()
-    else:
-        raise ValueError("unknown lang: {}".format(lang))
+@functools.lru_cache()
+def get_blank_nlp(lang: str) -> spacy.Language:
+    """Return a blank (without model) spaCy language pipeline."""
+    return spacy.blank(lang)
+
+
+@functools.lru_cache()
+def get_lemmatizing_nlp(lang: str) -> spacy.Language:
+    """Return a spaCy language pipeline with a lookup lemmatizer."""
+    nlp = spacy.blank(lang)
+    nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
+    nlp.initialize()
+    return nlp
 
 
 def get_tag(text: str) -> str:
@@ -59,8 +62,3 @@ def get_tag(text: str) -> str:
         .replace("'", "-")
         .replace(".", "-")
     )
-
-
-FR_NLP_CACHE = cache.CachedStore(
-    functools.partial(get_nlp, lang="fr"), expiration_interval=None
-)
