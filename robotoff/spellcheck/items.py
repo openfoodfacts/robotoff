@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Optional
 
 from robotoff.prediction.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
-from robotoff.utils.text import FR_NLP_CACHE
+from robotoff.utils.text import get_blank_nlp
 
 LANGUAGE_ALLOWED = "fr"
 LANGUAGE_IDENTIFIER: LanguageIdentifier = DEFAULT_LANGUAGE_IDENTIFIER.get()
@@ -65,7 +65,7 @@ class AtomicCorrection:
         )
 
     def _is_original_known(self) -> bool:
-        nlp = FR_NLP_CACHE.get()
+        nlp = get_blank_nlp("fr")
         known_tokens = FR_KNOWN_TOKENS_CACHE.get()
 
         for token in nlp(self.original):
