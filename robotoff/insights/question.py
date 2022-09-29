@@ -6,11 +6,13 @@ from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
 from robotoff.mongo import MONGO_CLIENT_CACHE
-from robotoff.off import generate_image_url, get_product
+from robotoff.off import generate_image_url
+from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
+from json import loads
 
 logger = get_logger(__name__)
 
@@ -142,15 +144,17 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     @staticmethod
     def get_source_image_url(barcode: str) -> Optional[str]:
-        product: Optional[JSONType] = get_product(barcode, fields=["selected_images"])
+        product: Optional[JSONType] = get_product(barcode)
 
         if product is None:
             return None
 
-        if "selected_images" not in product:
+        data = dict(loads(product))
+
+        if "selected_images" not in data["product"]:
             return None
 
-        selected_images = product["selected_images"]
+        selected_images = data["product"]["selected_images"]
 
         for key in ("front", "ingredients", "nutrition"):
             if key in selected_images:
