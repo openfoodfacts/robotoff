@@ -1,5 +1,6 @@
 import abc
 import pathlib
+from json import loads
 from typing import Dict, List, Optional
 
 from robotoff import settings
@@ -12,7 +13,6 @@ from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
-from json import loads
 
 logger = get_logger(__name__)
 
