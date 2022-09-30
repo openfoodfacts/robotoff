@@ -1,5 +1,6 @@
-import pytest
 from typing import List
+
+import pytest
 
 from robotoff.prediction.category.matcher import match, predict, process
 from robotoff.prediction.types import Prediction, PredictionType

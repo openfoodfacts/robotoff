@@ -1,10 +1,10 @@
 import requests
 
-from robotoff.prediction.category.matcher import predict as predict_category_matcher
 from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import import_insights, refresh_insights
 from robotoff.models import with_db
 from robotoff.off import ServerType, get_server_type
+from robotoff.prediction.category.matcher import predict as predict_category_matcher
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.products import get_product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy

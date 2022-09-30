@@ -1,21 +1,20 @@
-from typing import Dict, Iterable, List, Optional, Set, Tuple
-import cachetools
 import datetime
 import re
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
+import cachetools
 from flashtext import KeywordProcessor
 
-from robotoff.products import ProductDataset
-from robotoff.prediction.types import Prediction, PredictionType
 from robotoff import settings
-from robotoff.taxonomy import get_taxonomy, TaxonomyType
+from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.products import ProductDataset
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.utils import dump_json, get_logger, load_json
 from robotoff.utils.text import (
     get_lemmatizing_nlp,
     strip_accents_ascii,
     strip_consecutive_spaces,
 )
-from robotoff.utils import dump_json, get_logger, load_json
-
 
 logger = get_logger(__name__)
 
