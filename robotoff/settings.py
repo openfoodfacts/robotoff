@@ -117,6 +117,15 @@ EVENTS_API_URL = os.environ.get(
     "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
 )
 
+CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
+CATEGORY_MATCHER_MATCH_MAPS = {
+    "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
+    "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
+}
+CATEGORY_MATCHER_INTERSECT = (
+    CATEGORY_MATCHER_DIR / "category_ingredient_intersect.json.gz"
+)
+
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
