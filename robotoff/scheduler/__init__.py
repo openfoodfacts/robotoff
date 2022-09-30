@@ -12,7 +12,6 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
-from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
@@ -21,6 +20,7 @@ from robotoff.insights.annotate import (
 from robotoff.insights.importer import import_insights
 from robotoff.metrics import ensure_influx_database, save_facet_metrics
 from robotoff.models import ProductInsight, with_db
+from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
     Product,

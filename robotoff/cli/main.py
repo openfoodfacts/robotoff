@@ -88,7 +88,7 @@ def batch_annotate(insight_type: str, filter_clause: str, dry: bool = True) -> N
 @app.command()
 def predict_category(output: str) -> None:
     from robotoff import settings
-    from robotoff.elasticsearch.category.predict import predict_from_dataset
+    from robotoff.prediction.category.matcher import predict_from_dataset
     from robotoff.products import ProductDataset
     from robotoff.utils import dump_jsonl
 
