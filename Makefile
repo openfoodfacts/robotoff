@@ -146,7 +146,7 @@ integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest -x -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings
