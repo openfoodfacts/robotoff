@@ -71,6 +71,24 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
             yield orjson.loads(line)
 
 
+def load_json(path: Union[str, pathlib.Path], compressed: bool = False) -> Dict:
+    if compressed:
+        with gzip.open(str(path), "rb") as f:
+            return orjson.loads(f.read())
+    else:
+        with open(str(path), "rb") as f:
+            return orjson.loads(f.read())
+
+
+def dump_json(path: Union[str, pathlib.Path], item: Any, compressed: bool = False):
+    if compressed:
+        with gzip.open(str(path), "wb") as f:
+            f.write(orjson.dumps(item))
+    else:
+        with open(str(path), "wb") as f:
+            f.write(orjson.dumps(item))
+
+
 def dump_jsonl(
     filepath: Union[str, pathlib.Path],
     json_iter: Iterable[Any],
