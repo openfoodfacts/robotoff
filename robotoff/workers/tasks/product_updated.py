@@ -1,8 +1,6 @@
 import requests
 
-from robotoff.elasticsearch.category.predict import (
-    predict_from_product as predict_category_from_product_es,
-)
+from robotoff.prediction.category.matcher import predict as predict_category_matcher
 from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import import_insights, refresh_insights
 from robotoff.models import with_db
@@ -48,7 +46,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     logger.info("Predicting product categories...")
     # predict category using Elasticsearch on title
     product_predictions = []
-    es_prediction = predict_category_from_product_es(product)
+    es_prediction = predict_category_matcher(product)
 
     if es_prediction is not None:
         product_predictions.append(es_prediction)
