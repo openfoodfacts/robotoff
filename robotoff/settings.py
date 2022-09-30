@@ -170,11 +170,9 @@ ELASTICSEARCH_TYPE = "document"
 
 
 class ElasticsearchIndex:
-    CATEGORY = "category"
     PRODUCT = "product"
 
     SUPPORTED_INDICES = {
-        CATEGORY: (PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"),
         PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
     }
 
