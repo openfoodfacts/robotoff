@@ -6,15 +6,20 @@ from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
 from robotoff.mongo import MONGO_CLIENT_CACHE
-from robotoff.off import generate_image_url
+from robotoff.off import generate_image_url, split_barcode
 from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
-from json import loads
 
 logger = get_logger(__name__)
+
+IMAGE_SUB_DOMAIN = "https://images.openfoodfacts.org"
+
+DISPLAY_IMAGE_SIZE = 400
+SMALL_IMAGE_SIZE = 200
+THUMB_IMAGE_SIZE = 100
 
 
 LABEL_IMG_BASE_URL = "https://{}/images/lang".format(
@@ -133,7 +138,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
         localized_value: str = taxonomy.get_localized_name(insight.value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = self.get_source_image_url(insight.barcode)
+        source_image_url = self.get_source_image_url(self, insight.barcode)
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
@@ -143,18 +148,13 @@ class CategoryQuestionFormatter(QuestionFormatter):
         )
 
     @staticmethod
-    def get_source_image_url(barcode: str) -> Optional[str]:
+    def get_source_image_url(self, barcode: str) -> Optional[str]:
         product: Optional[JSONType] = get_product(barcode)
 
         if product is None:
             return None
 
-        data = dict(loads(product))
-
-        if "selected_images" not in data["product"]:
-            return None
-
-        selected_images = data["product"]["selected_images"]
+        selected_images = self.generate_selected_images(product["images"])
 
         for key in ("front", "ingredients", "nutrition"):
             if key in selected_images:
@@ -167,6 +167,62 @@ class CategoryQuestionFormatter(QuestionFormatter):
                         return display_images[0]
 
         return None
+
+        def generate_selected_images(images: JSONType) -> JSONType:
+            selected_images = {}
+            front = {}
+            small = {}
+            thumb = {}
+            display = {}
+
+            barcode = images["code"]
+            revision_id_es = images["product"]["images"]["front_es"]["rev"]
+            revision_id_fr = images["product"]["images"]["front_fr"]["rev"]
+
+            # splitting the barcode
+
+            splitted_barcode = split_barcode(barcode)
+
+            es_image_url = (
+                IMAGE_SUB_DOMAIN
+                + "/images/products"
+                + splitted_barcode
+                + "/front_es."
+                + revision_id_es
+                + ".{}.jpg"
+            )
+            fr_image_url = (
+                IMAGE_SUB_DOMAIN
+                + "/images/products"
+                + splitted_barcode
+                + "/front_fr."
+                + revision_id_fr
+                + ".{}.jpg"
+            )
+
+            # assembling the "front" key
+
+            display["es"] = es_image_url.format(DISPLAY_IMAGE_SIZE)
+            display["fe"] = fr_image_url.format(DISPLAY_IMAGE_SIZE)
+
+            front["display"] = display
+
+            # assembling the "small" key
+
+            small["es"] = es_image_url.format(SMALL_IMAGE_SIZE)
+            small["fe"] = fr_image_url.format(SMALL_IMAGE_SIZE)
+
+            # assembling the "thumb" key
+
+            thumb["es"] = es_image_url.format(THUMB_IMAGE_SIZE)
+            thumb["fe"] = fr_image_url.format(THUMB_IMAGE_SIZE)
+
+            # assembling it all together
+            selected_images["front"] = front
+            selected_images["small"] = small
+            selected_images["thumb"] = thumb
+
+            return selected_images
 
 
 class ProductWeightQuestionFormatter(QuestionFormatter):
