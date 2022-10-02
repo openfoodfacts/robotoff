@@ -1,5 +1,6 @@
 import abc
 import pathlib
+from json import loads
 from typing import Dict, List, Optional
 
 from robotoff import settings
