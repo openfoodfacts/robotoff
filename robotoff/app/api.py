@@ -402,8 +402,10 @@ class OCRInsightsPredictorResource:
 
 class CategoryPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        deepest_only = req.get_param_as_bool("deepest_only", default=False)
+        """Predict categories using neural categorizer for a specific product."""
+        barcode: str = req.get_param("barcode", required=True)
+        deepest_only: bool = req.get_param_as_bool("deepest_only", default=False)
+        threshold: Optional[float] = req.get_param_as_float("threshold", default=None)
 
         categories = []
 
@@ -411,7 +413,7 @@ class CategoryPredictorResource:
         if product:
             predictions = CategoryClassifier(
                 get_taxonomy(TaxonomyType.category.name)
-            ).predict(product, deepest_only)
+            ).predict(product, deepest_only, threshold)
             categories = [p.to_dict() for p in predictions]
 
         resp.media = {"categories": categories}
