@@ -401,22 +401,30 @@ class OCRInsightsPredictorResource:
 
 
 class CategoryPredictorResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
+    @jsonschema.validate(schema.PREDICT_CATEGORY_SCHEMA)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
         """Predict categories using neural categorizer for a specific product."""
-        barcode: str = req.get_param("barcode", required=True)
-        deepest_only: bool = req.get_param_as_bool("deepest_only", default=False)
-        threshold: Optional[float] = req.get_param_as_float("threshold", default=None)
+        if "barcode" in req.media:
+            # Fetch product from DB
+            barcode: str = req.media["barcode"]
+            product = get_product(barcode, fields=["product_name", "ingredients_tags"])
+        else:
+            product = req.media["product"]
+        deepest_only: bool = req.media.get("deepest_only", False)
+        threshold: Optional[float] = req.media.get("threshold")
 
         categories = []
 
-        product = get_product(barcode)
         if product:
             predictions = CategoryClassifier(
                 get_taxonomy(TaxonomyType.category.name)
             ).predict(product, deepest_only, threshold)
-            categories = [p.to_dict() for p in predictions]
+            categories = [
+                {"value_tag": p.value_tag, "confidence": p.data["confidence"]}
+                for p in predictions
+            ]
 
-        resp.media = {"categories": categories}
+        resp.media = {"neural": categories}
 
 
 class UpdateDatasetResource:
