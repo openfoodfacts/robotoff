@@ -10,17 +10,16 @@ containing an 'errors' fields will be replaced.
 
 import argparse
 import base64
-from datetime import datetime
 import gzip
 import json
 import os
 import pathlib
 import sys
 import time
+from datetime import datetime
 from typing import List, Optional
 
 import requests
-
 
 API_KEY = os.environ.get("CLOUD_VISION_API_KEY")
 MAXIMUM_MODIFICATION_DATETIME = datetime(year=2019, month=5, day=1)
