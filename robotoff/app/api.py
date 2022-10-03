@@ -972,6 +972,7 @@ def get_questions_resource_on_get(
         order_by=order_by,
         reserved_barcode=reserved_barcode,
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
+        automatically_processable=False,
     )
 
     offset: int = (page - 1) * count
@@ -1160,16 +1161,16 @@ class UnansweredQuestionCollection:
         country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
 
-        query_parameters = {
-            "keep_types": [question_type] if question_type else None,
-            "group_by_value_tag": True,
-            "value_tag": value_tag,
-            "limit": count,
-            "country": country,
-            "server_domain": server_domain,
-        }
-
-        get_insights_ = functools.partial(get_insights, **query_parameters)
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=[question_type] if question_type else None,
+            group_by_value_tag=True,
+            value_tag=value_tag,
+            limit=count,
+            country=country,
+            server_domain=server_domain,
+            automatically_processable=False,
+        )
 
         offset: int = (page - 1) * count
         insights = [i for i in get_insights_(limit=count, offset=offset)]
