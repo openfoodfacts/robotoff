@@ -395,6 +395,95 @@ paths:
                   - logos
                   - count
 
+  /predict/category:
+    get:
+      tags:
+        - Predict
+      summary: Predict categories for a product
+      description: |
+        Currently only the neural categorizer is available on this endpoint.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - type: object
+                  properties:
+                    barcode:
+                      type: string
+                      description: The barcode of the product to categorize
+                      minLength: 1
+                      example: 0748162621021
+                    deepest_only:
+                      type: boolean
+                      description: |
+                        If true, only return the deepest elements in the category taxonomy
+                        (don't return categories that are parents of other predicted categories)
+                    threshold:
+                      type: number
+                      description: |
+                        The score above which we consider the category to be detected
+                      default: 0.5
+                  required:
+                    - barcode
+                - type: object
+                  properties:
+                    product:
+                      type: object
+                      properties:
+                        product_name:
+                          type: string
+                          minLength: 1
+                          example: Frozen dinner yeast rolls
+                        ingredients_tags:
+                          type: array
+                          items:
+                            type: string
+                          example:
+                            - "en:fortified-wheat-flour"
+                            - "en:cereal"
+                            - "en:flour"
+                      required:
+                        - product_name
+                    deepest_only:
+                      type: boolean
+                      description: |
+                        If true, only return the deepest elements in the category taxonomy
+                        (don't return categories that are parents of other predicted categories)
+                    threshold:
+                      type: number
+                      description: |
+                        The score above which we consider the category to be detected
+                      default: 0.5
+                  required:
+                    - product
+      responses:
+        "200":
+          description: the category predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  neural:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value_tag:
+                          type: string
+                          description: The predicted `value_tag`
+                          example: en:breads
+                        confidence:
+                          type: number
+                          description: The confidence score of the model
+                          example: 0.6
+                      required:
+                        - value_tag
+                        - confidence
+                required:
+                  - neural
+
 components:
   schemas:
     InsightSearchResult:
