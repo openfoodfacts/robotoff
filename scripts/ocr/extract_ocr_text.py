@@ -2,6 +2,7 @@ import enum
 import gzip
 import pathlib
 import re
+import sys
 import traceback
 from collections import defaultdict
 
@@ -365,7 +366,7 @@ class Word:
 
         if "detectedLanguages" in word_property:
             self.languages = [
-                DetectedLanguage(l) for l in data["property"]["detectedLanguages"]
+                DetectedLanguage(lang) for lang in data["property"]["detectedLanguages"]
             ]
 
     def get_text(self):
@@ -533,5 +534,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    assert args.input.is_file()
+    if not args.input.is_file():
+        sys.exit("input file {} does not exist".format(args.input))
     extract_ocr_text(args.input, args.output)
