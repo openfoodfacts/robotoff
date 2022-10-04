@@ -36,13 +36,13 @@ class AnnotationResult:
 class AnnotationStatus(Enum):
     saved = 1
     updated = 2
-    vote_saved = 9
     error_missing_product = 3
     error_updated_product = 4
     error_already_annotated = 5
     error_unknown_insight = 6
     error_missing_data = 7
     error_invalid_image = 8
+    vote_saved = 9
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -125,8 +125,15 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
 
-        insight.annotated_result = annotation_result.status_code
-        insight.save()
+        if annotation_result.status_code in (
+            AnnotationStatus.saved.value,
+            AnnotationStatus.updated.value,
+            AnnotationStatus.error_invalid_image.value,
+            AnnotationStatus.error_missing_product.value,
+            AnnotationStatus.error_updated_product.value,
+        ):
+            insight.annotated_result = annotation_result.status_code
+            insight.save()
 
         return annotation_result
 
