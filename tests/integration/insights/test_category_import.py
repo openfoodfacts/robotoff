@@ -42,9 +42,9 @@ def matcher_prediction(category):
         data={
             "lang": "en",
             "product_name": "test",
-            "model": "matcher",
         },
         automatic_processing=False,
+        predictor="matcher",
     )
 
 
@@ -53,8 +53,9 @@ def neural_prediction(category, confidence=0.7, auto=False):
         barcode=barcode1,
         type=PredictionType.category,
         value_tag=category,
-        data={"lang": "xx", "model": "neural", "confidence": confidence},
+        data={"lang": "xx", "confidence": confidence},
         automatic_processing=auto,
+        predictor="neural",
     )
 
 

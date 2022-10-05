@@ -1,3 +1,4 @@
+import copy
 import datetime
 import logging
 import os
@@ -39,23 +40,29 @@ class BaseURLProvider(object):
         self.prefix = "world"
         self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
 
+    def clone(self):
+        return copy.deepcopy(self)
+
     def robotoff(self):
-        self.prefix = "robotoff"
-        return self
+        result = self.clone()
+        result.prefix = "robotoff"
+        return result
 
     def static(self):
-        self.prefix = "static"
+        result = self.clone()
+        result.prefix = "static"
         # locally we may want to change it, give environment a chance
         static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
         if static_domain:
             if "://" in static_domain:
-                self.scheme, static_domain = static_domain.split("://", 1)
-            self.domain = static_domain
-        return self
+                result.scheme, static_domain = static_domain.split("://", 1)
+            result.domain = static_domain
+        return result
 
     def country(self, country_code: str):
-        self.prefix = country_code
-        return self
+        result = self.clone()
+        result.prefix = country_code
+        return result
 
     def get(self):
         return self.url % {
@@ -163,6 +170,11 @@ class ElasticsearchIndex:
     }
 
 
+# image moderation service
+IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
+    "IMAGE_MODERATION_SERVICE_URL", None
+)
+
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
 
@@ -211,6 +223,7 @@ OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
+OCR_USDA_CODE_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "USDA_code_flashtext.txt"
 OCR_LABEL_WHITELIST_DATA_PATH = OCR_DATA_DIR / "label_whitelist.txt"
 # Try to detect MSC codes
 OCR_FISHING_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_flashtext.txt"

@@ -99,3 +99,14 @@ and then run the `pytest`, with the `--pdb` option (as above).
 to view the inputs and outputs captured by pytest
 > and access the pdb console.
 
+
+
+# How to run checks locally
+
+When commiting your modifications to the main branch, your code have to pass several tests automatically run by GitHub in order to be merged.
+
+You can run theses checks locally before commiting by using the following command:
+
+```bash
+$ 	make checks
+```
