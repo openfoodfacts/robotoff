@@ -56,6 +56,10 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                     "type": "boolean",
                 },
                 "threshold": {"type": "number"},
+                "predictors": {
+                    "type": "array",
+                    "items": {"enum": ["neural", "matcher"]},
+                },
             },
             "required": ["barcode"],
         },
@@ -80,6 +84,14 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                     "type": "boolean",
                 },
                 "threshold": {"type": "number"},
+                "predictors": {
+                    "type": "array",
+                    "items": {"enum": ["neural", "matcher"]},
+                },
+                "lang": {
+                    "type": "string",
+                    "minLength": 1,
+                },
             },
             "required": ["product"],
         },

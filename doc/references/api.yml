@@ -424,6 +424,16 @@ paths:
                       description: |
                         The score above which we consider the category to be detected
                       default: 0.5
+                    predictors:
+                      type: array
+                      description:
+                        List of predictors to use, possible values are `matcher`
+                        (simple matching algorithm) and `neural` (neural network categorizer)
+                      items:
+                        type: string
+                        enum:
+                          - neural
+                          - matcher
                   required:
                     - barcode
                 - type: object
@@ -445,6 +455,11 @@ paths:
                             - "en:flour"
                       required:
                         - product_name
+                    lang:
+                      type: string
+                      minLength: 1
+                      description: Language of the product name, required for matcher algorithm
+                      example: en
                     deepest_only:
                       type: boolean
                       description: |
@@ -455,6 +470,16 @@ paths:
                       description: |
                         The score above which we consider the category to be detected
                       default: 0.5
+                    predictors:
+                      type: array
+                      description:
+                        List of predictors to use, possible values are `matcher`
+                        (simple matching algorithm) and `neural` (neural network categorizer)
+                      items:
+                        type: string
+                        enum:
+                          - neural
+                          - matcher
                   required:
                     - product
       responses:
@@ -481,8 +506,28 @@ paths:
                       required:
                         - value_tag
                         - confidence
-                required:
-                  - neural
+                  matcher:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value_tag:
+                          type: string
+                          description: The predicted `value_tag`
+                          example: en:breads
+                        pattern:
+                          type: string
+                          description: The pattern that matched the product name
+                          example: pain mie
+                        lang:
+                          type: string
+                          description: The language of the matched pattern
+                          example: en
+                        product_name:
+                          type: string
+                          description: The product name that matched the category name
+                      required:
+                        - value_tag
 
 components:
   schemas:
