@@ -138,7 +138,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
         localized_value: str = taxonomy.get_localized_name(insight.value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = self.get_source_image_url(self, insight.barcode)
+        source_image_url = self.get_source_image_url(insight.barcode)
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
@@ -148,13 +148,15 @@ class CategoryQuestionFormatter(QuestionFormatter):
         )
 
     @staticmethod
-    def get_source_image_url(self, barcode: str) -> Optional[str]:
+    def get_source_image_url(barcode: str) -> Optional[str]:
         product: Optional[JSONType] = get_product(barcode)
 
         if product is None:
             return None
 
-        selected_images = self.generate_selected_images(product["images"])
+        selected_images = CategoryQuestionFormatter.generate_selected_images(
+            product["images"]
+        )
 
         for key in ("front", "ingredients", "nutrition"):
             if key in selected_images:
@@ -168,6 +170,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
         return None
 
+        @staticmethod
         def generate_selected_images(images: JSONType) -> JSONType:
             selected_images = {}
             front = {}
@@ -176,48 +179,35 @@ class CategoryQuestionFormatter(QuestionFormatter):
             display = {}
 
             barcode = images["code"]
-            revision_id_es = images["product"]["images"]["front_es"]["rev"]
-            revision_id_fr = images["product"]["images"]["front_fr"]["rev"]
 
-            # splitting the barcode
+            splitted_barcode = split_barcode(barcode)  # splitting the barcode
 
-            splitted_barcode = split_barcode(barcode)
+            images_data = images["product"]["images"]
 
-            es_image_url = (
-                IMAGE_SUB_DOMAIN
-                + "/images/products"
-                + splitted_barcode
-                + "/front_es."
-                + revision_id_es
-                + ".{}.jpg"
-            )
-            fr_image_url = (
-                IMAGE_SUB_DOMAIN
-                + "/images/products"
-                + splitted_barcode
-                + "/front_fr."
-                + revision_id_fr
-                + ".{}.jpg"
-            )
+            for k in images_data.items():
+                if k.startswith("front_"):  # to add support for all languages
+                    language = k.split("_")[1]  # get language name
+                    revision_id = images_data[k][
+                        "rev"
+                    ]  # get revision_id for all languages
 
-            # assembling the "front" key
+                    image_url = (
+                        IMAGE_SUB_DOMAIN
+                        + "/images/products"
+                        + splitted_barcode
+                        + "/"
+                        + k
+                        + "."
+                        + revision_id
+                        + ".{}.jpg"
+                    )
 
-            display["es"] = es_image_url.format(DISPLAY_IMAGE_SIZE)
-            display["fe"] = fr_image_url.format(DISPLAY_IMAGE_SIZE)
+                    display[language] = image_url.format(DISPLAY_IMAGE_SIZE)
+                    small[language] = image_url.format(SMALL_IMAGE_SIZE)
+                    thumb[language] = image_url.format(THUMB_IMAGE_SIZE)
 
+            # assembling all the keys
             front["display"] = display
-
-            # assembling the "small" key
-
-            small["es"] = es_image_url.format(SMALL_IMAGE_SIZE)
-            small["fe"] = fr_image_url.format(SMALL_IMAGE_SIZE)
-
-            # assembling the "thumb" key
-
-            thumb["es"] = es_image_url.format(THUMB_IMAGE_SIZE)
-            thumb["fe"] = fr_image_url.format(THUMB_IMAGE_SIZE)
-
-            # assembling it all together
             selected_images["front"] = front
             selected_images["small"] = small
             selected_images["thumb"] = thumb
