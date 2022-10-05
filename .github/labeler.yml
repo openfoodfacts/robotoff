@@ -5,4 +5,4 @@ crowdin:
 - crowdin.yml
 
 tests:
-tests/integration/**/*
+- tests/integration/**/*
