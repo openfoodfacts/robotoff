@@ -3,6 +3,7 @@ import datetime
 import functools
 import hashlib
 import io
+import itertools
 import tempfile
 from typing import List, Optional
 
@@ -49,6 +50,9 @@ from robotoff.off import (
     get_barcode_from_url,
     get_product,
     get_server_type,
+)
+from robotoff.prediction.category.matcher import (
+    predict_by_lang as matcher_predict_by_lang,
 )
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
@@ -403,28 +407,55 @@ class OCRInsightsPredictorResource:
 class CategoryPredictorResource:
     @jsonschema.validate(schema.PREDICT_CATEGORY_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        """Predict categories using neural categorizer for a specific product."""
+        """Predict categories using neural categorizer and matching algorithm
+        for a specific product."""
+        predictors: List[str] = req.media.get("predictors") or ["neural", "matcher"]
+
         if "barcode" in req.media:
             # Fetch product from DB
+            from_barcode = True
             barcode: str = req.media["barcode"]
-            product = get_product(barcode, fields=["product_name", "ingredients_tags"])
+            product = get_product(barcode)
         else:
+            if "matcher" in predictors and "lang" not in req.media:
+                raise falcon.HTTPBadRequest(
+                    description="lang field is required when using matcher predictor"
+                )
+            from_barcode = False
             product = req.media["product"]
-        deepest_only: bool = req.media.get("deepest_only", False)
-        threshold: Optional[float] = req.media.get("threshold")
 
-        categories = []
-
+        response = {}
         if product:
-            predictions = CategoryClassifier(
-                get_taxonomy(TaxonomyType.category.name)
-            ).predict(product, deepest_only, threshold)
-            categories = [
-                {"value_tag": p.value_tag, "confidence": p.data["confidence"]}
-                for p in predictions
-            ]
+            if "neural" in predictors:
+                deepest_only: bool = req.media.get("deepest_only", False)
+                threshold: Optional[float] = req.media.get("threshold")
+                predictions = CategoryClassifier(
+                    get_taxonomy(TaxonomyType.category.name)
+                ).predict(product, deepest_only, threshold)
+                response["neural"] = [
+                    {"value_tag": p.value_tag, "confidence": p.data["confidence"]}
+                    for p in predictions
+                ]
+            if "matcher" in predictors:
+                if not from_barcode:
+                    lang = req.media["lang"]
+                    product[f"product_name_{lang}"] = product["product_name"]
+                    product["languages_codes"] = [lang]
+                    product["code"] = "UNKNOWN"
 
-        resp.media = {"neural": categories}
+                response["matcher"] = [
+                    {
+                        "value_tag": p.value_tag,
+                        "lang": p.data["lang"],
+                        "product_name": p.data["product_name"],
+                        "pattern": p.data["pattern"],
+                    }
+                    for p in itertools.chain.from_iterable(
+                        matcher_predict_by_lang(product).values()
+                    )
+                ]
+
+        resp.media = response
 
 
 class UpdateDatasetResource:
