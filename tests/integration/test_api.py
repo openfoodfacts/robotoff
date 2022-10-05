@@ -53,15 +53,31 @@ def test_random_question(client, mocker):
                 "barcode": "1",
                 "type": "add-binary",
                 "value": "Seeds",
-                "value_tag": "en:seeds",
                 "question": "Does the product belong to this category?",
-                "insight_id": insight_id,
+                "insight_id": "94371643-c2bc-4291-a585-af2cb1a5270a",
                 "insight_type": "category",
-                "source_image_url": "foo",
+                "value_tag": "en:seeds",
             }
         ],
         "status": "found",
     }
+
+    # assert result.json == {
+    #     "count": 1,
+    #     "questions": [
+    #         {
+    #             "barcode": "1",
+    #             "type": "add-binary",
+    #             "value": "Seeds",
+    #             "value_tag": "en:seeds",
+    #             "question": "Does the product belong to this category?",
+    #             "insight_id": insight_id,
+    #             "insight_type": "category",
+    #             "source_image_url": "foo",
+    #         }
+    #     ],
+    #     "status": "found",
+    # }
 
 
 def test_random_question_user_has_already_seen(client, mocker):

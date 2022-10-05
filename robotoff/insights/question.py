@@ -155,7 +155,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
             return None
 
         selected_images = CategoryQuestionFormatter.generate_selected_images(
-            product["images"]
+            product, barcode
         )
 
         for key in ("front", "ingredients", "nutrition"):
@@ -170,49 +170,46 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
         return None
 
-        @staticmethod
-        def generate_selected_images(images: JSONType) -> JSONType:
-            selected_images = {}
-            front = {}
-            small = {}
-            thumb = {}
-            display = {}
+    @staticmethod
+    def generate_selected_images(images: JSONType, barcode: str) -> JSONType:
+        selected_images = {}
+        images_data = {}
+        front = {}
+        small = {}
+        thumb = {}
+        display = {}
 
-            barcode = images["code"]
+        splitted_barcode = split_barcode(barcode)  # splitting the barcode
 
-            splitted_barcode = split_barcode(barcode)  # splitting the barcode
+        for k in images.items():
+            key = k[0]
+            if key.startswith("front_"):  # to add support for all languages
+                language = key.split("_")[1]  # get language name
+                revision_id = images[key]["rev"]  # get revision_id for all languages
 
-            images_data = images["product"]["images"]
+                image_url = (
+                    IMAGE_SUB_DOMAIN
+                    + "/images/products/"
+                    + ("/").join(splitted_barcode)
+                    + "/"
+                    + key
+                    + "."
+                    + revision_id
+                    + ".{}.jpg"
+                )
 
-            for k in images_data.items():
-                if k.startswith("front_"):  # to add support for all languages
-                    language = k.split("_")[1]  # get language name
-                    revision_id = images_data[k][
-                        "rev"
-                    ]  # get revision_id for all languages
+                display[language] = image_url.format(DISPLAY_IMAGE_SIZE)
+                small[language] = image_url.format(SMALL_IMAGE_SIZE)
+                thumb[language] = image_url.format(THUMB_IMAGE_SIZE)
 
-                    image_url = (
-                        IMAGE_SUB_DOMAIN
-                        + "/images/products"
-                        + splitted_barcode
-                        + "/"
-                        + k
-                        + "."
-                        + revision_id
-                        + ".{}.jpg"
-                    )
+        # assembling all the keys
+        front["display"] = display
+        images_data["front"] = front
+        images_data["small"] = small
+        images_data["thumb"] = thumb
+        selected_images["selected_images"] = images_data
 
-                    display[language] = image_url.format(DISPLAY_IMAGE_SIZE)
-                    small[language] = image_url.format(SMALL_IMAGE_SIZE)
-                    thumb[language] = image_url.format(THUMB_IMAGE_SIZE)
-
-            # assembling all the keys
-            front["display"] = display
-            selected_images["front"] = front
-            selected_images["small"] = small
-            selected_images["thumb"] = thumb
-
-            return selected_images
+        return selected_images
 
 
 class ProductWeightQuestionFormatter(QuestionFormatter):
