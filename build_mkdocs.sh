@@ -29,7 +29,7 @@ poetry run typer robotoff/cli/main.py utils docs --name robotoff-cli --output $c
 
 # Remove header (first line) in CLI reference
 # Taken from https://www.baeldung.com/linux/remove-first-line-text-file#using-thesed-command
-sed -i '1d' $cli_md
+sed -i -e '1d' ${cli_md}
 
 # Replace header (first line) in CLI reference
 # Taken from https://www.cyberciti.biz/faq/bash-prepend-text-lines-to-file/

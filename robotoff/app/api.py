@@ -1,6 +1,7 @@
 import csv
 import datetime
 import functools
+import hashlib
 import io
 import tempfile
 from typing import List, Optional
@@ -18,18 +19,23 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import BasicAuthDecodeError, basic_decode
-from robotoff.app.core import get_insights, save_insight
+from robotoff.app.core import (
+    SkipVotedOn,
+    SkipVotedType,
+    get_image_predictions,
+    get_images,
+    get_insights,
+    get_logo_annotation,
+    get_predictions,
+    save_annotation,
+)
 from robotoff.app.middleware import DBConnectionMiddleware
-from robotoff.insights._enum import InsightType
-from robotoff.insights.extraction import DEFAULT_INSIGHT_TYPES, extract_ocr_insights
-from robotoff.insights.ocr.dataclass import OCRParsingException
+from robotoff.insights.extraction import (
+    DEFAULT_OCR_PREDICTION_TYPES,
+    extract_ocr_predictions,
+)
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
 from robotoff.logos import generate_insights_from_annotated_logos
-from robotoff.ml.category.neural.model import (
-    ModelRegistry,
-    filter_blacklisted_categories,
-)
-from robotoff.ml.object_detection import ObjectDetectionModelRegistry
 from robotoff.models import (
     ImageModel,
     ImagePrediction,
@@ -40,12 +46,17 @@ from robotoff.models import (
 from robotoff.off import (
     OFFAuthentication,
     generate_image_path,
+    get_barcode_from_url,
     get_product,
     get_server_type,
 )
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
+from robotoff.prediction.ocr.dataclass import OCRParsingException
+from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import match_unprefixed_value
+from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -61,6 +72,25 @@ es_client = get_es_client()
 
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
+
+
+def _get_skip_voted_on(
+    auth: Optional[OFFAuthentication], device_id: str
+) -> SkipVotedOn:
+    """Helper function for constructing SkipVotedOn objects based on request params."""
+    if not auth:
+        return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
+
+    username: Optional[str] = auth.get_username()
+    if not username:
+        return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
+
+    return SkipVotedOn(SkipVotedType.USERNAME, username)
+
+
+###########
+# IMPORTANT: remember to update documentation at doc/references/api.md if you change API
+###########
 
 
 class ProductInsightResource:
@@ -145,6 +175,8 @@ class InsightCollection:
 
 class RandomInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+
         insight_type: Optional[str] = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
@@ -152,18 +184,26 @@ class RandomInsightResource:
         count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
 
         keep_types = [insight_type] if insight_type else None
-        insights: List[ProductInsight] = list(
-            get_insights(
-                keep_types=keep_types,
-                country=country,
-                value_tag=value_tag,
-                order_by="random",
-                server_domain=server_domain,
-                limit=count,
-            )
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=keep_types,
+            country=country,
+            value_tag=value_tag,
+            order_by="random",
+            server_domain=server_domain,
         )
 
-        resp.media = {"insights": [insight.serialize() for insight in insights]}
+        insights = [i.serialize() for i in get_insights_(limit=count)]
+        response["count"] = get_insights_(count=True)
+
+        if not insights:
+            response["insights"] = []
+            response["status"] = "no_insights"
+        else:
+            response["insights"] = insights
+            response["status"] = "found"
+
+        resp.media = response
 
 
 def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
@@ -192,6 +232,15 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     )
 
 
+def device_id_from_request(req: falcon.Request) -> str:
+    """Returns the 'device_id' from the request parameters, or a hash of the
+    access route (which should be the IPs of the proxies and the client)."""
+    return req.get_param(
+        "device_id",
+        default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+    )
+
+
 class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         insight_id = req.get_param("insight_id", required=True)
@@ -200,9 +249,13 @@ class AnnotateInsightResource:
         )
 
         update = req.get_param_as_bool("update", default=True)
+        # This field is only needed for nutritional table structure insights.
         data = req.get_param_as_json("data")
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
+        trusted_annotator: bool = auth is not None
+
+        device_id = device_id_from_request(req)
 
         username = auth.get_username() if auth else "unknown annotator"
         logger.info(
@@ -211,11 +264,18 @@ class AnnotateInsightResource:
             )
         )
 
-        annotation_result = save_insight(
-            insight_id, annotation, update=update, data=data, auth=auth
+        annotation_result = save_annotation(
+            insight_id,
+            annotation,
+            update=update,
+            data=data,
+            auth=auth,
+            device_id=device_id,
+            trusted_annotator=trusted_annotator,
         )
 
         resp.media = {
+            "status_code": annotation_result.status_code,
             "status": annotation_result.status,
             "description": annotation_result.description,
         }
@@ -280,8 +340,15 @@ class NutrientPredictorResource:
         if not ocr_url.endswith(".json"):
             raise falcon.HTTPBadRequest("a JSON file is expected")
 
+        barcode = get_barcode_from_url(ocr_url)
+
+        if barcode is None:
+            raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
+
         try:
-            insights = extract_ocr_insights(ocr_url, [InsightType.nutrient])
+            predictions = extract_ocr_predictions(
+                barcode, ocr_url, [PredictionType.nutrient]
+            )
 
         except requests.exceptions.RequestException:
             resp.media = {
@@ -298,21 +365,20 @@ class NutrientPredictorResource:
             }
             return
 
-        if not insights:
-            resp.media = {
-                "nutrients": {},
-            }
-        else:
-            nutrient_insights = insights[InsightType.nutrient]
-            resp.media = nutrient_insights.to_dict()
+        resp.media = {"nutrients": [p.to_dict() for p in predictions]}
 
 
 class OCRInsightsPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
+        barcode = get_barcode_from_url(ocr_url)
+        if barcode is None:
+            raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
 
         try:
-            insights = extract_ocr_insights(ocr_url, DEFAULT_INSIGHT_TYPES)
+            insights = extract_ocr_predictions(
+                barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+            )
 
         except requests.exceptions.RequestException:
             resp.media = {
@@ -335,24 +401,30 @@ class OCRInsightsPredictorResource:
 
 
 class CategoryPredictorResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        deepest_only = req.get_param_as_bool("deepest_only", default=False)
-        blacklist = req.get_param_as_bool("blacklist", default=False)
-        model = ModelRegistry.get()
-        predicted = model.predict_from_barcode(barcode, deepest_only=deepest_only)
+    @jsonschema.validate(schema.PREDICT_CATEGORY_SCHEMA)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict categories using neural categorizer for a specific product."""
+        if "barcode" in req.media:
+            # Fetch product from DB
+            barcode: str = req.media["barcode"]
+            product = get_product(barcode, fields=["product_name", "ingredients_tags"])
+        else:
+            product = req.media["product"]
+        deepest_only: bool = req.media.get("deepest_only", False)
+        threshold: Optional[float] = req.media.get("threshold")
 
-        if predicted:
-            if blacklist:
-                predicted = filter_blacklisted_categories(predicted)
+        categories = []
 
+        if product:
+            predictions = CategoryClassifier(
+                get_taxonomy(TaxonomyType.category.name)
+            ).predict(product, deepest_only, threshold)
             categories = [
-                {"category": category, "confidence": confidence}
-                for category, confidence in predicted
+                {"value_tag": p.value_tag, "confidence": p.data["confidence"]}
+                for p in predictions
             ]
 
-        categories = categories or []
-        resp.media = {"categories": categories}
+        resp.media = {"neural": categories}
 
 
 class UpdateDatasetResource:
@@ -405,10 +477,10 @@ class ImageCropResource:
         x_min = req.get_param_as_float("x_min", required=True)
         y_max = req.get_param_as_float("y_max", required=True)
         x_max = req.get_param_as_float("x_max", required=True)
-        image = get_image_from_url(image_url)
+        image = get_image_from_url(image_url, session=http_session, error_raise=False)
 
         if image is None:
-            raise falcon.HTTPBadRequest("invalid image")
+            raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
 
         (left, right, top, bottom) = (
             x_min * image.width,
@@ -519,11 +591,10 @@ class ImagePredictorResource:
                 "when `output_image` is True",
             )
 
-        image = get_image_from_url(image_url, session=http_session)
+        image = get_image_from_url(image_url, session=http_session, error_raise=False)
 
         if image is None:
-            logger.info("Could not fetch image: {}".format(image_url))
-            return
+            raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
 
         predictions = {}
 
@@ -581,6 +652,8 @@ class ImageLogoResource:
             join_image_model = True
 
         if min_confidence is not None:
+            # TODO(raphael): We should filter based on individual logo object confidence
+            # and not on image object with the maximum confidence
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
             join_image_prediction = True
 
@@ -704,7 +777,6 @@ class ImageLogoAnnotateResource:
             type_ = annotation["type"]
             value = annotation["value"] or None
             logo = LogoAnnotation.get_by_id(logo_id)
-
             if value is not None:
                 logo.annotation_value = value
                 value_tag = get_tag(value)
@@ -717,11 +789,16 @@ class ImageLogoAnnotateResource:
             logo.save()
             annotated_logos.append(logo)
 
-        generate_insights_from_annotated_logos(annotated_logos, server_domain)
+        created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
+        resp.media = {"created insights": created}
 
 
 class ImageLogoUpdateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Bulk update logo annotations: change type and value of logos that have specific
+        types and values.
+
+        Because this endpoint mass-update annotations, leave it out of API documentation."""
         source_value = req.get_param("source_value", required=True)
         source_type = req.get_param("source_type", required=True)
         target_value = req.get_param("target_value", required=True)
@@ -753,11 +830,14 @@ class ImageLogoUpdateResource:
 
 
 class WebhookProductResource:
+    """This handles requests from product opener
+    that act as webhooks on product update or deletion.
+    """
+
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         barcode = req.get_param("barcode", required=True)
         action = req.get_param("action", required=True)
         server_domain = req.get_param("server_domain", required=True)
-
         if server_domain != settings.OFF_SERVER_DOMAIN:
             logger.info("Rejecting webhook event from {}".format(server_domain))
             resp.media = {
@@ -769,7 +849,6 @@ class WebhookProductResource:
             "New webhook event received for product {} (action: {}, "
             "domain: {})".format(barcode, action, server_domain)
         )
-
         if action not in ("updated", "deleted"):
             raise falcon.HTTPBadRequest(
                 title="invalid_action",
@@ -778,7 +857,13 @@ class WebhookProductResource:
 
         if action == "updated":
             send_ipc_event(
-                "product_updated", {"barcode": barcode, "server_domain": server_domain}
+                "product_updated",
+                {
+                    "barcode": barcode,
+                    "server_domain": server_domain,
+                    # add some latency
+                    "task_delay": settings.UPDATED_PRODUCT_WAIT,
+                },
             )
 
         elif action == "deleted":
@@ -792,19 +877,32 @@ class WebhookProductResource:
 
 
 class ProductQuestionsResource:
+    """Get a question about a product to confirm/infirm an insight
+
+    see also doc/explanation/questions.md
+    """
+
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1) or 1
         lang: str = req.get_param("lang", default="en")
+        # If the device_id is not provided as a request parameter, we use the
+        # hash of the IPs as a backup.
+        device_id = device_id_from_request(req)
         server_domain: Optional[str] = req.get_param("server_domain")
 
+        auth: Optional[OFFAuthentication] = parse_auth(req)
+
         keep_types = QuestionFormatterFactory.get_default_types()
+
         insights = list(
             get_insights(
                 barcode=barcode,
                 keep_types=keep_types,
                 server_domain=server_domain,
                 limit=count,
+                order_by="n_votes",
+                avoid_voted_on=_get_skip_voted_on(auth, device_id),
             )
         )
 
@@ -840,6 +938,7 @@ def get_questions_resource_on_get(
     req: falcon.Request, resp: falcon.Response, order_by: str
 ):
     response: JSONType = {}
+    page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
     keep_types: Optional[List[str]] = req.get_param_as_list(
@@ -852,6 +951,12 @@ def get_questions_resource_on_get(
     reserved_barcode: Optional[bool] = req.get_param_as_bool(
         "reserved_barcode", default=False
     )
+
+    # If the device_id is not provided as a request parameter, we use the
+    # hash of the IPs as a backup.
+    device_id = device_id_from_request(req)
+
+    auth: Optional[OFFAuthentication] = parse_auth(req)
 
     if reserved_barcode:
         # Include all results, including non reserved barcodes
@@ -876,11 +981,14 @@ def get_questions_resource_on_get(
         brands=brands,
         order_by=order_by,
         reserved_barcode=reserved_barcode,
+        avoid_voted_on=_get_skip_voted_on(auth, device_id),
+        automatically_processable=False,
     )
 
-    insights = list(get_insights_(limit=count))
+    offset: int = (page - 1) * count
+    insights = list(get_insights_(limit=count, offset=offset))
     response["count"] = get_insights_(count=True)
-
+    # This code should be merged with the one in ProductQuestionsResource.get
     if not insights:
         response["questions"] = []
         response["status"] = "no_questions"
@@ -908,6 +1016,19 @@ class StatusResource:
         resp.media = {
             "status": "running",
         }
+
+
+class HealthResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        from robotoff.health import health
+
+        message, status, headers = health.run()
+        resp.media = {
+            "message": orjson.loads(message),
+            "status": status,
+            "headers": headers,
+        }
+        resp.status = str(status)
 
 
 class DumpResource:
@@ -961,6 +1082,195 @@ class UserStatisticsResource:
         resp.media = {"count": {"annotations": annotation_count}}
 
 
+class ImageCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        with_predictions: Optional[bool] = req.get_param_as_bool(
+            "with_predictions", default=False
+        )
+        barcode: Optional[str] = req.get_param("barcode")
+        server_domain = settings.OFF_SERVER_DOMAIN
+
+        get_images_ = functools.partial(
+            get_images,
+            with_predictions=with_predictions,
+            barcode=barcode,
+            server_domain=server_domain,
+        )
+
+        offset: int = (page - 1) * count
+        images = [i.to_dict() for i in get_images_(limit=count, offset=offset)]
+        response["count"] = get_images_(count=True)
+
+        if not images:
+            response["images"] = []
+            response["status"] = "no_images"
+        else:
+            response["images"] = images
+            response["status"] = "found"
+
+        resp.media = response
+
+
+class PredictionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        barcode: Optional[str] = req.get_param("barcode")
+        value_tag: str = req.get_param("value_tag")
+        keep_types: Optional[List[str]] = req.get_param_as_list(
+            "insight_types", required=False
+        )
+        brands = req.get_param_as_list("brands") or None
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        if brands is not None:
+            # Limit the number of brands to prevent slow SQL queries
+            brands = brands[:10]
+
+        query_parameters = {
+            "server_domain": server_domain,
+            "keep_types": keep_types,
+            "value_tag": value_tag,
+            "barcode": barcode,
+        }
+
+        get_predictions_ = functools.partial(get_predictions, **query_parameters)
+
+        offset: int = (page - 1) * count
+        predictions = [
+            i.to_dict() for i in get_predictions_(limit=count, offset=offset)
+        ]
+
+        response["count"] = get_predictions_(count=True)
+
+        if not predictions:
+            response["predictions"] = []
+            response["status"] = "no_predictions"
+        else:
+            response["predictions"] = list(predictions)
+            response["status"] = "found"
+
+        resp.media = response
+
+
+class UnansweredQuestionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        question_type: str = req.get_param("type")
+        value_tag: str = req.get_param("value_tag")
+        country: Optional[str] = req.get_param("country")
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=[question_type] if question_type else None,
+            group_by_value_tag=True,
+            value_tag=value_tag,
+            limit=count,
+            country=country,
+            server_domain=server_domain,
+            automatically_processable=False,
+        )
+
+        offset: int = (page - 1) * count
+        insights = [i for i in get_insights_(limit=count, offset=offset)]
+
+        response["count"] = get_insights_(count=True)
+
+        if not insights:
+            response["questions"] = []
+            response["status"] = "no_questions"
+        else:
+            response["questions"] = insights
+            response["status"] = "found"
+
+        resp.media = response
+
+
+class ImagePredictionCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
+        barcode: Optional[str] = req.get_param("barcode")
+        type: Optional[str] = req.get_param("type")
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        query_parameters = {
+            "with_logo": with_logo,
+            "barcode": barcode,
+            "type": type,
+            "server_domain": server_domain,
+        }
+
+        get_image_predictions_ = functools.partial(
+            get_image_predictions, **query_parameters
+        )
+
+        offset: int = (page - 1) * count
+        images = [
+            i.to_dict() for i in get_image_predictions_(limit=count, offset=offset)
+        ]
+        response["count"] = get_image_predictions_(count=True)
+
+        if not images:
+            response["image_predictions"] = []
+            response["status"] = "no_image_predictions"
+        else:
+            response["image_predictions"] = images
+            response["status"] = "found"
+
+        resp.media = response
+
+
+class LogoAnnotationCollection:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        response: JSONType = {}
+        barcode: Optional[str] = req.get_param("barcode")
+        keep_types: Optional[List[str]] = req.get_param_as_list("types", required=False)
+        value_tag: str = req.get_param("value_tag")
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
+        server_domain: Optional[str] = req.get_param("server_domain")
+
+        if keep_types:
+            # Limit the number of types to prevent slow SQL queries
+            keep_types = keep_types[:10]
+
+        query_parameters = {
+            "server_domain": server_domain,
+            "barcode": barcode,
+            "keep_types": keep_types,
+            "value_tag": value_tag,
+        }
+
+        get_annotation_ = functools.partial(get_logo_annotation, **query_parameters)
+
+        offset: int = (page - 1) * count
+        annotation = [i.to_dict() for i in get_annotation_(limit=count, offset=offset)]
+        response["count"] = get_annotation_(count=True)
+
+        if not annotation:
+            response["annotation"] = []
+            response["status"] = "no_annotation"
+        else:
+            response["annotation"] = annotation
+            response["status"] = "found"
+
+        resp.media = response
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -984,6 +1294,7 @@ api.resp_options.media_handlers.update(extra_handlers)
 api.req_options.auto_parse_form_urlencoded = True
 api.req_options.strip_url_path_trailing_slash = True
 api.req_options.auto_parse_qs_csv = True
+# defines urls
 api.add_route("/api/v1/insights/{barcode}", ProductInsightResource())
 api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail())
 api.add_route("/api/v1/insights", InsightCollection())
@@ -1007,6 +1318,12 @@ api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
+api.add_route("/api/v1/questions/unanswered", UnansweredQuestionCollection())
 api.add_route("/api/v1/status", StatusResource())
+api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
+api.add_route("/api/v1/predictions", PredictionCollection())
+api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
+api.add_route("/api/v1/images", ImageCollection())
+api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())

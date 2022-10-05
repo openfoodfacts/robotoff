@@ -4,13 +4,8 @@
 [![codecov](https://codecov.io/gh/openfoodfacts/robotoff/branch/master/graph/badge.svg?token=BY2T0KXNO1)](https://codecov.io/gh/openfoodfacts/robotoff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**Documentation:** <https://openfoodfacts.github.io/robotoff>
 
-**Source code:** <https://github.com/openfoodfacts/robotoff>
-
-**Open Food Facts:** <https://world.openfoodfacts.org>
-
-Robotoff is a service managing potential Open Food Facts updates (also known as _insights_).
+**Robotoff** is a service managing potential Open Food Facts updates (also known as _insights_) and predictions (which can then be combined to generate an insight).
 These insights include a growing set of facts, including:
 
 - the product category, weight, brand, packager codes and expiration date
@@ -27,17 +22,25 @@ Robotoff provides an API to:
 Once generated, the insights can be applied automatically, or after a manual validation if necessary.
 A scheduler regularly marks insights for automatic annotation and sends the update to Open Food Facts.
 
+Robotoff works together with [Product Opener](https://github.com/openfoodfacts/openfoodfacts-server), the Core server of Open Food Facts (in Perl, which can also be installed locally using Docker) and the [Open Food Facts apps](https://github.com/openfoodfacts/smooth-app) (which can work with your local instance after enabling dev mode)
+
+**Documentation:** <https://openfoodfacts.github.io/robotoff>
+
+**Source code:** <https://github.com/openfoodfacts/robotoff>
+
+**Open Food Facts:** <https://world.openfoodfacts.org>
+
 ## Overview
 
-- To get a better understanding on how Robotoff works, go to [Architecture](./introduction/architecture).
-- If you want to help, go to [Contributing](./introduction/contributing). In particular, to make to project run, go to [Get started!](./introduction/contributing#get-started)
+- To get a better understanding on how Robotoff works, go to [Architecture](https://openfoodfacts.github.io/robotoff/introduction/architecture/).
+- If you want to help, go to [Contributing](https://openfoodfacts.github.io/robotoff/introduction/contributing/).
 - Robotoff can be used as...
-  - an [online API](./references/api.md)
-  - a [CLI tool](./references/cli.md)
-  - a [Python package](./references/package.md)
-- If you need to deploy or maintain Robotoff, [Maintenance](./how-to-guides/deployment/maintenance) is the way to go.
+  - an [online API](https://openfoodfacts.github.io/robotoff/references/api/)
+  - a [CLI tool](https://openfoodfacts.github.io/robotoff/references/cli)
+  - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
+- If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
-**NOTE:** This documentation tries to follow as much as possible the documentation system from [Divio](https://documentation.divio.com/).
+**NOTE:** This documentation tries to follow as much as possible the documentation system from [Diátaxis](https://diataxis.fr/).
 
 ## Licence
 

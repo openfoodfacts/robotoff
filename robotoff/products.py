@@ -128,10 +128,10 @@ def fetch_dataset(minify: bool = True) -> bool:
             minify_product_dataset(output_path, minify_path)
 
         logger.info("Moving file(s) to dataset directory")
-        shutil.move(str(output_path), settings.JSONL_DATASET_PATH)
+        shutil.copy(str(output_path), settings.JSONL_DATASET_PATH)
 
         if minify:
-            shutil.move(str(minify_path), settings.JSONL_MIN_DATASET_PATH)
+            shutil.copy(str(minify_path), settings.JSONL_MIN_DATASET_PATH)
 
         save_product_dataset_etag(etag)
         logger.info("Dataset fetched")
@@ -178,9 +178,9 @@ def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
 
     if count < settings.DATASET_CHECK_MIN_PRODUCT_COUNT:
         logger.error(
-            "Dataset has {} products, less than minimum of {} products".format(
-                count, settings.DATASET_CHECK_MIN_PRODUCT_COUNT
-            )
+            "Dataset has %s products, less than minimum of %s products",
+            count,
+            settings.DATASET_CHECK_MIN_PRODUCT_COUNT,
         )
         return False
 
@@ -226,6 +226,10 @@ def apply_comparison_operator(
 
 
 class ProductStream:
+    """Starting for a stream of dict representing products,
+    provides a stream with filter methods to narrow down data.
+    """
+
     def __init__(self, iterator: Iterable[JSONType]):
         self.iterator: Iterable[JSONType] = iterator
 
@@ -338,6 +342,10 @@ class ProductStream:
 
 
 class ProductDataset:
+    """Handles the iteration over products dataset
+    contained in an eventually gziped file with one json by line.
+    """
+
     def __init__(self, jsonl_path):
         self.jsonl_path = jsonl_path
 
@@ -419,12 +427,6 @@ class ProductStore(metaclass=abc.ABCMeta):
     def __getitem__(self, item):
         pass
 
-    @abc.abstractmethod
-    def is_real_time(self) -> bool:
-        """Return True if the product store return the current version of the product,
-        and not an dumped version as in MemoryProductStore."""
-        pass
-
 
 class MemoryProductStore(ProductStore):
     def __init__(self, store: Dict[str, Product]):
@@ -461,9 +463,6 @@ class MemoryProductStore(ProductStore):
     def __iter__(self) -> Iterator[Product]:
         return iter(self.store.values())
 
-    def is_real_time(self) -> bool:
-        return False
-
 
 class DBProductStore(ProductStore):
     def __init__(self, client: MongoClient):
@@ -489,9 +488,6 @@ class DBProductStore(ProductStore):
 
     def __iter__(self):
         raise NotImplementedError("cannot iterate over database product store")
-
-    def is_real_time(self) -> bool:
-        return True
 
 
 def load_min_dataset() -> ProductStore:

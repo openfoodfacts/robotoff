@@ -1,11 +1,10 @@
 import abc
 import datetime
-import pathlib
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
-from robotoff.insights._enum import InsightType
+from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db
 from robotoff.off import (
@@ -23,13 +22,13 @@ from robotoff.off import (
 )
 from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
 
 @dataclass
 class AnnotationResult:
+    status_code: int
     status: str
     description: Optional[str] = None
 
@@ -41,35 +40,45 @@ class AnnotationStatus(Enum):
     error_updated_product = 4
     error_already_annotated = 5
     error_unknown_insight = 6
-    error_latent_insight = 7
-    error_missing_data = 8
+    error_missing_data = 7
+    error_invalid_image = 8
+    vote_saved = 9
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
-    status=AnnotationStatus.saved.name, description="the annotation was saved"
+    status_code=AnnotationStatus.saved.value,
+    status=AnnotationStatus.saved.name,
+    description="the annotation was saved",
 )
 UPDATED_ANNOTATION_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.updated.value,
     status=AnnotationStatus.updated.name,
     description="the annotation was saved and sent to OFF",
 )
 MISSING_PRODUCT_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_missing_product.value,
     status=AnnotationStatus.error_missing_product.name,
     description="the product could not be found on OFF",
 )
 ALREADY_ANNOTATED_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_already_annotated.value,
     status=AnnotationStatus.error_already_annotated.name,
     description="the insight has already been annotated",
 )
 UNKNOWN_INSIGHT_RESULT = AnnotationResult(
-    status=AnnotationStatus.error_unknown_insight.name, description="unknown insight ID"
-)
-LATENT_INSIGHT_RESULT = AnnotationResult(
-    status=AnnotationStatus.error_latent_insight.name,
-    description="cannot annotate a latent insight",
+    status_code=AnnotationStatus.error_unknown_insight.value,
+    status=AnnotationStatus.error_unknown_insight.name,
+    description="unknown insight ID",
 )
 DATA_REQUIRED_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_missing_data.value,
     status=AnnotationStatus.error_missing_data.name,
     description="annotation data is required as JSON in `data` field",
+)
+SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.vote_saved.value,
+    status=AnnotationStatus.vote_saved.name,
+    description="the annotation vote was saved",
 )
 
 
@@ -83,17 +92,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
-        if insight.latent:
-            return LATENT_INSIGHT_RESULT
-
-        with db.atomic() as transaction:
-            try:
-                return self._annotate(
-                    insight, annotation, update, data, auth, automatic
-                )
-            except Exception as e:
-                transaction.rollback()
-                raise e
+        with db.atomic():
+            return self._annotate(insight, annotation, update, data, auth, automatic)
 
     def _annotate(
         self,
@@ -118,12 +118,24 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if automatic:
             insight.automatic_processing = True
 
-        insight.save()
-
         if annotation == 1 and update:
-            return self.process_annotation(insight, data=data, auth=auth)
+            # Save insight before processing the annotation
+            insight.save()
+            annotation_result = self.process_annotation(insight, data=data, auth=auth)
+        else:
+            annotation_result = SAVED_ANNOTATION_RESULT
 
-        return SAVED_ANNOTATION_RESULT
+        if annotation_result.status_code in (
+            AnnotationStatus.saved.value,
+            AnnotationStatus.updated.value,
+            AnnotationStatus.error_invalid_image.value,
+            AnnotationStatus.error_missing_product.value,
+            AnnotationStatus.error_updated_product.value,
+        ):
+            insight.annotated_result = annotation_result.status_code
+            insight.save()
+
+        return annotation_result
 
     @abc.abstractmethod
     def process_annotation(
@@ -207,7 +219,6 @@ class LabelAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -233,9 +244,11 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         if expected_ingredients != original_ingredients:
             logger.warning(
                 "ingredients have changed since spellcheck insight "
-                "creation (product {})".format(barcode)
+                "creation (product %s)",
+                barcode,
             )
             return AnnotationResult(
+                status_code=AnnotationStatus.error_updated_product.value,
                 status=AnnotationStatus.error_updated_product.name,
                 description="the ingredient list has been updated since spellcheck",
             )
@@ -275,7 +288,6 @@ class CategoryAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -303,7 +315,6 @@ class ProductWeightAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -353,6 +364,7 @@ class BrandAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
+
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -428,7 +440,8 @@ class NutritionImageAnnotator(InsightAnnotator):
 
         if not image_id:
             return AnnotationResult(
-                status="error_invalid_image",
+                status_code=AnnotationStatus.error_invalid_image.value,
+                status=AnnotationStatus.error_invalid_image.name,
                 description="the image is invalid",
             )
         image_key = "nutrition_{}".format(insight.value_tag)
@@ -452,7 +465,6 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         insight.data["annotation"] = data
         insight.save()
-
         return SAVED_ANNOTATION_RESULT
 
     def is_data_required(self):
@@ -484,110 +496,3 @@ class InsightAnnotatorFactory:
 
 class InvalidInsight(Exception):
     pass
-
-
-def is_automatically_processable(
-    barcode: str, source_image: Optional[str], max_timedelta: datetime.timedelta
-) -> bool:
-    if not source_image:
-        return False
-
-    image_path = pathlib.Path(source_image)
-    image_id = image_path.stem
-
-    if not image_id.isdigit():
-        return False
-
-    product = get_product(barcode, projection=["images"])
-
-    if product is None:
-        logger.debug("Missing product: {}".format(barcode))
-        raise InvalidInsight()
-
-    if "images" not in product:
-        logger.debug("No images for product {}".format(barcode))
-        raise InvalidInsight()
-
-    product_images = product["images"]
-
-    if image_id not in product_images:
-        logger.debug("Missing image for product {}, ID: {}".format(barcode, image_id))
-        raise InvalidInsight()
-
-    if is_recent_image(product_images, image_id, max_timedelta):
-        return True
-
-    if is_selected_image(product_images, image_id):
-        return True
-
-    return False
-
-
-def is_selected_image(product_images: JSONType, image_id: str) -> bool:
-    for key_prefix in ("nutrition", "front", "ingredients"):
-        for key, image in product_images.items():
-            if key.startswith(key_prefix):
-                if image["imgid"] == image_id:
-                    logger.debug(
-                        "Image {} is a selected image for "
-                        "'{}'".format(image_id, key_prefix)
-                    )
-                    return True
-
-    return False
-
-
-def is_recent_image(
-    product_images: JSONType, image_id: str, max_timedelta: datetime.timedelta
-) -> bool:
-    upload_datetimes = []
-    insight_image_upload_datetime: Optional[datetime.datetime] = None
-
-    for key, image_meta in product_images.items():
-        if not key.isdigit():
-            continue
-
-        upload_datetime = datetime.datetime.utcfromtimestamp(
-            int(image_meta["uploaded_t"])
-        )
-        if key == image_id:
-            insight_image_upload_datetime = upload_datetime
-        else:
-            upload_datetimes.append(upload_datetime)
-
-    if not upload_datetimes:
-        logger.debug("No other images")
-        return True
-
-    if insight_image_upload_datetime is None:
-        raise ValueError("Image with ID {} not found".format(image_id))
-
-    else:
-        for upload_datetime in upload_datetimes:
-            if upload_datetime - insight_image_upload_datetime > max_timedelta:
-                logger.debug(
-                    "More recent image: {} > {}".format(
-                        upload_datetime, insight_image_upload_datetime
-                    )
-                )
-                return False
-
-        sorted_datetimes = [
-            str(x)
-            for x in sorted(set(x.date() for x in upload_datetimes), reverse=True)
-        ]
-        logger.debug(
-            "All images were uploaded the same day or before the target "
-            "image:\n{} >= {}".format(
-                insight_image_upload_datetime.date(), ", ".join(sorted_datetimes)
-            )
-        )
-        return True
-
-    logger.debug(
-        "More recent images: {} < {}".format(
-            insight_image_upload_datetime.date(),
-            max(x.date() for x in upload_datetimes),
-        )
-    )
-    return False

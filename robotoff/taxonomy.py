@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 import orjson
+import requests
 
 from robotoff import settings
 from robotoff.utils import get_logger, http_session
@@ -137,7 +138,14 @@ class Taxonomy:
         return self.nodes.keys()
 
     def find_deepest_nodes(self, nodes: List[TaxonomyNode]) -> List[TaxonomyNode]:
-        """From a list of nodes, find the deepest nodes using the taxonomy."""
+        """Given a list of nodes, returns the list of nodes where all the parents
+        within the list have been removed.
+
+        For example, for a taxonomy, 'fish' -> 'salmon' -> 'smoked-salmon':
+
+        ['fish', 'salmon'] -> ['salmon']
+        ['fish', 'smoked-salmon'] -> [smoked-salmon']
+        """
         excluded: Set[str] = set()
 
         for node in nodes:
@@ -149,11 +157,25 @@ class Taxonomy:
 
         return [node for node in nodes if node.id not in excluded]
 
-    def is_parent_of_any(self, item: str, candidates: Iterable[str]) -> bool:
+    def is_parent_of_any(
+        self, item: str, candidates: Iterable[str], raises: bool = True
+    ) -> bool:
+        """Return True if `item` is parent of any candidate, False otherwise.
+
+        If the item is not in the taxonomy and raises is False, return False.
+
+        :param item: The item to compare
+        :param candidates: A list of candidates
+        :param raises: if True, raises a ValueError if item is not in the
+        taxonomy, defaults to True.
+        """
         node: TaxonomyNode = self[item]
 
         if node is None:
-            raise ValueError("unknown id in taxonomy: {}".format(node))
+            if raises:
+                raise ValueError(f"unknown id in taxonomy: {node}")
+            else:
+                return False
 
         to_check_nodes: Set[TaxonomyNode] = set()
 
@@ -247,15 +269,21 @@ def generate_category_hierarchy(
     return categories_hierarchy_list
 
 
-def fetch_taxonomy(url: str, fallback_path: str, offline=False) -> Optional[Taxonomy]:
+def fetch_taxonomy(
+    url: str, fallback_path: str, offline: bool = False
+) -> Optional[Taxonomy]:
     if offline:
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = http_session.get(url, timeout=5)
+        r = http_session.get(url, timeout=120)  # might take some time
+        if r.status_code >= 300:
+            raise requests.HTTPError(
+                "Taxonomy download at %s returned status code {r.status_code}", url
+            )
         data = r.json()
-    except Exception:
-        logger.warning("Timeout while fetching '{}' taxonomy".format(url))
+    except Exception as e:
+        logger.exception(f"{type(e)} exception while fetching taxonomy at %s", url)
         if fallback_path:
             return Taxonomy.from_json(fallback_path)
         else:
@@ -290,20 +318,20 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_BRAND_URL,
-            fallback_path=settings.TAXONOMY_LABEL_PATH,
+            fallback_path=settings.TAXONOMY_BRAND_PATH,
         )
     ),
 }
 
 
-def get_taxonomy(taxonomy_type: str) -> Taxonomy:
+def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
     """Returned the requested Taxonomy."""
     taxonomy_store = TAXONOMY_STORES.get(taxonomy_type)
 
     if taxonomy_store is None:
         raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
 
-    return taxonomy_store.get()
+    return taxonomy_store.get(offline=offline)
 
 
 def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:

@@ -1,16 +1,13 @@
-import datetime
 import operator
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 import numpy as np
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
-from robotoff.insights.dataclass import ProductInsights, RawInsight
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
+from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
@@ -18,9 +15,9 @@ from robotoff.utils.cache import CachedStore
 logger = get_logger(__name__)
 
 
-LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
-    "brand": InsightType.brand,
-    "label": InsightType.label,
+LOGO_TYPE_MAPPING: Dict[str, PredictionType] = {
+    "brand": PredictionType.brand,
+    "label": PredictionType.label,
 }
 
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
@@ -47,7 +44,7 @@ def get_stored_logo_ids() -> Set[int]:
 
     if not r.ok:
         logger.warning(
-            f"error while fetching stored logo IDs ({r.status_code}): {r.text}"
+            f"error while fetching stored logo IDs ({r.status_code}): %s", r.text
         )
         return set()
 
@@ -71,7 +68,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
     )
 
     if not r.ok:
-        logger.warning(f"error while adding image to ANN ({r.status_code}): {r.text}")
+        logger.warning(f"error while adding image to ANN ({r.status_code}): %s", r.text)
         return 0
 
     return r.json()["added"]
@@ -86,14 +83,16 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
         timeout=30,
     )
 
+    r.raise_for_status()
     response = r.json()
+
     results = {int(key): value for key, value in response["results"].items()}
 
     logo_id_to_logo = {logo.id: logo for logo in logos}
     missing_logo_ids = set(logo_id_to_logo.keys()).difference(set(results.keys()))
 
     if missing_logo_ids:
-        logger.warning(f"Missing logo IDs in response: {missing_logo_ids}")
+        logger.warning("Missing logo IDs in response: %s", missing_logo_ids)
 
     saved = 0
     for logo_id, logo_results in results.items():
@@ -249,8 +248,8 @@ def import_logo_insights(
         selected_logos.append(logo)
         logo_probs.append(probs)
 
-    product_insights = predict_logo_insights(selected_logos, logo_probs)
-    imported = import_insights(product_insights, server_domain, automatic=True)
+    predictions = predict_logo_predictions(selected_logos, logo_probs)
+    imported = import_insights(predictions, server_domain, automatic=True)
 
     for logo, probs in zip(selected_logos, logo_probs):
         NotifierFactory.get_notifier().send_logo_notification(logo, probs)
@@ -259,49 +258,45 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos(
-    logos: List[LogoAnnotation], server_domain: str
-):
-    product_insights: List[ProductInsights] = []
+    logos: List[LogoAnnotation],
+    server_domain: str,
+) -> int:
+    predictions = []
     for logo in logos:
-        raw_insight = generate_raw_insight(
-            logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
+        prediction = generate_prediction(
+            logo.annotation_type,
+            logo.taxonomy_value,
+            confidence=1.0,
+            logo_id=logo.id,
+            username=logo.username,
+            is_annotation=True,  # it's worth restating it
+            automatic_processing=True,  # because this is a user annotation, which we trust.
         )
 
-        if raw_insight is None:
-            return
+        if prediction is None:
+            continue
 
         image = logo.image_prediction.image
 
-        try:
-            raw_insight.automatic_processing = is_automatically_processable(
-                image.barcode, image.source_image, datetime.timedelta(days=30)
-            )
-        except InvalidInsight:
-            return
+        if prediction.automatic_processing:
+            prediction.data["notify"] = True
 
-        if raw_insight.automatic_processing:
-            raw_insight.data["notify"] = True
+        prediction.barcode = image.barcode
+        prediction.source_image = image.source_image
+        predictions.append(prediction)
 
-        product_insights.append(
-            ProductInsights(
-                insights=[raw_insight],
-                type=raw_insight.type,
-                barcode=image.barcode,
-                source_image=image.source_image,
-            )
-        )
-
-    imported = import_insights(product_insights, server_domain, automatic=True)
+    imported = import_insights(predictions, server_domain, automatic=True)
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")
+    return imported
 
 
-def predict_logo_insights(
+def predict_logo_predictions(
     logos: List[LogoAnnotation],
     logo_probs: List[Dict[LogoLabelType, float]],
-) -> List[ProductInsights]:
-    grouped_insights: Dict[Tuple[str, str, InsightType], List[RawInsight]] = {}
+) -> List[Prediction]:
+    predictions = []
 
     for logo, probs in zip(logos, logo_probs):
         if not probs:
@@ -316,59 +311,48 @@ def predict_logo_insights(
         if label == UNKNOWN_LABEL:
             continue
 
-        raw_insight = generate_raw_insight(
+        prediction = generate_prediction(
             label[0], label[1], confidence=max_prob, logo_id=logo.id
         )
 
-        if raw_insight is not None:
+        if prediction is not None:
             image = logo.image_prediction.image
-            source_image = image.source_image
-            barcode = image.barcode
-            key = (barcode, source_image, raw_insight.type)
-            grouped_insights.setdefault(key, [])
-            grouped_insights[key].append(raw_insight)
+            prediction.barcode = image.barcode
+            prediction.source_image = image.source_image
+            predictions.append(prediction)
 
-    insights: List[ProductInsights] = []
-
-    for (barcode, source_image, insight_type), raw_insights in grouped_insights.items():
-        insights.append(
-            ProductInsights(
-                insights=raw_insights,
-                type=insight_type,
-                barcode=barcode,
-                source_image=source_image,
-            )
-        )
-
-    return insights
+    return predictions
 
 
-def generate_raw_insight(
-    logo_type: str, logo_value: Optional[str], **kwargs
-) -> Optional[RawInsight]:
+def generate_prediction(
+    logo_type: str,
+    logo_value: Optional[str],
+    automatic_processing: Optional[bool] = False,
+    **kwargs,
+) -> Optional[Prediction]:
     if logo_type not in LOGO_TYPE_MAPPING:
         return None
 
-    insight_type = LOGO_TYPE_MAPPING[logo_type]
+    prediction_type = LOGO_TYPE_MAPPING[logo_type]
 
     value_tag = None
     value = None
 
-    if insight_type == InsightType.brand:
-        value = logo_value
+    if prediction_type == PredictionType.brand:
+        value_tag = value = logo_value
         if value is None:
             return None
 
-    elif insight_type == InsightType.label:
+    elif prediction_type == PredictionType.label:
         value_tag = logo_value
         if value_tag is None:
             return None
 
-    return RawInsight(
-        type=insight_type,
+    return Prediction(
+        type=prediction_type,
         value_tag=value_tag,
         value=value,
-        automatic_processing=False,
+        automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
         data=kwargs,
     )

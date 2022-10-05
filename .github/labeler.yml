@@ -1,0 +1,5 @@
+github_actions:
+- .github/**/*
+
+crowdin:
+- crowdin.yml

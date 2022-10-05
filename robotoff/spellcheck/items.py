@@ -3,7 +3,7 @@ import re
 from dataclasses import InitVar, asdict, dataclass, field
 from typing import Dict, Iterable, List, Optional
 
-from robotoff.ml.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
+from robotoff.prediction.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
 from robotoff.utils.text import FR_NLP_CACHE
 

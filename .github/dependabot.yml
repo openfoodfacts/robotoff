@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 30
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 30
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    open-pull-requests-limit: 30

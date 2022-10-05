@@ -20,8 +20,8 @@ LABEL_IMG_BASE_URL = "https://{}/images/lang".format(
 )
 
 LABEL_IMAGES = {
-    "en:eu-organic": LABEL_IMG_BASE_URL + "en/labels/eu-organic.135x90.svg",
-    "en:ab-agriculture-biologique": LABEL_IMG_BASE_URL
+    "en:eu-organic": LABEL_IMG_BASE_URL + "/en/labels/eu-organic.135x90.svg",
+    "fr:ab-agriculture-biologique": LABEL_IMG_BASE_URL
     + "/fr/labels/ab-agriculture-biologique.74x90.svg",
     "en:european-vegetarian-union": LABEL_IMG_BASE_URL
     + "/en/labels/european-vegetarian-union.90x90.svg",
@@ -70,6 +70,9 @@ class AddBinaryQuestion(Question):
             "insight_id": self.insight_id,
             "insight_type": self.insight_type,
         }
+
+        if self.value_tag:
+            serial["value_tag"] = self.value_tag
 
         if self.image_url:
             serial["image_url"] = self.image_url

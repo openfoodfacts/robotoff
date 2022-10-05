@@ -13,8 +13,7 @@ Report bugs at <https://github.com/openfoodfacts/robotoff/issues>.
 If you are reporting a bug, please include:
 
 - Your operating system name and version.
-- Any details about your local setup that might be helpful in
-  troubleshooting.
+- Any details about your local setup that might be helpful in troubleshooting.
 - Detailed steps to reproduce the bug.
 
 ### Fix Bugs
@@ -37,15 +36,12 @@ The best way to send feedback is to file an issue at
 If you are proposing a feature:
 
 - Explain in detail how it would work.
-- Keep the scope as narrow as possible, to make it easier to
-  implement.
-- Remember that this is a volunteer-driven project, and that
-  contributions are welcome
+- Keep the scope as narrow as possible, to make it easier to implement.
+- Remember that this is a volunteer-driven project, and that contributions are welcome.
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up Robotoff for local
-development.
+Ready to contribute code? Here's how to set up Robotoff for local development.
 
 1.  Fork the robotoff repo on GitHub.
 2.  Clone your fork locally:
@@ -53,47 +49,57 @@ development.
     ```
     git clone git@github.com:your_name_here/robotoff.git
     ```
+3. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md) and run it.
+   
+4. code!
 
-3.  Install the dependencies using [Poetry](https://python-poetry.org/docs/#installation):
+5.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
 
-    ```
-    poetry install
-    ```
+    If you are on Windows, make sure you have [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) installed. Don't forget to add its path in your [system environment variables](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417).
 
-4.  Configure files required for the tests to run locally:
+    A sample path may look like this: `C:\Program Files (x86)\GnuWin32\bin`
     
-    Download the Robotoff models:
-    ```
-    poetry run robotoff-cli download-models
-    ```
+    It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  
 
-    Compile the i18n files:
-    ```
-    cd i18n && bash compile.sh && cd ..
-    ```
-
-5.  Create a branch for local development:
+    If you are using docker:
 
     ```
-    git checkout -b name-of-your-bugfix-or-feature
+    make lint
+    make checks
+    make tests
+    ```
+    To test the APIs on your localhost run 
+
+    ```
+    docker-compose up
     ```
 
-    Now you can make your changes locally.
+    You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
 
-6.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
+    The mapping of functions and API path is at the end of robotoff/app/api.py
+
+    If you are on a local install:
 
     ```
     flake8
     black --check .
-    mypy . services/ann
+    mypy .
     isort --check .
     poetry run pytest tests
-    ```
+    ```    
 
-7.  Commit your changes and push your branch to GitHub:
+    Before running the test cases make sure you have a database created. Have a look at .env and robotoff/settings.py the default database name, user, and password is
 
     ```
-    git add .
+    postgres
+    ```
+    Configure them through environment (you may use `.env` if you use docker) as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.
+
+6.  Commit your changes and push your branch to GitHub:
+
+    ```
+    git status
+    git add files-you-have-modified
     git commit -m "Your detailed description of your changes."
     git push origin name-of-your-bugfix-or-feature
     ```
@@ -106,7 +112,7 @@ development.
 
     More tips at <https://chris.beams.io/posts/git-commit>
 
-8.  Submit a pull request through the GitHub website.
+7.  Submit a pull request through the GitHub website.
 
 ## Pull Request Guidelines
 

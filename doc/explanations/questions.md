@@ -1,10 +1,12 @@
 # Question format proposal
 
 After loading a product, the client (web, iOS, Android) will request the Robotoff server a _question_ (on 
-`/api/v1/questions/{barcode}`).
+`/api/v1/questions/{barcode}`). [^question_api]
 A question includes an insight and metadata such that the client knows how to display the question and what kind of 
 input is expected from the user. All data returned by Robotoff is localized with respect to the `lang` parameter 
 provided by the client.
+
+[^question_api]: see `robotoff.app.api.ProductQuestionsResource`
 
 ## Question formats
 
@@ -59,4 +61,6 @@ For instance:
 The `image_url` can be used to display an image in the `question` interface, such as labels (IGP, organic,...).
 The `source_image_url` is the URL of the image from which the insight was extracted, if any.
 
-The client returns the insight ID and the annotation (0, -1 or 1).
+The client returns the insight ID and the annotation (0, -1 or 1). [^annotate]
+
+[^annotate]: see `robotoff.app.api.AnnotateInsightResource`

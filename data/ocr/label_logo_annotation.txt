@@ -98,7 +98,7 @@ WWF Brasil||en:wwf
 wwf||en:wwf
 rspca assured||en:rspca-assured
 igp||en:pgi
-label ab||en:ab-agriculture-biologique
+label ab||fr:ab-agriculture-biologique
 label rouge vectoriel||en:label-rouge
 label rouge||en:label-rouge
 produit en bretagne||en:produced-in-bretagne

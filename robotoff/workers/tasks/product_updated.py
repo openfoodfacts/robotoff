@@ -1,111 +1,79 @@
-import time
-from typing import Dict, Optional
+import requests
 
 from robotoff.elasticsearch.category.predict import (
     predict_from_product as predict_category_from_product_es,
 )
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import ProductInsights
-from robotoff.insights.extraction import get_insights_from_product_name
-from robotoff.insights.importer import InsightImporterFactory
-from robotoff.insights.validator import (
-    InsightValidationResult,
-    InsightValidator,
-    InsightValidatorFactory,
-    validate_insight,
-)
-from robotoff.ml.category.neural.model import (
-    predict_from_product as predict_category_from_product_ml,
-)
-from robotoff.models import ProductInsight
+from robotoff.insights.extraction import get_predictions_from_product_name
+from robotoff.insights.importer import import_insights, refresh_insights
+from robotoff.models import with_db
 from robotoff.off import ServerType, get_server_type
-from robotoff.products import Product, get_product, get_product_store
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.products import get_product
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
 
+@with_db
 def update_insights(barcode: str, server_domain: str):
     # Sleep 10s to let the OFF update request that triggered the webhook call
     # to finish
-    time.sleep(10)
+    logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
+
     product_dict = get_product(barcode)
 
     if product_dict is None:
-        logger.warn("Updated product does not exist: {}".format(barcode))
+        logger.warning("Updated product does not exist: %s", barcode)
         return
 
-    updated = updated_product_predict_insights(barcode, product_dict, server_domain)
-
-    if updated:
-        logger.info("Product {} updated".format(barcode))
-
-    update_ingredients(barcode, product_dict, server_domain)
-
-    product = Product(product_dict)
-    validators: Dict[str, Optional[InsightValidator]] = {}
-
-    for insight in (
-        ProductInsight.select()
-        .where(
-            ProductInsight.annotation.is_null(),
-            ProductInsight.barcode == barcode,
-            ProductInsight.server_domain == server_domain,
-        )
-        .iterator()
-    ):
-        if insight.type not in validators:
-            validators[insight.type] = InsightValidatorFactory.create(
-                insight.type, None
-            )
-
-        validator = validators[insight.type]
-
-        if validator is not None:
-            result = validate_insight(insight, validator=validator, product=product)
-            if result == InsightValidationResult.deleted:
-                logger.info(
-                    "Insight {} deleted (type: {})".format(insight.id, insight.type)
-                )
-            elif result == InsightValidationResult.updated:
-                logger.info(
-                    "Insight {} converted to latent (type: {})".format(
-                        insight.id, insight.type
-                    )
-                )
+    updated_product_predict_insights(barcode, product_dict, server_domain)
+    logger.info("Refreshing insights...")
+    imported = refresh_insights(barcode, server_domain, automatic=True)
+    logger.info(f"{imported} insights created after refresh")
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
+    """Predict categories for product and import predicted category insight.
+
+    :param barcode: product barcode
+    :param product: product as retrieved from application
+    :param server_domain: the server the product belongs to
+    :return: True if at least one category insight was imported
+    """
     if get_server_type(server_domain) != ServerType.off:
         return False
 
-    product_insights = []
-    product_insight = predict_category_from_product_es(product)
+    logger.info("Predicting product categories...")
+    # predict category using Elasticsearch on title
+    product_predictions = []
+    es_prediction = predict_category_from_product_es(product)
 
-    if product_insight is not None:
-        product_insights.append(product_insight)
+    if es_prediction is not None:
+        product_predictions.append(es_prediction)
 
-    product_insight = predict_category_from_product_ml(product, filter_blacklisted=True)
+    # predict category using neural model
+    neural_predictions = []
+    try:
+        neural_predictions = CategoryClassifier(
+            get_taxonomy(TaxonomyType.category.name)
+        ).predict(product)
+    except requests.exceptions.HTTPError as e:
+        resp = e.response
+        logger.error(
+            f"Category classifier returned an error: {resp.status_code}: %s", resp.text
+        )
 
-    if product_insight is not None:
-        product_insights.append(product_insight)
+    for neural_prediction in neural_predictions:
+        neural_prediction.barcode = barcode
+        product_predictions.append(neural_prediction)
 
-    if not product_insights:
+    if len(product_predictions) < 1:
         return False
 
-    merged_product_insight = ProductInsights.merge(product_insights)
-    product_store = get_product_store()
-    importer = InsightImporterFactory.create(InsightType.category, product_store)
-
-    imported = importer.import_insights(
-        [merged_product_insight],
-        server_domain=server_domain,
-        automatic=False,
-    )
-
-    if imported:
-        logger.info("Category insight imported for product {}".format(barcode))
+    imported = import_insights(product_predictions, server_domain, automatic=True)
+    logger.info(f"{imported} category insight imported for product {barcode}")
 
     return bool(imported)
 
@@ -119,44 +87,12 @@ def updated_product_predict_insights(
     if not product_name:
         return updated
 
-    product_store = get_product_store()
-    insights_all = get_insights_from_product_name(barcode, product_name)
+    logger.info("Generating predictions from product name...")
+    predictions_all = get_predictions_from_product_name(barcode, product_name)
+    imported = import_insights(predictions_all, server_domain, automatic=False)
+    logger.info(f"{imported} insights imported for product {barcode}")
 
-    for insight_type, insights in insights_all.items():
-        importer = InsightImporterFactory.create(insight_type, product_store)
-        imported = importer.import_insights(
-            [insights], server_domain=server_domain, automatic=False
-        )
-
-        if imported:
-            logger.info(
-                "{} insights ({}) imported for product {}".format(
-                    imported, insight_type, barcode
-                )
-            )
-            updated = True
+    if imported:
+        updated = True
 
     return updated
-
-
-def update_ingredients(barcode: str, product: JSONType, server_domain: str) -> int:
-    deleted = 0
-
-    for insight in ProductInsight.select().where(
-        ProductInsight.type == InsightType.ingredient_spellcheck.name,
-        ProductInsight.annotation.is_null(True),
-        ProductInsight.barcode == barcode,
-    ):
-        lang = insight.data["lang"]
-        insight_text = insight.data["text"]
-        field_name = "ingredients_text_{}".format(lang)
-
-        if field_name not in product or product[field_name] != insight_text:
-            logger.info(
-                "Ingredients deleted or updated for product {} (lang: {}), deleting "
-                "insight".format(barcode, lang)
-            )
-            insight.delete_instance()
-            deleted += 1
-
-    return deleted

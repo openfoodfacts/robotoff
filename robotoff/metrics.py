@@ -63,6 +63,8 @@ COUNTRY_TAGS = [
 
 
 def get_influx_client() -> InfluxDBClient:
+    if not settings.INFLUXDB_HOST:
+        return None
     return InfluxDBClient(
         settings.INFLUXDB_HOST,
         settings.INFLUXDB_PORT,
@@ -70,6 +72,23 @@ def get_influx_client() -> InfluxDBClient:
         settings.INFLUXDB_PASSWORD,
         settings.INFLUXDB_DB_NAME,
     )
+
+
+def ensure_influx_database():
+    client = get_influx_client()
+    if client is not None:
+        try:
+            db_names = [data.get("name") for data in client.get_list_database()]
+            if settings.INFLUXDB_DB_NAME not in db_names:
+                # create it
+                client.create_database(settings.INFLUXDB_DB_NAME)
+                logger.warning(
+                    "Creating influxdb database %r as it does not exist yet",
+                    settings.INFLUXDB_DB_NAME,
+                )
+        except Exception:
+            # better be fail safe, our job is not that important !
+            logger.exception("Error on ensure_influx_database")
 
 
 def get_product_count(country_tag: str) -> int:
@@ -80,8 +99,6 @@ def get_product_count(country_tag: str) -> int:
 
 
 def save_facet_metrics():
-    client = get_influx_client()
-
     inserts = []
     target_datetime = datetime.datetime.now()
     product_counts = {
@@ -107,7 +124,9 @@ def save_facet_metrics():
         )
 
     inserts += generate_metrics_from_path("world", "/countries?json=1", target_datetime)
-    client.write_points(inserts)
+    client = get_influx_client()
+    if client is not None:
+        client.write_points(inserts)
 
 
 def get_facet_name(url: str) -> str:

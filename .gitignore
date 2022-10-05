@@ -20,10 +20,16 @@ docker-compose.production.yml
 images
 
 .venv/
-
-tf_models/nutriscore
+tf_models/*
 weights/
 
+# direnv
+.envrc
+# vim
+.*.swp
+
+# coverage
+.cov
 .coverage
 coverage.xml
 
