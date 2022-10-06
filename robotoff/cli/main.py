@@ -87,6 +87,8 @@ def batch_annotate(insight_type: str, filter_clause: str, dry: bool = True) -> N
 
 @app.command()
 def predict_category(output: str) -> None:
+    """Predict categories from the product JSONL dataset stored in `datasets`
+    directory."""
     from robotoff import settings
     from robotoff.prediction.category.matcher import predict_from_dataset
     from robotoff.products import ProductDataset
