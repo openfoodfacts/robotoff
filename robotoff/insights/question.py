@@ -172,16 +172,28 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     @staticmethod
     def generate_selected_images(images: JSONType, barcode: str) -> JSONType:
-        selected_images = {"front": {"display": {}}, "small": {}, "thumb": {}}
+        selected_images = {
+            "front": {"display": {}, "small": {}, "thumb": {}},
+            "nutrition": {"display": {}, "small": {}, "thumb": {}},
+            "ingredients": {"display": {}, "small": {}, "thumb": {}},
+            "packaging": {"display": {}, "small": {}, "thumb": {}},
+        }
         splitted_barcode = split_barcode(barcode)  # splitting the barcode
         image_url = "{}/images/products/{}/{}.{}.{}.jpg"
 
         for key, images in images.items():
-            if key.startswith("front_"):  # to add support for all languages
+            # assembling `front``, `small`, `thumb`, `nutrition`, `ingredients`, `packaging` images
+            if (
+                key.startswith("front_")
+                or key.startswith("nutrition_")
+                or key.startswith("ingredients_")
+                or key.startswith("packaging_")
+            ):  # to add support for all languages
+                image_type = key.split("_")[0]
                 language = key.split("_")[1]  # get language name
                 revision_id = images["rev"]  # get revision_id for all languages
 
-                selected_images["front"]["display"].update(
+                selected_images[image_type]["display"].update(
                     {
                         language: image_url.format(
                             IMAGE_SUB_DOMAIN,
@@ -192,7 +204,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
                         )
                     }
                 )
-                selected_images["small"].update(
+                selected_images[image_type]["small"].update(
                     {
                         language: image_url.format(
                             IMAGE_SUB_DOMAIN,
@@ -204,7 +216,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
                     }
                 )
 
-                selected_images["thumb"].update(
+                selected_images[image_type]["thumb"].update(
                     {
                         language: image_url.format(
                             IMAGE_SUB_DOMAIN,
