@@ -172,7 +172,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     @staticmethod
     def generate_selected_images(images: JSONType, barcode: str) -> JSONType:
-        selected_images = {
+        selected_images: Dict[str, Dict[str, Dict[str, str]]] = {
             "front": {"display": {}, "small": {}, "thumb": {}},
             "nutrition": {"display": {}, "small": {}, "thumb": {}},
             "ingredients": {"display": {}, "small": {}, "thumb": {}},
@@ -182,15 +182,16 @@ class CategoryQuestionFormatter(QuestionFormatter):
         image_url = "{}/images/products/{}/{}.{}.{}.jpg"
 
         for key, images in images.items():
-            # assembling `front``, `small`, `thumb`, `nutrition`, `ingredients`, `packaging` images
             if (
                 key.startswith("front_")
                 or key.startswith("nutrition_")
                 or key.startswith("ingredients_")
                 or key.startswith("packaging_")
-            ):  # to add support for all languages
-                image_type = key.split("_")[0]
-                language = key.split("_")[1]  # get language name
+            ):
+                image_type = key.split("_")[
+                    0
+                ]  # to get image type: `front`, `nutrition`, `ingredients` or `packaging`
+                language = key.split("_")[1]  # splitting to get the language name
                 revision_id = images["rev"]  # get revision_id for all languages
 
                 selected_images[image_type]["display"].update(
