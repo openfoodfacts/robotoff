@@ -172,42 +172,49 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     @staticmethod
     def generate_selected_images(images: JSONType, barcode: str) -> JSONType:
-        selected_images = {}
-        images_data = {}
-        front = {}
-        small = {}
-        thumb = {}
-        display = {}
-
+        selected_images = {"front": {"display": {}}, "small": {}, "thumb": {}}
         splitted_barcode = split_barcode(barcode)  # splitting the barcode
+        image_url = "{}/images/products/{}/{}.{}.{}.jpg"
 
-        for k in images.items():
-            key = k[0]
+        for key, images in images.items():
             if key.startswith("front_"):  # to add support for all languages
                 language = key.split("_")[1]  # get language name
-                revision_id = images[key]["rev"]  # get revision_id for all languages
+                revision_id = images["rev"]  # get revision_id for all languages
 
-                image_url = (
-                    IMAGE_SUB_DOMAIN
-                    + "/images/products/"
-                    + ("/").join(splitted_barcode)
-                    + "/"
-                    + key
-                    + "."
-                    + revision_id
-                    + ".{}.jpg"
+                selected_images["front"]["display"].update(
+                    {
+                        language: image_url.format(
+                            IMAGE_SUB_DOMAIN,
+                            "/".join(splitted_barcode),
+                            key,
+                            revision_id,
+                            DISPLAY_IMAGE_SIZE,
+                        )
+                    }
+                )
+                selected_images["small"].update(
+                    {
+                        language: image_url.format(
+                            IMAGE_SUB_DOMAIN,
+                            "/".join(splitted_barcode),
+                            key,
+                            revision_id,
+                            SMALL_IMAGE_SIZE,
+                        )
+                    }
                 )
 
-                display[language] = image_url.format(DISPLAY_IMAGE_SIZE)
-                small[language] = image_url.format(SMALL_IMAGE_SIZE)
-                thumb[language] = image_url.format(THUMB_IMAGE_SIZE)
-
-        # assembling all the keys
-        front["display"] = display
-        images_data["front"] = front
-        images_data["small"] = small
-        images_data["thumb"] = thumb
-        selected_images["selected_images"] = images_data
+                selected_images["thumb"].update(
+                    {
+                        language: image_url.format(
+                            IMAGE_SUB_DOMAIN,
+                            "/".join(splitted_barcode),
+                            key,
+                            revision_id,
+                            THUMB_IMAGE_SIZE,
+                        )
+                    }
+                )
 
         return selected_images
 

@@ -1076,17 +1076,18 @@ def test_generate_selected_images():
     selected_images = CategoryQuestionFormatter.generate_selected_images(
         images["product"]["images"], images["code"]
     )
-    assert selected_images["selected_images"]["front"] == {
+
+    assert selected_images["front"] == {
         "display": {
             "es": "https://images.openfoodfacts.org/images/products/541/004/104/0807/front_es.130.400.jpg",
             "fr": "https://images.openfoodfacts.org/images/products/541/004/104/0807/front_fr.142.400.jpg",
         }
     }
-    assert selected_images["selected_images"]["small"] == {
+    assert selected_images["small"] == {
         "es": "https://images.openfoodfacts.org/images/products/541/004/104/0807/front_es.130.200.jpg",
         "fr": "https://images.openfoodfacts.org/images/products/541/004/104/0807/front_fr.142.200.jpg",
     }
-    assert selected_images["selected_images"]["thumb"] == {
+    assert selected_images["thumb"] == {
         "es": "https://images.openfoodfacts.org/images/products/541/004/104/0807/front_es.130.100.jpg",
         "fr": "https://images.openfoodfacts.org/images/products/541/004/104/0807/front_fr.142.100.jpg",
     }
