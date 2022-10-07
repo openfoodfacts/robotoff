@@ -23,7 +23,7 @@ from robotoff.off import (
 from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
 
-'''
+"""
 This file allows to annotate product.
 
 To check whether the annotation already exists or not, save it and send it to the off database, use the following commands :
@@ -32,7 +32,7 @@ To check whether the annotation already exists or not, save it and send it to th
     annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[Dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
 
 If you don't want to add it to the off database but only save it for example in case of a vote, you can use SAVED_ANNOTATION_VOTE_RESULT to warn the annotation has been taken into account. 
-'''
+"""
 
 
 logger = get_logger(__name__)
@@ -122,7 +122,9 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.save()
 
         if annotation == 1 and update:
-            return self.process_annotation(insight, data=data, auth=auth) #calls the process_annotation function of the class corresponding to the current insight type
+            return self.process_annotation(
+                insight, data=data, auth=auth
+            )  # calls the process_annotation function of the class corresponding to the current insight type
 
         return SAVED_ANNOTATION_RESULT
 
