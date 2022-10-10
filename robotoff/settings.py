@@ -129,10 +129,10 @@ CATEGORY_MATCHER_INTERSECT = (
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
-TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
-TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
-TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
-TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
+TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json.gz"
+TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json.gz"
+TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json.gz"
+TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json.gz"
 INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"

@@ -4,11 +4,10 @@ import pathlib
 from enum import Enum
 from typing import Dict, Iterable, List, Optional, Set, Union
 
-import orjson
 import requests
 
 from robotoff import settings
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import get_logger, http_session, load_json
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
@@ -223,9 +222,7 @@ class Taxonomy:
 
     @classmethod
     def from_json(cls, file_path: Union[str, pathlib.Path]):
-        with open(str(file_path), "rb") as f:
-            data = orjson.loads(f.read())
-            return cls.from_dict(data)
+        return cls.from_dict(load_json(file_path, compressed=True))
 
     def to_graph(self):
         """Generate a networkx.DiGraph from the taxonomy."""
