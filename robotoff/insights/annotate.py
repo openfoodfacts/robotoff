@@ -133,7 +133,9 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if annotation == 1 and update:
             # Save insight before processing the annotation
             insight.save()
-            annotation_result = self.process_annotation(insight, data=data, auth=auth)  # calls the process_annotation function of the class corresponding to the current insight type
+            annotation_result = self.process_annotation(
+                insight, data=data, auth=auth
+            )  # calls the process_annotation function of the class corresponding to the current insight type
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
 
