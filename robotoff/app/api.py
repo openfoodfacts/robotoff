@@ -1173,6 +1173,9 @@ class UnansweredQuestionCollection:
         value_tag: str = req.get_param("value_tag")
         country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
+        reserved_barcode: Optional[bool] = req.get_param_as_bool(
+            "reserved_barcode", default=False
+        )
         campaign: Optional[str] = req.get_param("campaign")
 
         get_insights_ = functools.partial(
@@ -1184,6 +1187,7 @@ class UnansweredQuestionCollection:
             country=country,
             server_domain=server_domain,
             automatically_processable=False,
+            reserved_barcode=reserved_barcode,
             campaign=campaign,
         )
 
