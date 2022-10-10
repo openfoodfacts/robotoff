@@ -25,7 +25,7 @@ class CachedStore(metaclass=abc.ABCMeta):
             and datetime.datetime.utcnow() >= self.expires_after
         ):
             if self.store is not None:
-                logger.info("ProductStore expired, reloading...")
+                logger.info("CachedStore expired, reloading...")
 
             if self.expiration_timedelta is not None:
                 self.expires_after = (
