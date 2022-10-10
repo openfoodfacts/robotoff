@@ -125,22 +125,23 @@ PACKAGER_CODE = {
             lowercase=False,
         ),
     ],
-    "USDA": [
-        # To match the USDA like "EST. 522"
-        OCRRegex(
-            re.compile(r"EST\.*\s*\d{1,5}[A-Z]{0,3}\.*"),
-            field=OCRField.full_text_contiguous,
-            lowercase=False,
-            processing_func=process_USDA_match_to_flashtext,
-        ),
-        # To match the USDA like "V34626"
-        OCRRegex(
-            re.compile(r"[A-Z]\d{1,5}[A-Z]?"),
-            field=OCRField.full_text_contiguous,
-            lowercase=False,
-            processing_func=process_USDA_match_to_flashtext,
-        ),
-    ],
+    # Temporarily disable USDA extraction until the overmatching bug is fixed
+    # "USDA": [
+    #     # To match the USDA like "EST. 522"
+    #     OCRRegex(
+    #         re.compile(r"EST\.*\s*\d{1,5}[A-Z]{0,3}\.*"),
+    #         field=OCRField.full_text_contiguous,
+    #         lowercase=False,
+    #         processing_func=process_USDA_match_to_flashtext,
+    #     ),
+    #     # To match the USDA like "V34626"
+    #     OCRRegex(
+    #         re.compile(r"[A-Z]\d{1,5}[A-Z]?"),
+    #         field=OCRField.full_text_contiguous,
+    #         lowercase=False,
+    #         processing_func=process_USDA_match_to_flashtext,
+    #     ),
+    # ],
 }
 
 

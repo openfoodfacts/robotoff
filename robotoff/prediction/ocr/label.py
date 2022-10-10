@@ -64,7 +64,7 @@ LABELS_REGEX = {
             processing_func=process_es_bio_label_code,
         ),
     ],
-    "en:ab-agriculture-biologique": [
+    "fr:ab-agriculture-biologique": [
         OCRRegex(
             re.compile(r"certifi[ée] ab[\s.,)]"),
             field=OCRField.full_text_contiguous,

@@ -275,6 +275,7 @@ class AnnotateInsightResource:
         )
 
         resp.media = {
+            "status_code": annotation_result.status_code,
             "status": annotation_result.status,
             "description": annotation_result.description,
         }
@@ -400,20 +401,30 @@ class OCRInsightsPredictorResource:
 
 
 class CategoryPredictorResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        deepest_only = req.get_param_as_bool("deepest_only", default=False)
+    @jsonschema.validate(schema.PREDICT_CATEGORY_SCHEMA)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict categories using neural categorizer for a specific product."""
+        if "barcode" in req.media:
+            # Fetch product from DB
+            barcode: str = req.media["barcode"]
+            product = get_product(barcode, fields=["product_name", "ingredients_tags"])
+        else:
+            product = req.media["product"]
+        deepest_only: bool = req.media.get("deepest_only", False)
+        threshold: Optional[float] = req.media.get("threshold")
 
         categories = []
 
-        product = get_product(barcode)
         if product:
             predictions = CategoryClassifier(
                 get_taxonomy(TaxonomyType.category.name)
-            ).predict(product, deepest_only)
-            categories = [p.to_dict() for p in predictions]
+            ).predict(product, deepest_only, threshold)
+            categories = [
+                {"value_tag": p.value_tag, "confidence": p.data["confidence"]}
+                for p in predictions
+            ]
 
-        resp.media = {"categories": categories}
+        resp.media = {"neural": categories}
 
 
 class UpdateDatasetResource:
@@ -641,6 +652,8 @@ class ImageLogoResource:
             join_image_model = True
 
         if min_confidence is not None:
+            # TODO(raphael): We should filter based on individual logo object confidence
+            # and not on image object with the maximum confidence
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
             join_image_prediction = True
 
@@ -782,6 +795,10 @@ class ImageLogoAnnotateResource:
 
 class ImageLogoUpdateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Bulk update logo annotations: change type and value of logos that have specific
+        types and values.
+
+        Because this endpoint mass-update annotations, leave it out of API documentation."""
         source_value = req.get_param("source_value", required=True)
         source_type = req.get_param("source_type", required=True)
         target_value = req.get_param("target_value", required=True)
@@ -965,6 +982,7 @@ def get_questions_resource_on_get(
         order_by=order_by,
         reserved_barcode=reserved_barcode,
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
+        automatically_processable=False,
     )
 
     offset: int = (page - 1) * count
@@ -1150,17 +1168,19 @@ class UnansweredQuestionCollection:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         question_type: str = req.get_param("type")
         value_tag: str = req.get_param("value_tag")
+        country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
 
-        query_parameters = {
-            "keep_types": [question_type],
-            "group_by_value_tag": True,
-            "value_tag": value_tag,
-            "limit": count,
-            "server_domain": server_domain,
-        }
-
-        get_insights_ = functools.partial(get_insights, **query_parameters)
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=[question_type] if question_type else None,
+            group_by_value_tag=True,
+            value_tag=value_tag,
+            limit=count,
+            country=country,
+            server_domain=server_domain,
+            automatically_processable=False,
+        )
 
         offset: int = (page - 1) * count
         insights = [i for i in get_insights_(limit=count, offset=offset)]
@@ -1298,12 +1318,12 @@ api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
-api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())
+api.add_route("/api/v1/questions/unanswered", UnansweredQuestionCollection())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
-api.add_route("/api/v1/predictions/", PredictionCollection())
+api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
 api.add_route("/api/v1/images", ImageCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())

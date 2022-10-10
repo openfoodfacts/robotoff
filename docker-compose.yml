@@ -83,6 +83,8 @@ services:
     command: postgres -c shared_buffers=1024MB -c work_mem=64MB
     mem_limit: 4g
     shm_size: 1g
+    ports:
+      - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"
     networks:
       - webnet
 

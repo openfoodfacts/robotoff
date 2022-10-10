@@ -17,8 +17,9 @@ def test_category_prediction_to_prediction():
     assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
-        data={"lang": "xx", "model": "neural", "confidence": 0.5},
+        data={"lang": "xx", "confidence": 0.5},
         automatic_processing=False,
+        predictor="neural",
     )
 
 
@@ -29,8 +30,9 @@ def test_category_prediction_to_prediction_auto(monkeypatch):
     assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
-        data={"lang": "xx", "model": "neural", "confidence": 0.9},
+        data={"lang": "xx", "confidence": 0.9},
         automatic_processing=True,
+        predictor="neural",
     )
 
 
