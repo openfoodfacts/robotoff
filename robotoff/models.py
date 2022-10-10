@@ -157,6 +157,11 @@ class ProductInsight(BaseModel):
     # Predictor stores what ML model/OCR processing generated this insight.
     predictor = peewee.CharField(max_length=100, null=True, index=True)
 
+    # annotation campaigns enable contributors to focus their efforts (on
+    # Hunger Games) on a subset of products. Each product have 0+ campaign
+    # tags
+    campaign = BinaryJSONField(null=True, index=True, default=list)
+
     def serialize(self) -> JSONType:
         return {
             "id": str(self.id),
