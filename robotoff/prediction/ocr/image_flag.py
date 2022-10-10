@@ -28,8 +28,11 @@ LABELS_TO_FLAG = {
     "Facial Expression",
     "Glasses",
     "Eyewear",
-    "Gesture",
-    "Thumb",
+    # Gesture generate too many false positive
+    # "Gesture",
+    # Thumb is pretty common on OFF images (as products are often hold in
+    # hands)
+    # "Thumb",
     "Jeans",
     "Shoe",
     "Child",
