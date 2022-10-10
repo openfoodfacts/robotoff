@@ -63,7 +63,7 @@ With **cosine distance** :
 | clip-vit-large-patch14       | **0.7753**     | **0.8722**     |
 | deit_base_patch16_384        | 0.4403         | 0.5070         |
 
-Embedding size and per-sample latency independant of the distance used :
+Embedding size and per-sample latency (independent of the distance used):
 
 | model                        | embedding size | per-sample latency (ms) |
 | ---------------------------- | -------------- | ----------------------- |
