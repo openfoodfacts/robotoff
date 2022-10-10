@@ -24,7 +24,7 @@ from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
 
 """
-This file allows to annotate product.
+This file allows to annotate products.
 
 To check whether the annotation already exists or not, save it and send it to the off database, use the following commands :
     from robotoff.insights.annotate import InsightAnnotatorFactor
