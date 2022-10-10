@@ -413,8 +413,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         """
         pass
 
-    @staticmethod
+    @classmethod
     def add_fields(
+        cls,
         insight: ProductInsight,
         product: Product,
         timestamp: datetime.datetime,
@@ -436,6 +437,19 @@ class InsightImporter(metaclass=abc.ABCMeta):
             insight.process_after = timestamp + datetime.timedelta(
                 minutes=settings.INSIGHT_AUTOMATIC_PROCESSING_WAIT
             )
+
+        cls.add_optional_fields(insight, product)
+
+    @classmethod
+    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+        """Overwrite this method in children classes to add optional fields.
+
+        The `campaign` field should be populated here.
+
+        :param insight: the ProductInsight
+        :param product: the associated Product
+        """
+        pass
 
 
 class PackagerCodeInsightImporter(InsightImporter):
@@ -583,6 +597,17 @@ class CategoryImporter(InsightImporter):
                 category, set(product.categories_tags)
             )
         )
+
+    @classmethod
+    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+        taxonomy = get_taxonomy(InsightType.category.name)
+        if (
+            insight.value_tag in taxonomy
+            and "agribalyse_food_code" in taxonomy[insight.value_tag].additional_data
+        ):
+            # This category is linked to an agribalyse category, add it as a
+            # campaign tag
+            insight.campaign = ["agribalyse-category"]
 
 
 class ProductWeightImporter(InsightImporter):

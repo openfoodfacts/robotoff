@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -861,6 +861,24 @@ class TestCategoryImporter:
 
         for candidate, expected_value_tag in zip(candidates, expected_value_tags):
             assert candidate.value_tag == expected_value_tag
+
+    @pytest.mark.parametrize(
+        "value_tag,expected_campaign",
+        [
+            ("en:frozen-french-fries-to-deep-fry", ["agribalyse-category"]),
+            ("en:breads", []),
+        ],
+    )
+    def test_add_campaign(self, value_tag: str, expected_campaign: List[str], mocker):
+        mocker.patch(
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("category", offline=True),
+        )
+        insight = ProductInsight(value_tag=value_tag)
+        CategoryImporter.add_optional_fields(
+            insight, Product({"code": DEFAULT_BARCODE})
+        )
+        assert insight.campaign == expected_campaign
 
 
 class TestProductWeightImporter:
