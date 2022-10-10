@@ -98,6 +98,10 @@ class ProductInsight(BaseModel):
     # 1 = Validated
     annotation = peewee.IntegerField(null=True, index=True)
 
+    # Saves the value returned by Annotator.annotate
+    # The value is mapped at `AnnotationStatus(enum)` class in annotate.py
+    annotated_result = peewee.IntegerField(null=True, index=False)
+
     # The number of votes for this annotation.
     # Stored here for quick sorting.
     n_votes = peewee.IntegerField(null=False, index=True)
@@ -259,7 +263,13 @@ class LogoAnnotation(BaseModel):
     annotation_value = peewee.CharField(null=True, index=True)
     annotation_value_tag = peewee.CharField(null=True, index=True)
     taxonomy_value = peewee.CharField(null=True, index=True)
-    annotation_type = peewee.CharField(null=True, index=True)
+    annotation_type = peewee.CharField(
+        null=True,
+        index=True,
+        help_text="Category of the annotation. Current possible values: brand, "
+        "category, label, no_logo, nutrition_label, packager_code, packaging, "
+        "qr_code, store",
+    )
     username = peewee.TextField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True, index=True)
     nearest_neighbors = BinaryJSONField(null=True)

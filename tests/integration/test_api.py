@@ -170,7 +170,11 @@ def test_annotate_insight_authenticated(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {"description": "the annotation was saved", "status": "saved"}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
     votes = list(AnnotationVote.select())
@@ -184,6 +188,9 @@ def test_annotate_insight_authenticated(client):
     )
     assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
     assert "completed_at" in insight
+
+    # check if "annotated_result" is saved
+    assert insight["annotated_result"] == 1
 
 
 def test_annotate_insight_not_enough_votes(client):
@@ -200,6 +207,7 @@ def test_annotate_insight_not_enough_votes(client):
     assert result.json == {
         "description": "the annotation vote was saved",
         "status": "vote_saved",
+        "status_code": 9,
     }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
@@ -250,7 +258,11 @@ def test_annotate_insight_majority_annotation(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {"description": "the annotation was saved", "status": "saved"}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     votes = list(AnnotationVote.select())
     assert len(votes) == 4
@@ -296,7 +308,11 @@ def test_annotate_insight_opposite_votes(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {"description": "the annotation was saved", "status": "saved"}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     votes = list(AnnotationVote.select())
     assert len(votes) == 4
@@ -348,7 +364,11 @@ def test_annotate_insight_majority_vote_overridden(client):
     )
 
     assert result.status_code == 200
-    assert result.json == {"description": "the annotation was saved", "status": "saved"}
+    assert result.json == {
+        "status_code": 1,
+        "status": "saved",
+        "description": "the annotation was saved",
+    }
 
     votes = list(AnnotationVote.select())
     assert len(votes) == 5
@@ -385,8 +405,9 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
 
     assert result.status_code == 200
     assert result.json == {
-        "description": "the annotation vote was saved",
+        "status_code": 9,
         "status": "vote_saved",
+        "description": "the annotation vote was saved",
     }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
@@ -425,6 +446,7 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     assert authenticated_result.json == {
         "description": "the annotation was saved and sent to OFF",
         "status": "updated",
+        "status_code": 2,
     }
     # We have the previous vote, but the last request should validate the insight directly
     votes = list(AnnotationVote.select())
@@ -537,7 +559,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
 
 
 def test_prediction_collection_no_result(client):
-    result = client.simulate_get("/api/v1/predictions/")
+    result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
 
@@ -545,7 +567,7 @@ def test_prediction_collection_no_result(client):
 def test_prediction_collection_no_filter(client):
 
     prediction1 = PredictionFactory(value_tag="en:seeds")
-    result = client.simulate_get("/api/v1/predictions/")
+    result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
@@ -558,7 +580,7 @@ def test_prediction_collection_no_filter(client):
     prediction2 = PredictionFactory(
         value_tag="en:beers", data={"sample": 1}, type="brand"
     )
-    result = client.simulate_get("/api/v1/predictions/")
+    result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 2
@@ -574,7 +596,7 @@ def test_prediction_collection_no_filter(client):
 
 def test_get_unanswered_questions_api_empty(client):
     ProductInsight.delete().execute()  # remove default sample
-    result = client.simulate_get("/api/v1/questions/unanswered/")
+    result = client.simulate_get("/api/v1/questions/unanswered")
 
     assert result.status_code == 200
     assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
@@ -617,7 +639,7 @@ def test_get_unanswered_questions_api(client):
     # test to get all "category" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/",
+        "/api/v1/questions/unanswered",
         params={
             "count": 5,
             "page": 1,
@@ -634,7 +656,7 @@ def test_get_unanswered_questions_api(client):
     # test to get all "label" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "label"}
+        "/api/v1/questions/unanswered", params={"type": "label"}
     )
     assert result.status_code == 200
     data = result.json
@@ -645,13 +667,36 @@ def test_get_unanswered_questions_api(client):
     # test to get all "nutrition" with "annotation=None"
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered/", params={"type": "nutrition"}
+        "/api/v1/questions/unanswered", params={"type": "nutrition"}
     )
     assert result.status_code == 200
     data = result.json
     assert len(data) == 3
     assert len(data["questions"]) == 2
     assert data["questions"] == [["en:salad", 2], ["en:soups", 1]]
+    assert data["status"] == "found"
+
+
+def test_get_unanswered_questions_api_with_country_filter(client):
+    ProductInsight.delete().execute()  # remove default sample
+
+    # test for filter with "country"
+
+    ProductInsightFactory(
+        type="location", value_tag="en:dates", barcode="032", countries=["en:india"]
+    )
+    ProductInsightFactory(
+        type="location", value_tag="en:dates", barcode="033", countries=["en:france"]
+    )
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered", params={"country": "en:india"}
+    )
+    assert result.status_code == 200
+    data = result.json
+    assert len(data) == 3
+    assert len(data["questions"]) == 1
+    assert data["questions"] == [["en:dates", 1]]
     assert data["status"] == "found"
 
 

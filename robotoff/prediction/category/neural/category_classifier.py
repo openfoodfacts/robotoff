@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
@@ -21,8 +21,9 @@ class CategoryPrediction:
         return Prediction(
             type=PredictionType.category,
             value_tag=self.category,
-            data={"lang": "xx", "model": "neural", "confidence": self.confidence},
+            data={"lang": "xx", "confidence": self.confidence},
             automatic_processing=self.confidence >= self.NEURAL_CONFIDENCE_THRESHOLD,
+            predictor="neural",
         )
 
     def __eq__(self, other):
@@ -43,15 +44,28 @@ class CategoryClassifier:
     def __init__(self, category_taxonomy: Taxonomy):
         self.taxonomy = category_taxonomy
 
-    def predict(self, product: Dict, deepest_only: bool = False) -> List[Prediction]:
-        """Returns an unordered list of category predictions for the given product.
+    def predict(
+        self,
+        product: Dict,
+        deepest_only: bool = False,
+        threshold: Optional[float] = None,
+    ) -> List[Prediction]:
+        """Returns an unordered list of category predictions for the given
+        product.
 
-        :param deepest_only: controls whether the returned list should only contain the deepmost categories
-            for a predicted taxonomy chain.
+        :param product: the product to predict the categories from, should
+        have at least `product_name` and `ingredients_tags` fields
+        :param deepest_only: controls whether the returned list should only
+        contain the deepmost categories for a predicted taxonomy chain.
 
-            For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
+            For example, if we predict 'fresh vegetables' -> 'legumes' ->
+            'beans' for a product,
             setting deepest_only=True will return ['beans'].
+        :param threshold: the score above which we consider the category to be
+        detected (default: 0.5)
         """
+        if threshold is None:
+            threshold = 0.5
 
         # model was train with product having a name
         if not product.get("product_name"):
@@ -94,9 +108,9 @@ class CategoryClassifier:
 
         category_predictions = []
 
-        # We only consider predictions with a confidence score of 0.5 and above.
+        # We only consider predictions with a confidence score of `threshold` and above.
         for idx, confidence in enumerate(prediction["output_mapper_layer"]):
-            if confidence >= 0.5:
+            if confidence >= threshold:
                 category_predictions.append(
                     CategoryPrediction(
                         category=prediction["output_mapper_layer_1"][idx],

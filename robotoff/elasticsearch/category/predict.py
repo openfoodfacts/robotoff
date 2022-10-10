@@ -52,9 +52,9 @@ def predict(client, product: Dict) -> Optional[Prediction]:
             data={
                 "lang": lang,
                 "product_name": product_name,
-                "model": "matcher",
             },
             automatic_processing=False,
+            predictor="matcher",
         )
 
     return None

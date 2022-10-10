@@ -1,3 +1,4 @@
+import copy
 import datetime
 import logging
 import os
@@ -39,23 +40,29 @@ class BaseURLProvider(object):
         self.prefix = "world"
         self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
 
+    def clone(self):
+        return copy.deepcopy(self)
+
     def robotoff(self):
-        self.prefix = "robotoff"
-        return self
+        result = self.clone()
+        result.prefix = "robotoff"
+        return result
 
     def static(self):
-        self.prefix = "static"
+        result = self.clone()
+        result.prefix = "static"
         # locally we may want to change it, give environment a chance
         static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
         if static_domain:
             if "://" in static_domain:
-                self.scheme, static_domain = static_domain.split("://", 1)
-            self.domain = static_domain
-        return self
+                result.scheme, static_domain = static_domain.split("://", 1)
+            result.domain = static_domain
+        return result
 
     def country(self, country_code: str):
-        self.prefix = country_code
-        return self
+        result = self.clone()
+        result.prefix = country_code
+        return result
 
     def get(self):
         return self.url % {
