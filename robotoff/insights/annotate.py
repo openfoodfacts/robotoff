@@ -23,6 +23,18 @@ from robotoff.off import (
 from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
 
+"""
+This file allows to annotate products.
+
+To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
+    from robotoff.insights.annotate import InsightAnnotatorFactor
+    annotator = InsightAnnotatorFactory.get(insight_type)
+    annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[Dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
+
+If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
+"""
+
+
 logger = get_logger(__name__)
 
 
@@ -121,7 +133,9 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if annotation == 1 and update:
             # Save insight before processing the annotation
             insight.save()
-            annotation_result = self.process_annotation(insight, data=data, auth=auth)
+            annotation_result = self.process_annotation(
+                insight, data=data, auth=auth
+            )  # calls the process_annotation function of the class corresponding to the current insight type
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
 
