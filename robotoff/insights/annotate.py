@@ -31,7 +31,7 @@ To check whether the annotation already exists or not (and save it and send it t
     annotator = InsightAnnotatorFactory.get(insight_type)
     annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[Dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
 
-If you don't want to add it to the Open Food Facts (off) database but only save it for example in case of a vote, you can use SAVED_ANNOTATION_VOTE_RESULT to warn the annotation has been taken into account. 
+If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
 """
 
 
