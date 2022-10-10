@@ -26,42 +26,62 @@ Latency was measured on 50 batches of 8 samples with a Tesla T4 GPU.
 
 With **L2 distance** :
 
-| model                        | micro-recall@4 | macro-recall@4 | embedding size | per-sample latency (ms) |
-| ---------------------------- | -------------- | -------------- | -------------- | ----------------------- |
-| random                       | 0.0083         | 0.0063         | -              | -                       |
-| efficientnet_b1              | 0.4612         | 0.5070         | 1280           | 3.93                    |
-| resnest101e                  | 0.4322         | 0.5124         | 2048           | 17.82                   |
-| beit_large_patch16_384       | 0.4162         | 0.5233         | 1024           | 142.75                  |
-| efficientnet_b2              | 0.4707         | 0.5323         | 1408           | 4.29                    |
-| rexnet_100                   | 0.5158         | 0.5340         | 1280           | 3.91                    |
-| efficientnet_b4              | 0.4807         | 0.5450         | 1792           | 6.99                    |
-| resnet50                     | 0.4916         | 0.5609         | 2048           | 3.50                    |
-| efficientnet_b0              | 0.5420         | 0.5665         | 1280           | 5.51                    |
-| beit_base_patch16_384        | 0.4758         | 0.5666         | 768            | 41.88                   |
-| resnet50d                    | 0.5313         | 0.6133         | 2048           | 4.01                    |
-| beit_large_patch16_224_in22k | 0.5723         | 0.6660         | 1024           | 43.56                   |
-| clip-vit-base-patch32        | 0.7006         | 0.8243         | 768            | **3.08**                |
-| clip-vit-base-patch16        | 0.7295         | 0.8428         | 768            | 11.69                   |
-| clip-vit-large-patch14       | **0.7706**     | **0.8755**     | 1024           | 56.68                   |
-| deit_base_patch16_384        | 0.3920         | 0.4375         | 80             | 1.73                    |
+| model                        | micro-recall@4 | macro-recall@4 |
+| ---------------------------- | -------------- | -------------- |
+| random                       | 0.0083         | 0.0063         |
+| efficientnet_b1              | 0.4612         | 0.5070         |
+| resnest101e                  | 0.4322         | 0.5124         |
+| beit_large_patch16_384       | 0.4162         | 0.5233         |
+| efficientnet_b2              | 0.4707         | 0.5323         |
+| rexnet_100                   | 0.5158         | 0.5340         |
+| efficientnet_b4              | 0.4807         | 0.5450         |
+| resnet50                     | 0.4916         | 0.5609         |
+| efficientnet_b0              | 0.5420         | 0.5665         |
+| beit_base_patch16_384        | 0.4758         | 0.5666         |
+| resnet50d                    | 0.5313         | 0.6133         |
+| beit_large_patch16_224_in22k | 0.5723         | 0.6660         |
+| clip-vit-base-patch32        | 0.7006         | 0.8243         |
+| clip-vit-base-patch16        | 0.7295         | 0.8428         |
+| clip-vit-large-patch14       | **0.7706**     | **0.8755**     |
+| deit_base_patch16_384        | 0.3920         | 0.4375         |
 
 With **cosine distance** :
 
-| model                        | micro-recall@4 | macro-recall@4 | embedding size | per-sample latency (ms) |
-| ---------------------------- | -------------- | -------------- | -------------- | ----------------------- |
-| random                       | 0.0091         | 0.0114         | -              | -                       |
-| efficientnet_b1              | 0.4941         | 0.5334         | 1280           | 3.93                    |
-| resnest101e                  | 0.4777         | 0.5415         | 2048           | 17.82                   |
-| efficientnet_b2              | 0.4909         | 0.5466         | 1408           | 4.29                    |
-| rexnet_100                   | 0.5461         | 0.5716         | 1280           | 3.91                    |
-| efficientnet_b4              | 0.5141         | 0.5861         | 1792           | 6.99                    |
-| resnet50                     | 0.5241         | 0.5868         | 2048           | 3.50                    |
-| efficientnet_b0              | 0.5489         | 0.5838         | 1280           | 5.51                    |
-| resnet50d                    | 0.5791         | 0.6353         | 2048           | 4.01                    |
-| clip-vit-base-patch32        | 0.7030         | 0.8244         | 768            | **3.08**                |
-| clip-vit-base-patch16        | 0.7297         | 0.8470         | 768            | 11.69                   |
-| clip-vit-large-patch14       | **0.7753**     | **0.8722**     | 1024           | 56.68                   |
-| deit_base_patch16_384        | 0.4403         | 0.5070         | 80             | 1.73                    | 
+| model                        | micro-recall@4 | macro-recall@4 |
+| ---------------------------- | -------------- | -------------- |
+| random                       | 0.0091         | 0.0114         |
+| efficientnet_b1              | 0.4941         | 0.5334         |
+| resnest101e                  | 0.4777         | 0.5415         |
+| efficientnet_b2              | 0.4909         | 0.5466         |
+| rexnet_100                   | 0.5461         | 0.5716         |
+| efficientnet_b4              | 0.5141         | 0.5861         |
+| resnet50                     | 0.5241         | 0.5868         |
+| efficientnet_b0              | 0.5489         | 0.5838         |
+| resnet50d                    | 0.5791         | 0.6353         |
+| clip-vit-base-patch32        | 0.7030         | 0.8244         |
+| clip-vit-base-patch16        | 0.7297         | 0.8470         |
+| clip-vit-large-patch14       | **0.7753**     | **0.8722**     |
+| deit_base_patch16_384        | 0.4403         | 0.5070         |
+
+Embedding size and per-sample latency independant of the distance used :
+
+| model                        | embedding size | per-sample latency (ms) |
+| ---------------------------- | -------------- | ----------------------- |
+| random                       | -              | -                       |
+| efficientnet_b1              | 1280           | 3.93                    |
+| resnest101e                  | 1024           | 142.75                  |
+| efficientnet_b2              | 1408           | 4.29                    |
+| rexnet_100                   | 1280           | 3.91                    |
+| efficientnet_b4              | 1792           | 6.99                    |
+| resnet50                     | 2048           | 3.50                    |
+| efficientnet_b0              | 1280           | 5.51                    |
+| beit_base_patch16_384        | 768            | 41.88                   |
+| resnet50d                    | 2048           | 4.01                    |
+| beit_large_patch16_224_in22k | 1024           | 43.56                   |
+| clip-vit-base-patch32        | 768            | **3.08**                |
+| clip-vit-base-patch16        | 768            | 11.69                   |
+| clip-vit-large-patch14       | 1024           | 56.68                   |
+| deit_base_patch16_384        | 80             | 1.73                    |
 
 N.B: we didn't use the cosine-distance for the beit models as they were not working anymore when doing the benchmark with the cosine distance. Some explanations can be found [there](https://github.com/rwightman/pytorch-image-models/issues/1346).
 
