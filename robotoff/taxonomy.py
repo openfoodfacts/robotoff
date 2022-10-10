@@ -2,7 +2,7 @@ import collections
 import functools
 import pathlib
 from enum import Enum
-from typing import Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
 import orjson
 import requests
@@ -28,18 +28,20 @@ class TaxonomyType(Enum):
 
 
 class TaxonomyNode:
-    __slots__ = ("id", "names", "parents", "children", "synonyms")
+    __slots__ = ("id", "names", "parents", "children", "synonyms", "additional_data")
 
     def __init__(
         self,
         identifier: str,
         names: Dict[str, str],
         synonyms: Optional[Dict[str, List[str]]],
+        additional_data: Optional[Dict[str, Any]] = None,
     ):
         self.id: str = identifier
         self.names: Dict[str, str] = names
         self.parents: List["TaxonomyNode"] = []
         self.children: List["TaxonomyNode"] = []
+        self.additional_data = additional_data or {}
 
         if synonyms:
             self.synonyms = synonyms
@@ -211,6 +213,11 @@ class Taxonomy:
                     identifier=key,
                     names=key_data.get("name", {}),
                     synonyms=key_data.get("synonyms", None),
+                    additional_data={
+                        k: v
+                        for k, v in key_data.items()
+                        if k not in {"parents", "name", "synonyms", "children"}
+                    },
                 )
                 taxonomy.add(key, node)
 
