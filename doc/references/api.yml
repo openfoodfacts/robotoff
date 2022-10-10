@@ -85,6 +85,7 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
+        - $ref: "#/components/parameters/campaign"
       responses:
         "200":
           description: The queried insights
@@ -124,6 +125,7 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
+        - $ref: "#/components/parameters/campaign"
       responses:
         "200":
           description: ""
@@ -576,6 +578,14 @@ components:
       schema:
         type: boolean
         default: false
+    campaign:
+      name: campaign
+      in: query
+      description: Filter by annotation campaign.
+        An annotation campaign allows to only retrieve questions about selected products, based on arbitrary criteria
+      schema:
+        type: string
+        example: agribalyse-category
 
 tags:
   - name: Questions
