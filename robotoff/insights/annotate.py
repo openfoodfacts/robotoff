@@ -26,7 +26,7 @@ from robotoff.utils import get_logger
 """
 This file allows to annotate products.
 
-To check whether the annotation already exists or not, save it and send it to the off database, use the following commands :
+To check whether the annotation already exists or not (and save it and send it to the off database), use the following commands:
     from robotoff.insights.annotate import InsightAnnotatorFactor
     annotator = InsightAnnotatorFactory.get(insight_type)
     annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[Dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
