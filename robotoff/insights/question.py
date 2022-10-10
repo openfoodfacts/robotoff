@@ -6,7 +6,7 @@ from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
 from robotoff.mongo import MONGO_CLIENT_CACHE
-from robotoff.off import generate_image_url, split_barcode
+from robotoff.off import generate_image_url
 from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
@@ -14,8 +14,6 @@ from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
-
-IMAGE_SUB_DOMAIN = "https://images.openfoodfacts.org"
 
 DISPLAY_IMAGE_SIZE = 400
 SMALL_IMAGE_SIZE = 200
@@ -178,10 +176,8 @@ class CategoryQuestionFormatter(QuestionFormatter):
             "ingredients": {"display": {}, "small": {}, "thumb": {}},
             "packaging": {"display": {}, "small": {}, "thumb": {}},
         }
-        splitted_barcode = split_barcode(barcode)  # splitting the barcode
-        image_url = "{}/images/products/{}/{}.{}.{}.jpg"
 
-        for key, images in images.items():
+        for key, image_data in images.items():
             if (
                 key.startswith("front_")
                 or key.startswith("nutrition_")
@@ -192,42 +188,19 @@ class CategoryQuestionFormatter(QuestionFormatter):
                     0
                 ]  # to get image type: `front`, `nutrition`, `ingredients` or `packaging`
                 language = key.split("_")[1]  # splitting to get the language name
-                revision_id = images["rev"]  # get revision_id for all languages
+                revision_id = image_data["rev"]  # get revision_id for all languages
 
-                selected_images[image_type]["display"].update(
-                    {
-                        language: image_url.format(
-                            IMAGE_SUB_DOMAIN,
-                            "/".join(splitted_barcode),
-                            key,
-                            revision_id,
-                            DISPLAY_IMAGE_SIZE,
-                        )
-                    }
-                )
-                selected_images[image_type]["small"].update(
-                    {
-                        language: image_url.format(
-                            IMAGE_SUB_DOMAIN,
-                            "/".join(splitted_barcode),
-                            key,
-                            revision_id,
-                            SMALL_IMAGE_SIZE,
-                        )
-                    }
-                )
+                for field_name, image_size in (
+                    ("display", DISPLAY_IMAGE_SIZE),
+                    ("small", SMALL_IMAGE_SIZE),
+                    ("thumb", THUMB_IMAGE_SIZE),
+                ):
+                    image_id = key + "." + revision_id + "." + str(image_size)
+                    image_url = generate_image_url(barcode, image_id)
 
-                selected_images[image_type]["thumb"].update(
-                    {
-                        language: image_url.format(
-                            IMAGE_SUB_DOMAIN,
-                            "/".join(splitted_barcode),
-                            key,
-                            revision_id,
-                            THUMB_IMAGE_SIZE,
-                        )
-                    }
-                )
+                    selected_images[image_type][field_name].update(
+                        {language: image_url}
+                    )
 
         return selected_images
 
