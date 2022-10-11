@@ -27,7 +27,7 @@ class OriginParser:
         INGREDIENTS = json.load(open(settings.TAXONOMY_CATEGORY_PATH, "r"))
 
         # French ----------------
-        INGREDIENTS_SYNONYMS_FR = [
+         INGREDIENTS_SYNONYMS_FR = [
             ingredient["synonyms"]["fr"]
             for ingredient in INGREDIENTS.values()
             if "synonyms" in ingredient and "fr" in ingredient["synonyms"]
@@ -147,7 +147,7 @@ class OriginParser:
 
         # English -----------------------
 
-        INGREDIENTS_SYNONYMS_EN = [
+         INGREDIENTS_SYNONYMS_EN = [
             ingredient["synonyms"]["en"]
             for ingredient in INGREDIENTS.values()
             if "synonyms" in ingredient and "en" in ingredient["synonyms"]

@@ -365,14 +365,8 @@ class NutrientPredictorResource:
         resp.media = {"nutrients": [p.to_dict() for p in predictions]}
 
 
-import time
-
-
 class OriginPredictorResource:
-    sumt = 0
-    count = 1
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        
         ocr_url = req.get_param("ocr_url", required=True)
 
         if not ocr_url.endswith(".json"):
@@ -384,13 +378,9 @@ class OriginPredictorResource:
             raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
 
         try:
-            begining = time.time()
             predictions = extract_ocr_predictions(
                 barcode, ocr_url, [PredictionType.origin]
             )
-            OriginPredictorResource.sumt += time.time() - begining
-            print(OriginPredictorResource.sumt/OriginPredictorResource.count)
-            OriginPredictorResource.count += 1
 
         except requests.exceptions.RequestException:
             resp.media = {
