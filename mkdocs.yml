@@ -3,6 +3,7 @@ docs_dir: doc
 
 # Link to Github on every page
 repo_url: https://github.com/openfoodfacts/robotoff
+edit_uri: blob/main/doc/
 
 site_name: Robotoff
 site_dir: gh_pages
@@ -18,3 +19,4 @@ markdown_extensions:
 
 plugins:
   - awesome-pages
+  - search

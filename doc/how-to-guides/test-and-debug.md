@@ -23,7 +23,7 @@ $ docker-compose run --rm api poetry run python
 ...
 > from tests.integration.models_utils import *
 > PredictionFactory()
-````
+```
 
 > **NOTE:**  
 > If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
@@ -85,6 +85,7 @@ This can be a good way to try to understand why a test is failing.
 make pytest args="path/to/test.py --pdb"
 ```
 If it's a `mock.assert_called_with`, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.
+
 If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.
 
 ```python
@@ -98,3 +99,14 @@ and then run the `pytest`, with the `--pdb` option (as above).
 to view the inputs and outputs captured by pytest
 > and access the pdb console.
 
+
+
+# How to run checks locally
+
+When commiting your modifications to the main branch, your code have to pass several tests automatically run by GitHub in order to be merged.
+
+You can run theses checks locally before commiting by using the following command:
+
+```bash
+$ 	make checks
+```

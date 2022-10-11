@@ -4,6 +4,13 @@
 
 name: Generate documentation
 on:
+  pull_request:
+    # on pull request we just want to build to see nothing is broken
+    paths:
+    - "README.md"
+    - "doc/**"
+    - ".github/workflows/generate-doc.yml"
+    - "mkdocs.yml"
   push:
     branches:
       - master
@@ -38,9 +45,12 @@ jobs:
       - name: Generate documentation
         run: bash ./build_mkdocs.sh
 
-    # Deploy docs to gh_pages
-    # Example from https://github.com/marketplace/actions/deploy-to-github-pages
+      # Deploy docs to gh_pages if we are pushing to master
+      # Example from https://github.com/marketplace/actions/deploy-to-github-pages
       - name: Deploy 🚀
+        # we only deploy on push to master
+        if: |
+          github.event_name == 'push' && github.event.ref == 'refs/heads/master'
         uses: JamesIves/github-pages-deploy-action@v4.4.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
