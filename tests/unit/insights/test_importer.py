@@ -248,7 +248,7 @@ def test_sort_predictions(predictions, order):
     ],
 )
 def test_select_deepest_taxonomized_candidates(candidates, taxonomy_name, kept_indices):
-    taxonomy = get_taxonomy(taxonomy_name, offline=True)
+    taxonomy = get_taxonomy(taxonomy_name)
     assert select_deepest_taxonomized_candidates(candidates, taxonomy) == [
         candidates[idx] for idx in kept_indices
     ]
@@ -686,6 +686,8 @@ class TestPackagerCodeInsightImporter:
 
 
 class TestLabelInsightImporter:
+    # TODO: this test currently depends on external data, it should not !
+
     def test_get_type(self):
         assert LabelInsightImporter.get_type() == InsightType.label
 
@@ -703,11 +705,7 @@ class TestLabelInsightImporter:
             ("en:fsc", {"en:organic"}, False),
         ],
     )
-    def test_is_parent_label(self, label, to_check_labels, expected, mocker):
-        mocker.patch(
-            "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("label", offline=True),
-        )
+    def test_is_parent_label(self, label, to_check_labels, expected):
         assert LabelInsightImporter.is_parent_label(label, to_check_labels) is expected
 
     @pytest.mark.parametrize(
@@ -758,11 +756,7 @@ class TestLabelInsightImporter:
             ),
         ],
     )
-    def test_generate_candidates(self, predictions, product, expected, mocker):
-        mocker.patch(
-            "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("label", offline=True),
-        )
+    def test_generate_candidates(self, predictions, product, expected):
         candidates = list(
             LabelInsightImporter.generate_candidates(product, predictions)
         )
@@ -792,11 +786,7 @@ class TestCategoryImporter:
             ("en:dairies", {"en:snacks"}, False),
         ],
     )
-    def test_is_parent_category(self, category, to_check_categories, expected, mocker):
-        mocker.patch(
-            "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
-        )
+    def test_is_parent_category(self, category, to_check_categories, expected):
         assert (
             CategoryImporter.is_parent_category(category, to_check_categories)
             is expected
@@ -848,13 +838,7 @@ class TestCategoryImporter:
             ),
         ],
     )
-    def test_generate_candidates(
-        self, predictions, product, expected_value_tags, mocker
-    ):
-        mocker.patch(
-            "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
-        )
+    def test_generate_candidates(self, predictions, product, expected_value_tags):
         candidates = list(CategoryImporter.generate_candidates(product, predictions))
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected_value_tags)

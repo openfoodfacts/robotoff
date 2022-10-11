@@ -1,6 +1,6 @@
-from robotoff.utils.types import JSONType
+from typing import Any, Dict
 
-IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
+IMAGE_PREDICTION_IMPORTER_SCHEMA: Dict[str, Any] = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Image Prediction Importer",
     "type": "object",
@@ -30,7 +30,7 @@ IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
     "required": ["predictions"],
 }
 
-UPDATE_LOGO_SCHEMA: JSONType = {
+UPDATE_LOGO_SCHEMA: Dict[str, Any] = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Update Logo",
     "type": "object",
@@ -39,49 +39,4 @@ UPDATE_LOGO_SCHEMA: JSONType = {
         "type": {"type": "string", "minLength": 1},
     },
     "required": ["value", "type"],
-}
-
-PREDICT_CATEGORY_SCHEMA: JSONType = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Predict Category",
-    "anyOf": [
-        {
-            "type": "object",
-            "properties": {
-                "barcode": {
-                    "type": "string",
-                    "minLength": 1,
-                },
-                "deepest_only": {
-                    "type": "boolean",
-                },
-                "threshold": {"type": "number"},
-            },
-            "required": ["barcode"],
-        },
-        {
-            "type": "object",
-            "properties": {
-                "product": {
-                    "type": "object",
-                    "properties": {
-                        "product_name": {
-                            "type": "string",
-                            "minLength": 1,
-                        },
-                        "ingredients_tags": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                        },
-                    },
-                    "required": ["product_name"],
-                },
-                "deepest_only": {
-                    "type": "boolean",
-                },
-                "threshold": {"type": "number"},
-            },
-            "required": ["product"],
-        },
-    ],
 }

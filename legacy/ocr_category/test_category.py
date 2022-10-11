@@ -1,7 +1,7 @@
 import pytest
 
 from robotoff.insights import InsightType
-from robotoff.prediction.ocr.category import find_category
+from robotoff.prediction.ocr.category import predict_ocr_categories
 
 
 @pytest.mark.parametrize(
@@ -92,7 +92,7 @@ from robotoff.prediction.ocr.category import find_category
 def test_predict_ocr_categories(
     text: str, predicted_category: str, confidence: float
 ) -> None:
-    insights = find_category(text)
+    insights = predict_ocr_categories(text)
 
     # No hesitation in the examples
     assert len(insights) == 1

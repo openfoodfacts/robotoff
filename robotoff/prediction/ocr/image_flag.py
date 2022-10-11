@@ -28,11 +28,8 @@ LABELS_TO_FLAG = {
     "Facial Expression",
     "Glasses",
     "Eyewear",
-    # Gesture generate too many false positive
-    # "Gesture",
-    # Thumb is pretty common on OFF images (as products are often hold in
-    # hands)
-    # "Thumb",
+    "Gesture",
+    "Thumb",
     "Jeans",
     "Shoe",
     "Child",
@@ -43,7 +40,6 @@ LABELS_TO_FLAG = {
     "Computer",
     "Laptop",
     "Refrigerator",
-    "Cat",  # https://world.openfoodfacts.org/images/products/761/002/911/3600/1.json
 }
 
 

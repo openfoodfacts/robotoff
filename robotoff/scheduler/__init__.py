@@ -4,7 +4,6 @@ import os
 import uuid
 from typing import Dict, Iterable
 
-import requests.exceptions
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -203,14 +202,11 @@ def _refresh_elasticsearch():
 # this job does no use database
 def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
-    try:
-        _download_product_dataset()
-        # Elasticsearch is dependent on the availability of the product dump from Product Opener
-        # (main Open Food Facts backend)
-        # it it called after the download product dataset call.
-        _refresh_elasticsearch()
-    except requests.exceptions.RequestException:
-        logger.exception("Exception while running ES updates for categories")
+
+    _download_product_dataset()
+    # Elasticsearch is dependent on the availability of the PO product dump, i.e.
+    # it it called after the download product dataset call.
+    _refresh_elasticsearch()
 
 
 def generate_insights():

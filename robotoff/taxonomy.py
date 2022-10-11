@@ -269,9 +269,7 @@ def generate_category_hierarchy(
     return categories_hierarchy_list
 
 
-def fetch_taxonomy(
-    url: str, fallback_path: str, offline: bool = False
-) -> Optional[Taxonomy]:
+def fetch_taxonomy(url: str, fallback_path: str, offline=False) -> Optional[Taxonomy]:
     if offline:
         return Taxonomy.from_json(fallback_path)
 
@@ -318,20 +316,20 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_BRAND_URL,
-            fallback_path=settings.TAXONOMY_BRAND_PATH,
+            fallback_path=settings.TAXONOMY_LABEL_PATH,
         )
     ),
 }
 
 
-def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
+def get_taxonomy(taxonomy_type: str) -> Taxonomy:
     """Returned the requested Taxonomy."""
     taxonomy_store = TAXONOMY_STORES.get(taxonomy_type)
 
     if taxonomy_store is None:
         raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
 
-    return taxonomy_store.get(offline=offline)
+    return taxonomy_store.get()
 
 
 def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:

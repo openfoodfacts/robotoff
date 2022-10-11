@@ -49,7 +49,6 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     server_domain: str = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     server_type = "off"
     unique_scans_n = 10
-    annotation = None
 
 
 class PredictionFactory(PeeweeModelFactory):
@@ -116,7 +115,7 @@ class LogoAnnotationFactory(PeeweeModelFactory):
     score = 0.7
     annotation_value = "ab agriculture biologique"
     annotation_value_tag = "ab-agriculture-biologique"
-    taxonomy_value = "fr:ab-agriculture-biologique"
+    taxonomy_value = "en:ab-agriculture-biologique"
     annotation_type = "label"
     nearest_neighbors = {"logo_ids": [111111, 222222], "distances": [11.1, 12.4]}
 

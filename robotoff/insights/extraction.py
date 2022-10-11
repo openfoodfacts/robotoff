@@ -13,7 +13,6 @@ logger = get_logger(__name__)
 
 
 DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
-    PredictionType.category,
     PredictionType.label,
     PredictionType.packager_code,
     PredictionType.product_weight,

@@ -29,7 +29,7 @@ def test_es_ocr_regex(input_str: str, is_match: bool, output: Optional[str]):
 @pytest.mark.parametrize(
     "text,value_tags",
     [
-        ("certifié ab.", ["fr:ab-agriculture-biologique"]),
+        ("certifié ab.", ["en:ab-agriculture-biologique"]),
         ("décret du 5/01/07", ["en:label-rouge"]),
         ("DECRET du 05.01.07", ["en:label-rouge"]),
         ("Homologation n° LA 21/88", ["en:label-rouge"]),
