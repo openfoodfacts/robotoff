@@ -1169,8 +1169,7 @@ class UnansweredQuestionCollection:
         response: JSONType = {}
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
-        question_type: str = req.get_param("type")
-        value_tag: str = req.get_param("value_tag")
+        insight_type: str = req.get_param("type")
         country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
         reserved_barcode: Optional[bool] = req.get_param_as_bool(
@@ -1180,9 +1179,8 @@ class UnansweredQuestionCollection:
 
         get_insights_ = functools.partial(
             get_insights,
-            keep_types=[question_type] if question_type else None,
+            keep_types=[insight_type] if insight_type else None,
             group_by_value_tag=True,
-            value_tag=value_tag,
             limit=count,
             country=country,
             server_domain=server_domain,
