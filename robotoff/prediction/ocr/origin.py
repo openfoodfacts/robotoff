@@ -10,6 +10,8 @@ from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 EXTRACTOR_VERSION = "1"
 
+# TODO: check that commit suggested are still in place
+
 
 class OriginParser:
     LARGE_ORIGIN = "large origin"  # large origin means several countries, or an unknown country outside of the local area.
