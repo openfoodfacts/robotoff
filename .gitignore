@@ -8,7 +8,6 @@ robotoff.egg-info
 ml/data/*
 datasets
 *.joblib
-*.gz
 .ipynb_checkpoints
 .mypy_cache
 .pytest_cache
