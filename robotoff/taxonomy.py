@@ -302,28 +302,32 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
             fetch_taxonomy,
             url=settings.TAXONOMY_CATEGORY_URL,
             fallback_path=settings.TAXONOMY_CATEGORY_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
     TaxonomyType.ingredient.name: CachedStore(
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_INGREDIENT_URL,
             fallback_path=settings.TAXONOMY_INGREDIENT_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
     TaxonomyType.label.name: CachedStore(
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_LABEL_URL,
             fallback_path=settings.TAXONOMY_LABEL_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
     TaxonomyType.brand.name: CachedStore(
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_BRAND_URL,
             fallback_path=settings.TAXONOMY_BRAND_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
 }
 
