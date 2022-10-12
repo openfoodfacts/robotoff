@@ -26,6 +26,7 @@ class PredictionType(str, Enum):
     image_lang = "image_lang"
     nutrition_image = "nutrition_image"
     nutrition_table_structure = "nutrition_table_structure"
+    origin = "origin"
 
 
 @dataclasses.dataclass

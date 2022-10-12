@@ -100,6 +100,9 @@ TAXONOMY_LABEL_URL = (
 TAXONOMY_BRAND_URL = (
     BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json"
 )
+TAXONOMY_COUNTRY_URL = (
+    BaseURLProvider().static().get() + "/data/taxonomies/countries.full.json"
+)
 OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
@@ -124,6 +127,7 @@ TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
 TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
 TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
 TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
+TAXONOMY_COUNTRY_PATH = TAXONOMY_DIR / "countries.full.json.gz"
 INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"

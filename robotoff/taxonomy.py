@@ -25,6 +25,7 @@ class TaxonomyType(Enum):
     ingredient = 2
     label = 3
     brand = 4
+    origin = 5
 
 
 class TaxonomyNode:
@@ -326,6 +327,13 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
             fetch_taxonomy,
             url=settings.TAXONOMY_BRAND_URL,
             fallback_path=settings.TAXONOMY_BRAND_PATH,
+        )
+    ),
+    TaxonomyType.origin.name: CachedStore(
+        functools.partial(
+            fetch_taxonomy,
+            url=settings.TAXONOMY_COUNTRY_URL,
+            fallback_path=settings.TAXONOMY_COUNTRY_PATH,
         )
     ),
 }
