@@ -315,21 +315,45 @@ paths:
           headers: {}
           content:
             image/jpeg: {}
+
   /images/logos:
     get:
       tags:
-        - Images
-      summary: Search or fetch logo annotations
-      description: |
-        If `logo_ids` parameter is provided, return logo annotation about requested logos.
-        Otherwise search logos with the specific filter provided. `logo_ids` and the
-        remaining parameters are mutually exclusive.
+        - Logos
+      summary: Fetch logos
+      description: Return details about requested logos
       parameters:
         - name: logo_ids
-          description: Comma-separated string of logo IDs. Mutually exclusive with the other parameters.
+          description: Comma-separated string of logo IDs
           in: query
           schema:
             type: string
+      responses:
+        "200":
+          description: The fetch results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logos:
+                    type: array
+                    description: Details about requested logos
+                  count:
+                    type: number
+                    description: Number of returned results
+                required:
+                  - logos
+                  - count
+  /images/logos/search:
+    get:
+      tags:
+        - Logos
+      summary: Search for logos
+      description: |
+        Search for logos detected using the universal-logo-detector model that 
+        meet some criteria (annotation status, annotated, type,...)
+      parameters:
         - name: count
           description: Number of results to return
           in: query
@@ -372,14 +396,15 @@ paths:
           schema:
             type: string
         - name: annotated
-          description: If true, only return annotated logos, otherwise only return non-annotated ones.
+          description: The annotation status of the logo.
+            If not provided, both annotated and non-annotated logos are returned
           in: query
           schema:
             type: boolean
-            default: false
+            default: null
       responses:
         "200":
-          description: "The search/fetch results"
+          description: The search results
           content:
             application/json:
               schema:
@@ -387,7 +412,7 @@ paths:
                 properties:
                   logos:
                     type: array
-                    description: Found logo annotations
+                    description: Found logos
                   count:
                     type: number
                     description: Number of returned results

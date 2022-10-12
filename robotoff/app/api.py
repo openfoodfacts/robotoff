@@ -650,7 +650,11 @@ class ImageLogoSearchResource:
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
         random: bool = req.get_param_as_bool("random", default=False)
         server_domain: Optional[str] = req.get_param("server_domain")
-        annotated: bool = req.get_param_as_bool("annotated", default=False)
+        annotated: Optional[bool] = req.get_param_as_bool("annotated")
+
+        where_clauses = []
+        if annotated is not None:
+            where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
 
         where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
         join_image_prediction = False
