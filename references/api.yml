@@ -85,6 +85,7 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
+        - $ref: "#/components/parameters/campaign"
       responses:
         "200":
           description: The queried insights
@@ -124,11 +125,64 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
+        - $ref: "#/components/parameters/campaign"
       responses:
         "200":
           description: ""
           headers: {}
           content: {}
+  /questions/unanswered:
+    get:
+      tags:
+        - Questions
+      summary: Get unanswered question counts
+      description: |
+        Get number of unanswered questions grouped by `value_tag`.
+        The list is ordered from highest count to lowest.
+      operationId: GetQuestionsUnanswered
+      parameters:
+        - name: count
+          in: query
+          description: The number of distinct `value_tag`s to return
+          schema:
+            type: number
+            default: 25
+            minimum: 1
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/insight_type"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/reserved_barcode"
+        - $ref: "#/components/parameters/campaign"
+      responses:
+        "200":
+          description: "The number of questions grouped by `value_tag`"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: The total number of questions that meet the provided criteria
+                  questions:
+                    type: array
+                    items:
+                      oneOf:
+                        - type: string
+                          description: The `value_tag`
+                        - type: integer
+                          description: The number of questions for this `value_tag`
+                  status:
+                    type: string
+                    description: The request status
+                    enum:
+                      - found
+                      - no_questions
+                required:
+                  - count
+                  - questions
+                  - status
 
   /insights/random:
     get:
@@ -542,6 +596,12 @@ components:
       description: Comma-separated list, filter by insight types
       schema:
         type: string
+    insight_type:
+      name: type
+      in: query
+      description: Filter by insight type
+      schema:
+        type: string
     country:
       name: country
       in: query
@@ -569,6 +629,7 @@ components:
       schema:
         type: integer
         default: 1
+        minimum: 1
     reserved_barcode:
       name: reserved_barcode
       in: query
@@ -576,6 +637,14 @@ components:
       schema:
         type: boolean
         default: false
+    campaign:
+      name: campaign
+      in: query
+      description: Filter by annotation campaign.
+        An annotation campaign allows to only retrieve questions about selected products, based on arbitrary criteria
+      schema:
+        type: string
+        example: agribalyse-category
 
 tags:
   - name: Questions
