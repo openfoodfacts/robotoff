@@ -23,36 +23,13 @@ paths:
       summary: Get questions for a given product
       operationId: getQuestionsBarcode
       parameters:
-        - name: barcode
-          in: path
-          description: The product barcode
-          required: true
-          style: simple
-          schema:
-            type: string
-        - name: lang
-          in: query
-          description: The language of the question/value
-          schema:
-            type: string
-            default: en
-        - name: count
-          in: query
-          description: The number of questions to return
-          schema:
-            type: number
-            default: 1
-            minimum: 1
-        - name: server_domain
-          in: query
-          description: The server domain
-          schema:
-            type: string
-            default: api.openfoodfacts.org
+        - $ref: "#/components/parameters/barcode_path"
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/lang"
       responses:
         "200":
-          description: ""
-          headers: {}
+          description: "Questions about the requested product"
           content:
             application/json:
               schema:
@@ -68,7 +45,6 @@ paths:
                     items:
                       type: object
 
-      deprecated: false
   /questions/random:
     get:
       tags:
@@ -89,7 +65,6 @@ paths:
       responses:
         "200":
           description: The queried insights
-          headers: {}
           content:
             application/json:
               schema:
@@ -108,12 +83,13 @@ paths:
                     type: integer
                     description: The total number of results with the provided filters
 
-      deprecated: false
   /questions/popular:
     get:
       tags:
         - Questions
-      summary: Get questions about products ranked by popularity (scan count)
+      summary: Get questions about popular products
+      description: |
+        Questions are ranked by the product popularity (based on scan count).
       operationId: GetQuestionsPopular
       parameters:
         - $ref: "#/components/parameters/lang"
@@ -129,7 +105,6 @@ paths:
       responses:
         "200":
           description: ""
-          headers: {}
           content: {}
   /questions/unanswered:
     get:
@@ -204,25 +179,12 @@ paths:
           schema:
             type: string
             default: api.openfoodfacts.org
-        - name: type
-          in: query
-          description: filter by insight type
-          schema:
-            type: string
-        - name: country
-          in: query
-          description: Filter by country tag
-          schema:
-            type: string
-        - name: value_tag
-          in: query
-          description: Filter by value_tag
-          schema:
-            type: string
+        - $ref: "#/components/parameters/insight_type"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/value_tag"
       responses:
         "200":
           description: ""
-          headers: {}
           content:
             application/json:
               schema:
@@ -233,32 +195,18 @@ paths:
                     items:
                       $ref: "#/components/schemas/InsightSearchResult"
 
-      deprecated: false
   /insights/{barcode}:
     get:
       tags:
         - Insights
       summary: Get all insights for a specific product
-      description: >-
-        Return all insights associated with a specific product.
-
-        + server_domain (str, optional) - server domain. Default to 'api.openfoodfacts.org'
       operationId: Getallinsightsforaspecificproduct
       parameters:
-        - name: barcode
-          in: path
-          description: ""
-          required: true
-          style: simple
-          schema:
-            type: integer
-            example: Product barcode
+        - $ref: "#/components/parameters/barcode_path"
       responses:
         "200":
           description: ""
-          headers: {}
           content: {}
-      deprecated: false
   /insights/detail/{id}:
     get:
       tags:
@@ -276,9 +224,7 @@ paths:
       responses:
         "200":
           description: ""
-          headers: {}
           content: {}
-      deprecated: false
   /insights/annotate:
     post:
       tags:
@@ -315,9 +261,7 @@ paths:
       responses:
         "200":
           description: ""
-          headers: {}
           content: {}
-      deprecated: false
 
   /images/crop:
     get:
@@ -366,7 +310,6 @@ paths:
       responses:
         "200":
           description: ""
-          headers: {}
           content:
             image/jpeg: {}
   /images/logos:
@@ -580,7 +523,7 @@ components:
       in: query
       description: The number of questions to return
       schema:
-        type: number
+        type: integer
         default: 1
         minimum: 1
     server_domain:
@@ -618,7 +561,7 @@ components:
     value_tag:
       name: value_tag
       in: query
-      description: Filter by value tag, i.e the value that is going to be sent to Openfoodfacts
+      description: Filter by value tag, i.e the value that is going to be sent to Product Opener
       schema:
         type: string
       example: en:organic
@@ -645,7 +588,14 @@ components:
       schema:
         type: string
         example: agribalyse-category
-
+    barcode_path:
+      name: barcode
+      in: path
+      required: true
+      description: The barcode of the product
+      schema:
+        type: integer
+        example: 5410041040807
 tags:
   - name: Questions
   - name: Insights
