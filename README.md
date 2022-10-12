@@ -30,6 +30,8 @@ Robotoff works together with [Product Opener](https://github.com/openfoodfacts/o
 
 **Open Food Facts:** <https://world.openfoodfacts.org>
 
+A rendered view of the latest version of the API documentation is available [here](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/openfoodfacts/robotoff/master/doc/references/api.yml).
+
 ## Overview
 
 - To get a better understanding on how Robotoff works, go to [Architecture](https://openfoodfacts.github.io/robotoff/introduction/architecture/).
