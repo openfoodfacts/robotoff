@@ -56,7 +56,7 @@ def generate_from_ocr_archive(
 
         if barcode is None:
             click.echo(
-                "cannot extract barcode from source " "{}".format(source_image),
+                f"cannot extract barcode from source {source_image}",
                 err=True,
             )
             continue
@@ -120,19 +120,17 @@ def is_automatically_processable(
     product = get_product(insight.barcode, fields=["images"])
 
     if product is None:
-        logger.info("Missing product: {}".format(insight.barcode))
+        logger.info(f"Missing product: {insight.barcode}")
         raise InvalidInsight()
 
     if "images" not in product:
-        logger.info("No images for product {}".format(insight.barcode))
+        logger.info(f"No images for product {insight.barcode}")
         raise InvalidInsight()
 
     product_images = product["images"]
 
     if image_id not in product_images:
-        logger.info(
-            "Missing image for product {}, ID: {}".format(insight.barcode, image_id)
-        )
+        logger.info(f"Missing image for product {insight.barcode}, ID: {image_id}")
         raise InvalidInsight()
 
     if is_recent_image(product_images, image_id, max_timedelta):
@@ -145,7 +143,7 @@ def is_automatically_processable(
 
 
 def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
-    logger.info("Timedelta: {}".format(max_timedelta))
+    logger.info(f"Timedelta: {max_timedelta}")
     count = 0
     insight: ProductInsight
 
@@ -175,17 +173,15 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
         try:
             is_processable = is_automatically_processable(insight, max_timedelta)
         except InvalidInsight:
-            logger.info("Deleting insight {}".format(insight.id))
+            logger.info(f"Deleting insight {insight.id}")
             insight.delete_instance()
             continue
 
         if is_processable:
             logger.info(
-                "Annotating insight {} (barcode: {})".format(
-                    insight.value_tag or insight.value, insight.barcode
-                )
+                f"Annotating insight {insight.value_tag or insight.value} (barcode: {insight.barcode})"
             )
             annotator.annotate(insight, 1, update=True, automatic=True)
             count += 1
 
-    logger.info("Annotated insights: {}".format(count))
+    logger.info(f"Annotated insights: {count}")
