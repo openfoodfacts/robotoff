@@ -504,6 +504,13 @@ def get_product_store() -> DBProductStore:
 def get_product(
     barcode: str, projection: Optional[List[str]] = None
 ) -> Optional[JSONType]:
+    """Get product from MongoDB.
+
+    :param barcode: barcode of the product to fetch
+    :param projection: list of fields to retrieve, if not provided all fields
+    are queried
+    :return: the product as a dict or None if it was not found
+    """
     mongo_client = MONGO_CLIENT_CACHE.get()
     return mongo_client.off.products.find_one({"code": barcode}, projection)
 

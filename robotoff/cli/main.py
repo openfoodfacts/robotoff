@@ -6,6 +6,8 @@ from typing import List, Optional
 import typer
 from typer import Option
 
+from robotoff.insights.dataclass import InsightType
+
 app = typer.Typer()
 
 
@@ -254,17 +256,56 @@ def import_insights(
 
 @app.command()
 def apply_insights(
-    insight_type: str,
-    delta: int = 1,
+    insight_type: InsightType = typer.Argument(
+        ...,
+        help="Filter insights to apply based on their type",
+    ),
+    predictor: str = typer.Argument(
+        ..., help="Filter insights to apply based on their predictor value"
+    ),
+    value_tag: Optional[str] = typer.Option(
+        help="Filter insights to apply based on their `value_tag`", default=None
+    ),
+    max_delta: int = typer.Option(
+        180,
+        help="Maximum number of days between the upload of the insight image "
+        "and the upload of the most recent image of the product to consider "
+        "the apply the insight automatically",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        help="Perform a dry run (don't apply any insight)",
+    ),
+    max_scan_count: Optional[int] = typer.Option(
+        None, help="Filter insights based on their popularity"
+    ),
 ) -> None:
+    """Apply insights automatically based on their insight type AND predictor.
+
+    Be careful when using this command, it may modify *many* products in Open
+    Food Facts database.
+    """
     import datetime
 
     from robotoff.cli import insights
     from robotoff.utils import get_logger
 
     logger = get_logger()
-    logger.info("Applying {} insights".format(insight_type))
-    insights.apply_insights(insight_type, datetime.timedelta(days=delta))
+    if dry_run:
+        logger.info("*** DRY RUN ***")
+    logger.info(
+        "Applying automatically insights with the following criteria: "
+        f"type: `{insight_type.name}`, predictor: `{predictor}`, "
+        f"value_tag: `{value_tag}`, max_scan_count: {max_scan_count}"
+    )
+    insights.apply_insights(
+        insight_type=insight_type.name,
+        predictor=predictor,
+        max_timedelta=datetime.timedelta(days=max_delta),
+        value_tag=value_tag,
+        max_scan_count=max_scan_count,
+        dry_run=dry_run,
+    )
 
 
 @app.command()
