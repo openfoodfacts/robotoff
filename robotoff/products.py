@@ -22,6 +22,12 @@ logger = get_logger(__name__)
 
 
 def get_image_id(image_path: str) -> Optional[str]:
+    """Return the image ID from an image path.
+
+    :param image_path: the image path (ex: /322/247/762/7888/2.jpg)
+    :return: the image ID ("2" in the previous example) or None if the image
+    is not "raw" (not digit-numbered)
+    """
     image_id = pathlib.Path(image_path).stem
 
     if image_id.isdigit():
