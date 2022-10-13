@@ -50,6 +50,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     server_type = "off"
     unique_scans_n = 10
     annotation = None
+    automatic_processing = False
 
 
 class PredictionFactory(PeeweeModelFactory):
@@ -62,6 +63,8 @@ class PredictionFactory(PeeweeModelFactory):
     timestamp = factory.LazyFunction(datetime.utcnow)
     value_tag = "en:seeds"
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
+    automatic_processing = None
+    predictor = None
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):

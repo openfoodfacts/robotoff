@@ -137,15 +137,9 @@ def is_trustworthy_insight_image(
 def get_existing_insight(
     insight_type: InsightType, barcode: str, server_domain: str
 ) -> List[ProductInsight]:
-    """Get `value` and `value_tag` of all insights for specific product and
-    `insight_type`."""
+    """Get all insights for specific product and `insight_type`."""
     return list(
-        ProductInsight.select(
-            ProductInsight.annotation,
-            ProductInsight.id,
-            ProductInsight.value,
-            ProductInsight.value_tag,
-        ).where(
+        ProductInsight.select().where(
             ProductInsight.type == insight_type.name,
             ProductInsight.barcode == barcode,
             ProductInsight.server_domain == server_domain,
@@ -168,8 +162,10 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
     auto-incremented integers, so the most recent images have the highest IDs.
     Images with `source_image = None` have a lower priority that images with a
     source image.
+    - predictor, predictions with predictor value have higher priority
 
     :param predictions: The predictions to sort
+    :return: Sorted predictions
     """
     return sorted(
         predictions,
@@ -178,6 +174,41 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
             -int(get_image_id(prediction.source_image) or 0)
             if prediction.source_image
             else 0,
+            # hack to set a higher priority to prediction with a predictor value
+            prediction.predictor or "z",
+        ),
+    )
+
+
+def sort_candidates(candidates: Iterable[ProductInsight]) -> List[ProductInsight]:
+    """Sort candidates by priority, using as keys:
+    - priority, specified by data["priority"], candidate with lowest priority
+    values (high priority) come first
+    - source image upload datetime (most recent first): images IDs are
+    auto-incremented integers, so the most recent images have the highest IDs.
+    Images with `source_image = None` have a lower priority that images with a
+    source image.
+    - automatic processing status: candidates that are automatically
+    processable have higher priority
+
+    This function should be used to make sure most important candidates are
+    looked into first in `get_insight_update`. Note that the sorting keys are
+    a superset of those used in `sort_predictions`.
+
+    :param candidates: The candidates to sort
+    :return: Sorted candidates
+    """
+    return sorted(
+        candidates,
+        key=lambda candidate: (
+            candidate.data.get("priority", 1),
+            -int(get_image_id(candidate.source_image) or 0)
+            if candidate.source_image
+            else 0,
+            # automatically processable insights come first
+            -int(candidate.automatic_processing),
+            # hack to set a higher priority to prediction with a predictor value
+            candidate.predictor or "z",
         ),
     )
 
@@ -257,7 +288,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         ):
             if to_delete:
                 to_delete_ids = [insight.id for insight in to_delete]
-                logger.info(f"Deleting insight IDs: {[str(x) for x in to_delete_ids]}")
+                logger.info(f"Deleting {len(to_delete_ids)} insights")
                 ProductInsight.delete().where(
                     ProductInsight.id.in_(to_delete_ids)
                 ).execute()
@@ -375,13 +406,16 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for reference in reference_insights
             if reference.annotation is not None
         )
-        for candidate in candidates:
+        for candidate in sort_candidates(candidates):
             match = False
-            for reference in reference_insights:
+            for reference in (
+                reference_insight
+                for reference_insight in reference_insights
+                if reference_insight.annotation is not None
+            ):
                 if cls.is_conflicting_insight(candidate, reference):
                     # Candidate conflicts with existing insight, keeping
                     # existing insight and discarding candidate
-                    to_keep_ids.add(reference.id)
                     match = True
 
             if not match:
