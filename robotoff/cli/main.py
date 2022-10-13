@@ -268,6 +268,41 @@ def apply_insights(
 
 
 @app.command()
+def refresh_insights(
+    barcode: Optional[str] = typer.Option(
+        None,
+        help="Refresh a specific product. If not provided, all products are updated",
+    ),
+    server_domain: Optional[str] = typer.Option(
+        None, help="The server domain to use, Open Food Facts by default"
+    ),
+):
+    """Refresh insights based on available predictions.
+
+    If a `barcode` is provided, only the insights of this product is
+    refreshed, otherwise insights of all products are refreshed.
+    """
+    from robotoff import settings
+    from robotoff.utils import get_logger
+    from robotoff.insights.importer import (
+        refresh_insights as refresh_insights_,
+        refresh_all_insights,
+    )
+
+    logger = get_logger()
+    server_domain = server_domain or settings.OFF_SERVER_DOMAIN
+
+    if barcode is not None:
+        logger.info(f"Refreshing product {barcode}")
+        imported = refresh_insights_(barcode, server_domain, automatic=True)
+    else:
+        logger.info("Refreshing insights of all products")
+        imported = refresh_all_insights(server_domain, automatic=True)
+
+    logger.info(f"Refreshed insights: {imported}")
+
+
+@app.command()
 def init_elasticsearch(
     load_index: bool = False,
     load_data: bool = True,

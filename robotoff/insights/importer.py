@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 
+from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
@@ -1066,6 +1067,28 @@ def refresh_insights(
                 automatic,
                 product_store,
             )
+
+    return imported
+
+
+def refresh_all_insights(
+    server_domain: str,
+    automatic: bool,
+    product_store: Optional[DBProductStore] = None,
+):
+    """Refresh insights of all products for which we have predictions.
+
+    :param server_domain: The server domain associated with the predictions.
+    :param automatic: If False, no insight is applied automatically.
+    :param product_store: The product store to use, defaults to None
+    :return: The number of imported insights.
+    """
+    imported = 0
+    for barcode in (
+        PredictionModel.select(fn.Distinct(PredictionModel.barcode)).scalar().iterator()
+    ):
+        logger.info(f"Refreshing insights for product {barcode}")
+        imported += refresh_insights(barcode, server_domain, automatic, product_store)
 
     return imported
 
