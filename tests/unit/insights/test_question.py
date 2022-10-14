@@ -20,7 +20,7 @@ def test_get_display_image(source_image: str, output: str):
 
 
 def test_generate_selected_images():
-    with (TEST_DATA_DIR / "generate_images.json").open("r") as f:
+    with (TEST_DATA_DIR / "generate_selected_images.json").open("r") as f:
         IMAGE_DATA = json.load(f)
 
     selected_images = CategoryQuestionFormatter.generate_selected_images(
