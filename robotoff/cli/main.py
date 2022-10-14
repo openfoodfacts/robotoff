@@ -17,25 +17,38 @@ def run(service: str) -> None:
 
 
 @app.command()
-def predict_insight(ocr_url: str) -> None:
-    import json
-
+def generate_import_insights(
+    barcode: str = typer.Argument(..., help="Barcode of the product")
+) -> None:
+    """Generate OCR predictions/insights for a specific product and import them."""
     from robotoff.insights.extraction import (
         DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
-    from robotoff.off import get_barcode_from_url
+    from robotoff.insights.importer import import_insights as import_insights_
+    from robotoff.off import generate_json_ocr_url
     from robotoff.utils import get_logger
+    from robotoff import settings
+    from robotoff.products import get_product
 
-    get_logger()
+    logger = get_logger()
 
-    barcode = get_barcode_from_url(ocr_url)
-    if barcode is None:
-        raise ValueError(f"invalid OCR URL: {ocr_url}")
+    product = get_product(barcode, ["images"])
+    if product is None:
+        raise ValueError(f"product not found: {barcode}")
 
-    results = extract_ocr_predictions(barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
+    predictions = []
+    for image_id in product["images"]:
+        if not image_id.isdigit():
+            continue
 
-    print(json.dumps(results, indent=4))
+        ocr_url = generate_json_ocr_url(barcode, image_id)
+        predictions += extract_ocr_predictions(
+            barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+        )
+
+    imported = import_insights_(predictions, settings.OFF_SERVER_DOMAIN, automatic=True)
+    logger.info(f"Import finished, {imported} insights imported")
 
 
 @app.command()
