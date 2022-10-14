@@ -392,5 +392,33 @@ def export_logo_annotation(
         dump_jsonl(output, dict_iter)
 
 
+@app.command()
+def export_logos_ann(
+    output: pathlib.Path = typer.Argument(
+        ...,
+        help="Path to the output file, can either have .json or .json.gz as "
+        "extension",
+    ),
+) -> None:
+    """Export all information about logo in DB necessary to generate logo
+    crops."""
+    from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+    from robotoff.utils import dump_jsonl
+
+    with db:
+        query = (
+            LogoAnnotation.select(
+                LogoAnnotation.id,
+                LogoAnnotation.bounding_box,
+                LogoAnnotation.score,
+                ImageModel.image_id,
+                ImageModel.barcode,
+            )
+            .join(ImagePrediction)
+            .join(ImageModel)
+        )
+        dump_jsonl(output, query.dicts().iterator())
+
+
 def main() -> None:
     app()
