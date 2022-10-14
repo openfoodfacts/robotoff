@@ -149,11 +149,11 @@ class CategoryQuestionFormatter(QuestionFormatter):
     def get_source_image_url(barcode: str) -> Optional[str]:
         product: Optional[JSONType] = get_product(barcode)
 
-        if product is None:
+        if product is None or "images" not in product:
             return None
 
         selected_images = CategoryQuestionFormatter.generate_selected_images(
-            product, barcode
+            product["images"], barcode
         )
 
         for key in ("front", "ingredients", "nutrition"):
@@ -169,12 +169,19 @@ class CategoryQuestionFormatter(QuestionFormatter):
         return None
 
     @staticmethod
-    def generate_selected_images(images: JSONType, barcode: str) -> JSONType:
+    def generate_selected_images(
+        images: JSONType, barcode: str
+    ) -> Dict[str, Dict[str, Dict[str, str]]]:
+        """Generate the same `selected_images` field as returned by Product
+        Opener API.
+
+        :param images: the `images` data of the product
+        :param barcode: the product barcode
+        :return: the `selected_images` data
+        """
         selected_images: Dict[str, Dict[str, Dict[str, str]]] = {
-            "front": {"display": {}, "small": {}, "thumb": {}},
-            "nutrition": {"display": {}, "small": {}, "thumb": {}},
-            "ingredients": {"display": {}, "small": {}, "thumb": {}},
-            "packaging": {"display": {}, "small": {}, "thumb": {}},
+            image_type: {}
+            for image_type in ("front", "nutrition", "ingredients", "packaging")
         }
 
         for key, image_data in images.items():
@@ -189,18 +196,21 @@ class CategoryQuestionFormatter(QuestionFormatter):
                 ]  # to get image type: `front`, `nutrition`, `ingredients` or `packaging`
                 language = key.split("_")[1]  # splitting to get the language name
                 revision_id = image_data["rev"]  # get revision_id for all languages
+                available_image_sizes = set(
+                    int(size) for size in image_data["sizes"] if size.isdigit()
+                )
 
                 for field_name, image_size in (
                     ("display", DISPLAY_IMAGE_SIZE),
                     ("small", SMALL_IMAGE_SIZE),
                     ("thumb", THUMB_IMAGE_SIZE),
                 ):
-                    image_id = key + "." + revision_id + "." + str(image_size)
-                    image_url = generate_image_url(barcode, image_id)
-
-                    selected_images[image_type][field_name].update(
-                        {language: image_url}
-                    )
+                    if image_size in available_image_sizes:
+                        image_url = generate_image_url(
+                            barcode, f"{key}.{revision_id}.{image_size}"
+                        )
+                        selected_images[image_type].setdefault(field_name, {})
+                        selected_images[image_type][field_name][language] = image_url
 
         return selected_images
 
