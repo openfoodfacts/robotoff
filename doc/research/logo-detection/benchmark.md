@@ -94,3 +94,25 @@ However, CLIP models largely outperform any other tested architecture on this be
 Performances of CLIP models increase as models gets larger or with a smaller image patch size. The prediction latency is however 3.8x and 18,4x higher for `clip-vit-base-patch16` and `clip-vit-large-patch14` respectively compared to `clip-vit-base-patch32`.
 
 In conclusion, CLIP models are very good candidates for an off-the-shelf replacement of the `efficientnet-b0` model currently used to generate logo embeddings. An additional benefit from this model architecture is the smaller embedding size (768 or 1024, depending on the version) compared to the original `efficientnet-b0` model (1280).
+
+To study the behaviour of each model in a case closer to our usecase, we performed another benchmark based this time of the efficiency of each model to predict the right label for each logo of val.txt file. The predicted label is the most represented one among the k closest neighbours.
+
+Here are the results we obtained working with a cosine distance :
+
+| model                        | micro-recall@4 | macro-recall@4 |
+| ---------------------------- | -------------- | -------------- |
+| random                       | 0.0080         | 0.0079         |
+| efficientnet_b1              | 0.7033         | 0.7613         |
+| resnest101e                  | 0.4777         | 0.5415         |
+| efficientnet_b2              | 0.6937         | 0.7831         |
+| rexnet_100                   | 0.7478         | 0.7121         |
+| efficientnet_b4              | 0.7091         | 0.7961         |
+| resnet50                     | 0.7170         | 0.7923         |
+| efficientnet_b0              | 0.7325         | 0.7832         |
+| resnet50d                    | 0.7870         | 0.8420         |
+| clip-vit-base-patch32        | 0.8414         | 0.8981         |
+| clip-vit-base-patch16        | 0.8695         | 0.9204         |
+| clip-vit-large-patch14       | **0.8761**     | **0.9283**     |
+| deit_base_patch16_384        | 0.6193         | 0.6933         |
+
+The CLIP models remain better than the others.
