@@ -923,6 +923,85 @@
 <p>However, CLIP models largely outperform any other tested architecture on this benchmark: with <code>clip-vit-large-patch14</code> we gain +22.8 on micro-recall@4 and +30.9 on macro-recall@4 compared to <code>efficientnet-b0</code>.</p>
 <p>Performances of CLIP models increase as models gets larger or with a smaller image patch size. The prediction latency is however 3.8x and 18,4x higher for <code>clip-vit-base-patch16</code> and <code>clip-vit-large-patch14</code> respectively compared to <code>clip-vit-base-patch32</code>.</p>
 <p>In conclusion, CLIP models are very good candidates for an off-the-shelf replacement of the <code>efficientnet-b0</code> model currently used to generate logo embeddings. An additional benefit from this model architecture is the smaller embedding size (768 or 1024, depending on the version) compared to the original <code>efficientnet-b0</code> model (1280).</p>
+<p>To study the behaviour of each model in a case closer to our usecase, we performed another benchmark based this time of the efficiency of each model to predict the right label for each logo of val.txt file. The predicted label is the most represented one among the k closest neighbours.</p>
+<p>Here are the results we obtained working with a cosine distance :</p>
+<table>
+<thead>
+<tr>
+<th>model</th>
+<th>micro-recall@4</th>
+<th>macro-recall@4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>random</td>
+<td>0.0080</td>
+<td>0.0079</td>
+</tr>
+<tr>
+<td>efficientnet_b1</td>
+<td>0.7033</td>
+<td>0.7613</td>
+</tr>
+<tr>
+<td>resnest101e</td>
+<td>0.4777</td>
+<td>0.5415</td>
+</tr>
+<tr>
+<td>efficientnet_b2</td>
+<td>0.6937</td>
+<td>0.7831</td>
+</tr>
+<tr>
+<td>rexnet_100</td>
+<td>0.7478</td>
+<td>0.7121</td>
+</tr>
+<tr>
+<td>efficientnet_b4</td>
+<td>0.7091</td>
+<td>0.7961</td>
+</tr>
+<tr>
+<td>resnet50</td>
+<td>0.7170</td>
+<td>0.7923</td>
+</tr>
+<tr>
+<td>efficientnet_b0</td>
+<td>0.7325</td>
+<td>0.7832</td>
+</tr>
+<tr>
+<td>resnet50d</td>
+<td>0.7870</td>
+<td>0.8420</td>
+</tr>
+<tr>
+<td>clip-vit-base-patch32</td>
+<td>0.8414</td>
+<td>0.8981</td>
+</tr>
+<tr>
+<td>clip-vit-base-patch16</td>
+<td>0.8695</td>
+<td>0.9204</td>
+</tr>
+<tr>
+<td>clip-vit-large-patch14</td>
+<td><strong>0.8761</strong></td>
+<td><strong>0.9283</strong></td>
+</tr>
+<tr>
+<td>deit_base_patch16_384</td>
+<td>0.6193</td>
+<td>0.6933</td>
+</tr>
+</tbody>
+</table>
+<p>The CLIP models remain better than the others.</p>
                 
               
               
