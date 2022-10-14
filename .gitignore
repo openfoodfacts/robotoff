@@ -2,6 +2,8 @@
 robotoff.code-workspace
 __pycache__
 build
+# debug is a dev-only directory to store all temporary files
+debug
 dist
 .idea
 robotoff.egg-info
