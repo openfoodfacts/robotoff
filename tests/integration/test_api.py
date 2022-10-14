@@ -41,7 +41,18 @@ def client():
 
 
 def test_random_question(client, mocker):
-    product = {"selected_images": {"ingredients": {"display": {"fr": "foo"}}}}
+    product = {
+        "images": {
+            "ingredients_fr": {
+                "rev": "51",
+                "sizes": {
+                    "100": {"h": 75, "w": 100},
+                    "400": {"h": 300, "w": 400},
+                    "full": {"h": 1500, "w": 2000},
+                },
+            }
+        }
+    }
     mocker.patch("robotoff.insights.question.get_product", return_value=product)
     result = client.simulate_get("/api/v1/questions/random")
 
@@ -57,7 +68,7 @@ def test_random_question(client, mocker):
                 "question": "Does the product belong to this category?",
                 "insight_id": insight_id,
                 "insight_type": "category",
-                "source_image_url": "foo",
+                "source_image_url": "https://static.openfoodfacts.net/images/products/1/ingredients_fr.51.400.jpg",
             }
         ],
         "status": "found",
