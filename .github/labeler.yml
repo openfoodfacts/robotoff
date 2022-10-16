@@ -5,7 +5,7 @@ crowdin:
 - crowdin.yml
 
 documentation:
-*.MD
+- *.MD
 
 tests:
 - tests/**/*
