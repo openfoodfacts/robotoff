@@ -4,5 +4,94 @@ github_actions:
 crowdin:
 - crowdin.yml
 
+documentation:
+*.MD
+
 tests:
+- tests/**/*
+
+integration tests:
 - tests/integration/**/*
+- tests/integration/insights/**/*
+
+unit tests:
+- tests/unit/**/*
+- tests/unit/insights/**/*
+- tests/unit/cli/**/*
+- tests/unit/utils/**/*
+- tests/unit/prediction/**/*
+- tests/unit/elasticsearch/**/*
+- tests/unit/prediction/category/**/*
+- tests/unit/prediction/category/neural/**/*
+
+robotoff app:
+- robotoff/app/**/*
+
+cli:
+- robotoff/cli/**/*
+- tests/unit/cli/**/*
+
+utils:
+- robotoff/utils/**/*
+- tests/unit/utils/**/*
+
+workers:
+- robotoff/workers/**/*
+- robotoff/workers/tasks/**/*
+
+insights:
+- robotoff/insights/**/*
+- tests/integration/insights/**/*
+- tests/unit/insights/**/*
+
+scheduler:
+- robotoff/scheduler/**/*
+
+predictions:
+- robotoff/prediction/**/*
+- tests/unit/prediction/**/*
+
+ocr prediction:
+- robotoff/prediction/ocr/**/*
+- tests/unit/prediction/ocr/**/*
+- legacy/ocr_category/prediction_from_ocr/**/*
+
+elasticsearch:
+- robotoff/elasticsearch/**/*
+- tests/unit/elasticsearch/**/*
+- robotoff/elasticsearch/product/**/*
+- robotoff/elasticsearch/category/**/*
+- robotoff/spellcheck/elasticsearch/**/*
+- tests/unit/elasticsearch/category/**/*
+- tests/unit/elasticsearch/**/*
+- robotoff/elasticsearch/category/**/*
+- tests/unit/elasticsearch/category/**/*
+- robotoff/elasticsearch/product/**/*
+
+spellcheck:
+- robotoff/spellcheck/**/*
+- robotoff/spellcheck/vocabulary/**/*
+- robotoff/spellcheck/patterns/**/*
+- robotoff/spellcheck/percentages/**/*
+- robotoff/spellcheck/elasticsearch/**/*
+
+object detection:
+- robotoff/prediction/object_detection/utils/**/*
+- robotoff/prediction/object_detection/**/*
+
+category prediction:
+- robotoff/prediction/category/**/*
+- tests/unit/prediction/category/**/*
+- tests/unit/elasticsearch/category/**/*
+- robotoff/elasticsearch/category/**/*
+- tests/unit/elasticsearch/category/**/*
+- tests/unit/prediction/category/**/*
+- legacy/ocr_category/prediction_from_ocr/**/*
+
+neural category prediction:
+- robotoff/prediction/category/neural/**/*
+- tests/unit/prediction/category/neural/**/*
+
+legacy:
+- legacy/**/*
+- legacy/ocr_category/prediction_from_ocr/**/*
