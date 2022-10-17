@@ -487,6 +487,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#robotoff-cli-export-logos-ann" class="md-nav__link">
+    robotoff-cli export-logos-ann
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#robotoff-cli-generate-ocr-insights" class="md-nav__link">
     robotoff-cli generate-ocr-insights
   </a>
@@ -838,6 +845,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#robotoff-cli-export-logos-ann" class="md-nav__link">
+    robotoff-cli export-logos-ann
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#robotoff-cli-generate-ocr-insights" class="md-nav__link">
     robotoff-cli generate-ocr-insights
   </a>
@@ -945,6 +959,7 @@
 <li><code>download-dataset</code></li>
 <li><code>download-models</code>: Download model weights from remote URLs.</li>
 <li><code>export-logo-annotation</code></li>
+<li><code>export-logos-ann</code>: Export all information about logo in DB...</li>
 <li><code>generate-ocr-insights</code>: Generate OCR insights of the requested type.</li>
 <li><code>generate-spellcheck-insights</code></li>
 <li><code>import-insights</code>: This command is used to backfill a new...</li>
@@ -1063,6 +1078,20 @@ setting deepest_only=True will return 'beans'.</p>
 <ul>
 <li><code>--server-domain TEXT</code></li>
 <li><code>--annotated / --no-annotated</code></li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-export-logos-ann"><code>robotoff-cli export-logos-ann</code></h2>
+<p>Export all information about logo in DB necessary to generate logo
+crops.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli export-logos-ann <span class="o">[</span>OPTIONS<span class="o">]</span> OUTPUT
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>OUTPUT</code>: Path to the output file, can either have .json or .json.gz as extension  [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="robotoff-cli-generate-ocr-insights"><code>robotoff-cli generate-ocr-insights</code></h2>
