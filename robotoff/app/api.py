@@ -243,7 +243,7 @@ def device_id_from_request(req: falcon.Request) -> str:
 
 class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        insight_id = req.get_param("insight_id", required=True)
+        insight_id = req.get_param_as_uuid("insight_id", required=True)
         annotation = req.get_param_as_int(
             "annotation", required=True, min_value=-1, max_value=1
         )
