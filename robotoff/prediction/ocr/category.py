@@ -110,6 +110,7 @@ def find_category(content: Union[OCRResult, str]) -> List[Prediction]:
                         value_tag=category_value,
                         predictor="regex",
                         data={"text": match.group(), "notify": ocr_regex.notify},
+                        automatic_processing=False,
                     )
                 )
     return predictions
