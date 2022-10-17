@@ -81,7 +81,7 @@ Embedding size and per-sample latency (independent of the distance used):
 | clip-vit-base-patch32        | 768            | **3.08**                |
 | clip-vit-base-patch16        | 768            | 11.69                   |
 | clip-vit-large-patch14       | 1024           | 56.68                   |
-| deit_base_patch16_384        | 80             | 1.73                    |
+| deit_base_patch16_384        | 768            | 1.73                    |
 
 N.B: we didn't use the cosine-distance for the beit models as they were not working anymore when doing the benchmark with the cosine distance. Some explanations can be found [there](https://github.com/rwightman/pytorch-image-models/issues/1346).
 
@@ -101,18 +101,18 @@ Here are the results we obtained working with a cosine distance :
 
 | model                        | micro-recall@4 | macro-recall@4 |
 | ---------------------------- | -------------- | -------------- |
-| random                       | 0.0080         | 0.0079         |
-| efficientnet_b1              | 0.7033         | 0.7613         |
-| resnest101e                  | 0.4777         | 0.5415         |
-| efficientnet_b2              | 0.6937         | 0.7831         |
-| rexnet_100                   | 0.7478         | 0.7121         |
-| efficientnet_b4              | 0.7091         | 0.7961         |
-| resnet50                     | 0.7170         | 0.7923         |
-| efficientnet_b0              | 0.7325         | 0.7832         |
-| resnet50d                    | 0.7870         | 0.8420         |
-| clip-vit-base-patch32        | 0.8414         | 0.8981         |
-| clip-vit-base-patch16        | 0.8695         | 0.9204         |
-| clip-vit-large-patch14       | **0.8761**     | **0.9283**     |
-| deit_base_patch16_384        | 0.6193         | 0.6933         |
+| random                       | 0.0098         | 0.0098         |
+| efficientnet_b1              | 0.7347         | 0.7711         |
+| resnest101e                  | 0.7089         | 0.7653         |
+| efficientnet_b2              | 0.7379         | 0.7847         |
+| rexnet_100                   | 0.7848         | 0.7896         |
+| efficientnet_b4              | 0.7590         | 0.8025         |
+| resnet50                     | 0.7667         | 0.8050         |
+| efficientnet_b0              | 0.7835         | 0.8098         |
+| resnet50d                    | 0.8054         | 0.8229         |
+| clip-vit-base-patch32        | 0.9139         | 0.9196         |
+| clip-vit-base-patch16        | 0.9171         | 0.9219         |
+| clip-vit-large-patch14       | **0.9427**     | **0.9417**     |
+| deit_base_patch16_384        | 0.7025         | 0.7573         |
 
 The CLIP models remain better than the others.
