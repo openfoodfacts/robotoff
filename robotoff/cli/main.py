@@ -21,15 +21,15 @@ def generate_import_insights(
     barcode: str = typer.Argument(..., help="Barcode of the product")
 ) -> None:
     """Generate OCR predictions/insights for a specific product and import them."""
+    from robotoff import settings
     from robotoff.insights.extraction import (
         DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
     from robotoff.insights.importer import import_insights as import_insights_
     from robotoff.off import generate_json_ocr_url
-    from robotoff.utils import get_logger
-    from robotoff import settings
     from robotoff.products import get_product
+    from robotoff.utils import get_logger
 
     logger = get_logger()
 
@@ -296,11 +296,9 @@ def refresh_insights(
     refreshed, otherwise insights of all products are refreshed.
     """
     from robotoff import settings
+    from robotoff.insights.importer import refresh_all_insights
+    from robotoff.insights.importer import refresh_insights as refresh_insights_
     from robotoff.utils import get_logger
-    from robotoff.insights.importer import (
-        refresh_insights as refresh_insights_,
-        refresh_all_insights,
-    )
 
     logger = get_logger()
     server_domain = server_domain or settings.OFF_SERVER_DOMAIN
