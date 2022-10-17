@@ -29,7 +29,7 @@ unit tests:
 robotoff app:
 - robotoff/app/**/*
 
-cli:
+robotoff-cli:
 - robotoff/cli/**/*
 - tests/unit/cli/**/*
 
