@@ -343,8 +343,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for candidate in candidates:
                 if candidate.automatic_processing is None:
                     logger.warning(
-                        "Insight with automatic_processing=None: %s", candidate.__data__
+                        "Insight with automatic_processing=None", candidate.__data__
                     )
+                    candidate.automatic_processing = False
 
                 if not is_trustworthy_insight_image(
                     product.images, candidate.source_image
