@@ -1,8 +1,9 @@
-import gzip
 import glob
-import orjson
+import gzip
 import os
 from pathlib import Path
+
+import orjson
 
 
 def is_valid_dir(product_dir: str) -> bool:
