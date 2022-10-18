@@ -423,7 +423,7 @@ paths:
         - Predict
       summary: Predict categories for a product
       description: |
-        Currently only the neural categorizer is available on this endpoint.
+        Both `neural` and `matcher` categorizers are available.
       requestBody:
         content:
           application/json:
