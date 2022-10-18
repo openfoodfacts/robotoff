@@ -47,7 +47,7 @@ with gzip.open(str(OUTPUT_PATH), "wb") as output_f:
 
         open_fn = gzip.open if gzip_selected else open
         file_path = gz_json_path if gzip_selected else json_path
-        with open_fn(str(file_path), "rb") as f:
+        with open_fn(str(file_path), "rb") as f:  # type: ignore
             try:
                 data = orjson.loads(f.read())
             except orjson.JSONDecodeError:
