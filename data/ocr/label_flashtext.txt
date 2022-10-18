@@ -118,11 +118,11 @@ en:vegan||vegan
 en:vegan||veganoveganistisch
 en:vegan||vegetalien
 en:vegan||végétalien
-fr:aoc||appellation d'origine controlee
-fr:aoc||appellation d'origine contrôlée
-fr:viande-bovine-francaise||viande bovine francaise
-fr:viande-bovine-francaise||viande bovine française
-fr:viande-porcine-francaise||le porc francais
-fr:viande-porcine-francaise||le porc français
+en:pdo||appellation d'origine controlee
+en:pdo||appellation d'origine contrôlée
+en:french-beef||viande bovine francaise
+en:french-beef||viande bovine française
+en:french-pork||le porc francais
+en:french-pork||le porc français
 en:small-producers-symbol||symbole des producteurs paysans
 en:small-producers-symbol||www.spp.coop
