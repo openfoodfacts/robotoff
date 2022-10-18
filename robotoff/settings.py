@@ -77,6 +77,7 @@ DATA_DIR = PROJECT_DIR / "data"
 DATASET_DIR = PROJECT_DIR / "datasets"
 DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / "i18n"
+LABEL_LOGOS_PATH = DATA_DIR / "label_logos.json"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
