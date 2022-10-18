@@ -8,8 +8,8 @@ from robotoff.workers.tasks.product_updated import add_category_insight
 
 def test_add_category_insight_no_insights(mocker):
     mocker.patch(
-        "robotoff.workers.tasks.product_updated.predict_category_from_product_es",
-        return_value=None,
+        "robotoff.workers.tasks.product_updated.predict_category_matcher",
+        return_value=[],
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
@@ -36,8 +36,8 @@ def test_add_category_insight_with_ml_insights(mocker):
         predictor="neural",
     )
     mocker.patch(
-        "robotoff.workers.tasks.product_updated.predict_category_from_product_es",
-        return_value=None,
+        "robotoff.workers.tasks.product_updated.predict_category_matcher",
+        return_value=[],
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
