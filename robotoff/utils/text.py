@@ -54,11 +54,23 @@ def get_lemmatizing_nlp(lang: str) -> spacy.Language:
 
 
 def get_tag(text: str) -> str:
+    """Return a tag from a text.
+
+    In Open Food Facts, tags are obtained from free text by performing the
+    following:
+    - lowercasing
+    - accent removal
+    - replacement of punctuation by either a comma ("-") or nothing, depending
+    on the punctuation
+    """
     text = strip_accents_ascii_v2(text)
-    return (
+    text = (
         text.lower()
         .replace(" & ", "-")
         .replace(" ", "-")
         .replace("'", "-")
         .replace(".", "-")
+        .replace("!", "")
+        .replace("?", "")
     )
+    return strip_consecutive_spaces(text).strip("-")

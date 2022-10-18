@@ -14,6 +14,7 @@ from robotoff.utils.text import get_tag
         ("monop'daily", "monop-daily"),
         ("épi d'or", "epi-d-or"),
         ("Health Star Rating 0.5", "health-star-rating-0-5"),
+        ("C'est qui le Patron ?!", "c-est-qui-le-patron"),
     ],
 )
 def test_get_tag(value: str, output: str):
