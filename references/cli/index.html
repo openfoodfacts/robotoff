@@ -10,7 +10,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.2.8">
+      <meta name="generator" content="mkdocs-1.2.4, mkdocs-material-7.2.8">
     
     
       
@@ -965,7 +965,7 @@
 <li><code>import-insights</code>: This command is used to backfill a new...</li>
 <li><code>import-logos</code></li>
 <li><code>init-elasticsearch</code>: This command is used for manual insertion of...</li>
-<li><code>predict-category</code></li>
+<li><code>predict-category</code>: Predict categories from the product JSONL...</li>
 <li><code>predict-insight</code></li>
 <li><code>run</code></li>
 <li><code>spellcheck</code></li>
@@ -998,11 +998,11 @@
 <p>Be careful when using this command, it may modify <em>many</em> products in Open
 Food Facts database.</p>
 <p><strong>Usage</strong>:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli apply-insights <span class="o">[</span>OPTIONS<span class="o">]</span> INSIGHT_TYPE:<span class="o">[</span>ingredient_spellcheck<span class="p">|</span>packager_code<span class="p">|</span>label<span class="p">|</span>category<span class="p">|</span>image_flag<span class="p">|</span>product_weight<span class="p">|</span>expiration_date<span class="p">|</span>brand<span class="p">|</span>image_orientation<span class="p">|</span>store<span class="p">|</span>nutrient<span class="p">|</span>trace<span class="p">|</span>packaging<span class="p">|</span>location<span class="p">|</span>nutrient_mention<span class="p">|</span>image_lang<span class="p">|</span>nutrition_image<span class="p">|</span>nutrition_table_structure<span class="o">]</span> PREDICTOR
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli apply-insights <span class="o">[</span>OPTIONS<span class="o">]</span> INSIGHT_TYPE PREDICTOR
 </code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>INSIGHT_TYPE:[ingredient_spellcheck|packager_code|label|category|image_flag|product_weight|expiration_date|brand|image_orientation|store|nutrient|trace|packaging|location|nutrient_mention|image_lang|nutrition_image|nutrition_table_structure]</code>: Filter insights to apply based on their type  [required]</li>
+<li><code>INSIGHT_TYPE</code>: Filter insights to apply based on their type  [required]</li>
 <li><code>PREDICTOR</code>: Filter insights to apply based on their predictor value  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
@@ -1178,6 +1178,8 @@ in robotoff.settings.ElasticsearchIndex.</p>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="robotoff-cli-predict-category"><code>robotoff-cli predict-category</code></h2>
+<p>Predict categories from the product JSONL dataset stored in <code>datasets</code>
+directory.</p>
 <p><strong>Usage</strong>:</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli predict-category <span class="o">[</span>OPTIONS<span class="o">]</span> OUTPUT
 </code></pre></div>
