@@ -53,7 +53,18 @@ up:
 # creates a docker network and runs docker-compose
 	@echo "🥫 Building and starting containers …"
 	docker network create po_default || true  
+ifdef service
+	${DOCKER_COMPOSE} up -d --build ${service} 2>&1
+else
 	${DOCKER_COMPOSE} up -d --build 2>&1
+endif
+
+build:
+ifdef service
+	${DOCKER_COMPOSE} build ${service} 2>&1
+else
+	${DOCKER_COMPOSE} build 2>&1
+endif
 
 down:
 	@echo "🥫 Bringing down containers …"
@@ -64,7 +75,7 @@ hdown:
 	${DOCKER_COMPOSE} down -v
 
 restart:
-	@echo "🥫 Restarting frontend & backend containers …"
+	@echo "🥫 Restarting containers …"
 	${DOCKER_COMPOSE} restart
 
 status:

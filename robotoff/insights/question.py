@@ -6,13 +6,18 @@ from robotoff import settings
 from robotoff.insights import InsightType
 from robotoff.models import ProductInsight
 from robotoff.mongo import MONGO_CLIENT_CACHE
-from robotoff.off import generate_image_url, get_product
+from robotoff.off import generate_image_url
+from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
+
+DISPLAY_IMAGE_SIZE = 400
+SMALL_IMAGE_SIZE = 200
+THUMB_IMAGE_SIZE = 100
 
 
 LABEL_IMG_BASE_URL = "https://{}/images/lang".format(
@@ -142,15 +147,14 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     @staticmethod
     def get_source_image_url(barcode: str) -> Optional[str]:
-        product: Optional[JSONType] = get_product(barcode, fields=["selected_images"])
+        product: Optional[JSONType] = get_product(barcode)
 
-        if product is None:
+        if product is None or "images" not in product:
             return None
 
-        if "selected_images" not in product:
-            return None
-
-        selected_images = product["selected_images"]
+        selected_images = CategoryQuestionFormatter.generate_selected_images(
+            product["images"], barcode
+        )
 
         for key in ("front", "ingredients", "nutrition"):
             if key in selected_images:
@@ -163,6 +167,52 @@ class CategoryQuestionFormatter(QuestionFormatter):
                         return display_images[0]
 
         return None
+
+    @staticmethod
+    def generate_selected_images(
+        images: JSONType, barcode: str
+    ) -> Dict[str, Dict[str, Dict[str, str]]]:
+        """Generate the same `selected_images` field as returned by Product
+        Opener API.
+
+        :param images: the `images` data of the product
+        :param barcode: the product barcode
+        :return: the `selected_images` data
+        """
+        selected_images: Dict[str, Dict[str, Dict[str, str]]] = {
+            image_type: {}
+            for image_type in ("front", "nutrition", "ingredients", "packaging")
+        }
+
+        for key, image_data in images.items():
+            if (
+                key.startswith("front_")
+                or key.startswith("nutrition_")
+                or key.startswith("ingredients_")
+                or key.startswith("packaging_")
+            ):
+                image_type = key.split("_")[
+                    0
+                ]  # to get image type: `front`, `nutrition`, `ingredients` or `packaging`
+                language = key.split("_")[1]  # splitting to get the language name
+                revision_id = image_data["rev"]  # get revision_id for all languages
+                available_image_sizes = set(
+                    int(size) for size in image_data["sizes"] if size.isdigit()
+                )
+
+                for field_name, image_size in (
+                    ("display", DISPLAY_IMAGE_SIZE),
+                    ("small", SMALL_IMAGE_SIZE),
+                    ("thumb", THUMB_IMAGE_SIZE),
+                ):
+                    if image_size in available_image_sizes:
+                        image_url = generate_image_url(
+                            barcode, f"{key}.{revision_id}.{image_size}"
+                        )
+                        selected_images[image_type].setdefault(field_name, {})
+                        selected_images[image_type][field_name][language] = image_url
+
+        return selected_images
 
 
 class ProductWeightQuestionFormatter(QuestionFormatter):

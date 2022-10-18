@@ -81,7 +81,7 @@ Embedding size and per-sample latency (independent of the distance used):
 | clip-vit-base-patch32        | 768            | **3.08**                |
 | clip-vit-base-patch16        | 768            | 11.69                   |
 | clip-vit-large-patch14       | 1024           | 56.68                   |
-| deit_base_patch16_384        | 80             | 1.73                    |
+| deit_base_patch16_384        | 768            | 1.73                    |
 
 N.B: we didn't use the cosine-distance for the beit models as they were not working anymore when doing the benchmark with the cosine distance. Some explanations can be found [there](https://github.com/rwightman/pytorch-image-models/issues/1346).
 
@@ -94,3 +94,25 @@ However, CLIP models largely outperform any other tested architecture on this be
 Performances of CLIP models increase as models gets larger or with a smaller image patch size. The prediction latency is however 3.8x and 18,4x higher for `clip-vit-base-patch16` and `clip-vit-large-patch14` respectively compared to `clip-vit-base-patch32`.
 
 In conclusion, CLIP models are very good candidates for an off-the-shelf replacement of the `efficientnet-b0` model currently used to generate logo embeddings. An additional benefit from this model architecture is the smaller embedding size (768 or 1024, depending on the version) compared to the original `efficientnet-b0` model (1280).
+
+To study the behaviour of each model in a case closer to our usecase, we performed another benchmark based this time of the efficiency of each model to predict the right label for each logo of val.txt file. The predicted label is the most represented one among the k closest neighbours.
+
+Here are the results we obtained working with a cosine distance :
+
+| model                        | micro-recall@4 | macro-recall@4 |
+| ---------------------------- | -------------- | -------------- |
+| random                       | 0.0098         | 0.0098         |
+| efficientnet_b1              | 0.7347         | 0.7711         |
+| resnest101e                  | 0.7089         | 0.7653         |
+| efficientnet_b2              | 0.7379         | 0.7847         |
+| rexnet_100                   | 0.7848         | 0.7896         |
+| efficientnet_b4              | 0.7590         | 0.8025         |
+| resnet50                     | 0.7667         | 0.8050         |
+| efficientnet_b0              | 0.7835         | 0.8098         |
+| resnet50d                    | 0.8054         | 0.8229         |
+| clip-vit-base-patch32        | 0.9139         | 0.9196         |
+| clip-vit-base-patch16        | 0.9171         | 0.9219         |
+| clip-vit-large-patch14       | **0.9427**     | **0.9417**     |
+| deit_base_patch16_384        | 0.7025         | 0.7573         |
+
+The CLIP models remain better than the others.

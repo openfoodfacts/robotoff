@@ -9,7 +9,7 @@ on:
     paths:
     - "README.md"
     - "doc/**"
-    - ".github/workflows/generate-doc.yml"
+    - ".github/workflows/generate-docs.yml"
     - "mkdocs.yml"
   push:
     branches:

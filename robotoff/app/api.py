@@ -56,7 +56,7 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import match_unprefixed_value
+from robotoff.taxonomy import match_taxonomized_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -89,7 +89,7 @@ def _get_skip_voted_on(
 
 
 ###########
-# IMPORTANT: remember to update documentation at doc/references/api.md if you change API
+# IMPORTANT: remember to update documentation at doc/references/api.yml if you change API
 ###########
 
 
@@ -243,7 +243,7 @@ def device_id_from_request(req: falcon.Request) -> str:
 
 class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        insight_id = req.get_param("insight_id", required=True)
+        insight_id = req.get_param_as_uuid("insight_id", required=True)
         annotation = req.get_param_as_int(
             "annotation", required=True, min_value=-1, max_value=1
         )
@@ -628,16 +628,25 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        logo_ids: Optional[List[str]] = req.get_param_as_list(
-            "logo_ids", required=False
-        )
+        logo_ids: List[str] = req.get_param_as_list("logo_ids", required=True)
+        logos = []
+        for logo in (
+            LogoAnnotation.select()
+            .join(ImagePrediction)
+            .join(ImageModel)
+            .where(LogoAnnotation.id.in_(logo_ids))
+            .iterator()
+        ):
+            logo_dict = logo.to_dict()
+            image_prediction = logo_dict.pop("image_prediction")
+            logo_dict["image"] = image_prediction["image"]
+            logos.append(logo_dict)
 
-        if logo_ids is not None:
-            self.fetch_logos(logo_ids, resp)
-        else:
-            self.search(req, resp)
+        resp.media = {"logos": logos, "count": len(logos)}
 
-    def search(self, req: falcon.Request, resp: falcon.Response):
+
+class ImageLogoSearchResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int(
             "count", min_value=1, max_value=2000, default=25
         )
@@ -647,7 +656,11 @@ class ImageLogoResource:
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
         random: bool = req.get_param_as_bool("random", default=False)
         server_domain: Optional[str] = req.get_param("server_domain")
-        annotated: bool = req.get_param_as_bool("annotated", default=False)
+        annotated: Optional[bool] = req.get_param_as_bool("annotated")
+
+        where_clauses = []
+        if annotated is not None:
+            where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
 
         where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
         join_image_prediction = False
@@ -700,22 +713,6 @@ class ImageLogoResource:
 
         resp.media = {"logos": items, "count": query_count}
 
-    def fetch_logos(self, logo_ids: List[str], resp: falcon.Response):
-        logos = []
-        for logo in (
-            LogoAnnotation.select()
-            .join(ImagePrediction)
-            .join(ImageModel)
-            .where(LogoAnnotation.id.in_(logo_ids))
-            .iterator()
-        ):
-            logo_dict = logo.to_dict()
-            image_prediction = logo_dict.pop("image_prediction")
-            logo_dict["image"] = image_prediction["image"]
-            logos.append(logo_dict)
-
-        resp.media = {"logos": logos, "count": len(logos)}
-
 
 class ImageLogoDetailResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
@@ -752,7 +749,7 @@ class ImageLogoDetailResource:
             if value is not None:
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
             else:
                 logo.annotation_value_tag = None
                 logo.taxonomy_value = None
@@ -770,6 +767,7 @@ class ImageLogoDetailResource:
 
 
 class ImageLogoAnnotateResource:
+    @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
@@ -782,18 +780,28 @@ class ImageLogoAnnotateResource:
             logo_id = annotation["logo_id"]
             type_ = annotation["type"]
             value = annotation["value"] or None
-            logo = LogoAnnotation.get_by_id(logo_id)
+            try:
+                logo = LogoAnnotation.get_by_id(logo_id)
+            except LogoAnnotation.DoesNotExist:
+                raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
+
             if value is not None:
                 logo.annotation_value = value
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
+            elif type_ in ("brand", "category", "label", "store"):
+                raise falcon.HTTPBadRequest(
+                    description=f"value required for type {type_} (logo {logo_id})"
+                )
 
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at
-            logo.save()
             annotated_logos.append(logo)
+
+        for logo in annotated_logos:
+            logo.save()
 
         created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
         resp.media = {"created insights": created}
@@ -816,7 +824,7 @@ class ImageLogoUpdateResource:
 
         target_value_tag = get_tag(target_value)
         source_value_tag = get_tag(source_value)
-        taxonomy_value = match_unprefixed_value(target_value_tag, target_type)
+        taxonomy_value = match_taxonomized_value(target_value_tag, target_type)
 
         query = LogoAnnotation.update(
             {
@@ -1325,6 +1333,7 @@ api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResour
 api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
+api.add_route("/api/v1/images/logos/search", ImageLogoSearchResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
