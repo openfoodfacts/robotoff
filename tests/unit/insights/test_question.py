@@ -1,9 +1,18 @@
 import json
+from typing import Optional
 
 import pytest
 
-from robotoff.insights.question import CategoryQuestionFormatter, get_display_image
+from robotoff.insights.dataclass import InsightType
+from robotoff.insights.question import (
+    CategoryQuestionFormatter,
+    Question,
+    get_display_image,
+)
+from robotoff.models import ProductInsight
+from robotoff.off import split_barcode
 from robotoff.settings import TEST_DATA_DIR
+from robotoff.utils.i18n import TranslationStore
 
 
 @pytest.mark.parametrize(
@@ -76,4 +85,85 @@ def test_generate_selected_images():
         "thumb": {
             "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.100.jpg"
         },
+    }
+
+
+def generate_insight(
+    insight_type: str,
+    value: Optional[str] = None,
+    value_tag: Optional[str] = None,
+    add_source_image: bool = False,
+) -> ProductInsight:
+    barcode = "1111111111"
+    return ProductInsight(
+        type=insight_type,
+        value=value,
+        value_tag=value_tag,
+        barcode=barcode,
+        source_image=f"/{'/'.join(split_barcode(barcode))}/1.jpg"
+        if add_source_image
+        else None,
+    )
+
+
+@pytest.fixture(scope="session")
+def translation_store():
+    store = TranslationStore()
+    store.load()
+    return store
+
+
+@pytest.mark.parametrize(
+    "lang,insight_type,value,value_tag,expected_question_str",
+    [
+        (
+            "fr",
+            InsightType.category.name,
+            "Pains",
+            "en:breads",
+            "Le produit appartient-il à cette catégorie ?",
+        ),
+        (
+            "en",
+            InsightType.category.name,
+            "Butters",
+            "en:butters",
+            "Does the product belong to this category?",
+        ),
+        (
+            "es",
+            InsightType.category.name,
+            "Mantequillas",
+            "en:butters",
+            "¿Pertenece el producto a esta categoría?",
+        ),
+    ],
+)
+def test_category_question_formatter(
+    lang: str,
+    insight_type: str,
+    value: str,
+    value_tag: Optional[str],
+    expected_question_str: str,
+    translation_store: TranslationStore,
+    mocker,
+):
+    mocker.patch(
+        "robotoff.insights.question.get_product",
+        return_value={"images": {"front_fr": {"rev": "10", "sizes": {"400": {}}}}},
+    )
+    insight = generate_insight(insight_type, None, value_tag, add_source_image=False)
+    question = CategoryQuestionFormatter(translation_store).format_question(
+        insight, lang
+    )
+    assert isinstance(question, Question)
+    assert question.serialize() == {
+        "barcode": insight.barcode,
+        "type": "add-binary",
+        "value": value,
+        "value_tag": value_tag,
+        "question": expected_question_str,
+        "insight_id": str(insight.id),
+        "insight_type": insight_type,
+        "source_image_url": "https://static.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
     }
