@@ -59,6 +59,13 @@ else
 	${DOCKER_COMPOSE} up -d --build 2>&1
 endif
 
+build:
+ifdef service
+	${DOCKER_COMPOSE} build ${service} 2>&1
+else
+	${DOCKER_COMPOSE} build 2>&1
+endif
+
 down:
 	@echo "🥫 Bringing down containers …"
 	${DOCKER_COMPOSE} down
