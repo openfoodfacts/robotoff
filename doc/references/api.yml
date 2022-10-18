@@ -431,6 +431,7 @@ paths:
                         enum:
                           - neural
                           - matcher
+                      example: ["neural", "matcher"]
                   required:
                     - barcode
                 - type: object
@@ -441,15 +442,14 @@ paths:
                         product_name:
                           type: string
                           minLength: 1
-                          example: Frozen dinner yeast rolls
+                          example: roasted chicken
                         ingredients_tags:
                           type: array
                           items:
                             type: string
                           example:
-                            - "en:fortified-wheat-flour"
-                            - "en:cereal"
-                            - "en:flour"
+                            - "en:chicken"
+                            - "en:salts"
                       required:
                         - product_name
                     lang:
@@ -477,6 +477,7 @@ paths:
                         enum:
                           - neural
                           - matcher
+                      example: ["neural", "matcher"]
                   required:
                     - product
       responses:
@@ -495,7 +496,7 @@ paths:
                         value_tag:
                           type: string
                           description: The predicted `value_tag`
-                          example: en:breads
+                          example: en:roast-chicken
                         confidence:
                           type: number
                           description: The confidence score of the model
@@ -511,20 +512,60 @@ paths:
                         value_tag:
                           type: string
                           description: The predicted `value_tag`
-                          example: en:breads
-                        pattern:
-                          type: string
-                          description: The pattern that matched the product name
-                          example: pain mie
-                        lang:
-                          type: string
-                          description: The language of the matched pattern
-                          example: en
-                        product_name:
-                          type: string
-                          description: The product name that matched the category name
+                          example: en:roast-chicken
+                        debug:
+                          type: object
+                          description: Additional debug information
+                          properties:
+                            pattern:
+                              type: string
+                              description: The pattern that matched the product name
+                              example: roast chicken
+                            lang:
+                              type: string
+                              description: The language of the matched pattern
+                              example: en
+                            product_name:
+                              type: string
+                              description: The product name that matched the category name
+                              example: roasted chicken
+                            processed_product_name:
+                              type: string
+                              description: The product name after preprocessing
+                                (stemming, stop word removal,...)
+                              example: roast chicken
+                            category_name:
+                              type: string
+                              description:
+                                The (localized) category name that matched the
+                                product name
+                              example: Roast chicken
+                            start_idx:
+                              type: integer
+                              description: The string match start position
+                              example: 0
+                            end_idx:
+                              type: integer
+                              description: The string match end position
+                              example: 13
+                            is_full_match:
+                              type: boolean
+                              description:
+                                If true, the processed product name matched completely with
+                                the processed category name
+                              example: true
+                          required:
+                            - pattern
+                            - lang
+                            - product_name
+                            - processed_product_name
+                            - category_name
+                            - start_idx
+                            - end_idx
+                            - is_full_match
                       required:
                         - value_tag
+                        - debug
 
 components:
   schemas:

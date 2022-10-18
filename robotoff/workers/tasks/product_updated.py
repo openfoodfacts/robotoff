@@ -48,9 +48,8 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     product_predictions = predict_category_matcher(product)
 
     # predict category using neural model
-    neural_predictions = []
     try:
-        neural_predictions = CategoryClassifier(
+        product_predictions += CategoryClassifier(
             get_taxonomy(TaxonomyType.category.name)
         ).predict(product)
     except requests.exceptions.HTTPError as e:
@@ -59,12 +58,11 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
             f"Category classifier returned an error: {resp.status_code}: %s", resp.text
         )
 
-    for neural_prediction in neural_predictions:
-        neural_prediction.barcode = barcode
-        product_predictions.append(neural_prediction)
-
     if len(product_predictions) < 1:
         return False
+
+    for prediction in product_predictions:
+        prediction.barcode = barcode
 
     imported = import_insights(product_predictions, server_domain, automatic=True)
     logger.info(f"{imported} category insight imported for product {barcode}")

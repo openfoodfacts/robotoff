@@ -106,7 +106,7 @@ class CategoryClassifier:
         #
         # The model only returns top 50 predictions.
 
-        category_predictions = []
+        category_predictions: List[CategoryPrediction] = []
 
         # We only consider predictions with a confidence score of `threshold` and above.
         for idx, confidence in enumerate(prediction["output_mapper_layer"]):

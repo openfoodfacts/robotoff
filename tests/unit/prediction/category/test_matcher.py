@@ -90,7 +90,6 @@ def test_predict(
     additional_data: Dict,
 ):
     product = {
-        "code": "0000",
         f"product_name_{lang}": product_name,
         "languages_codes": [lang],
     }
@@ -110,5 +109,4 @@ def test_predict(
             "lang": lang,
             **additional_data,
         }
-        assert prediction.barcode == product["code"]
         assert prediction.automatic_processing is False
