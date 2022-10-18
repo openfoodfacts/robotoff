@@ -162,7 +162,7 @@ def add_missing_ocr(sleep: float, seen_path: pathlib.Path):
         seen_set = set(map(str.strip, f))
 
     for i, image_path_str in enumerate(
-        glob.iglob("{}/**/*.jpg".format(BASE_IMAGE_DIR))
+        glob.iglob("{}/**/*.jpg".format(BASE_IMAGE_DIR), recursive=True)
     ):
         if i % 10000 == 0:
             print(
