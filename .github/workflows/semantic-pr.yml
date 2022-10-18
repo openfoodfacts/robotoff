@@ -25,6 +25,8 @@ jobs:
             refactor
             ci
             chore
+            test
+            style
           # Configure which scopes are allowed.
           #scopes: |
            # core
