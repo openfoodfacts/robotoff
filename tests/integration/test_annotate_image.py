@@ -126,6 +126,28 @@ def test_logo_annotation_missing_value_when_required(logo_type, client):
     }
 
 
+def test_logo_annotation_incorrect_value_label_type(client):
+    """A language-prefixed value is expected for label type."""
+    ann = LogoAnnotationFactory(
+        image_prediction__image__source_image="/images/2.jpg", annotation_type="label"
+    )
+    result = client.simulate_post(
+        "/api/v1/images/logos/annotate",
+        json={
+            "withCredentials": True,
+            "annotations": [
+                {"logo_id": ann.id, "type": "label", "value": "eu-organic"}
+            ],
+        },
+        headers=_AUTH_HEADER,
+    )
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "language-prefixed value are required for label type (here: eu-organic)",
+        "title": "400 Bad Request",
+    }
+
+
 def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
     ann = LogoAnnotationFactory(
         image_prediction__image__source_image="/images/2.jpg", annotation_type="brand"
@@ -205,7 +227,7 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
         json={
             "withCredentials": True,
             "annotations": [
-                {"logo_id": ann.id, "value": "EU Organic", "type": "label"}
+                {"logo_id": ann.id, "value": "en:eu-organic", "type": "label"}
             ],
         },
         headers=_AUTH_HEADER,
@@ -215,8 +237,8 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
     assert result.json == {"created insights": 1}
     ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
     assert ann.annotation_type == "label"
-    assert ann.annotation_value == "EU Organic"
-    assert ann.annotation_value_tag == "eu-organic"
+    assert ann.annotation_value == "en:eu-organic"
+    assert ann.annotation_value_tag == "en:eu-organic"
     assert ann.taxonomy_value == "en:eu-organic"
     assert ann.username == "a"
     assert start <= ann.completed_at <= end

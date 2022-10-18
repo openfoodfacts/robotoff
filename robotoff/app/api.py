@@ -56,7 +56,7 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import match_taxonomized_value
+from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -786,6 +786,10 @@ class ImageLogoAnnotateResource:
                 raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
 
             if value is not None:
+                if type_ == "label" and not is_prefixed_value(value):
+                    raise falcon.HTTPBadRequest(
+                        description=f"language-prefixed value are required for label type (here: {value})"
+                    )
                 logo.annotation_value = value
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag

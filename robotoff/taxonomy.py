@@ -4,11 +4,13 @@ import pathlib
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
+import cachetools
 import requests
 
 from robotoff import settings
 from robotoff.utils import get_logger, http_session, load_json
 from robotoff.utils.cache import CachedStore
+from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 
 try:
@@ -342,62 +344,38 @@ def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
     return taxonomy_store.get(offline=offline)
 
 
-def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:
+def is_prefixed_value(value: str) -> bool:
+    """Return True if the given value has a language prefix (en:, fr:,...),
+    False otherwise."""
+    return len(value) > 3 and value[2] == ":"
+
+
+@cachetools.cached(cachetools.TTLCache(maxsize=2, ttl=43200))  # 12h TTL
+def get_taxonomy_mapping(taxonomy_type: str) -> Dict[str, str]:
+    """Return for label type a mapping of prefixed taxonomy values in all
+    languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
+    canonical value (`en:organic` for the previous example).
+    """
     taxonomy = get_taxonomy(taxonomy_type)
     ids: Dict[str, str] = {}
 
     for key in taxonomy.keys():
-        unprefixed_key = key
-        if len(key) > 3 and key[2] == ":":
-            unprefixed_key = key[3:]
-
         if taxonomy_type == TaxonomyType.brand.name:
+            unprefixed_key = key
+            if is_prefixed_value(key):
+                unprefixed_key = key[3:]
             ids[unprefixed_key] = taxonomy[key].names["en"]
         else:
-            ids[unprefixed_key] = key
+            for lang, name in taxonomy[key].names.items():
+                tag = get_tag(name)
+                ids[f"{lang}:{tag}"] = key
 
     return ids
 
 
-UNPREFIXED_MAPPING_STORE: Dict[str, CachedStore] = {
-    TaxonomyType.label.name: CachedStore(
-        functools.partial(
-            get_unprefixed_mapping,
-            taxonomy_type=TaxonomyType.label.name,
-        )
-    ),
-    TaxonomyType.brand.name: CachedStore(
-        functools.partial(
-            get_unprefixed_mapping,
-            taxonomy_type=TaxonomyType.brand.name,
-        )
-    ),
-}
-
-
-def match_unprefixed_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
-    """From an unprefixed `value_tag`, return the taxonomized value in the
-    taxonomy (if any) or return None if no match was found.
-
-    Currently this only works for labels and brands:
-    - for label, from unprefixed `value_tag` (ex: en-organic), we return the
-    prefixed label (ex: en:eu-organic)
-    - for brand, we return the correctly capitalize brand name
-    (ex: carrefour-bio -> Carrefour Bio), as Product Opener does not have a
-    brand taxonomy so far
-    """
-    unprefixed_mapping_cache = UNPREFIXED_MAPPING_STORE.get(taxonomy_type)
-
-    if unprefixed_mapping_cache is None:
-        return None
-
-    unprefixed_mapping = unprefixed_mapping_cache.get()
-    return unprefixed_mapping.get(value_tag)
-
-
 def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
-    """Return the taxonomized value of a `value_tag` (if any) or return
-    None if no match was found.
+    """Return the canonical taxonomized value of a `value_tag` (if any) or
+    return None if no match was found or if the type is unsupported.
 
     Currently it only works for brand and label.
     """
@@ -409,4 +387,4 @@ def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]
     if value_tag in taxonomy:
         return value_tag
 
-    return match_unprefixed_value(value_tag, taxonomy_type)
+    return get_taxonomy_mapping(taxonomy_type).get(value_tag)

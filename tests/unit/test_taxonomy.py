@@ -3,12 +3,7 @@ from typing import List, Set
 import pytest
 
 from robotoff import settings
-from robotoff.taxonomy import (
-    Taxonomy,
-    TaxonomyType,
-    match_taxonomized_value,
-    match_unprefixed_value,
-)
+from robotoff.taxonomy import Taxonomy, TaxonomyType, match_taxonomized_value
 
 label_taxonomy = Taxonomy.from_json(settings.TAXONOMY_LABEL_PATH)
 category_taxonomy = Taxonomy.from_json(settings.TAXONOMY_CATEGORY_PATH)
@@ -107,24 +102,11 @@ class TestTaxonomy:
     [
         (TaxonomyType.brand.name, "carrefour-bio", "Carrefour Bio"),
         (TaxonomyType.brand.name, "unknown-brand", None),
-        (TaxonomyType.label.name, "eu-organic", "en:eu-organic"),
-        (TaxonomyType.label.name, "unknown-label", None),
-    ],
-)
-def test_match_unprefixed_value(taxonomy_type, value, expected):
-    assert match_unprefixed_value(value, taxonomy_type) == expected
-
-
-@pytest.mark.parametrize(
-    "taxonomy_type,value,expected",
-    [
-        (TaxonomyType.brand.name, "carrefour-bio", "Carrefour Bio"),
-        (TaxonomyType.brand.name, "unknown-brand", None),
-        (TaxonomyType.label.name, "eu-organic", "en:eu-organic"),
+        (TaxonomyType.label.name, "fr:bio-europeen", "en:eu-organic"),
         (
             TaxonomyType.label.name,
             "ab-agriculture-biologique",
-            "fr:ab-agriculture-biologique",
+            None,
         ),
         (
             TaxonomyType.label.name,
@@ -132,6 +114,8 @@ def test_match_unprefixed_value(taxonomy_type, value, expected):
             "fr:ab-agriculture-biologique",
         ),
         (TaxonomyType.label.name, "unknown-label", None),
+        (TaxonomyType.label.name, "fr:viande-bovine-francaise", "en:french-beef"),
+        (TaxonomyType.ingredient.name, "text", None),  # unsupported taxonomy
     ],
 )
 def test_match_taxonomized_value(taxonomy_type, value, expected):
