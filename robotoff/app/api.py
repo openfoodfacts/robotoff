@@ -89,7 +89,7 @@ def _get_skip_voted_on(
 
 
 ###########
-# IMPORTANT: remember to update documentation at doc/references/api.md if you change API
+# IMPORTANT: remember to update documentation at doc/references/api.yml if you change API
 ###########
 
 
