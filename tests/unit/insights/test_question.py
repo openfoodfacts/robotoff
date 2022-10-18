@@ -6,6 +6,7 @@ import pytest
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.question import (
     CategoryQuestionFormatter,
+    LabelQuestionFormatter,
     Question,
     get_display_image,
 )
@@ -114,25 +115,22 @@ def translation_store():
 
 
 @pytest.mark.parametrize(
-    "lang,insight_type,value,value_tag,expected_question_str",
+    "lang,value,value_tag,expected_question_str",
     [
         (
             "fr",
-            InsightType.category.name,
             "Pains",
             "en:breads",
             "Le produit appartient-il à cette catégorie ?",
         ),
         (
             "en",
-            InsightType.category.name,
             "Butters",
             "en:butters",
             "Does the product belong to this category?",
         ),
         (
             "es",
-            InsightType.category.name,
             "Mantequillas",
             "en:butters",
             "¿Pertenece el producto a esta categoría?",
@@ -141,7 +139,6 @@ def translation_store():
 )
 def test_category_question_formatter(
     lang: str,
-    insight_type: str,
     value: str,
     value_tag: Optional[str],
     expected_question_str: str,
@@ -152,7 +149,9 @@ def test_category_question_formatter(
         "robotoff.insights.question.get_product",
         return_value={"images": {"front_fr": {"rev": "10", "sizes": {"400": {}}}}},
     )
-    insight = generate_insight(insight_type, None, value_tag, add_source_image=False)
+    insight = generate_insight(
+        InsightType.category.name, None, value_tag, add_source_image=False
+    )
     question = CategoryQuestionFormatter(translation_store).format_question(
         insight, lang
     )
@@ -164,6 +163,61 @@ def test_category_question_formatter(
         "value_tag": value_tag,
         "question": expected_question_str,
         "insight_id": str(insight.id),
-        "insight_type": insight_type,
+        "insight_type": InsightType.category.name,
         "source_image_url": "https://static.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
     }
+
+
+@pytest.mark.parametrize(
+    "lang,value,value_tag,expected_question_str,ref_image_url",
+    [
+        (
+            "fr",
+            "Bio européen",
+            "en:eu-organic",
+            "Le produit a-t-il ce label ?",
+            "https://static.openfoodfacts.net/images/lang/en/labels/eu-organic.135x90.svg",
+        ),
+        (
+            "en",
+            "Nutriscore Grade A",
+            "en:nutriscore-grade-a",
+            "Does the product have this label?",
+            "https://static.openfoodfacts.org/images/attributes/nutriscore-a.svg",
+        ),
+        (
+            "en",
+            "Made in France",
+            "en:made-in-france",
+            "Does the product have this label?",
+            None,
+        ),
+    ],
+)
+def test_label_question_formatter(
+    lang: str,
+    value: str,
+    value_tag: str,
+    expected_question_str: str,
+    ref_image_url: Optional[str],
+    translation_store: TranslationStore,
+):
+    insight = generate_insight(
+        InsightType.label.name, None, value_tag, add_source_image=True
+    )
+    question = LabelQuestionFormatter(translation_store).format_question(insight, lang)
+    assert isinstance(question, Question)
+    expected_dict = {
+        "barcode": insight.barcode,
+        "type": "add-binary",
+        "value": value,
+        "value_tag": value_tag,
+        "question": expected_question_str,
+        "insight_id": str(insight.id),
+        "insight_type": InsightType.label.name,
+        "source_image_url": "https://static.openfoodfacts.net/images/products/111/111/111/1/1.400.jpg",
+    }
+
+    if ref_image_url is not None:
+        expected_dict["ref_image_url"] = ref_image_url
+    assert question.serialize() == expected_dict
