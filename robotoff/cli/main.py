@@ -6,8 +6,6 @@ from typing import List, Optional
 import typer
 from typer import Option
 
-from robotoff.insights.dataclass import InsightType
-
 app = typer.Typer()
 
 
@@ -258,7 +256,7 @@ def import_insights(
 
 @app.command()
 def apply_insights(
-    insight_type: InsightType = typer.Argument(
+    insight_type: str = typer.Argument(
         ...,
         help="Filter insights to apply based on their type",
     ),
@@ -297,11 +295,11 @@ def apply_insights(
         logger.info("*** DRY RUN ***")
     logger.info(
         "Applying automatically insights with the following criteria: "
-        f"type: `{insight_type.name}`, predictor: `{predictor}`, "
+        f"type: `{insight_type}`, predictor: `{predictor}`, "
         f"value_tag: `{value_tag}`, max_scan_count: {max_scan_count}"
     )
     insights.apply_insights(
-        insight_type=insight_type.name,
+        insight_type=insight_type,
         predictor=predictor,
         max_timedelta=datetime.timedelta(days=max_delta),
         value_tag=value_tag,
