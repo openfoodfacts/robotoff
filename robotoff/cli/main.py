@@ -17,10 +17,11 @@ def run(service: str) -> None:
 
 
 @app.command()
-def generate_import_insights(
+def regenerate_ocr_insights(
     barcode: str = typer.Argument(..., help="Barcode of the product")
 ) -> None:
-    """Generate OCR predictions/insights for a specific product and import them."""
+    """Regenerate OCR predictions/insights for a specific product and import
+    them."""
     from robotoff import settings
     from robotoff.insights.extraction import (
         DEFAULT_OCR_PREDICTION_TYPES,
