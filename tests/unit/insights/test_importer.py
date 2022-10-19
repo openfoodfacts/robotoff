@@ -316,20 +316,38 @@ class TestInsightImporter:
     def test_get_insight_update_duplicates(self):
         candidates = [
             ProductInsight(
-                barcode=DEFAULT_BARCODE, type=InsightType.label, value_tag="tag1"
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/1.jpg",
             ),
             ProductInsight(
-                barcode=DEFAULT_BARCODE, type=InsightType.label, value_tag="tag1"
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/2.jpg",
             ),
             ProductInsight(
-                barcode=DEFAULT_BARCODE, type=InsightType.label, value_tag="tag2"
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/2.jpg",
+                predictor="PREDICTOR",
+            ),
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag2",
+                source_image="/1/1.jpg",
             ),
         ]
         (
             to_create,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(candidates, [])
-        assert to_create == [candidates[0], candidates[2]]
+        # the third candidate has a more recent image and a predictor so it
+        # has higher priority
+        assert to_create == [candidates[2], candidates[3]]
         assert to_delete == []
 
     def test_get_insight_update_conflicting_reference(self):
@@ -345,11 +363,13 @@ class TestInsightImporter:
                 value_tag="tag1",
                 id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
             ),
+            # annotated product should be kept
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag3",
                 id=uuid.UUID("f3fca6c5-15be-4bd7-bd72-90c7abd2ed4c"),
+                annotation=1,
             ),
         ]
         candidates = [
@@ -372,9 +392,9 @@ class TestInsightImporter:
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(
             candidates, references
         )
-        # only the insight with a different value_tag is removed / created
-        assert to_create == [candidates[1]]
-        assert to_delete == [references[1]]
+        # only the existing annotated insight is kept
+        assert to_create == [candidates[0], candidates[1]]
+        assert to_delete == [references[0]]
 
     def test_get_insight_update_annotated_reference(self):
         class TestInsightImporter(InsightImporter):

@@ -17,25 +17,39 @@ def run(service: str) -> None:
 
 
 @app.command()
-def predict_insight(ocr_url: str) -> None:
-    import json
-
+def regenerate_ocr_insights(
+    barcode: str = typer.Argument(..., help="Barcode of the product")
+) -> None:
+    """Regenerate OCR predictions/insights for a specific product and import
+    them."""
+    from robotoff import settings
     from robotoff.insights.extraction import (
         DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
-    from robotoff.off import get_barcode_from_url
+    from robotoff.insights.importer import import_insights as import_insights_
+    from robotoff.off import generate_json_ocr_url
+    from robotoff.products import get_product
     from robotoff.utils import get_logger
 
-    get_logger()
+    logger = get_logger()
 
-    barcode = get_barcode_from_url(ocr_url)
-    if barcode is None:
-        raise ValueError(f"invalid OCR URL: {ocr_url}")
+    product = get_product(barcode, ["images"])
+    if product is None:
+        raise ValueError(f"product not found: {barcode}")
 
-    results = extract_ocr_predictions(barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
+    predictions = []
+    for image_id in product["images"]:
+        if not image_id.isdigit():
+            continue
 
-    print(json.dumps(results, indent=4))
+        ocr_url = generate_json_ocr_url(barcode, image_id)
+        predictions += extract_ocr_predictions(
+            barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+        )
+
+    imported = import_insights_(predictions, settings.OFF_SERVER_DOMAIN, automatic=True)
+    logger.info(f"Import finished, {imported} insights imported")
 
 
 @app.command()
@@ -306,6 +320,39 @@ def apply_insights(
         max_scan_count=max_scan_count,
         dry_run=dry_run,
     )
+
+
+@app.command()
+def refresh_insights(
+    barcode: Optional[str] = typer.Option(
+        None,
+        help="Refresh a specific product. If not provided, all products are updated",
+    ),
+    server_domain: Optional[str] = typer.Option(
+        None, help="The server domain to use, Open Food Facts by default"
+    ),
+):
+    """Refresh insights based on available predictions.
+
+    If a `barcode` is provided, only the insights of this product is
+    refreshed, otherwise insights of all products are refreshed.
+    """
+    from robotoff import settings
+    from robotoff.insights.importer import refresh_all_insights
+    from robotoff.insights.importer import refresh_insights as refresh_insights_
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    server_domain = server_domain or settings.OFF_SERVER_DOMAIN
+
+    if barcode is not None:
+        logger.info(f"Refreshing product {barcode}")
+        imported = refresh_insights_(barcode, server_domain, automatic=True)
+    else:
+        logger.info("Refreshing insights of all products")
+        imported = refresh_all_insights(server_domain, automatic=True)
+
+    logger.info(f"Refreshed insights: {imported}")
 
 
 @app.command()
