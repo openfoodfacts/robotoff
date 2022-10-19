@@ -940,6 +940,7 @@ class ProductQuestionsResource:
                 limit=count,
                 order_by="n_votes",
                 avoid_voted_on=_get_skip_voted_on(auth, device_id),
+                automatically_processable=False,
             )
         )
 
