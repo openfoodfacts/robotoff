@@ -653,16 +653,32 @@ class ImageLogoSearchResource:
         type_: Optional[str] = req.get_param("type")
         barcode: Optional[str] = req.get_param("barcode")
         value: Optional[str] = req.get_param("value")
+        taxonomy_value: Optional[str] = req.get_param("taxonomy_value")
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
         random: bool = req.get_param_as_bool("random", default=False)
         server_domain: Optional[str] = req.get_param("server_domain")
         annotated: Optional[bool] = req.get_param_as_bool("annotated")
 
+        if type_ is None and (value is not None or taxonomy_value is not None):
+            raise falcon.HTTPBadRequest(
+                description="a type is required if `value` or `taxonomy_value` is provided"
+            )
+
+        if value is not None and taxonomy_value is not None:
+            raise falcon.HTTPBadRequest(
+                description="`value` and `taxonomy_value` are mutually exclusive parameters"
+            )
+
+        if type_ == "label" and taxonomy_value is None and value is not None:
+            raise falcon.HTTPBadRequest(
+                description="you should provide a `taxonomy_value` and not a `value` "
+                "for label type"
+            )
+
         where_clauses = []
         if annotated is not None:
             where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
 
-        where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
         join_image_prediction = False
         join_image_model = False
 
@@ -686,6 +702,9 @@ class ImageLogoSearchResource:
         if value is not None:
             value_tag = get_tag(value)
             where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
+
+        if taxonomy_value is not None:
+            where_clauses.append(LogoAnnotation.taxonomy_value == taxonomy_value)
 
         query = LogoAnnotation.select()
         join_image_prediction = join_image_prediction or join_image_model
