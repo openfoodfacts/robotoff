@@ -183,14 +183,15 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
 
 def sort_candidates(candidates: Iterable[ProductInsight]) -> List[ProductInsight]:
     """Sort candidates by priority, using as keys:
+
     - priority, specified by data["priority"], candidate with lowest priority
-    values (high priority) come first
+      values (high priority) come first
     - source image upload datetime (most recent first): images IDs are
-    auto-incremented integers, so the most recent images have the highest IDs.
-    Images with `source_image = None` have a lower priority that images with a
-    source image.
+      auto-incremented integers, so the most recent images have the highest IDs.
+      Images with `source_image = None` have a lower priority that images with a
+      source image.
     - automatic processing status: candidates that are automatically
-    processable have higher priority
+      processable have higher priority
 
     This function should be used to make sure most important candidates are
     looked into first in `get_insight_update`. Note that the sorting keys are
@@ -343,7 +344,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for candidate in candidates:
                 if candidate.automatic_processing is None:
                     logger.warning(
-                        "Insight with automatic_processing=None", candidate.__data__
+                        "Insight with automatic_processing=None: %s", candidate.__data__
                     )
                     candidate.automatic_processing = False
 
@@ -409,16 +410,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
             if reference.annotation is not None
         )
         for candidate in sort_candidates(candidates):
-            match = False
-            for reference in (
-                reference_insight
+            # if match is True, candidate conflicts with existing insight,
+            # keeping existing insight and discarding candidate
+            match = any(
+                cls.is_conflicting_insight(candidate, reference_insight)
                 for reference_insight in reference_insights
                 if reference_insight.annotation is not None
-            ):
-                if cls.is_conflicting_insight(candidate, reference):
-                    # Candidate conflicts with existing insight, keeping
-                    # existing insight and discarding candidate
-                    match = True
+            )
 
             if not match:
                 for selected in to_create:
