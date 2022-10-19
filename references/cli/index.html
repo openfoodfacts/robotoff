@@ -536,8 +536,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotoff-cli-predict-insight" class="md-nav__link">
-    robotoff-cli predict-insight
+  <a href="#robotoff-cli-refresh-insights" class="md-nav__link">
+    robotoff-cli refresh-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-regenerate-ocr-insights" class="md-nav__link">
+    robotoff-cli regenerate-ocr-insights
   </a>
   
 </li>
@@ -894,8 +901,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotoff-cli-predict-insight" class="md-nav__link">
-    robotoff-cli predict-insight
+  <a href="#robotoff-cli-refresh-insights" class="md-nav__link">
+    robotoff-cli refresh-insights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-regenerate-ocr-insights" class="md-nav__link">
+    robotoff-cli regenerate-ocr-insights
   </a>
   
 </li>
@@ -966,7 +980,8 @@
 <li><code>import-logos</code></li>
 <li><code>init-elasticsearch</code>: This command is used for manual insertion of...</li>
 <li><code>predict-category</code>: Predict categories from the product JSONL...</li>
-<li><code>predict-insight</code></li>
+<li><code>refresh-insights</code>: Refresh insights based on available...</li>
+<li><code>regenerate-ocr-insights</code>: Regenerate OCR predictions/insights for a...</li>
 <li><code>run</code></li>
 <li><code>spellcheck</code></li>
 <li><code>test-spellcheck</code></li>
@@ -1191,13 +1206,28 @@ directory.</p>
 <ul>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
-<h2 id="robotoff-cli-predict-insight"><code>robotoff-cli predict-insight</code></h2>
+<h2 id="robotoff-cli-refresh-insights"><code>robotoff-cli refresh-insights</code></h2>
+<p>Refresh insights based on available predictions.</p>
+<p>If a <code>barcode</code> is provided, only the insights of this product is
+refreshed, otherwise insights of all products are refreshed.</p>
 <p><strong>Usage</strong>:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli predict-insight <span class="o">[</span>OPTIONS<span class="o">]</span> OCR_URL
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli refresh-insights <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--barcode TEXT</code>: Refresh a specific product. If not provided, all products are updated</li>
+<li><code>--server-domain TEXT</code>: The server domain to use, Open Food Facts by default</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-regenerate-ocr-insights"><code>robotoff-cli regenerate-ocr-insights</code></h2>
+<p>Regenerate OCR predictions/insights for a specific product and import
+them.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli regenerate-ocr-insights <span class="o">[</span>OPTIONS<span class="o">]</span> BARCODE
 </code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>OCR_URL</code>: [required]</li>
+<li><code>BARCODE</code>: Barcode of the product  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
