@@ -373,6 +373,14 @@ paths:
         - name: value
           description: Filter by annotated value
           in: query
+          example: lidl
+          schema:
+            type: string
+        - name: taxonomy_value
+          description:
+            Filter by taxonomy value, i.e. the canonical value present is the associated taxonomy.
+            This parameter is mutually exclusive with `value`, and should be used for `label` type.
+          in: query
           example: en:organic
           schema:
             type: string
