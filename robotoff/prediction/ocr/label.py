@@ -85,7 +85,7 @@ LABELS_REGEX = {
             lowercase=False,
         ),
     ],
-    "en:label-rouge": [
+    "fr:label-rouge": [
         OCRRegex(
             re.compile(r"d[ée]cret du 0?5[./]01[./]07"),
             field=OCRField.full_text_contiguous,

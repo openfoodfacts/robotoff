@@ -1,7 +1,7 @@
 igp||en:pgi
 label ab||fr:ab-agriculture-biologique
-label rouge vectoriel||en:label-rouge
-label rouge||en:label-rouge
+label rouge vectoriel||fr:label-rouge
+label rouge||fr:label-rouge
 produit en bretagne||en:produced-in-bretagne
 demeter||en:demeter
 Bio Equitable||fr:bio-equitable
