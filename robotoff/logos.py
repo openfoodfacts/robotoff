@@ -270,6 +270,7 @@ def generate_insights_from_annotated_logos(
             data={
                 "confidence": 1.0,
                 "logo_id": logo.id,
+                "bounding_box": logo.bounding_box,
                 "username": logo.username,
                 "is_annotation": True,  # it's worth restating it
             },
@@ -316,7 +317,11 @@ def predict_logo_predictions(
         prediction = generate_prediction(
             logo_type=label[0],
             logo_value=label[1],
-            data={"confidence": max_prob, "logo_id": logo.id},
+            data={
+                "confidence": max_prob,
+                "logo_id": logo.id,
+                "bounding_box": logo.bounding_box,
+            },
         )
 
         if prediction is not None:

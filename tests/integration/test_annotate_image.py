@@ -187,6 +187,7 @@ def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
         "username": "a",
         "is_annotation": True,
         "notify": True,
+        "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert prediction.value == "Etorki"
     assert prediction.value_tag == "Etorki"
@@ -204,6 +205,7 @@ def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
         "username": "a",
         "is_annotation": True,
         "notify": True,
+        "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert insight.value == "Etorki"
     assert insight.value_tag == "Etorki"
@@ -253,6 +255,7 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
         "username": "a",
         "is_annotation": True,
         "notify": True,
+        "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert prediction.value is None
     assert prediction.value_tag == "en:eu-organic"
@@ -270,6 +273,7 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
         "username": "a",
         "is_annotation": True,
         "notify": True,
+        "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert insight.value is None
     assert insight.value_tag == "en:eu-organic"
