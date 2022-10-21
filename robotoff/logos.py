@@ -264,13 +264,15 @@ def generate_insights_from_annotated_logos(
     predictions = []
     for logo in logos:
         prediction = generate_prediction(
-            logo.annotation_type,
-            logo.taxonomy_value,
-            confidence=1.0,
-            logo_id=logo.id,
-            username=logo.username,
-            is_annotation=True,  # it's worth restating it
+            logo_type=logo.annotation_type,
+            logo_value=logo.taxonomy_value,
             automatic_processing=True,  # because this is a user annotation, which we trust.
+            data={
+                "confidence": 1.0,
+                "logo_id": logo.id,
+                "username": logo.username,
+                "is_annotation": True,  # it's worth restating it
+            },
         )
 
         if prediction is None:
@@ -312,7 +314,9 @@ def predict_logo_predictions(
             continue
 
         prediction = generate_prediction(
-            label[0], label[1], confidence=max_prob, logo_id=logo.id
+            logo_type=label[0],
+            logo_value=label[1],
+            data={"confidence": max_prob, "logo_id": logo.id},
         )
 
         if prediction is not None:
@@ -327,10 +331,20 @@ def predict_logo_predictions(
 def generate_prediction(
     logo_type: str,
     logo_value: Optional[str],
+    data: Dict,
     automatic_processing: Optional[bool] = False,
-    **kwargs,
 ) -> Optional[Prediction]:
-    if logo_type not in LOGO_TYPE_MAPPING:
+    """Generate a Prediction from a logo.
+
+    The Prediction may either be created after the annotation of the logo by
+    a human (in which case `automatic_processing` is True), or by infering the
+    logo value from nearest neighbor labels (in which case
+    `automatic_processing` is False).
+
+    Currently, only brand and label logo types are supported: None is returned
+    if the logo type is different, or if the logo_value is None.
+    """
+    if logo_type not in LOGO_TYPE_MAPPING or logo_value is None:
         return None
 
     prediction_type = LOGO_TYPE_MAPPING[logo_type]
@@ -340,13 +354,9 @@ def generate_prediction(
 
     if prediction_type == PredictionType.brand:
         value_tag = value = logo_value
-        if value is None:
-            return None
 
     elif prediction_type == PredictionType.label:
         value_tag = logo_value
-        if value_tag is None:
-            return None
 
     return Prediction(
         type=prediction_type,
@@ -354,5 +364,5 @@ def generate_prediction(
         value=value,
         automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
-        data=kwargs,
+        data=data,
     )
