@@ -1,5 +1,5 @@
 import operator
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -11,6 +11,7 @@ from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -21,6 +22,59 @@ LOGO_TYPE_MAPPING: Dict[str, PredictionType] = {
 }
 
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
+
+
+BoundingBoxType = Tuple[float, float, float, float]
+
+
+def compute_iou(box_1: BoundingBoxType, box_2: BoundingBoxType) -> float:
+    """Compute the IoU (intersection over union) for two bounding boxes.
+
+    The boxes are expected to have the following format:
+    (y_min, x_min, y_max, x_max).
+    """
+    y_min_1, x_min_1, y_max_1, x_max_1 = box_1
+    y_min_2, x_min_2, y_max_2, x_max_2 = box_2
+    x_max = min(x_max_1, x_max_2)
+    x_min = max(x_min_1, x_min_2)
+    y_max = min(y_max_1, y_max_2)
+    y_min = max(y_min_1, y_min_2)
+    width_inter = max(0, x_max - x_min)
+    height_inter = max(0, y_max - y_min)
+    area_inter = width_inter * height_inter
+    box_1_area = (x_max_1 - x_min_1) * (y_max_1 - y_min_1)
+    box_2_area = (x_max_2 - x_min_2) * (y_max_2 - y_min_2)
+    union_area = box_1_area + box_2_area - area_inter
+    return area_inter / union_area
+
+
+def filter_logos(
+    logos: List[JSONType], score_threshold: float, iou_threshold: float = 0.95
+) -> List[Tuple[int, JSONType]]:
+    """Select logos that don't intersect with each other
+    (IoU < `iou_threshold`) and that have a confidence score above
+    `score_threshold`.
+
+    Return a list of (original_idx, logo) tuples.
+    """
+    filtered = []
+    skip_indexes = set()
+    for i in range(len(logos)):
+        if i not in skip_indexes:
+            for j in range(i + 1, len(logos)):
+                if (
+                    compute_iou(logos[i]["bounding_box"], logos[j]["bounding_box"])
+                    >= iou_threshold
+                ):
+                    # logos are sorted by descending confidence score, so we ignore
+                    # j logo (logo with lower confidence score)
+                    skip_indexes.add(j)
+
+        logo = logos[i]
+        if logo["score"] >= score_threshold:
+            filtered.append((i, logo))
+
+    return filtered
 
 
 def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
