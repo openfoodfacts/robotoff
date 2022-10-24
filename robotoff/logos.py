@@ -60,17 +60,17 @@ def filter_logos(
     filtered = []
     skip_indexes = set()
     for i in range(len(logos)):
+        logo = logos[i]
         if i not in skip_indexes:
             for j in range(i + 1, len(logos)):
                 if (
-                    compute_iou(logos[i]["bounding_box"], logos[j]["bounding_box"])
+                    compute_iou(logo["bounding_box"], logos[j]["bounding_box"])
                     >= iou_threshold
                 ):
                     # logos are sorted by descending confidence score, so we ignore
                     # j logo (logo with lower confidence score)
                     skip_indexes.add(j)
 
-        logo = logos[i]
         if logo["score"] >= score_threshold:
             filtered.append((i, logo))
 
