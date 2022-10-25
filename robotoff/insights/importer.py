@@ -1083,8 +1083,8 @@ def refresh_all_insights(
     :return: The number of imported insights.
     """
     imported = 0
-    for barcode in (
-        PredictionModel.select(fn.Distinct(PredictionModel.barcode)).scalar().iterator()
+    for (barcode,) in (
+        PredictionModel.select(fn.Distinct(PredictionModel.barcode)).tuples().iterator()
     ):
         logger.info(f"Refreshing insights for product {barcode}")
         imported += refresh_insights(barcode, server_domain, automatic, product_store)
