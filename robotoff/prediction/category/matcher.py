@@ -50,6 +50,8 @@ STOP_WORDS_EXCEPTIONS = {
     "fr": {"deux", "trois", "quatre"},
     "en": {"two", "three", "four"},
     "es": {"dos", "tres", "cuatro"},
+    "de": {"jahren", "jahr"},
+    "it": {"anno"},
 }
 
 
@@ -72,7 +74,21 @@ MATCH_MAPS_EXCEPTIONS = {
             "frais",
             # "premier cru" becomes "cru" after lemmatization
             "cru",
-        }
+            # "dès un an" becomes "an" an after lemmatization
+            "an",
+        },
+        "es": {
+            # en:fresh-food
+            "fresco",
+        },
+        "en": {
+            # en:fresh-food
+            "fresh",
+        },
+        "de": {
+            # frish -> frischen after lemmatization (en:fresh-foods)
+            "frischen",
+        },
     }
 }
 
@@ -235,12 +251,8 @@ def generate_intersect_categories_ingredients() -> Dict[str, Set[str]]:
     for lang in SUPPORTED_LANG:
         matches[lang] = set()
 
-    for lang in set(ingredient_match_maps) | set(category_match_maps):
-        for key in (
-            set(ingredient_match_maps[lang])
-            & set(category_match_maps[lang])
-            & SUPPORTED_LANG
-        ):
+    for lang in set(ingredient_match_maps) & set(category_match_maps) & SUPPORTED_LANG:
+        for key in set(ingredient_match_maps[lang]) & set(category_match_maps[lang]):
             for node_id, _ in category_match_maps[lang][key]:
                 matches[lang].add(node_id)
 
@@ -409,7 +421,9 @@ def predict_from_dataset(
 
     logger.info("Performing prediction on products without categories")
     for product in product_stream.iter():
-        yield from predict(product)
+        for prediction in predict(product):
+            prediction.barcode = product["code"]
+            yield prediction
 
 
 def dump_resource_files():
