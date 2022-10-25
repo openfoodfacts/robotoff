@@ -776,6 +776,18 @@ class TestLabelInsightImporter:
                 Product({"code": DEFAULT_BARCODE, "labels_tags": ["en:vegan"]}),
                 [("en:ecoveg", False), ("en:max-havelaar", True)],
             ),
+            (
+                # fr:sans-gluten should be normalized into en:no-gluten
+                [
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="fr:sans-gluten",
+                        automatic_processing=True,
+                    ),
+                ],
+                Product({"code": DEFAULT_BARCODE}),
+                [("en:no-gluten", True)],
+            ),
         ],
     )
     def test_generate_candidates(self, predictions, product, expected, mocker):

@@ -24,7 +24,12 @@ from robotoff.products import (
     get_product_store,
     is_valid_image,
 )
-from robotoff.taxonomy import Taxonomy, get_taxonomy
+from robotoff.taxonomy import (
+    Taxonomy,
+    TaxonomyType,
+    get_taxonomy,
+    match_taxonomized_value,
+)
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -566,6 +571,17 @@ class LabelInsightImporter(InsightImporter):
             for prediction in predictions
             if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
         ]
+        for candidate in candidates:
+            if candidate.value_tag:
+                # we normalize `value_tag` to the canonical taxonomy value
+                # it helps to deal with internationalization
+                # (`fr:sans-gluten` and `en:no-gluten` is the same tag)
+                value_tag = match_taxonomized_value(
+                    candidate.value_tag, TaxonomyType.label.name
+                )
+                if value_tag is not None:
+                    candidate.value_tag = value_tag
+
         taxonomy = get_taxonomy(InsightType.label.name)
         for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy):
             insight = ProductInsight(**candidate.to_dict())
