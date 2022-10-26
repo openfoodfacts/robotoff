@@ -287,10 +287,31 @@ def save_annotation(
     auth: Optional[OFFAuthentication] = None,
     trusted_annotator: bool = False,
 ) -> AnnotationResult:
-    """Saves annotation either by using a single response as ground truth or by using several responses.
+    """Saves annotation either by using a single response as ground truth or
+    by using several responses.
 
-    trusted_annotator: defines whether the given annotation comes from an authoritative source (e.g.
-    a trusted user), ot whether the annotation should be subject to the voting system.
+    If annotation == -1 (ignore), we consider the annotation as a vote, so
+    that we don't return the insight to the user again.
+    If there are >= 2 votes on one of the 2 other possible values (0/1),
+    including the vote in process, we set the annotation value of the largest
+    voting group. The only exception is when both groups >= 2 votes, in which
+    case we mark the insight as invalid (annotation=-1).
+    Note that `annotation=-1` has two different meanings here: if it's a vote,
+    we consider it as a "ignore", and if it's the insight annotation value we
+    consider the insight as invalid, so that it's not available for annotation
+    again.
+
+    :param insight_id: The ID of the insight
+    :param annotation: The annotation, either -1, 0, or 1
+    :param device_id: Unique identifier of the device, see
+      `device_id_from_request`
+    :param update: If True, perform the update on Product Opener if annotation=1,
+      otherwise only save the annotation (default: True)
+    :param data: Optional additional data, required for some insight types
+    :param auth: User authentication data
+    :param trusted_annotator: Defines whether the given annotation comes from
+    an authoritative source (e.g. a trusted user), ot whether the annotation
+    should be subject to the voting system.
     """
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
@@ -303,7 +324,9 @@ def save_annotation(
     if insight.annotation is not None:
         return ALREADY_ANNOTATED_RESULT
 
-    if not trusted_annotator:
+    # We use AnnotationVote mechanism to save annotation = -1 (ignore) for
+    # authenticated users, so that it's not returned again to the user
+    if not trusted_annotator or annotation == -1:
         verified = False
 
         AnnotationVote.create(
@@ -320,7 +343,11 @@ def save_annotation(
                         AnnotationVote.value,
                         peewee.fn.COUNT(AnnotationVote.value).alias("num_votes"),
                     )
-                    .where(AnnotationVote.insight_id == insight_id)
+                    .where(
+                        AnnotationVote.insight_id == insight_id,
+                        # We don't consider any ignore (annotation = -1) vote
+                        AnnotationVote.value != -1,
+                    )
                     .group_by(AnnotationVote.value)
                     .order_by(peewee.SQL("num_votes").desc())
                 )
@@ -332,24 +359,25 @@ def save_annotation(
                 tx.rollback()
                 raise e
 
-        # If the top annotation has more than 2 votes, consider applying it to the insight.
-        if existing_votes[0].num_votes > 2:
-            annotation = existing_votes[0].value
-            verified = True
+        if existing_votes:
+            # If the top annotation has more than 2 votes, consider applying it to the insight.
+            if existing_votes[0].num_votes > 2:
+                annotation = existing_votes[0].value
+                verified = True
 
-        # But first check for the following cases:
-        #  1) The 1st place annotation has >2 votes, and the 2nd place annotation has >= 2 votes.
-        #  2) 1st place and 2nd place have 2 votes each.
-        #
-        # In both cases, we consider this an ambiguous result and mark it with 'I don't know'.
-        if (
-            existing_votes[0].num_votes >= 2
-            and len(existing_votes) > 1
-            and existing_votes[1].num_votes >= 2
-        ):
-            # This code credits the last person to contribute a vote with a potentially not their annotation.
-            annotation = 0
-            verified = True
+            # But first check for the following cases:
+            #  1) The 1st place annotation has > 2 votes, and the 2nd place annotation has >= 2 votes.
+            #  2) 1st place and 2nd place have 2 votes each.
+            #
+            # In both cases, we consider this an ambiguous result and mark it with 'I don't know'.
+            if (
+                existing_votes[0].num_votes >= 2
+                and len(existing_votes) > 1
+                and existing_votes[1].num_votes >= 2
+            ):
+                # This code credits the last person to contribute a vote with a potentially not their annotation.
+                annotation = -1
+                verified = True
 
         if not verified:
             return SAVED_ANNOTATION_VOTE_RESULT
