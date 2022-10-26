@@ -256,16 +256,14 @@ class AnnotateInsightResource:
         # This field is only needed for nutritional table structure insights.
         data = req.get_param_as_json("data")
 
-        auth: Optional[OFFAuthentication] = parse_auth(req)
-        trusted_annotator: bool = auth is not None
+        auth = parse_auth(req)
+        trusted_annotator = auth is not None
 
         device_id = device_id_from_request(req)
-
-        username = auth.get_username() if auth else "unknown annotator"
         logger.info(
-            "New annotation received from {} (annotation: {}, insight: {})".format(
-                username, annotation, insight_id
-            )
+            "New annotation received from "
+            f"{auth.get_username() if auth else 'unknown annotator'} "
+            f"(annotation: {annotation}, insight: {insight_id})"
         )
 
         annotation_result = save_annotation(
