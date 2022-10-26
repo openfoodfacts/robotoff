@@ -137,6 +137,7 @@ class InsightCollection:
         annotation: Optional[int] = req.get_param_as_int("annotation")
         value_tag: str = req.get_param("value_tag")
         brands = req.get_param_as_list("brands") or None
+        predictor = req.get_param("predictor")
         server_domain: Optional[str] = req.get_param("server_domain")
 
         if keep_types:
@@ -157,6 +158,7 @@ class InsightCollection:
             annotated=annotated,
             annotation=annotation,
             barcode=barcode,
+            predictor=predictor,
         )
 
         offset: int = (page - 1) * count
@@ -182,6 +184,7 @@ class RandomInsightResource:
         value_tag: Optional[str] = req.get_param("value_tag")
         server_domain: Optional[str] = req.get_param("server_domain")
         count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
+        predictor = req.get_param("predictor")
 
         keep_types = [insight_type] if insight_type else None
         get_insights_ = functools.partial(
@@ -191,6 +194,7 @@ class RandomInsightResource:
             value_tag=value_tag,
             order_by="random",
             server_domain=server_domain,
+            predictor=predictor,
         )
 
         insights = [i.serialize() for i in get_insights_(limit=count)]
@@ -991,6 +995,7 @@ def get_questions_resource_on_get(
     )
     # filter by annotation campaign
     campaign: Optional[str] = req.get_param("campaign")
+    predictor = req.get_param("predictor")
 
     # If the device_id is not provided as a request parameter, we use the
     # hash of the IPs as a backup.
@@ -1024,6 +1029,7 @@ def get_questions_resource_on_get(
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
         automatically_processable=False,
         campaign=campaign,
+        predictor=predictor,
     )
 
     offset: int = (page - 1) * count
@@ -1214,6 +1220,7 @@ class UnansweredQuestionCollection:
             "reserved_barcode", default=False
         )
         campaign: Optional[str] = req.get_param("campaign")
+        predictor = req.get_param("predictor")
 
         get_insights_ = functools.partial(
             get_insights,
@@ -1225,6 +1232,7 @@ class UnansweredQuestionCollection:
             automatically_processable=False,
             reserved_barcode=reserved_barcode,
             campaign=campaign,
+            predictor=predictor,
         )
 
         offset: int = (page - 1) * count
