@@ -81,6 +81,7 @@ def get_insights(
     group_by_value_tag: Optional[bool] = False,
     automatically_processable: Optional[bool] = None,
     campaign: Optional[str] = None,
+    predictor: Optional[str] = None,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -118,6 +119,9 @@ def get_insights(
 
     if campaign is not None:
         where_clauses.append(ProductInsight.campaign.contains(campaign))
+
+    if predictor is not None:
+        where_clauses.append(ProductInsight.predictor == predictor)
 
     query = _add_vote_exclusions(ProductInsight.select(), avoid_voted_on)
 
