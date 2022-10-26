@@ -79,6 +79,8 @@ def get_insights(
     count: bool = False,
     avoid_voted_on: Optional[SkipVotedOn] = None,
     group_by_value_tag: Optional[bool] = False,
+    automatically_processable: Optional[bool] = None,
+    campaign: Optional[str] = None,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
         server_domain = settings.OFF_SERVER_DOMAIN
@@ -90,6 +92,11 @@ def get_insights(
 
     if annotation is not None:
         where_clauses.append(ProductInsight.annotation == annotation)
+
+    if automatically_processable is not None:
+        where_clauses.append(
+            ProductInsight.automatic_processing == automatically_processable
+        )
 
     if barcode:
         where_clauses.append(ProductInsight.barcode == barcode)
@@ -108,6 +115,9 @@ def get_insights(
 
     if reserved_barcode is not None:
         where_clauses.append(ProductInsight.reserved_barcode == reserved_barcode)
+
+    if campaign is not None:
+        where_clauses.append(ProductInsight.campaign.contains(campaign))
 
     query = _add_vote_exclusions(ProductInsight.select(), avoid_voted_on)
 

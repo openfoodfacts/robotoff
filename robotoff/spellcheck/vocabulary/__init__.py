@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.vocabulary.utils import Vocabulary
-from robotoff.utils.text import FR_NLP_CACHE
+from robotoff.utils.text import get_blank_nlp
 
 TOKENS = List[str]
 ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
@@ -30,7 +30,7 @@ class VocabularySpellchecker(BaseSpellchecker):
     def tokenize(text: str, remove_additives: bool = False) -> TOKENS:
         tokens: TOKENS = []
 
-        nlp = FR_NLP_CACHE.get()
+        nlp = get_blank_nlp("fr")
         for token in nlp(text):
             tokens.append(token.orth_)
         tokens = [token for token in tokens if any(c.isalnum() for c in token)]

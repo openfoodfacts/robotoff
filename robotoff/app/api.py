@@ -50,13 +50,13 @@ from robotoff.off import (
     get_product,
     get_server_type,
 )
-from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
-from robotoff.taxonomy import TaxonomyType, get_taxonomy, match_unprefixed_value
+from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
@@ -89,7 +89,7 @@ def _get_skip_voted_on(
 
 
 ###########
-# IMPORTANT: remember to update documentation at doc/references/api.md if you change API
+# IMPORTANT: remember to update documentation at doc/references/api.yml if you change API
 ###########
 
 
@@ -243,7 +243,7 @@ def device_id_from_request(req: falcon.Request) -> str:
 
 class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        insight_id = req.get_param("insight_id", required=True)
+        insight_id = req.get_param_as_uuid("insight_id", required=True)
         annotation = req.get_param_as_int(
             "annotation", required=True, min_value=-1, max_value=1
         )
@@ -275,6 +275,7 @@ class AnnotateInsightResource:
         )
 
         resp.media = {
+            "status_code": annotation_result.status_code,
             "status": annotation_result.status,
             "description": annotation_result.description,
         }
@@ -400,20 +401,36 @@ class OCRInsightsPredictorResource:
 
 
 class CategoryPredictorResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        deepest_only = req.get_param_as_bool("deepest_only", default=False)
+    @jsonschema.validate(schema.PREDICT_CATEGORY_SCHEMA)
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict categories using neural categorizer and matching algorithm
+        for a specific product."""
+        predictors: List[str] = req.media.get("predictors") or ["neural", "matcher"]
 
-        categories = []
+        if "barcode" in req.media:
+            # Fetch product from DB
+            barcode: str = req.media["barcode"]
+            product = get_product(barcode) or {}
+            if not product:
+                raise falcon.HTTPNotFound(description=f"product {barcode} not found")
+        else:
+            product = req.media["product"]
+            if "matcher" in predictors:
+                if "lang" not in req.media:
+                    raise falcon.HTTPBadRequest(
+                        description="lang field is required when using matcher predictor"
+                    )
+                lang = req.media["lang"]
+                product[f"product_name_{lang}"] = product["product_name"]
+                product["languages_codes"] = [lang]
 
-        product = get_product(barcode)
-        if product:
-            predictions = CategoryClassifier(
-                get_taxonomy(TaxonomyType.category.name)
-            ).predict(product, deepest_only)
-            categories = [p.to_dict() for p in predictions]
-
-        resp.media = {"categories": categories}
+        resp.media = predict_category(
+            product,
+            neural_predictor="neural" in predictors,
+            matcher_predictor="matcher" in predictors,
+            deepest_only=req.media.get("deepest_only", False),
+            threshold=req.media.get("threshold"),
+        )
 
 
 class UpdateDatasetResource:
@@ -611,28 +628,57 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        logo_ids: Optional[List[str]] = req.get_param_as_list(
-            "logo_ids", required=False
-        )
+        logo_ids: List[str] = req.get_param_as_list("logo_ids", required=True)
+        logos = []
+        for logo in (
+            LogoAnnotation.select()
+            .join(ImagePrediction)
+            .join(ImageModel)
+            .where(LogoAnnotation.id.in_(logo_ids))
+            .iterator()
+        ):
+            logo_dict = logo.to_dict()
+            image_prediction = logo_dict.pop("image_prediction")
+            logo_dict["image"] = image_prediction["image"]
+            logos.append(logo_dict)
 
-        if logo_ids is not None:
-            self.fetch_logos(logo_ids, resp)
-        else:
-            self.search(req, resp)
+        resp.media = {"logos": logos, "count": len(logos)}
 
-    def search(self, req: falcon.Request, resp: falcon.Response):
+
+class ImageLogoSearchResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int(
             "count", min_value=1, max_value=2000, default=25
         )
         type_: Optional[str] = req.get_param("type")
         barcode: Optional[str] = req.get_param("barcode")
         value: Optional[str] = req.get_param("value")
+        taxonomy_value: Optional[str] = req.get_param("taxonomy_value")
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
         random: bool = req.get_param_as_bool("random", default=False)
         server_domain: Optional[str] = req.get_param("server_domain")
-        annotated: bool = req.get_param_as_bool("annotated", default=False)
+        annotated: Optional[bool] = req.get_param_as_bool("annotated")
 
-        where_clauses = [LogoAnnotation.annotation_value.is_null(not annotated)]
+        if type_ is None and (value is not None or taxonomy_value is not None):
+            raise falcon.HTTPBadRequest(
+                description="a type is required if `value` or `taxonomy_value` is provided"
+            )
+
+        if value is not None and taxonomy_value is not None:
+            raise falcon.HTTPBadRequest(
+                description="`value` and `taxonomy_value` are mutually exclusive parameters"
+            )
+
+        if type_ == "label" and taxonomy_value is None and value is not None:
+            raise falcon.HTTPBadRequest(
+                description="you should provide a `taxonomy_value` and not a `value` "
+                "for label type"
+            )
+
+        where_clauses = []
+        if annotated is not None:
+            where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
+
         join_image_prediction = False
         join_image_model = False
 
@@ -641,6 +687,8 @@ class ImageLogoResource:
             join_image_model = True
 
         if min_confidence is not None:
+            # TODO(raphael): We should filter based on individual logo object confidence
+            # and not on image object with the maximum confidence
             where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
             join_image_prediction = True
 
@@ -654,6 +702,9 @@ class ImageLogoResource:
         if value is not None:
             value_tag = get_tag(value)
             where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
+
+        if taxonomy_value is not None:
+            where_clauses.append(LogoAnnotation.taxonomy_value == taxonomy_value)
 
         query = LogoAnnotation.select()
         join_image_prediction = join_image_prediction or join_image_model
@@ -680,22 +731,6 @@ class ImageLogoResource:
             item["image"] = image_prediction["image"]
 
         resp.media = {"logos": items, "count": query_count}
-
-    def fetch_logos(self, logo_ids: List[str], resp: falcon.Response):
-        logos = []
-        for logo in (
-            LogoAnnotation.select()
-            .join(ImagePrediction)
-            .join(ImageModel)
-            .where(LogoAnnotation.id.in_(logo_ids))
-            .iterator()
-        ):
-            logo_dict = logo.to_dict()
-            image_prediction = logo_dict.pop("image_prediction")
-            logo_dict["image"] = image_prediction["image"]
-            logos.append(logo_dict)
-
-        resp.media = {"logos": logos, "count": len(logos)}
 
 
 class ImageLogoDetailResource:
@@ -733,7 +768,7 @@ class ImageLogoDetailResource:
             if value is not None:
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
             else:
                 logo.annotation_value_tag = None
                 logo.taxonomy_value = None
@@ -751,6 +786,7 @@ class ImageLogoDetailResource:
 
 
 class ImageLogoAnnotateResource:
+    @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
@@ -763,18 +799,32 @@ class ImageLogoAnnotateResource:
             logo_id = annotation["logo_id"]
             type_ = annotation["type"]
             value = annotation["value"] or None
-            logo = LogoAnnotation.get_by_id(logo_id)
+            try:
+                logo = LogoAnnotation.get_by_id(logo_id)
+            except LogoAnnotation.DoesNotExist:
+                raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
+
             if value is not None:
+                if type_ == "label" and not is_prefixed_value(value):
+                    raise falcon.HTTPBadRequest(
+                        description=f"language-prefixed value are required for label type (here: {value})"
+                    )
                 logo.annotation_value = value
                 value_tag = get_tag(value)
                 logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_unprefixed_value(value_tag, type_)
+                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
+            elif type_ in ("brand", "category", "label", "store"):
+                raise falcon.HTTPBadRequest(
+                    description=f"value required for type {type_} (logo {logo_id})"
+                )
 
             logo.annotation_type = type_
             logo.username = username
             logo.completed_at = completed_at
-            logo.save()
             annotated_logos.append(logo)
+
+        for logo in annotated_logos:
+            logo.save()
 
         created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
         resp.media = {"created insights": created}
@@ -782,6 +832,10 @@ class ImageLogoAnnotateResource:
 
 class ImageLogoUpdateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Bulk update logo annotations: change type and value of logos that have specific
+        types and values.
+
+        Because this endpoint mass-update annotations, leave it out of API documentation."""
         source_value = req.get_param("source_value", required=True)
         source_type = req.get_param("source_type", required=True)
         target_value = req.get_param("target_value", required=True)
@@ -793,7 +847,7 @@ class ImageLogoUpdateResource:
 
         target_value_tag = get_tag(target_value)
         source_value_tag = get_tag(source_value)
-        taxonomy_value = match_unprefixed_value(target_value_tag, target_type)
+        taxonomy_value = match_taxonomized_value(target_value_tag, target_type)
 
         query = LogoAnnotation.update(
             {
@@ -886,6 +940,7 @@ class ProductQuestionsResource:
                 limit=count,
                 order_by="n_votes",
                 avoid_voted_on=_get_skip_voted_on(auth, device_id),
+                automatically_processable=False,
             )
         )
 
@@ -934,6 +989,8 @@ def get_questions_resource_on_get(
     reserved_barcode: Optional[bool] = req.get_param_as_bool(
         "reserved_barcode", default=False
     )
+    # filter by annotation campaign
+    campaign: Optional[str] = req.get_param("campaign")
 
     # If the device_id is not provided as a request parameter, we use the
     # hash of the IPs as a backup.
@@ -965,6 +1022,8 @@ def get_questions_resource_on_get(
         order_by=order_by,
         reserved_barcode=reserved_barcode,
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
+        automatically_processable=False,
+        campaign=campaign,
     )
 
     offset: int = (page - 1) * count
@@ -1148,19 +1207,25 @@ class UnansweredQuestionCollection:
         response: JSONType = {}
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
-        question_type: str = req.get_param("type")
-        value_tag: str = req.get_param("value_tag")
+        insight_type: str = req.get_param("type")
+        country: Optional[str] = req.get_param("country")
         server_domain: Optional[str] = req.get_param("server_domain")
+        reserved_barcode: Optional[bool] = req.get_param_as_bool(
+            "reserved_barcode", default=False
+        )
+        campaign: Optional[str] = req.get_param("campaign")
 
-        query_parameters = {
-            "keep_types": [question_type],
-            "group_by_value_tag": True,
-            "value_tag": value_tag,
-            "limit": count,
-            "server_domain": server_domain,
-        }
-
-        get_insights_ = functools.partial(get_insights, **query_parameters)
+        get_insights_ = functools.partial(
+            get_insights,
+            keep_types=[insight_type] if insight_type else None,
+            group_by_value_tag=True,
+            limit=count,
+            country=country,
+            server_domain=server_domain,
+            automatically_processable=False,
+            reserved_barcode=reserved_barcode,
+            campaign=campaign,
+        )
 
         offset: int = (page - 1) * count
         insights = [i for i in get_insights_(limit=count, offset=offset)]
@@ -1292,18 +1357,19 @@ api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResour
 api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
+api.add_route("/api/v1/images/logos/search", ImageLogoSearchResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
-api.add_route("/api/v1/questions/unanswered/", UnansweredQuestionCollection())
+api.add_route("/api/v1/questions/unanswered", UnansweredQuestionCollection())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
-api.add_route("/api/v1/predictions/", PredictionCollection())
+api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
 api.add_route("/api/v1/images", ImageCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())

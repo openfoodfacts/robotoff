@@ -2,10 +2,7 @@ import functools
 import re
 import unicodedata
 
-from spacy.lang.en import English
-from spacy.lang.fr import French
-
-from robotoff.utils import cache
+import spacy
 
 from .fold_to_ascii import fold
 
@@ -41,26 +38,39 @@ def strip_consecutive_spaces(text: str) -> str:
     return CONSECUTIVE_SPACES_REGEX.sub(" ", text)
 
 
-def get_nlp(lang: str):
-    if lang == "fr":
-        return French()
-    elif lang == "en":
-        return English()
-    else:
-        raise ValueError("unknown lang: {}".format(lang))
+@functools.lru_cache()
+def get_blank_nlp(lang: str) -> spacy.Language:
+    """Return a blank (without model) spaCy language pipeline."""
+    return spacy.blank(lang)
+
+
+@functools.lru_cache()
+def get_lemmatizing_nlp(lang: str) -> spacy.Language:
+    """Return a spaCy language pipeline with a lookup lemmatizer."""
+    nlp = spacy.blank(lang)
+    nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
+    nlp.initialize()
+    return nlp
 
 
 def get_tag(text: str) -> str:
+    """Return a tag from a text.
+
+    In Open Food Facts, tags are obtained from free text by performing the
+    following:
+    - lowercasing
+    - accent removal
+    - replacement of punctuation by either a comma ("-") or nothing, depending
+    on the punctuation
+    """
     text = strip_accents_ascii_v2(text)
-    return (
+    text = (
         text.lower()
         .replace(" & ", "-")
         .replace(" ", "-")
         .replace("'", "-")
         .replace(".", "-")
+        .replace("!", "")
+        .replace("?", "")
     )
-
-
-FR_NLP_CACHE = cache.CachedStore(
-    functools.partial(get_nlp, lang="fr"), expiration_interval=None
-)
+    return strip_consecutive_spaces(text).strip("-")

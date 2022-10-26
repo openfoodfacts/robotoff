@@ -1,3 +1,4 @@
+import copy
 import datetime
 import logging
 import os
@@ -39,23 +40,29 @@ class BaseURLProvider(object):
         self.prefix = "world"
         self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
 
+    def clone(self):
+        return copy.deepcopy(self)
+
     def robotoff(self):
-        self.prefix = "robotoff"
-        return self
+        result = self.clone()
+        result.prefix = "robotoff"
+        return result
 
     def static(self):
-        self.prefix = "static"
+        result = self.clone()
+        result.prefix = "static"
         # locally we may want to change it, give environment a chance
         static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
         if static_domain:
             if "://" in static_domain:
-                self.scheme, static_domain = static_domain.split("://", 1)
-            self.domain = static_domain
-        return self
+                result.scheme, static_domain = static_domain.split("://", 1)
+            result.domain = static_domain
+        return result
 
     def country(self, country_code: str):
-        self.prefix = country_code
-        return self
+        result = self.clone()
+        result.prefix = country_code
+        return result
 
     def get(self):
         return self.url % {
@@ -70,6 +77,7 @@ DATA_DIR = PROJECT_DIR / "data"
 DATASET_DIR = PROJECT_DIR / "datasets"
 DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / "i18n"
+LABEL_LOGOS_PATH = DATA_DIR / "label_logos.json"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
@@ -110,13 +118,22 @@ EVENTS_API_URL = os.environ.get(
     "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
 )
 
+CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
+CATEGORY_MATCHER_MATCH_MAPS = {
+    "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
+    "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
+}
+CATEGORY_MATCHER_INTERSECT = (
+    CATEGORY_MATCHER_DIR / "category_ingredient_intersect.json.gz"
+)
+
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
-TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
-TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
-TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
-TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
+TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json.gz"
+TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json.gz"
+TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json.gz"
+TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json.gz"
 INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
@@ -154,11 +171,9 @@ ELASTICSEARCH_TYPE = "document"
 
 
 class ElasticsearchIndex:
-    CATEGORY = "category"
     PRODUCT = "product"
 
     SUPPORTED_INDICES = {
-        CATEGORY: (PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"),
         PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
     }
 

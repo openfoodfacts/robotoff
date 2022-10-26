@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -248,7 +248,7 @@ def test_sort_predictions(predictions, order):
     ],
 )
 def test_select_deepest_taxonomized_candidates(candidates, taxonomy_name, kept_indices):
-    taxonomy = get_taxonomy(taxonomy_name)
+    taxonomy = get_taxonomy(taxonomy_name, offline=True)
     assert select_deepest_taxonomized_candidates(candidates, taxonomy) == [
         candidates[idx] for idx in kept_indices
     ]
@@ -316,20 +316,38 @@ class TestInsightImporter:
     def test_get_insight_update_duplicates(self):
         candidates = [
             ProductInsight(
-                barcode=DEFAULT_BARCODE, type=InsightType.label, value_tag="tag1"
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/1.jpg",
             ),
             ProductInsight(
-                barcode=DEFAULT_BARCODE, type=InsightType.label, value_tag="tag1"
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/2.jpg",
             ),
             ProductInsight(
-                barcode=DEFAULT_BARCODE, type=InsightType.label, value_tag="tag2"
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/2.jpg",
+                predictor="PREDICTOR",
+            ),
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag2",
+                source_image="/1/1.jpg",
             ),
         ]
         (
             to_create,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(candidates, [])
-        assert to_create == [candidates[0], candidates[2]]
+        # the third candidate has a more recent image and a predictor so it
+        # has higher priority
+        assert to_create == [candidates[2], candidates[3]]
         assert to_delete == []
 
     def test_get_insight_update_conflicting_reference(self):
@@ -345,11 +363,13 @@ class TestInsightImporter:
                 value_tag="tag1",
                 id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
             ),
+            # annotated product should be kept
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag3",
                 id=uuid.UUID("f3fca6c5-15be-4bd7-bd72-90c7abd2ed4c"),
+                annotation=1,
             ),
         ]
         candidates = [
@@ -372,9 +392,9 @@ class TestInsightImporter:
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(
             candidates, references
         )
-        # only the insight with a different value_tag is removed / created
-        assert to_create == [candidates[1]]
-        assert to_delete == [references[1]]
+        # only the existing annotated insight is kept
+        assert to_create == [candidates[0], candidates[1]]
+        assert to_delete == [references[0]]
 
     def test_get_insight_update_annotated_reference(self):
         class TestInsightImporter(InsightImporter):
@@ -702,8 +722,6 @@ class TestPackagerCodeInsightImporter:
 
 
 class TestLabelInsightImporter:
-    # TODO: this test currently depends on external data, it should not !
-
     def test_get_type(self):
         assert LabelInsightImporter.get_type() == InsightType.label
 
@@ -721,7 +739,11 @@ class TestLabelInsightImporter:
             ("en:fsc", {"en:organic"}, False),
         ],
     )
-    def test_is_parent_label(self, label, to_check_labels, expected):
+    def test_is_parent_label(self, label, to_check_labels, expected, mocker):
+        mocker.patch(
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("label", offline=True),
+        )
         assert LabelInsightImporter.is_parent_label(label, to_check_labels) is expected
 
     @pytest.mark.parametrize(
@@ -772,7 +794,11 @@ class TestLabelInsightImporter:
             ),
         ],
     )
-    def test_generate_candidates(self, predictions, product, expected):
+    def test_generate_candidates(self, predictions, product, expected, mocker):
+        mocker.patch(
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("label", offline=True),
+        )
         candidates = list(
             LabelInsightImporter.generate_candidates(product, predictions)
         )
@@ -802,7 +828,11 @@ class TestCategoryImporter:
             ("en:dairies", {"en:snacks"}, False),
         ],
     )
-    def test_is_parent_category(self, category, to_check_categories, expected):
+    def test_is_parent_category(self, category, to_check_categories, expected, mocker):
+        mocker.patch(
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("category", offline=True),
+        )
         assert (
             CategoryImporter.is_parent_category(category, to_check_categories)
             is expected
@@ -854,13 +884,37 @@ class TestCategoryImporter:
             ),
         ],
     )
-    def test_generate_candidates(self, predictions, product, expected_value_tags):
+    def test_generate_candidates(
+        self, predictions, product, expected_value_tags, mocker
+    ):
+        mocker.patch(
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("category", offline=True),
+        )
         candidates = list(CategoryImporter.generate_candidates(product, predictions))
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected_value_tags)
 
         for candidate, expected_value_tag in zip(candidates, expected_value_tags):
             assert candidate.value_tag == expected_value_tag
+
+    @pytest.mark.parametrize(
+        "value_tag,expected_campaign",
+        [
+            ("en:frozen-french-fries-to-deep-fry", ["agribalyse-category"]),
+            ("en:breads", []),
+        ],
+    )
+    def test_add_campaign(self, value_tag: str, expected_campaign: List[str], mocker):
+        mocker.patch(
+            "robotoff.insights.importer.get_taxonomy",
+            return_value=get_taxonomy("category", offline=True),
+        )
+        insight = ProductInsight(value_tag=value_tag)
+        CategoryImporter.add_optional_fields(
+            insight, Product({"code": DEFAULT_BARCODE})
+        )
+        assert insight.campaign == expected_campaign
 
 
 class TestProductWeightImporter:

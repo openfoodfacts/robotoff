@@ -141,7 +141,7 @@ def load_labelmap(path: str):
     """
     with open(path, "r") as fid:
         label_map_string = fid.read()
-        label_map = string_int_label_map_pb2.StringIntLabelMap()
+        label_map = string_int_label_map_pb2.StringIntLabelMap()  # type: ignore
         try:
             text_format.Merge(label_map_string, label_map)
         except text_format.ParseError:

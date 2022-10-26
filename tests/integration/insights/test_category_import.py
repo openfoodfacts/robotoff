@@ -21,12 +21,15 @@ def _set_up_and_tear_down(peewee_db):
         barcode=barcode1,
         type="category",
         value_tag="en:salmons",
+        automatic_processing=False,
+        predictor="matcher",
     )
     ProductInsightFactory(
         id=insight_id1,
         barcode=barcode1,
         type="category",
         value_tag="en:salmons",
+        predictor="matcher",
     )
     # Run the test case.
     yield
@@ -42,9 +45,9 @@ def matcher_prediction(category):
         data={
             "lang": "en",
             "product_name": "test",
-            "model": "matcher",
         },
         automatic_processing=False,
+        predictor="matcher",
     )
 
 
@@ -53,8 +56,9 @@ def neural_prediction(category, confidence=0.7, auto=False):
         barcode=barcode1,
         type=PredictionType.category,
         value_tag=category,
-        data={"lang": "xx", "model": "neural", "confidence": confidence},
+        data={"lang": "xx", "confidence": confidence},
         automatic_processing=auto,
+        predictor="neural",
     )
 
 
@@ -65,7 +69,7 @@ class TestCategoryImporter:
     """
 
     def fake_product_store(self):
-        return {barcode1: Product({"categories_tags": ["en:Fish"]})}
+        return {barcode1: Product({"categories_tags": ["en:fish"]})}
 
     def _run_import(self, predictions, product_store=None):
         if product_store is None:
@@ -81,28 +85,30 @@ class TestCategoryImporter:
     @pytest.mark.parametrize(
         "predictions",
         [
-            # empty list
-            [],
             # category already on product
-            [matcher_prediction("en:Fish")],
-            [neural_prediction("en:Fish")],
+            [matcher_prediction("en:fish")],
+            [neural_prediction("en:fish")],
             # category already in insights
             [matcher_prediction("en:salmons")],
             [neural_prediction("en:salmons")],
             # both
             [
-                matcher_prediction("en:Fish"),
+                matcher_prediction("en:fish"),
                 matcher_prediction("en:salmons"),
-                neural_prediction("en:Fish"),
+                neural_prediction("en:fish"),
                 neural_prediction("en:salmons"),
             ],
         ],
     )
-    def test_import_nothing(self, predictions):
+    def test_import_one_same_value_tag(self, predictions):
+        """Test when there is a single import, but the value_tag stays the
+        same."""
         imported = self._run_import(predictions)
-        assert imported == 0
+        assert imported == 1
         # no insight created
         assert ProductInsight.select().count() == 1
+        insight = ProductInsight().select().limit(1)[0]
+        assert insight.value_tag == "en:salmons"
 
     @pytest.mark.parametrize(
         "predictions",
@@ -118,7 +124,9 @@ class TestCategoryImporter:
             ],
         ],
     )
-    def test_import_one(self, predictions):
+    def test_import_one_different_value_tag(self, predictions):
+        """Test when a more precise category is available as prediction: the
+        prediction should be used as insight instead of the less precise one."""
         imported = self._run_import(predictions)
         assert imported == 1
         # no insight created

@@ -4,6 +4,7 @@ import os
 import uuid
 from typing import Dict, Iterable
 
+import requests.exceptions
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -11,7 +12,6 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
-from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
@@ -20,6 +20,7 @@ from robotoff.insights.annotate import (
 from robotoff.insights.importer import import_insights
 from robotoff.metrics import ensure_influx_database, save_facet_metrics
 from robotoff.models import ProductInsight, with_db
+from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
     Product,
@@ -202,11 +203,14 @@ def _refresh_elasticsearch():
 # this job does no use database
 def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
-
-    _download_product_dataset()
-    # Elasticsearch is dependent on the availability of the PO product dump, i.e.
-    # it it called after the download product dataset call.
-    _refresh_elasticsearch()
+    try:
+        _download_product_dataset()
+        # Elasticsearch is dependent on the availability of the product dump from Product Opener
+        # (main Open Food Facts backend)
+        # it it called after the download product dataset call.
+        _refresh_elasticsearch()
+    except requests.exceptions.RequestException:
+        logger.exception("Exception while running ES updates for categories")
 
 
 def generate_insights():

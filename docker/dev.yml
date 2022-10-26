@@ -31,16 +31,25 @@ x-robotoff-dev: &robotoff-dev
       - ./gh_pages:/opt/robotoff/gh_pages
 
 x-networks-productopener-local: &networks-productopener-local
-    # in dev we want to be able to communicatet with product opener
+    # in dev we want to be able to communicate with product opener
     # using our docker-compose environment
     networks:
-      - po_local
-      - webnet
+      po_local:
+      webnet:
 
 services:
   api:
     <<: *robotoff-dev
-    <<: *networks-productopener-local
+    networks:
+      po_local:
+        aliases:
+        # trick: make robotoff available outside and inside with same name
+        # with this alias, we can call it from inside docker with same name as outside
+        # and Product Opener will call it from a browser (outside)
+        # or from within perl code (inside)
+        - robotoff.openfoodfacts.localhost
+        - api
+      webnet:
   workers:
     <<: *robotoff-dev
     <<: *networks-productopener-local

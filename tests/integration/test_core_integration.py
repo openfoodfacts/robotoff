@@ -172,29 +172,32 @@ def test_get_unanswered_questions_list():
     insight_data1 = get_insights(keep_types=["category"])
     insight_data_items1 = [item.to_dict() for item in insight_data1]
     assert insight_data_items1[0]["id"] == product1.id
-    # assert insight_data_items1[0]["type"] == []
 
     product2 = ProductInsightFactory(type="label", value_tag="en:apricots")
     insight_data2 = get_insights(keep_types=["label"], value_tag="en:apricots")
     insight_data_items2 = [item.to_dict() for item in insight_data2]
     assert insight_data_items2[0]["id"] == product2.id
-    # assert insight_data_items2[0]["type"] == []
 
     product3 = ProductInsightFactory(type="label", value_tag="en:soups")
     insight_data3 = get_insights(keep_types=["label"], value_tag="en:soups")
     insight_data_items3 = [item.to_dict() for item in insight_data3]
     assert insight_data_items3[0]["id"] == product3.id
-    # assert insight_data_items3[0]["type"] == []
 
     product4 = ProductInsightFactory(type="category", value_tag="en:chicken")
     insight_data4 = get_insights(keep_types=["category"], value_tag="en:chicken")
     insight_data_items4 = [item.to_dict() for item in insight_data4]
     assert insight_data_items4[0]["id"] == product4.id
-    # assert insight_data_items4[0]["type"] == []
 
     insight_data5 = get_insights(keep_types=["category"])
     insight_data_items5 = [item.to_dict() for item in insight_data5]
     assert len(insight_data_items5) == 2
+
+    product6 = ProductInsightFactory(value_tag="en:raisins", countries="en:india")
+    insight_data6 = get_insights(country="en:india")
+    insight_data_items6 = [item.to_dict() for item in insight_data6]
+    assert insight_data_items6[0]["id"] == product6.id
+    assert insight_data_items6[0]["value_tag"] == "en:raisins"
+    assert insight_data_items6[0]["countries"] == "en:india"
 
 
 def test_get_logo_annotation():

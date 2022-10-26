@@ -11,6 +11,7 @@ from robotoff.insights.importer import import_insights
 from robotoff.logos import (
     LOGO_CONFIDENCE_THRESHOLDS,
     add_logos_to_ann,
+    filter_logos,
     import_logo_insights,
     save_nearest_neighbors,
 )
@@ -164,15 +165,15 @@ def run_object_detection(
     )
 
     logos = []
-    for i, item in enumerate(data):
-        if item["score"] >= 0.5:
-            logo = LogoAnnotation.create(
+    for i, item in filter_logos(data, score_threshold=0.5, iou_threshold=0.95):
+        logos.append(
+            LogoAnnotation.create(
                 image_prediction=image_prediction,
                 index=i,
                 score=item["score"],
                 bounding_box=item["bounding_box"],
             )
-            logos.append(logo)
+        )
 
     logger.info(f"{len(logos)} logos found for image {source_image}")
     if logos:
