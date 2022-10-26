@@ -53,7 +53,7 @@ def _add_vote_exclusions(
     elif exclusion.by == SkipVotedType.USERNAME:
         criteria = AnnotationVote.username == exclusion.id
     else:
-        raise ValueError("Unknown SkipVoteType: {exclusion.by}")
+        raise ValueError(f"Unknown SkipVoteType: {exclusion.by}")
 
     return query.join(
         AnnotationVote,
@@ -304,7 +304,7 @@ def save_annotation(
         return ALREADY_ANNOTATED_RESULT
 
     if not trusted_annotator:
-        verified: bool = False
+        verified = False
 
         AnnotationVote.create(
             insight_id=insight_id,
