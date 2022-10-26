@@ -185,6 +185,8 @@ paths:
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/value_tag"
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
