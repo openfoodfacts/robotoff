@@ -9,7 +9,6 @@ from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
-from robotoff.utils.types import JSONType
 
 db = PostgresqlExtDatabase(
     settings.POSTGRES_DB,
@@ -161,16 +160,6 @@ class ProductInsight(BaseModel):
     # Hunger Games) on a subset of products. Each product have 0+ campaign
     # tags
     campaign = BinaryJSONField(null=True, index=True, default=list)
-
-    def serialize(self) -> JSONType:
-        return {
-            "id": str(self.id),
-            "type": self.type,
-            "barcode": self.barcode,
-            "countries": self.countries,
-            "source_image": self.source_image,
-            **self.data,
-        }
 
 
 class Prediction(BaseModel):
