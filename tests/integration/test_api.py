@@ -175,7 +175,7 @@ def test_annotate_insight_authenticated(client):
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
-            "annotation": -1,
+            "annotation": 0,
         },
         headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
     )
@@ -197,11 +197,42 @@ def test_annotate_insight_authenticated(client):
         .dicts()
         .iterator()
     )
-    assert insight.items() > {"username": "a", "annotation": -1, "n_votes": 0}.items()
+    assert insight.items() > {"username": "a", "annotation": 0, "n_votes": 0}.items()
     assert "completed_at" in insight
 
     # check if "annotated_result" is saved
     assert insight["annotated_result"] == 1
+
+
+def test_annotate_insight_authenticated_ignore(client):
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": insight_id,
+            "annotation": -1,
+        },
+        headers={"Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")},
+    )
+
+    assert result.status_code == 200
+    assert result.json == {
+        "status_code": 9,
+        "status": "vote_saved",
+        "description": "the annotation vote was saved",
+    }
+
+    votes = list(AnnotationVote.select())
+    assert len(votes) == 1
+
+    insight = next(
+        ProductInsight.select()
+        .where(ProductInsight.id == insight_id)
+        .dicts()
+        .iterator()
+    )
+    assert (
+        insight.items() > {"username": None, "annotation": None, "n_votes": 0}.items()
+    )
 
 
 def test_annotate_insight_not_enough_votes(client):
@@ -209,7 +240,7 @@ def test_annotate_insight_not_enough_votes(client):
         "/api/v1/insights/annotate",
         params={
             "insight_id": insight_id,
-            "annotation": -1,
+            "annotation": 1,
             "device_id": "voter1",
         },
     )
@@ -225,7 +256,7 @@ def test_annotate_insight_not_enough_votes(client):
     votes = list(AnnotationVote.select().dicts())
     assert len(votes) == 1
 
-    assert votes[0]["value"] == -1
+    assert votes[0]["value"] == 1
     assert votes[0]["username"] is None
     assert votes[0]["device_id"] == "voter1"
 
@@ -254,8 +285,13 @@ def test_annotate_insight_majority_annotation(client):
     )
     AnnotationVoteFactory(
         insight_id=insight_id,
-        value=-1,
+        value=0,
         device_id="no-voter1",
+    )
+    AnnotationVoteFactory(
+        insight_id=insight_id,
+        value=-1,
+        device_id="ignore-voter1",
     )
 
     result = client.simulate_post(
@@ -276,7 +312,7 @@ def test_annotate_insight_majority_annotation(client):
     }
 
     votes = list(AnnotationVote.select())
-    assert len(votes) == 4
+    assert len(votes) == 5
 
     insight = next(
         ProductInsight.select()
@@ -285,7 +321,7 @@ def test_annotate_insight_majority_annotation(client):
         .iterator()
     )
     # The insight should be annoted with '1', with a None username since this was resolved with an
-    # anonymous vote.
+    # anonymous vote. `n_votes = 4, as -1 votes are not considered
     assert insight.items() > {"annotation": 1, "username": None, "n_votes": 4}.items()
 
 
@@ -304,7 +340,7 @@ def test_annotate_insight_opposite_votes(client):
     )
     AnnotationVoteFactory(
         insight_id=insight_id,
-        value=-1,
+        value=0,
         device_id="no-voter1",
     )
 
@@ -313,7 +349,7 @@ def test_annotate_insight_opposite_votes(client):
         params={
             "insight_id": insight_id,
             "device_id": "no-voter2",
-            "annotation": -1,
+            "annotation": 0,
             "update": False,  # disable actually updating the product in PO.
         },
     )
@@ -334,9 +370,9 @@ def test_annotate_insight_opposite_votes(client):
         .dicts()
         .iterator()
     )
-    # The insight should be annoted with '0', with a None username since this was resolved with an
+    # The insight should be annoted with '-1', with a None username since this was resolved with an
     # anonymous vote.
-    assert insight.items() > {"annotation": 0, "username": None, "n_votes": 4}.items()
+    assert insight.items() > {"annotation": -1, "username": None, "n_votes": 4}.items()
 
 
 # This test checks for handling of cases where we have 3 votes for one annotation,
@@ -355,12 +391,12 @@ def test_annotate_insight_majority_vote_overridden(client):
     )
     AnnotationVoteFactory(
         insight_id=insight_id,
-        value=-1,
+        value=0,
         device_id="no-voter1",
     )
     AnnotationVoteFactory(
         insight_id=insight_id,
-        value=-1,
+        value=0,
         device_id="no-voter2",
     )
 
@@ -369,7 +405,7 @@ def test_annotate_insight_majority_vote_overridden(client):
         params={
             "insight_id": insight_id,
             "device_id": "no-voter3",
-            "annotation": -1,
+            "annotation": 0,
             "update": False,  # disable actually updating the product in PO.
         },
     )
@@ -392,7 +428,7 @@ def test_annotate_insight_majority_vote_overridden(client):
     )
     # The insight should be annoted with '0', with a None username since this was resolved with an
     # anonymous vote.
-    assert insight.items() > {"annotation": 0, "username": None, "n_votes": 5}.items()
+    assert insight.items() > {"annotation": -1, "username": None, "n_votes": 5}.items()
 
 
 def test_annotate_insight_anonymous_then_authenticated(client, mocker):
@@ -559,7 +595,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
             "/api/v1/insights/annotate",
             params={
                 "insight_id": insight_id,
-                "annotation": -1,
+                "annotation": 0,
                 "device_id": "test-device",
             },
             headers={
