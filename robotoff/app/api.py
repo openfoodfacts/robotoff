@@ -183,7 +183,7 @@ class RandomInsightResource:
         country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
         server_domain: Optional[str] = req.get_param("server_domain")
-        count: int = req.get_param_as_int("count", default=1, min_value=1, max_value=50)
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
         predictor = req.get_param("predictor")
 
         keep_types = [insight_type] if insight_type else None
@@ -918,14 +918,14 @@ class WebhookProductResource:
 
 
 class ProductQuestionsResource:
-    """Get a question about a product to confirm/infirm an insight
+    """Get questions about a product to confirm/infirm an insight
 
     see also doc/explanation/questions.md
     """
 
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
         response: JSONType = {}
-        count: int = req.get_param_as_int("count", min_value=1) or 1
+        count: int = req.get_param_as_int("count", min_value=1, default=25)
         lang: str = req.get_param("lang", default="en")
         # If the device_id is not provided as a request parameter, we use the
         # hash of the IPs as a backup.
