@@ -12,6 +12,7 @@ american
 appel
 artisanal
 aucune
+asia
 // 'auchan' is the brand to use
 auchan production
 avenue
@@ -28,6 +29,7 @@ crisp
 cristal
 crunch
 cucina
+delice
 delta
 deluxe
 demeter
@@ -46,11 +48,13 @@ frigo
 fromage
 fruite
 geant
+gold
 golden
 gourmet
 granola
 grenade
 gusto
+homemade
 ice-tea
 ideal
 italia
@@ -100,7 +104,11 @@ the-coca-cola-company
 thomas
 tradition
 tropical
+tous les jours
 valor
 vegan
 veritas
 ice tea
+// wrigley's is the correct brand
+wrigley
+wal-mart-stores
