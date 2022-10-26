@@ -98,8 +98,8 @@ class ProductInsightResource:
         server_domain: Optional[str] = req.get_param("server_domain")
         response: JSONType = {}
         insights = [
-            i.serialize()
-            for i in get_insights(
+            insight.to_dict()
+            for insight in get_insights(
                 barcode=barcode, server_domain=server_domain, limit=None
             )
         ]
@@ -197,7 +197,7 @@ class RandomInsightResource:
             predictor=predictor,
         )
 
-        insights = [i.serialize() for i in get_insights_(limit=count)]
+        insights = [insight.to_dict() for insight in get_insights_(limit=count)]
         response["count"] = get_insights_(count=True)
 
         if not insights:
