@@ -683,18 +683,15 @@ class ImageLogoSearchResource:
         if annotated is not None:
             where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
 
+        if min_confidence is not None:
+            where_clauses.append(LogoAnnotation.score >= min_confidence)
+
         join_image_prediction = False
         join_image_model = False
 
         if server_domain:
             where_clauses.append(ImageModel.server_domain == server_domain)
             join_image_model = True
-
-        if min_confidence is not None:
-            # TODO(raphael): We should filter based on individual logo object confidence
-            # and not on image object with the maximum confidence
-            where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
-            join_image_prediction = True
 
         if barcode is not None:
             where_clauses.append(ImageModel.barcode == barcode)
