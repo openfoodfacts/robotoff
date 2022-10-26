@@ -19,7 +19,7 @@ with gzip.open(str(OUTPUT_PATH), "wb") as output_f:
     for i, image_path_str in enumerate(
         glob.iglob("{}/**/*.jpg".format(ROOT_DIR), recursive=True)
     ):
-        if i % 1000 == 0:
+        if i % 10000 == 0:
             print("step: {}, added: {}".format(i, added))
 
         image_path = Path(image_path_str)
