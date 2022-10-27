@@ -62,6 +62,7 @@ paths:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
         - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/predictor"
       responses:
         "200":
           description: The queried insights
@@ -102,6 +103,7 @@ paths:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
         - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/predictor"
       responses:
         "200":
           description: ""
@@ -129,6 +131,7 @@ paths:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
         - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/predictor"
       responses:
         "200":
           description: "The number of questions grouped by `value_tag`"
@@ -182,6 +185,9 @@ paths:
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/value_tag"
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/predictor"
       responses:
         "200":
           description: ""
@@ -702,11 +708,19 @@ components:
     campaign:
       name: campaign
       in: query
-      description: Filter by annotation campaign.
+      description: Filter by annotation campaign
         An annotation campaign allows to only retrieve questions about selected products, based on arbitrary criteria
       schema:
         type: string
         example: agribalyse-category
+    predictor:
+      name: predictor
+      in: query
+      description: Filter by predictor value
+        A predictor refers to the model/method that was used to generate the prediction.
+      schema:
+        type: string
+        example: universal-logo-detector
     barcode_path:
       name: barcode
       in: path
