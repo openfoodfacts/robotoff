@@ -15,7 +15,7 @@ class FakeNutriscoreModel(RemoteModel):
         self.raw_result = raw_result
 
     def detect_from_image(
-        self, image: np.ndarray, output_image: bool = False
+        self, image: Image.Image, output_image: bool = False
     ) -> ObjectDetectionRawResult:
         return self.raw_result
 
@@ -35,7 +35,7 @@ def test_extract_nutriscore_label_automatic(
         detection_boxes=np.array([[1, 2, 3, 4]]),
         detection_scores=np.array([0.8]),
         detection_classes=np.array([1]),
-        category_index={1: {"id": 1, "name": "nutriscore-a"}},
+        label_names=["NULL", "nutriscore-a"],
     )
     mocker.patch(
         "robotoff.prediction.object_detection.core.ObjectDetectionModelRegistry.get",
