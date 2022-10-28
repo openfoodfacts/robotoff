@@ -2,20 +2,20 @@ import dataclasses
 import pathlib
 from typing import Dict, List, Optional, Tuple
 
+import cachetools
+import grpc
 import numpy as np
-import PIL
 from PIL import Image
+from tritonclient.grpc import service_pb2, service_pb2_grpc
 
 from robotoff import settings
-from robotoff.prediction.object_detection.utils import label_map_util
 from robotoff.prediction.object_detection.utils import visualization_utils as vis_util
-from robotoff.prediction.object_detection.utils.label_map_util import CategoryIndex
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
-LABEL_MAP_NAME = "labels.pbtxt"
+LABEL_NAMES_FILENAME = "labels.txt"
 
 
 @dataclasses.dataclass
@@ -31,9 +31,9 @@ class ObjectDetectionRawResult:
     detection_boxes: np.ndarray
     detection_scores: np.ndarray
     detection_classes: np.ndarray
-    category_index: CategoryIndex
+    label_names: List[str]
     detection_masks: Optional[np.ndarray] = None
-    boxed_image: Optional[PIL.Image.Image] = None
+    boxed_image: Optional[Image.Image] = None
 
     def select(self, threshold: Optional[float] = None) -> List[ObjectDetectionResult]:
         if threshold is None:
@@ -49,7 +49,7 @@ class ObjectDetectionRawResult:
             selected_boxes, selected_scores, selected_classes
         ):
             label_int = int(label)
-            label_str = self.category_index.get(label_int, {}).get("name")
+            label_str = self.label_names[label_int]
             if label_str is not None:
                 result = ObjectDetectionResult(
                     bounding_box=tuple(bounding_box.tolist()),
@@ -64,7 +64,7 @@ class ObjectDetectionRawResult:
         return [dataclasses.asdict(r) for r in self.select(threshold)]
 
 
-def convert_image_to_array(image: PIL.Image.Image) -> np.ndarray:
+def convert_image_to_array(image: Image.Image) -> np.ndarray:
     if image.mode != "RGB":
         image = image.convert("RGB")
 
@@ -79,7 +79,7 @@ def add_boxes_and_labels(image_array: np.ndarray, raw_result: ObjectDetectionRaw
         raw_result.detection_boxes,
         raw_result.detection_classes,
         raw_result.detection_scores,
-        raw_result.category_index,
+        raw_result.label_names,
         instance_masks=raw_result.detection_masks,
         use_normalized_coordinates=True,
         line_thickness=5,
@@ -100,37 +100,78 @@ def resize_image(image: Image.Image, max_size: Tuple[int, int]) -> Image.Image:
     return image
 
 
+@cachetools.cached(cachetools.Cache(maxsize=1))
+def get_triton_inference_stub():
+    channel = grpc.insecure_channel(settings.TRITON_URI)
+    return service_pb2_grpc.GRPCInferenceServiceStub(channel)
+
+
 class RemoteModel:
-    def __init__(self, name: str, label_path: pathlib.Path):
+    def __init__(self, name: str, label_names: List[str]):
         self.name: str = name
-        label_map = label_map_util.load_labelmap(str(label_path))
-        self.categories = label_map_util.convert_label_map_to_categories(
-            label_map, max_num_classes=1000
-        )
-        self.category_index: CategoryIndex = label_map_util.create_category_index(
-            self.categories
-        )
+        self.label_names = label_names
 
     def detect_from_image(
-        self, image: np.ndarray, output_image: bool = False
+        self, image: Image.Image, output_image: bool = False
     ) -> ObjectDetectionRawResult:
         resized_image = resize_image(image, settings.OBJECT_DETECTION_IMAGE_MAX_SIZE)
         image_array = convert_image_to_array(resized_image)
-        data = {
-            "signature_name": "serving_default",
-            "instances": np.expand_dims(image_array, 0).tolist(),
-        }
+        grpc_stub = get_triton_inference_stub()
+        request = service_pb2.ModelInferRequest()
+        request.model_name = self.name
 
-        r = http_session.post(
-            "{}/{}:predict".format(settings.TF_SERVING_BASE_URL, self.name), json=data
+        image_input = service_pb2.ModelInferRequest().InferInputTensor()
+        image_input.name = "inputs"
+        image_input.datatype = "UINT8"
+        image_input.shape.extend([1, image_array.shape[0], image_array.shape[1], 3])
+        request.inputs.extend([image_input])
+
+        for output_name in (
+            "num_detections",
+            "detection_classes",
+            "detection_scores",
+            "detection_boxes",
+        ):
+            output = service_pb2.ModelInferRequest().InferRequestedOutputTensor()
+            output.name = output_name
+            request.outputs.extend([output])
+
+        request.raw_input_contents.extend([image_array.tobytes()])
+        response = grpc_stub.ModelInfer(request)
+
+        if len(response.outputs) != 4:
+            raise Exception(f"expected 4 output, got {len(response.outputs)}")
+
+        if len(response.raw_output_contents) != 4:
+            raise Exception(
+                f"expected 4 raw output content, got {len(response.raw_output_contents)}"
+            )
+
+        output_index = {output.name: i for i, output in enumerate(response.outputs)}
+        num_detections = (
+            np.frombuffer(
+                response.raw_output_contents[output_index["num_detections"]],
+                dtype=np.float32,
+            )
+            .reshape((1, 1))
+            .astype(np.int)[0][0]
         )
-        r.raise_for_status()
-        response = r.json()
-        prediction = response["predictions"][0]
-        num_detections = int(prediction["num_detections"])
-        detection_classes = np.array(prediction["detection_classes"], dtype=np.uint8)
-        detection_scores = np.array(prediction["detection_scores"])
-        detection_boxes = np.array(prediction["detection_boxes"])
+        detection_scores = np.frombuffer(
+            response.raw_output_contents[output_index["detection_scores"]],
+            dtype=np.float32,
+        ).reshape((1, -1))[0]
+        detection_classes = (
+            np.frombuffer(
+                response.raw_output_contents[output_index["detection_classes"]],
+                dtype=np.float32,
+            )
+            .reshape((1, -1))
+            .astype(np.int)
+        )[0]
+        detection_boxes = np.frombuffer(
+            response.raw_output_contents[output_index["detection_boxes"]],
+            dtype=np.float32,
+        ).reshape((1, -1, 4))[0]
 
         result = ObjectDetectionRawResult(
             num_detections=num_detections,
@@ -138,7 +179,7 @@ class RemoteModel:
             detection_boxes=detection_boxes,
             detection_scores=detection_scores,
             detection_masks=None,
-            category_index=self.category_index,
+            label_names=self.label_names,
         )
 
         if output_image:
@@ -149,31 +190,34 @@ class RemoteModel:
 
 class ObjectDetectionModelRegistry:
     models: Dict[str, RemoteModel] = {}
+    _loaded = False
 
     @classmethod
     def get_available_models(cls) -> List[str]:
+        cls.load_all()
         return list(cls.models.keys())
 
     @classmethod
     def load_all(cls):
-        for model_name in settings.OBJECT_DETECTION_TF_SERVING_MODELS:
-            file_path = settings.TF_SERVING_MODELS_PATH / model_name
+        if cls._loaded:
+            return
+        for model_name in settings.OBJECT_DETECTION_MODEL_VERSION:
+            file_path = settings.MODELS_DIR / model_name
             if file_path.is_dir():
-                logger.info("TF model '{}' found".format(model_name))
+                logger.info(f"Model '{model_name}' found")
                 cls.models[model_name] = cls.load(model_name, file_path)
             else:
-                logger.info("Missing TF model: '{}'".format(model_name))
+                logger.info(f"Missing model: '{model_name}'")
+        cls._loaded = True
 
     @classmethod
     def load(cls, name: str, model_dir: pathlib.Path) -> RemoteModel:
-        label_path = model_dir / LABEL_MAP_NAME
-        model = RemoteModel(name, label_path)
+        label_names = ["NULL"] + list(text_file_iter(model_dir / LABEL_NAMES_FILENAME))
+        model = RemoteModel(name, label_names)
         cls.models[name] = model
         return model
 
     @classmethod
     def get(cls, name: str) -> RemoteModel:
+        cls.load_all()
         return cls.models[name]
-
-
-ObjectDetectionModelRegistry.load_all()

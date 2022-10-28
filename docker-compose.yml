@@ -36,6 +36,8 @@ x-robotoff-base-env: &robotoff-base-env
   SENTRY_DSN:
   ELASTICSEARCH_HOSTS:
   TF_SERVING_HOST:
+  TRITON_HOST:
+
 
 services:
   api:
