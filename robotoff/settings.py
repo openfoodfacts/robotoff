@@ -258,15 +258,14 @@ _tf_serving_host = os.environ.get("TF_SERVING_HOST", "localhost")
 _tf_serving_http_port = os.environ.get("TF_SERVING_PORT", "8501")
 TF_SERVING_BASE_URL = f"http://{_tf_serving_host}:{_tf_serving_http_port}/v1/models"
 
-TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
+
+_triton_host = os.environ.get("TRITON_HOST", "localhost")
+_triton_grpc_port = os.environ.get("TRITON_PORT", "8001")
+TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
+
+MODELS_DIR = PROJECT_DIR / "models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
-
-OBJECT_DETECTION_TF_SERVING_MODELS = (
-    "nutriscore",
-    "nutrition-table",
-    "universal-logo-detector",
-)
 
 OBJECT_DETECTION_MODEL_VERSION = {
     "nutriscore": "tf-nutriscore-1.0",

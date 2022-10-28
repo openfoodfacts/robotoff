@@ -217,11 +217,11 @@ class ImagePrediction(BaseModel):
     """Table to store computer vision predictions (object detection,
     image segmentation,...) made by custom models.
 
-    They are created by api `ImagePredictorResource`, `ImagePredictionImporterResource`
+    They are created by API `ImagePredictorResource`, `ImagePredictionImporterResource`
     or cli `import_logos`
 
-    Predictions come from a model, from settings `OBJECT_DETECTION_TF_SERVING_MODELS`
-    this can be a nutriscore, a logo, etc...
+    Predictions come from a model, see `OBJECT_DETECTION_MODEL_VERSION` in
+    settings.py for available models.
     """
 
     type = peewee.CharField(max_length=256)

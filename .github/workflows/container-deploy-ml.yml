@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - tf-serving-deploy-*
+      - ml-deploy-*
     # only update on push if ml.yml changed (does not apply to tags)
     paths:
       - docker/ml.yml
