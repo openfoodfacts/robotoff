@@ -103,12 +103,17 @@ class TestCategoryImporter:
     def test_import_one_same_value_tag(self, predictions):
         """Test when there is a single import, but the value_tag stays the
         same."""
+        original_insights = ProductInsight.select()
+        assert len(original_insights) == 1
+        original_timestamp = original_insights[0].timestamp
         imported = self._run_import(predictions)
-        assert imported == 1
+        assert imported == 0
         # no insight created
-        assert ProductInsight.select().count() == 1
-        insight = ProductInsight().select().limit(1)[0]
+        insights = list(ProductInsight.select())
+        assert len(insights) == 1
+        insight = insights[0]
         assert insight.value_tag == "en:salmons"
+        assert insight.timestamp > original_timestamp
 
     @pytest.mark.parametrize(
         "predictions",
