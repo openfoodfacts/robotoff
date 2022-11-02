@@ -290,7 +290,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 raise ValueError(f"unexpected prediction type: '{prediction.type}'")
 
         inserts = 0
-        for to_create, to_delete in cls.generate_insights(
+        for to_create, to_update, to_delete in cls.generate_insights(
             predictions, server_domain, automatic, product_store
         ):
             if to_delete:
@@ -306,6 +306,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     50,
                 )
 
+            for insight in to_update:
+                insight.save()
+
         return inserts
 
     @classmethod
@@ -315,9 +318,11 @@ class InsightImporter(metaclass=abc.ABCMeta):
         server_domain: str,
         automatic: bool,
         product_store: DBProductStore,
-    ) -> Iterator[Tuple[List[ProductInsight], List[ProductInsight]]]:
+    ) -> Iterator[
+        Tuple[List[ProductInsight], List[ProductInsight], List[ProductInsight]]
+    ]:
         """Given a list of predictions, yield tuples of ProductInsight to
-        create and delete.
+        create, update and delete.
 
         It calls the `generate_candidates` method, specific to each insight type
         (and implemented in sub-classes).
@@ -337,7 +342,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     f"Product {barcode} not found in DB, deleting existing insights"
                 )
                 if references:
-                    yield [], references
+                    yield [], [], references
                 continue
 
             product_predictions = sort_predictions(group)
@@ -367,14 +372,27 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     # Note: we could add vote annotation for anonymous user,
                     # but it should be done outside this loop. It's not yet implemented
 
-            to_create, to_delete = cls.get_insight_update(candidates, references)
+            to_create, to_update, to_delete = cls.get_insight_update(
+                candidates, references
+            )
 
             for insight in to_create:
                 if not automatic:
                     insight.automatic_processing = False
                 cls.add_fields(insight, product, timestamp, server_domain, server_type)
 
-            yield to_create, to_delete
+            for insight, reference_insight in to_update:
+                if not automatic:
+                    insight.automatic_processing = False
+                # Keep `reference_insight` in DB (as the value/value_tag/source_image is the same),
+                # but update information from `insight`.
+                # This way, we don't unnecessarily insert/delete rows in ProductInsight table
+                # and we keep associated votes
+                cls.update_fields(insight, reference_insight, product, timestamp)
+
+            yield to_create, [
+                reference_insight for (_, reference_insight) in to_update
+            ], to_delete
 
     @classmethod
     @abc.abstractmethod
@@ -399,20 +417,31 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def get_insight_update(
         cls, candidates: List[ProductInsight], reference_insights: List[ProductInsight]
-    ) -> Tuple[List[ProductInsight], List[ProductInsight]]:
+    ) -> Tuple[
+        List[ProductInsight],
+        List[Tuple[ProductInsight, ProductInsight]],
+        List[ProductInsight],
+    ]:
         """Return a tuple containing:
-        - a list of ProductInsight to import
+        - a list of ProductInsight to create
+        - a list of ProductInsight to update, as (insight, reference_insight)
+          tuples, where `insight` is the candidate and `reference_insight` is
+          the insight already in DB
         - a list of ProductInsight to delete
 
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
         """
-        to_create: List[ProductInsight] = []
+        to_create_or_update: List[Tuple[ProductInsight, Optional[ProductInsight]]] = []
         # Keep already annotated insights in DB
         to_keep_ids = set(
             reference.id
             for reference in reference_insights
+            # Don't delete already annotated insights
             if reference.annotation is not None
+            # Don't overwrite an insight that is going to be applied
+            # automatically soon
+            or reference.automatic_processing is True
         )
         for candidate in sort_candidates(candidates):
             # if match is True, candidate conflicts with existing insight,
@@ -421,21 +450,53 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 cls.is_conflicting_insight(candidate, reference_insight)
                 for reference_insight in reference_insights
                 if reference_insight.annotation is not None
+                # Don't overwrite an insight that is going to be applied
+                # automatically soon
+                or reference_insight.automatic_processing is True
             )
 
             if not match:
-                for selected in to_create:
+                for selected, _ in to_create_or_update:
                     if cls.is_conflicting_insight(candidate, selected):
                         # Don't import candidate if it conflicts with an
                         # already selected candidate
                         break
                 else:
-                    to_create.append(candidate)
+                    mapping_ref_insight = None
+                    # In order for the voting system to work, we map insights to create
+                    # to existing insights with the same value/value_tag/source_image.
+                    # This way, we don't loose vote information.
+                    for reference_insight in reference_insights:
+                        if (
+                            reference_insight.annotation is None
+                            and cls.is_conflicting_insight(candidate, reference_insight)
+                            # only map to existing insight if the source image is the same,
+                            # otherwise create a new insight
+                            and candidate.source_image == reference_insight.source_image
+                        ):
+                            mapping_ref_insight = reference_insight
+                            to_keep_ids.add(reference_insight.id)
+                            break
+
+                    # If mapping_ref_insight is None, a new insight is created in DB,
+                    # Otherwise the reference insight is updated with candidate
+                    # information
+                    to_create_or_update.append((candidate, mapping_ref_insight))
 
         to_delete = [
             insight for insight in reference_insights if insight.id not in to_keep_ids
         ]
-        return to_create, to_delete
+        to_create = [
+            insight
+            for insight, ref_insight in to_create_or_update
+            if ref_insight is None
+        ]
+        to_update = [
+            (insight, ref_insight)
+            for insight, ref_insight in to_create_or_update
+            if ref_insight is not None
+        ]
+        return to_create, to_update, to_delete
 
     @classmethod
     @abc.abstractmethod
@@ -471,6 +532,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         insight.countries = product.countries_tags
         insight.brands = product.brands_tags
         insight.n_votes = 0
+        insight.unique_scans_n = product.unique_scans_n
 
         if insight.automatic_processing:
             insight.process_after = timestamp + datetime.timedelta(
@@ -478,6 +540,36 @@ class InsightImporter(metaclass=abc.ABCMeta):
             )
 
         cls.add_optional_fields(insight, product)
+
+    @classmethod
+    def update_fields(
+        cls,
+        insight: ProductInsight,
+        reference_insight: ProductInsight,
+        product: Product,
+        timestamp: datetime.datetime,
+    ):
+        """Update `reference_insight` fields with data from `insight`.
+
+        This is used to refresh `reference_insight` with potentially fresher
+        information, while avoiding row deletion/insertion each time
+        `import_insights` is called.
+        """
+        cls.add_fields(
+            insight,
+            product,
+            timestamp,
+            reference_insight.server_domain,
+            reference_insight.server_type,
+        )
+
+        for field_name in (
+            key
+            for key in insight.__data__.keys()
+            if key not in ("id", "barcode", "type", "server_domain", "server_type")
+        ):
+            if getattr(insight, field_name) != getattr(reference_insight, field_name):
+                setattr(reference_insight, field_name, getattr(insight, field_name))
 
     @classmethod
     def add_optional_fields(cls, insight: ProductInsight, product: Product):

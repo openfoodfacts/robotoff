@@ -278,23 +278,23 @@ class TestInsightImporter:
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag1",
-                id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
                 annotation=-1,
             ),
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag2",
-                id=uuid.UUID("f3fca6c5-15be-4bd7-bd72-90c7abd2ed4c"),
             ),
         ]
         (
             to_create,
+            to_update,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(
             candidates, references
         )
-        assert to_create == candidates
+        assert to_create == []
+        assert to_update == []
         assert to_delete == [references[1]]
 
     def test_get_insight_update_no_reference(self):
@@ -308,9 +308,11 @@ class TestInsightImporter:
         ]
         (
             to_create,
+            to_update,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(candidates, [])
         assert to_create == candidates
+        assert to_update == []
         assert to_delete == []
 
     def test_get_insight_update_duplicates(self):
@@ -343,32 +345,27 @@ class TestInsightImporter:
         ]
         (
             to_create,
+            to_update,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(candidates, [])
         # the third candidate has a more recent image and a predictor so it
         # has higher priority
         assert to_create == [candidates[2], candidates[3]]
         assert to_delete == []
+        assert to_update == []
 
     def test_get_insight_update_conflicting_reference(self):
-        class TestInsightImporter(InsightImporter):
-            @classmethod
-            def is_conflicting_insight(cls, candidate, reference):
-                return candidate.value_tag == reference.value_tag
-
         references = [
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag1",
-                id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
             ),
             # annotated product should be kept
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag3",
-                id=uuid.UUID("f3fca6c5-15be-4bd7-bd72-90c7abd2ed4c"),
                 annotation=1,
             ),
         ]
@@ -377,37 +374,110 @@ class TestInsightImporter:
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag1",
-                id=uuid.UUID("5d71c235-2304-4473-ba1c-63f3569f44a0"),
             ),
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag2",
-                id=uuid.UUID("c984b252-fb31-41ea-b78e-6ca08b9f5e4b"),
             ),
         ]
         (
             to_create,
+            to_update,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(
             candidates, references
         )
         # only the existing annotated insight is kept
-        assert to_create == [candidates[0], candidates[1]]
-        assert to_delete == [references[0]]
+        assert to_create == [candidates[1]]
+        assert to_delete == []
+        assert to_update == [(candidates[0], references[0])]
 
-    def test_get_insight_update_annotated_reference(self):
-        class TestInsightImporter(InsightImporter):
-            @classmethod
-            def is_conflicting_insight(cls, candidate, reference):
-                return candidate.value_tag == reference.value_tag
-
+    def test_get_insight_update_no_overwrite_automatic_processing(
+        self,
+    ):
+        """Don't overwrite an insight that is going to be applied
+        automatically soon."""
         references = [
             ProductInsight(
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag1",
-                id=uuid.UUID("a6aa784b-4d39-4baa-a16c-b2f1c9dac9f9"),
+                source_image="/1/1.jpg",
+                automatic_processing=True,
+            ),
+        ]
+        candidates = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/2.jpg",
+                automatic_processing=True,
+            ),
+        ]
+        (
+            to_create,
+            to_update,
+            to_delete,
+        ) = InsightImporterWithIsConflictingInsight.get_insight_update(
+            candidates, references
+        )
+        assert to_create == []
+        assert to_delete == []
+        assert to_update == []
+
+    def test_get_insight_update_conflicting_reference_different_source_image(
+        self,
+    ):
+        references = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/1.jpg",
+            ),
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag3",
+                automatic_processing=False,
+            ),
+        ]
+        candidates = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
+                source_image="/1/2.jpg",
+            ),
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag3",
+                automatic_processing=True,
+            ),
+        ]
+        (
+            to_create,
+            to_update,
+            to_delete,
+        ) = InsightImporterWithIsConflictingInsight.get_insight_update(
+            candidates, references
+        )
+        # for both candidate/reference couples with the same value_tag,
+        # source_image is different so we create a new insight instead of
+        # updating the old one.
+        assert to_create == [candidates[0]]
+        assert to_delete == [references[0]]
+        assert to_update == [(candidates[1], references[1])]
+
+    def test_get_insight_update_annotated_reference(self):
+        references = [
+            ProductInsight(
+                barcode=DEFAULT_BARCODE,
+                type=InsightType.label,
+                value_tag="tag1",
                 annotation=0,
             ),
         ]
@@ -416,11 +486,11 @@ class TestInsightImporter:
                 barcode=DEFAULT_BARCODE,
                 type=InsightType.label,
                 value_tag="tag2",
-                id=uuid.UUID("c984b252-fb31-41ea-b78e-6ca08b9f5e4b"),
             ),
         ]
         (
             to_create,
+            to_update,
             to_delete,
         ) = InsightImporterWithIsConflictingInsight.get_insight_update(
             candidates, references
@@ -428,6 +498,7 @@ class TestInsightImporter:
         assert to_create == candidates
         # Annotated existing insight should not be deleted
         assert to_delete == []
+        assert to_update == []
 
     def test_generate_insights_no_predictions(self):
         assert (
@@ -485,7 +556,7 @@ class TestInsightImporter:
                 product_store=FakeProductStore(),
             )
         )
-        assert generated == [([], [reference])]
+        assert generated == [([], [], [reference])]
         get_existing_insight_mock.assert_called_once()
 
     def test_generate_insights_creation_and_deletion(self, mocker):
@@ -506,7 +577,7 @@ class TestInsightImporter:
 
             @classmethod
             def get_insight_update(cls, candidates, references):
-                return candidates, references
+                return candidates, [], references
 
         reference = ProductInsight(
             barcode=DEFAULT_BARCODE, type=InsightType.category, value_tag="tag1"
@@ -541,8 +612,9 @@ class TestInsightImporter:
             )
         )
         assert len(generated) == 1
-        to_create, to_delete = generated[0]
+        to_create, to_update, to_delete = generated[0]
         assert len(to_create) == 1
+        assert len(to_update) == 0
         created_insight = to_create[0]
         assert isinstance(created_insight, ProductInsight)
         assert created_insight.automatic_processing is False
@@ -568,7 +640,7 @@ class TestInsightImporter:
 
             @classmethod
             def get_insight_update(cls, candidates, references):
-                return candidates, references
+                return candidates, [], references
 
         mocker.patch(
             "robotoff.insights.importer.get_existing_insight",
@@ -591,8 +663,9 @@ class TestInsightImporter:
             )
         )
         assert len(generated) == 1
-        to_create, to_delete = generated[0]
+        to_create, to_update, to_delete = generated[0]
         assert not to_delete
+        assert to_update == []
         assert len(to_create) == 1
         created_insight = to_create[0]
         assert isinstance(created_insight.process_after, datetime.datetime)
@@ -627,7 +700,7 @@ class TestInsightImporter:
                         type=InsightType.label.name,
                         value_tag="tag1",
                     )
-                ], [
+                ], [], [
                     ProductInsight(
                         barcode=DEFAULT_BARCODE,
                         type=InsightType.label.name,
