@@ -68,6 +68,7 @@ jobs:
           echo "COMPOSE_PROJECT_NAME=robotoff-ml" >> .env
           echo "COMPOSE_FILE=docker/ml.yml" >> .env
           echo "RESTART_POLICY=always" >> .env
+          echo "TRITON_EXPOSE_HTTP=${{ secrets.TRITON_EXPOSE_HTTP }}" >> .env
 
     - name: Start services
       uses: appleboy/ssh-action@master
