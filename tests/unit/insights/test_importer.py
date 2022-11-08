@@ -704,6 +704,22 @@ class TestPackagerCodeInsightImporter:
         assert insight.value == prediction.value
         assert insight.type == InsightType.packager_code
 
+    def test_generate_asc_candidates(self):
+        prediction = Prediction(type=PredictionType.packager_code, value="ASC-C-00026")
+
+        product = Product({"emb_codes_tags": ["ASC-C-00950"]})
+
+        insight_data = list(
+            PackagerCodeInsightImporter().generate_candidates(product, [prediction])
+        )
+
+        assert len(insight_data) == 1
+        insight = insight_data[0]
+        assert isinstance(insight, ProductInsight)
+        assert insight.value == prediction.value
+        assert insight.type == InsightType.packager_code
+        assert insight.data == {}
+
 
 class TestLabelInsightImporter:
     def test_get_type(self):
