@@ -22,8 +22,8 @@ jobs:
     strategy:
       matrix:
         python-version:
-        - "3.7"
-        - "3.8"
+          - "3.7"
+          - "3.8"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -104,6 +104,7 @@ jobs:
       #----------------------------------------------
       # Upload test coverage
       #----------------------------------------------
+      - uses: actions/checkout@master
       - uses: codecov/codecov-action@v3.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
