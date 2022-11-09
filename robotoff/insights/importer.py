@@ -277,7 +277,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
         cls,
         predictions: List[Prediction],
         server_domain: str,
-        automatic: bool,
         product_store: DBProductStore,
     ) -> int:
         """Import insights, this is the main method.
@@ -291,7 +290,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
         inserts = 0
         for to_create, to_update, to_delete in cls.generate_insights(
-            predictions, server_domain, automatic, product_store
+            predictions, server_domain, product_store
         ):
             if to_delete:
                 to_delete_ids = [insight.id for insight in to_delete]
@@ -316,7 +315,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
         cls,
         predictions: List[Prediction],
         server_domain: str,
-        automatic: bool,
         product_store: DBProductStore,
     ) -> Iterator[
         Tuple[List[ProductInsight], List[ProductInsight], List[ProductInsight]]
@@ -377,13 +375,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
             )
 
             for insight in to_create:
-                if not automatic:
-                    insight.automatic_processing = False
                 cls.add_fields(insight, product, timestamp, server_domain, server_type)
 
             for insight, reference_insight in to_update:
-                if not automatic:
-                    insight.automatic_processing = False
                 # Keep `reference_insight` in DB (as the value/value_tag/source_image is the same),
                 # but update information from `insight`.
                 # This way, we don't unnecessarily insert/delete rows in ProductInsight table
@@ -1054,7 +1048,6 @@ IMPORTERS: List[Type[InsightImporter]] = [
 def import_insights(
     predictions: Iterable[Prediction],
     server_domain: str,
-    automatic: bool,
     product_store: Optional[DBProductStore] = None,
 ) -> int:
     if product_store is None:
@@ -1064,14 +1057,13 @@ def import_insights(
         predictions, product_store, server_domain
     )
     return import_insights_for_products(
-        updated_prediction_types_by_barcode, server_domain, automatic, product_store
+        updated_prediction_types_by_barcode, server_domain, product_store
     )
 
 
 def import_insights_for_products(
     prediction_types_by_barcode: Dict[str, Set[PredictionType]],
     server_domain: str,
-    automatic: bool,
     product_store: DBProductStore,
 ) -> int:
     """Re-compute insights for products with new predictions.
@@ -1096,7 +1088,7 @@ def import_insights_for_products(
                 )
             ]
             imported += importer.import_insights(
-                predictions, server_domain, automatic, product_store
+                predictions, server_domain, product_store
             )
     return imported
 
@@ -1140,7 +1132,6 @@ def import_predictions(
 def refresh_insights(
     barcode: str,
     server_domain: str,
-    automatic: bool,
     product_store: Optional[DBProductStore] = None,
 ) -> int:
     """Refresh all insights for specific product.
@@ -1155,7 +1146,6 @@ def refresh_insights(
 
     :param barcode: Barcode of the product.
     :param server_domain: The server domain associated with the predictions.
-    :param automatic: If False, no insight is applied automatically.
     :param product_store: The product store to use, defaults to None
     :return: The number of imported insights.
     """
@@ -1172,7 +1162,6 @@ def refresh_insights(
             imported += importer.import_insights(
                 [p for p in predictions if p.type in required_prediction_types],
                 server_domain,
-                automatic,
                 product_store,
             )
 
@@ -1181,13 +1170,11 @@ def refresh_insights(
 
 def refresh_all_insights(
     server_domain: str,
-    automatic: bool,
     product_store: Optional[DBProductStore] = None,
 ):
     """Refresh insights of all products for which we have predictions.
 
     :param server_domain: The server domain associated with the predictions.
-    :param automatic: If False, no insight is applied automatically.
     :param product_store: The product store to use, defaults to None
     :return: The number of imported insights.
     """
@@ -1196,7 +1183,7 @@ def refresh_all_insights(
         PredictionModel.select(fn.Distinct(PredictionModel.barcode)).tuples().iterator()
     ):
         logger.info(f"Refreshing insights for product {barcode}")
-        imported += refresh_insights(barcode, server_domain, automatic, product_store)
+        imported += refresh_insights(barcode, server_domain, product_store)
 
     return imported
 

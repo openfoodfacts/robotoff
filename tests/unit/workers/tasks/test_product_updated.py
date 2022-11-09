@@ -62,7 +62,6 @@ def test_add_category_insight_with_ml_insights(mocker):
             )
         ],
         server_domain,
-        automatic=True,
     )
 
     assert imported

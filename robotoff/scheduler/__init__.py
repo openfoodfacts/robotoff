@@ -225,9 +225,7 @@ def generate_insights():
     product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
     imported = import_insights(
-        product_predictions_iter,
-        server_domain=settings.OFF_SERVER_DOMAIN,
-        automatic=False,
+        product_predictions_iter, server_domain=settings.OFF_SERVER_DOMAIN
     )
     logger.info("{} category insights imported".format(imported))
 

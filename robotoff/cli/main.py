@@ -48,7 +48,7 @@ def regenerate_ocr_insights(
             barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
         )
 
-    imported = import_insights_(predictions, settings.OFF_SERVER_DOMAIN, automatic=True)
+    imported = import_insights_(predictions, settings.OFF_SERVER_DOMAIN)
     logger.info(f"Import finished, {imported} insights imported")
 
 
@@ -347,10 +347,10 @@ def refresh_insights(
 
     if barcode is not None:
         logger.info(f"Refreshing product {barcode}")
-        imported = refresh_insights_(barcode, server_domain, automatic=True)
+        imported = refresh_insights_(barcode, server_domain)
     else:
         logger.info("Refreshing insights of all products")
-        imported = refresh_all_insights(server_domain, automatic=True)
+        imported = refresh_all_insights(server_domain)
 
     logger.info(f"Refreshed insights: {imported}")
 
