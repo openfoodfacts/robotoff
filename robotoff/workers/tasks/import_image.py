@@ -70,7 +70,7 @@ def import_insights_from_image(
         source_image,
         barcode,
     )
-    imported = import_insights(predictions_all, server_domain, automatic=True)
+    imported = import_insights(predictions_all, server_domain)
     logger.info(f"Import finished, {imported} insights imported")
 
 

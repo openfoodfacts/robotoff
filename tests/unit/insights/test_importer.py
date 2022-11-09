@@ -30,6 +30,7 @@ from robotoff.taxonomy import get_taxonomy
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
+# 2022-02-08 16:07
 DEFAULT_UPLOADED_T = "1644332825"
 
 
@@ -506,7 +507,6 @@ class TestInsightImporter:
                 InsightImporter.generate_insights(
                     [],
                     DEFAULT_SERVER_DOMAIN,
-                    automatic=True,
                     product_store=FakeProductStore(),
                 )
             )
@@ -528,7 +528,6 @@ class TestInsightImporter:
                         )
                     ],
                     DEFAULT_SERVER_DOMAIN,
-                    automatic=True,
                     product_store=FakeProductStore(),
                 )
             )
@@ -552,7 +551,6 @@ class TestInsightImporter:
                     )
                 ],
                 DEFAULT_SERVER_DOMAIN,
-                automatic=True,
                 product_store=FakeProductStore(),
             )
         )
@@ -598,13 +596,19 @@ class TestInsightImporter:
             FakeImporter.generate_insights(
                 [prediction],
                 DEFAULT_SERVER_DOMAIN,
-                automatic=False,
                 product_store=FakeProductStore(
                     data={
                         DEFAULT_BARCODE: Product(
                             {
                                 "code": DEFAULT_BARCODE,
-                                "images": {"8": {"uploaded_t": DEFAULT_UPLOADED_T}},
+                                "images": {
+                                    "8": {
+                                        "uploaded_t": (
+                                            datetime.datetime.utcnow()
+                                            - datetime.timedelta(days=600)
+                                        ).timestamp()
+                                    }
+                                },
                             }
                         )
                     }
@@ -617,7 +621,7 @@ class TestInsightImporter:
         assert len(to_update) == 0
         created_insight = to_create[0]
         assert isinstance(created_insight, ProductInsight)
-        assert created_insight.automatic_processing is False
+        assert created_insight.automatic_processing is True
         assert isinstance(created_insight.timestamp, datetime.datetime)
         assert created_insight.type == "category"
         assert created_insight.value_tag == "tag2"
@@ -625,7 +629,7 @@ class TestInsightImporter:
         assert created_insight.barcode == DEFAULT_BARCODE
         assert created_insight.server_domain == DEFAULT_SERVER_DOMAIN
         assert created_insight.server_type == "off"
-        assert created_insight.process_after is None
+        assert created_insight.process_after is not None
         uuid.UUID(created_insight.id)
         assert to_delete == [reference]
         get_existing_insight_mock.assert_called_once()
@@ -656,7 +660,6 @@ class TestInsightImporter:
             FakeImporter.generate_insights(
                 [prediction],
                 DEFAULT_SERVER_DOMAIN,
-                automatic=True,
                 product_store=FakeProductStore(
                     data={DEFAULT_BARCODE: Product({"code": DEFAULT_BARCODE})}
                 ),
@@ -680,7 +683,6 @@ class TestInsightImporter:
             FakeImporter.import_insights(
                 [Prediction(type=PredictionType.label)],
                 DEFAULT_SERVER_DOMAIN,
-                automatic=True,
                 product_store=FakeProductStore(),
             )
 
@@ -691,9 +693,7 @@ class TestInsightImporter:
                 return {PredictionType.label}
 
             @classmethod
-            def generate_insights(
-                cls, predictions, server_domain, automatic, product_store
-            ):
+            def generate_insights(cls, predictions, server_domains, product_store):
                 yield [
                     ProductInsight(
                         barcode=DEFAULT_BARCODE,
@@ -715,7 +715,6 @@ class TestInsightImporter:
         imported = FakeImporter.import_insights(
             [Prediction(type=PredictionType.label)],
             DEFAULT_SERVER_DOMAIN,
-            automatic=True,
             product_store=FakeProductStore(),
         )
         assert imported == 1
@@ -1204,12 +1203,11 @@ class TestImportInsightsForProducts:
         import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
             DEFAULT_SERVER_DOMAIN,
-            automatic=True,
             product_store=product_store,
         )
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_called_once_with(
-            [], DEFAULT_SERVER_DOMAIN, True, product_store
+            [], DEFAULT_SERVER_DOMAIN, product_store
         )
 
     def test_import_insights_single_product(self, mocker):
@@ -1237,13 +1235,12 @@ class TestImportInsightsForProducts:
         imported = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
             DEFAULT_SERVER_DOMAIN,
-            automatic=True,
             product_store=product_store,
         )
         assert imported == 1
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_called_once_with(
-            [prediction], DEFAULT_SERVER_DOMAIN, True, product_store
+            [prediction], DEFAULT_SERVER_DOMAIN, product_store
         )
 
     def test_import_insights_type_mismatch(self, mocker):
@@ -1266,7 +1263,6 @@ class TestImportInsightsForProducts:
         imported = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.image_orientation}},
             DEFAULT_SERVER_DOMAIN,
-            automatic=True,
             product_store=product_store,
         )
         assert imported == 0

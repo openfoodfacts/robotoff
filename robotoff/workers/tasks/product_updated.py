@@ -28,7 +28,7 @@ def update_insights(barcode: str, server_domain: str):
 
     updated_product_predict_insights(barcode, product_dict, server_domain)
     logger.info("Refreshing insights...")
-    imported = refresh_insights(barcode, server_domain, automatic=True)
+    imported = refresh_insights(barcode, server_domain)
     logger.info(f"{imported} insights created after refresh")
 
 
@@ -64,7 +64,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     for prediction in product_predictions:
         prediction.barcode = barcode
 
-    imported = import_insights(product_predictions, server_domain, automatic=True)
+    imported = import_insights(product_predictions, server_domain)
     logger.info(f"{imported} category insight imported for product {barcode}")
 
     return bool(imported)
@@ -81,7 +81,7 @@ def updated_product_predict_insights(
 
     logger.info("Generating predictions from product name...")
     predictions_all = get_predictions_from_product_name(barcode, product_name)
-    imported = import_insights(predictions_all, server_domain, automatic=False)
+    imported = import_insights(predictions_all, server_domain)
     logger.info(f"{imported} insights imported for product {barcode}")
 
     if imported:

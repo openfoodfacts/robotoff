@@ -303,7 +303,7 @@ def import_logo_insights(
         logo_probs.append(probs)
 
     predictions = predict_logo_predictions(selected_logos, logo_probs)
-    imported = import_insights(predictions, server_domain, automatic=True)
+    imported = import_insights(predictions, server_domain)
 
     for logo, probs in zip(selected_logos, logo_probs):
         NotifierFactory.get_notifier().send_logo_notification(logo, probs)
@@ -342,7 +342,7 @@ def generate_insights_from_annotated_logos(
         prediction.source_image = image.source_image
         predictions.append(prediction)
 
-    imported = import_insights(predictions, server_domain, automatic=True)
+    imported = import_insights(predictions, server_domain)
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")

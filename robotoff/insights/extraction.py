@@ -46,6 +46,9 @@ def get_predictions_from_product_name(
         )
         for prediction in predictions:
             prediction.data["source"] = "product_name"
+            # Predictions from product name are not as trustworthy as
+            # predictions from OCR, so disable automatic processing
+            prediction.automatic_processing = False
         predictions_all += predictions
 
     return predictions_all

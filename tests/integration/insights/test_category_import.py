@@ -77,7 +77,6 @@ class TestCategoryImporter:
         imported = import_insights(
             predictions,
             server_domain=settings.OFF_SERVER_DOMAIN,
-            automatic=True,
             product_store=product_store,
         )
         return imported

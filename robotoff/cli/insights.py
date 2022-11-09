@@ -95,7 +95,6 @@ def import_insights(
             imported += import_insights_(
                 prediction_batch,
                 server_domain,
-                automatic=False,
                 product_store=product_store,
             )
 
