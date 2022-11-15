@@ -360,8 +360,8 @@ def save_annotation(
                 raise e
 
         if existing_votes:
-            # If the top annotation has more than 2 votes, consider applying it to the insight.
-            if existing_votes[0].num_votes > 2:
+            # If the top annotation has 3 or more votes, consider applying it to the insight.
+            if existing_votes[0].num_votes >= 3:
                 annotation = existing_votes[0].value
                 verified = True
 
