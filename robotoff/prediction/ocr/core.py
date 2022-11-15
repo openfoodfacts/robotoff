@@ -12,6 +12,7 @@ from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 
 from .brand import find_brands
+from .category import find_category
 from .dataclass import OCRParsingException, OCRResult, OCRResultGenerationException
 from .expiration_date import find_expiration_date
 from .image_flag import flag_image
@@ -32,6 +33,7 @@ logger = get_logger(__name__)
 PREDICTION_TYPE_TO_FUNC: Dict[
     str, Callable[[Union[OCRResult, str]], List[Prediction]]
 ] = {
+    PredictionType.category: find_category,
     PredictionType.packager_code: find_packager_codes,
     PredictionType.label: find_labels,
     PredictionType.expiration_date: find_expiration_date,
@@ -71,30 +73,30 @@ def get_ocr_result(
     try:
         r = session.get(ocr_url)
     except requests.exceptions.RequestException as e:
-        error_message = f"HTTP Error when fetching OCR URL {ocr_url}"
+        error_message = "HTTP Error when fetching OCR URL"
         if error_raise:
-            raise OCRResultGenerationException(error_message) from e
+            raise OCRResultGenerationException(error_message, ocr_url) from e
 
-        logger.warning(error_message, exc_info=e)
+        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
         return None
 
     try:
         ocr_data: Dict = r.json()
     except json.JSONDecodeError as e:
-        error_message = f"Error while decoding OCR JSON from {ocr_url}"
+        error_message = "Error while decoding OCR JSON"
         if error_raise:
-            raise OCRResultGenerationException(error_message) from e
+            raise OCRResultGenerationException(error_message, ocr_url) from e
 
-        logger.warning(error_message, exc_info=e)
+        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
         return None
 
     try:
         return OCRResult.from_json(ocr_data)
     except OCRParsingException as e:
         if error_raise:
-            raise OCRResultGenerationException(str(e)) from e
+            raise OCRResultGenerationException(str(e), ocr_url) from e
 
-        logger.warning(f"Error while parsing OCR JSON from {ocr_url}", exc_info=e)
+        logger.warning("Error while parsing OCR JSON from %s", ocr_url, exc_info=e)
         return None
 
 

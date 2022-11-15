@@ -14,5 +14,25 @@ services:
     networks:
       - webnet
 
+  triton:
+    restart: $RESTART_POLICY
+    # This is a custom built of Triton with:
+    # - GRPC/HTTP support
+    # - CPU only (we don't have GPU in production)
+    # - Tensorflow 2 SavedModel and ONNX support
+    # This allows us to reduce significantly the image size
+    # See https://gist.github.com/raphael0202/091e521f2c79a8db8c6e9aceafb6e0b9 for build script
+    image: ghcr.io/openfoodfacts/triton:latest
+    ports:
+      - ${TRITON_EXPOSE_HTTP:-8000}:8000
+      - ${TRITON_EXPOSE_GRPC:-8001}:8001
+      - ${TRITON_EXPOSE_METRICS:-8002}:8002
+    volumes:
+      - ../models:/models
+    entrypoint: "tritonserver --model-repository=/models"
+    mem_limit: 10g
+    networks:
+      - webnet
+
 networks:
   webnet:

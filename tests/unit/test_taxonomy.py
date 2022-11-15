@@ -3,7 +3,7 @@ from typing import List, Set
 import pytest
 
 from robotoff import settings
-from robotoff.taxonomy import Taxonomy
+from robotoff.taxonomy import Taxonomy, TaxonomyType, match_taxonomized_value
 
 label_taxonomy = Taxonomy.from_json(settings.TAXONOMY_LABEL_PATH)
 category_taxonomy = Taxonomy.from_json(settings.TAXONOMY_CATEGORY_PATH)
@@ -95,3 +95,28 @@ class TestTaxonomy:
         item_nodes = [taxonomy[item] for item in items]
         output_nodes = [taxonomy[o] for o in output]
         assert taxonomy.find_deepest_nodes(item_nodes) == output_nodes
+
+
+@pytest.mark.parametrize(
+    "taxonomy_type,value,expected",
+    [
+        (TaxonomyType.brand.name, "carrefour-bio", "Carrefour Bio"),
+        (TaxonomyType.brand.name, "unknown-brand", None),
+        (TaxonomyType.label.name, "fr:bio-europeen", "en:eu-organic"),
+        (
+            TaxonomyType.label.name,
+            "ab-agriculture-biologique",
+            None,
+        ),
+        (
+            TaxonomyType.label.name,
+            "fr:ab-agriculture-biologique",
+            "fr:ab-agriculture-biologique",
+        ),
+        (TaxonomyType.label.name, "unknown-label", None),
+        (TaxonomyType.label.name, "fr:viande-bovine-francaise", "en:french-beef"),
+        (TaxonomyType.ingredient.name, "text", None),  # unsupported taxonomy
+    ],
+)
+def test_match_taxonomized_value(taxonomy_type, value, expected):
+    assert match_taxonomized_value(value, taxonomy_type) == expected

@@ -1,10 +1,12 @@
 import contextlib
 import datetime
+import functools
 import json
 import pathlib
 import sys
 from typing import Iterable, List, Optional, Set, TextIO, Union
 
+import _io
 import click
 import dacite
 from more_itertools import chunked
@@ -16,10 +18,10 @@ from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
 from robotoff.insights.importer import import_insights as import_insights_
 from robotoff.insights.importer import is_recent_image, is_selected_image
 from robotoff.models import ProductInsight, db
-from robotoff.off import get_barcode_from_path, get_product
+from robotoff.off import get_barcode_from_path
 from robotoff.prediction.ocr import OCRResult, extract_predictions, ocr_iter
 from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.products import get_product_store
+from robotoff.products import get_product, get_product_store
 from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
@@ -31,6 +33,7 @@ def run_from_ocr_archive(
     output: Optional[pathlib.Path] = None,
 ):
     predictions = generate_from_ocr_archive(input_, prediction_type)
+    output_f: _io._TextIOBase
 
     if output is not None:
         output_f = output.open("w")
@@ -54,7 +57,7 @@ def generate_from_ocr_archive(
 
         if barcode is None:
             click.echo(
-                "cannot extract barcode from source " "{}".format(source_image),
+                f"cannot extract barcode from source {source_image}",
                 err=True,
             )
             continue
@@ -115,53 +118,90 @@ def is_automatically_processable(
     if not image_id.isdigit():
         return False
 
-    product = get_product(insight.barcode, fields=["images"])
+    product = get_product(insight.barcode, projection=["images"])
 
     if product is None:
-        logger.info("Missing product: {}".format(insight.barcode))
+        logger.info(f"Missing product: {insight.barcode}")
         raise InvalidInsight()
 
     if "images" not in product:
-        logger.info("No images for product {}".format(insight.barcode))
+        logger.info(f"No images for product {insight.barcode}")
         raise InvalidInsight()
 
     product_images = product["images"]
 
     if image_id not in product_images:
-        logger.info(
-            "Missing image for product {}, ID: {}".format(insight.barcode, image_id)
-        )
+        logger.info(f"Missing image for product {insight.barcode}, ID: {image_id}")
         raise InvalidInsight()
 
-    if is_recent_image(product_images, image_id, max_timedelta):
-        return True
-
-    if is_selected_image(product_images, image_id):
-        return True
-
-    return False
+    return is_recent_image(
+        product_images, image_id, max_timedelta
+    ) or is_selected_image(product_images, image_id)
 
 
-def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
-    logger.info("Timedelta: {}".format(max_timedelta))
+def generate_apply_insights_query(
+    insight_type: str,
+    predictor: str,
+    value_tag: Optional[str] = None,
+    max_scan_count: Optional[int] = None,
+):
+    where_clauses = [
+        ProductInsight.type == insight_type,
+        ProductInsight.annotation.is_null(),
+        ProductInsight.predictor == predictor,
+    ]
+    if value_tag is not None:
+        where_clauses.append(ProductInsight.value_tag == value_tag)
+
+    if max_scan_count is not None:
+        where_clauses.append(ProductInsight.unique_scans_n <= max_scan_count)
+
+    return ProductInsight.select().where(*where_clauses)
+
+
+def apply_insights(
+    insight_type: str,
+    predictor: str,
+    max_timedelta: datetime.timedelta,
+    value_tag: Optional[str] = None,
+    max_scan_count: Optional[int] = None,
+    dry_run: bool = False,
+):
+    """Apply automatically insights based on the following criteria:
+    - their insight type
+    - their predictor value
+    - the maximum number of days between the upload of the insight image and
+    the upload of the most recent image of the product
+
+    If the insight is invalid (the image the insight is based on has been
+    deleted or the product does not exist), the insight will be deleted.
+
+    :param insight_type: filter based on insight type
+    :param predictor: filter based on predictor value
+    :param max_timedelta: maximum image timestamp timedelta
+    :param value_tag: filter based on `value_tag` (optional)
+    :param max_scan_count: filter based on their scan count
+    (<= max_scan_count, optional)
+    :param dry_run: if True, doesn't perform any database edit or insight
+    deletion
+    """
+    logger.info(f"Timedelta: {max_timedelta}")
     count = 0
     insight: ProductInsight
 
     annotator = InsightAnnotatorFactory.get(insight_type)
     authorized_labels: Set[str] = AUTHORIZED_LABELS_STORE.get()
+    query_func = functools.partial(
+        generate_apply_insights_query,
+        insight_type=insight_type,
+        predictor=predictor,
+        value_tag=value_tag,
+        max_scan_count=max_scan_count,
+    )
+    logger.info(f"Number of insights to check: {query_func().count()}")
 
-    for insight in (
-        ProductInsight.select()
-        .where(
-            ProductInsight.type == insight_type,
-            ProductInsight.annotation.is_null(),
-        )
-        .order_by(fn.Random())
-    ):
-        if (
-            insight.process_after is not None
-            and insight.process_after >= datetime.datetime.utcnow()
-        ):
+    for insight in query_func().order_by(fn.Random()):
+        if insight.process_after is not None:
             continue
 
         if (
@@ -173,17 +213,18 @@ def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
         try:
             is_processable = is_automatically_processable(insight, max_timedelta)
         except InvalidInsight:
-            logger.info("Deleting insight {}".format(insight.id))
-            insight.delete_instance()
+            logger.info(f"Deleting insight {insight.id}")
+
+            if not dry_run:
+                insight.delete_instance()
             continue
 
         if is_processable:
             logger.info(
-                "Annotating insight {} (barcode: {})".format(
-                    insight.value_tag or insight.value, insight.barcode
-                )
+                f"Annotating insight {insight.value_tag or insight.value} (barcode: {insight.barcode})"
             )
-            annotator.annotate(insight, 1, update=True, automatic=True)
+            if not dry_run:
+                annotator.annotate(insight, 1, update=True, automatic=True)
             count += 1
 
-    logger.info("Annotated insights: {}".format(count))
+    logger.info(f"Annotated insights: {count}")

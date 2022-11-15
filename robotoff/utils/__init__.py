@@ -4,7 +4,7 @@ import os
 import pathlib
 import sys
 from io import BytesIO
-from typing import Any, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import orjson
 import PIL
@@ -69,6 +69,38 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
         line = line.strip("\n")
         if line:
             yield orjson.loads(line)
+
+
+def load_json(
+    path: Union[str, pathlib.Path], compressed: bool = False
+) -> Union[Dict, List]:
+    """Load a JSON file.
+
+    :param path: the path of the file
+    :param: compressed: if True, use gzip to decompress the file
+    :return: the unserialized JSON
+    """
+    if compressed:
+        with gzip.open(str(path), "rb") as f:
+            return orjson.loads(f.read())
+    else:
+        with open(str(path), "rb") as f:
+            return orjson.loads(f.read())
+
+
+def dump_json(path: Union[str, pathlib.Path], item: Any, compressed: bool = False):
+    """Dump an object in a JSON file.
+
+    :param path: the path of the file
+    :param item: the item to serialize
+    :param: compressed: if True, use gzip to compress the file
+    """
+    if compressed:
+        with gzip.open(str(path), "wb") as f:
+            f.write(orjson.dumps(item))
+    else:
+        with open(str(path), "wb") as f:
+            f.write(orjson.dumps(item))
 
 
 def dump_jsonl(

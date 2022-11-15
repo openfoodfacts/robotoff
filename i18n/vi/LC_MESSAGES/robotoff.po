@@ -2,7 +2,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2022-02-01 10:45\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Vietnamese\n"
 "Language: vi\n"
@@ -14,26 +13,25 @@ msgstr ""
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: vi\n"
-"X-Crowdin-File: robotoff.pot\n"
-"X-Crowdin-File-ID: 1674\n"
+"X-Crowdin-File-ID: 2554\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "Sản phẩm có thuộc danh mục này không?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "Sản phẩm có nhãn này không?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "Sản phẩm có thuộc nhãn hàng này không?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Trọng lượng này có đúng với trọng lượng ghi trên sản phẩm không?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Hình ảnh này có phải về thông tin dinh dưỡng cho ngôn ngữ này không?"
 

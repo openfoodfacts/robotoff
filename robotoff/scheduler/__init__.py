@@ -4,6 +4,7 @@ import os
 import uuid
 from typing import Dict, Iterable
 
+import requests.exceptions
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -11,7 +12,6 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
-from robotoff.elasticsearch.category.predict import predict_from_dataset
 from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
@@ -20,6 +20,7 @@ from robotoff.insights.annotate import (
 from robotoff.insights.importer import import_insights
 from robotoff.metrics import ensure_influx_database, save_facet_metrics
 from robotoff.models import ProductInsight, with_db
+from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
     Product,
@@ -37,7 +38,7 @@ settings.init_sentry()
 logger = get_logger(__name__)
 
 
-@with_db
+# Note: we do not use with_db, for atomicity is handled in annotator
 def process_insights():
     processed = 0
     for insight in (
@@ -49,18 +50,29 @@ def process_insights():
         )
         .iterator()
     ):
-        annotator = InsightAnnotatorFactory.get(insight.type)
-        logger.info(
-            "Annotating insight {} (product: {})".format(insight.id, insight.barcode)
-        )
-        annotation_result = annotator.annotate(insight, 1, update=True)
-        processed += 1
+        try:
+            annotator = InsightAnnotatorFactory.get(insight.type)
+            logger.info(
+                "Annotating insight %s (product: %s)", insight.id, insight.barcode
+            )
+            annotation_result = annotator.annotate(insight, 1, update=True)
+            processed += 1
 
-        if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-            "notify", False
-        ):
-            slack.NotifierFactory.get_notifier().notify_automatic_processing(insight)
-    logger.info("{} insights processed".format(processed))
+            if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
+                "notify", False
+            ):
+                slack.NotifierFactory.get_notifier().notify_automatic_processing(
+                    insight
+                )
+        except Exception as e:
+            # continue to the next one
+            # Note: annotator already rolled-back the transaction
+            logger.exception(
+                f"exception {e} while handling annotation of insight %s (product) %s",
+                insight.id,
+                insight.barcode,
+            )
+    logger.info("%d insights processed", processed)
 
 
 @with_db
@@ -167,6 +179,7 @@ def mark_insights():
         marked += 1
 
     logger.info("{} insights marked".format(marked))
+    return marked  # useful for tests
 
 
 def _download_product_dataset():
@@ -190,11 +203,14 @@ def _refresh_elasticsearch():
 # this job does no use database
 def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
-
-    _download_product_dataset()
-    # Elasticsearch is dependent on the availability of the PO product dump, i.e.
-    # it it called after the download product dataset call.
-    _refresh_elasticsearch()
+    try:
+        _download_product_dataset()
+        # Elasticsearch is dependent on the availability of the product dump from Product Opener
+        # (main Open Food Facts backend)
+        # it it called after the download product dataset call.
+        _refresh_elasticsearch()
+    except requests.exceptions.RequestException:
+        logger.exception("Exception while running ES updates for categories")
 
 
 def generate_insights():

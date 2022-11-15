@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 
+from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
@@ -23,7 +24,12 @@ from robotoff.products import (
     get_product_store,
     is_valid_image,
 )
-from robotoff.taxonomy import Taxonomy, get_taxonomy
+from robotoff.taxonomy import (
+    Taxonomy,
+    TaxonomyType,
+    get_taxonomy,
+    match_taxonomized_value,
+)
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -137,15 +143,9 @@ def is_trustworthy_insight_image(
 def get_existing_insight(
     insight_type: InsightType, barcode: str, server_domain: str
 ) -> List[ProductInsight]:
-    """Get `value` and `value_tag` of all insights for specific product and
-    `insight_type`."""
+    """Get all insights for specific product and `insight_type`."""
     return list(
-        ProductInsight.select(
-            ProductInsight.annotation,
-            ProductInsight.id,
-            ProductInsight.value,
-            ProductInsight.value_tag,
-        ).where(
+        ProductInsight.select().where(
             ProductInsight.type == insight_type.name,
             ProductInsight.barcode == barcode,
             ProductInsight.server_domain == server_domain,
@@ -168,8 +168,10 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
     auto-incremented integers, so the most recent images have the highest IDs.
     Images with `source_image = None` have a lower priority that images with a
     source image.
+    - predictor, predictions with predictor value have higher priority
 
     :param predictions: The predictions to sort
+    :return: Sorted predictions
     """
     return sorted(
         predictions,
@@ -178,6 +180,42 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
             -int(get_image_id(prediction.source_image) or 0)
             if prediction.source_image
             else 0,
+            # hack to set a higher priority to prediction with a predictor value
+            prediction.predictor or "z",
+        ),
+    )
+
+
+def sort_candidates(candidates: Iterable[ProductInsight]) -> List[ProductInsight]:
+    """Sort candidates by priority, using as keys:
+
+    - priority, specified by data["priority"], candidate with lowest priority
+      values (high priority) come first
+    - source image upload datetime (most recent first): images IDs are
+      auto-incremented integers, so the most recent images have the highest IDs.
+      Images with `source_image = None` have a lower priority that images with a
+      source image.
+    - automatic processing status: candidates that are automatically
+      processable have higher priority
+
+    This function should be used to make sure most important candidates are
+    looked into first in `get_insight_update`. Note that the sorting keys are
+    a superset of those used in `sort_predictions`.
+
+    :param candidates: The candidates to sort
+    :return: Sorted candidates
+    """
+    return sorted(
+        candidates,
+        key=lambda candidate: (
+            candidate.data.get("priority", 1),
+            -int(get_image_id(candidate.source_image) or 0)
+            if candidate.source_image
+            else 0,
+            # automatically processable insights come first
+            -int(candidate.automatic_processing),
+            # hack to set a higher priority to prediction with a predictor value
+            candidate.predictor or "z",
         ),
     )
 
@@ -198,7 +236,7 @@ def select_deepest_taxonomized_candidates(
 
     for candidate in candidates:
         if candidate.value_tag is None:
-            logger.warning(f"Unexpected None `value_tag` (candidate: {candidate})")
+            logger.warning("Unexpected None `value_tag` (candidate: %s)", candidate)
         else:
             value_tags.add(candidate.value_tag)
 
@@ -257,7 +295,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         ):
             if to_delete:
                 to_delete_ids = [insight.id for insight in to_delete]
-                logger.info(f"Deleting insight IDs: {[str(x) for x in to_delete_ids]}")
+                logger.info(f"Deleting {len(to_delete_ids)} insights")
                 ProductInsight.delete().where(
                     ProductInsight.id.in_(to_delete_ids)
                 ).execute()
@@ -311,8 +349,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for candidate in candidates:
                 if candidate.automatic_processing is None:
                     logger.warning(
-                        f"Insight with automatic_processing=None: {candidate.__data__}"
+                        "Insight with automatic_processing=None: %s", candidate.__data__
                     )
+                    candidate.automatic_processing = False
 
                 if not is_trustworthy_insight_image(
                     product.images, candidate.source_image
@@ -320,6 +359,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     # Don't process automatically if the insight image is not
                     # trustworthy (too old and not selected)
                     candidate.automatic_processing = False
+                if candidate.data.get("is_annotation"):
+                    username = candidate.data.get("username")
+                    if username:
+                        # logo annotation by a user
+                        candidate.username = username
+                    # Note: we could add vote annotation for anonymous user,
+                    # but it should be done outside this loop. It's not yet implemented
 
             to_create, to_delete = cls.get_insight_update(candidates, references)
 
@@ -368,14 +414,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for reference in reference_insights
             if reference.annotation is not None
         )
-        for candidate in candidates:
-            match = False
-            for reference in reference_insights:
-                if cls.is_conflicting_insight(candidate, reference):
-                    # Candidate conflicts with existing insight, keeping
-                    # existing insight and discarding candidate
-                    to_keep_ids.add(reference.id)
-                    match = True
+        for candidate in sort_candidates(candidates):
+            # if match is True, candidate conflicts with existing insight,
+            # keeping existing insight and discarding candidate
+            match = any(
+                cls.is_conflicting_insight(candidate, reference_insight)
+                for reference_insight in reference_insights
+                if reference_insight.annotation is not None
+            )
 
             if not match:
                 for selected in to_create:
@@ -406,8 +452,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         """
         pass
 
-    @staticmethod
+    @classmethod
     def add_fields(
+        cls,
         insight: ProductInsight,
         product: Product,
         timestamp: datetime.datetime,
@@ -430,6 +477,19 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 minutes=settings.INSIGHT_AUTOMATIC_PROCESSING_WAIT
             )
 
+        cls.add_optional_fields(insight, product)
+
+    @classmethod
+    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+        """Overwrite this method in children classes to add optional fields.
+
+        The `campaign` field should be populated here.
+
+        :param insight: the ProductInsight
+        :param product: the associated Product
+        """
+        pass
+
 
 class PackagerCodeInsightImporter(InsightImporter):
     @staticmethod
@@ -451,9 +511,10 @@ class PackagerCodeInsightImporter(InsightImporter):
         product: Product,
         emb_code: str,
     ) -> bool:
-        return normalize_emb_code(emb_code) not in [
-            normalize_emb_code(c) for c in product.emb_codes_tags
-        ]
+        existing_codes = [normalize_emb_code(c) for c in product.emb_codes_tags]
+        normalized_code = normalize_emb_code(emb_code)
+
+        return normalized_code not in existing_codes
 
     @classmethod
     def generate_candidates(
@@ -511,6 +572,17 @@ class LabelInsightImporter(InsightImporter):
             for prediction in predictions
             if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
         ]
+        for candidate in candidates:
+            if candidate.value_tag:
+                # we normalize `value_tag` to the canonical taxonomy value
+                # it helps to deal with internationalization
+                # (`fr:sans-gluten` and `en:no-gluten` is the same tag)
+                value_tag = match_taxonomized_value(
+                    candidate.value_tag, TaxonomyType.label.name
+                )
+                if value_tag is not None:
+                    candidate.value_tag = value_tag
+
         taxonomy = get_taxonomy(InsightType.label.name)
         for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy):
             insight = ProductInsight(**candidate.to_dict())
@@ -576,6 +648,17 @@ class CategoryImporter(InsightImporter):
                 category, set(product.categories_tags)
             )
         )
+
+    @classmethod
+    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+        taxonomy = get_taxonomy(InsightType.category.name)
+        if (
+            insight.value_tag in taxonomy
+            and "agribalyse_food_code" in taxonomy[insight.value_tag].additional_data
+        ):
+            # This category is linked to an agribalyse category, add it as a
+            # campaign tag
+            insight.campaign = ["agribalyse-category"]
 
 
 class ProductWeightImporter(InsightImporter):
@@ -846,6 +929,9 @@ def import_product_predictions(
         .tuples()
     )
 
+    # note: there are some cases
+    # when we could decide to replace old predictions of the same key.
+    # It's not yet implemented.
     to_import = (
         create_prediction_model(prediction, server_domain, timestamp)
         for prediction in product_predictions_iter
@@ -997,6 +1083,28 @@ def refresh_insights(
                 automatic,
                 product_store,
             )
+
+    return imported
+
+
+def refresh_all_insights(
+    server_domain: str,
+    automatic: bool,
+    product_store: Optional[DBProductStore] = None,
+):
+    """Refresh insights of all products for which we have predictions.
+
+    :param server_domain: The server domain associated with the predictions.
+    :param automatic: If False, no insight is applied automatically.
+    :param product_store: The product store to use, defaults to None
+    :return: The number of imported insights.
+    """
+    imported = 0
+    for (barcode,) in (
+        PredictionModel.select(fn.Distinct(PredictionModel.barcode)).tuples().iterator()
+    ):
+        logger.info(f"Refreshing insights for product {barcode}")
+        imported += refresh_insights(barcode, server_domain, automatic, product_store)
 
     return imported
 

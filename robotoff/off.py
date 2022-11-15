@@ -28,6 +28,14 @@ class OFFAuthentication:
         self.username = username
         self.password = password
 
+    def __eq__(self, other):
+        """equality - we may use it in tests"""
+        return (
+            self.username == other.username
+            and self.password == other.password
+            and self.session_cookie == other.session_cookie
+        )
+
     def get_username(self) -> Optional[str]:
         if self.username is not None:
             return self.username
@@ -48,9 +56,8 @@ class OFFAuthentication:
                             break
 
             logger.warning(
-                "Unable to extract username from session cookie: {}".format(
-                    self.session_cookie
-                )
+                "Unable to extract username from session cookie: %s",
+                self.session_cookie,
             )
 
         return None
@@ -118,7 +125,9 @@ def get_api_product_url(server: Union[ServerType, str]) -> str:
 def get_base_url(server: Union[ServerType, str]) -> str:
     if isinstance(server, str):
         server = server.replace("api", "world")
-        return "https://{}".format(server)
+        # get scheme, https on prod, but http in dev
+        scheme = settings.BaseURLProvider().scheme
+        return f"{scheme}://{server}"
     else:
         if server not in API_URLS:
             raise ValueError("unsupported server type: {}".format(server))
@@ -493,3 +502,29 @@ def select_rotate_image(
 
     r.raise_for_status()
     return r
+
+
+def normalize_tag(value, lowercase=True):
+    """given a value normalize it to a tag (as in taxonomies)
+
+    This means removing accents, lowercasing, replacing spaces with dashes, etc..
+    """
+    # removing accents
+    value = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", "-", value)
+    value = re.sub(r"[éè]", "e", value)
+    value = re.sub(r"[à]", "a", value)
+    value = re.sub(r"[ù]", "u", value)
+    # changing unwanted character to "-"
+    value = re.sub(r"&\w+;", "-", value)
+    value = re.sub(
+        r"[\s!\"#\$%&'()*+,\/:;<=>?@\[\\\]^_`{\|}~¡¢£¤¥¦§¨©ª«¬®¯°±²³´µ¶·¸¹º»¼½¾¿×ˆ˜–—‘’‚“”„†‡•…‰‹›€™\t]",  # noqa: E501
+        "-",
+        value,
+    )
+    # lowering the value if wanted
+    if lowercase:
+        value = value.lower()
+    # removing excess "-"
+    value = re.sub(r"-+", "-", value)
+    value = value.strip("-")
+    return value

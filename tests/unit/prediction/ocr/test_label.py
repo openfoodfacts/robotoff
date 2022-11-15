@@ -29,13 +29,13 @@ def test_es_ocr_regex(input_str: str, is_match: bool, output: Optional[str]):
 @pytest.mark.parametrize(
     "text,value_tags",
     [
-        ("certifié ab.", ["en:ab-agriculture-biologique"]),
-        ("décret du 5/01/07", ["en:label-rouge"]),
-        ("DECRET du 05.01.07", ["en:label-rouge"]),
-        ("Homologation n° LA 21/88", ["en:label-rouge"]),
-        ("homologation LA 42/05", ["en:label-rouge"]),
-        ("Homologation n°LA19/05", ["en:label-rouge"]),
-        ("Homologation n°LA 02/91", ["en:label-rouge"]),
+        ("certifié ab.", ["fr:ab-agriculture-biologique"]),
+        ("décret du 5/01/07", ["fr:label-rouge"]),
+        ("DECRET du 05.01.07", ["fr:label-rouge"]),
+        ("Homologation n° LA 21/88", ["fr:label-rouge"]),
+        ("homologation LA 42/05", ["fr:label-rouge"]),
+        ("Homologation n°LA19/05", ["fr:label-rouge"]),
+        ("Homologation n°LA 02/91", ["fr:label-rouge"]),
     ],
 )
 def test_find_labels(text: str, value_tags: List[str]):

@@ -17,25 +17,39 @@ def run(service: str) -> None:
 
 
 @app.command()
-def predict_insight(ocr_url: str) -> None:
-    import json
-
+def regenerate_ocr_insights(
+    barcode: str = typer.Argument(..., help="Barcode of the product")
+) -> None:
+    """Regenerate OCR predictions/insights for a specific product and import
+    them."""
+    from robotoff import settings
     from robotoff.insights.extraction import (
         DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
-    from robotoff.off import get_barcode_from_url
+    from robotoff.insights.importer import import_insights as import_insights_
+    from robotoff.off import generate_json_ocr_url
+    from robotoff.products import get_product
     from robotoff.utils import get_logger
 
-    get_logger()
+    logger = get_logger()
 
-    barcode = get_barcode_from_url(ocr_url)
-    if barcode is None:
-        raise ValueError(f"invalid OCR URL: {ocr_url}")
+    product = get_product(barcode, ["images"])
+    if product is None:
+        raise ValueError(f"product not found: {barcode}")
 
-    results = extract_ocr_predictions(barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES)
+    predictions = []
+    for image_id in product["images"]:
+        if not image_id.isdigit():
+            continue
 
-    print(json.dumps(results, indent=4))
+        ocr_url = generate_json_ocr_url(barcode, image_id)
+        predictions += extract_ocr_predictions(
+            barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+        )
+
+    imported = import_insights_(predictions, settings.OFF_SERVER_DOMAIN, automatic=True)
+    logger.info(f"Import finished, {imported} insights imported")
 
 
 @app.command()
@@ -87,8 +101,10 @@ def batch_annotate(insight_type: str, filter_clause: str, dry: bool = True) -> N
 
 @app.command()
 def predict_category(output: str) -> None:
+    """Predict categories from the product JSONL dataset stored in `datasets`
+    directory."""
     from robotoff import settings
-    from robotoff.elasticsearch.category.predict import predict_from_dataset
+    from robotoff.prediction.category.matcher import predict_from_dataset
     from robotoff.products import ProductDataset
     from robotoff.utils import dump_jsonl
 
@@ -254,17 +270,89 @@ def import_insights(
 
 @app.command()
 def apply_insights(
-    insight_type: str,
-    delta: int = 1,
+    insight_type: str = typer.Argument(
+        ...,
+        help="Filter insights to apply based on their type",
+    ),
+    predictor: str = typer.Argument(
+        ..., help="Filter insights to apply based on their predictor value"
+    ),
+    value_tag: Optional[str] = typer.Option(
+        help="Filter insights to apply based on their `value_tag`", default=None
+    ),
+    max_delta: int = typer.Option(
+        180,
+        help="Maximum number of days between the upload of the insight image "
+        "and the upload of the most recent image of the product to consider "
+        "the apply the insight automatically",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        help="Perform a dry run (don't apply any insight)",
+    ),
+    max_scan_count: Optional[int] = typer.Option(
+        None, help="Filter insights based on their popularity"
+    ),
 ) -> None:
+    """Apply insights automatically based on their insight type AND predictor.
+
+    Be careful when using this command, it may modify *many* products in Open
+    Food Facts database.
+    """
     import datetime
 
     from robotoff.cli import insights
     from robotoff.utils import get_logger
 
     logger = get_logger()
-    logger.info("Applying {} insights".format(insight_type))
-    insights.apply_insights(insight_type, datetime.timedelta(days=delta))
+    if dry_run:
+        logger.info("*** DRY RUN ***")
+    logger.info(
+        "Applying automatically insights with the following criteria: "
+        f"type: `{insight_type}`, predictor: `{predictor}`, "
+        f"value_tag: `{value_tag}`, max_scan_count: {max_scan_count}"
+    )
+    insights.apply_insights(
+        insight_type=insight_type,
+        predictor=predictor,
+        max_timedelta=datetime.timedelta(days=max_delta),
+        value_tag=value_tag,
+        max_scan_count=max_scan_count,
+        dry_run=dry_run,
+    )
+
+
+@app.command()
+def refresh_insights(
+    barcode: Optional[str] = typer.Option(
+        None,
+        help="Refresh a specific product. If not provided, all products are updated",
+    ),
+    server_domain: Optional[str] = typer.Option(
+        None, help="The server domain to use, Open Food Facts by default"
+    ),
+):
+    """Refresh insights based on available predictions.
+
+    If a `barcode` is provided, only the insights of this product is
+    refreshed, otherwise insights of all products are refreshed.
+    """
+    from robotoff import settings
+    from robotoff.insights.importer import refresh_all_insights
+    from robotoff.insights.importer import refresh_insights as refresh_insights_
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    server_domain = server_domain or settings.OFF_SERVER_DOMAIN
+
+    if barcode is not None:
+        logger.info(f"Refreshing product {barcode}")
+        imported = refresh_insights_(barcode, server_domain, automatic=True)
+    else:
+        logger.info("Refreshing insights of all products")
+        imported = refresh_all_insights(server_domain, automatic=True)
+
+    logger.info(f"Refreshed insights: {imported}")
 
 
 @app.command()
@@ -390,6 +478,34 @@ def export_logo_annotation(
         logo_iter = query.iterator()
         dict_iter = (logo.to_dict() for logo in logo_iter)
         dump_jsonl(output, dict_iter)
+
+
+@app.command()
+def export_logos_ann(
+    output: pathlib.Path = typer.Argument(
+        ...,
+        help="Path to the output file, can either have .json or .json.gz as "
+        "extension",
+    ),
+) -> None:
+    """Export all information about logo in DB necessary to generate logo
+    crops."""
+    from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+    from robotoff.utils import dump_jsonl
+
+    with db:
+        query = (
+            LogoAnnotation.select(
+                LogoAnnotation.id,
+                LogoAnnotation.bounding_box,
+                LogoAnnotation.score,
+                ImageModel.image_id,
+                ImageModel.barcode,
+            )
+            .join(ImagePrediction)
+            .join(ImageModel)
+        )
+        dump_jsonl(output, query.dicts().iterator())
 
 
 def main() -> None:

@@ -1,6 +1,8 @@
+ARG PYTHON_VERSION=3.7
+
 # base python setup
 # -----------------
-FROM python:3.7-slim as python-base
+FROM python:$PYTHON_VERSION-slim as python-base
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends -y gettext curl build-essential && \
     apt-get autoremove --purge && \

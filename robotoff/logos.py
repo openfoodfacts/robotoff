@@ -1,5 +1,5 @@
 import operator
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -11,6 +11,7 @@ from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.cache import CachedStore
+from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -21,6 +22,59 @@ LOGO_TYPE_MAPPING: Dict[str, PredictionType] = {
 }
 
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
+
+
+BoundingBoxType = Tuple[float, float, float, float]
+
+
+def compute_iou(box_1: BoundingBoxType, box_2: BoundingBoxType) -> float:
+    """Compute the IoU (intersection over union) for two bounding boxes.
+
+    The boxes are expected to have the following format:
+    (y_min, x_min, y_max, x_max).
+    """
+    y_min_1, x_min_1, y_max_1, x_max_1 = box_1
+    y_min_2, x_min_2, y_max_2, x_max_2 = box_2
+    x_max = min(x_max_1, x_max_2)
+    x_min = max(x_min_1, x_min_2)
+    y_max = min(y_max_1, y_max_2)
+    y_min = max(y_min_1, y_min_2)
+    width_inter = max(0, x_max - x_min)
+    height_inter = max(0, y_max - y_min)
+    area_inter = width_inter * height_inter
+    box_1_area = (x_max_1 - x_min_1) * (y_max_1 - y_min_1)
+    box_2_area = (x_max_2 - x_min_2) * (y_max_2 - y_min_2)
+    union_area = box_1_area + box_2_area - area_inter
+    return area_inter / union_area
+
+
+def filter_logos(
+    logos: List[JSONType], score_threshold: float, iou_threshold: float = 0.95
+) -> List[Tuple[int, JSONType]]:
+    """Select logos that don't intersect with each other
+    (IoU < `iou_threshold`) and that have a confidence score above
+    `score_threshold`.
+
+    Return a list of (original_idx, logo) tuples.
+    """
+    filtered = []
+    skip_indexes = set()
+    for i in range(len(logos)):
+        logo = logos[i]
+        if i not in skip_indexes:
+            for j in range(i + 1, len(logos)):
+                if (
+                    compute_iou(logo["bounding_box"], logos[j]["bounding_box"])
+                    >= iou_threshold
+                ):
+                    # logos are sorted by descending confidence score, so we ignore
+                    # j logo (logo with lower confidence score)
+                    skip_indexes.add(j)
+
+        if logo["score"] >= score_threshold:
+            filtered.append((i, logo))
+
+    return filtered
 
 
 def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
@@ -44,7 +98,7 @@ def get_stored_logo_ids() -> Set[int]:
 
     if not r.ok:
         logger.warning(
-            f"error while fetching stored logo IDs ({r.status_code}): {r.text}"
+            f"error while fetching stored logo IDs ({r.status_code}): %s", r.text
         )
         return set()
 
@@ -68,7 +122,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
     )
 
     if not r.ok:
-        logger.warning(f"error while adding image to ANN ({r.status_code}): {r.text}")
+        logger.warning(f"error while adding image to ANN ({r.status_code}): %s", r.text)
         return 0
 
     return r.json()["added"]
@@ -92,7 +146,7 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     missing_logo_ids = set(logo_id_to_logo.keys()).difference(set(results.keys()))
 
     if missing_logo_ids:
-        logger.warning(f"Missing logo IDs in response: {missing_logo_ids}")
+        logger.warning("Missing logo IDs in response: %s", missing_logo_ids)
 
     saved = 0
     for logo_id, logo_results in results.items():
@@ -258,12 +312,22 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos(
-    logos: List[LogoAnnotation], server_domain: str
-):
+    logos: List[LogoAnnotation],
+    server_domain: str,
+) -> int:
     predictions = []
     for logo in logos:
         prediction = generate_prediction(
-            logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
+            logo_type=logo.annotation_type,
+            logo_value=logo.taxonomy_value,
+            automatic_processing=True,  # because this is a user annotation, which we trust.
+            data={
+                "confidence": 1.0,
+                "logo_id": logo.id,
+                "bounding_box": logo.bounding_box,
+                "username": logo.username,
+                "is_annotation": True,  # it's worth restating it
+            },
         )
 
         if prediction is None:
@@ -282,6 +346,7 @@ def generate_insights_from_annotated_logos(
 
     if imported:
         logger.info(f"{imported} logo insights imported after annotation")
+    return imported
 
 
 def predict_logo_predictions(
@@ -304,7 +369,13 @@ def predict_logo_predictions(
             continue
 
         prediction = generate_prediction(
-            label[0], label[1], confidence=max_prob, logo_id=logo.id
+            logo_type=label[0],
+            logo_value=label[1],
+            data={
+                "confidence": max_prob,
+                "logo_id": logo.id,
+                "bounding_box": logo.bounding_box,
+            },
         )
 
         if prediction is not None:
@@ -317,9 +388,22 @@ def predict_logo_predictions(
 
 
 def generate_prediction(
-    logo_type: str, logo_value: Optional[str], **kwargs
+    logo_type: str,
+    logo_value: Optional[str],
+    data: Dict,
+    automatic_processing: Optional[bool] = False,
 ) -> Optional[Prediction]:
-    if logo_type not in LOGO_TYPE_MAPPING:
+    """Generate a Prediction from a logo.
+
+    The Prediction may either be created after the annotation of the logo by
+    a human (in which case `automatic_processing` is True), or by infering the
+    logo value from nearest neighbor labels (in which case
+    `automatic_processing` is False).
+
+    Currently, only brand and label logo types are supported: None is returned
+    if the logo type is different, or if the logo_value is None.
+    """
+    if logo_type not in LOGO_TYPE_MAPPING or logo_value is None:
         return None
 
     prediction_type = LOGO_TYPE_MAPPING[logo_type]
@@ -328,20 +412,16 @@ def generate_prediction(
     value = None
 
     if prediction_type == PredictionType.brand:
-        value = logo_value
-        if value is None:
-            return None
+        value_tag = value = logo_value
 
     elif prediction_type == PredictionType.label:
         value_tag = logo_value
-        if value_tag is None:
-            return None
 
     return Prediction(
         type=prediction_type,
         value_tag=value_tag,
         value=value,
-        automatic_processing=False,
+        automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
-        data=kwargs,
+        data=data,
     )

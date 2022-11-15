@@ -1,3 +1,4 @@
+import copy
 import datetime
 import logging
 import os
@@ -39,23 +40,29 @@ class BaseURLProvider(object):
         self.prefix = "world"
         self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
 
+    def clone(self):
+        return copy.deepcopy(self)
+
     def robotoff(self):
-        self.prefix = "robotoff"
-        return self
+        result = self.clone()
+        result.prefix = "robotoff"
+        return result
 
     def static(self):
-        self.prefix = "static"
+        result = self.clone()
+        result.prefix = "static"
         # locally we may want to change it, give environment a chance
         static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
         if static_domain:
             if "://" in static_domain:
-                self.scheme, static_domain = static_domain.split("://", 1)
-            self.domain = static_domain
-        return self
+                result.scheme, static_domain = static_domain.split("://", 1)
+            result.domain = static_domain
+        return result
 
     def country(self, country_code: str):
-        self.prefix = country_code
-        return self
+        result = self.clone()
+        result.prefix = country_code
+        return result
 
     def get(self):
         return self.url % {
@@ -70,6 +77,7 @@ DATA_DIR = PROJECT_DIR / "data"
 DATASET_DIR = PROJECT_DIR / "datasets"
 DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / "i18n"
+LABEL_LOGOS_PATH = DATA_DIR / "label_logos.json"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
@@ -106,14 +114,26 @@ def off_credentials() -> Dict[str, str]:
 
 
 OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
+EVENTS_API_URL = os.environ.get(
+    "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
+)
+
+CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
+CATEGORY_MATCHER_MATCH_MAPS = {
+    "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
+    "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
+}
+CATEGORY_MATCHER_INTERSECT = (
+    CATEGORY_MATCHER_DIR / "category_ingredient_intersect.json.gz"
+)
 
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
-TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json"
-TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json"
-TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json"
-TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json"
+TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json.gz"
+TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json.gz"
+TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json.gz"
+TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json.gz"
 INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
@@ -151,14 +171,17 @@ ELASTICSEARCH_TYPE = "document"
 
 
 class ElasticsearchIndex:
-    CATEGORY = "category"
     PRODUCT = "product"
 
     SUPPORTED_INDICES = {
-        CATEGORY: (PROJECT_DIR / "robotoff/elasticsearch/index/category_index.json"),
         PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
     }
 
+
+# image moderation service
+IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
+    "IMAGE_MODERATION_SERVICE_URL", None
+)
 
 # Slack paramaters for notifications about detection
 _slack_token = os.environ.get("SLACK_TOKEN", "")
@@ -191,7 +214,7 @@ def init_sentry(integrations: Optional[List[Integration]] = None):
                 event_level=logging.WARNING,  # Send warning and errors as events
             )
         )
-        sentry_sdk.init(
+        sentry_sdk.init(  # type:ignore # mypy say it's abstract
             _sentry_dsn,
             environment=_robotoff_instance,
             integrations=integrations,
@@ -208,6 +231,7 @@ OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
+OCR_USDA_CODE_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "USDA_code_flashtext.txt"
 OCR_LABEL_WHITELIST_DATA_PATH = OCR_DATA_DIR / "label_whitelist.txt"
 # Try to detect MSC codes
 OCR_FISHING_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "fishing_flashtext.txt"
@@ -234,15 +258,14 @@ _tf_serving_host = os.environ.get("TF_SERVING_HOST", "localhost")
 _tf_serving_http_port = os.environ.get("TF_SERVING_PORT", "8501")
 TF_SERVING_BASE_URL = f"http://{_tf_serving_host}:{_tf_serving_http_port}/v1/models"
 
-TF_SERVING_MODELS_PATH = PROJECT_DIR / "tf_models"
+
+_triton_host = os.environ.get("TRITON_HOST", "localhost")
+_triton_grpc_port = os.environ.get("TRITON_PORT", "8001")
+TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
+
+MODELS_DIR = PROJECT_DIR / "models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
-
-OBJECT_DETECTION_TF_SERVING_MODELS = (
-    "nutriscore",
-    "nutrition-table",
-    "universal-logo-detector",
-)
 
 OBJECT_DETECTION_MODEL_VERSION = {
     "nutriscore": "tf-nutriscore-1.0",

@@ -23,11 +23,24 @@ from robotoff.off import (
 from robotoff.products import get_image_id, get_product
 from robotoff.utils import get_logger
 
+"""
+This file allows to annotate products.
+
+To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
+    from robotoff.insights.annotate import InsightAnnotatorFactor
+    annotator = InsightAnnotatorFactory.get(insight_type)
+    annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[Dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
+
+If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
+"""
+
+
 logger = get_logger(__name__)
 
 
 @dataclass
 class AnnotationResult:
+    status_code: int
     status: str
     description: Optional[str] = None
 
@@ -35,37 +48,47 @@ class AnnotationResult:
 class AnnotationStatus(Enum):
     saved = 1
     updated = 2
-    vote_saved = 9
     error_missing_product = 3
     error_updated_product = 4
     error_already_annotated = 5
     error_unknown_insight = 6
     error_missing_data = 7
+    error_invalid_image = 8
+    vote_saved = 9
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
-    status=AnnotationStatus.saved.name, description="the annotation was saved"
+    status_code=AnnotationStatus.saved.value,
+    status=AnnotationStatus.saved.name,
+    description="the annotation was saved",
 )
 UPDATED_ANNOTATION_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.updated.value,
     status=AnnotationStatus.updated.name,
     description="the annotation was saved and sent to OFF",
 )
 MISSING_PRODUCT_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_missing_product.value,
     status=AnnotationStatus.error_missing_product.name,
     description="the product could not be found on OFF",
 )
 ALREADY_ANNOTATED_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_already_annotated.value,
     status=AnnotationStatus.error_already_annotated.name,
     description="the insight has already been annotated",
 )
 UNKNOWN_INSIGHT_RESULT = AnnotationResult(
-    status=AnnotationStatus.error_unknown_insight.name, description="unknown insight ID"
+    status_code=AnnotationStatus.error_unknown_insight.value,
+    status=AnnotationStatus.error_unknown_insight.name,
+    description="unknown insight ID",
 )
 DATA_REQUIRED_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_missing_data.value,
     status=AnnotationStatus.error_missing_data.name,
     description="annotation data is required as JSON in `data` field",
 )
 SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.vote_saved.value,
     status=AnnotationStatus.vote_saved.name,
     description="the annotation vote was saved",
 )
@@ -81,14 +104,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
-        with db.atomic() as transaction:
-            try:
-                return self._annotate(
-                    insight, annotation, update, data, auth, automatic
-                )
-            except Exception as e:
-                transaction.rollback()
-                raise e
+        with db.atomic():
+            return self._annotate(insight, annotation, update, data, auth, automatic)
 
     def _annotate(
         self,
@@ -113,12 +130,26 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if automatic:
             insight.automatic_processing = True
 
-        insight.save()
-
         if annotation == 1 and update:
-            return self.process_annotation(insight, data=data, auth=auth)
+            # Save insight before processing the annotation
+            insight.save()
+            annotation_result = self.process_annotation(
+                insight, data=data, auth=auth
+            )  # calls the process_annotation function of the class corresponding to the current insight type
+        else:
+            annotation_result = SAVED_ANNOTATION_RESULT
 
-        return SAVED_ANNOTATION_RESULT
+        if annotation_result.status_code in (
+            AnnotationStatus.saved.value,
+            AnnotationStatus.updated.value,
+            AnnotationStatus.error_invalid_image.value,
+            AnnotationStatus.error_missing_product.value,
+            AnnotationStatus.error_updated_product.value,
+        ):
+            insight.annotated_result = annotation_result.status_code
+            insight.save()
+
+        return annotation_result
 
     @abc.abstractmethod
     def process_annotation(
@@ -202,7 +233,6 @@ class LabelAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -228,9 +258,11 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         if expected_ingredients != original_ingredients:
             logger.warning(
                 "ingredients have changed since spellcheck insight "
-                "creation (product {})".format(barcode)
+                "creation (product %s)",
+                barcode,
             )
             return AnnotationResult(
+                status_code=AnnotationStatus.error_updated_product.value,
                 status=AnnotationStatus.error_updated_product.name,
                 description="the ingredient list has been updated since spellcheck",
             )
@@ -270,7 +302,6 @@ class CategoryAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -298,7 +329,6 @@ class ProductWeightAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
-
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -348,6 +378,7 @@ class BrandAnnotator(InsightAnnotator):
             server_domain=insight.server_domain,
             auth=auth,
         )
+
         return UPDATED_ANNOTATION_RESULT
 
 
@@ -423,7 +454,8 @@ class NutritionImageAnnotator(InsightAnnotator):
 
         if not image_id:
             return AnnotationResult(
-                status="error_invalid_image",
+                status_code=AnnotationStatus.error_invalid_image.value,
+                status=AnnotationStatus.error_invalid_image.name,
                 description="the image is invalid",
             )
         image_key = "nutrition_{}".format(insight.value_tag)
@@ -447,7 +479,6 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
     ) -> AnnotationResult:
         insight.data["annotation"] = data
         insight.save()
-
         return SAVED_ANNOTATION_RESULT
 
     def is_data_required(self):

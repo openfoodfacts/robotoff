@@ -11,13 +11,12 @@ from robotoff.cli.main import categorize, init_elasticsearch
     [
         (False, False, [], [], []),
         (False, True, ["non-existent"], [], []),
-        (False, True, ["category"], [], [call("category")]),
         (
             True,
             True,
-            ["product", "category"],
-            [call("product", ANY), call("category", ANY)],
-            [call("product"), call("category")],
+            ["product"],
+            [call("product", ANY)],
+            [call("product")],
         ),
     ],
 )

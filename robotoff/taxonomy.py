@@ -2,13 +2,15 @@ import collections
 import functools
 import pathlib
 from enum import Enum
-from typing import Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
-import orjson
+import cachetools
+import requests
 
 from robotoff import settings
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import get_logger, http_session, load_json
 from robotoff.utils.cache import CachedStore
+from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 
 try:
@@ -27,18 +29,20 @@ class TaxonomyType(Enum):
 
 
 class TaxonomyNode:
-    __slots__ = ("id", "names", "parents", "children", "synonyms")
+    __slots__ = ("id", "names", "parents", "children", "synonyms", "additional_data")
 
     def __init__(
         self,
         identifier: str,
         names: Dict[str, str],
         synonyms: Optional[Dict[str, List[str]]],
+        additional_data: Optional[Dict[str, Any]] = None,
     ):
         self.id: str = identifier
         self.names: Dict[str, str] = names
         self.parents: List["TaxonomyNode"] = []
         self.children: List["TaxonomyNode"] = []
+        self.additional_data = additional_data or {}
 
         if synonyms:
             self.synonyms = synonyms
@@ -210,6 +214,11 @@ class Taxonomy:
                     identifier=key,
                     names=key_data.get("name", {}),
                     synonyms=key_data.get("synonyms", None),
+                    additional_data={
+                        k: v
+                        for k, v in key_data.items()
+                        if k not in {"parents", "name", "synonyms", "children"}
+                    },
                 )
                 taxonomy.add(key, node)
 
@@ -222,9 +231,7 @@ class Taxonomy:
 
     @classmethod
     def from_json(cls, file_path: Union[str, pathlib.Path]):
-        with open(str(file_path), "rb") as f:
-            data = orjson.loads(f.read())
-            return cls.from_dict(data)
+        return cls.from_dict(load_json(file_path, compressed=True))  # type: ignore
 
     def to_graph(self):
         """Generate a networkx.DiGraph from the taxonomy."""
@@ -268,15 +275,21 @@ def generate_category_hierarchy(
     return categories_hierarchy_list
 
 
-def fetch_taxonomy(url: str, fallback_path: str, offline=False) -> Optional[Taxonomy]:
+def fetch_taxonomy(
+    url: str, fallback_path: str, offline: bool = False
+) -> Optional[Taxonomy]:
     if offline:
         return Taxonomy.from_json(fallback_path)
 
     try:
-        r = http_session.get(url, timeout=5)
+        r = http_session.get(url, timeout=120)  # might take some time
+        if r.status_code >= 300:
+            raise requests.HTTPError(
+                "Taxonomy download at %s returned status code {r.status_code}", url
+            )
         data = r.json()
-    except Exception:
-        logger.warning("Timeout while fetching '{}' taxonomy".format(url))
+    except Exception as e:
+        logger.exception(f"{type(e)} exception while fetching taxonomy at %s", url)
         if fallback_path:
             return Taxonomy.from_json(fallback_path)
         else:
@@ -291,80 +304,87 @@ TAXONOMY_STORES: Dict[str, CachedStore] = {
             fetch_taxonomy,
             url=settings.TAXONOMY_CATEGORY_URL,
             fallback_path=settings.TAXONOMY_CATEGORY_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
     TaxonomyType.ingredient.name: CachedStore(
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_INGREDIENT_URL,
             fallback_path=settings.TAXONOMY_INGREDIENT_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
     TaxonomyType.label.name: CachedStore(
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_LABEL_URL,
             fallback_path=settings.TAXONOMY_LABEL_PATH,
-        )
+        ),
+        expiration_interval=720,
     ),
     TaxonomyType.brand.name: CachedStore(
         functools.partial(
             fetch_taxonomy,
             url=settings.TAXONOMY_BRAND_URL,
-            fallback_path=settings.TAXONOMY_LABEL_PATH,
-        )
+            fallback_path=settings.TAXONOMY_BRAND_PATH,
+        ),
+        expiration_interval=720,
     ),
 }
 
 
-def get_taxonomy(taxonomy_type: str) -> Taxonomy:
+def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
     """Returned the requested Taxonomy."""
     taxonomy_store = TAXONOMY_STORES.get(taxonomy_type)
 
     if taxonomy_store is None:
         raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
 
-    return taxonomy_store.get()
+    return taxonomy_store.get(offline=offline)
 
 
-def get_unprefixed_mapping(taxonomy_type: str) -> Dict[str, str]:
+def is_prefixed_value(value: str) -> bool:
+    """Return True if the given value has a language prefix (en:, fr:,...),
+    False otherwise."""
+    return len(value) > 3 and value[2] == ":"
+
+
+@cachetools.cached(cachetools.TTLCache(maxsize=2, ttl=43200))  # 12h TTL
+def get_taxonomy_mapping(taxonomy_type: str) -> Dict[str, str]:
+    """Return for label type a mapping of prefixed taxonomy values in all
+    languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
+    canonical value (`en:organic` for the previous example).
+    """
     taxonomy = get_taxonomy(taxonomy_type)
     ids: Dict[str, str] = {}
 
     for key in taxonomy.keys():
-        unprefixed_key = key
-        if len(key) > 3 and key[2] == ":":
-            unprefixed_key = key[3:]
-
         if taxonomy_type == TaxonomyType.brand.name:
+            unprefixed_key = key
+            if is_prefixed_value(key):
+                unprefixed_key = key[3:]
             ids[unprefixed_key] = taxonomy[key].names["en"]
         else:
-            ids[unprefixed_key] = key
+            for lang, name in taxonomy[key].names.items():
+                tag = get_tag(name)
+                ids[f"{lang}:{tag}"] = key
 
     return ids
 
 
-UNPREFIXED_MAPPING_STORE: Dict[str, CachedStore] = {
-    TaxonomyType.label.name: CachedStore(
-        functools.partial(
-            get_unprefixed_mapping,
-            taxonomy_type=TaxonomyType.label.name,
-        )
-    ),
-    TaxonomyType.brand.name: CachedStore(
-        functools.partial(
-            get_unprefixed_mapping,
-            taxonomy_type=TaxonomyType.brand.name,
-        )
-    ),
-}
+def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
+    """Return the canonical taxonomized value of a `value_tag` (if any) or
+    return None if no match was found or if the type is unsupported.
 
-
-def match_unprefixed_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
-    unprefixed_mapping_cache = UNPREFIXED_MAPPING_STORE.get(taxonomy_type)
-
-    if unprefixed_mapping_cache is None:
+    Currently it only works for brand and label.
+    """
+    if taxonomy_type not in (TaxonomyType.brand.name, TaxonomyType.label.name):
         return None
 
-    unprefixed_mapping = unprefixed_mapping_cache.get()
-    return unprefixed_mapping.get(value_tag)
+    taxonomy = get_taxonomy(taxonomy_type)
+
+    if value_tag in taxonomy:
+        return value_tag
+
+    return get_taxonomy_mapping(taxonomy_type).get(value_tag)

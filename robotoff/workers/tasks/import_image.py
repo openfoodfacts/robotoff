@@ -11,6 +11,7 @@ from robotoff.insights.importer import import_insights
 from robotoff.logos import (
     LOGO_CONFIDENCE_THRESHOLDS,
     add_logos_to_ann,
+    filter_logos,
     import_logo_insights,
     save_nearest_neighbors,
 )
@@ -41,7 +42,7 @@ def run_import_image_job(
     product = get_product_store()[barcode]
     if product is None:
         logger.warning(
-            f"Product {barcode} does not exist during image import ({source_image})"
+            "Product %s does not exist during image import (%s)", barcode, source_image
         )
         return
 
@@ -143,7 +144,7 @@ def run_object_detection(
     image_instance = ImageModel.get_or_none(source_image=source_image)
 
     if image_instance is None:
-        logger.warning(f"Missing image in DB for image {source_image}")
+        logger.warning("Missing image in DB for image %s", source_image)
         return
 
     timestamp = datetime.datetime.utcnow()
@@ -164,15 +165,15 @@ def run_object_detection(
     )
 
     logos = []
-    for i, item in enumerate(data):
-        if item["score"] >= 0.5:
-            logo = LogoAnnotation.create(
+    for i, item in filter_logos(data, score_threshold=0.5, iou_threshold=0.95):
+        logos.append(
+            LogoAnnotation.create(
                 image_prediction=image_prediction,
                 index=i,
                 score=item["score"],
                 bounding_box=item["bounding_box"],
             )
-            logos.append(logo)
+        )
 
     logger.info(f"{len(logos)} logos found for image {source_image}")
     if logos:
@@ -183,7 +184,8 @@ def run_object_detection(
         except requests.exceptions.HTTPError as e:
             resp = e.response
             logger.warning(
-                f"Could not save nearest neighbors in ANN: {resp.status_code}: {resp.text}"
+                f"Could not save nearest neighbors in ANN: {resp.status_code}: %s",
+                resp.text,
             )
 
         thresholds = LOGO_CONFIDENCE_THRESHOLDS.get()

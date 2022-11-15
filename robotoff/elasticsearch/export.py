@@ -5,7 +5,6 @@ import orjson
 from elasticsearch import Elasticsearch
 
 from robotoff import settings
-from robotoff.elasticsearch.category.dump import generate_category_data
 from robotoff.elasticsearch.product.dump import generate_product_data
 from robotoff.utils import get_logger
 from robotoff.utils.es import perform_export
@@ -30,9 +29,6 @@ class ElasticsearchExporter:
         logger.info(f"Deleted %d documents from {index}", resp["deleted"])
 
     def _get_data(self, index: str) -> Iterable[Tuple[str, Dict]]:
-        if index == settings.ElasticsearchIndex.CATEGORY:
-            return generate_category_data()
-
         if index == settings.ElasticsearchIndex.PRODUCT:
             return generate_product_data()
 

@@ -85,8 +85,8 @@ en:made-in-switzerland
 en:made-in-the-eu
 en:australian-made
 en:gluten-free
-fr:viande-bovine-francaise
-fr:viande-porcine-francaise
+en:french-beef
+en:french-pork
 en:no-preservatives
 en:no-colorings
 en:no-additives
@@ -95,7 +95,7 @@ en:no-lactose
 en:palm-oil-free
 en:max-havelaar
 en:organic
-en:ab-agriculture-biologique
+fr:ab-agriculture-biologique
 en:no-flavors
 en:no-artificial-flavors
 en:vegan

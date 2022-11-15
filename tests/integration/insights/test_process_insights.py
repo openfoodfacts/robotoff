@@ -6,15 +6,17 @@ from robotoff import settings
 from robotoff.models import ProductInsight
 from robotoff.scheduler import process_insights
 
+from ..models_utils import ProductInsightFactory, clean_db
+
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
     # clean db
-    ProductInsight.delete().execute()
+    clean_db()
     # Run the test case.
     yield
     # Tear down.
-    ProductInsight.delete().execute()
+    clean_db()
 
 
 # global for generating items
@@ -22,28 +24,19 @@ _id_count = 0
 
 
 def _create_insight(**kwargs):
-    global _id_count
-    _id_count += 1
-    barcode = f"{_id_count:08}" or kwargs.pop("barcode")
-    insight_id = f"94371643-c2bc-4291-a585-af2c{_id_count:08}"
     data = dict(
         {
-            "id": insight_id,
             "data": {"notify": False},  # we do not test notification
-            "barcode": barcode,
             "type": "category",
             "value_tag": "en:Salmons",
-            "server_domain": settings.OFF_SERVER_DOMAIN,
             "automatic_processing": True,
-            "process_after": datetime.now() - timedelta(minutes=12),
-            "unique_scans_n": 100,
+            "process_after": datetime.utcnow() - timedelta(minutes=12),
             "n_votes": 3,
-            "reserved_barcode": False,
         },
         **kwargs,
     )
-    ProductInsight.create(**data)
-    return insight_id, barcode
+    insight = ProductInsightFactory(**data)
+    return insight.id, insight.barcode
 
 
 def test_process_insight_category(mocker):
@@ -52,7 +45,7 @@ def test_process_insight_category(mocker):
     )
     mock = mocker.patch("robotoff.off.update_product")
     # a processed insight exists
-    date0 = datetime.now() - timedelta(minutes=10)
+    date0 = datetime.utcnow() - timedelta(minutes=10)
     id0, code0 = _create_insight(type="category", completed_at=date0, annotation=1)
     # an insight to be processed
     id1, code1 = _create_insight(type="category")
@@ -63,7 +56,7 @@ def test_process_insight_category(mocker):
     # insight 1 processed
     insight = ProductInsight.get(id=id1)
     assert insight.completed_at is not None
-    assert insight.completed_at <= datetime.now()
+    assert insight.completed_at <= datetime.utcnow()
     assert insight.annotation == 1
     # update_product calledfor item 1
     mock.assert_called_once_with(
@@ -90,7 +83,7 @@ def test_process_insight_category_existing(mocker):
     # insight processed
     insight = ProductInsight.get(id=id1)
     assert insight.completed_at is not None
-    assert insight.completed_at <= datetime.now()
+    assert insight.completed_at <= datetime.utcnow()
     assert insight.annotation == 1
     # but update_product wasn't called
     mock.assert_not_called()
@@ -106,28 +99,37 @@ def test_process_insight_non_existing_product(mocker):
     # insight processed
     insight = ProductInsight.get(id=id1)
     assert insight.completed_at is not None
-    assert insight.completed_at <= datetime.now()
+    assert insight.completed_at <= datetime.utcnow()
     assert insight.annotation == 1
     # but update_product wasn't called
     mock.assert_not_called()
 
 
 def test_process_insight_update_product_raises(mocker):
+    def raise_for_salmons(params, *args, **kwargs):
+        if "en:Salmons" in params.values():
+            raise Exception("Boom !")
+        else:
+            return
+
     mocker.patch(
         "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
     )
-    mock = mocker.patch("robotoff.off.update_product", side_effect=Exception("Boom !"))
-    # an insight to be processed
+    mock = mocker.patch("robotoff.off.update_product", side_effect=raise_for_salmons)
+    # an insight to be processed, that will raise
     id1, code1 = _create_insight(type="category")
+    # add another insight that should pass
+    id2, code2 = _create_insight(type="category", value_tag="en:Tuna")
     # run process
-    with pytest.raises(Exception):
-        process_insights()
-    # insight not marked processed
+    start = datetime.utcnow()
+    process_insights()
+    end = datetime.utcnow()
+    # insight1 not marked processed
     insight = ProductInsight.get(id=id1)
     assert insight.completed_at is None
     assert insight.annotation is None
     # but update_product was called
-    mock.assert_called_once_with(
+    mock.assert_any_call(
         {
             "code": code1,
             "add_categories": "en:Salmons",
@@ -136,6 +138,23 @@ def test_process_insight_update_product_raises(mocker):
         auth=None,
         server_domain=settings.OFF_SERVER_DOMAIN,
     )
+    # insight2 processed
+    # and update_product was called
+    insight = ProductInsight.get(id=id2)
+    assert insight.completed_at is not None
+    assert start < insight.completed_at < end
+    assert insight.annotation == 1
+    mock.assert_any_call(
+        {
+            "code": code2,
+            "add_categories": "en:Tuna",
+            "comment": f"[robotoff] Adding category 'en:Tuna', ID: {id2}",
+        },
+        auth=None,
+        server_domain=settings.OFF_SERVER_DOMAIN,
+    )
+    # we add only two calls
+    assert mock.call_count == 2
 
 
 def test_process_insight_same_product(mocker):
@@ -156,7 +175,7 @@ def test_process_insight_same_product(mocker):
     for id_ in [id1, id2, id3]:
         insight = ProductInsight.get(id=id_)
         assert insight.completed_at is not None
-        assert insight.completed_at <= datetime.now()
+        assert insight.completed_at <= datetime.utcnow()
         assert insight.annotation == 1
     # update_product was called twice
     assert mock.call_count == 2

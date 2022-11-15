@@ -7,7 +7,7 @@ import requests
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import LogoAnnotation, ProductInsight
+from robotoff.models import LogoAnnotation, ProductInsight, crop_image_url
 from robotoff.prediction.types import Prediction
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
@@ -19,11 +19,17 @@ class SlackException(Exception):
     pass
 
 
-class SlackNotifierInterface:
-    """SlackNotifierInterface is an interface for posting Robotoff-related alerts and notifications to the OFF Slack channels."""
+class NotifierInterface:
+    """NotifierInterface is an interface for posting
+    Robotoff-related alerts and notifications
+    to various channels.
+    """
+
+    # Note: we do not use abstract methods,
+    # for a notifier might choose to only implements a few
 
     def notify_image_flag(
-        self, predictions: List[Prediction], source: str, barcode: str
+        self, predictions: List[Prediction], source_image: str, barcode: str
     ):
         pass
 
@@ -40,11 +46,21 @@ class NotifierFactory:
     """NotifierFactory is responsible for creating a notifier to post notifications to."""
 
     @staticmethod
-    def get_notifier() -> SlackNotifierInterface:
+    def get_notifier() -> NotifierInterface:
+        notifiers: List[NotifierInterface] = []
         token = settings.slack_token()
         if token == "":
-            return NoopSlackNotifier()
-        return SlackNotifier(token)
+            # use a Noop notifier to get logs for tests and dev
+            notifiers.append(NoopSlackNotifier())
+        else:
+            notifiers.append(SlackNotifier(token))
+        moderation_service_url: Optional[str] = settings.IMAGE_MODERATION_SERVICE_URL
+        if moderation_service_url:
+            notifiers.append(ImageModerationNotifier(moderation_service_url))
+        if len(notifiers) == 1:
+            return notifiers[0]
+        else:
+            return MultiNotifier(notifiers)
 
 
 def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
@@ -96,8 +112,66 @@ def _slack_message_block(
     return [block]
 
 
-class SlackNotifier(SlackNotifierInterface):
-    """SlackNotifier implements the real SlackNotifier."""
+class MultiNotifier(NotifierInterface):
+    """Aggregate multiple notifiers in one instance
+
+    See NotifierInterface for methods documentation
+
+    :param notifiers: the notifiers to dispatch to
+    """
+
+    def __init__(self, notifiers: List[NotifierInterface]):
+        self.notifiers: List[NotifierInterface] = notifiers
+
+    def _dispatch(self, function_name: str, *args, **kwargs):
+        """dispatch call to function_name to all notifiers"""
+        for notifier in self.notifiers:
+            fn = getattr(notifier, function_name)
+            fn(*args, **kwargs)
+
+    def notify_image_flag(
+        self, predictions: List[Prediction], source_image: str, barcode: str
+    ):
+        self._dispatch("notify_image_flag", predictions, source_image, barcode)
+
+    def notify_automatic_processing(self, insight: ProductInsight):
+        self._dispatch("notify_automatic_processing", insight)
+
+    def send_logo_notification(
+        self, logo: LogoAnnotation, probs: Dict[LogoLabelType, float]
+    ):
+        self._dispatch("send_logo_notification", logo, probs)
+
+
+class ImageModerationNotifier(NotifierInterface):
+    """Notifier to dispatch to image moderation server
+
+    :param service_url: base url for image moderation service
+    """
+
+    def __init__(self, service_url):
+        self.service_url = service_url.rstrip("/")
+
+    def notify_image_flag(
+        self, predictions: List[Prediction], source_image: str, barcode: str
+    ):
+        """Send image to the moderation server so that a human can moderate it"""
+        if not predictions:
+            return
+        image_url = f"{settings.OFF_IMAGE_BASE_URL}/{source_image.lstrip('/')}"
+        image_id = int(source_image.rsplit("/", 1)[-1].split(".", 1)[0])
+        params = {"imgid": image_id, "url": image_url}
+        try:
+            http_session.put(f"{self.service_url}/{barcode}", data=params)
+        except Exception:
+            logger.exception(
+                "Error while notifying image to moderation service",
+                extra={"params": params, "url": image_url, "barcode": barcode},
+            )
+
+
+class SlackNotifier(NotifierInterface):
+    """Notifier to send messages on specific slack channels"""
 
     # Slack channel IDs.
     ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
@@ -131,7 +205,7 @@ class SlackNotifier(SlackNotifierInterface):
         self, predictions: List[Prediction], source_image: str, barcode: str
     ):
         """Sends alerts to Slack channels for flagged images."""
-        if len(predictions) < 1:
+        if not predictions:
             return
 
         text = ""
@@ -161,26 +235,39 @@ class SlackNotifier(SlackNotifierInterface):
 
     def notify_automatic_processing(self, insight: ProductInsight):
         product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
+        edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
 
         if insight.source_image:
-            image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
+            if insight.data and "bounding_box" in insight.data:
+                image_url = crop_image_url(
+                    insight.source_image, insight.data.get("bounding_box")
+                )
+            else:
+                image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
+
+        edit_text = f"(<{edit_url}|edit>)"
+
+        value = insight.value or insight.value_tag
 
         if insight.type in {
             InsightType.product_weight.name,
             InsightType.expiration_date.name,
         }:
-            text = f"The {insight.type} `{insight.value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
+            text = f"The {insight.type} `{value}` (match: `{insight.data['raw']}`) was automatically added to product {insight.barcode}"
         else:
-            text = f"The `{insight.value}` {insight.type} was automatically added to product {insight.barcode}"
+            text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
-        message = _slack_message_block(text + " " + metadata_text)
+        message = _slack_message_block(f"{text} {metadata_text}")
+        nutriscore_message = _slack_message_block(f"{text} {metadata_text} {edit_text}")
 
         if insight.value_tag in self.NUTRISCORE_LABELS:
             self._post_message(
-                message, self.NUTRISCORE_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
+                nutriscore_message,
+                self.NUTRISCORE_ALERT_CHANNEL,
+                **self.COLLAPSE_LINKS_PARAMS,
             )
             return
 
@@ -236,7 +323,7 @@ class SlackNotifier(SlackNotifierInterface):
             return response_json
         except Exception as e:
             logger.error(
-                "An exception occurred when sending a Slack " "notification", exc_info=e
+                "An exception occurred when sending a Slack notification", exc_info=e
             )
 
 

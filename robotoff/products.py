@@ -22,6 +22,12 @@ logger = get_logger(__name__)
 
 
 def get_image_id(image_path: str) -> Optional[str]:
+    """Return the image ID from an image path.
+
+    :param image_path: the image path (ex: /322/247/762/7888/2.jpg)
+    :return: the image ID ("2" in the previous example) or None if the image
+    is not "raw" (not digit-numbered)
+    """
     image_id = pathlib.Path(image_path).stem
 
     if image_id.isdigit():
@@ -178,9 +184,9 @@ def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
 
     if count < settings.DATASET_CHECK_MIN_PRODUCT_COUNT:
         logger.error(
-            "Dataset has {} products, less than minimum of {} products".format(
-                count, settings.DATASET_CHECK_MIN_PRODUCT_COUNT
-            )
+            "Dataset has %s products, less than minimum of %s products",
+            count,
+            settings.DATASET_CHECK_MIN_PRODUCT_COUNT,
         )
         return False
 
@@ -504,6 +510,13 @@ def get_product_store() -> DBProductStore:
 def get_product(
     barcode: str, projection: Optional[List[str]] = None
 ) -> Optional[JSONType]:
+    """Get product from MongoDB.
+
+    :param barcode: barcode of the product to fetch
+    :param projection: list of fields to retrieve, if not provided all fields
+    are queried
+    :return: the product as a dict or None if it was not found
+    """
     mongo_client = MONGO_CLIENT_CACHE.get()
     return mongo_client.off.products.find_one({"code": barcode}, projection)
 

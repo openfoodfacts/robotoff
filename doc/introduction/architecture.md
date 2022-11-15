@@ -19,9 +19,15 @@ Robotoff allows to predict many information (also called _insights_), mostly fro
 Each time a contributor uploads a new image on Open Food Facts, the text on this image is extracted using Google Cloud Vision, an OCR (Optical Character Recognition) service. Robotoff receives a new event through a webhook each time this occurs, with the URLs of the image and the resulting OCR (as a JSON file).
 We use simple string matching algorithms to find patterns in the OCR text to generate new predictions [^predictions].
 
-We also use a ML model to extract logos from images. These logos are then embedded in a vector space using a pre-trained model. In this space we use a k-nearest-neighbor approach to try to classify the logo, predicting a brand or a label [^logos].
+We also use a ML model to extract objects from images. [^image_predictions]
 
-We use the image to detect the grade of the Nutri-Score (A to E) with a computer vision model (object detection).
+One model tries to detect any logo [^logos].
+Detected logos are then embedded in a vector space using a pre-trained model.
+In this space we use a k-nearest-neighbor approach to try to classify the logo, predicting a brand or a label.
+Hunger game also collects users annotations to have ground truth ([logo game](https://hunger.openfoodfacts.org/logos)).
+
+Another model tries to detect the grade of the Nutri-Score (A to E) 
+with a computer vision model.
 
 The above detections generate predictions which in turn generate many types of insights [^insights]:
 
@@ -38,9 +44,11 @@ Predictions, as well as insights are stored in the PostgreSQL database.
 
 [^predictions]: see `robotoff.models.Prediction`
 
+[^image_predictions]: see `robotoff.models.ImagePrediction` and `robotoff.workers.tasks.import_image.run_import_image_job`
+
 [^insights]: see `robotoff.models.ProductInsight`
 
-[^logos]: see `robotoff.logos`
+[^logos]: see `robotoff.models.ImageAnnotation` `robotoff.logos`
 
 These new insights are then accessible to all annotation tools (Hunger Games, mobile apps,...), that can validate or not the insight. 
 

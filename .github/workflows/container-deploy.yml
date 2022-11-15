@@ -98,7 +98,9 @@ jobs:
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
           echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
+          # TODO remove when triton is deployed, and category model is retrained for triton
           echo "TF_SERVING_HOST=${{ secrets.TF_SERVING_HOST }}" >> .env
+          echo "TRITON_HOST=${{ secrets.TRITON_HOST }}" >> .env
           echo "INFLUXDB_HOST=${{ secrets.INFLUXDB_HOST }}" >> .env
           echo "INFLUXDB_PORT=8086" >> .env
           echo "INFLUXDB_DB_NAME=${{ matrix.env == 'robotoff-org' && 'off_metrics' || 'off_net_metrics' }}" >> .env
@@ -106,6 +108,9 @@ jobs:
           echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
+          echo "EVENTS_API_URL=https://event.${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
+          # TODO: remove this url when we have a proper server running for this purpose
+          echo "IMAGE_MODERATION_SERVICE_URL=https://amathjourney.com/api/off-annotation/flag-image"
 
 
     - name: Create Docker volumes

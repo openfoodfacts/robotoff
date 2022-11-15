@@ -43,23 +43,27 @@ class PartialRequestMatcher:
 
 
 @pytest.mark.parametrize(
-    "token_value,want_type",
-    [("T", slack.SlackNotifier), ("", slack.NoopSlackNotifier)],
+    "token_value, moderation_url, want_type",
+    [
+        ("T", "", slack.SlackNotifier),
+        ("T", "http://test.org/", slack.MultiNotifier),
+        ("", "", slack.NoopSlackNotifier),
+    ],
 )
-def test_notifier_factory(monkeypatch, token_value, want_type):
-    def test_slack_token(t: str) -> str:
-        return t
-
-    monkeypatch.setattr(settings, "slack_token", lambda: test_slack_token(token_value))
+def test_notifier_factory(monkeypatch, token_value, moderation_url, want_type):
+    monkeypatch.setattr(settings, "slack_token", lambda: token_value)
+    monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_URL", moderation_url)
     notifier = slack.NotifierFactory.get_notifier()
     assert type(notifier) is want_type
 
 
-def test_notify_image_flag_no_insights(mocker):
+def test_notify_image_flag_no_prediction(mocker):
     mock = mocker.patch("robotoff.slack.http_session.post")
 
-    notifier = slack.SlackNotifier("")
-    # no insights associated to image
+    notifier = slack.MultiNotifier(
+        [slack.SlackNotifier(""), slack.ImageModerationNotifier("")]
+    )
+    # no predictions associated to image
     notifier.notify_image_flag(
         [],
         "/source_image",
@@ -71,12 +75,18 @@ def test_notify_image_flag_no_insights(mocker):
 
 def test_notify_image_flag_public(mocker, monkeypatch):
     """Test notifying a potentially sensitive public image"""
-    mock = mocker.patch(
+    mock_slack = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+    )
+    mock_image_moderation = mocker.patch(
+        "robotoff.slack.http_session.put", return_value=MockSlackResponse()
     )
     monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
 
-    notifier = slack.SlackNotifier("")
+    slack_notifier = slack.SlackNotifier("")
+    notifier = slack.MultiNotifier(
+        [slack_notifier, slack.ImageModerationNotifier("http://images.org/")]
+    )
 
     notifier.notify_image_flag(
         [
@@ -85,28 +95,38 @@ def test_notify_image_flag_public(mocker, monkeypatch):
                 data={"text": "bad_word", "type": "SENSITIVE", "label": "flagged"},
             )
         ],
-        "/source_image",
+        "/source_image/2.jpg",
         "123",
     )
 
-    mock.assert_called_once_with(
-        notifier.POST_MESSAGE_URL,
+    mock_slack.assert_called_once_with(
+        slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
-            notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
-            f"{settings.OFF_IMAGE_BASE_URL}/source_image",
+            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
+            slack_notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
+            f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg",
         ),
+    )
+    mock_image_moderation.assert_called_once_with(
+        "http://images.org/123",
+        data={"imgid": 2, "url": f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg"},
     )
 
 
 def test_notify_image_flag_private(mocker, monkeypatch):
     """Test notifying a potentially sensitive private image"""
-    mock = mocker.patch(
+    mock_slack = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+    )
+    mock_image_moderation = mocker.patch(
+        "robotoff.slack.http_session.put", return_value=MockSlackResponse()
     )
     monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
 
-    notifier = slack.SlackNotifier("")
+    slack_notifier = slack.SlackNotifier("")
+    notifier = slack.MultiNotifier(
+        [slack_notifier, slack.ImageModerationNotifier("http://images.org/")]
+    )
 
     notifier.notify_image_flag(
         [
@@ -115,17 +135,21 @@ def test_notify_image_flag_private(mocker, monkeypatch):
                 data={"type": "label_annotation", "label": "face", "likelihood": 0.8},
             )
         ],
-        "/source_image",
+        "/source_image/2.jpg",
         "123",
     )
 
-    mock.assert_called_once_with(
-        notifier.POST_MESSAGE_URL,
+    mock_slack.assert_called_once_with(
+        slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
-            notifier.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL,
-            f"{settings.OFF_IMAGE_BASE_URL}/source_image",
+            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
+            slack_notifier.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL,
+            f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg",
         ),
+    )
+    mock_image_moderation.assert_called_once_with(
+        "http://images.org/123",
+        data={"imgid": 2, "url": f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg"},
     )
 
 
@@ -166,7 +190,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
 
     notifier.notify_automatic_processing(
         ProductInsight(
-            barcode="123", source_image="/image/1", type="label", value="en:vegan"
+            barcode="123", source_image="/image/1", type="label", value_tag="en:vegan"
         )
     )
 
@@ -198,3 +222,30 @@ def test_noop_slack_notifier_logging(caplog):
 
     (logged,) = caplog.records
     assert logged.msg.startswith("Alerting on slack channel")
+
+
+def test_notify_automatic_processing_nutriscore(mocker, monkeypatch):
+    mock = mocker.patch(
+        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+    )
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
+
+    notifier = slack.SlackNotifier("")
+
+    notifier.notify_automatic_processing(
+        ProductInsight(
+            barcode="123",
+            source_image="/image/1",
+            type="label",
+            value_tag="en:nutriscore",
+            data={"bounding_box": (2, 2, 4, 4)},
+        )
+    )
+
+    mock.assert_called_once_with(
+        notifier.POST_MESSAGE_URL,
+        data=PartialRequestMatcher(
+            f"The `en:nutriscore` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <https://robotoff.{settings._robotoff_domain}/api/v1/images/crop?image_url={settings.OFF_IMAGE_BASE_URL}/image/1&y_min=2&x_min=2&y_max=4&x_max=4|source image>) (<https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|edit>)",
+            notifier.NUTRISCORE_ALERT_CHANNEL,
+        ),
+    )
