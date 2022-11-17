@@ -1529,11 +1529,14 @@ python-versions = "*"
 
 [[package]]
 name = "types-requests"
-version = "2.26.3"
+version = "2.27.31"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
 python-versions = "*"
+
+[package.dependencies]
+types-urllib3 = "<1.27"
 
 [[package]]
 name = "types-setuptools"
@@ -1555,6 +1558,14 @@ python-versions = "*"
 name = "types-toml"
 version = "0.10.8.1"
 description = "Typing stubs for toml"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "types-urllib3"
+version = "1.26.25.4"
+description = "Typing stubs for urllib3"
 category = "dev"
 optional = false
 python-versions = "*"
@@ -1682,7 +1693,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "1c164143880704f9fcdc3edbe8fa6cf91a0998ba27768f15ce9dd57a97effb7f"
+content-hash = "daeed78697373170c0f3f571dbcf87f6b7261d91d2a17ced205c4884c2801b5d"
 
 [metadata.files]
 apscheduler = []
@@ -1811,6 +1822,7 @@ types-requests = []
 types-setuptools = []
 types-six = []
 types-toml = []
+types-urllib3 = []
 typing-extensions = []
 tzdata = []
 tzlocal = []
