@@ -8,7 +8,7 @@ from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from robotoff import settings
-from robotoff.utils import get_logger
+from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
 
@@ -94,8 +94,9 @@ def ensure_influx_database():
 
 
 def get_product_count(country_tag: str) -> int:
-    r = requests.get(
-        settings.BaseURLProvider().country(country_tag).get() + "/3.json?fields=null"
+    r = http_session.get(
+        settings.BaseURLProvider().country(country_tag).get() + "/3.json?fields=null",
+        auth=settings._off_request_auth,
     ).json()
     return int(r["count"])
 
@@ -150,7 +151,7 @@ def generate_metrics_from_path(
         facet = get_facet_name(url)
 
     try:
-        r = requests.get(url, timeout=60)
+        r = http_session.get(url, timeout=60, auth=settings._off_request_auth)
     except requests.exceptions.Timeout:
         logger.error("OFF request timeout (60s): {}".format(url))
         return inserts

@@ -3,7 +3,7 @@
 import enum
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 from robotoff import settings
@@ -412,14 +412,12 @@ def update_product(
         raise ValueError(
             "a password or a session cookie is required to update a product"
         )
-
-    request_auth: Optional[Tuple[str, str]] = None
-    if server_domain.endswith("openfoodfacts.net"):
-        # dev environment requires authentication
-        request_auth = ("off", "off")
-
     r = http_session.get(
-        url, params=params, auth=request_auth, cookies=cookies, timeout=timeout
+        url,
+        params=params,
+        auth=settings._off_request_auth,
+        cookies=cookies,
+        timeout=timeout,
     )
 
     r.raise_for_status()
@@ -491,13 +489,12 @@ def select_rotate_image(
             "a password or a session cookie is required to select an image"
         )
 
-    request_auth: Optional[Tuple[str, str]] = None
-    if server_domain.endswith("openfoodfacts.net"):
-        # dev environment requires authentication
-        request_auth = ("off", "off")
-
     r = http_session.post(
-        url, data=params, auth=request_auth, cookies=cookies, timeout=timeout
+        url,
+        data=params,
+        auth=settings._off_request_auth,
+        cookies=cookies,
+        timeout=timeout,
     )
 
     r.raise_for_status()
