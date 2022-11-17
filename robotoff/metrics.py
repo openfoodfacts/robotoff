@@ -1,5 +1,4 @@
 import datetime
-import json
 from typing import List, Optional
 from urllib.parse import urlparse
 
@@ -162,7 +161,7 @@ def generate_metrics_from_path(
 
     try:
         data = r.json()
-    except json.JSONDecodeError as e:
+    except requests.exceptions.JSONDecodeError as e:
         logger.error("Error during OFF request JSON decoding:\n{}".format(e))
         return inserts
 
