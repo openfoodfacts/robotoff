@@ -9,17 +9,17 @@ import sentry_sdk
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-_robotoff_instance = os.environ.get("ROBOTOFF_INSTANCE", "dev")
+ROBOTOFF_INSTANCE = os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
 
 # Returns the top-level-domain (TLD) for the Robotoff instance.
 def _instance_tld() -> str:
-    if _robotoff_instance == "prod":
+    if ROBOTOFF_INSTANCE == "prod":
         return "org"
-    elif _robotoff_instance == "dev":
+    elif ROBOTOFF_INSTANCE == "dev":
         return "net"
     else:
-        return _robotoff_instance
+        return ROBOTOFF_INSTANCE
 
 
 _default_robotoff_domain = f"openfoodfacts.{_instance_tld()}"
@@ -107,6 +107,7 @@ OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
 
 _off_password = os.environ.get("OFF_PASSWORD", "")
 _off_user = os.environ.get("OFF_USER", "")
+_off_request_auth = ("off", "off") if _instance_tld() == "net" else None
 
 
 def off_credentials() -> Dict[str, str]:
@@ -190,7 +191,7 @@ _slack_token = os.environ.get("SLACK_TOKEN", "")
 # Returns the slack token to use for posting alerts if the current instance is the 'prod' instance.
 # For all other instances, the empty string is returned.
 def slack_token() -> str:
-    if _robotoff_instance == "prod":
+    if ROBOTOFF_INSTANCE == "prod":
         if _slack_token != "":
             return _slack_token
         else:
@@ -216,10 +217,10 @@ def init_sentry(integrations: Optional[List[Integration]] = None):
         )
         sentry_sdk.init(  # type:ignore # mypy say it's abstract
             _sentry_dsn,
-            environment=_robotoff_instance,
+            environment=ROBOTOFF_INSTANCE,
             integrations=integrations,
         )
-    elif _robotoff_instance == "prod":
+    elif ROBOTOFF_INSTANCE == "prod":
         raise ValueError("No SENTRY_DSN specified for prod Robotoff")
 
 
