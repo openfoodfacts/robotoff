@@ -18,6 +18,28 @@ jobs:
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
     steps:
+    - name: Set various variable for staging deployment
+      if: matrix.env == 'robotoff-net'
+      run: |
+        echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
+        echo "ROBOTOFF_DOMAIN=openfoodfacts.net" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
+        echo "TRITON_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
+    - name: Set various variable for production deployment
+      if: matrix.env == 'robotoff-org'
+      run: |
+        echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
+        echo "ROBOTOFF_DOMAIN=openfoodfacts.org" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://off2.free.org:27017" >> $GITHUB_ENV
+        echo "TRITON_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
       id: wait-build
@@ -39,11 +61,11 @@ jobs:
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -62,11 +84,11 @@ jobs:
     - name: Set environment variables
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -83,32 +105,31 @@ jobs:
           echo "RESTART_POLICY=always" >> .env
 
           # Set app variables
-          echo "ROBOTOFF_INSTANCE=${{ secrets.ROBOTOFF_INSTANCE }}" >> .env
-          echo "ROBOTOFF_DOMAIN=${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
+          echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
+          echo "ROBOTOFF_DOMAIN=${{ env.ROBOTOFF_DOMAIN }}" >> .env
           echo "IPC_AUTHKEY=${{ secrets.IPC_AUTHKEY }}" >> .env
-          echo "IPC_HOST=${{ secrets.IPC_HOST }}" >> .env
-          echo "IPC_PORT=${{ secrets.IPC_PORT }}" >> .env
-          echo "WORKER_COUNT=${{ secrets.WORKER_COUNT }}" >> .env
+          echo "IPC_HOST=0.0.0.0" >> .env
+          echo "IPC_PORT=6650" >> .env
+          echo "WORKER_COUNT=8" >> .env
           echo "POSTGRES_HOST=postgres" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "POSTGRES_DB=postgres" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
-          echo "OFF_USER=${{ secrets.OFF_USER }}" >> .env
+          echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
+          echo "OFF_USER=roboto-app" >> .env
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
           echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
           # TODO remove when triton is deployed, and category model is retrained for triton
-          echo "TF_SERVING_HOST=${{ secrets.TF_SERVING_HOST }}" >> .env
-          echo "TRITON_HOST=${{ secrets.TRITON_HOST }}" >> .env
-          echo "INFLUXDB_HOST=${{ secrets.INFLUXDB_HOST }}" >> .env
-          echo "INFLUXDB_PORT=8086" >> .env
-          echo "INFLUXDB_DB_NAME=${{ matrix.env == 'robotoff-org' && 'off_metrics' || 'off_net_metrics' }}" >> .env
-          echo "INFLUXDB_USERNAME=off" >> .env
-          echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
+          echo "TF_SERVING_HOST=10.1.0.200" >> .env
+          echo "TRITON_HOST=${{ env.TRITON_HOST }}" >> .env
+          echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
+          echo "INFLUXDB_PORT=8087" >> .env
+          echo "INFLUXDB_BUCKET=off_metrics" >> .env
+          echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
-          echo "EVENTS_API_URL=https://event.${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
+          echo "EVENTS_API_URL=https://event.${{ env.ROBOTOFF_DOMAIN }}" >> .env
           # TODO: remove this url when we have a proper server running for this purpose
           echo "IMAGE_MODERATION_SERVICE_URL=https://amathjourney.com/api/off-annotation/flag-image"
 
@@ -116,11 +137,11 @@ jobs:
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -133,11 +154,11 @@ jobs:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
@@ -150,11 +171,11 @@ jobs:
       id: livecheck
       if: ${{ always() }}
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -171,11 +192,11 @@ jobs:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
@@ -187,11 +208,11 @@ jobs:
       uses: appleboy/ssh-action@master
       if: ${{ always() }}
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |

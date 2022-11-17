@@ -490,22 +490,24 @@ docs = ["sphinx (>=3.5)", "jaraco.packaging (>=9)", "rst.linker (>=1.9)", "furo"
 testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 (<5)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
 
 [[package]]
-name = "influxdb"
-version = "5.3.1"
-description = "InfluxDB client"
+name = "influxdb-client"
+version = "1.34.0"
+description = "InfluxDB 2.0 Python client library"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 
 [package.dependencies]
-msgpack = "*"
-python-dateutil = ">=2.6.0"
-pytz = "*"
-requests = ">=2.17.0"
-six = ">=1.10.0"
+certifi = ">=14.05.14"
+python-dateutil = ">=2.5.3"
+reactivex = ">=4.0.4"
+urllib3 = ">=1.26.0"
 
 [package.extras]
-test = ["nose", "nose-cov", "mock", "requests-mock"]
+async = ["aiohttp (>=3.8.1)", "aiocsv (>=1.2.2)"]
+ciso = ["ciso8601 (>=2.1.1)"]
+extra = ["pandas (>=0.25.3)", "numpy"]
+test = ["flake8 (>=5.0.3)", "coverage (>=4.0.3)", "nose (>=1.3.7)", "pluggy (>=0.3.1)", "py (>=1.4.31)", "randomize (>=0.13)", "pytest (>=5.0.0)", "pytest-cov (>=3.0.0)", "httpretty (==1.0.5)", "psutil (>=5.6.3)", "aioresponses (>=0.7.3)", "sphinx (==1.8.5)", "sphinx-rtd-theme", "jinja2 (==3.1.2)"]
 
 [[package]]
 name = "iniconfig"
@@ -725,14 +727,6 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
-name = "msgpack"
-version = "1.0.4"
-description = "MessagePack serializer"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "murmurhash"
 version = "1.0.9"
 description = "Cython bindings for MurmurHash"
@@ -816,7 +810,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "pathspec"
-version = "0.10.1"
+version = "0.10.2"
 description = "Utility library for gitignore style pattern matching of file paths."
 category = "dev"
 optional = false
@@ -866,7 +860,7 @@ python-versions = "*"
 
 [[package]]
 name = "platformdirs"
-version = "2.5.3"
+version = "2.5.4"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
@@ -1170,6 +1164,17 @@ python-versions = ">=3.6"
 pyyaml = "*"
 
 [[package]]
+name = "reactivex"
+version = "4.0.4"
+description = "ReactiveX (Rx) for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+typing-extensions = ">=4.1.1,<5.0.0"
+
+[[package]]
 name = "requests"
 version = "2.27.1"
 description = "Python HTTP for Humans."
@@ -1251,7 +1256,7 @@ webhdfs = ["requests"]
 
 [[package]]
 name = "spacy"
-version = "3.4.2"
+version = "3.4.3"
 description = "Industrial-strength Natural Language Processing (NLP) in Python"
 category = "main"
 optional = false
@@ -1274,7 +1279,7 @@ spacy-loggers = ">=1.0.0,<2.0.0"
 srsly = ">=2.4.3,<3.0.0"
 thinc = ">=8.1.0,<8.2.0"
 tqdm = ">=4.38.0,<5.0.0"
-typer = ">=0.3.0,<0.5.0"
+typer = ">=0.3.0,<0.8.0"
 typing-extensions = {version = ">=3.7.4,<4.2.0", markers = "python_version < \"3.8\""}
 wasabi = ">=0.9.1,<1.1.0"
 
@@ -1516,7 +1521,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-protobuf"
-version = "3.20.4.2"
+version = "3.20.4.5"
 description = "Typing stubs for protobuf"
 category = "dev"
 optional = false
@@ -1540,7 +1545,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-six"
-version = "1.16.21.1"
+version = "1.16.21.3"
 description = "Typing stubs for six"
 category = "dev"
 optional = false
@@ -1548,7 +1553,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-toml"
-version = "0.10.8"
+version = "0.10.8.1"
 description = "Typing stubs for toml"
 category = "dev"
 optional = false
@@ -1677,7 +1682,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "f3ee59df28dff0ba3e2851e860b563553f118bb412447ad36b0deb32f84ee75d"
+content-hash = "1c164143880704f9fcdc3edbe8fa6cf91a0998ba27768f15ce9dd57a97effb7f"
 
 [metadata.files]
 apscheduler = []
@@ -1720,7 +1725,7 @@ identify = []
 idna = []
 importlib-metadata = []
 importlib-resources = []
-influxdb = []
+influxdb-client = []
 iniconfig = []
 isort = []
 jinja2 = []
@@ -1739,7 +1744,6 @@ mkdocs-awesome-pages-plugin = []
 mkdocs-material = []
 mkdocs-material-extensions = []
 more-itertools = []
-msgpack = []
 murmurhash = []
 mypy = []
 mypy-extensions = []
@@ -1779,6 +1783,7 @@ pytz = []
 pytz-deprecation-shim = []
 pyyaml = []
 pyyaml-env-tag = []
+reactivex = []
 requests = []
 sentry-sdk = []
 shellingham = []
