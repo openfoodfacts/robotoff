@@ -2,12 +2,12 @@ version: "3.9"
 
 
 x-robotoff-base: &robotoff-base
-    restart: $RESTART_POLICY
-    image: ghcr.io/openfoodfacts/robotoff:${TAG}
-    volumes:
-      - ./datasets:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models
-      - ./models:/opt/robotoff/models
+  restart: $RESTART_POLICY
+  image: ghcr.io/openfoodfacts/robotoff:${TAG}
+  volumes:
+    - ./datasets:/opt/robotoff/datasets
+    - ./tf_models:/opt/robotoff/tf_models
+    - ./models:/opt/robotoff/models
 
 x-robotoff-base-env: &robotoff-base-env
   ROBOTOFF_INSTANCE:
@@ -29,9 +29,8 @@ x-robotoff-base-env: &robotoff-base-env
   OFF_PASSWORD:
   INFLUXDB_HOST:
   INFLUXDB_PORT:
-  INFLUXDB_DB_NAME:
-  INFLUXDB_USERNAME:
-  INFLUXDB_PASSWORD:
+  INFLUXDB_BUCKET:
+  INFLUXDB_AUTH_TOKEN:
   SLACK_TOKEN:
   SENTRY_DSN:
   ELASTICSEARCH_HOSTS:

@@ -281,9 +281,9 @@ BRAND_MATCHING_MIN_COUNT = 15
 
 INFLUXDB_HOST = os.environ.get("INFLUXDB_HOST", "localhost")
 INFLUXDB_PORT = int(os.environ.get("INFLUXDB_PORT", "8086"))
-INFLUXDB_DB_NAME = os.environ.get("INFLUXDB_DB_NAME", "off_metrics")
-INFLUXDB_USERNAME = os.environ.get("INFLUXDB_USERNAME", "off_metrics")
-INFLUXDB_PASSWORD = os.environ.get("INFLUXDB_PASSWORD")
+INFLUXDB_BUCKET = os.environ.get("INFLUXDB_BUCKET", "off_metrics")
+INFLUXDB_AUTH_TOKEN = os.environ.get("INFLUXDB_AUTH_TOKEN")
+INFLUXDB_ORG = os.environ.get("INFLUXDB_ORG", "off")
 
 TEST_DIR = PROJECT_DIR / "tests"
 TEST_DATA_DIR = TEST_DIR / "unit/data"

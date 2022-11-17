@@ -4,7 +4,8 @@ from typing import List, Optional
 from urllib.parse import urlparse
 
 import requests
-from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -62,15 +63,13 @@ COUNTRY_TAGS = [
 ]
 
 
-def get_influx_client() -> InfluxDBClient:
+def get_influx_client() -> Optional[InfluxDBClient]:
     if not settings.INFLUXDB_HOST:
         return None
     return InfluxDBClient(
-        settings.INFLUXDB_HOST,
-        settings.INFLUXDB_PORT,
-        settings.INFLUXDB_USERNAME,
-        settings.INFLUXDB_PASSWORD,
-        settings.INFLUXDB_DB_NAME,
+        url=f"http://{settings.INFLUXDB_HOST}:{settings.INFLUXDB_PORT}",
+        token=settings.INFLUXDB_AUTH_TOKEN,
+        org=settings.INFLUXDB_ORG,
     )
 
 
@@ -78,13 +77,16 @@ def ensure_influx_database():
     client = get_influx_client()
     if client is not None:
         try:
-            db_names = [data.get("name") for data in client.get_list_database()]
-            if settings.INFLUXDB_DB_NAME not in db_names:
+            bucket_client = client.buckets_api()
+            bucket_names = [
+                bucket.name for bucket in bucket_client.find_buckets().buckets
+            ]
+            if settings.INFLUXDB_BUCKET not in bucket_names:
                 # create it
-                client.create_database(settings.INFLUXDB_DB_NAME)
+                client.bucket_name(bucket_name=settings.INFLUXDB_BUCKET)
                 logger.warning(
-                    "Creating influxdb database %r as it does not exist yet",
-                    settings.INFLUXDB_DB_NAME,
+                    "Creating influxdb bucket %r as it does not exist yet",
+                    settings.INFLUXDB_BUCKET,
                 )
         except Exception:
             # better be fail safe, our job is not that important !
@@ -126,7 +128,8 @@ def save_facet_metrics():
     inserts += generate_metrics_from_path("world", "/countries?json=1", target_datetime)
     client = get_influx_client()
     if client is not None:
-        client.write_points(inserts)
+        write_client = client.write_api(write_options=SYNCHRONOUS)
+        write_client.write(bucket=settings.INFLUXDB_BUCKET, record=inserts)
 
 
 def get_facet_name(url: str) -> str:

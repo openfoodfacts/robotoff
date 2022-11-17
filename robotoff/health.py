@@ -1,6 +1,6 @@
 import requests
 from healthcheck import HealthCheck
-from influxdb import InfluxDBClient
+from influxdb_client import InfluxDBClient
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from pymongo import MongoClient
 
@@ -37,15 +37,13 @@ def test_connect_influxdb():
         return True, "skipped InfluxDB db connection test (INFLUXDB_HOST is empty)!"
     logger.debug("health: testing InfluxDB connection to %s", settings.INFLUXDB_HOST)
     client = InfluxDBClient(
-        settings.INFLUXDB_HOST,
-        settings.INFLUXDB_PORT,
-        settings.INFLUXDB_USERNAME,
-        settings.INFLUXDB_PASSWORD,
-        settings.INFLUXDB_DB_NAME,
-        timeout=10,  # 10s is much
+        url=f"http://{settings.INFLUXDB_HOST}:{settings.INFLUXDB_PORT}",
+        token=settings.INFLUXDB_AUTH_TOKEN,
+        org=settings.INFLUXDB_ORG,
     )
-    client.get_list_users()
-    return True, "InfluxDB db connection success !"
+    if not client.ping():
+        return False, "InfluxDB connection failed!"
+    return True, "InfluxDB db connection success!"
 
 
 def test_connect_robotoff_api():
