@@ -1,5 +1,5 @@
 from multiprocessing.connection import Client
-from typing import Dict
+from typing import Dict, Optional
 
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -7,7 +7,7 @@ from robotoff.utils import get_logger
 logger = get_logger(__name__)
 
 
-def send_ipc_event(event_type: str, meta: Dict = None):
+def send_ipc_event(event_type: str, meta: Optional[Dict] = None):
     meta = meta or {}
 
     logger.info("Connecting listener server on {}:{}" "".format(*settings.IPC_ADDRESS))

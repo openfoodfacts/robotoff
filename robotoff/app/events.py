@@ -1,4 +1,5 @@
 from multiprocessing import Process, SimpleQueue
+from typing import Optional
 
 import requests
 
@@ -48,7 +49,7 @@ def send_event(
     event_type: str,
     user_id: str,
     device_id: str,
-    barcode: str = None,
+    barcode: Optional[str] = None,
 ):
     event = {
         "event_type": event_type,
