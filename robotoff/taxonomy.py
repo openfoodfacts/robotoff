@@ -1,5 +1,4 @@
 import collections
-import functools
 import pathlib
 from enum import Enum
 from typing import Any, Dict, Iterable, List, Optional, Set, Union
@@ -9,7 +8,6 @@ import requests
 
 from robotoff import settings
 from robotoff.utils import get_logger, http_session, load_json
-from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
 
@@ -276,9 +274,9 @@ def generate_category_hierarchy(
 
 
 def fetch_taxonomy(
-    url: str, fallback_path: str, offline: bool = False
-) -> Optional[Taxonomy]:
-    if offline:
+    url: str, fallback_path: Optional[str] = None, offline: bool = False
+) -> Taxonomy:
+    if offline and fallback_path:
         return Taxonomy.from_json(fallback_path)
 
     try:
@@ -293,55 +291,23 @@ def fetch_taxonomy(
         if fallback_path:
             return Taxonomy.from_json(fallback_path)
         else:
-            return None
+            raise e
 
     return Taxonomy.from_dict(data)
 
 
-TAXONOMY_STORES: Dict[str, CachedStore] = {
-    TaxonomyType.category.name: CachedStore(
-        functools.partial(
-            fetch_taxonomy,
-            url=settings.TAXONOMY_CATEGORY_URL,
-            fallback_path=settings.TAXONOMY_CATEGORY_PATH,
-        ),
-        expiration_interval=720,
-    ),
-    TaxonomyType.ingredient.name: CachedStore(
-        functools.partial(
-            fetch_taxonomy,
-            url=settings.TAXONOMY_INGREDIENT_URL,
-            fallback_path=settings.TAXONOMY_INGREDIENT_PATH,
-        ),
-        expiration_interval=720,
-    ),
-    TaxonomyType.label.name: CachedStore(
-        functools.partial(
-            fetch_taxonomy,
-            url=settings.TAXONOMY_LABEL_URL,
-            fallback_path=settings.TAXONOMY_LABEL_PATH,
-        ),
-        expiration_interval=720,
-    ),
-    TaxonomyType.brand.name: CachedStore(
-        functools.partial(
-            fetch_taxonomy,
-            url=settings.TAXONOMY_BRAND_URL,
-            fallback_path=settings.TAXONOMY_BRAND_PATH,
-        ),
-        expiration_interval=720,
-    ),
-}
-
-
+@cachetools.cached(cache=cachetools.TTLCache(maxsize=100, ttl=12 * 60 * 60))  # 12h
 def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
     """Returned the requested Taxonomy."""
-    taxonomy_store = TAXONOMY_STORES.get(taxonomy_type)
+    if taxonomy_type not in settings.TAXONOMY_URLS:
+        raise ValueError(f"unknown taxonomy type: {taxonomy_type}")
 
-    if taxonomy_store is None:
-        raise ValueError("unknown taxonomy type: {}".format(taxonomy_type))
-
-    return taxonomy_store.get(offline=offline)
+    url = settings.TAXONOMY_URLS[taxonomy_type]
+    return fetch_taxonomy(
+        url,
+        fallback_path=str(settings.TAXONOMY_PATHS.get(taxonomy_type, "")) or None,
+        offline=offline,
+    )
 
 
 def is_prefixed_value(value: str) -> bool:

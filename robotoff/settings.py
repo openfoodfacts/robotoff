@@ -89,18 +89,15 @@ JSONL_DATASET_URL = (
     BaseURLProvider().static().get() + "/data/openfoodfacts-products.jsonl.gz"
 )
 
-TAXONOMY_CATEGORY_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/categories.full.json"
-)
-TAXONOMY_INGREDIENT_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/ingredients.full.json"
-)
-TAXONOMY_LABEL_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/labels.full.json"
-)
-TAXONOMY_BRAND_URL = (
-    BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json"
-)
+TAXONOMY_URLS = {
+    "category": BaseURLProvider().static().get()
+    + "/data/taxonomies/categories.full.json",
+    "ingredient": BaseURLProvider().static().get()
+    + "/data/taxonomies/ingredients.full.json",
+    "label": BaseURLProvider().static().get() + "/data/taxonomies/labels.full.json",
+    "brand": BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json",
+}
+
 OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
@@ -131,10 +128,12 @@ CATEGORY_MATCHER_INTERSECT = (
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
-TAXONOMY_CATEGORY_PATH = TAXONOMY_DIR / "categories.full.json.gz"
-TAXONOMY_INGREDIENT_PATH = TAXONOMY_DIR / "ingredients.full.json.gz"
-TAXONOMY_LABEL_PATH = TAXONOMY_DIR / "labels.full.json.gz"
-TAXONOMY_BRAND_PATH = TAXONOMY_DIR / "brands.full.json.gz"
+TAXONOMY_PATHS = {
+    "category": TAXONOMY_DIR / "categories.full.json.gz",
+    "ingredient": TAXONOMY_DIR / "ingredients.full.json.gz",
+    "label": TAXONOMY_DIR / "labels.full.json.gz",
+    "brand": TAXONOMY_DIR / "brands.full.json.gz",
+}
 INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
 FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
