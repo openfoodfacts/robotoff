@@ -236,6 +236,21 @@ paths:
       tags:
         - Insights
       summary: Submit an annotation
+      description: |
+        The annotation can be submitted as an anonymous user or as a registered user.
+        If the user is anonymous, the annotation will be accounted as a vote, and several identical
+        anonymous votes are required to apply the insight. If the vote is sent from a registered user,
+        it is applied directly.
+
+        To send the annotation as a registered user, send Open Food Facts credentials to the API using
+        Basic Authentication: add a `Authorization: basic {ENCODED_BASE64}` header where `{ENCODED_BASE64}`
+        is an base64-encoded string of `user:password`. Don't provide an authentication header for anonymous
+        users.
+
+        The annotation is an integer that can take 3 values: `0`, `1`, `-1`. `0` means the insight is incorrect
+        (so it won't be applied), `1` means it is correct (so it will be applied) and `-1` means the insight
+        won't be returned to the user (_skip_). We use the voting mecanism system to remember which insight
+        to skip for a user (authenticated or not).
       operationId: Submitanannotation
       requestBody:
         required: true
@@ -249,7 +264,7 @@ paths:
                   description: ID of the insight
                 annotation:
                   type: integer
-                  description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for `unknown`"
+                  description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for _skip_"
                   enum:
                     - 0
                     - 1
