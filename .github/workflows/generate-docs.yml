@@ -45,6 +45,16 @@ jobs:
       - name: Generate documentation
         run: bash ./build_mkdocs.sh
 
+      # generating openapi documentation
+      # we do this after mkdocs to overwrite api.html file
+      - name: Generate openapi html with ghcr.io/redocly/redoc/cli:latest
+        run : |
+          docker run --rm \
+            -v $(pwd)/doc/references:/data -v $(pwd)/gh_pages/:/output \
+            ghcr.io/redocly/redoc/cli:latest \
+            build -o /output/references/api/index.html api.yml && \
+          sudo chown $UID -R gh_pages
+
       # Deploy docs to gh_pages if we are pushing to master
       # Example from https://github.com/marketplace/actions/deploy-to-github-pages
       - name: Deploy 🚀
