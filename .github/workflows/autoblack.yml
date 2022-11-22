@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.7
+      - name: Set up Python 3.9
         uses: actions/setup-python@v3
         with:
-          python-version: 3.7
+          python-version: 3.9
       - name: Install Black
         run: pip install black==21.12b0 click==7.1.2
       - name: Run black --check .
