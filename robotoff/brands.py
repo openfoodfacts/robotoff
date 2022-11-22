@@ -7,6 +7,7 @@ import requests
 
 from robotoff import settings
 from robotoff.products import ProductDataset
+from robotoff.taxonomy import TaxonomyType
 from robotoff.utils import dump_text, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -93,7 +94,9 @@ def generate_brand_list(
     blacklisted_brands: Optional[Set[str]] = None,
 ) -> List[Tuple[str, str]]:
     min_length = min_length or 0
-    brand_taxonomy = requests.get(settings.TAXONOMY_BRAND_URL).json()
+    brand_taxonomy = requests.get(
+        settings.TAXONOMY_URLS[TaxonomyType.brand.name]
+    ).json()
     brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}
