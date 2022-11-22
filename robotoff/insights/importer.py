@@ -566,7 +566,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 setattr(reference_insight, field_name, getattr(insight, field_name))
 
     @classmethod
-    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+    def add_optional_fields(  # noqa: B027
+        cls, insight: ProductInsight, product: Product
+    ):
         """Overwrite this method in children classes to add optional fields.
 
         The `campaign` field should be populated here.
@@ -1033,7 +1035,7 @@ def import_product_predictions(
     return batch_insert(PredictionModel, to_import, 50)
 
 
-IMPORTERS: List[Type[InsightImporter]] = [
+IMPORTERS: List[Type] = [
     PackagerCodeInsightImporter,
     LabelInsightImporter,
     CategoryImporter,

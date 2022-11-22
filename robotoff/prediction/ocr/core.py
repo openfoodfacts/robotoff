@@ -129,7 +129,7 @@ def is_barcode(text: str):
 
 
 def get_source(
-    image_name: str, json_path: str = None, barcode: Optional[str] = None
+    image_name: str, json_path: Optional[str] = None, barcode: Optional[str] = None
 ) -> str:
     if not barcode:
         barcode = get_barcode_from_path(str(json_path))

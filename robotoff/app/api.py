@@ -1075,12 +1075,9 @@ class HealthResource:
 
 class DumpResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        keep_types: Optional[List[str]] = req.get_param_as_list(
-            "insight_types", required=False
-        )
-
-        if keep_types is not None:
-            keep_types = keep_types[:10]
+        keep_types: List[str] = req.get_param_as_list(
+            "insight_types", required=False, default=[]
+        )[:10]
 
         barcode = req.get_param("barcode")
         annotated = req.get_param_as_bool("annotated", blank_as_true=False)

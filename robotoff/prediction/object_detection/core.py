@@ -154,7 +154,7 @@ class RemoteModel:
                 dtype=np.float32,
             )
             .reshape((1, 1))
-            .astype(np.int)[0][0]
+            .astype(np.int)[0][0]  # type: ignore
         )
         detection_scores = np.frombuffer(
             response.raw_output_contents[output_index["detection_scores"]],
@@ -166,7 +166,7 @@ class RemoteModel:
                 dtype=np.float32,
             )
             .reshape((1, -1))
-            .astype(np.int)
+            .astype(np.int)  # type: ignore
         )[0]
         detection_boxes = np.frombuffer(
             response.raw_output_contents[output_index["detection_boxes"]],

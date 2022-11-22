@@ -1,4 +1,3 @@
-import abc
 import datetime
 from typing import Callable, Optional
 
@@ -7,7 +6,7 @@ from robotoff.utils import get_logger
 logger = get_logger(__name__)
 
 
-class CachedStore(metaclass=abc.ABCMeta):
+class CachedStore:
     def __init__(self, fetch_func: Callable, expiration_interval: Optional[int] = 30):
         self.store = None
         self.expires_after: Optional[datetime.datetime] = None

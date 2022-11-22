@@ -198,7 +198,7 @@ def is_valid_image(barcode: str, image_id: str) -> bool:
 
 def get_product(
     barcode: str,
-    fields: List[str] = None,
+    fields: Optional[List[str]] = None,
     server: Optional[Union[ServerType, str]] = None,
     timeout: Optional[int] = 10,
 ) -> Optional[Dict]:
@@ -358,7 +358,7 @@ def save_ingredients(
     barcode: str,
     ingredient_text: str,
     insight_id: Optional[str] = None,
-    lang: str = None,
+    lang: Optional[str] = None,
     comment: Optional[str] = None,
     **kwargs,
 ):

@@ -64,9 +64,9 @@ def _add_vote_exclusions(
 
 def get_insights(
     barcode: Optional[str] = None,
-    keep_types: List[str] = None,
-    country: str = None,
-    brands: List[str] = None,
+    keep_types: Optional[List[str]] = None,
+    country: Optional[str] = None,
+    brands: Optional[List[str]] = None,
     annotated: Optional[bool] = False,
     annotation: Optional[int] = None,
     order_by: Optional[str] = None,
@@ -199,7 +199,7 @@ def get_images(
 
 def get_predictions(
     barcode: Optional[str] = None,
-    keep_types: List[str] = None,
+    keep_types: Optional[List[str]] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
@@ -393,7 +393,7 @@ def save_annotation(
 
 def get_logo_annotation(
     barcode: Optional[str] = None,
-    keep_types: List[str] = None,
+    keep_types: Optional[List[str]] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
