@@ -2,17 +2,9 @@ name: Container Image Deployment CI (ML stack)
 
 on:
   push:
-    branches:
-      - master
-      - ml-deploy-*
-    # only update on push if ml.yml changed (does not apply to tags)
-    paths:
-      - docker/ml.yml
-      - .github/workflows/container-deploy-ml.yml
-    # we also deploy ml on specific tags, starting with ml-
     tags:
-      - ml-*
-
+      - robotoff-ml-deploy-net*
+      - robotoff-ml-deploy-org*
 
 jobs:
   deploy:
@@ -20,26 +12,39 @@ jobs:
     strategy:
       matrix:
         env:
-          - robotoff-ml
+          - ${{ startsWith(github.ref, 'refs/tags/ml-deploy-org') && 'robotoff-ml-org' || 'robotoff-ml-net' }}
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
     steps:
+    - name: Set common variables
+      run: |
+        echo "PROJECT_DIR=robotoff-ml" >> $GITHUB_ENV
+        echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+    - name: Set various variables for staging deployment
+      if: matrix.env == 'robotoff-ml-net'
+      run: |
+        echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+    - name: Set various variables for production deployment
+      if: matrix.env == 'robotoff-ml-org'
+      run: |
+        echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
           # Clone Git repository if not already there
-          [ ! -d '${{ matrix.env }}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
+          [ ! -d '${{ env.PROJECT_DIR }}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ env.PROJECT_DIR }} --no-single-branch 2>&1
 
           # Go to repository directory
-          cd ${{ matrix.env }}
+          cd ${{ env.PROJECT_DIR }}
 
           # Fetch newest commits (in case it wasn't freshly cloned)
           git fetch --depth 1
@@ -50,16 +55,16 @@ jobs:
     - name: Set environment variables
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
           # Go to repository directory
-          cd ${{ matrix.env }}
+          cd ${{ env.PROJECT_DIR }}
 
           # Set Docker Compose variables
           echo "DOCKER_CLIENT_TIMEOUT=120" > .env
@@ -68,7 +73,7 @@ jobs:
           echo "COMPOSE_PROJECT_NAME=robotoff-ml" >> .env
           echo "COMPOSE_FILE=docker/ml.yml" >> .env
           echo "RESTART_POLICY=always" >> .env
-          echo "TRITON_EXPOSE_HTTP=${{ secrets.TRITON_EXPOSE_HTTP }}" >> .env
+          echo "TRITON_EXPOSE_HTTP=8003" >> .env
 
     - name: Start services
       uses: appleboy/ssh-action@master
@@ -76,44 +81,44 @@ jobs:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
-          cd ${{ matrix.env }}
+          cd ${{ env.PROJECT_DIR }}
           make up
 
     - name: Check services are up
       uses: appleboy/ssh-action@master
       if: ${{ always() }}
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
-          cd ${{ matrix.env }}
+          cd ${{ env.PROJECT_DIR }}
           make livecheck
 
     - name: Cleanup obsolete Docker objects
       uses: appleboy/ssh-action@master
       if: ${{ always() }}
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
-          cd ${{ matrix.env }}
+          cd ${{ env.PROJECT_DIR }}
           make prune
