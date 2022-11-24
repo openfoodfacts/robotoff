@@ -23,9 +23,15 @@ paths:
       summary: Get questions for a given product
       operationId: getQuestionsBarcode
       parameters:
+        - name: count
+          in: query
+          description: The number of questions to return
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
         - $ref: "#/components/parameters/barcode_path"
         - $ref: "#/components/parameters/server_domain"
-        - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/lang"
       responses:
         "200":
@@ -169,19 +175,6 @@ paths:
       summary: Get a random insight
       operationId: GetInsightsRandom
       parameters:
-        - name: count
-          in: query
-          description: The number of results to return
-          schema:
-            type: number
-            default: 1
-            minimum: 1
-        - name: server_domain
-          in: query
-          description: The server domain
-          schema:
-            type: string
-            default: api.openfoodfacts.org
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/value_tag"
@@ -664,7 +657,7 @@ components:
       description: The number of questions to return
       schema:
         type: integer
-        default: 1
+        default: 25
         minimum: 1
     server_domain:
       name: server_domain
