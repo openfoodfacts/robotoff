@@ -28,6 +28,8 @@ jobs:
         echo "ROBOTOFF_DOMAIN=openfoodfacts.net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
         echo "TRITON_HOST=10.1.0.200" >> $GITHUB_ENV
+        # TODO remove when category model is retrained for Triton
+        echo "TF_SERVING_HOST=10.1.0.200" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
     - name: Set various variable for production deployment
       if: matrix.env == 'robotoff-org'
@@ -38,7 +40,9 @@ jobs:
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
         echo "ROBOTOFF_DOMAIN=openfoodfacts.org" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://off2.free.org:27017" >> $GITHUB_ENV
-        echo "TRITON_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "TRITON_HOST=10.1.0.201" >> $GITHUB_ENV
+        # TODO remove when category model is retrained for Triton
+        echo "TF_SERVING_HOST=10.1.0.201" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
@@ -120,8 +124,7 @@ jobs:
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
           echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
-          # TODO remove when triton is deployed, and category model is retrained for triton
-          echo "TF_SERVING_HOST=10.1.0.200" >> .env
+          echo "TF_SERVING_HOST=${{ env.TF_SERVING_HOST }}" >> .env
           echo "TRITON_HOST=${{ env.TRITON_HOST }}" >> .env
           echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
           echo "INFLUXDB_PORT=8087" >> .env
