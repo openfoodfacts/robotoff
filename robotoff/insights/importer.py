@@ -914,33 +914,6 @@ class StoreInsightImporter(InsightImporter):
             yield insight
 
 
-class PackagingInsightImporter(InsightImporter):
-    @staticmethod
-    def get_type() -> InsightType:
-        return InsightType.packaging
-
-    @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
-        return {PredictionType.packaging}
-
-    @classmethod
-    def is_conflicting_insight(
-        cls, candidate: ProductInsight, reference: ProductInsight
-    ) -> bool:
-        return candidate.value_tag == reference.value_tag
-
-    @classmethod
-    def generate_candidates(
-        cls,
-        product: Product,
-        predictions: List[Prediction],
-    ) -> Iterator[ProductInsight]:
-        for prediction in predictions:
-            insight = ProductInsight(**prediction.to_dict())
-            insight.automatic_processing = True
-            yield insight
-
-
 def is_valid_product_prediction(
     prediction: Prediction, product: Optional[Product] = None
 ) -> bool:
@@ -1043,7 +1016,6 @@ IMPORTERS: List[Type] = [
     ExpirationDateImporter,
     BrandInsightImporter,
     StoreInsightImporter,
-    PackagingInsightImporter,
 ]
 
 

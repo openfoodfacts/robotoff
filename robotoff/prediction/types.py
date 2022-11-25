@@ -6,7 +6,10 @@ from typing import Any, Dict, Optional
 
 @unique
 class PredictionType(str, Enum):
-    """PredictionType defines the type of the prediction."""
+    """PredictionType defines the type of the prediction.
+
+    See `InsightType` documentation for further information about each type.
+    """
 
     ingredient_spellcheck = "ingredient_spellcheck"
     packager_code = "packager_code"
@@ -20,6 +23,7 @@ class PredictionType(str, Enum):
     store = "store"
     nutrient = "nutrient"
     trace = "trace"
+    packaging_text = "packaging_text"
     packaging = "packaging"
     location = "location"
     nutrient_mention = "nutrient_mention"

@@ -63,8 +63,15 @@ class InsightType(str, Enum):
     # NOTE: there are 0 insights of this type in the Postgres DB.
     trace = "trace"
 
+    # (legacy) The 'packaging_text' insight detects the type of packaging based on the image OCR.
+    # This type used to be named 'packaging' and has been renamed into `packaging_text`, so that
+    # 'packaging' type can be used for detections of detailed packaging information
+    # (shape, material,...).
+    # This insight used to be applied automatically.
+    packaging_text = "packaging_text"
+
     # The 'packaging' insight detects the type of packaging based on the image OCR.
-    # This insight is always applied automatically.
+    # The details about each packaging element (shape, material, recycling) is returned.
     packaging = "packaging"
 
     # The 'location' insight detects the location of where the product comes from from the image OCR.

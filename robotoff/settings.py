@@ -96,6 +96,12 @@ TAXONOMY_URLS = {
     + "/data/taxonomies/ingredients.full.json",
     "label": BaseURLProvider().static().get() + "/data/taxonomies/labels.full.json",
     "brand": BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json",
+    "packaging_shape": BaseURLProvider().static().get()
+    + "/data/taxonomies/packaging_shapes.full.json",
+    "packaging_material": BaseURLProvider().static().get()
+    + "/data/taxonomies/packaging_materials.full.json",
+    "packaging_recycling": BaseURLProvider().static().get()
+    + "/data/taxonomies/packaging_recycling.full.json",
 }
 
 OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"

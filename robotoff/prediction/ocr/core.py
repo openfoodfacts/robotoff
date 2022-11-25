@@ -22,7 +22,6 @@ from .label import find_labels
 from .location import find_locations
 from .nutrient import find_nutrient_mentions, find_nutrient_values
 from .packager_code import find_packager_codes
-from .packaging import find_packaging
 from .product_weight import find_product_weight
 from .store import find_stores
 from .trace import find_traces
@@ -45,7 +44,6 @@ PREDICTION_TYPE_TO_FUNC: Dict[
     PredictionType.nutrient_mention: find_nutrient_mentions,
     PredictionType.brand: find_brands,
     PredictionType.store: find_stores,
-    PredictionType.packaging: find_packaging,
     PredictionType.location: find_locations,
     PredictionType.image_lang: get_image_lang,
 }

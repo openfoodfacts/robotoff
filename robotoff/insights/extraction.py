@@ -21,7 +21,6 @@ DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
     PredictionType.expiration_date,
     PredictionType.brand,
     PredictionType.store,
-    PredictionType.packaging,
     PredictionType.nutrient,
     PredictionType.nutrient_mention,
     PredictionType.image_lang,

@@ -12,7 +12,6 @@ from robotoff.insights.importer import (
     InsightImporter,
     LabelInsightImporter,
     PackagerCodeInsightImporter,
-    PackagingInsightImporter,
     ProductWeightImporter,
     StoreInsightImporter,
     import_insights_for_products,
@@ -1168,24 +1167,6 @@ class TestStoreInsightImporter:
             ProductInsight(value_tag="tag1"), ProductInsight(value_tag="tag1")
         )
         assert not StoreInsightImporter.is_conflicting_insight(
-            ProductInsight(value_tag="tag1"), ProductInsight(value_tag="tag2")
-        )
-
-
-class TestPackagingInsightImporter:
-    def test_get_type(self):
-        assert PackagingInsightImporter.get_type() == InsightType.packaging
-
-    def test_get_required_prediction_types(self):
-        assert PackagingInsightImporter.get_required_prediction_types() == {
-            PredictionType.packaging
-        }
-
-    def test_is_conflicting_insight(self):
-        assert PackagingInsightImporter.is_conflicting_insight(
-            ProductInsight(value_tag="tag1"), ProductInsight(value_tag="tag1")
-        )
-        assert not PackagingInsightImporter.is_conflicting_insight(
             ProductInsight(value_tag="tag1"), ProductInsight(value_tag="tag2")
         )
 
