@@ -195,3 +195,10 @@ class InsightImportResult:
             f"types: {list(set(result.type.value for result in self.product_insight_import_results))}, "
             f"predictions: created={self.created_predictions_count()}>"
         )
+
+
+@enum.unique
+class PackagingElementProperty(enum.Enum):
+    shape = "shape"
+    material = "material"
+    recycling = "recycling"

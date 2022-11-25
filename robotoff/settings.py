@@ -127,6 +127,7 @@ DATASET_DIR = PROJECT_DIR / "datasets"
 DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / "i18n"
 LABEL_LOGOS_PATH = DATA_DIR / "label_logos.json"
+GRAMMARS_DIR = DATA_DIR / "grammars"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
@@ -175,6 +176,9 @@ TAXONOMY_PATHS = {
     "ingredient": TAXONOMY_DIR / "ingredients.full.json.gz",
     "label": TAXONOMY_DIR / "labels.full.json.gz",
     "brand": TAXONOMY_DIR / "brands.full.json.gz",
+    "packaging_material": TAXONOMY_DIR / "packaging_materials.full.json.gz",
+    "packaging_shape": TAXONOMY_DIR / "packaging_shapes.full.json.gz",
+    "packaging_recycling": TAXONOMY_DIR / "packaging_recycling.full.json.gz",
 }
 INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
 INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"

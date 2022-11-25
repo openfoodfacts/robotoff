@@ -1,0 +1,22 @@
+// match any non-whitespace word that is not detected by other rule/terminal
+// it has priority 0, lower than packaging related terminals that have priority
+// 1, so it matches words that were not detected by other terminals
+OTHER: /[^\s]+/
+
+// match a packaging string (see packaging rule below), any other word or a whitespace
+value: (packaging | junk | WS)+
+// all other words
+junk: OTHER+
+// boite en carton a recycler, bouteille,...
+packaging: shape_material_or_shape (WS to_recycling)?
+// boite, boite en carton,...
+?shape_material_or_shape: shape_material | PACKAGING_SHAPES
+// boite en carton, opercule metal,...
+shape_material: PACKAGING_SHAPES (WS "en")? (WS PACKAGING_MATERIALS (WS PACKAGING_MATERIALS)?)
+// a recycler, a jeter, a reutiliser...
+to_recycling: "a" WS PACKAGING_RECYCLING
+
+%import .terminal_packaging_shape_fr.PACKAGING_SHAPES
+%import .terminal_packaging_material_fr.PACKAGING_MATERIALS
+%import .terminal_packaging_recycling_fr.PACKAGING_RECYCLING_VERB -> PACKAGING_RECYCLING
+%import common.WS
