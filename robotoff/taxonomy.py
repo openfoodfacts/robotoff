@@ -24,6 +24,9 @@ class TaxonomyType(Enum):
     ingredient = 2
     label = 3
     brand = 4
+    packaging_shape = 5
+    packaging_material = 6
+    packaging_recycling = 7
 
 
 class TaxonomyNode:
