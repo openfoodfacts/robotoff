@@ -9,6 +9,12 @@ import sentry_sdk
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+
+# Robotoff instance gives the environment, either `prod` or `dev`
+# (`dev` by default).
+# If `prod` is used, openfoodfacts.org domain will be used by default,
+# and openfoodfacts.net if `dev` is used.
+# Messages to Slack are only enabled if `ROBOTOFF_INSTANCE=prod`.
 ROBOTOFF_INSTANCE = os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
 
@@ -23,6 +29,9 @@ def _instance_tld() -> str:
 
 
 _default_robotoff_domain = f"openfoodfacts.{_instance_tld()}"
+
+# `ROBOTOFF_DOMAIN` can be used to overwrite the Product Opener domain used.
+# If empty, the domain will be inferred from `ROBOTOFF_INSTANCE`
 _robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_domain)
 
 
