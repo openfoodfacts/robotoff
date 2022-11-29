@@ -19,8 +19,9 @@ Robotoff provides an API to:
 - Fetch insights
 - Annotate an insight (accept or reject)
 
-Once generated, the insights can be applied automatically, or after a manual validation if necessary.
-A scheduler regularly marks insights for automatic annotation and sends the update to Open Food Facts.
+Once generated, the insights can be applied automatically, or after a manual validation if necessary. A scheduler regularly marks insights for automatic annotation and sends the update to Open Food Facts.
+
+A detailed description of [how predictions and insights work is available here](https://openfoodfacts.github.io/robotoff/robotoff/explanations/predictions/).
 
 Robotoff works together with [Product Opener](https://github.com/openfoodfacts/openfoodfacts-server), the Core server of Open Food Facts (in Perl, which can also be installed locally using Docker) and the [Open Food Facts apps](https://github.com/openfoodfacts/smooth-app) (which can work with your local instance after enabling dev mode)
 
