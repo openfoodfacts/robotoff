@@ -62,3 +62,9 @@ networks:
   po_local:
     name: ${PO_LOCAL_NET:-po_default}
     external: true
+
+volumes:
+  postgres-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
+  es-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
