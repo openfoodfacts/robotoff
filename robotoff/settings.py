@@ -9,7 +9,6 @@ import sentry_sdk
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-
 # Robotoff instance gives the environment, either `prod` or `dev`
 # (`dev` by default).
 # If `prod` is used, openfoodfacts.org domain will be used by default,

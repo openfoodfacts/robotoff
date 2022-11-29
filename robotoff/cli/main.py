@@ -10,13 +10,6 @@ app = typer.Typer()
 
 
 @app.command()
-def run(service: str) -> None:
-    from robotoff.cli.run import run as run_
-
-    run_(service)
-
-
-@app.command()
 def regenerate_ocr_insights(
     barcode: str = typer.Argument(..., help="Barcode of the product")
 ) -> None:
@@ -86,20 +79,6 @@ def generate_ocr_insights(
 
 
 @app.command()
-def annotate(insight_type: Optional[str], country: Optional[str]) -> None:
-    from robotoff.cli import annotate as annotate_
-
-    annotate_.run(insight_type, country)
-
-
-@app.command()
-def batch_annotate(insight_type: str, filter_clause: str, dry: bool = True) -> None:
-    from robotoff.cli import batch
-
-    batch.run(insight_type, dry, filter_clause)
-
-
-@app.command()
 def predict_category(output: str) -> None:
     """Predict categories from the product JSONL dataset stored in `datasets`
     directory."""
@@ -115,70 +94,8 @@ def predict_category(output: str) -> None:
 
 
 @app.command()
-def spellcheck(
-    pattern: str,
-    correction: str,
-    country: str = "fr",
-    dry: bool = False,
-) -> None:
-    from robotoff.cli.spellcheck import correct_ingredient
-    from robotoff.off import OFFAuthentication
-    from robotoff.utils import get_logger
-    from robotoff.utils.text import get_tag
-
-    username = typer.prompt("Username ?")
-    password = typer.prompt("Password ?", hide_input=True)
-
-    get_logger()
-    ingredient = get_tag(pattern)
-    comment = "Fixing '{}' typo".format(pattern)
-    auth = OFFAuthentication(username=username, password=password)
-    correct_ingredient(
-        country, ingredient, pattern, correction, comment, dry_run=dry, auth=auth
-    )
-
-
-@app.command()
-def generate_spellcheck_insights(
-    output: str,
-    index_name: str = "product_all",
-    confidence: float = 0.5,
-    max_errors: Optional[int] = None,
-    limit: Optional[int] = None,
-) -> None:
-    from robotoff.spellcheck import Spellchecker
-    from robotoff.utils import dump_jsonl, get_logger
-    from robotoff.utils.es import get_es_client
-
-    logger = get_logger()
-    logger.info("Max errors: {}".format(max_errors))
-
-    client = get_es_client()
-    insights_iter = Spellchecker.load(
-        client=client, confidence=confidence, index_name=index_name
-    ).generate_insights(max_errors=max_errors, limit=limit)
-
-    dump_jsonl(output, insights_iter)
-
-
-@app.command()
-def test_spellcheck(text: str, confidence: float = 1.0) -> None:
-    import json
-
-    from robotoff.spellcheck import Spellchecker
-    from robotoff.utils import get_logger
-    from robotoff.utils.es import get_es_client
-
-    get_logger()
-    client = get_es_client()
-    result = Spellchecker.load(client=client, confidence=confidence).predict_insight(
-        text, detailed=True
-    )
-    print(json.dumps(result, indent=5))
-
-
-@app.command()
 def download_dataset(minify: bool = False) -> None:
+    """Download Open Food Facts dataset and save it in `datasets` directory."""
     from robotoff.products import fetch_dataset, has_dataset_changed
     from robotoff.utils import get_logger
 
@@ -193,7 +110,7 @@ def categorize(
     barcode: str,
     deepest_only: bool = False,
 ) -> None:
-    """Categorise predicts product categories based on the neural category classifier.
+    """Predict product categories based on the neural category classifier.
 
     deepest_only: controls whether the returned predictions should only contain the deepmost
     categories for a predicted taxonomy chain.
@@ -256,60 +173,6 @@ def import_insights(
 
     imported = import_insights_(insights, server_domain, batch_size)
     logger.info("{} insights imported".format(imported))
-
-
-@app.command()
-def apply_insights(
-    insight_type: str = typer.Argument(
-        ...,
-        help="Filter insights to apply based on their type",
-    ),
-    predictor: str = typer.Argument(
-        ..., help="Filter insights to apply based on their predictor value"
-    ),
-    value_tag: Optional[str] = typer.Option(
-        help="Filter insights to apply based on their `value_tag`", default=None
-    ),
-    max_delta: int = typer.Option(
-        180,
-        help="Maximum number of days between the upload of the insight image "
-        "and the upload of the most recent image of the product to consider "
-        "the apply the insight automatically",
-    ),
-    dry_run: bool = typer.Option(
-        False,
-        help="Perform a dry run (don't apply any insight)",
-    ),
-    max_scan_count: Optional[int] = typer.Option(
-        None, help="Filter insights based on their popularity"
-    ),
-) -> None:
-    """Apply insights automatically based on their insight type AND predictor.
-
-    Be careful when using this command, it may modify *many* products in Open
-    Food Facts database.
-    """
-    import datetime
-
-    from robotoff.cli import insights
-    from robotoff.utils import get_logger
-
-    logger = get_logger()
-    if dry_run:
-        logger.info("*** DRY RUN ***")
-    logger.info(
-        "Applying automatically insights with the following criteria: "
-        f"type: `{insight_type}`, predictor: `{predictor}`, "
-        f"value_tag: `{value_tag}`, max_scan_count: {max_scan_count}"
-    )
-    insights.apply_insights(
-        insight_type=insight_type,
-        predictor=predictor,
-        max_timedelta=datetime.timedelta(days=max_delta),
-        value_tag=value_tag,
-        max_scan_count=max_scan_count,
-        dry_run=dry_run,
-    )
 
 
 @app.command()
