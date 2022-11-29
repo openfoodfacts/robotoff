@@ -687,8 +687,7 @@ Be sure to run <code>make create_external_networks</code> before if needed (espe
 <p>In such cases you will have to mock the function which calls MongoDB. Feel free to reuse the existing test cases.</p>
 <p>To identify parts of the code where Robotoff connects to MongoDB or to Open Food Facts server (the part you should mock), keep an eye for variables like <code>server_url</code>, <code>server_domain</code> or <code>settings.OFF_SERVER_DOMAIN</code>.</p>
 <h1 id="debugging-guide">Debugging guide</h1>
-<p>We encourage using <a href="https://docs.python.org/3/library/pdb.html">PDB</a>
-to debug.</p>
+<p>We encourage using <a href="https://docs.python.org/3/library/pdb.html">PDB</a> to debug.</p>
 <p>Running test with <code>--pdb</code> flags, pytest will stop and open the pdb console as soon as there is an error or an assert fails.
 This can be a good way to try to understand why a test is failing.</p>
 <p><div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s2">&quot;path/to/test.py --pdb&quot;</span>
@@ -700,13 +699,11 @@ If it's a <code>mock.assert_called_with</code>, you can look at the real data pa
 <p>and then run the <code>pytest</code>, with the <code>--pdb</code> option (as above).</p>
 <blockquote>
 <p><strong>Note</strong><br />
-we need the <code>--pdb</code> option,
-to view the inputs and outputs captured by pytest
-and access the pdb console.</p>
+we need the <code>--pdb</code> option, to view the inputs and outputs captured by pytest and access the pdb console.</p>
 </blockquote>
 <h1 id="how-to-run-checks-locally">How to run checks locally</h1>
-<p>When commiting your modifications to the main branch, your code have to pass several tests automatically run by GitHub in order to be merged.</p>
-<p>You can run theses checks locally before commiting by using the following command:</p>
+<p>When committing your modifications to the main branch, your code have to pass several tests automatically run by Github in order to be merged.</p>
+<p>You can run theses checks locally before committing by using the following command:</p>
 <div class="highlight"><pre><span></span><code>$   make checks
 </code></pre></div>
                 

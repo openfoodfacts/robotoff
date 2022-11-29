@@ -386,6 +386,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#restore-db-dumps" class="md-nav__link">
+    Restore DB dumps
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore DB dumps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#postgresql-dump" class="md-nav__link">
+    PostgreSQL dump
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mongodb-dump" class="md-nav__link">
+    MongoDB dump
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -685,6 +712,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#restore-db-dumps" class="md-nav__link">
+    Restore DB dumps
+  </a>
+  
+    <nav class="md-nav" aria-label="Restore DB dumps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#postgresql-dump" class="md-nav__link">
+    PostgreSQL dump
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mongodb-dump" class="md-nav__link">
+    MongoDB dump
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -705,40 +759,50 @@
                 <h1 id="dev-install">Dev install</h1>
 <p>You may choose Docker install (recommended, less chance to mess up with your system, all included) or local install.</p>
 <h2 id="docker-install">Docker install</h2>
-<p>After cloning the repository,
-customize parameters by editing the <code>.env</code> file.
+<p>After cloning the repository, customize parameters by editing the <code>.env</code> file.
 You should, consider those changes:</p>
 <ul>
-<li>if you want to use tensorflow models, add <code>docker/ml.yml</code> to <code>COMPOSE_FILE</code></li>
-<li>if you don't work on Product Opener, you should launch MongoDB by adding <code>docker/mongodb.yml</code> to <code>COMPOSE_FILE</code></li>
-<li>change <code>OFF_UID</code> and <code>OFF_GID</code> to match your own user UID/GID.
-  (see <a href="https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e">Getting developper uid for docker</a>)</li>
+<li>
+<p>if you want to use ML models, add <code>docker/ml.yml</code> to <code>COMPOSE_FILE</code>, using <code>;</code> as separator.</p>
+<p>You should also run <code>make dl-models</code> to download all machine learning models locally.</p>
+</li>
 </ul>
-<p>Note: <strong>beware</strong> not to commit your changes in the future.</p>
+<ul>
+<li>if you don't work on Product Opener, you should launch MongoDB by adding <code>docker/mongodb.yml</code> to <code>COMPOSE_FILE</code></li>
+</ul>
+<ul>
+<li>change <code>OFF_UID</code> and <code>OFF_GID</code> to match your own user UID/GID (optional, only if you experience some file permission issue, see <a href="https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e">Getting developper uid for docker</a>)</li>
+</ul>
+<p>Note: <strong>beware</strong> not to commit your local changes to <code>.env</code> file!</p>
 <p>Because of Elasticsearch service, you may need to increase a system parameter (<code>vm.max_map_count=262144</code>), as described <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html">here</a>.</p>
 <p>Then simply run:</p>
 <div class="highlight"><pre><span></span><code>make dev
 </code></pre></div>
-<p>This will build containers, pull images based containers, create containers and run them.
-It will also download models.</p>
-<p>Verify whether robotoff is running as expected, by executing the following command in CLI,
-<div class="highlight"><pre><span></span><code>curl http://robotoff.openfoodfacts.localhost:5500/api/v1/status
+<p>This will build containers, pull images based containers, create containers and run them.</p>
+<p>Verify whether robotoff is running as expected, by executing the following command in CLI:
+<div class="highlight"><pre><span></span><code>curl http://localhost:5500/api/v1/status
 </code></pre></div>
 The expected response is <code>{"status":"running"}</code>.</p>
-<p>Also take a look at <a href="../maintenance/">maintenance</a></p>
+<p>Also take a look at <a href="../maintenance/">maintenance</a>.</p>
 <h2 id="local-install-with-poetry">Local install with poetry</h2>
 <p>This is an alternative if you are reluctant to use Docker, or have some other reasons to prefer manual install.</p>
-<p>After cloning the repository:</p>
+<p>After cloning the repository:
+1. Make sure a <a href="https://python-poetry.org/docs/#installation">recent version of Poetry is installed</a></p>
 <ol>
 <li>
-<p>Install the dependencies using <a href="https://python-poetry.org/docs/#installation">Poetry</a>:</p>
+<p>Configure Poetry to use Python 3.9:
+   <div class="highlight"><pre><span></span><code>poetry env use python3.9
+</code></pre></div></p>
+</li>
+<li>
+<p>Install the dependencies:</p>
 <div class="highlight"><pre><span></span><code>poetry install
 </code></pre></div>
 </li>
 <li>
 <p>Configure files required for the tests to run locally:</p>
 <p>Compile the i18n files:
-  <div class="highlight"><pre><span></span><code>cd i18n &amp;&amp; bash compile.sh &amp;&amp; cd ..
+  <div class="highlight"><pre><span></span><code><span class="nb">cd</span> i18n <span class="o">&amp;&amp;</span> bash compile.sh <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
 </code></pre></div></p>
 </li>
 <li>
@@ -748,28 +812,41 @@ The expected response is <code>{"status":"running"}</code>.</p>
 <p>If you want to use Elasticsearch predictions, you'll also have to set an Elasticsearch instance</p>
 </li>
 <li>
-<p>To configure MongoDB for docker, start with installing <a href="https://hub.docker.com/_/mongo">official MongoDB image</a></p>
-<p>Start the MongoDB container with</p>
-<div class="highlight"><pre><span></span><code>docker start mongodb
-</code></pre></div>
-<p>Your MongoDB has been installed successfully  and is up and running. Congratulations!</p>
-<p>Once you have the Robotoff services running with <code>docker-compose up</code> along with MongoDB container, proceed with the next steps.</p>
-<p>Our MongoDB does not have a database right now. So we restore it.</p>
-<div class="highlight"><pre><span></span><code>tar xzf off-dev-mongo-dump.tar.gz
-docker cp -a dump robotoff_mongodb_1:/var/tmp/
-docker exec mongodb mongorestore /var/tmp/dump
-</code></pre></div>
-<p>First we have extracted the zip file. Next we copy the dump in our running MongoDB service in Robotoff <code>robotoff_mongodb_1</code>. Lastly, we restore the dump from Robotoff's service to <code>mongodb</code> container.</p>
-<p>The MongoDB configuration is now complete. </p>
-<p>You can now work with Robotoff seamlessly.</p>
-</li>
-<li>
 <p>To debug in a running container, you need to run poetry in the container. For example:</p>
 <p><div class="highlight"><pre><span></span><code>docker-compose run --rm api poetry run python
 </code></pre></div>
   Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code. </p>
 </li>
 </ol>
+<h2 id="restore-db-dumps">Restore DB dumps</h2>
+<p>To have real-world data, you're probably interested in restoring data from production server.</p>
+<h3 id="postgresql-dump">PostgreSQL dump</h3>
+<p>Robotoff uses PostgreSQL as main database.</p>
+<p>First, download the latest DB dump:</p>
+<div class="highlight"><pre><span></span><code>wget https://openfoodfacts.org/data/dumps/robotoff_postgres_latest.dump
+</code></pre></div>
+<p>Start PostgreSQL container and copy the dump inside the container:</p>
+<div class="highlight"><pre><span></span><code>make up <span class="nv">service</span><span class="o">=</span>postgres
+docker cp -a robotoff_postgres_latest.dump robotoff_postgres_1:/tmp/
+</code></pre></div>
+<p>Then launch dump restore:</p>
+<div class="highlight"><pre><span></span><code>docker <span class="nb">exec</span> -it robotoff_postgres_1 pg_restore -v -d postgres -U postgres -c -j <span class="m">8</span> --if-exists /tmp/robotoff_postgres_latest.dump
+</code></pre></div>
+<p>This command drops all existing tables (<code>-c</code> command) and perform restore using 8 cores. The database is huge, it may take several hours to run depending on your hardware.</p>
+<h3 id="mongodb-dump">MongoDB dump</h3>
+<p>Robotoff also relies on MongoDB to fetch product. On staging and production, it interacts directly with the same MongoDB instance used by Product Opener.</p>
+<p>To restore Product Opener MongoDB dump, start by downloading and extracting the archive:</p>
+<div class="highlight"><pre><span></span><code>wget https://static.openfoodfacts.org/data/openfoodfacts-mongodbdump.tar.gz
+tar xvzf openfoodfacts-mongodbdump.tar.gz
+</code></pre></div>
+<p>Make sure the MongoDB container is up and running and copy the dump directory inside the container:</p>
+<div class="highlight"><pre><span></span><code>make up <span class="nv">service</span><span class="o">=</span>mongodb
+docker cp -a dump robotoff_mongodb_1:/var/tmp/
+</code></pre></div>
+<p>Then launch dump restore:</p>
+<div class="highlight"><pre><span></span><code>docker cp -a dump robotoff_mongodb_1:/var/tmp/
+docker <span class="nb">exec</span> -it robotff_mongodb_1 mongorestore --drop /var/tmp/dump
+</code></pre></div>
                 
               
               

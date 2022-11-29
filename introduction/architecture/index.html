@@ -729,7 +729,8 @@ with a computer vision model.</p>
 <li>perform spellcheck on ingredient lists <sup id="fnref:spellcheck_ingredients"><a class="footnote-ref" href="#fn:spellcheck_ingredients">11</a></sup></li>
 </ul>
 </li>
-<li>a Tensorflow Serving instance, used to serve object detection models (currently, only nutriscore and category), which is identified as <code>robotoff-ml</code><sup id="fnref:robotoff_ml"><a class="footnote-ref" href="#fn:robotoff_ml">10</a></sup>.</li>
+<li>a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) <sup id="fnref:robotoff_ml"><a class="footnote-ref" href="#fn:robotoff_ml">10</a></sup>.</li>
+<li>a Tensorflow Serving instance, used to serve the category detection model. We're going to get rid of Tensorflow Serving once a new categorizer is trained. <sup id="fnref2:robotoff_ml"><a class="footnote-ref" href="#fn:robotoff_ml">10</a></sup></li>
 <li><a href="https://github.com/openfoodfacts/robotoff-ann/">robotoff-ann</a> which uses an approximate KNN approach to predict logo label</li>
 <li>MongoDB, to fetch the product latest version without querying Product Opener API.</li>
 </ul>
@@ -761,10 +762,10 @@ with a computer vision model.</p>
 <p>see <code>robotoff.insights.annotate</code>&#160;<a class="footnote-backref" href="#fnref:annotate" title="Jump back to footnote 8 in the text">&#8617;</a></p>
 </li>
 <li id="fn:predict_category">
-<p>see <code>robotoff.elasticsearch.predict</code>&#160;<a class="footnote-backref" href="#fnref:predict_category" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+<p>see <code>robotoff.prediction.category.matcher</code>&#160;<a class="footnote-backref" href="#fnref:predict_category" title="Jump back to footnote 9 in the text">&#8617;</a></p>
 </li>
 <li id="fn:robotoff_ml">
-<p>see <code>docker/ml.yml</code>&#160;<a class="footnote-backref" href="#fnref:robotoff_ml" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+<p>see <code>docker/ml.yml</code>&#160;<a class="footnote-backref" href="#fnref:robotoff_ml" title="Jump back to footnote 10 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:robotoff_ml" title="Jump back to footnote 10 in the text">&#8617;</a></p>
 </li>
 <li id="fn:spellcheck_ingredients">
 <p>see <code>robotoff.spellcheck.elasticsearch.es_handler.ElasticsearchHandler</code>&#160;<a class="footnote-backref" href="#fnref:spellcheck_ingredients" title="Jump back to footnote 11 in the text">&#8617;</a></p>
