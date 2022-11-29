@@ -189,16 +189,6 @@ def download_dataset(minify: bool = False) -> None:
 
 
 @app.command()
-def download_models(force: bool = False) -> None:
-    """Download model weights from remote URLs.
-
-    If models have already been downloaded, the command is skipped unless
-    --force option is used.
-    """
-    pass
-
-
-@app.command()
 def categorize(
     barcode: str,
     deepest_only: bool = False,

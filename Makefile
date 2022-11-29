@@ -16,6 +16,7 @@ MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
 DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker-compose --env-file=${ENV_FILE}
+ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
 
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
@@ -94,10 +95,37 @@ log:
 # Management #
 #------------#
 
-# TODO: uncomment once model download CLI is ready 
-# dl-models:
-# 	@echo "🥫 Downloading models …"
-# 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
+dl-models: dl-model-labels dl-model-archives dl-model-categorizer
+
+dl-model-archives:
+	@echo "🥫 Downloading model archive files …"
+	cd models; \
+	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
+		do \
+			dir=`echo $${asset_name} | sed 's/tf-//g'`; \
+			mkdir -p $${dir} $${dir}/1; \
+			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
+	done
+
+dl-model-labels:
+	@echo "🥫 Downloading model label files …"
+	cd models; \
+	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
+	do \
+		dir=`echo $${asset_name} | sed 's/tf-//g'`; \
+		mkdir -p $${dir} $${dir}/1; \
+		wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/labels.txt > $${dir}/labels.txt; \
+	done
+
+dl-model-categorizer:
+	@echo "🥫 Downloading categorizer model …"
+	cd tf_models; \
+	dir=category-classifier; \
+	mkdir -p $${dir} $${dir}/1; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-xx-2.0/serving_model.tar.gz > $${dir}/1/saved_model.tar.gz; \
+	cd $${dir}/1; \
+	tar -xzvf saved_model.tar.gz --strip-component=1; \
+	rm saved_model.tar.gz
 
 #------------#
 # Quality    #
