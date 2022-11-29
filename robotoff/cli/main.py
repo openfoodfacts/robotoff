@@ -10,6 +10,13 @@ app = typer.Typer()
 
 
 @app.command()
+def run(service: str) -> None:
+    from robotoff.cli.run import run as run_
+
+    run_(service)
+
+
+@app.command()
 def regenerate_ocr_insights(
     barcode: str = typer.Argument(..., help="Barcode of the product")
 ) -> None:
