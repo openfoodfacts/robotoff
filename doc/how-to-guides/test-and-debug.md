@@ -74,8 +74,7 @@ To identify parts of the code where Robotoff connects to MongoDB or to Open Food
 
 # Debugging guide
 
-We encourage using [PDB](https://docs.python.org/3/library/pdb.html)
-to debug.
+We encourage using [PDB](https://docs.python.org/3/library/pdb.html) to debug.
 
 Running test with `--pdb` flags, pytest will stop and open the pdb console as soon as there is an error or an assert fails.
 This can be a good way to try to understand why a test is failing.
@@ -95,17 +94,15 @@ import pdb; pdb.set_trace()
 and then run the `pytest`, with the `--pdb` option (as above).
 
 > **Note**  
-> we need the `--pdb` option,
-to view the inputs and outputs captured by pytest
-> and access the pdb console.
+> we need the `--pdb` option, to view the inputs and outputs captured by pytest and access the pdb console.
 
 
 
 # How to run checks locally
 
-When commiting your modifications to the main branch, your code have to pass several tests automatically run by GitHub in order to be merged.
+When committing your modifications to the main branch, your code have to pass several tests automatically run by Github in order to be merged.
 
-You can run theses checks locally before commiting by using the following command:
+You can run theses checks locally before committing by using the following command:
 
 ```bash
 $ 	make checks

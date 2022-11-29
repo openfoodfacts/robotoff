@@ -5,7 +5,8 @@ Robotoff is split in several services:
 - the _scheduler_, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...)
 - the _workers_, responsible for all long-lasting tasks (mainly insight extraction from images)
 - the public _api_ service
-- the _tf\_serving_ service which serve tensor flow models
+- the _triton_ service which serve ML models
+- the _tf_serving_ service, which serve the categorizer model that hasn't been migrated yet to triton
 
 Two additional services are used:
 
@@ -14,9 +15,9 @@ Two additional services are used:
 
 All services are managed by docker. [docker-compose](https://docs.docker.com/compose/) is used to manage these services.
 
-`tf-serving` has it's own file: `docker/ml.yml`.
+`tf-serving` and `triton` have their own file: `docker/ml.yml`.
 
-Models for tf-serving part are stored as released at https://github.com/openfoodfacts/robotoff-models.
+ML models are stored as released at https://github.com/openfoodfacts/robotoff-models.
 
 
 ## Quick start
@@ -37,7 +38,7 @@ To display the logs of the container, `docker-compose logs [service-name]`.
 
 Two options are often used: `-f` to follow output and `--tail n` to only display last n lines.
 
-To display all running services, run `docker-compose ps`:
+To display all running services, run `make status`:
 
 ```
         Name                      Command               State                  Ports                
@@ -52,7 +53,16 @@ robotoff_workers_1     /bin/sh -c /docker-entrypo ...   Up
 ## Database backup and restore
 
 To backup the PostgreSQL database, run the following command:
-`docker exec -i robotoff_postgres_1 pg_dump -U postgres postgres | gzip > $(date +%Y-%m-%d)_robotoff_postgres.sql.gz`
 
-You can restore it easily locally by running:
-`zcat dump.sql.gz | docker exec -i robotoff_postgres_1 psql -U postgres`
+```bash
+docker exec -i robotoff_postgres_1 pg_dump -F c -U postgres postgres | gzip > robotoff_postgres$(date +%Y-%m-%d).dump
+```
+
+All Robotoff PostgreSQL dumps are stored on _openfoodfacts.org_ server, in `/srv2/off/html/data/dumps` folder. When backing up the database, please update the `robotoff_postgres_latest.dump` symlink so that http://openfoodfacts.org/data/dumps/robotoff_postgres_latest.dump always points to the latest dump.
+
+You can restore it easily by copying the dump file inside the container and launching `pg_restore`:
+
+```bash
+docker cp -a robotoff_postgres.dump robotoff_postgres_1:/tmp/
+docker exec -it robotoff_postgres_1 pg_restore -v -d postgres -U postgres -j 8 --if-exists /tmp/robotoff_postgres.dump
+```

@@ -69,12 +69,13 @@ Robotoff also depends on the following services:
 - a single node Elasticsearch instance, used to:
   - infer the product category from the product name, using an improved string matching algorithm. [^predict_category] (used in conjunction with ML detection)
   - perform spellcheck on ingredient lists [^spellcheck_ingredients]
-- a Tensorflow Serving instance, used to serve object detection models (currently, only nutriscore and category), which is identified as `robotoff-ml`[^robotoff_ml].
+- a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) [^robotoff_ml].
+- a Tensorflow Serving instance, used to serve the category detection model. We're going to get rid of Tensorflow Serving once a new categorizer is trained. [^robotoff_ml]
 - [robotoff-ann](https://github.com/openfoodfacts/robotoff-ann/) which uses an approximate KNN approach to predict logo label
 - MongoDB, to fetch the product latest version without querying Product Opener API.
 
 
-[^predict_category]: see `robotoff.elasticsearch.predict`
+[^predict_category]: see `robotoff.prediction.category.matcher`
 
 [^robotoff_ml]: see `docker/ml.yml`
 

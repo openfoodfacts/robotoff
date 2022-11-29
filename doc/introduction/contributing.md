@@ -18,11 +18,11 @@ If you are reporting a bug, please include:
 
 ### Fix Bugs
 
-Look through the GitHub issues for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it. Issues tagged with "good first issue" are suitable for newcomers.
+Look through the Github issues for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it. Issues tagged with "good first issue" are suitable for newcomers.
 
 ### Implement Features
 
-Look through the GitHub issues for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
+Look through the Github issues for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
 
 ### Write Documentation
 
@@ -43,12 +43,14 @@ If you are proposing a feature:
 
 Ready to contribute code? Here's how to set up Robotoff for local development.
 
-1.  Fork the robotoff repo on GitHub.
+1. Fork the robotoff repo on Github.
+
 2.  Clone your fork locally:
 
     ```
     git clone git@github.com:your_name_here/robotoff.git
     ```
+    
 3. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md) and run it.
    
 4. code!
@@ -76,7 +78,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
     You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
 
-    The mapping of functions and API path is at the end of robotoff/app/api.py
+    The mapping of functions and API path is at the end of `robotoff/app/api.py`
 
     If you are on a local install:
 
@@ -86,33 +88,34 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
     mypy .
     isort --check .
     poetry run pytest tests
-    ```    
+    ```
 
-    Before running the test cases make sure you have a database created. Have a look at .env and robotoff/settings.py the default database name, user, and password is
+    Before running the test cases make sure you have a database created. Have a look at `.env` and `robotoff/settings.py` the default database name, user, and password is:
 
     ```
     postgres
     ```
-    Configure them through environment (you may use `.env` if you use docker) as you like. We don't provide sample database as of now but you'll have a database structure ready to start working.
+    Configure them through environment (you may use `.env` if you use docker) as you like. See [dev install](../how-to-guides/deployment/dev-install.md#) for more information about how to restore database dumps.
 
-6.  Commit your changes and push your branch to GitHub:
+6. Commit your changes and push your branch to Github:
 
-    ```
-    git status
-    git add files-you-have-modified
-    git commit -m "Your detailed description of your changes."
-    git push origin name-of-your-bugfix-or-feature
-    ```
+   ```
+   git status
+   git add files-you-have-modified
+   git commit -m "fix: your detailed description of your changes"
+   git push origin name-of-your-bugfix-or-feature
+   ```
 
-    In brief, commit messages should follow these conventions:
+   In brief, commit messages should follow these conventions:
 
-    > - Always contain a subject line which briefly describes the changes made. For example "Update CONTRIBUTING.rst".
-    > - Subject lines should not exceed 50 characters.
-    > - The commit body should contain context about the change - how the code worked before, how it works now and why you decided to solve the issue in the way you did.
+   > - we follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification, please prefix your commit messages with `fix:`, `feat:`,...
+   >   - Always contain a subject line which briefly describes the changes made. For example "docs: update CONTRIBUTING.rst".
+   > - Subject lines should not exceed 50 characters.
+   > - The commit body should contain context about the change - how the code worked before, how it works now and why you decided to solve the issue in the way you did.
 
-    More tips at <https://chris.beams.io/posts/git-commit>
+   More tips at <https://chris.beams.io/posts/git-commit>
 
-7.  Submit a pull request through the GitHub website.
+7.  Submit a pull request through the Github website.
 
 ## Pull Request Guidelines
 
