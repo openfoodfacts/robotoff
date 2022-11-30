@@ -1,17 +1,19 @@
 import datetime
-from typing import List, Optional
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
+from peewee import fn
 
 from robotoff import settings
+from robotoff.models import ProductInsight, with_db
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
 
-URL_PATHS: List[str] = [
+URL_PATHS: list[str] = [
     "/ingredients-analysis?json=1",
     "/data-quality?json=1",
     "/ingredients?stats=1&json=1",
@@ -142,8 +144,8 @@ def generate_metrics_from_path(
     target_datetime: datetime.datetime,
     count: Optional[int] = None,
     facet: Optional[str] = None,
-) -> List:
-    inserts: List = []
+) -> list[dict]:
+    inserts: list[dict] = []
     url = settings.BaseURLProvider().country(country_tag + "-en").get() + path
 
     if facet is None:
@@ -189,6 +191,55 @@ def generate_metrics_from_path(
                 },
                 "time": target_datetime.isoformat(),
                 "fields": fields,
+            }
+        )
+    return inserts
+
+
+def save_insight_metrics():
+    """Save number of insights, grouped by the following fields:
+    - type
+    - annotation
+    - automatic_processing
+    - predictor
+    - reserved_barcode
+    """
+    target_datetime = datetime.datetime.now()
+
+    client = get_influx_client()
+    if client is not None:
+        write_client = client.write_api(write_options=SYNCHRONOUS)
+
+        for inserts in (generate_insight_metrics(target_datetime),):
+            write_client.write(bucket=settings.INFLUXDB_BUCKET, record=inserts)
+
+
+@with_db
+def generate_insight_metrics(target_datetime: datetime.datetime) -> list[dict]:
+    group_by_fields = [
+        ProductInsight.type,
+        ProductInsight.annotation,
+        ProductInsight.automatic_processing,
+        ProductInsight.predictor,
+        ProductInsight.reserved_barcode,
+    ]
+    inserts = []
+    for item in (
+        ProductInsight.select(
+            *group_by_fields,
+            fn.COUNT(ProductInsight.id).alias("count"),
+        )
+        .group_by(*group_by_fields)
+        .dicts()
+        .iterator()
+    ):
+        count = item.pop("count")
+        inserts.append(
+            {
+                "measurement": "insights",
+                "tags": item,
+                "time": target_datetime.isoformat(),
+                "fields": {"count": count},
             }
         )
     return inserts

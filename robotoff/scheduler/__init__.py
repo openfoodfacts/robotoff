@@ -18,7 +18,11 @@ from robotoff.insights.annotate import (
     InsightAnnotatorFactory,
 )
 from robotoff.insights.importer import import_insights
-from robotoff.metrics import ensure_influx_database, save_facet_metrics
+from robotoff.metrics import (
+    ensure_influx_database,
+    save_facet_metrics,
+    save_insight_metrics,
+)
 from robotoff.models import ProductInsight, with_db
 from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
@@ -270,6 +274,7 @@ def run():
 
     # This job exports daily product metrics for monitoring.
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
+    scheduler.add_job(save_insight_metrics, "cron", day="*", hour=1, max_instances=1)
 
     # This job refreshes data needed to generate insights.
     scheduler.add_job(_update_data, "cron", day="*", hour="3", max_instances=1)
