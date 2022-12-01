@@ -7,12 +7,14 @@ Robotoff is made of several services:
 - the public _API_ service
 - the _scheduler_, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...) [^scheduler]
 - the _workers_, responsible for all long-lasting tasks
+- a _redis_ instance
 
-Communication between API and Workers happens through ipc events. [^ipc_events]
+Communication between API and workers happens through Redis DB using [rq](https://python-rq.org). [^worker_job]
 
 [^scheduler]: See `scheduler.run`
 
-[^ipc_events]: See `robotoff.workers.client` and `robotoff.workers.listener`
+TODO: change
+[^worker_job]: See `robotoff.workers.queues` and `robotoff.workers.tasks`
 
 Robotoff allows to predict many information (also called _insights_), mostly from the product images or OCR.
 
@@ -58,7 +60,7 @@ Some insights with high confidence are applied automatically, 10 minutes after i
 
 Robotoff is also notified by Product Opener every time a product is updated or deleted [^product_update]. This is used to delete insights associated with deleted products, or to update them accordingly.
 
-[^product_update]: see `workers.tasks.product_updated` and `workers.tasks.delete_product_insights`
+[^product_update]: see `workers.tasks.product_updated` and `workers.tasks.delete_product_insights_job`
 [^annotate]: see `robotoff.insights.annotate`
 
 

@@ -10,10 +10,24 @@ app = typer.Typer()
 
 
 @app.command()
-def run(service: str) -> None:
-    from robotoff.cli.run import run as run_
+def run_scheduler():
+    from robotoff import scheduler
+    from robotoff.utils import get_logger
 
-    run_(service)
+    # Defining a root logger
+    get_logger()
+    scheduler.run()
+
+
+@app.command()
+def run_worker(
+    burst: bool = typer.Option(
+        False, help="Run in burst mode (quit after all work is done)"
+    )
+):
+    from robotoff.workers.main import run
+
+    run(burst=burst)
 
 
 @app.command()

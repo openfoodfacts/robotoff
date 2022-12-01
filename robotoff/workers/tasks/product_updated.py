@@ -15,9 +15,15 @@ logger = get_logger(__name__)
 
 
 @with_db
-def update_insights(barcode: str, server_domain: str):
-    # Sleep 10s to let the OFF update request that triggered the webhook call
-    # to finish
+def update_insights_job(barcode: str, server_domain: str):
+    """This job is triggered by the webhook API, when product information has
+    been updated.
+
+    When a product is updated, Robotoff will:
+
+    1. Generate new predictions related to the product's category and name.
+    2. Regenerate all insights from the product associated predictions.
+    """
     logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
 
     product_dict = get_product(barcode)
