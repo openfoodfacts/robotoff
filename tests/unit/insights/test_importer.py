@@ -500,48 +500,49 @@ class TestInsightImporter:
         assert to_delete == []
         assert to_update == []
 
-    def test_generate_insights_no_predictions(self):
-        assert (
-            list(
-                InsightImporter.generate_insights(
-                    [],
-                    DEFAULT_SERVER_DOMAIN,
-                    product_store=FakeProductStore(),
-                )
-            )
-            == []
+    def test_generate_insights_no_predictions(self, mocker):
+        get_existing_insight_mock = mocker.patch(
+            "robotoff.insights.importer.get_existing_insight", return_value=[]
         )
+        assert (
+            CategoryImporter.generate_insights(
+                DEFAULT_BARCODE,
+                [],
+                DEFAULT_SERVER_DOMAIN,
+                product_store=FakeProductStore(),
+            )
+            == ([], [], [])
+        )
+        get_existing_insight_mock.assert_called_once()
+
+    def test_generate_insights_no_predictions_with_existing_insight(self, mocker):
+        existing_insight = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.category.name,
+            value_tag="en:fishes",
+        )
+        get_existing_insight_mock = mocker.patch(
+            "robotoff.insights.importer.get_existing_insight",
+            return_value=[existing_insight],
+        )
+        assert (
+            CategoryImporter.generate_insights(
+                DEFAULT_BARCODE,
+                [],
+                DEFAULT_SERVER_DOMAIN,
+                product_store=FakeProductStore(),
+            )
+            == ([], [], [existing_insight])
+        )
+        get_existing_insight_mock.assert_called_once()
 
     def test_generate_insights_missing_product_no_references(self, mocker):
         get_existing_insight_mock = mocker.patch(
             "robotoff.insights.importer.get_existing_insight", return_value=[]
         )
         assert (
-            list(
-                InsightImporter.generate_insights(
-                    [
-                        Prediction(
-                            type=PredictionType.category,
-                            barcode=DEFAULT_BARCODE,
-                            data={},
-                        )
-                    ],
-                    DEFAULT_SERVER_DOMAIN,
-                    product_store=FakeProductStore(),
-                )
-            )
-            == []
-        )
-        get_existing_insight_mock.assert_called_once()
-
-    def test_generate_insights_missing_product_with_reference(self, mocker):
-        reference = ProductInsight(barcode=DEFAULT_BARCODE, type=InsightType.category)
-        get_existing_insight_mock = mocker.patch(
-            "robotoff.insights.importer.get_existing_insight",
-            return_value=[reference],
-        )
-        generated = list(
             InsightImporter.generate_insights(
+                DEFAULT_BARCODE,
                 [
                     Prediction(
                         type=PredictionType.category,
@@ -552,8 +553,29 @@ class TestInsightImporter:
                 DEFAULT_SERVER_DOMAIN,
                 product_store=FakeProductStore(),
             )
+            == ([], [], [])
         )
-        assert generated == [([], [], [reference])]
+        get_existing_insight_mock.assert_called_once()
+
+    def test_generate_insights_missing_product_with_reference(self, mocker):
+        reference = ProductInsight(barcode=DEFAULT_BARCODE, type=InsightType.category)
+        get_existing_insight_mock = mocker.patch(
+            "robotoff.insights.importer.get_existing_insight",
+            return_value=[reference],
+        )
+        generated = InsightImporter.generate_insights(
+            DEFAULT_BARCODE,
+            [
+                Prediction(
+                    type=PredictionType.category,
+                    barcode=DEFAULT_BARCODE,
+                    data={},
+                )
+            ],
+            DEFAULT_SERVER_DOMAIN,
+            product_store=FakeProductStore(),
+        )
+        assert generated == ([], [], [reference])
         get_existing_insight_mock.assert_called_once()
 
     def test_generate_insights_creation_and_deletion(self, mocker):
@@ -591,31 +613,29 @@ class TestInsightImporter:
             automatic_processing=True,
             source_image="/images/products/322/982/001/9192/8.jpg",
         )
-        generated = list(
-            FakeImporter.generate_insights(
-                [prediction],
-                DEFAULT_SERVER_DOMAIN,
-                product_store=FakeProductStore(
-                    data={
-                        DEFAULT_BARCODE: Product(
-                            {
-                                "code": DEFAULT_BARCODE,
-                                "images": {
-                                    "8": {
-                                        "uploaded_t": (
-                                            datetime.datetime.utcnow()
-                                            - datetime.timedelta(days=600)
-                                        ).timestamp()
-                                    }
-                                },
-                            }
-                        )
-                    }
-                ),
-            )
+        generated = FakeImporter.generate_insights(
+            DEFAULT_BARCODE,
+            [prediction],
+            DEFAULT_SERVER_DOMAIN,
+            product_store=FakeProductStore(
+                data={
+                    DEFAULT_BARCODE: Product(
+                        {
+                            "code": DEFAULT_BARCODE,
+                            "images": {
+                                "8": {
+                                    "uploaded_t": (
+                                        datetime.datetime.utcnow()
+                                        - datetime.timedelta(days=600)
+                                    ).timestamp()
+                                }
+                            },
+                        }
+                    )
+                }
+            ),
         )
-        assert len(generated) == 1
-        to_create, to_update, to_delete = generated[0]
+        to_create, to_update, to_delete = generated
         assert len(to_create) == 1
         assert len(to_update) == 0
         created_insight = to_create[0]
@@ -655,17 +675,15 @@ class TestInsightImporter:
             data={},
             automatic_processing=True,
         )
-        generated = list(
-            FakeImporter.generate_insights(
-                [prediction],
-                DEFAULT_SERVER_DOMAIN,
-                product_store=FakeProductStore(
-                    data={DEFAULT_BARCODE: Product({"code": DEFAULT_BARCODE})}
-                ),
-            )
+        generated = FakeImporter.generate_insights(
+            DEFAULT_BARCODE,
+            [prediction],
+            DEFAULT_SERVER_DOMAIN,
+            product_store=FakeProductStore(
+                data={DEFAULT_BARCODE: Product({"code": DEFAULT_BARCODE})}
+            ),
         )
-        assert len(generated) == 1
-        to_create, to_update, to_delete = generated[0]
+        to_create, to_update, to_delete = generated
         assert not to_delete
         assert to_update == []
         assert len(to_create) == 1
@@ -680,6 +698,7 @@ class TestInsightImporter:
 
         with pytest.raises(ValueError, match="unexpected prediction type: 'label'"):
             FakeImporter.import_insights(
+                DEFAULT_BARCODE,
                 [Prediction(type=PredictionType.label)],
                 DEFAULT_SERVER_DOMAIN,
                 product_store=FakeProductStore(),
@@ -692,26 +711,33 @@ class TestInsightImporter:
                 return {PredictionType.label}
 
             @classmethod
-            def generate_insights(cls, predictions, server_domains, product_store):
-                yield [
-                    ProductInsight(
-                        barcode=DEFAULT_BARCODE,
-                        type=InsightType.label.name,
-                        value_tag="tag1",
-                    )
-                ], [], [
-                    ProductInsight(
-                        barcode=DEFAULT_BARCODE,
-                        type=InsightType.label.name,
-                        value_tag="tag2",
-                    )
-                ]
+            def generate_insights(
+                cls, barcode, predictions, server_domains, product_store
+            ):
+                return (
+                    [
+                        ProductInsight(
+                            barcode=DEFAULT_BARCODE,
+                            type=InsightType.label.name,
+                            value_tag="tag1",
+                        )
+                    ],
+                    [],
+                    [
+                        ProductInsight(
+                            barcode=DEFAULT_BARCODE,
+                            type=InsightType.label.name,
+                            value_tag="tag2",
+                        )
+                    ],
+                )
 
         product_insight_delete_mock = mocker.patch.object(ProductInsight, "delete")
         batch_insert_mock = mocker.patch(
             "robotoff.insights.importer.batch_insert", return_value=1
         )
         imported = FakeImporter.import_insights(
+            DEFAULT_BARCODE,
             [Prediction(type=PredictionType.label)],
             DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
@@ -1187,9 +1213,7 @@ class TestImportInsightsForProducts:
             product_store=product_store,
         )
         get_product_predictions_mock.assert_called_once()
-        import_insights_mock.assert_called_once_with(
-            [], DEFAULT_SERVER_DOMAIN, product_store
-        )
+        import_insights_mock.assert_not_called()
 
     def test_import_insights_single_product(self, mocker):
         prediction_dict = {
@@ -1221,7 +1245,7 @@ class TestImportInsightsForProducts:
         assert imported == 1
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_called_once_with(
-            [prediction], DEFAULT_SERVER_DOMAIN, product_store
+            DEFAULT_BARCODE, [prediction], DEFAULT_SERVER_DOMAIN, product_store
         )
 
     def test_import_insights_type_mismatch(self, mocker):

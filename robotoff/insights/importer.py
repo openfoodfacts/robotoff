@@ -24,6 +24,7 @@ from robotoff.products import (
     get_product_store,
     is_valid_image,
 )
+from robotoff.redis import Lock, LockedResourceException
 from robotoff.taxonomy import (
     Taxonomy,
     TaxonomyType,
@@ -1035,6 +1036,11 @@ def import_insights(
     server_domain: str,
     product_store: Optional[DBProductStore] = None,
 ) -> int:
+    """Import predictions and generate (and import) insights from these
+    predictions.
+
+    :param predictions: an iterable of Predictions to import
+    """
     if product_store is None:
         product_store = get_product_store()
 
@@ -1055,6 +1061,9 @@ def import_insights_for_products(
 
     :param prediction_types_by_barcode: a dict that associates each barcode
     with a set of prediction type that were updated
+    :param server_domain: The server domain associated with the predictions
+    :param product_store: The product store to use
+
     :return: Number of imported insights
     """
     imported = 0
@@ -1077,9 +1086,20 @@ def import_insights_for_products(
                 sorted(predictions, key=operator.attrgetter("barcode")),
                 operator.attrgetter("barcode"),
             ):
-                imported += importer.import_insights(
-                    barcode, list(product_predictions), server_domain, product_store
-                )
+                try:
+                    with Lock(name=f"robotoff:import:{barcode}", expire=60, timeout=10):
+                        imported += importer.import_insights(
+                            barcode,
+                            list(product_predictions),
+                            server_domain,
+                            product_store,
+                        )
+                except LockedResourceException:
+                    logger.info(
+                        "Couldn't acquire insight import lock, skipping insight import for product %s",
+                        barcode,
+                    )
+                    continue
     return imported
 
 

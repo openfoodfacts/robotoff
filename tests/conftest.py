@@ -3,6 +3,15 @@
 import pytest
 
 from robotoff import models
+from robotoff.redis import Lock
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_redis_lock():
+    previous_value = Lock._enabled
+    Lock._enabled = False
+    yield
+    Lock._enabled = previous_value
 
 
 @pytest.fixture(scope="session")
