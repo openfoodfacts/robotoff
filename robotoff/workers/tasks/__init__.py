@@ -8,7 +8,6 @@ from robotoff.utils import configure_root_logger, get_logger
 
 from .import_image import run_import_image_job
 from .product_updated import update_insights
-from .update_recycle import update_recycling
 
 logger = get_logger(__name__)
 root_logger = multiprocessing.get_logger()
@@ -89,8 +88,4 @@ EVENT_MAPPING: Dict[str, Callable] = {
     # 2. Regenerate all insights from the product associated predictions.
     #
     "product_updated": update_insights,
-    # 'update_recycling' auto-selects the recycling photos for a given product.
-    # NOTE: currently this task is not being triggered from anywhere.
-    #
-    "update_recycling": update_recycling,
 }
