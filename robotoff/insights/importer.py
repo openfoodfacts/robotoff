@@ -275,6 +275,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def import_insights(
         cls,
+        barcode: str,
         predictions: List[Prediction],
         server_domain: str,
         product_store: DBProductStore,
@@ -288,37 +289,48 @@ class InsightImporter(metaclass=abc.ABCMeta):
             if prediction.type not in required_prediction_types:
                 raise ValueError(f"unexpected prediction type: '{prediction.type}'")
 
-        inserts = 0
-        for to_create, to_update, to_delete in cls.generate_insights(
-            predictions, server_domain, product_store
-        ):
-            if to_delete:
-                to_delete_ids = [insight.id for insight in to_delete]
-                logger.info(f"Deleting {len(to_delete_ids)} insights")
-                ProductInsight.delete().where(
-                    ProductInsight.id.in_(to_delete_ids)
-                ).execute()
-            if to_create:
-                inserts += batch_insert(
-                    ProductInsight,
-                    (model_to_dict(insight) for insight in to_create),
-                    50,
+        if (
+            len(
+                prediction_barcodes := set(
+                    prediction.barcode for prediction in predictions
                 )
+            )
+            > 1
+        ):
+            raise ValueError(
+                f"predictions for more than 1 product were provided: {prediction_barcodes}"
+            )
 
-            for insight in to_update:
-                insight.save()
+        inserts = 0
+        to_create, to_update, to_delete = cls.generate_insights(
+            barcode, predictions, server_domain, product_store
+        )
+        if to_delete:
+            to_delete_ids = [insight.id for insight in to_delete]
+            logger.info(f"Deleting {len(to_delete_ids)} insights")
+            ProductInsight.delete().where(
+                ProductInsight.id.in_(to_delete_ids)
+            ).execute()
+        if to_create:
+            inserts += batch_insert(
+                ProductInsight,
+                (model_to_dict(insight) for insight in to_create),
+                50,
+            )
+
+        for insight in to_update:
+            insight.save()
 
         return inserts
 
     @classmethod
     def generate_insights(
         cls,
+        barcode: str,
         predictions: List[Prediction],
         server_domain: str,
         product_store: DBProductStore,
-    ) -> Iterator[
-        Tuple[List[ProductInsight], List[ProductInsight], List[ProductInsight]]
-    ]:
+    ) -> Tuple[List[ProductInsight], List[ProductInsight], List[ProductInsight]]:
         """Given a list of predictions, yield tuples of ProductInsight to
         create, update and delete.
 
@@ -328,65 +340,57 @@ class InsightImporter(metaclass=abc.ABCMeta):
         timestamp = datetime.datetime.utcnow()
         server_type = get_server_type(server_domain).name
 
-        for barcode, group in itertools.groupby(
-            sorted(predictions, key=operator.attrgetter("barcode")),
-            operator.attrgetter("barcode"),
-        ):
-            product = product_store[barcode]
-            references = get_existing_insight(cls.get_type(), barcode, server_domain)
+        product = product_store[barcode]
+        references = get_existing_insight(cls.get_type(), barcode, server_domain)
 
-            if product is None:
-                logger.info(
-                    f"Product {barcode} not found in DB, deleting existing insights"
-                )
-                if references:
-                    yield [], [], references
-                continue
-
-            product_predictions = sort_predictions(group)
-            candidates = [
-                candidate
-                for candidate in cls.generate_candidates(product, product_predictions)
-                if is_valid_insight_image(product.images, candidate.source_image)
-            ]
-            for candidate in candidates:
-                if candidate.automatic_processing is None:
-                    logger.warning(
-                        "Insight with automatic_processing=None: %s", candidate.__data__
-                    )
-                    candidate.automatic_processing = False
-
-                if not is_trustworthy_insight_image(
-                    product.images, candidate.source_image
-                ):
-                    # Don't process automatically if the insight image is not
-                    # trustworthy (too old and not selected)
-                    candidate.automatic_processing = False
-                if candidate.data.get("is_annotation"):
-                    username = candidate.data.get("username")
-                    if username:
-                        # logo annotation by a user
-                        candidate.username = username
-                    # Note: we could add vote annotation for anonymous user,
-                    # but it should be done outside this loop. It's not yet implemented
-
-            to_create, to_update, to_delete = cls.get_insight_update(
-                candidates, references
+        if product is None:
+            logger.info(
+                f"Product {barcode} not found in DB, deleting existing insights"
             )
+            return [], [], references
 
-            for insight in to_create:
-                cls.add_fields(insight, product, timestamp, server_domain, server_type)
+        predictions = sort_predictions(predictions)
+        candidates = [
+            candidate
+            for candidate in cls.generate_candidates(product, predictions)
+            if is_valid_insight_image(product.images, candidate.source_image)
+        ]
+        for candidate in candidates:
+            if candidate.automatic_processing is None:
+                logger.warning(
+                    "Insight with automatic_processing=None: %s", candidate.__data__
+                )
+                candidate.automatic_processing = False
 
-            for insight, reference_insight in to_update:
-                # Keep `reference_insight` in DB (as the value/value_tag/source_image is the same),
-                # but update information from `insight`.
-                # This way, we don't unnecessarily insert/delete rows in ProductInsight table
-                # and we keep associated votes
-                cls.update_fields(insight, reference_insight, product, timestamp)
+            if not is_trustworthy_insight_image(product.images, candidate.source_image):
+                # Don't process automatically if the insight image is not
+                # trustworthy (too old and not selected)
+                candidate.automatic_processing = False
+            if candidate.data.get("is_annotation"):
+                username = candidate.data.get("username")
+                if username:
+                    # logo annotation by a user
+                    candidate.username = username
+                # Note: we could add vote annotation for anonymous user,
+                # but it should be done outside this loop. It's not yet implemented
 
-            yield to_create, [
-                reference_insight for (_, reference_insight) in to_update
-            ], to_delete
+        to_create, to_update, to_delete = cls.get_insight_update(candidates, references)
+
+        for insight in to_create:
+            cls.add_fields(insight, product, timestamp, server_domain, server_type)
+
+        for insight, reference_insight in to_update:
+            # Keep `reference_insight` in DB (as the value/value_tag/source_image is the same),
+            # but update information from `insight`.
+            # This way, we don't unnecessarily insert/delete rows in ProductInsight table
+            # and we keep associated votes
+            cls.update_fields(insight, reference_insight, product, timestamp)
+
+        return (
+            to_create,
+            [reference_insight for (_, reference_insight) in to_update],
+            to_delete,
+        )
 
     @classmethod
     @abc.abstractmethod
@@ -1068,9 +1072,14 @@ def import_insights_for_products(
                     selected_barcodes, list(required_prediction_types)
                 )
             ]
-            imported += importer.import_insights(
-                predictions, server_domain, product_store
-            )
+
+            for barcode, product_predictions in itertools.groupby(
+                sorted(predictions, key=operator.attrgetter("barcode")),
+                operator.attrgetter("barcode"),
+            ):
+                imported += importer.import_insights(
+                    barcode, list(product_predictions), server_domain, product_store
+                )
     return imported
 
 
@@ -1141,6 +1150,7 @@ def refresh_insights(
         required_prediction_types = importer.get_required_prediction_types()
         if prediction_types >= required_prediction_types:
             imported += importer.import_insights(
+                barcode,
                 [p for p in predictions if p.type in required_prediction_types],
                 server_domain,
                 product_store,
