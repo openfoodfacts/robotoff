@@ -29,6 +29,16 @@ logger = get_logger(__name__)
 def run_import_image_job(
     barcode: str, image_url: str, ocr_url: str, server_domain: str
 ):
+    """This job is triggered every time there is a new OCR image available for
+    processing by Robotoff, via /api/v1/images/import.
+
+    On each image import, Robotoff performs the following tasks:
+
+    1. Generates various predictions based on the OCR-extracted text from the image.
+    2. Extracts the nutriscore prediction based on the nutriscore ML model.
+    3. Triggers the 'object_detection' task
+    4. Stores the imported image metadata in the Robotoff DB.
+    """
     logger.info(
         f"Running `import_image` for product {barcode} ({server_domain}), image {image_url}"
     )

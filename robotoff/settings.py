@@ -170,11 +170,9 @@ POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
 
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://mongodb:27017")
 
-IPC_AUTHKEY = os.environ.get("IPC_AUTHKEY", "IPC").encode("utf-8")
-IPC_HOST = os.environ.get("IPC_HOST", "localhost")
-IPC_PORT = int(os.environ.get("IPC_PORT", 6650))
-IPC_ADDRESS: Tuple[str, int] = (IPC_HOST, IPC_PORT)
-WORKER_COUNT = int(os.environ.get("WORKER_COUNT", 8))
+# Redis
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 

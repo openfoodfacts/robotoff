@@ -63,7 +63,13 @@ from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
-from robotoff.workers.client import send_ipc_event
+from robotoff.workers.queues import high_queue, low_queue, enqueue_in_job, enqueue_job
+from robotoff.workers.tasks import (
+    delete_product_insights_job,
+    download_product_dataset_job,
+    run_import_image_job,
+    update_insights_job,
+)
 
 logger = get_logger()
 
@@ -438,7 +444,11 @@ class CategoryPredictorResource:
 
 class UpdateDatasetResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        send_ipc_event("download_dataset")
+        """Re-import the Product Opener product dump."""
+
+        enqueue_job(
+            download_product_dataset_job, queue=low_queue, job_kwargs={"timeout": "1h"}
+        )
 
         resp.media = {
             "status": "scheduled",
@@ -458,22 +468,19 @@ class ImageImporterResource:
         server_domain = req.get_param("server_domain", required=True)
 
         if server_domain != settings.OFF_SERVER_DOMAIN:
-            logger.info("Rejecting image import from {}".format(server_domain))
+            logger.info(f"Rejecting image import from {server_domain}")
             resp.media = {
                 "status": "rejected",
             }
             return
 
-        send_ipc_event(
-            "import_image",
-            {
-                "barcode": barcode,
-                "image_url": image_url,
-                "ocr_url": ocr_url,
-                "server_domain": server_domain,
-            },
+        high_queue.enqueue(
+            run_import_image_job,
+            barcode=barcode,
+            image_url=image_url,
+            ocr_url=ocr_url,
+            server_domain=server_domain,
         )
-
         resp.media = {
             "status": "scheduled",
         }
@@ -893,19 +900,18 @@ class WebhookProductResource:
             )
 
         if action == "updated":
-            send_ipc_event(
-                "product_updated",
-                {
-                    "barcode": barcode,
-                    "server_domain": server_domain,
-                    # add some latency
-                    "task_delay": settings.UPDATED_PRODUCT_WAIT,
-                },
+            enqueue_in_job(
+                update_insights_job,
+                high_queue,
+                settings.UPDATED_PRODUCT_WAIT,
+                barcode=barcode,
+                server_domain=server_domain,
             )
-
         elif action == "deleted":
-            send_ipc_event(
-                "product_deleted", {"barcode": barcode, "server_domain": server_domain}
+            high_queue.enqueue(
+                delete_product_insights_job,
+                barcode=barcode,
+                server_domain=server_domain,
             )
 
         resp.media = {

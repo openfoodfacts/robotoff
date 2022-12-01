@@ -173,26 +173,26 @@ health:
 i18n-compile:
 	@echo "🥫 Compiling translations …"
 # Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
-	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps workers -c "cd i18n && . compile.sh"
+	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker -c "cd i18n && . compile.sh"
 
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit
+	${DOCKER_COMPOSE_TEST} run --rm worker poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
 integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE_TEST} run --rm worker poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings
 # usage: make pytest args='test/unit/my-test.py --pdb'
 pytest: guard-args
 	@echo "🥫 Running test: ${args} …"
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker poetry run pytest ${args}
 
 #------------#
 # Production #

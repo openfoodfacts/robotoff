@@ -357,3 +357,12 @@ def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]
         return value_tag
 
     return get_taxonomy_mapping(taxonomy_type).get(value_tag)
+
+
+def load_resources():
+    """Load and cache resources."""
+    for taxonomy_type in settings.TAXONOMY_URLS.keys():
+        get_taxonomy(taxonomy_type)
+
+    for taxonomy_type in (TaxonomyType.brand, TaxonomyType.label):
+        get_taxonomy_mapping(taxonomy_type.name)

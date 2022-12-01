@@ -95,6 +95,15 @@ MATCH_MAPS_EXCEPTIONS = {
 MatchMapType = Dict[str, Dict[str, List[Tuple[str, str]]]]
 
 
+def load_resources():
+    """Load and cache resources."""
+    get_processors()
+    get_intersect_categories_ingredients()
+
+    for lang in SUPPORTED_LANG:
+        get_lemmatizing_nlp(lang)
+
+
 def preprocess_product_name(name: str, lang: str) -> str:
     """Preprocess product name before matching:
     - remove all weight mentions (100 g, 1l,...)
@@ -224,6 +233,7 @@ def get_processors() -> Dict[str, KeywordProcessor]:
 
     This enables a fast matching of query parts against matched maps keys.
     """
+    logger.info("Loading category matcher processors...")
     match_maps = get_match_maps(TaxonomyType.category.name)
     processors = {}
     for lang, items in match_maps.items():
@@ -267,6 +277,7 @@ def get_intersect_categories_ingredients():
     See `generate_intersect_categories_ingredients` function for more
     information.
     """
+    logger.info("Loading category intersection ingredient...")
     return {
         k: set(v)
         for k, v in load_json(

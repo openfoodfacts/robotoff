@@ -1,7 +1,7 @@
 version: "3.9"
 
-
-x-robotoff-base: &robotoff-base
+x-robotoff-base:
+  &robotoff-base
   restart: $RESTART_POLICY
   image: ghcr.io/openfoodfacts/robotoff:${TAG}
   volumes:
@@ -9,17 +9,15 @@ x-robotoff-base: &robotoff-base
     - ./tf_models:/opt/robotoff/tf_models
     - ./models:/opt/robotoff/models
 
-x-robotoff-base-env: &robotoff-base-env
+x-robotoff-base-env:
+  &robotoff-base-env
   ROBOTOFF_INSTANCE:
   ROBOTOFF_DOMAIN:
   ROBOTOFF_SCHEME:
   STATIC_OFF_DOMAIN:
   GUNICORN_NUM_WORKERS:
-  IPC_AUTHKEY:
-  IPC_HOST: workers
-  IPC_PORT:
-  WORKER_COUNT:
   ROBOTOFF_UPDATED_PRODUCT_WAIT:
+  REDIS_HOST:
   POSTGRES_HOST:
   POSTGRES_DB:
   POSTGRES_USER:
@@ -44,15 +42,18 @@ services:
     environment: *robotoff-base-env
     mem_limit: 2g
     depends_on:
-      - workers
+      - worker
     ports:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
     networks:
       - webnet
 
-  workers:
+  worker:
     <<: *robotoff-base
-    command: poetry run robotoff-cli run workers
+    deploy:
+      mode: replicated
+      replicas: 8
+    command: poetry run robotoff-cli run-worker
     environment:
       <<: *robotoff-base-env
       REAL_TIME_IMAGE_PREDICTION: 1
@@ -67,7 +68,7 @@ services:
   scheduler:
     <<: *robotoff-base
     environment: *robotoff-base-env
-    command: poetry run robotoff-cli run scheduler
+    command: poetry run robotoff-cli run-scheduler
     mem_limit: 4g
     networks:
       - webnet
@@ -86,6 +87,19 @@ services:
     shm_size: 1g
     ports:
       - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"
+    networks:
+      - webnet
+
+  redis:
+    restart: $RESTART_POLICY
+    image: redis/redis-stack-server:6.2.4-v4
+    volumes:
+      - redis-data:/data
+    environment:
+      REDIS_ARGS: --save 60 1000 --appendonly yes
+    mem_limit: 4g
+    ports:
+      - "${REDIS_EXPOSE:-127.0.0.1:6379}:6379"
     networks:
       - webnet
 
@@ -113,6 +127,8 @@ services:
 volumes:
   postgres-data:
   es-data:
+  redis-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
 
 networks:
   webnet:

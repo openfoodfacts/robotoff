@@ -4,6 +4,7 @@ from influxdb_client import InfluxDBClient
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+from redis import Redis
 
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -21,6 +22,13 @@ def test_connect_mongodb():
     except ServerSelectionTimeoutError:
         return False, "MongoDB DB connection failed!"
     return True, "MongoDB DB connection succeeded!"
+
+
+def test_connect_redis():
+    logger.debug("health: testing Redis connection to %s", settings.REDIS_HOST)
+    client = Redis(host=settings.REDIS_HOST)
+    client.ping()
+    return True, "Redis DB connection success!"
 
 
 def test_connect_postgres():
@@ -67,5 +75,6 @@ def test_connect_ann():
 health.add_check(test_connect_mongodb)
 health.add_check(test_connect_postgres)
 health.add_check(test_connect_influxdb)
+health.add_check(test_connect_redis)
 health.add_check(test_connect_robotoff_api)
 health.add_check(test_connect_ann)

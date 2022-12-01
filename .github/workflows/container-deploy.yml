@@ -111,10 +111,7 @@ jobs:
           # Set app variables
           echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
           echo "ROBOTOFF_DOMAIN=${{ env.ROBOTOFF_DOMAIN }}" >> .env
-          echo "IPC_AUTHKEY=${{ secrets.IPC_AUTHKEY }}" >> .env
-          echo "IPC_HOST=0.0.0.0" >> .env
-          echo "IPC_PORT=6650" >> .env
-          echo "WORKER_COUNT=8" >> .env
+          echo "REDIS_HOST=redis" >> .env
           echo "POSTGRES_HOST=postgres" >> .env
           echo "POSTGRES_DB=postgres" >> .env
           echo "POSTGRES_USER=postgres" >> .env
