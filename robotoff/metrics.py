@@ -206,12 +206,10 @@ def save_insight_metrics():
     """
     target_datetime = datetime.datetime.now()
 
-    client = get_influx_client()
-    if client is not None:
+    if (client := get_influx_client()) is not None:
         write_client = client.write_api(write_options=SYNCHRONOUS)
-
-        for inserts in (generate_insight_metrics(target_datetime),):
-            write_client.write(bucket=settings.INFLUXDB_BUCKET, record=inserts)
+        inserts = generate_insight_metrics(target_datetime)
+        write_client.write(bucket=settings.INFLUXDB_BUCKET, record=inserts)
 
 
 @with_db
@@ -224,22 +222,24 @@ def generate_insight_metrics(target_datetime: datetime.datetime) -> list[dict]:
         ProductInsight.reserved_barcode,
     ]
     inserts = []
-    for item in (
+    query_results = (
         ProductInsight.select(
             *group_by_fields,
             fn.COUNT(ProductInsight.id).alias("count"),
         )
         .group_by(*group_by_fields)
         .dicts()
-        .iterator()
-    ):
-        count = item.pop("count")
+    )
+    total_count = sum(query_result["count"] for query_result in query_results)
+
+    for query_result in query_results:
+        count = query_result.pop("count")
         inserts.append(
             {
                 "measurement": "insights",
-                "tags": item,
+                "tags": query_result,
                 "time": target_datetime.isoformat(),
-                "fields": {"count": count},
+                "fields": {"count": count, "percent": count / total_count},
             }
         )
     return inserts
