@@ -1152,6 +1152,20 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "python-redis-lock"
+version = "4.0.0"
+description = "Lock context manager implemented via redis SETNX/BLPOP."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+redis = ">=2.10.0"
+
+[package.extras]
+django = ["django-redis (>=3.8.0)"]
+
+[[package]]
 name = "pytz"
 version = "2022.6"
 description = "World timezone definitions, modern and historical"
@@ -1777,7 +1791,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e66161d5bdf2f10ba4e45e7c03d9c9baf547dfa39b718ed6583e512c47fa43d7"
+content-hash = "b10be5f6c3bcdfb03cacd230ecb963f5a39669b2693d6fb5aec2754981c854f0"
 
 [metadata.files]
 apscheduler = []
@@ -1876,6 +1890,7 @@ pytest-httpserver = []
 pytest-mock = []
 python-dateutil = []
 python-rapidjson = []
+python-redis-lock = []
 pytz = []
 pytz-deprecation-shim = []
 pyyaml = []
