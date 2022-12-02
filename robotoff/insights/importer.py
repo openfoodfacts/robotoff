@@ -855,7 +855,7 @@ class BrandInsightImporter(InsightImporter):
         return candidate.value_tag == reference.value_tag
 
     @staticmethod
-    def is_valid(barcode: str, tag: str) -> bool:
+    def is_in_barcode_range(barcode: str, tag: str) -> bool:
         brand_prefix: Set[Tuple[str, str]] = BRAND_PREFIX_STORE.get()
 
         if not in_barcode_range(brand_prefix, tag, barcode):
@@ -875,7 +875,14 @@ class BrandInsightImporter(InsightImporter):
             return
 
         for prediction in predictions:
-            if not cls.is_valid(product.barcode, prediction.value_tag):  # type: ignore
+            if not (
+                prediction.predictor == "universal-logo-detector"
+                and "username" in prediction.data
+            ) and not cls.is_in_barcode_range(
+                product.barcode, prediction.value_tag  # type: ignore
+            ):
+                # Check barcode range for all predictors except logos detected using
+                # universal-logo-detector model and annotated manually
                 continue
             insight = ProductInsight(**prediction.to_dict())
             if insight.automatic_processing is None:
