@@ -41,7 +41,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up create_external_networks
+dev: hello build up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -55,9 +55,9 @@ up:
 	@echo "🥫 Building and starting containers …"
 	docker network create po_default || true  
 ifdef service
-	${DOCKER_COMPOSE} up -d --build ${service} 2>&1
+	${DOCKER_COMPOSE} up -d ${service} 2>&1
 else
-	${DOCKER_COMPOSE} up -d --build 2>&1
+	${DOCKER_COMPOSE} up -d 2>&1
 endif
 
 build:
