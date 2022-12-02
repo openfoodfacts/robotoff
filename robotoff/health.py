@@ -3,6 +3,7 @@ from healthcheck import HealthCheck
 from influxdb_client import InfluxDBClient
 from playhouse.postgres_ext import PostgresqlExtDatabase
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -14,9 +15,12 @@ logger = get_logger(__name__)
 
 def test_connect_mongodb():
     logger.debug("health: testing mongodb connection to %s", settings.MONGO_URI)
-    client = MongoClient(settings.MONGO_URI)
-    client.server_info()
-    return True, "MongoDB db connection success !"
+    client = MongoClient(settings.MONGO_URI, serverSelectionTimeoutMS=5_000)
+    try:
+        client.server_info()
+    except ServerSelectionTimeoutError:
+        return False, "MongoDB DB connection failed!"
+    return True, "MongoDB DB connection succeeded!"
 
 
 def test_connect_postgres():
