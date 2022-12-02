@@ -124,6 +124,5 @@ docker cp -a dump robotoff_mongodb_1:/var/tmp/
 Then launch dump restore:
 
 ```bash
-docker cp -a dump robotoff_mongodb_1:/var/tmp/
 docker exec -it robotoff_mongodb_1 mongorestore --drop /var/tmp/dump
 ```
