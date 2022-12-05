@@ -84,7 +84,9 @@ class CategoryClassifier:
         }
 
         r = http_session.post(
-            f"{settings.TF_SERVING_BASE_URL}/category-classifier:predict", json=data
+            f"{settings.TF_SERVING_BASE_URL}/category-classifier:predict",
+            json=data,
+            timeout=(3.0, 10.0),
         )
         r.raise_for_status()
         response = r.json()
