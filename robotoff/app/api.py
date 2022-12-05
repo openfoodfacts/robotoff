@@ -63,7 +63,7 @@ from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType
-from robotoff.workers.queues import high_queue, low_queue, enqueue_in_job, enqueue_job
+from robotoff.workers.queues import enqueue_in_job, enqueue_job, high_queue, low_queue
 from robotoff.workers.tasks import (
     delete_product_insights_job,
     download_product_dataset_job,

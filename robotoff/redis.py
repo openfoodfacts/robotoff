@@ -2,6 +2,7 @@ from typing import Optional
 
 from redis import Redis
 from redis_lock import Lock as BaseLock
+
 from robotoff import settings
 
 redis_conn = Redis(host=settings.REDIS_HOST)

@@ -1,5 +1,5 @@
-import time
 import threading
+import time
 from typing import Callable, Optional
 
 from rq import Queue

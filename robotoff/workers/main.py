@@ -11,10 +11,14 @@ settings.init_sentry()
 
 
 def load_resources():
+    """Load cacheable resources in memory.
+
+    This way, all resources are available in memory before the worker forks.
+    """
     logger.info("Loading resources in workers...")
 
-    from robotoff.prediction.category import matcher
     from robotoff import taxonomy
+    from robotoff.prediction.category import matcher
 
     matcher.load_resources()
     taxonomy.load_resources()

@@ -2,8 +2,8 @@ from robotoff.models import Prediction, ProductInsight, with_db
 from robotoff.products import fetch_dataset, has_dataset_changed
 from robotoff.utils import get_logger
 
-from .import_image import run_import_image_job
-from .product_updated import update_insights_job
+from .import_image import run_import_image_job  # noqa: F401
+from .product_updated import update_insights_job  # noqa: F401
 
 logger = get_logger(__name__)
 
