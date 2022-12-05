@@ -7,6 +7,7 @@ from robotoff.off import ServerType, get_server_type
 from robotoff.prediction.category.matcher import predict as predict_category_matcher
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.products import get_product
+from robotoff.redis import Lock, LockedResourceException
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -26,16 +27,24 @@ def update_insights_job(barcode: str, server_domain: str):
     """
     logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
 
-    product_dict = get_product(barcode)
+    try:
+        with Lock(
+            name=f"robotoff:product_update_job:{barcode}", expire=300, timeout=10
+        ):
+            product_dict = get_product(barcode)
 
-    if product_dict is None:
-        logger.warning("Updated product does not exist: %s", barcode)
-        return
+            if product_dict is None:
+                logger.warning("Updated product does not exist: %s", barcode)
+                return
 
-    updated_product_predict_insights(barcode, product_dict, server_domain)
-    logger.info("Refreshing insights...")
-    imported = refresh_insights(barcode, server_domain)
-    logger.info(f"{imported} insights created after refresh")
+            updated_product_predict_insights(barcode, product_dict, server_domain)
+            logger.info("Refreshing insights...")
+            imported = refresh_insights(barcode, server_domain)
+            logger.info(f"{imported} insights created after refresh")
+    except LockedResourceException:
+        logger.info(
+            f"Couldn't acquire product_update lock, skipping product_update for product {barcode}"
+        )
 
 
 def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
