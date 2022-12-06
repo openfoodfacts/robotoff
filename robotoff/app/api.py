@@ -5,6 +5,7 @@ import hashlib
 import io
 import tempfile
 from typing import List, Optional
+import uuid
 
 import falcon
 import orjson
@@ -114,7 +115,7 @@ class ProductInsightResource:
 
 
 class ProductInsightDetail:
-    def on_get(self, req: falcon.Request, resp: falcon.Response, insight_id: str):
+    def on_get(self, req: falcon.Request, resp: falcon.Response, insight_id: uuid.UUID):
         try:
             insight: ProductInsight = ProductInsight.get_by_id(insight_id)
         except ProductInsight.DoesNotExist:
