@@ -1,6 +1,7 @@
 import operator
 from typing import Dict, List, Optional, Set, Tuple
 
+import cachetools
 import numpy as np
 
 from robotoff import settings
@@ -10,7 +11,6 @@ from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_logger, http_session
-from robotoff.utils.cache import CachedStore
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -25,6 +25,12 @@ UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
 
 
 BoundingBoxType = Tuple[float, float, float, float]
+
+
+def load_resources():
+    """Load and cache resources."""
+    get_logo_confidence_thresholds()
+    get_logo_annotations()
 
 
 def compute_iou(box_1: BoundingBoxType, box_2: BoundingBoxType) -> float:
@@ -77,6 +83,7 @@ def filter_logos(
     return filtered
 
 
+@cachetools.cached(cachetools.LRUCache(maxsize=1))
 def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
     thresholds = {}
 
@@ -84,11 +91,6 @@ def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
         thresholds[(item.type, item.value)] = item.threshold
 
     return thresholds
-
-
-LOGO_CONFIDENCE_THRESHOLDS = CachedStore(
-    get_logo_confidence_thresholds, expiration_interval=10
-)
 
 
 def get_stored_logo_ids() -> Set[int]:
@@ -164,6 +166,7 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
     return saved
 
 
+@cachetools.cached(cachetools.LRUCache(maxsize=1))
 def get_logo_annotations() -> Dict[int, LogoLabelType]:
     annotations: Dict[int, LogoLabelType] = {}
 
@@ -185,9 +188,6 @@ def get_logo_annotations() -> Dict[int, LogoLabelType]:
     return annotations
 
 
-LOGO_ANNOTATIONS_CACHE = CachedStore(get_logo_annotations, expiration_interval=1)
-
-
 def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
     probs = predict_proba(logo)
 
@@ -206,7 +206,7 @@ def predict_proba(
     nn_distances = logo.nearest_neighbors["distances"]
     nn_logo_ids = logo.nearest_neighbors["logo_ids"]
 
-    logo_annotations = LOGO_ANNOTATIONS_CACHE.get()
+    logo_annotations = get_logo_annotations()
 
     nn_labels: List[LogoLabelType] = []
     for nn_logo_id in nn_logo_ids:
