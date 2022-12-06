@@ -856,8 +856,7 @@ tar xvzf openfoodfacts-mongodbdump.tar.gz
 docker cp -a dump robotoff_mongodb_1:/var/tmp/
 </code></pre></div>
 <p>Then launch dump restore:</p>
-<div class="highlight"><pre><span></span><code>docker cp -a dump robotoff_mongodb_1:/var/tmp/
-docker <span class="nb">exec</span> -it robotoff_mongodb_1 mongorestore --drop /var/tmp/dump
+<div class="highlight"><pre><span></span><code>docker <span class="nb">exec</span> -it robotoff_mongodb_1 mongorestore --drop /var/tmp/dump
 </code></pre></div>
                 
               
