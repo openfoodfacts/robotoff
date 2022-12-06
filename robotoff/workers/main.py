@@ -17,11 +17,12 @@ def load_resources():
     """
     logger.info("Loading resources in workers...")
 
-    from robotoff import taxonomy
+    from robotoff import logos, taxonomy
     from robotoff.prediction.category import matcher
 
     matcher.load_resources()
     taxonomy.load_resources()
+    logos.load_resources()
 
 
 def run(burst: bool = False):

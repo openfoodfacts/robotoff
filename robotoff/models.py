@@ -242,7 +242,7 @@ class LogoAnnotation(BaseModel):
     """Annotation(s) for an image prediction
     (an image prediction might lead to several annotations)
 
-    At the moment, this is mostly for logo (see run_object_detection),
+    At the moment, this is mostly for logo (see run_logo_object_detection),
     when we have a logo prediction above a certain threshold we create an entry,
     to ask user for annotation on the logo (https://hunger.openfoodfacts.org/logos)
     and eventual annotation will land there.

@@ -3,25 +3,25 @@ import pathlib
 from typing import Optional
 
 import requests
-from PIL import Image
 
 from robotoff import settings
 from robotoff.insights.extraction import get_predictions_from_image
 from robotoff.insights.importer import import_insights
 from robotoff.logos import (
-    LOGO_CONFIDENCE_THRESHOLDS,
     add_logos_to_ann,
     filter_logos,
+    get_logo_confidence_thresholds,
     import_logo_insights,
     save_nearest_neighbors,
 )
-from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db, with_db
 from robotoff.off import get_server_type, get_source_from_url
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.types import PredictionType
 from robotoff.products import Product, get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.workers.queues import enqueue_job, high_queue
 
 logger = get_logger(__name__)
 
@@ -45,6 +45,7 @@ def run_import_image_job(
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
     if image is None:
+        logger.info(f"Error while downloading image {image_url}")
         return
 
     source_image = get_source_from_url(image_url)
@@ -59,21 +60,38 @@ def run_import_image_job(
     with db:
         with db.atomic():
             save_image(barcode, source_image, product, server_domain)
-            import_insights_from_image(
-                barcode, image, source_image, ocr_url, server_domain
-            )
-        with db.atomic():
-            # Launch object detection in a new SQL transaction
-            run_object_detection(barcode, image, source_image, server_domain)
+
+    enqueue_job(
+        import_insights_from_image,
+        high_queue,
+        barcode=barcode,
+        image_url=image_url,
+        ocr_url=ocr_url,
+        server_domain=server_domain,
+    )
+    enqueue_job(
+        run_logo_object_detection,
+        high_queue,
+        barcode=barcode,
+        image_url=image_url,
+        server_domain=server_domain,
+    )
 
 
+@with_db
 def import_insights_from_image(
     barcode: str,
-    image: Image.Image,
-    source_image: str,
+    image_url: str,
     ocr_url: str,
     server_domain: str,
 ):
+    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+
+    if image is None:
+        logger.info(f"Error while downloading image {image_url}")
+        return
+
+    source_image = get_source_from_url(image_url)
     predictions_all = get_predictions_from_image(barcode, image, source_image, ocr_url)
     NotifierFactory.get_notifier().notify_image_flag(
         [p for p in predictions_all if p.type == PredictionType.image_flag],
@@ -136,9 +154,7 @@ def save_image(
     return image_model
 
 
-def run_object_detection(
-    barcode: str, image: Image.Image, source_image: str, server_domain: str
-):
+def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
     """Detect logos using the universal logo detector model and generate
     logo-related insights.
 
@@ -149,44 +165,75 @@ def run_object_detection(
     """
     logger.info(
         f"Running object detection for product {barcode} ({server_domain}), "
-        f"image {source_image}"
+        f"image {image_url}"
     )
-    image_instance = ImageModel.get_or_none(source_image=source_image)
 
-    if image_instance is None:
-        logger.warning("Missing image in DB for image %s", source_image)
+    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+
+    if image is None:
+        logger.info(f"Error while downloading image {image_url}")
         return
 
-    timestamp = datetime.datetime.utcnow()
-    model_name = "universal-logo-detector"
-    results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
-        image, output_image=False
-    )
-    data = results.to_json(threshold=0.1)
-    max_confidence = max([item["score"] for item in data], default=None)
-    image_prediction = ImagePrediction.create(
-        image=image_instance,
-        type="object_detection",
-        model_name=model_name,
-        model_version=settings.OBJECT_DETECTION_MODEL_VERSION[model_name],
-        data={"objects": data},
-        timestamp=timestamp,
-        max_confidence=max_confidence,
-    )
+    source_image = get_source_from_url(image_url)
 
-    logos = []
-    for i, item in filter_logos(data, score_threshold=0.5, iou_threshold=0.95):
-        logos.append(
-            LogoAnnotation.create(
-                image_prediction=image_prediction,
-                index=i,
-                score=item["score"],
-                bounding_box=item["bounding_box"],
+    with db:
+        with db.atomic():
+            image_instance = ImageModel.get_or_none(source_image=source_image)
+
+            if image_instance is None:
+                logger.warning("Missing image in DB for image %s", source_image)
+                return
+
+            timestamp = datetime.datetime.utcnow()
+            model_name = "universal-logo-detector"
+            results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
+                image, output_image=False
             )
+            data = results.to_json(threshold=0.1)
+            max_confidence = max([item["score"] for item in data], default=None)
+            image_prediction = ImagePrediction.create(
+                image=image_instance,
+                type="object_detection",
+                model_name=model_name,
+                model_version=settings.OBJECT_DETECTION_MODEL_VERSION[model_name],
+                data={"objects": data},
+                timestamp=timestamp,
+                max_confidence=max_confidence,
+            )
+
+            logo_ids = []
+            for i, item in filter_logos(data, score_threshold=0.5, iou_threshold=0.95):
+                logo_ids.append(
+                    LogoAnnotation.create(
+                        image_prediction=image_prediction,
+                        index=i,
+                        score=item["score"],
+                        bounding_box=item["bounding_box"],
+                    ).id
+                )
+
+    logger.info(f"{len(logo_ids)} logos found for image {source_image}")
+    if logo_ids:
+        enqueue_job(
+            process_created_logos,
+            high_queue,
+            job_kwargs={},
+            image_prediction_id=image_prediction.id,
+            server_domain=server_domain,
         )
 
-    logger.info(f"{len(logos)} logos found for image {source_image}")
+
+@with_db
+def process_created_logos(image_prediction_id: int, server_domain: str):
+    logos = (
+        LogoAnnotation.select()
+        .join(ImagePrediction)
+        .join(ImageModel)
+        .where(ImagePrediction.id == image_prediction_id)
+    )
+
     if logos:
+        image_instance = logos[0].image_prediction.image
         add_logos_to_ann(image_instance, logos)
 
         try:
@@ -198,5 +245,5 @@ def run_object_detection(
                 resp.text,
             )
 
-        thresholds = LOGO_CONFIDENCE_THRESHOLDS.get()
+        thresholds = get_logo_confidence_thresholds()
         import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)
