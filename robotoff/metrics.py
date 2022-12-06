@@ -18,6 +18,7 @@ URL_PATHS: list[str] = [
     "/data-quality?json=1",
     "/ingredients?stats=1&json=1",
     "/states?json=1",
+    "/misc?json=1",
 ]
 
 COUNTRY_TAGS = [
