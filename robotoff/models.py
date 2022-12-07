@@ -16,6 +16,7 @@ db = PostgresqlExtDatabase(
     password=settings.POSTGRES_PASSWORD,
     host=settings.POSTGRES_HOST,
     port=5432,
+    autoconnect=False,
 )
 
 
