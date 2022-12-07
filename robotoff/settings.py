@@ -279,12 +279,6 @@ MODELS_DIR = PROJECT_DIR / "models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
 
-OBJECT_DETECTION_MODEL_VERSION = {
-    "nutriscore": "tf-nutriscore-1.0",
-    "nutrition-table": "tf-nutrition-table-1.0",
-    "universal-logo-detector": "tf-universal-logo-detector-1.0",
-}
-
 # We require a minimum of 15 occurences of the brands already on OFF to perform the extraction. This reduces false positive.
 # We require a minimum of 4 characters for the brand
 

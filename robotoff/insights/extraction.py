@@ -1,10 +1,16 @@
-from typing import Dict, Iterable, List, Optional
+import datetime
+from typing import Iterable, List, Optional
 
 from PIL import Image
 
+from robotoff.models import ImageModel, ImagePrediction
 from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
-from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
+from robotoff.prediction.object_detection import (
+    OBJECT_DETECTION_MODEL_VERSION,
+    ObjectDetectionModel,
+    ObjectDetectionModelRegistry,
+)
 from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils import get_logger, http_session
@@ -35,6 +41,50 @@ PRODUCT_NAME_PREDICTION_TYPES: List[PredictionType] = [
 ]
 
 
+def run_object_detection_model(
+    model_name: ObjectDetectionModel,
+    image: Image.Image,
+    source_image: str,
+    threshold: float = 0.1,
+) -> Optional[ImagePrediction]:
+    """Run a model detection model and save the results in the
+    `image_prediction` table.
+
+    An item with the corresponding `source_image` in the `image` table is
+    expected to exist.
+
+    :param model_name: name of the object detection model to use
+    :param image: the input Pillow image
+    :param source_image: the source image path (used to fetch the image from
+      `image` table)
+    :param threshold: the minimum object score above which we keep the object data
+
+    :return: return None if the image does not exist in DB, or the created
+      `ImagePrediction` otherwise
+    """
+    image_instance = ImageModel.get_or_none(source_image=source_image)
+
+    if image_instance is None:
+        logger.warning("Missing image in DB for image %s", source_image)
+        return None
+
+    timestamp = datetime.datetime.utcnow()
+    results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
+        image, output_image=False
+    )
+    data = results.to_json(threshold=threshold)
+    max_confidence = max([item["score"] for item in data], default=None)
+    return ImagePrediction.create(
+        image=image_instance,
+        type="object_detection",
+        model_name=model_name.value,
+        model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
+        data={"objects": data},
+        timestamp=timestamp,
+        max_confidence=max_confidence,
+    )
+
+
 def get_predictions_from_product_name(
     barcode: str, product_name: str
 ) -> List[Prediction]:
@@ -53,49 +103,11 @@ def get_predictions_from_product_name(
     return predictions_all
 
 
-def get_predictions_from_image(
-    barcode: str, image: Image.Image, source_image: str, ocr_url: str
-) -> List[Prediction]:
-    logger.info(f"Generating OCR predictions from OCR {ocr_url}")
-    ocr_predictions = extract_ocr_predictions(
-        barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
-    )
-    extract_nutriscore = any(
-        prediction.value_tag == "en:nutriscore"
-        and prediction.type == PredictionType.label
-        for prediction in ocr_predictions
-    )
-    image_ml_predictions = extract_image_ml_predictions(
-        barcode, image, source_image, extract_nutriscore=extract_nutriscore
-    )
-    return ocr_predictions + image_ml_predictions
-
-
-def extract_image_ml_predictions(
-    barcode: str, image: Image.Image, source_image: str, extract_nutriscore: bool = True
-) -> List[Prediction]:
-    if extract_nutriscore:
-        # Currently all of the automatic processing for the Nutri-Score grades has been
-        # disabled due to a prediction quality issue.
-        # Last automatic processing threshold was set to 0.9 - resulting in ~70% incorrect
-        # detection.
-        nutriscore_prediction = extract_nutriscore_label(
-            image,
-            source_image,
-            manual_threshold=0.5,
-        )
-
-        if nutriscore_prediction:
-            nutriscore_prediction.barcode = barcode
-            nutriscore_prediction.source_image = source_image
-            return [nutriscore_prediction]
-
-    return []
-
-
 def extract_ocr_predictions(
     barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
 ) -> List[Prediction]:
+    logger.info(f"Generating OCR predictions from OCR {ocr_url}")
+
     predictions_all: List[Prediction] = []
     source_image = get_source_from_url(ocr_url)
     ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
@@ -109,51 +121,3 @@ def extract_ocr_predictions(
         )
 
     return predictions_all
-
-
-NUTRISCORE_LABELS: Dict[str, str] = {
-    "nutriscore-a": "en:nutriscore-grade-a",
-    "nutriscore-b": "en:nutriscore-grade-b",
-    "nutriscore-c": "en:nutriscore-grade-c",
-    "nutriscore-d": "en:nutriscore-grade-d",
-    "nutriscore-e": "en:nutriscore-grade-e",
-}
-
-
-def extract_nutriscore_label(
-    image: Image.Image,
-    source_image: str,
-    manual_threshold: float,
-    automatic_threshold: Optional[float] = None,
-) -> Optional[Prediction]:
-    model = ObjectDetectionModelRegistry.get("nutriscore")
-    raw_result = model.detect_from_image(image, output_image=False)
-    results = raw_result.select(threshold=manual_threshold)
-
-    if not results:
-        return None
-
-    if len(results) > 1:
-        logger.warning("more than one nutriscore detected, discarding detections")
-        return None
-
-    result = results[0]
-    score = result.score
-
-    automatic_processing = False
-    if automatic_threshold:
-        automatic_processing = score >= automatic_threshold
-    label_tag = NUTRISCORE_LABELS[result.label]
-
-    return Prediction(
-        type=PredictionType.label,
-        source_image=source_image,
-        value_tag=label_tag,
-        automatic_processing=automatic_processing,
-        data={
-            "confidence": score,
-            "bounding_box": result.bounding_box,
-            "model": "nutriscore",
-            "notify": True,
-        },
-    )

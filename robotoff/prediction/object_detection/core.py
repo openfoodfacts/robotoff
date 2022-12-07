@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import pathlib
 from typing import Dict, List, Optional, Tuple
 
@@ -16,6 +17,19 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 LABEL_NAMES_FILENAME = "labels.txt"
+
+
+class ObjectDetectionModel(enum.Enum):
+    nutriscore = "nutriscore"
+    universal_logo_detector = "universal-logo-detector"
+    nutrition_table = "nutrition-table"
+
+
+OBJECT_DETECTION_MODEL_VERSION = {
+    ObjectDetectionModel.nutriscore: "tf-nutriscore-1.0",
+    ObjectDetectionModel.nutrition_table: "tf-nutrition-table-1.0",
+    ObjectDetectionModel.universal_logo_detector: "tf-universal-logo-detector-1.0",
+}
 
 
 @dataclasses.dataclass
@@ -201,7 +215,8 @@ class ObjectDetectionModelRegistry:
     def load_all(cls):
         if cls._loaded:
             return
-        for model_name in settings.OBJECT_DETECTION_MODEL_VERSION:
+        for model in ObjectDetectionModel:
+            model_name = model.value
             file_path = settings.MODELS_DIR / model_name
             if file_path.is_dir():
                 logger.info(f"Model '{model_name}' found")

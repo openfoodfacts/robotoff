@@ -4,8 +4,11 @@ from typing import Optional
 
 import requests
 
-from robotoff import settings
-from robotoff.insights.extraction import get_predictions_from_image
+from robotoff.insights.extraction import (
+    DEFAULT_OCR_PREDICTION_TYPES,
+    extract_ocr_predictions,
+    run_object_detection_model,
+)
 from robotoff.insights.importer import import_insights
 from robotoff.logos import (
     add_logos_to_ann,
@@ -14,9 +17,16 @@ from robotoff.logos import (
     import_logo_insights,
     save_nearest_neighbors,
 )
-from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db, with_db
+from robotoff.models import (
+    ImageModel,
+    ImagePrediction,
+    LogoAnnotation,
+    Prediction,
+    db,
+    with_db,
+)
 from robotoff.off import get_server_type, get_source_from_url
-from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
+from robotoff.prediction.object_detection import ObjectDetectionModel
 from robotoff.prediction.types import PredictionType
 from robotoff.products import Product, get_product_store
 from robotoff.slack import NotifierFactory
@@ -76,6 +86,13 @@ def run_import_image_job(
         image_url=image_url,
         server_domain=server_domain,
     )
+    enqueue_job(
+        run_nutrition_table_object_detection,
+        high_queue,
+        barcode=barcode,
+        image_url=image_url,
+        server_domain=server_domain,
+    )
 
 
 @with_db
@@ -92,13 +109,27 @@ def import_insights_from_image(
         return
 
     source_image = get_source_from_url(image_url)
-    predictions_all = get_predictions_from_image(barcode, image, source_image, ocr_url)
+    predictions = extract_ocr_predictions(
+        barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+    )
+    if any(
+        prediction.value_tag == "en:nutriscore"
+        and prediction.type == PredictionType.label
+        for prediction in predictions
+    ):
+        enqueue_job(
+            run_nutriscore_object_detection,
+            high_queue,
+            barcode=barcode,
+            image_url=image_url,
+            server_domain=server_domain,
+        )
     NotifierFactory.get_notifier().notify_image_flag(
-        [p for p in predictions_all if p.type == PredictionType.image_flag],
+        [p for p in predictions if p.type == PredictionType.image_flag],
         source_image,
         barcode,
     )
-    imported = import_insights(predictions_all, server_domain)
+    imported = import_insights(predictions, server_domain)
     logger.info(f"Import finished, {imported} insights imported")
 
 
@@ -154,18 +185,12 @@ def save_image(
     return image_model
 
 
-def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
-    """Detect logos using the universal logo detector model and generate
-    logo-related insights.
-
-    :param barcode: Product barcode
-    :param image: Pillow Image to run the object detection on
-    :param image_url: URL of the image to use
-    :param server_domain: The server domain associated with the image
-    """
+def run_nutrition_table_object_detection(
+    barcode: str, image_url: str, server_domain: str
+):
     logger.info(
-        f"Running object detection for product {barcode} ({server_domain}), "
-        f"image {image_url}"
+        f"Running nutrition table object detection for product {barcode} "
+        f"({server_domain}), image {image_url}"
     )
 
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
@@ -178,31 +203,109 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
 
     with db:
         with db.atomic():
-            image_instance = ImageModel.get_or_none(source_image=source_image)
+            run_object_detection_model(
+                ObjectDetectionModel.nutrition_table, image, source_image
+            )
 
-            if image_instance is None:
-                logger.warning("Missing image in DB for image %s", source_image)
+
+NUTRISCORE_LABELS = {
+    "nutriscore-a": "en:nutriscore-grade-a",
+    "nutriscore-b": "en:nutriscore-grade-b",
+    "nutriscore-c": "en:nutriscore-grade-c",
+    "nutriscore-d": "en:nutriscore-grade-d",
+    "nutriscore-e": "en:nutriscore-grade-e",
+}
+
+
+def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain: str):
+    logger.info(
+        f"Running nutriscore object detection for product {barcode} "
+        f"({server_domain}), image {image_url}"
+    )
+
+    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+
+    if image is None:
+        logger.info(f"Error while downloading image {image_url}")
+        return
+
+    source_image = get_source_from_url(image_url)
+
+    with db:
+        with db.atomic():
+            image_prediction = run_object_detection_model(
+                ObjectDetectionModel.nutriscore, image, source_image
+            )
+
+            if not image_prediction:
                 return
 
-            timestamp = datetime.datetime.utcnow()
-            model_name = "universal-logo-detector"
-            results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
-                image, output_image=False
+            results = [
+                item
+                for item in image_prediction.data["objects"]
+                if item["score"] >= 0.5
+            ]
+
+            if len(results) > 1:
+                logger.info("more than one nutriscore detected, discarding detections")
+                return
+
+            result = results[0]
+            score = result["score"]
+            label_tag = NUTRISCORE_LABELS[result["label"]]
+
+            prediction = Prediction(
+                type=PredictionType.label,
+                barcode=barcode,
+                source_image=source_image,
+                value_tag=label_tag,
+                automatic_processing=False,
+                server_domain=server_domain,
+                data={
+                    "confidence": score,
+                    "bounding_box": result["bounding_box"],
+                    "model": ObjectDetectionModel.nutriscore.value,
+                },
             )
-            data = results.to_json(threshold=0.1)
-            max_confidence = max([item["score"] for item in data], default=None)
-            image_prediction = ImagePrediction.create(
-                image=image_instance,
-                type="object_detection",
-                model_name=model_name,
-                model_version=settings.OBJECT_DETECTION_MODEL_VERSION[model_name],
-                data={"objects": data},
-                timestamp=timestamp,
-                max_confidence=max_confidence,
+            import_insights([prediction], server_domain)
+
+
+def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
+    """Detect logos using the universal logo detector model and generate
+    logo-related predictions.
+
+    :param barcode: Product barcode
+    :param image_url: URL of the image to use
+    :param server_domain: The server domain associated with the image
+    """
+    logger.info(
+        f"Running logo object detection for product {barcode} "
+        f"({server_domain}), image {image_url}"
+    )
+
+    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+
+    if image is None:
+        logger.info(f"Error while downloading image {image_url}")
+        return
+
+    source_image = get_source_from_url(image_url)
+
+    with db:
+        with db.atomic():
+            image_prediction = run_object_detection_model(
+                ObjectDetectionModel.universal_logo_detector, image, source_image
             )
 
+            if image_prediction is None:
+                return
+
             logo_ids = []
-            for i, item in filter_logos(data, score_threshold=0.5, iou_threshold=0.95):
+            for i, item in filter_logos(
+                image_prediction.data["objects"],
+                score_threshold=0.5,
+                iou_threshold=0.95,
+            ):
                 logo_ids.append(
                     LogoAnnotation.create(
                         image_prediction=image_prediction,
