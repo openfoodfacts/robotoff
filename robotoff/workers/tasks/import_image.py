@@ -95,7 +95,6 @@ def run_import_image_job(
     )
 
 
-@with_db
 def import_insights_from_image(
     barcode: str,
     image_url: str,
@@ -129,8 +128,11 @@ def import_insights_from_image(
         source_image,
         barcode,
     )
-    imported = import_insights(predictions, server_domain)
-    logger.info(f"Import finished, {imported} insights imported")
+
+    with db:
+        with db.atomic():
+            imported = import_insights(predictions, server_domain)
+            logger.info(f"Import finished, {imported} insights imported")
 
 
 def save_image(

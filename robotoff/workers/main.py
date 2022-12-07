@@ -3,6 +3,7 @@ import sys
 from rq import Connection, Worker
 
 from robotoff import settings
+from robotoff.models import with_db
 from robotoff.utils import get_logger
 from robotoff.workers.queues import queue_names, redis_conn
 
@@ -10,6 +11,7 @@ logger = get_logger()
 settings.init_sentry()
 
 
+@with_db
 def load_resources():
     """Load cacheable resources in memory.
 
@@ -19,10 +21,12 @@ def load_resources():
 
     from robotoff import logos, taxonomy
     from robotoff.prediction.category import matcher
+    from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 
     matcher.load_resources()
     taxonomy.load_resources()
     logos.load_resources()
+    ObjectDetectionModelRegistry.load_all()
 
 
 def run(burst: bool = False):
