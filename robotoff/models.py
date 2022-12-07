@@ -220,8 +220,8 @@ class ImagePrediction(BaseModel):
     They are created by API `ImagePredictorResource`, `ImagePredictionImporterResource`
     or cli `import_logos`
 
-    Predictions come from a model, see `OBJECT_DETECTION_MODEL_VERSION` in
-    settings.py for available models.
+    Predictions come from a model, see `ObjectDetectionModel` in
+    predictions/object_detection/core.py for available models.
     """
 
     type = peewee.CharField(max_length=256)
