@@ -55,7 +55,7 @@ up:
 	@echo "🥫 Building and starting containers …"
 	docker network create po_default || true  
 ifdef service
-	${DOCKER_COMPOSE} up -d ${service} 2>&1
+	${DOCKER_COMPOSE} up --remove-orphans -d ${service} 2>&1
 else
 	${DOCKER_COMPOSE} up -d 2>&1
 endif
