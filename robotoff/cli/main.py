@@ -211,10 +211,16 @@ def refresh_insights(
     If a `barcode` is provided, only the insights of this product is
     refreshed, otherwise insights of all products are refreshed.
     """
+    import tqdm
+    from peewee import fn
+
     from robotoff import settings
-    from robotoff.insights.importer import refresh_all_insights
     from robotoff.insights.importer import refresh_insights as refresh_insights_
+    from robotoff.models import Prediction as PredictionModel
+    from robotoff.models import db
     from robotoff.utils import get_logger
+    from robotoff.workers.queues import enqueue_job, low_queue
+    from robotoff.workers.tasks import refresh_insights_job
 
     logger = get_logger()
     server_domain = server_domain or settings.OFF_SERVER_DOMAIN
@@ -222,11 +228,32 @@ def refresh_insights(
     if barcode is not None:
         logger.info(f"Refreshing product {barcode}")
         imported = refresh_insights_(barcode, server_domain)
+        logger.info(f"Refreshed insights: {imported}")
     else:
-        logger.info("Refreshing insights of all products")
-        imported = refresh_all_insights(server_domain)
+        logger.info("Launching insight refresh on full database")
+        with db:
+            with db.atomic():
+                barcodes = [
+                    barcode
+                    for (barcode,) in PredictionModel.select(
+                        fn.Distinct(PredictionModel.barcode)
+                    ).tuples()
+                ]
+        confirm = typer.confirm(
+            f"{len(barcodes)} jobs are going to be launched, confirm?"
+        )
 
-    logger.info(f"Refreshed insights: {imported}")
+        if not confirm:
+            return
+
+        logger.info("Adding refresh_insights jobs in queue...")
+        for barcode in tqdm.tqdm(barcodes, desc="barcode"):
+            enqueue_job(
+                refresh_insights_job,
+                low_queue,
+                barcode=barcode,
+                server_domain=server_domain,
+            )
 
 
 @app.command()

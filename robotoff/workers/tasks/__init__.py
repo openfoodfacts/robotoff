@@ -1,3 +1,4 @@
+from robotoff.insights.importer import refresh_insights
 from robotoff.models import Prediction, ProductInsight, with_db
 from robotoff.products import fetch_dataset, has_dataset_changed
 from robotoff.utils import get_logger
@@ -46,3 +47,11 @@ def delete_product_insights_job(barcode: str, server_domain: str):
         f"{deleted_predictions} predictions deleted, "
         f"{deleted_insights} insights deleted"
     )
+
+
+@with_db
+def refresh_insights_job(barcode: str, server_domain: str):
+    logger.info(
+        f"Refreshing insights for product {barcode}, server_domain: {server_domain}"
+    )
+    refresh_insights(barcode, server_domain)
