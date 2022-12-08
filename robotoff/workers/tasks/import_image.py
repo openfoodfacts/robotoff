@@ -135,6 +135,14 @@ def import_insights_from_image(
             logger.info(f"Import finished, {imported} insights imported")
 
 
+@with_db
+def save_image_job(barcode: str, source_image: str, server_domain: str):
+    product = get_product_store()[barcode]
+    if product is None:
+        return
+    save_image(barcode, source_image, product, server_domain)
+
+
 def save_image(
     barcode: str, source_image: str, product: Product, server_domain: str
 ) -> Optional[ImageModel]:

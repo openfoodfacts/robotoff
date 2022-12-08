@@ -202,9 +202,6 @@ def refresh_insights(
         None,
         help="Refresh a specific product. If not provided, all products are updated",
     ),
-    server_domain: Optional[str] = typer.Option(
-        None, help="The server domain to use, Open Food Facts by default"
-    ),
 ):
     """Refresh insights based on available predictions.
 
@@ -223,11 +220,10 @@ def refresh_insights(
     from robotoff.workers.tasks import refresh_insights_job
 
     logger = get_logger()
-    server_domain = server_domain or settings.OFF_SERVER_DOMAIN
 
     if barcode is not None:
         logger.info(f"Refreshing product {barcode}")
-        imported = refresh_insights_(barcode, server_domain)
+        imported = refresh_insights_(barcode, settings.OFF_SERVER_DOMAIN)
         logger.info(f"Refreshed insights: {imported}")
     else:
         logger.info("Launching insight refresh on full database")
@@ -251,9 +247,76 @@ def refresh_insights(
             enqueue_job(
                 refresh_insights_job,
                 low_queue,
+                job_kwargs={"result_ttl": 0},
                 barcode=barcode,
-                server_domain=server_domain,
+                server_domain=settings.OFF_SERVER_DOMAIN,
             )
+
+
+@app.command()
+def import_images_in_db():
+    """Make sure that every image available in MongoDB is saved in `image`
+    table."""
+    import tqdm
+
+    from robotoff import settings
+    from robotoff.off import generate_image_path
+    from robotoff.products import get_product_store
+    from robotoff.workers.queues import enqueue_job, low_queue
+    from robotoff.workers.tasks.import_image import save_image_job
+
+    store = get_product_store()
+    for product in tqdm.tqdm(store.iter_product(projection=["images", "code"])):
+        for image_id in (id_ for id_ in product.images.keys() if id_.isdigit()):
+            source_image = generate_image_path(product.barcode, image_id)
+            enqueue_job(
+                save_image_job,
+                low_queue,
+                job_kwargs={"result_ttl": 0},
+                barcode=product.barcode,
+                source_image=source_image,
+                server_domain=settings.OFF_SERVER_DOMAIN,
+            )
+
+
+@app.command()
+def run_object_detection_models():
+    """Run universal-logo-detector and nutrition-table object detection models
+    on all images in DB."""
+    import tqdm
+
+    from robotoff import settings
+    from robotoff.off import generate_image_url
+    from robotoff.models import ImageModel, db
+    from robotoff.workers.queues import enqueue_job, low_queue
+    from robotoff.workers.tasks.import_image import (
+        run_logo_object_detection,
+        run_nutrition_table_object_detection,
+    )
+
+    with db:
+        items = list(
+            ImageModel.select(ImageModel.barcode, ImageModel.image_id).tuples()
+        )
+
+    for barcode, image_id in tqdm.tqdm(items, desc="barcode"):
+        image_url = generate_image_url(barcode, image_id)
+        enqueue_job(
+            run_logo_object_detection,
+            low_queue,
+            job_kwargs={"result_ttl": 0},
+            barcode=barcode,
+            image_url=image_url,
+            server_domain=settings.OFF_SERVER_DOMAIN,
+        )
+        enqueue_job(
+            run_nutrition_table_object_detection,
+            low_queue,
+            job_kwargs={"result_ttl": 0},
+            barcode=barcode,
+            image_url=image_url,
+            server_domain=settings.OFF_SERVER_DOMAIN,
+        )
 
 
 @app.command()
