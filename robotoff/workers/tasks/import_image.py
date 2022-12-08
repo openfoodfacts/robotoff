@@ -139,6 +139,12 @@ def save_image(
     barcode: str, source_image: str, product: Product, server_domain: str
 ) -> Optional[ImageModel]:
     """Save imported image details in DB."""
+    if existing_image_model := ImageModel.get_or_none(source_image=source_image):
+        logger.info(
+            f"Image {source_image} already exist in DB, returning existing image",
+        )
+        return existing_image_model
+
     image_id = pathlib.Path(source_image).stem
 
     if not image_id.isdigit():
@@ -300,6 +306,8 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
             )
 
             if image_prediction is None:
+                # Can occur in normal conditions if an image prediction
+                # already exists for this image and model
                 return
 
             logo_ids = []
