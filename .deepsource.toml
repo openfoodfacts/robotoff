@@ -12,8 +12,8 @@ runtime_version = "3.x.x"
 
 [[transformers]]
 name = "black"
-enabled = true
+enabled = false
 
 [[transformers]]
 name = "isort"
-enabled = true
+enabled = false
