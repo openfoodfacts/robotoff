@@ -12,8 +12,6 @@ Robotoff is made of several services:
 Communication between API and workers happens through Redis DB using [rq](https://python-rq.org). [^worker_job]
 
 [^scheduler]: See `scheduler.run`
-
-TODO: change
 [^worker_job]: See `robotoff.workers.queues` and `robotoff.workers.tasks`
 
 Robotoff allows to predict many information (also called _insights_), mostly from the product images or OCR.

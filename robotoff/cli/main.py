@@ -12,6 +12,7 @@ app = typer.Typer()
 
 @app.command()
 def run_scheduler():
+    """Launch the scheduler service."""
     from robotoff import scheduler
     from robotoff.utils import get_logger
 
@@ -34,6 +35,7 @@ def run_worker(
         False, help="Run in burst mode (quit after all work is done)"
     ),
 ):
+    """Launch a worker."""
     from robotoff.workers.main import run
 
     run(queues=[x.value for x in queues], burst=burst)
