@@ -41,22 +41,33 @@ services:
     <<: *robotoff-base
     environment: *robotoff-base-env
     mem_limit: 2g
-    depends_on:
-      - worker
     ports:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
     networks:
       - webnet
 
-  worker:
+  worker_high:
     <<: *robotoff-base
     deploy:
       mode: replicated
-      replicas: 8
-    command: poetry run robotoff-cli run-worker
-    environment:
-      <<: *robotoff-base-env
-      REAL_TIME_IMAGE_PREDICTION: 1
+      replicas: 6
+    command: poetry run robotoff-cli run-worker robotoff-high
+    environment: *robotoff-base-env
+    depends_on:
+      - postgres
+    mem_limit: 8g
+    networks:
+      - webnet
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  worker_low:
+    <<: *robotoff-base
+    deploy:
+      mode: replicated
+      replicas: 2
+    command: poetry run robotoff-cli run-worker robotoff-low robotoff-high
+    environment: *robotoff-base-env
     depends_on:
       - postgres
     mem_limit: 8g
