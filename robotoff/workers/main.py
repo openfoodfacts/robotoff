@@ -5,7 +5,7 @@ from rq import Connection, Worker
 from robotoff import settings
 from robotoff.models import with_db
 from robotoff.utils import get_logger
-from robotoff.workers.queues import queue_names, redis_conn
+from robotoff.workers.queues import redis_conn
 
 logger = get_logger()
 settings.init_sentry()
@@ -41,11 +41,11 @@ class CustomWorker(Worker):
         load_resources(refresh=True)
 
 
-def run(burst: bool = False):
+def run(queues: list[str], burst: bool = False):
     load_resources()
     try:
         with Connection(connection=redis_conn):
-            w = CustomWorker(queues=queue_names)
+            w = CustomWorker(queues=queues)
             w.work(logging_level="INFO", burst=burst)
     except ConnectionError as e:
         print(e)

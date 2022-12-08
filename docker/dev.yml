@@ -50,7 +50,14 @@ services:
         - robotoff.openfoodfacts.localhost
         - api
       webnet:
-  worker:
+  worker_high:
+    <<: *robotoff-dev
+    <<: *networks-productopener-local
+    deploy:
+      mode: replicated
+      # Only 1 replica is easier to deal with for local dev
+      replicas: 1
+  worker_low:
     <<: *robotoff-dev
     <<: *networks-productopener-local
     deploy:

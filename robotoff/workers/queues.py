@@ -1,3 +1,4 @@
+import enum
 import threading
 import time
 from typing import Callable, Optional
@@ -7,9 +8,14 @@ from rq.job import Job
 
 from robotoff.redis import redis_conn
 
-queue_names = ["robotoff-high", "robotoff-low"]
-high_queue = Queue("robotoff-high", connection=redis_conn)
-low_queue = Queue("robotoff-low", connection=redis_conn)
+
+class AvailableQueue(enum.Enum):
+    robotoff_high = "robotoff-high"
+    robotoff_low = "robotoff-low"
+
+
+high_queue = Queue(AvailableQueue.robotoff_high.value, connection=redis_conn)
+low_queue = Queue(AvailableQueue.robotoff_low.value, connection=redis_conn)
 
 
 def enqueue_in_job(

@@ -1,3 +1,4 @@
+import enum
 import pathlib
 import sys
 from pathlib import Path
@@ -19,15 +20,23 @@ def run_scheduler():
     scheduler.run()
 
 
+class WorkerQueue(enum.Enum):
+    robotoff_high = "robotoff-high"
+    robotoff_low = "robotoff-low"
+
+
 @app.command()
 def run_worker(
+    queues: list[WorkerQueue] = typer.Argument(
+        ..., help="Names of the queues to listen to"
+    ),
     burst: bool = typer.Option(
         False, help="Run in burst mode (quit after all work is done)"
-    )
+    ),
 ):
     from robotoff.workers.main import run
 
-    run(burst=burst)
+    run(queues=[x.value for x in queues], burst=burst)
 
 
 @app.command()
