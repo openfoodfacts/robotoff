@@ -295,8 +295,8 @@ def run_object_detection_models():
     import tqdm
 
     from robotoff import settings
-    from robotoff.off import generate_image_url
     from robotoff.models import ImageModel, db
+    from robotoff.off import generate_image_url
     from robotoff.workers.queues import enqueue_job, low_queue
     from robotoff.workers.tasks.import_image import (
         run_logo_object_detection,

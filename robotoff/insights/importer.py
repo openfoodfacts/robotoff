@@ -6,7 +6,6 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
 
-from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
