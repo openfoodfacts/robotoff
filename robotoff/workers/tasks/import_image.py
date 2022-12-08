@@ -134,11 +134,17 @@ def import_insights_from_image(
 
 
 @with_db
-def save_image_job(barcode: str, source_image: str, server_domain: str):
-    product = get_product_store()[barcode]
-    if product is None:
-        return
-    save_image(barcode, source_image, product, server_domain)
+def save_image_job(batch: list[tuple[str, str]], server_domain: str):
+    """Save a batch of images in DB.
+
+    :param batch: a batch of (barcode, source_image) tuples
+    :param server_domain: the server domain to use
+    """
+    for barcode, source_image in batch:
+        product = get_product_store()[barcode]
+        if product is None:
+            continue
+        save_image(barcode, source_image, product, server_domain)
 
 
 def save_image(
