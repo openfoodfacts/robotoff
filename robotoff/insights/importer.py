@@ -1179,26 +1179,6 @@ def refresh_insights(
     return imported
 
 
-def refresh_all_insights(
-    server_domain: str,
-    product_store: Optional[DBProductStore] = None,
-):
-    """Refresh insights of all products for which we have predictions.
-
-    :param server_domain: The server domain associated with the predictions.
-    :param product_store: The product store to use, defaults to None
-    :return: The number of imported insights.
-    """
-    imported = 0
-    for (barcode,) in (
-        PredictionModel.select(fn.Distinct(PredictionModel.barcode)).tuples().iterator()
-    ):
-        logger.info(f"Refreshing insights for product {barcode}")
-        imported += refresh_insights(barcode, server_domain, product_store)
-
-    return imported
-
-
 def get_product_predictions(
     barcodes: List[str], prediction_types: Optional[List[str]] = None
 ) -> Iterator[Dict]:
