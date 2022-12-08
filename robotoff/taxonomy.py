@@ -361,6 +361,7 @@ def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]
 
 def load_resources():
     """Load and cache resources."""
+    logger.info("Loading taxonomy resources...")
     for taxonomy_type in settings.TAXONOMY_URLS.keys():
         get_taxonomy(taxonomy_type)
 

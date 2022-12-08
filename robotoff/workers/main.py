@@ -17,7 +17,7 @@ def load_resources():
 
     This way, all resources are available in memory before the worker forks.
     """
-    logger.info("Loading resources in workers...")
+    logger.info("Loading resources in memory...")
 
     from robotoff import logos, taxonomy
     from robotoff.prediction.category import matcher
@@ -26,6 +26,7 @@ def load_resources():
     matcher.load_resources()
     taxonomy.load_resources()
     logos.load_resources()
+    logger.info("Loading object detection model labels...")
     ObjectDetectionModelRegistry.load_all()
 
 
