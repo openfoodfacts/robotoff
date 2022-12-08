@@ -47,7 +47,7 @@ robotoff_api_1         /bin/sh -c /docker-entrypo ...   Up      0.0.0.0:5500->55
                                                                 /tcp                                
 robotoff_postgres_1    docker-entrypoint.sh postg ...   Up      127.0.0.1:5432->5432/tcp            
 robotoff_scheduler_1   /bin/sh -c /docker-entrypo ...   Up                                          
-robotoff_workers_1     /bin/sh -c /docker-entrypo ...   Up                              
+robotoff_worker_low_1     /bin/sh -c /docker-entrypo ...   Up                              
 ```
 
 ## Database backup and restore
