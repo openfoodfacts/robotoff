@@ -493,7 +493,10 @@ class DBProductStore(ProductStore):
         return None
 
     def __iter__(self):
-        raise NotImplementedError("cannot iterate over database product store")
+        yield from self.iter()
+
+    def iter_product(self, projection: Optional[list[str]] = None):
+        yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
 def load_min_dataset() -> ProductStore:
