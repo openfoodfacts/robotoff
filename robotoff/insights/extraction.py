@@ -51,7 +51,8 @@ def run_object_detection_model(
     `image_prediction` table.
 
     An item with the corresponding `source_image` in the `image` table is
-    expected to exist.
+    expected to exist. Nothing is done if an image prediction already exists
+    in DB for this image and model.
 
     :param model_name: name of the object detection model to use
     :param image: the input Pillow image
@@ -66,6 +67,16 @@ def run_object_detection_model(
 
     if image_instance is None:
         logger.warning("Missing image in DB for image %s", source_image)
+        return None
+
+    existing_image_prediction = ImagePrediction.get_or_none(
+        image=image_instance, model_name=model_name.value
+    )
+    if existing_image_prediction is not None:
+        logger.info(
+            f"Object detection results for {model_name} already exist for "
+            f"image {source_image}: ID {existing_image_prediction.id}"
+        )
         return None
 
     timestamp = datetime.datetime.utcnow()
