@@ -241,13 +241,12 @@ def refresh_insights(
     else:
         logger.info("Launching insight refresh on full database")
         with db:
-            with db.atomic():
-                barcodes = [
-                    barcode
-                    for (barcode,) in PredictionModel.select(
-                        fn.Distinct(PredictionModel.barcode)
-                    ).tuples()
-                ]
+            barcodes = [
+                barcode
+                for (barcode,) in PredictionModel.select(
+                    fn.Distinct(PredictionModel.barcode)
+                ).tuples()
+            ]
 
         batches = list(chunked(barcodes, batch_size))
         confirm = typer.confirm(

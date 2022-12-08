@@ -68,8 +68,7 @@ def run_import_image_job(
         return
 
     with db:
-        with db.atomic():
-            save_image(barcode, source_image, product, server_domain)
+        save_image(barcode, source_image, product, server_domain)
 
     enqueue_job(
         import_insights_from_image,
@@ -130,9 +129,8 @@ def import_insights_from_image(
     )
 
     with db:
-        with db.atomic():
-            imported = import_insights(predictions, server_domain)
-            logger.info(f"Import finished, {imported} insights imported")
+        imported = import_insights(predictions, server_domain)
+        logger.info(f"Import finished, {imported} insights imported")
 
 
 @with_db
@@ -218,10 +216,9 @@ def run_nutrition_table_object_detection(
     source_image = get_source_from_url(image_url)
 
     with db:
-        with db.atomic():
-            run_object_detection_model(
-                ObjectDetectionModel.nutrition_table, image, source_image
-            )
+        run_object_detection_model(
+            ObjectDetectionModel.nutrition_table, image, source_image
+        )
 
 
 NUTRISCORE_LABELS = {
@@ -248,42 +245,39 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
     source_image = get_source_from_url(image_url)
 
     with db:
-        with db.atomic():
-            image_prediction = run_object_detection_model(
-                ObjectDetectionModel.nutriscore, image, source_image
-            )
+        image_prediction = run_object_detection_model(
+            ObjectDetectionModel.nutriscore, image, source_image
+        )
 
-            if not image_prediction:
-                return
+        if not image_prediction:
+            return
 
-            results = [
-                item
-                for item in image_prediction.data["objects"]
-                if item["score"] >= 0.5
-            ]
+        results = [
+            item for item in image_prediction.data["objects"] if item["score"] >= 0.5
+        ]
 
-            if len(results) > 1:
-                logger.info("more than one nutriscore detected, discarding detections")
-                return
+        if len(results) > 1:
+            logger.info("more than one nutriscore detected, discarding detections")
+            return
 
-            result = results[0]
-            score = result["score"]
-            label_tag = NUTRISCORE_LABELS[result["label"]]
+        result = results[0]
+        score = result["score"]
+        label_tag = NUTRISCORE_LABELS[result["label"]]
 
-            prediction = Prediction(
-                type=PredictionType.label,
-                barcode=barcode,
-                source_image=source_image,
-                value_tag=label_tag,
-                automatic_processing=False,
-                server_domain=server_domain,
-                data={
-                    "confidence": score,
-                    "bounding_box": result["bounding_box"],
-                    "model": ObjectDetectionModel.nutriscore.value,
-                },
-            )
-            import_insights([prediction], server_domain)
+        prediction = Prediction(
+            type=PredictionType.label,
+            barcode=barcode,
+            source_image=source_image,
+            value_tag=label_tag,
+            automatic_processing=False,
+            server_domain=server_domain,
+            data={
+                "confidence": score,
+                "bounding_box": result["bounding_box"],
+                "model": ObjectDetectionModel.nutriscore.value,
+            },
+        )
+        import_insights([prediction], server_domain)
 
 
 def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
@@ -308,30 +302,29 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
     source_image = get_source_from_url(image_url)
 
     with db:
-        with db.atomic():
-            image_prediction = run_object_detection_model(
-                ObjectDetectionModel.universal_logo_detector, image, source_image
+        image_prediction = run_object_detection_model(
+            ObjectDetectionModel.universal_logo_detector, image, source_image
+        )
+
+        if image_prediction is None:
+            # Can occur in normal conditions if an image prediction
+            # already exists for this image and model
+            return
+
+        logo_ids = []
+        for i, item in filter_logos(
+            image_prediction.data["objects"],
+            score_threshold=0.5,
+            iou_threshold=0.95,
+        ):
+            logo_ids.append(
+                LogoAnnotation.create(
+                    image_prediction=image_prediction,
+                    index=i,
+                    score=item["score"],
+                    bounding_box=item["bounding_box"],
+                ).id
             )
-
-            if image_prediction is None:
-                # Can occur in normal conditions if an image prediction
-                # already exists for this image and model
-                return
-
-            logo_ids = []
-            for i, item in filter_logos(
-                image_prediction.data["objects"],
-                score_threshold=0.5,
-                iou_threshold=0.95,
-            ):
-                logo_ids.append(
-                    LogoAnnotation.create(
-                        image_prediction=image_prediction,
-                        index=i,
-                        score=item["score"],
-                        bounding_box=item["bounding_box"],
-                    ).id
-                )
 
     logger.info(f"{len(logo_ids)} logos found for image {source_image}")
     if logo_ids:

@@ -25,11 +25,10 @@ def with_db(fn):
 
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
-        with db.connection_context():
-            # use atomic to avoid falling in a bad state
+        with db:
+            # use atomic transaction to avoid falling in a bad state
             # (error in the main transaction)
-            with db.atomic():
-                return fn(*args, **kwargs)
+            return fn(*args, **kwargs)
 
     return wrapper
 
