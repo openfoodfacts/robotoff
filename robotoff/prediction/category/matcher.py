@@ -97,10 +97,12 @@ MatchMapType = Dict[str, Dict[str, List[Tuple[str, str]]]]
 
 def load_resources():
     """Load and cache resources."""
+    logger.info("Loading matcher resources...")
     get_processors()
     get_intersect_categories_ingredients()
 
     for lang in SUPPORTED_LANG:
+        logger.info(f"Loading NLP for {lang}...")
         get_lemmatizing_nlp(lang)
 
 

@@ -29,6 +29,7 @@ BoundingBoxType = Tuple[float, float, float, float]
 
 def load_resources():
     """Load and cache resources."""
+    logger.info("Loading logo resources...")
     get_logo_confidence_thresholds()
     get_logo_annotations()
 
