@@ -211,6 +211,9 @@ def refresh_insights(
         None,
         help="Refresh a specific product. If not provided, all products are updated",
     ),
+    batch_size: int = typer.Option(
+        50, help="Number of products to send in a worker tasks"
+    ),
 ):
     """Refresh insights based on available predictions.
 
@@ -218,6 +221,7 @@ def refresh_insights(
     refreshed, otherwise insights of all products are refreshed.
     """
     import tqdm
+    from more_itertools import chunked
     from peewee import fn
 
     from robotoff import settings
@@ -244,20 +248,22 @@ def refresh_insights(
                         fn.Distinct(PredictionModel.barcode)
                     ).tuples()
                 ]
+
+        batches = list(chunked(barcodes, batch_size))
         confirm = typer.confirm(
-            f"{len(barcodes)} jobs are going to be launched, confirm?"
+            f"{len(batches)} jobs are going to be launched, confirm?"
         )
 
         if not confirm:
             return
 
         logger.info("Adding refresh_insights jobs in queue...")
-        for barcode in tqdm.tqdm(barcodes, desc="barcode"):
+        for barcode_batch in tqdm.tqdm(batches, desc="barcode batch"):
             enqueue_job(
                 refresh_insights_job,
                 low_queue,
-                job_kwargs={"result_ttl": 0},
-                barcode=barcode,
+                job_kwargs={"result_ttl": 0, "timeout": "5m"},
+                barcodes=barcode_batch,
                 server_domain=settings.OFF_SERVER_DOMAIN,
             )
 

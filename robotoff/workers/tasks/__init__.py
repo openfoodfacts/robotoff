@@ -50,8 +50,9 @@ def delete_product_insights_job(barcode: str, server_domain: str):
 
 
 @with_db
-def refresh_insights_job(barcode: str, server_domain: str):
+def refresh_insights_job(barcodes: list[str], server_domain: str):
     logger.info(
-        f"Refreshing insights for product {barcode}, server_domain: {server_domain}"
+        f"Refreshing insights for {len(barcodes)} products, server_domain: {server_domain}"
     )
-    refresh_insights(barcode, server_domain)
+    for barcode in barcodes:
+        refresh_insights(barcode, server_domain)
