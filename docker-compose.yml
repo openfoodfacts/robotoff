@@ -92,7 +92,7 @@ services:
 
   redis:
     restart: $RESTART_POLICY
-    image: redis/redis-stack-server:6.2.4-v4
+    image: redis:7.0.5-alpine
     volumes:
       - redis-data:/data
     environment:
