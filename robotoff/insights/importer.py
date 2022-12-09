@@ -978,7 +978,8 @@ def import_product_predictions(
     """Import predictions for a specific product.
 
     If a prediction already exists in DB (same (barcode, type, server_domain,
-    source_image, value, value_tag)), it won't be imported.
+    source_image, value, value_tag, predictor, automatic_processing)), it
+    won't be imported.
 
     :param barcode: Barcode of the product. All `product_predictions` must
     have the same barcode.
@@ -994,6 +995,8 @@ def import_product_predictions(
             PredictionModel.source_image,
             PredictionModel.value_tag,
             PredictionModel.value,
+            PredictionModel.predictor,
+            PredictionModel.automatic_processing,
         )
         .where(PredictionModel.barcode == barcode)
         .tuples()
@@ -1011,6 +1014,8 @@ def import_product_predictions(
             prediction.source_image,
             prediction.value_tag,
             prediction.value,
+            prediction.predictor,
+            prediction.automatic_processing,
         )
         not in existing_predictions
     )
