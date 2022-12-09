@@ -68,7 +68,7 @@ Pint = "0.9"
 APScheduler = "~3.8.1"
 more-itertools = "~8.9.0"
 matplotlib = "~3.5.0"
-typer = "~0.3.2"
+typer = "~0.7.0"
 py-healthcheck = "^1.10.1"
 spacy-lookups-data = "^1.0.3"
 cachetools = "^5.2.0"
@@ -82,7 +82,7 @@ extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "4.0.1"
-black = "21.12b0"                                  # If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml and in .pre-commit-config.yaml
+black = "22.10.0"                                  # If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml and in .pre-commit-config.yaml
 factory_boy-peewee = "0.0.4"  # This package is archived and not maintained anymore but works and is very lightweight.
 mypy = "0.991"
 pytest = "~7.2.0"
@@ -96,7 +96,6 @@ pytest-cov = "~4.0.0"
 mkdocs-material = "~7.2.3"
 mdx-truly-sane-lists = "~1.2"
 mkdocs-awesome-pages-plugin = "~2.8.0"
-typer-cli = "~0.0.11"
 coverage = { extras = ["toml"], version = "~6.3" }
 types-requests = "~2.28.11.5"
 types-six = "^1.16.10"
