@@ -15,9 +15,10 @@ from ..models_utils import ImageModelFactory, clean_db
 
 @pytest.fixture()
 def image_model(peewee_db):
-    clean_db()
-    yield ImageModelFactory(source_image="/1/1.jpg")
-    clean_db()
+    with peewee_db:
+        clean_db()
+        yield ImageModelFactory(source_image="/1/1.jpg")
+        clean_db()
 
 
 class FakeNutriscoreModel(RemoteModel):
@@ -75,11 +76,12 @@ def test_run_object_detection_model(mocker, image_model, model_name, label_names
     assert image_prediction.max_confidence == 0.8
 
 
-def test_run_object_detection_model_no_image_instance():
-    image_prediction = run_object_detection_model(
-        ObjectDetectionModel.nutriscore,
-        None,
-        source_image="/images/1/1.jpg",
-        threshold=0.1,
-    )
+def test_run_object_detection_model_no_image_instance(peewee_db):
+    with peewee_db:
+        image_prediction = run_object_detection_model(
+            ObjectDetectionModel.nutriscore,
+            None,
+            source_image="/images/1/1.jpg",
+            threshold=0.1,
+        )
     assert image_prediction is None

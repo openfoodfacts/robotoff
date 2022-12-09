@@ -26,13 +26,15 @@ insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    clean_db()
-    # Set up.
-    ProductInsightFactory(id=insight_id, barcode=1)
+    with peewee_db:
+        # clean db
+        clean_db()
+        # Set up.
+        ProductInsightFactory(id=insight_id, barcode=1)
     # Run the test case.
     yield
-    clean_db()
+    with peewee_db:
+        clean_db()
 
 
 @pytest.fixture()
@@ -75,12 +77,13 @@ def test_random_question(client, mocker):
     }
 
 
-def test_random_question_user_has_already_seen(client, mocker):
+def test_random_question_user_has_already_seen(client, mocker, peewee_db):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        device_id="device1",
-    )
+    with peewee_db:
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            device_id="device1",
+        )
 
     result = client.simulate_get("/api/v1/questions/random?device_id=device1")
 
@@ -110,11 +113,13 @@ def test_popular_question(client, mocker):
     }
 
 
-def test_popular_question_pagination(client, mocker):
+def test_popular_question_pagination(client, mocker, peewee_db):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
-    ProductInsight.delete().execute()  # remove default sample
-    for i in range(0, 12):
-        ProductInsightFactory(barcode=i, unique_scans_n=100 - i)
+
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        for i in range(0, 12):
+            ProductInsightFactory(barcode=i, unique_scans_n=100 - i)
 
     result = client.simulate_get("/api/v1/questions/popular?count=5&page=1")
     assert result.status_code == 200
@@ -170,7 +175,7 @@ def test_barcode_question(client, mocker):
     }
 
 
-def test_annotate_insight_authenticated(client):
+def test_annotate_insight_authenticated(client, peewee_db):
     result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -188,23 +193,26 @@ def test_annotate_insight_authenticated(client):
     }
 
     # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 0
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 0
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
-    assert insight.items() > {"username": "a", "annotation": 0, "n_votes": 0}.items()
-    assert "completed_at" in insight
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
+        assert (
+            insight.items() > {"username": "a", "annotation": 0, "n_votes": 0}.items()
+        )
+        assert "completed_at" in insight
 
     # check if "annotated_result" is saved
     assert insight["annotated_result"] == 1
 
 
-def test_annotate_insight_authenticated_ignore(client):
+def test_annotate_insight_authenticated_ignore(client, peewee_db):
     result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -221,21 +229,23 @@ def test_annotate_insight_authenticated_ignore(client):
         "description": "the annotation vote was saved",
     }
 
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 1
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 1
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
-    assert (
-        insight.items() > {"username": None, "annotation": None, "n_votes": 0}.items()
-    )
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
+        assert (
+            insight.items()
+            > {"username": None, "annotation": None, "n_votes": 0}.items()
+        )
 
 
-def test_annotate_insight_not_enough_votes(client):
+def test_annotate_insight_not_enough_votes(client, peewee_db):
     result = client.simulate_post(
         "/api/v1/insights/annotate",
         params={
@@ -253,46 +263,48 @@ def test_annotate_insight_not_enough_votes(client):
     }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
-    votes = list(AnnotationVote.select().dicts())
+    with peewee_db:
+        votes = list(AnnotationVote.select().dicts())
     assert len(votes) == 1
 
     assert votes[0]["value"] == 1
     assert votes[0]["username"] is None
     assert votes[0]["device_id"] == "voter1"
-
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
+    with peewee_db:
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
 
     assert not any(insight[key] for key in ("username", "completed_at", "annotation"))
     assert insight.items() > {"n_votes": 1}.items()
 
 
-def test_annotate_insight_majority_annotation(client):
+def test_annotate_insight_majority_annotation(client, peewee_db):
     # Add pre-existing insight votes.
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=1,
-        device_id="yes-voter1",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=1,
-        device_id="yes-voter2",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=0,
-        device_id="no-voter1",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=-1,
-        device_id="ignore-voter1",
-    )
+    with peewee_db:
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=1,
+            device_id="yes-voter1",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=1,
+            device_id="yes-voter2",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=0,
+            device_id="no-voter1",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=-1,
+            device_id="ignore-voter1",
+        )
 
     result = client.simulate_post(
         "/api/v1/insights/annotate",
@@ -311,38 +323,40 @@ def test_annotate_insight_majority_annotation(client):
         "description": "the annotation was saved",
     }
 
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 5
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 5
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
     # The insight should be annoted with '1', with a None username since this was resolved with an
     # anonymous vote. `n_votes = 4, as -1 votes are not considered
     assert insight.items() > {"annotation": 1, "username": None, "n_votes": 4}.items()
 
 
 # This test checks for handling of cases where we have 2 votes for 2 different annotations.
-def test_annotate_insight_opposite_votes(client):
+def test_annotate_insight_opposite_votes(client, peewee_db):
     # Add pre-existing insight votes.
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=1,
-        device_id="yes-voter1",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=1,
-        device_id="yes-voter2",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=0,
-        device_id="no-voter1",
-    )
+    with peewee_db:
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=1,
+            device_id="yes-voter1",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=1,
+            device_id="yes-voter2",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=0,
+            device_id="no-voter1",
+        )
 
     result = client.simulate_post(
         "/api/v1/insights/annotate",
@@ -361,15 +375,16 @@ def test_annotate_insight_opposite_votes(client):
         "description": "the annotation was saved",
     }
 
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 4
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 4
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
     # The insight should be annoted with '-1', with a None username since this was resolved with an
     # anonymous vote.
     assert insight.items() > {"annotation": -1, "username": None, "n_votes": 4}.items()
@@ -377,28 +392,29 @@ def test_annotate_insight_opposite_votes(client):
 
 # This test checks for handling of cases where we have 3 votes for one annotation,
 # but the follow-up has 2 votes.
-def test_annotate_insight_majority_vote_overridden(client):
+def test_annotate_insight_majority_vote_overridden(client, peewee_db):
     # Add pre-existing insight votes.
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=1,
-        device_id="yes-voter1",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=1,
-        device_id="yes-voter2",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=0,
-        device_id="no-voter1",
-    )
-    AnnotationVoteFactory(
-        insight_id=insight_id,
-        value=0,
-        device_id="no-voter2",
-    )
+    with peewee_db:
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=1,
+            device_id="yes-voter1",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=1,
+            device_id="yes-voter2",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=0,
+            device_id="no-voter1",
+        )
+        AnnotationVoteFactory(
+            insight_id=insight_id,
+            value=0,
+            device_id="no-voter2",
+        )
 
     result = client.simulate_post(
         "/api/v1/insights/annotate",
@@ -417,21 +433,22 @@ def test_annotate_insight_majority_vote_overridden(client):
         "description": "the annotation was saved",
     }
 
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 5
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 5
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
     # The insight should be annoted with '0', with a None username since this was resolved with an
     # anonymous vote.
     assert insight.items() > {"annotation": -1, "username": None, "n_votes": 5}.items()
 
 
-def test_annotate_insight_anonymous_then_authenticated(client, mocker):
+def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db):
     """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
 
     # mock because as we validate the insight, we will ask mongo for product
@@ -458,17 +475,18 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
     }
 
     # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 1
-    # no category added
-    add_category.assert_not_called()
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 1
+        # no category added
+        add_category.assert_not_called()
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
 
     assert not any(
         insight[key]
@@ -496,15 +514,16 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker):
         "status_code": 2,
     }
     # We have the previous vote, but the last request should validate the insight directly
-    votes = list(AnnotationVote.select())
-    assert len(votes) == 1  # this is the previous vote
+    with peewee_db:
+        votes = list(AnnotationVote.select())
+        assert len(votes) == 1  # this is the previous vote
 
-    insight = next(
-        ProductInsight.select()
-        .where(ProductInsight.id == insight_id)
-        .dicts()
-        .iterator()
-    )
+        insight = next(
+            ProductInsight.select()
+            .where(ProductInsight.id == insight_id)
+            .dicts()
+            .iterator()
+        )
     # we still have the vote, but we also have an authenticated validation
     assert insight.items() > {"username": "a", "n_votes": 1, "annotation": 1}.items()
     assert insight.get("completed_at") is not None
@@ -528,9 +547,10 @@ def test_image_collection_no_result(client):
     assert data["status"] == "no_images"
 
 
-def test_image_collection(client):
-    image_model = ImageModelFactory(barcode="123")
-    ImagePredictionFactory(image__barcode="456")
+def test_image_collection(client, peewee_db):
+    with peewee_db:
+        image_model = ImageModelFactory(barcode="123")
+        ImagePredictionFactory(image__barcode="456")
 
     result = client.simulate_get(
         "/api/v1/images",
@@ -611,9 +631,9 @@ def test_prediction_collection_no_result(client):
     assert result.json == {"count": 0, "predictions": [], "status": "no_predictions"}
 
 
-def test_prediction_collection_no_filter(client):
-
-    prediction1 = PredictionFactory(value_tag="en:seeds")
+def test_prediction_collection_no_filter(client, peewee_db):
+    with peewee_db:
+        prediction1 = PredictionFactory(value_tag="en:seeds")
     result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     data = result.json
@@ -624,9 +644,10 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[0]["type"] == "category"
     assert prediction_data[0]["value_tag"] == "en:seeds"
 
-    prediction2 = PredictionFactory(
-        value_tag="en:beers", data={"sample": 1}, type="brand"
-    )
+    with peewee_db:
+        prediction2 = PredictionFactory(
+            value_tag="en:beers", data={"sample": 1}, type="brand"
+        )
     result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200
     data = result.json
@@ -641,47 +662,37 @@ def test_prediction_collection_no_filter(client):
     assert prediction_data[1]["value_tag"] == "en:beers"
 
 
-def test_get_unanswered_questions_api_empty(client):
-    ProductInsight.delete().execute()  # remove default sample
+def test_get_unanswered_questions_api_empty(client, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
     result = client.simulate_get("/api/v1/questions/unanswered")
 
     assert result.status_code == 200
     assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
 
 
-def test_get_unanswered_questions_api(client):
-    ProductInsight.delete().execute()  # remove default sample
-
-    ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
-
-    ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
-
-    ProductInsightFactory(type="nutrition", value_tag="en:soups", barcode="789")
-
-    ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="302")
-
-    ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="403")
-
-    ProductInsightFactory(type="category", value_tag="en:soups", barcode="194")
-
-    ProductInsightFactory(type="category", value_tag="en:soups", barcode="967")
-
-    ProductInsightFactory(type="label", value_tag="en:beer", barcode="039")
-
-    ProductInsightFactory(type="category", value_tag="en:apricot", barcode="492")
-
-    ProductInsightFactory(type="category", value_tag="en:soups", barcode="594")
-
-    ProductInsightFactory(
-        type="category",
-        value_tag="en:apricot",
-        barcode="780",
-        annotation=1,
-    )
-
-    ProductInsightFactory(
-        type="category", value_tag="en:apricot", barcode="983", annotation=0
-    )
+def test_get_unanswered_questions_api(client, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
+        ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
+        ProductInsightFactory(type="nutrition", value_tag="en:soups", barcode="789")
+        ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="302")
+        ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="403")
+        ProductInsightFactory(type="category", value_tag="en:soups", barcode="194")
+        ProductInsightFactory(type="category", value_tag="en:soups", barcode="967")
+        ProductInsightFactory(type="label", value_tag="en:beer", barcode="039")
+        ProductInsightFactory(type="category", value_tag="en:apricot", barcode="492")
+        ProductInsightFactory(type="category", value_tag="en:soups", barcode="594")
+        ProductInsightFactory(
+            type="category",
+            value_tag="en:apricot",
+            barcode="780",
+            annotation=1,
+        )
+        ProductInsightFactory(
+            type="category", value_tag="en:apricot", barcode="983", annotation=0
+        )
 
     # test to get all "category" with "annotation=None"
 
@@ -724,17 +735,19 @@ def test_get_unanswered_questions_api(client):
     assert data["status"] == "found"
 
 
-def test_get_unanswered_questions_api_with_country_filter(client):
-    ProductInsight.delete().execute()  # remove default sample
-
-    # test for filter with "country"
-
-    ProductInsightFactory(
-        type="location", value_tag="en:dates", barcode="032", countries=["en:india"]
-    )
-    ProductInsightFactory(
-        type="location", value_tag="en:dates", barcode="033", countries=["en:france"]
-    )
+def test_get_unanswered_questions_api_with_country_filter(client, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        # test for filter with "country"
+        ProductInsightFactory(
+            type="location", value_tag="en:dates", barcode="032", countries=["en:india"]
+        )
+        ProductInsightFactory(
+            type="location",
+            value_tag="en:dates",
+            barcode="033",
+            countries=["en:france"],
+        )
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered", params={"country": "en:india"}
@@ -747,10 +760,11 @@ def test_get_unanswered_questions_api_with_country_filter(client):
     assert data["status"] == "found"
 
 
-def test_get_unanswered_questions_pagination(client):
-    ProductInsight.delete().execute()  # remove default sample
-    for i in range(0, 12):
-        ProductInsightFactory(type="nutrition", value_tag=f"en:soups-{i:02}")
+def test_get_unanswered_questions_pagination(client, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        for i in range(0, 12):
+            ProductInsightFactory(type="nutrition", value_tag=f"en:soups-{i:02}")
 
     result = client.simulate_get(
         "/api/v1/questions/unanswered?count=5&page=1&type=nutrition"
@@ -804,22 +818,22 @@ def test_image_prediction_collection_empty(client):
     assert result.status_code == 200
 
 
-def test_image_prediction_collection(client):
+def test_image_prediction_collection(client, peewee_db):
+    with peewee_db:
+        logo_annotation_category_123 = LogoAnnotationFactory(
+            image_prediction__image__barcode="123",
+            image_prediction__type="category",
+        )
+        prediction_category_123 = logo_annotation_category_123.image_prediction
+        logo_annotation_label_789 = LogoAnnotationFactory(
+            image_prediction__image__barcode="789",
+            image_prediction__type="label",
+        )
+        prediction_label_789 = logo_annotation_label_789.image_prediction
 
-    logo_annotation_category_123 = LogoAnnotationFactory(
-        image_prediction__image__barcode="123",
-        image_prediction__type="category",
-    )
-    prediction_category_123 = logo_annotation_category_123.image_prediction
-    logo_annotation_label_789 = LogoAnnotationFactory(
-        image_prediction__image__barcode="789",
-        image_prediction__type="label",
-    )
-    prediction_label_789 = logo_annotation_label_789.image_prediction
-
-    prediction_label_789_no_logo = ImagePredictionFactory(
-        image__barcode="789", type="label"
-    )
+        prediction_label_789_no_logo = ImagePredictionFactory(
+            image__barcode="789", type="label"
+        )
 
     # test with "barcode=123" and "with_logo=True"
     result = client.simulate_get(
@@ -886,44 +900,39 @@ def test_logo_annotation_collection_empty(client):
     assert result.json == {"count": 0, "annotation": [], "status": "no_annotation"}
 
 
-def test_logo_annotation_collection_api(client):
-    LogoAnnotation.delete().execute()  # remove default sample
-
-    annotation_123_1 = LogoAnnotationFactory(
-        image_prediction__image__barcode="123",
-        annotation_value_tag="etorki",
-        annotation_type="brand",
-    )
-
-    annotation_123_2 = LogoAnnotationFactory(
-        image_prediction__image__barcode="123",
-        annotation_value_tag="etorki",
-        annotation_type="brand",
-    )
-
-    annotation_295 = LogoAnnotationFactory(
-        image_prediction__image__barcode="295",
-        annotation_value_tag="cheese",
-        annotation_type="dairies",
-    )
-
-    annotation_789 = LogoAnnotationFactory(
-        image_prediction__image__barcode="789",
-        annotation_value_tag="creme",
-        annotation_type="dairies",
-    )
-
-    annotation_306 = LogoAnnotationFactory(
-        image_prediction__image__barcode="306",
-        annotation_value_tag="yoghurt",
-        annotation_type="dairies",
-    )
-
-    annotation_604 = LogoAnnotationFactory(
-        image_prediction__image__barcode="604",
-        annotation_value_tag="meat",
-        annotation_type="category",
-    )
+def test_logo_annotation_collection_api(client, peewee_db):
+    with peewee_db:
+        LogoAnnotation.delete().execute()  # remove default sample
+        annotation_123_1 = LogoAnnotationFactory(
+            image_prediction__image__barcode="123",
+            annotation_value_tag="etorki",
+            annotation_type="brand",
+        )
+        annotation_123_2 = LogoAnnotationFactory(
+            image_prediction__image__barcode="123",
+            annotation_value_tag="etorki",
+            annotation_type="brand",
+        )
+        annotation_295 = LogoAnnotationFactory(
+            image_prediction__image__barcode="295",
+            annotation_value_tag="cheese",
+            annotation_type="dairies",
+        )
+        annotation_789 = LogoAnnotationFactory(
+            image_prediction__image__barcode="789",
+            annotation_value_tag="creme",
+            annotation_type="dairies",
+        )
+        annotation_306 = LogoAnnotationFactory(
+            image_prediction__image__barcode="306",
+            annotation_value_tag="yoghurt",
+            annotation_type="dairies",
+        )
+        annotation_604 = LogoAnnotationFactory(
+            image_prediction__image__barcode="604",
+            annotation_value_tag="meat",
+            annotation_type="category",
+        )
 
     # test with "barcode"
 
@@ -982,22 +991,23 @@ def test_logo_annotation_collection_api(client):
     assert annotations[3]["image_prediction"]["image"]["barcode"] == "604"
 
 
-def test_logo_annotation_collection_pagination(client):
-    LogoAnnotation.delete().execute()  # remove default sample
-    for i in range(0, 12):
-        LogoAnnotationFactory(
-            annotation_type="label", annotation_value_tag=f"no lactose-{i:02}"
-        )
+def test_logo_annotation_collection_pagination(client, peewee_db):
+    with peewee_db:
+        LogoAnnotation.delete().execute()  # remove default sample
+        for i in range(0, 12):
+            LogoAnnotationFactory(
+                annotation_type="label", annotation_value_tag=f"no lactose-{i:02}"
+            )
 
-    for i in range(0, 2):
-        LogoAnnotationFactory(
-            annotation_type="vegan", annotation_value_tag=f"truffle cake-{i:02}"
-        )
+        for i in range(0, 2):
+            LogoAnnotationFactory(
+                annotation_type="vegan", annotation_value_tag=f"truffle cake-{i:02}"
+            )
 
-    for i in range(0, 2):
-        LogoAnnotationFactory(
-            annotation_type="category", annotation_value_tag=f"sea food-{i:02}"
-        )
+        for i in range(0, 2):
+            LogoAnnotationFactory(
+                annotation_type="category", annotation_value_tag=f"sea food-{i:02}"
+            )
 
     result = client.simulate_get(
         "/api/v1/annotation/collection?count=5&page=1&types=label"

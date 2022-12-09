@@ -11,12 +11,13 @@ from ..models_utils import ProductInsightFactory, clean_db
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    clean_db()
-    # Run the test case.
-    yield
-    # Tear down.
-    clean_db()
+    with peewee_db:
+        # clean db
+        clean_db()
+        # Run the test case.
+        yield
+        # Tear down.
+        clean_db()
 
 
 # global for generating items

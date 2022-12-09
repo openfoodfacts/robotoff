@@ -22,10 +22,13 @@ def client():
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    clean_db()
-    # Run the test case.
+    with peewee_db:
+        clean_db()
+        # Run the test case.
     yield
-    clean_db()
+
+    with peewee_db:
+        clean_db()
 
 
 def _fake_store(monkeypatch, barcode):
@@ -126,11 +129,14 @@ def test_logo_annotation_missing_value_when_required(logo_type, client):
     }
 
 
-def test_logo_annotation_incorrect_value_label_type(client):
+def test_logo_annotation_incorrect_value_label_type(client, peewee_db):
     """A language-prefixed value is expected for label type."""
-    ann = LogoAnnotationFactory(
-        image_prediction__image__source_image="/images/2.jpg", annotation_type="label"
-    )
+
+    with peewee_db:
+        ann = LogoAnnotationFactory(
+            image_prediction__image__source_image="/images/2.jpg",
+            annotation_type="label",
+        )
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
         json={
@@ -148,10 +154,12 @@ def test_logo_annotation_incorrect_value_label_type(client):
     }
 
 
-def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
-    ann = LogoAnnotationFactory(
-        image_prediction__image__source_image="/images/2.jpg", annotation_type="brand"
-    )
+def test_logo_annotation_brand(client, peewee_db, monkeypatch, fake_taxonomy):
+    with peewee_db:
+        ann = LogoAnnotationFactory(
+            image_prediction__image__source_image="/images/2.jpg",
+            annotation_type="brand",
+        )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
     monkeypatch.setattr(
@@ -169,7 +177,9 @@ def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
     end = datetime.utcnow()
     assert result.status_code == 200
     assert result.json == {"created insights": 1}
-    ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
+
+    with peewee_db:
+        ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
     assert ann.annotation_type == "brand"
     assert ann.annotation_value == "etorki"
     assert ann.annotation_value_tag == "etorki"
@@ -177,7 +187,9 @@ def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
     assert ann.username == "a"
     assert start <= ann.completed_at <= end
     # we generate a prediction
-    predictions = list(Prediction.select().filter(barcode=barcode).execute())
+
+    with peewee_db:
+        predictions = list(Prediction.select().filter(barcode=barcode).execute())
     assert len(predictions) == 1
     (prediction,) = predictions
     assert prediction.type == "brand"
@@ -195,7 +207,9 @@ def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
     assert start <= prediction.timestamp <= end
     assert prediction.automatic_processing
     # We check that this prediction in turn generates an insight
-    insights = list(ProductInsight.select().filter(barcode=barcode).execute())
+
+    with peewee_db:
+        insights = list(ProductInsight.select().filter(barcode=barcode).execute())
     assert len(insights) == 1
     (insight,) = insights
     assert insight.type == "brand"
@@ -216,11 +230,14 @@ def test_logo_annotation_brand(client, monkeypatch, fake_taxonomy):
     assert insight.completed_at is None  # we did not run annotate yet
 
 
-def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
+def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
     """This test will check that, given an image with a logo above the confidence threshold,
     that is then fed into the ANN logos and labels model, we annotate properly a product.
     """
-    ann = LogoAnnotationFactory(image_prediction__image__source_image="/images/2.jpg")
+    with peewee_db:
+        ann = LogoAnnotationFactory(
+            image_prediction__image__source_image="/images/2.jpg"
+        )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
     start = datetime.utcnow()
@@ -237,7 +254,8 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
     end = datetime.utcnow()
     assert result.status_code == 200
     assert result.json == {"created insights": 1}
-    ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
+    with peewee_db:
+        ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
     assert ann.annotation_type == "label"
     assert ann.annotation_value == "en:eu-organic"
     assert ann.annotation_value_tag == "en:eu-organic"
@@ -245,7 +263,8 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
     assert ann.username == "a"
     assert start <= ann.completed_at <= end
     # we generate a prediction
-    predictions = list(Prediction.select().filter(barcode=barcode).execute())
+    with peewee_db:
+        predictions = list(Prediction.select().filter(barcode=barcode).execute())
     assert len(predictions) == 1
     (prediction,) = predictions
     assert prediction.type == "label"
@@ -263,7 +282,8 @@ def test_logo_annotation_label(client, monkeypatch, fake_taxonomy):
     assert start <= prediction.timestamp <= end
     assert prediction.automatic_processing
     # We check that this prediction in turn generates an insight
-    insights = list(ProductInsight.select().filter(barcode=barcode).execute())
+    with peewee_db:
+        insights = list(ProductInsight.select().filter(barcode=barcode).execute())
     assert len(insights) == 1
     (insight,) = insights
     assert insight.type == "label"
