@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Set
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
-from robotoff.models import Prediction, ProductInsight
+from robotoff.models import Prediction, ProductInsight, with_db
 from robotoff.off import get_server_type
 from robotoff.prediction.types import PredictionType
 from robotoff.products import (
@@ -30,6 +30,7 @@ def generate_quality_facets():
     generate_fiber_quality_facet()
 
 
+@with_db
 def generate_fiber_quality_facet():
     product_store: DBProductStore = get_product_store()
     collection = product_store.collection
