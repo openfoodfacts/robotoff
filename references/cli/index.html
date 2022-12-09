@@ -473,6 +473,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#robotoff-cli-import-images-in-db" class="md-nav__link">
+    robotoff-cli import-images-in-db
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#robotoff-cli-import-insights" class="md-nav__link">
     robotoff-cli import-insights
   </a>
@@ -515,8 +522,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotoff-cli-run" class="md-nav__link">
-    robotoff-cli run
+  <a href="#robotoff-cli-run-object-detection-model" class="md-nav__link">
+    robotoff-cli run-object-detection-model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-run-scheduler" class="md-nav__link">
+    robotoff-cli run-scheduler
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-run-worker" class="md-nav__link">
+    robotoff-cli run-worker
   </a>
   
 </li>
@@ -801,6 +822,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#robotoff-cli-import-images-in-db" class="md-nav__link">
+    robotoff-cli import-images-in-db
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#robotoff-cli-import-insights" class="md-nav__link">
     robotoff-cli import-insights
   </a>
@@ -843,8 +871,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robotoff-cli-run" class="md-nav__link">
-    robotoff-cli run
+  <a href="#robotoff-cli-run-object-detection-model" class="md-nav__link">
+    robotoff-cli run-object-detection-model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-run-scheduler" class="md-nav__link">
+    robotoff-cli run-scheduler
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-cli-run-worker" class="md-nav__link">
+    robotoff-cli run-worker
   </a>
   
 </li>
@@ -885,13 +927,16 @@
 <li><code>export-logo-annotation</code></li>
 <li><code>export-logos-ann</code>: Export all information about logo in DB...</li>
 <li><code>generate-ocr-insights</code>: Generate OCR insights of the requested type.</li>
+<li><code>import-images-in-db</code>: Make sure that every image available in...</li>
 <li><code>import-insights</code>: This command is used to backfill a new...</li>
 <li><code>import-logos</code></li>
 <li><code>init-elasticsearch</code>: This command is used for manual insertion of...</li>
 <li><code>predict-category</code>: Predict categories from the product JSONL...</li>
 <li><code>refresh-insights</code>: Refresh insights based on available...</li>
 <li><code>regenerate-ocr-insights</code>: Regenerate OCR predictions/insights for a...</li>
-<li><code>run</code></li>
+<li><code>run-object-detection-model</code>: Run universal-logo-detector and...</li>
+<li><code>run-scheduler</code>: Launch the scheduler service.</li>
+<li><code>run-worker</code>: Launch a worker.</li>
 </ul>
 <h2 id="robotoff-cli-add-logo-to-ann"><code>robotoff-cli add-logo-to-ann</code></h2>
 <p><strong>Usage</strong>:</p>
@@ -979,6 +1024,17 @@ crops.</p>
 <li><code>--output FILE</code>: File to write output to, stdout if not specified  [required]</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
+<h2 id="robotoff-cli-import-images-in-db"><code>robotoff-cli import-images-in-db</code></h2>
+<p>Make sure that every image available in MongoDB is saved in <code>image</code>
+table.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli import-images-in-db <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--batch-size INTEGER</code>: Number of items to send in a worker tasks  [default: 500]</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
 <h2 id="robotoff-cli-import-insights"><code>robotoff-cli import-insights</code></h2>
 <p>This command is used to backfill a new insight type on the daily product data dump.</p>
 <p><strong>Usage</strong>:</p>
@@ -1049,7 +1105,7 @@ refreshed, otherwise insights of all products are refreshed.</p>
 <p><strong>Options</strong>:</p>
 <ul>
 <li><code>--barcode TEXT</code>: Refresh a specific product. If not provided, all products are updated</li>
-<li><code>--server-domain TEXT</code>: The server domain to use, Open Food Facts by default</li>
+<li><code>--batch-size INTEGER</code>: Number of products to send in a worker tasks  [default: 100]</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
 <h2 id="robotoff-cli-regenerate-ocr-insights"><code>robotoff-cli regenerate-ocr-insights</code></h2>
@@ -1066,16 +1122,42 @@ them.</p>
 <ul>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
-<h2 id="robotoff-cli-run"><code>robotoff-cli run</code></h2>
+<h2 id="robotoff-cli-run-object-detection-model"><code>robotoff-cli run-object-detection-model</code></h2>
+<p>Run universal-logo-detector and nutrition-table object detection models
+on all images in DB.</p>
 <p><strong>Usage</strong>:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli run <span class="o">[</span>OPTIONS<span class="o">]</span> SERVICE
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli run-object-detection-model <span class="o">[</span>OPTIONS<span class="o">]</span> MODEL_NAME:<span class="o">[</span>nutriscore<span class="p">|</span>universal-logo-detector<span class="p">|</span>nutrition-table<span class="o">]</span>
 </code></pre></div>
 <p><strong>Arguments</strong>:</p>
 <ul>
-<li><code>SERVICE</code>: [required]</li>
+<li><code>MODEL_NAME:[nutriscore|universal-logo-detector|nutrition-table]</code>: Name of the object detection model  [required]</li>
 </ul>
 <p><strong>Options</strong>:</p>
 <ul>
+<li><code>--limit INTEGER</code>: Maximum numbers of job to launch</li>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-run-scheduler"><code>robotoff-cli run-scheduler</code></h2>
+<p>Launch the scheduler service.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli run-scheduler <span class="o">[</span>OPTIONS<span class="o">]</span>
+</code></pre></div>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--help</code>: Show this message and exit.</li>
+</ul>
+<h2 id="robotoff-cli-run-worker"><code>robotoff-cli run-worker</code></h2>
+<p>Launch a worker.</p>
+<p><strong>Usage</strong>:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>robotoff-cli run-worker <span class="o">[</span>OPTIONS<span class="o">]</span> QUEUES:<span class="o">[</span>robotoff-high<span class="p">|</span>robotoff-low<span class="o">]</span>...
+</code></pre></div>
+<p><strong>Arguments</strong>:</p>
+<ul>
+<li><code>QUEUES:[robotoff-high|robotoff-low]...</code>: Names of the queues to listen to  [required]</li>
+</ul>
+<p><strong>Options</strong>:</p>
+<ul>
+<li><code>--burst / --no-burst</code>: Run in burst mode (quit after all work is done)  [default: False]</li>
 <li><code>--help</code>: Show this message and exit.</li>
 </ul>
                 

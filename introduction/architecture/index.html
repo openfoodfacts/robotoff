@@ -705,8 +705,9 @@
 <li>the public <em>API</em> service</li>
 <li>the <em>scheduler</em>, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...) <sup id="fnref:scheduler"><a class="footnote-ref" href="#fn:scheduler">1</a></sup></li>
 <li>the <em>workers</em>, responsible for all long-lasting tasks</li>
+<li>a <em>redis</em> instance</li>
 </ul>
-<p>Communication between API and Workers happens through ipc events. <sup id="fnref:ipc_events"><a class="footnote-ref" href="#fn:ipc_events">2</a></sup></p>
+<p>Communication between API and workers happens through Redis DB using <a href="https://python-rq.org">rq</a>. <sup id="fnref:worker_job"><a class="footnote-ref" href="#fn:worker_job">2</a></sup></p>
 <p>Robotoff allows to predict many information (also called <em>insights</em>), mostly from the product images or OCR.</p>
 <p>Each time a contributor uploads a new image on Open Food Facts, the text on this image is extracted using Google Cloud Vision, an OCR (Optical Character Recognition) service. Robotoff receives a new event through a webhook each time this occurs, with the URLs of the image and the resulting OCR (as a JSON file).
 We use simple string matching algorithms to find patterns in the OCR text to generate new predictions <sup id="fnref:predictions"><a class="footnote-ref" href="#fn:predictions">3</a></sup>.</p>
@@ -752,8 +753,8 @@ with a computer vision model.</p>
 <li id="fn:scheduler">
 <p>See <code>scheduler.run</code>&#160;<a class="footnote-backref" href="#fnref:scheduler" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
-<li id="fn:ipc_events">
-<p>See <code>robotoff.workers.client</code> and <code>robotoff.workers.listener</code>&#160;<a class="footnote-backref" href="#fnref:ipc_events" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<li id="fn:worker_job">
+<p>See <code>robotoff.workers.queues</code> and <code>robotoff.workers.tasks</code>&#160;<a class="footnote-backref" href="#fnref:worker_job" title="Jump back to footnote 2 in the text">&#8617;</a></p>
 </li>
 <li id="fn:predictions">
 <p>see <code>robotoff.models.Prediction</code>&#160;<a class="footnote-backref" href="#fnref:predictions" title="Jump back to footnote 3 in the text">&#8617;</a></p>
@@ -768,7 +769,7 @@ with a computer vision model.</p>
 <p>see <code>robotoff.models.ImageAnnotation</code> <code>robotoff.logos</code>&#160;<a class="footnote-backref" href="#fnref:logos" title="Jump back to footnote 6 in the text">&#8617;</a></p>
 </li>
 <li id="fn:product_update">
-<p>see <code>workers.tasks.product_updated</code> and <code>workers.tasks.delete_product_insights</code>&#160;<a class="footnote-backref" href="#fnref:product_update" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+<p>see <code>workers.tasks.product_updated</code> and <code>workers.tasks.delete_product_insights_job</code>&#160;<a class="footnote-backref" href="#fnref:product_update" title="Jump back to footnote 7 in the text">&#8617;</a></p>
 </li>
 <li id="fn:annotate">
 <p>see <code>robotoff.insights.annotate</code>&#160;<a class="footnote-backref" href="#fnref:annotate" title="Jump back to footnote 8 in the text">&#8617;</a></p>
