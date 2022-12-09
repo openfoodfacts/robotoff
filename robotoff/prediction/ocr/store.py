@@ -67,6 +67,7 @@ def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
                         value=store,
                         value_tag=get_store_tag(store),
                         data={"text": match_str, "notify": store in NOTIFY_STORES},
+                        predictor="regex",
                     )
                 )
                 break
