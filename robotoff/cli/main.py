@@ -355,6 +355,8 @@ def run_object_detection_model(
 ):
     """Launch object detection model jobs on all missing images (images
     without an ImagePrediction item for this model) in DB."""
+    from typing import Callable
+
     import tqdm
     from peewee import JOIN
 
@@ -368,8 +370,10 @@ def run_object_detection_model(
         run_nutrition_table_object_detection,
     )
 
+    kwargs = {}
     if model_name == ObjectDetectionModel.universal_logo_detector:
-        func = run_logo_object_detection
+        func: Callable = run_logo_object_detection
+        kwargs["process_logos"] = False
     elif model_name == ObjectDetectionModel.nutrition_table:
         func = run_nutrition_table_object_detection
     else:
@@ -406,6 +410,7 @@ def run_object_detection_model(
                 barcode=barcode,
                 image_url=image_url,
                 server_domain=settings.OFF_SERVER_DOMAIN,
+                **kwargs,
             )
 
 

@@ -286,13 +286,17 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
         import_insights([prediction], server_domain)
 
 
-def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
+def run_logo_object_detection(
+    barcode: str, image_url: str, server_domain: str, process_logos: bool = True
+):
     """Detect logos using the universal logo detector model and generate
     logo-related predictions.
 
     :param barcode: Product barcode
     :param image_url: URL of the image to use
     :param server_domain: The server domain associated with the image
+    :param process_logos: if True, process created logos: send them to
+      Robotoff ANN and fetch nearest neighbors
     """
     logger.info(
         f"Running logo object detection for product {barcode} "
@@ -333,7 +337,7 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
             )
 
     logger.info(f"{len(logo_ids)} logos found for image {source_image}")
-    if logo_ids:
+    if logo_ids and process_logos:
         enqueue_job(
             process_created_logos,
             high_queue,
