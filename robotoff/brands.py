@@ -1,20 +1,24 @@
-import json
 import operator
 from typing import Dict, List, Optional, Set, Tuple
 
-import orjson
+import cachetools
 import requests
 
 from robotoff import settings
 from robotoff.products import ProductDataset
-from robotoff.taxonomy import TaxonomyType
-from robotoff.utils import dump_text, text_file_iter
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.utils import dump_json, dump_text, load_json, text_file_iter
 from robotoff.utils.cache import CachedStore
 
 
-def get_brand_prefix() -> Set:
-    with settings.BRAND_PREFIX_PATH.open("rb") as f:
-        return set(tuple(x) for x in orjson.loads(f.read()))
+@cachetools.cached(cachetools.LRUCache(maxsize=1))
+def get_brand_prefix() -> set[tuple[str, str]]:
+    """Get a set of brand prefix tuples found in Open Food Facts databases.
+
+    Each tuple has the format (brand_tag, prefix) where prefix is a digit with
+    13 elements (EAN-13).
+    """
+    return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
 def get_brand_blacklist() -> Set[str]:
@@ -26,9 +30,7 @@ def generate_barcode_prefix(barcode: str) -> str:
         prefix = 7
         return barcode[:prefix] + "x" * (len(barcode) - prefix)
 
-    raise ValueError(
-        "barcode prefix only works on EAN-13 barcode " "(here: {})".format(barcode)
-    )
+    raise ValueError(f"barcode prefix only works on EAN-13 barcode (here: {barcode})")
 
 
 def compute_brand_prefix(
@@ -60,14 +62,11 @@ def compute_brand_prefix(
     return count
 
 
-def save_brand_prefix(count_threshold: int):
+def save_brand_prefix(count_threshold: int = 5):
     product_dataset = ProductDataset(settings.JSONL_DATASET_PATH)
     counts = compute_brand_prefix(product_dataset, threshold=count_threshold)
-
     brand_prefixes = list(counts.keys())
-
-    with settings.BRAND_PREFIX_PATH.open("w") as f:
-        json.dump(brand_prefixes, f)
+    dump_json(settings.BRAND_PREFIX_PATH, brand_prefixes, compressed=True)
 
 
 def keep_brand_from_taxonomy(
@@ -94,9 +93,7 @@ def generate_brand_list(
     blacklisted_brands: Optional[Set[str]] = None,
 ) -> List[Tuple[str, str]]:
     min_length = min_length or 0
-    brand_taxonomy = requests.get(
-        settings.TAXONOMY_URLS[TaxonomyType.brand.name]
-    ).json()
+    brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
     brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}
@@ -144,7 +141,6 @@ def in_barcode_range(
     return True
 
 
-BRAND_PREFIX_STORE = CachedStore(fetch_func=get_brand_prefix, expiration_interval=None)
 BRAND_BLACKLIST_STORE = CachedStore(
     fetch_func=get_brand_blacklist, expiration_interval=None
 )

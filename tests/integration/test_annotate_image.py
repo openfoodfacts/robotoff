@@ -8,7 +8,6 @@ import pytest
 import robotoff.insights.importer
 import robotoff.taxonomy
 from robotoff.app.api import api
-from robotoff.brands import BRAND_PREFIX_STORE
 from robotoff.models import LogoAnnotation, Prediction, ProductInsight
 from robotoff.products import Product
 
@@ -154,7 +153,7 @@ def test_logo_annotation_incorrect_value_label_type(client, peewee_db):
     }
 
 
-def test_logo_annotation_brand(client, peewee_db, monkeypatch, fake_taxonomy):
+def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxonomy):
     with peewee_db:
         ann = LogoAnnotationFactory(
             image_prediction__image__source_image="/images/2.jpg",
@@ -162,8 +161,8 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, fake_taxonomy):
         )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
-    monkeypatch.setattr(
-        BRAND_PREFIX_STORE, "get", lambda: {("Etorki", "0000000xxxxxx")}
+    mocker.patch(
+        "robotoff.brands.get_brand_prefix", return_value={("Etorki", "0000000xxxxxx")}
     )
     start = datetime.utcnow()
     result = client.simulate_post(

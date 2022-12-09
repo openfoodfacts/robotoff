@@ -1,6 +1,6 @@
 import pytest
 
-from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
+from robotoff.brands import get_brand_prefix, in_barcode_range
 
 
 @pytest.mark.parametrize(
@@ -16,5 +16,5 @@ from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
     ],
 )
 def test_in_barcode_range(barcode, brand_tag, is_valid):
-    brand_prefix = BRAND_PREFIX_STORE.get()
+    brand_prefix = get_brand_prefix()
     assert in_barcode_range(brand_prefix, brand_tag, barcode) is is_valid

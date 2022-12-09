@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Ty
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
-from robotoff.brands import BRAND_PREFIX_STORE, in_barcode_range
+from robotoff.brands import get_brand_prefix, in_barcode_range
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
@@ -860,7 +860,7 @@ class BrandInsightImporter(InsightImporter):
 
     @staticmethod
     def is_in_barcode_range(barcode: str, tag: str) -> bool:
-        brand_prefix: Set[Tuple[str, str]] = BRAND_PREFIX_STORE.get()
+        brand_prefix = get_brand_prefix()
 
         if not in_barcode_range(brand_prefix, tag, barcode):
             logger.info(f"Barcode {barcode} of brand {tag} not in barcode range")

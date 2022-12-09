@@ -256,7 +256,7 @@ OCR_TRACE_ALLERGEN_DATA_PATH = OCR_DATA_DIR / "trace_allergen.txt"
 # Try to detect postal codes in France
 OCR_CITIES_FR_PATH = OCR_DATA_DIR / "cities_laposte_hexasmal.json.gz"
 
-BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json"
+BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json.gz"
 
 # When we're making queries to the API, so that we're not blocked by error
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
