@@ -84,9 +84,7 @@ def is_recent_image(
 
     for upload_datetime in remaining_datetimes:
         if upload_datetime - image_datetime > max_timedelta:
-            logger.info(
-                "More recent image: {} > {}".format(upload_datetime, image_datetime)
-            )
+            logger.debug(f"More recent image: {upload_datetime} > {image_datetime}")
             return False
 
     return True
