@@ -235,3 +235,6 @@ guard-%: # guard clause for targets that require an environment variable (usuall
    		echo use "make ${MAKECMDGOALS} $*=you-args"; \
    		exit 1; \
 	fi;
+
+robotoff-cli: guard-args
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff ${args}

@@ -2,7 +2,6 @@ import json
 import pathlib
 from typing import Callable, Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
-import orjson
 import requests
 
 from robotoff.off import generate_json_ocr_url, get_barcode_from_path, split_barcode
@@ -155,36 +154,3 @@ def ocr_iter(
     elif not isinstance(source, str):
         items = jsonl_iter_fp(source)
         yield from ocr_content_iter(items)
-
-    elif is_barcode(source):
-        barcode: str = source
-        image_data = fetch_images_for_ean(source)["product"]["images"]
-
-        for image_id in image_data.keys():
-            if image_id.isdigit():
-                print("Getting OCR for image {}".format(image_id))
-                data = get_json_for_image(barcode, image_id)
-                source = get_source(image_id, barcode=barcode)
-                if data:
-                    yield source, data
-
-    else:
-        input_path = pathlib.Path(source)
-
-        if not input_path.exists():
-            print("Unrecognized input: {}".format(input_path))
-            return
-
-        if input_path.is_dir():
-            for json_path in input_path.glob("**/*.json"):
-                with open(str(json_path), "rb") as f:
-                    source = get_source(json_path.stem, json_path=str(json_path))
-                    yield source, orjson.loads(f.read())
-        else:
-            if ".json" in input_path.suffixes:
-                with open(str(input_path), "rb") as f:
-                    yield None, orjson.loads(f.read())
-
-            elif ".jsonl" in input_path.suffixes:
-                items = jsonl_iter(input_path)
-                yield from ocr_content_iter(items)

@@ -1,48 +1,65 @@
 import contextlib
-import json
-import pathlib
+import gzip
 import sys
-from typing import Iterable, List, Optional, TextIO, Union
+from pathlib import Path
+from typing import Iterable, List, Optional
 
 import _io
 import click
 import dacite
+import orjson
+import tqdm
 from more_itertools import chunked
 
 from robotoff.insights.importer import import_insights as import_insights_
 from robotoff.models import db
 from robotoff.off import get_barcode_from_path
-from robotoff.prediction.ocr import OCRResult, extract_predictions, ocr_iter
+from robotoff.prediction.ocr import OCRResult, extract_predictions
+from robotoff.prediction.ocr.core import ocr_content_iter
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import get_product_store
-from robotoff.utils import get_logger, jsonl_iter
+from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
 
 logger = get_logger(__name__)
 
 
 def run_from_ocr_archive(
-    input_: Union[str, TextIO],
+    input_path: Path,
     prediction_type: PredictionType,
-    output: Optional[pathlib.Path] = None,
+    output: Optional[Path] = None,
 ):
-    predictions = generate_from_ocr_archive(input_, prediction_type)
+    predictions = tqdm.tqdm(
+        generate_from_ocr_archive(input_path, prediction_type), desc="OCR"
+    )
     output_f: _io._TextIOBase
+    need_decoding = False
 
     if output is not None:
-        output_f = output.open("w")
+        if output.suffix == ".gz":
+            output_f = gzip.open(output, "wb")
+        else:
+            output_f = output.open("wb")
     else:
         output_f = sys.stdout
+        need_decoding = True
 
     with contextlib.closing(output_f):
         for prediction in predictions:
-            output_f.write(json.dumps(prediction.to_dict()) + "\n")
+            raw_data = orjson.dumps(prediction.to_dict()) + b"\n"
+            data = raw_data.decode("utf-8") if need_decoding else raw_data
+            output_f.write(data)
 
 
 def generate_from_ocr_archive(
-    input_: Union[str, TextIO, pathlib.Path],
+    input_path: Path,
     prediction_type: PredictionType,
 ) -> Iterable[Prediction]:
-    for source_image, ocr_json in ocr_iter(input_):
+    json_iter = (
+        gzip_jsonl_iter(input_path)
+        if input_path.suffix == ".gz"
+        else jsonl_iter(input_path)
+    )
+    for source_image, ocr_json in ocr_content_iter(json_iter):
         if source_image is None:
             continue
 
@@ -65,7 +82,7 @@ def generate_from_ocr_archive(
         )
 
 
-def insights_iter(file_path: pathlib.Path) -> Iterable[Prediction]:
+def insights_iter(file_path: Path) -> Iterable[Prediction]:
     for prediction in jsonl_iter(file_path):
         yield dacite.from_dict(
             data_class=Prediction,

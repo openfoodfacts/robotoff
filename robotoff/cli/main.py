@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
-from typer import Option
 
 app = typer.Typer()
 
@@ -78,36 +77,27 @@ def regenerate_ocr_insights(
 
 
 @app.command()
-def generate_ocr_insights(
-    source: str,
-    prediction_type: str,
-    output: Path = Option(
-        ...,
-        help="File to write output to, stdout if not specified",
+def generate_ocr_predictions(
+    input_path: Path = typer.Argument(
+        ..., help="Path to a (gzipped-)OCR JSONL archive"
+    ),
+    prediction_type: str = typer.Argument(
+        ..., help="Type of the predictions to generate (label, brand,...)"
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        help="File to write output to, stdout if not specified. Gzipped output are supported.",
         dir_okay=False,
         writable=True,
     ),
 ) -> None:
-    """Generate OCR insights of the requested type.
-
-    SOURCE can be either:
-    * the path to a JSON file, a (gzipped-)JSONL file, or a directory
-        containing JSON files
-    * a barcode
-    * the '-' character: input is read from stdin and assumed to be JSONL
-
-    Output is JSONL, each line containing the insights for one document.
-    """
-    from typing import TextIO, Union
-
+    """Generate OCR predictions of the requested type."""
     from robotoff.cli import insights
     from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
-    input_: Union[str, TextIO] = sys.stdin if source == "-" else source
-
     get_logger()
-    insights.run_from_ocr_archive(input_, PredictionType[prediction_type], output)
+    insights.run_from_ocr_archive(input_path, PredictionType[prediction_type], output)
 
 
 @app.command()
