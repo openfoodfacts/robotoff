@@ -23,7 +23,7 @@ from robotoff.metrics import (
     save_facet_metrics,
     save_insight_metrics,
 )
-from robotoff.models import ProductInsight, with_db
+from robotoff.models import ProductInsight, db, with_db
 from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     CACHED_PRODUCT_STORE,
@@ -44,38 +44,39 @@ logger = get_logger(__name__)
 
 # Note: we do not use with_db, for atomicity is handled in annotator
 def process_insights():
-    processed = 0
-    for insight in (
-        ProductInsight.select()
-        .where(
-            ProductInsight.annotation.is_null(),
-            ProductInsight.process_after.is_null(False),
-            ProductInsight.process_after <= datetime.datetime.utcnow(),
-        )
-        .iterator()
-    ):
-        try:
-            annotator = InsightAnnotatorFactory.get(insight.type)
-            logger.info(
-                "Annotating insight %s (product: %s)", insight.id, insight.barcode
+    with db.connection_context():
+        processed = 0
+        for insight in (
+            ProductInsight.select()
+            .where(
+                ProductInsight.annotation.is_null(),
+                ProductInsight.process_after.is_null(False),
+                ProductInsight.process_after <= datetime.datetime.utcnow(),
             )
-            annotation_result = annotator.annotate(insight, 1, update=True)
-            processed += 1
-
-            if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-                "notify", False
-            ):
-                slack.NotifierFactory.get_notifier().notify_automatic_processing(
-                    insight
+            .iterator()
+        ):
+            try:
+                annotator = InsightAnnotatorFactory.get(insight.type)
+                logger.info(
+                    "Annotating insight %s (product: %s)", insight.id, insight.barcode
                 )
-        except Exception as e:
-            # continue to the next one
-            # Note: annotator already rolled-back the transaction
-            logger.exception(
-                f"exception {e} while handling annotation of insight %s (product) %s",
-                insight.id,
-                insight.barcode,
-            )
+                annotation_result = annotator.annotate(insight, 1, update=True)
+                processed += 1
+
+                if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
+                    "notify", False
+                ):
+                    slack.NotifierFactory.get_notifier().notify_automatic_processing(
+                        insight
+                    )
+            except Exception as e:
+                # continue to the next one
+                # Note: annotator already rolled-back the transaction
+                logger.exception(
+                    f"exception {e} while handling annotation of insight %s (product) %s",
+                    insight.id,
+                    insight.barcode,
+                )
     logger.info("%d insights processed", processed)
 
 
@@ -228,10 +229,11 @@ def generate_insights():
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
     product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
-    imported = import_insights(
-        product_predictions_iter, server_domain=settings.OFF_SERVER_DOMAIN
-    )
-    logger.info("{} category insights imported".format(imported))
+    with db:
+        imported = import_insights(
+            product_predictions_iter, server_domain=settings.OFF_SERVER_DOMAIN
+        )
+    logger.info(f"{imported} category insights imported")
 
 
 def transform_insight_iter(insights_iter: Iterable[Dict]):
