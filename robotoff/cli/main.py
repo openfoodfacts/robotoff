@@ -47,11 +47,12 @@ def regenerate_ocr_insights(
     """Regenerate OCR predictions/insights for a specific product and import
     them."""
     from robotoff import settings
+    from robotoff.insights import importer
     from robotoff.insights.extraction import (
         DEFAULT_OCR_PREDICTION_TYPES,
         extract_ocr_predictions,
     )
-    from robotoff.insights.importer import import_insights as import_insights_
+    from robotoff.models import db
     from robotoff.off import generate_json_ocr_url
     from robotoff.products import get_product
     from robotoff.utils import get_logger
@@ -72,7 +73,9 @@ def regenerate_ocr_insights(
             barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
         )
 
-    imported = import_insights_(predictions, settings.OFF_SERVER_DOMAIN)
+    with db:
+        imported = importer.import_insights(predictions, settings.OFF_SERVER_DOMAIN)
+
     logger.info(f"Import finished, {imported} insights imported")
 
 
@@ -162,39 +165,66 @@ def categorize(
 
 @app.command()
 def import_insights(
-    insight_type: Optional[str],
-    server_domain: Optional[str] = None,
-    batch_size: int = 1024,
-    input_: Optional[pathlib.Path] = None,
-    generate_from: Optional[pathlib.Path] = None,
+    insight_type: Optional[str] = typer.Option(
+        None,
+        help="Type of the insight to generate, only needed when --generate-from is used",
+    ),
+    batch_size: int = typer.Option(
+        128,
+        help="Number of insights that are imported in each atomic SQL transaction",
+    ),
+    input_path: Optional[pathlib.Path] = typer.Option(
+        None,
+        help="Input path of the JSONL archive, is incompatible with --generate-from",
+    ),
+    generate_from: Optional[pathlib.Path] = typer.Option(
+        None, help="Input path of the OCR archive, is incompatible with --input-path"
+    ),
 ) -> None:
-    """This command is used to backfill a new insight type on the daily product data dump."""
+    """Import insights from a prediction JSONL archive (with --input-path
+    option), or generate them on the fly from an OCR archive (with
+    --generate-from option)."""
+    import tqdm
+    from more_itertools import chunked
+
     from robotoff import settings
-    from robotoff.cli.insights import generate_from_ocr_archive
-    from robotoff.cli.insights import import_insights as import_insights_
-    from robotoff.cli.insights import insights_iter
+    from robotoff.cli.insights import generate_from_ocr_archive, insights_iter
+    from robotoff.insights import importer
+    from robotoff.models import db
     from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     logger = get_logger()
-    server_domain = server_domain or settings.OFF_SERVER_DOMAIN
 
     if generate_from is not None:
-        logger.info("Generating and importing insights from {}".format(generate_from))
+        logger.info(f"Generating and importing insights from {generate_from}")
         if insight_type is None:
             sys.exit("Required option: --insight-type")
 
-        insights = generate_from_ocr_archive(
+        predictions = generate_from_ocr_archive(
             generate_from, PredictionType[insight_type]
         )
-    elif input_ is not None:
-        logger.info("Importing insights from {}".format(input_))
-        insights = insights_iter(input_)
+    elif input_path is not None:
+        logger.info(f"Importing insights from {input_path}")
+        predictions = insights_iter(input_path)
     else:
-        raise ValueError("--generate-from or --input must be provided")
+        raise ValueError("--generate-from or --input-path must be provided")
 
-    imported = import_insights_(insights, server_domain, batch_size)
-    logger.info("{} insights imported".format(imported))
+    imported = 0
+    with db.connection_context():
+        for prediction_batch in tqdm.tqdm(
+            chunked(predictions, batch_size), desc="prediction batch"
+        ):
+            # Create a new transaction for every batch
+            with db.atomic():
+                batch_imported = importer.import_insights(
+                    prediction_batch,
+                    settings.OFF_SERVER_DOMAIN,
+                )
+                logger.info(f"{batch_imported} insights imported in batch")
+                imported += batch_imported
+
+    logger.info(f"{imported} insights imported")
 
 
 @app.command()
@@ -323,8 +353,8 @@ def run_object_detection_model(
     ),
     limit: Optional[int] = typer.Option(None, help="Maximum numbers of job to launch"),
 ):
-    """Run universal-logo-detector and nutrition-table object detection models
-    on all images in DB."""
+    """Launch object detection model jobs on all missing images (images
+    without an ImagePrediction item for this model) in DB."""
     import tqdm
     from peewee import JOIN
 

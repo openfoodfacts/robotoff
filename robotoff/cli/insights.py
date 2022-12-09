@@ -9,15 +9,11 @@ import click
 import dacite
 import orjson
 import tqdm
-from more_itertools import chunked
 
-from robotoff.insights.importer import import_insights as import_insights_
-from robotoff.models import db
 from robotoff.off import get_barcode_from_path
 from robotoff.prediction.ocr import OCRResult, extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
 from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.products import get_product_store
 from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
 
 logger = get_logger(__name__)
@@ -89,23 +85,3 @@ def insights_iter(file_path: Path) -> Iterable[Prediction]:
             data=prediction,
             config=dacite.Config(cast=[PredictionType]),
         )
-
-
-def import_insights(
-    predictions: Iterable[Prediction],
-    server_domain: str,
-    batch_size: int = 1024,
-) -> int:
-    product_store = get_product_store()
-    imported: int = 0
-
-    prediction_batch: list[Prediction]
-    for prediction_batch in chunked(predictions, batch_size):
-        with db.atomic():
-            imported += import_insights_(
-                prediction_batch,
-                server_domain,
-                product_store=product_store,
-            )
-
-    return imported
