@@ -51,7 +51,7 @@ services:
     deploy:
       mode: replicated
       replicas: 6
-    command: poetry run robotoff-cli run-worker robotoff-high
+    command: python -m robotoff run-worker robotoff-high
     environment: *robotoff-base-env
     depends_on:
       - postgres
@@ -66,7 +66,7 @@ services:
     deploy:
       mode: replicated
       replicas: 2
-    command: poetry run robotoff-cli run-worker robotoff-low robotoff-high
+    command: python -m robotoff run-worker robotoff-low robotoff-high
     environment: *robotoff-base-env
     depends_on:
       - postgres
@@ -79,7 +79,7 @@ services:
   scheduler:
     <<: *robotoff-base
     environment: *robotoff-base-env
-    command: poetry run robotoff-cli run-scheduler
+    command: python -m robotoff run-scheduler
     mem_limit: 4g
     networks:
       - webnet

@@ -3,7 +3,7 @@ This script is used to generate the datasets for the 'neural' category ML model.
 For example: https://github.com/openfoodfacts/openfoodfacts-ai/releases/tag/dataset-category-2020-06-30
 
 Usage:
-1. Use 'poetry run robotoff-cli download-dataset' to fetch the latest version of the PO data.
+1. Use 'python -m robotoff download-dataset' to fetch the latest version of the PO data.
 2. Run 'python scripts/category_dataset.py' to construct the train/test/val datasets,
    alongside the category/ingredient taxonomy dump.
 3. Gzip the train/test/val datasets.
