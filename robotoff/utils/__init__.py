@@ -142,7 +142,9 @@ def text_file_iter(
 
 
 def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):
-    with open(str(filepath), "w") as f:
+    open_fn = get_open_fn(filepath)
+
+    with open_fn(str(filepath), "wt") as f:
         for item in text_iter:
             item = item.strip("\n")
             f.write(item + "\n")

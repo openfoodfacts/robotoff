@@ -2,12 +2,11 @@ import operator
 from typing import Dict, List, Optional, Set, Tuple
 
 import cachetools
-import requests
 
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.utils import dump_json, dump_text, load_json, text_file_iter
+from robotoff.utils import dump_json, dump_text, http_session, load_json, text_file_iter
 from robotoff.utils.cache import CachedStore
 
 
@@ -94,13 +93,15 @@ def generate_brand_list(
 ) -> List[Tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
-    brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()["tags"]
+    url = settings.BaseURLProvider().get() + "/brands.json"
+    brand_count_list = http_session.get(url).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}
     brand_list = []
 
-    for key in list(brand_taxonomy.keys()):
-        name = brand_taxonomy[key]["name"]["en"]
+    for node in brand_taxonomy.iter_nodes():
+        key = node.id
+        name = node.names["en"]
 
         if key.startswith("en:"):
             key = key[3:]

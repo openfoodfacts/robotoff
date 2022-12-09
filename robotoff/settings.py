@@ -114,8 +114,6 @@ TAXONOMY_URLS = {
 
 OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
-OFF_BRANDS_URL = BaseURLProvider().get() + "/brands.json"
-
 _off_password = os.environ.get("OFF_PASSWORD", "")
 _off_user = os.environ.get("OFF_USER", "")
 _off_request_auth = ("off", "off") if _instance_tld() == "net" else None
@@ -237,7 +235,7 @@ def init_sentry(integrations: Optional[List[Integration]] = None):
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
 OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"
-OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / "brand_from_taxonomy.txt"
+OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / "brand_from_taxonomy.gz"
 OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / "brand_logo_annotation.txt"
 OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
 OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
