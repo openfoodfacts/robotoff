@@ -1,5 +1,5 @@
 import operator
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional
 
 import cachetools
 
@@ -20,7 +20,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
     return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
-def get_brand_blacklist() -> Set[str]:
+def get_brand_blacklist() -> set[str]:
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
 
@@ -34,8 +34,8 @@ def generate_barcode_prefix(barcode: str) -> str:
 
 def compute_brand_prefix(
     product_dataset: ProductDataset, threshold: Optional[int] = None
-) -> Dict[Tuple[str, str], int]:
-    count: Dict[Tuple[str, str], int] = {}
+) -> dict[tuple[str, str], int]:
+    count: dict[tuple[str, str], int] = {}
 
     for product in (
         product_dataset.stream()
@@ -72,7 +72,7 @@ def keep_brand_from_taxonomy(
     brand_tag: str,
     brand: str,
     min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
+    blacklisted_brands: Optional[set[str]] = None,
 ) -> bool:
     if brand.isdigit():
         return False
@@ -89,8 +89,8 @@ def keep_brand_from_taxonomy(
 def generate_brand_list(
     threshold: int,
     min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
-) -> List[Tuple[str, str]]:
+    blacklisted_brands: Optional[set[str]] = None,
+) -> list[tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
     url = settings.BaseURLProvider().get() + "/brands.json"
@@ -118,7 +118,7 @@ def generate_brand_list(
 def dump_taxonomy_brands(
     threshold: int,
     min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
+    blacklisted_brands: Optional[set[str]] = None,
 ):
     filtered_brands = generate_brand_list(threshold, min_length, blacklisted_brands)
     line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
@@ -126,7 +126,7 @@ def dump_taxonomy_brands(
 
 
 def in_barcode_range(
-    brand_prefix: Set[Tuple[str, str]], brand_tag: str, barcode: str
+    brand_prefix: set[tuple[str, str]], brand_tag: str, barcode: str
 ) -> bool:
     """Check that the insight barcode is in the range of the detected
     brand barcode range.

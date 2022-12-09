@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from robotoff.spellcheck.exceptions import TokenLengthMismatchException
 from robotoff.spellcheck.items import AtomicCorrection, Offset
 
@@ -7,11 +5,11 @@ from robotoff.spellcheck.items import AtomicCorrection, Offset
 class CorrectionFormatter:
     def format(
         self,
-        original_tokens: List[Dict],
-        suggestion_tokens: List[Dict],
+        original_tokens: list[dict],
+        suggestion_tokens: list[dict],
         offset: Offset,
         score: int,
-    ) -> List[AtomicCorrection]:
+    ) -> list[AtomicCorrection]:
         if len(original_tokens) != len(suggestion_tokens):
             raise TokenLengthMismatchException()
 

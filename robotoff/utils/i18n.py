@@ -1,12 +1,12 @@
 import gettext
-from typing import Dict, Optional
+from typing import Optional
 
 from robotoff import settings
 
 
 class TranslationStore:
     def __init__(self):
-        self.translations: Dict[str, gettext.NullTranslations] = {}
+        self.translations: dict[str, gettext.NullTranslations] = {}
 
     def load(self):
         for lang_dir in settings.I18N_DIR.glob("*"):

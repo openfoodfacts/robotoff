@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import Dict, List, Match, Optional, Tuple, Union
+from typing import Optional, Union
 
 import pint
 
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 ureg = pint.UnitRegistry()
 
 
-def normalize_weight(value: str, unit: str) -> Tuple[float, str]:
+def normalize_weight(value: str, unit: str) -> tuple[float, str]:
     """Normalize the product weight unit to g for mass and mL for volumes.
     Return a (value, unit) tuple, where value is the normalized value as a
     float and unit either 'g' or 'ml'."""
@@ -105,11 +105,11 @@ def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
 
 
 def process_product_weight(
-    match: Match,
+    match: re.Match,
     prompt: bool,
     automatic_processing: bool,
     ending_prompt: bool = False,
-) -> Optional[Dict]:
+) -> Optional[dict]:
     raw = match.group()
 
     if prompt:
@@ -162,7 +162,7 @@ def process_product_weight(
     return result
 
 
-def process_multi_packaging(match) -> Optional[Dict]:
+def process_multi_packaging(match) -> Optional[dict]:
     raw = match.group()
 
     count = match.group(1)
@@ -197,7 +197,7 @@ def process_multi_packaging(match) -> Optional[Dict]:
     return result
 
 
-PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
+PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
     "with_mention": OCRRegex(
         re.compile(
             r"(?<![a-z])(poids|poids net [aà] l'emballage|poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"
@@ -246,7 +246,7 @@ PRODUCT_WEIGHT_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_product_weight(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():

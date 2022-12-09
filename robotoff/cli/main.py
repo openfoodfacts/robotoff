@@ -2,7 +2,7 @@ import enum
 import pathlib
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import typer
 
@@ -383,7 +383,7 @@ def run_object_detection_model(
 def init_elasticsearch(
     load_index: bool = False,
     load_data: bool = True,
-    to_load: Optional[List[str]] = None,
+    to_load: Optional[list[str]] = None,
 ) -> None:
     """
     This command is used for manual insertion of the Elasticsearch data and/or indexes

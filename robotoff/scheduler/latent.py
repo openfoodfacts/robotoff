@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Dict, List, Optional, Set
+from typing import Optional
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
@@ -35,7 +35,7 @@ def generate_fiber_quality_facet():
     product_store: DBProductStore = get_product_store()
     collection = product_store.collection
     added = 0
-    seen_set: Set[str] = set()
+    seen_set: set[str] = set()
 
     for prediction in (
         Prediction.select(Prediction.barcode, Prediction.source_image)
@@ -132,7 +132,7 @@ def generate_nutrition_image_insights():
     logger.info("{} insights deleted".format(deleted))
     product_store: DBProductStore = get_product_store()
     added = 0
-    seen_set: Set[str] = set()
+    seen_set: set[str] = set()
 
     prediction: Prediction
     for prediction in (
@@ -198,10 +198,10 @@ def generate_nutrition_image_insights():
     logger.info("Added: {}".format(added))
 
 
-def find_nutrition_image_lang(mentions: JSONType, min_count: int = 4) -> List[str]:
+def find_nutrition_image_lang(mentions: JSONType, min_count: int = 4) -> list[str]:
     nutrient_languages = find_nutrition_image_nutrient_languages(mentions)
 
-    lang_count: Dict[str, int] = {}
+    lang_count: dict[str, int] = {}
     for _, langs in nutrient_languages.items():
         for lang, count in langs.items():
             lang_count.setdefault(lang, 0)
@@ -212,10 +212,10 @@ def find_nutrition_image_lang(mentions: JSONType, min_count: int = 4) -> List[st
 
 def find_nutrition_image_nutrient_languages(
     mentions: JSONType,
-) -> Dict[str, Dict[str, int]]:
-    languages: Dict[str, Dict[str, int]] = {}
+) -> dict[str, dict[str, int]]:
+    languages: dict[str, dict[str, int]] = {}
     for nutrient, matches in mentions.items():
-        seen_lang: Set[str] = set()
+        seen_lang: set[str] = set()
 
         for match in matches:
             for lang in match.get("languages", []):

@@ -2,7 +2,7 @@ import abc
 import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
@@ -28,7 +28,7 @@ This file allows to annotate products.
 To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
     from robotoff.insights.annotate import InsightAnnotatorFactor
     annotator = InsightAnnotatorFactory.get(insight_type)
-    annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[Dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
+    annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
 
 If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
 """
@@ -99,7 +99,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         annotation: int,
         update: bool = True,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
@@ -111,7 +111,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         annotation: int,
         update: bool = True,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
@@ -154,7 +154,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         pass
@@ -167,7 +167,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         emb_code: str = insight.value
@@ -179,7 +179,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
         emb_codes_str: str = product.get("emb_codes", "")
 
-        emb_codes: List[str] = []
+        emb_codes: list[str] = []
         if emb_codes_str:
             emb_codes = emb_codes_str.split(",")
 
@@ -197,7 +197,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
     @staticmethod
-    def already_exists(new_emb_code: str, emb_codes: List[str]) -> bool:
+    def already_exists(new_emb_code: str, emb_codes: list[str]) -> bool:
         emb_codes = [normalize_emb_code(emb_code) for emb_code in emb_codes]
 
         normalized_emb_code = normalize_emb_code(new_emb_code)
@@ -212,7 +212,7 @@ class LabelAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["labels_tags"])
@@ -220,7 +220,7 @@ class LabelAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        labels_tags: List[str] = product.get("labels_tags") or []
+        labels_tags: list[str] = product.get("labels_tags") or []
 
         if insight.value_tag in labels_tags:
             return ALREADY_ANNOTATED_RESULT
@@ -239,7 +239,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         barcode = insight.barcode
@@ -280,7 +280,7 @@ class CategoryAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["categories_tags"])
@@ -288,7 +288,7 @@ class CategoryAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        categories_tags: List[str] = product.get("categories_tags") or []
+        categories_tags: list[str] = product.get("categories_tags") or []
 
         if insight.value_tag in categories_tags:
             return ALREADY_ANNOTATED_RESULT
@@ -308,7 +308,7 @@ class ProductWeightAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["quantity"])
@@ -335,7 +335,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["expiration_date"])
@@ -362,7 +362,7 @@ class BrandAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["brands_tags"])
@@ -385,7 +385,7 @@ class StoreAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["stores_tags"])
@@ -393,7 +393,7 @@ class StoreAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        stores_tags: List[str] = product.get("stores_tags") or []
+        stores_tags: list[str] = product.get("stores_tags") or []
 
         if insight.value_tag in stores_tags:
             return ALREADY_ANNOTATED_RESULT
@@ -412,7 +412,7 @@ class NutritionImageAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         product = get_product(insight.barcode, ["code"])
@@ -444,7 +444,7 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
     def process_annotation(
         self,
         insight: ProductInsight,
-        data: Optional[Dict] = None,
+        data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         insight.data["annotation"] = data

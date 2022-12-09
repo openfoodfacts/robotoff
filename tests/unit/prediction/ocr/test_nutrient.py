@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import pytest
 
 from robotoff.prediction.ocr.nutrient import find_nutrient_mentions
@@ -30,7 +28,7 @@ from robotoff.utils.types import JSONType
         ),
     ],
 )
-def test_find_nutrient_mentions(text: str, nutrients: Dict[str, List[JSONType]]):
+def test_find_nutrient_mentions(text: str, nutrients: dict[str, list[JSONType]]):
     results = find_nutrient_mentions(text)
     assert len(results) == 1
     insight = results[0]

@@ -1,11 +1,10 @@
 import re
-from typing import Dict
 
 from robotoff.settings import SPELLCHECK_PATTERNS_PATHS
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.exceptions import LanguageNotAllowedException
 
-Patterns = Dict[str, str]
+Patterns = dict[str, str]
 
 VERSION = "1"
 

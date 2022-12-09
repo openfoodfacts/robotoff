@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Iterable, Tuple
+from typing import Iterable
 
 import orjson
 from elasticsearch import Elasticsearch
@@ -28,7 +28,7 @@ class ElasticsearchExporter:
 
         logger.info(f"Deleted %d documents from {index}", resp["deleted"])
 
-    def _get_data(self, index: str) -> Iterable[Tuple[str, Dict]]:
+    def _get_data(self, index: str) -> Iterable[tuple[str, dict]]:
         if index == settings.ElasticsearchIndex.PRODUCT:
             return generate_product_data()
 

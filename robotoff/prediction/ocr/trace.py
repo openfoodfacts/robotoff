@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
@@ -10,7 +10,7 @@ from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 from .utils import generate_keyword_processor
 
 
-def generate_trace_keyword_processor(labels: Optional[List[str]] = None):
+def generate_trace_keyword_processor(labels: Optional[list[str]] = None):
     if labels is None:
         labels = list(text_file_iter(settings.OCR_TRACE_ALLERGEN_DATA_PATH))
 
@@ -30,7 +30,7 @@ TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_traces(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = []
 
     text = get_text(content, TRACES_REGEX)

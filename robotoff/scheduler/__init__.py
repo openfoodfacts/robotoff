@@ -2,7 +2,7 @@ import datetime
 import functools
 import os
 import uuid
-from typing import Dict, Iterable
+from typing import Iterable
 
 import requests.exceptions
 from apscheduler.events import EVENT_JOB_ERROR
@@ -236,7 +236,7 @@ def generate_insights():
     logger.info(f"{imported} category insights imported")
 
 
-def transform_insight_iter(insights_iter: Iterable[Dict]):
+def transform_insight_iter(insights_iter: Iterable[dict]):
     for insight in insights_iter:
         for field, value in insight.items():
             if isinstance(value, uuid.UUID):

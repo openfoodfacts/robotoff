@@ -1,6 +1,6 @@
 import json
 import operator
-from typing import Dict, List, Optional
+from typing import Optional
 
 import requests
 
@@ -29,7 +29,7 @@ class NotifierInterface:
     # for a notifier might choose to only implements a few
 
     def notify_image_flag(
-        self, predictions: List[Prediction], source_image: str, barcode: str
+        self, predictions: list[Prediction], source_image: str, barcode: str
     ):
         pass
 
@@ -37,7 +37,7 @@ class NotifierInterface:
         pass
 
     def send_logo_notification(
-        self, logo: LogoAnnotation, probs: Dict[LogoLabelType, float]
+        self, logo: LogoAnnotation, probs: dict[LogoLabelType, float]
     ):
         pass
 
@@ -47,7 +47,7 @@ class NotifierFactory:
 
     @staticmethod
     def get_notifier() -> NotifierInterface:
-        notifiers: List[NotifierInterface] = []
+        notifiers: list[NotifierInterface] = []
         token = settings.slack_token()
         if token == "":
             # use a Noop notifier to get logs for tests and dev
@@ -93,7 +93,7 @@ def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
 
 def _slack_message_block(
     message_text: str, with_image: Optional[str] = None
-) -> List[Dict]:
+) -> list[dict]:
     """Formats given parameters into a Slack message block."""
     block = {
         "type": "section",
@@ -120,8 +120,8 @@ class MultiNotifier(NotifierInterface):
     :param notifiers: the notifiers to dispatch to
     """
 
-    def __init__(self, notifiers: List[NotifierInterface]):
-        self.notifiers: List[NotifierInterface] = notifiers
+    def __init__(self, notifiers: list[NotifierInterface]):
+        self.notifiers: list[NotifierInterface] = notifiers
 
     def _dispatch(self, function_name: str, *args, **kwargs):
         """dispatch call to function_name to all notifiers"""
@@ -130,7 +130,7 @@ class MultiNotifier(NotifierInterface):
             fn(*args, **kwargs)
 
     def notify_image_flag(
-        self, predictions: List[Prediction], source_image: str, barcode: str
+        self, predictions: list[Prediction], source_image: str, barcode: str
     ):
         self._dispatch("notify_image_flag", predictions, source_image, barcode)
 
@@ -138,7 +138,7 @@ class MultiNotifier(NotifierInterface):
         self._dispatch("notify_automatic_processing", insight)
 
     def send_logo_notification(
-        self, logo: LogoAnnotation, probs: Dict[LogoLabelType, float]
+        self, logo: LogoAnnotation, probs: dict[LogoLabelType, float]
     ):
         self._dispatch("send_logo_notification", logo, probs)
 
@@ -153,7 +153,7 @@ class ImageModerationNotifier(NotifierInterface):
         self.service_url = service_url.rstrip("/")
 
     def notify_image_flag(
-        self, predictions: List[Prediction], source_image: str, barcode: str
+        self, predictions: list[Prediction], source_image: str, barcode: str
     ):
         """Send image to the moderation server so that a human can moderate it"""
         if not predictions:
@@ -202,7 +202,7 @@ class SlackNotifier(NotifierInterface):
         self.slack_token = slack_token
 
     def notify_image_flag(
-        self, predictions: List[Prediction], source_image: str, barcode: str
+        self, predictions: list[Prediction], source_image: str, barcode: str
     ):
         """Sends alerts to Slack channels for flagged images."""
         if not predictions:
@@ -284,7 +284,7 @@ class SlackNotifier(NotifierInterface):
         }
 
     def send_logo_notification(
-        self, logo: LogoAnnotation, probs: Dict[LogoLabelType, float]
+        self, logo: LogoAnnotation, probs: dict[LogoLabelType, float]
     ):
         crop_url = logo.get_crop_image_url()
         prob_text = "\n".join(
@@ -306,7 +306,7 @@ class SlackNotifier(NotifierInterface):
 
     def _post_message(
         self,
-        blocks: List[Dict],
+        blocks: list[dict],
         channel: str,
         **kwargs,
     ):
@@ -335,7 +335,7 @@ class NoopSlackNotifier(SlackNotifier):
 
     def _post_message(
         self,
-        blocks: List[Dict],
+        blocks: list[dict],
         channel: str,
         **kwargs,
     ):

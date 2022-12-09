@@ -1,7 +1,7 @@
 """Methods to load products in elasticsearch
 """
 import re
-from typing import Dict, Iterable, List, Tuple
+from typing import Iterable
 
 from robotoff import settings
 from robotoff.products import ProductDataset
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 MULTIPLE_SPACES_RE = re.compile(r"\s{2,}")
 
 
-def generate_product_data() -> Iterable[Tuple[str, Dict]]:
+def generate_product_data() -> Iterable[tuple[str, dict]]:
     dataset = ProductDataset(settings.JSONL_DATASET_PATH)
 
     product_stream = (
@@ -47,7 +47,7 @@ def empty_ingredient(ingredient: str) -> bool:
     return not bool(ingredient.strip(" /-.%0123456789"))
 
 
-def normalize_ingredient_list(ingredient_text: str) -> List[str]:
+def normalize_ingredient_list(ingredient_text: str) -> list[str]:
     ingredients = Ingredients.from_text(ingredient_text)
 
     normalized = []

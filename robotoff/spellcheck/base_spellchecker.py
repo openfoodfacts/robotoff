@@ -1,11 +1,10 @@
 import abc
-from typing import List
 
 from robotoff.spellcheck.items import SpellcheckItem
 
 
 class BaseSpellchecker(metaclass=abc.ABCMeta):
-    def predict(self, items: List[SpellcheckItem]) -> List[SpellcheckItem]:
+    def predict(self, items: list[SpellcheckItem]) -> list[SpellcheckItem]:
         return [self.predict_one(item) for item in items]
 
     def predict_one(self, item: SpellcheckItem) -> SpellcheckItem:

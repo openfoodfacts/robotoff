@@ -1,5 +1,3 @@
-from typing import List
-
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.elasticsearch.correction_formatter import CorrectionFormatter
 from robotoff.spellcheck.elasticsearch.es_handler import ElasticsearchHandler
@@ -43,7 +41,7 @@ class ElasticSearchSpellchecker(BaseSpellchecker):
             original=text, atomic_corrections=self._process(text)
         ).corrected_text
 
-    def _process(self, text: str) -> List[AtomicCorrection]:
+    def _process(self, text: str) -> list[AtomicCorrection]:
         es_handler = ElasticsearchHandler(self.client, **self.kwargs)
         correction_formatter = CorrectionFormatter()
 

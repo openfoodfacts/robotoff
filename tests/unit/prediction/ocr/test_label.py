@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 import pytest
 
@@ -38,7 +38,7 @@ def test_es_ocr_regex(input_str: str, is_match: bool, output: Optional[str]):
         ("Homologation n°LA 02/91", ["fr:label-rouge"]),
     ],
 )
-def test_find_labels(text: str, value_tags: List[str]):
+def test_find_labels(text: str, value_tags: list[str]):
     insights = find_labels(text)
     detected_value_tags = set(i.value_tag for i in insights)
     assert detected_value_tags == set(value_tags)

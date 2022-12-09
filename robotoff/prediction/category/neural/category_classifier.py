@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Optional
 
 from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
@@ -46,10 +46,10 @@ class CategoryClassifier:
 
     def predict(
         self,
-        product: Dict,
+        product: dict,
         deepest_only: bool = False,
         threshold: Optional[float] = None,
-    ) -> List[Prediction]:
+    ) -> list[Prediction]:
         """Returns an unordered list of category predictions for the given
         product.
 
@@ -108,7 +108,7 @@ class CategoryClassifier:
         #
         # The model only returns top 50 predictions.
 
-        category_predictions: List[CategoryPrediction] = []
+        category_predictions: list[CategoryPrediction] = []
 
         # We only consider predictions with a confidence score of `threshold` and above.
         for idx, confidence in enumerate(prediction["output_mapper_layer"]):

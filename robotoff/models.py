@@ -2,7 +2,7 @@
 import datetime
 import functools
 import uuid
-from typing import Dict, Iterable
+from typing import Iterable
 
 import peewee
 from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
@@ -33,7 +33,7 @@ def with_db(fn):
     return wrapper
 
 
-def batch_insert(model_cls, data: Iterable[Dict], batch_size=100) -> int:
+def batch_insert(model_cls, data: Iterable[dict], batch_size=100) -> int:
     rows = 0
     inserts = []
 

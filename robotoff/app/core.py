@@ -1,6 +1,6 @@
 import functools
 from enum import Enum
-from typing import Dict, Iterable, List, NamedTuple, Optional, Union
+from typing import Iterable, NamedTuple, Optional, Union
 
 import peewee
 from peewee import JOIN, fn
@@ -64,9 +64,9 @@ def _add_vote_exclusions(
 
 def get_insights(
     barcode: Optional[str] = None,
-    keep_types: Optional[List[str]] = None,
+    keep_types: Optional[list[str]] = None,
     country: Optional[str] = None,
-    brands: Optional[List[str]] = None,
+    brands: Optional[list[str]] = None,
     annotated: Optional[bool] = False,
     annotation: Optional[int] = None,
     order_by: Optional[str] = None,
@@ -199,7 +199,7 @@ def get_images(
 
 def get_predictions(
     barcode: Optional[str] = None,
-    keep_types: Optional[List[str]] = None,
+    keep_types: Optional[list[str]] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
@@ -283,7 +283,7 @@ def save_annotation(
     annotation: int,
     device_id: str,
     update: bool = True,
-    data: Optional[Dict] = None,
+    data: Optional[dict] = None,
     auth: Optional[OFFAuthentication] = None,
     trusted_annotator: bool = False,
 ) -> AnnotationResult:
@@ -393,7 +393,7 @@ def save_annotation(
 
 def get_logo_annotation(
     barcode: Optional[str] = None,
-    keep_types: Optional[List[str]] = None,
+    keep_types: Optional[list[str]] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     limit: Optional[int] = 25,

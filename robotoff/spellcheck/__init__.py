@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, Optional, Union
 
 from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
@@ -20,17 +20,17 @@ SPELLCHECKERS = {
 
 
 class Spellchecker:
-    def __init__(self, pipeline: List[BaseSpellchecker]):
-        self.spellcheckers: List[BaseSpellchecker] = pipeline
+    def __init__(self, pipeline: list[BaseSpellchecker]):
+        self.spellcheckers: list[BaseSpellchecker] = pipeline
 
     @classmethod
     def load(
         cls,
         client,
-        pipeline: Optional[List[Union[str, BaseSpellchecker]]] = None,
+        pipeline: Optional[list[Union[str, BaseSpellchecker]]] = None,
         **es_kwargs,
     ):
-        pipeline_: List[BaseSpellchecker] = []
+        pipeline_: list[BaseSpellchecker] = []
 
         if pipeline is None:
             pipeline = ["patterns", "elasticsearch", "vocabulary"]

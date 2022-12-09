@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.utils.types import JSONType
@@ -9,9 +9,9 @@ from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 EXTRACTOR_VERSION = "2"
 
 
-NutrientMentionType = Tuple[str, List[str]]
+NutrientMentionType = tuple[str, list[str]]
 
-NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
+NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
     "energy": [
         ("[ée]nergie", ["fr", "de"]),
         ("valeurs? [ée]nerg[ée]tiques?", ["fr"]),
@@ -99,7 +99,7 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
 }
 
 
-NUTRIENT_UNITS: Dict[str, List[str]] = {
+NUTRIENT_UNITS: dict[str, list[str]] = {
     "energy": ["kj", "kcal"],
     "saturated_fat": ["g"],
     "trans_fat": ["g"],
@@ -113,7 +113,7 @@ NUTRIENT_UNITS: Dict[str, List[str]] = {
 
 
 def generate_nutrient_regex(
-    nutrient_mentions: List[NutrientMentionType], units: List[str]
+    nutrient_mentions: list[NutrientMentionType], units: list[str]
 ):
     nutrient_names = [x[0] for x in nutrient_mentions]
     nutrient_names_str = "|".join(nutrient_names)
@@ -125,7 +125,7 @@ def generate_nutrient_regex(
     )
 
 
-def generate_nutrient_mention_regex(nutrient_mentions: List[NutrientMentionType]):
+def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]):
     sub_re = "|".join(
         r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
         for i, (name, lang) in enumerate(nutrient_mentions)
@@ -142,7 +142,7 @@ NUTRIENT_VALUES_REGEX = {
     for nutrient, units in NUTRIENT_UNITS.items()
 }
 
-NUTRIENT_MENTIONS_REGEX: Dict[str, OCRRegex] = {
+NUTRIENT_MENTIONS_REGEX: dict[str, OCRRegex] = {
     nutrient: OCRRegex(
         generate_nutrient_mention_regex(NUTRIENT_MENTION[nutrient]),
         field=OCRField.full_text_contiguous,
@@ -152,7 +152,7 @@ NUTRIENT_MENTIONS_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_nutrient_values(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
@@ -185,7 +185,7 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> List[Prediction]:
     ]
 
 
-def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
@@ -198,7 +198,7 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Prediction]:
             nutrients.setdefault(regex_code, [])
             group_dict = {k: v for k, v in match.groupdict().items() if v is not None}
 
-            languages: List[str] = []
+            languages: list[str] = []
             if group_dict:
                 languages_raw = list(group_dict.keys())[0]
                 languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")

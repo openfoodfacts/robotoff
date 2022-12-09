@@ -2,7 +2,7 @@ import datetime
 import itertools
 import operator
 import re
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Iterable, Optional
 
 import cachetools
 from flashtext import KeywordProcessor
@@ -92,7 +92,7 @@ MATCH_MAPS_EXCEPTIONS = {
     }
 }
 
-MatchMapType = Dict[str, Dict[str, List[Tuple[str, str]]]]
+MatchMapType = dict[str, dict[str, list[tuple[str, str]]]]
 
 
 def load_resources():
@@ -229,7 +229,7 @@ def get_match_maps(taxonomy_type: str) -> MatchMapType:
 
 
 @cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=3600))
-def get_processors() -> Dict[str, KeywordProcessor]:
+def get_processors() -> dict[str, KeywordProcessor]:
     """Return a dict mapping lang to flashtext KeywordProcessor used to
     perform category matching.
 
@@ -249,7 +249,7 @@ def get_processors() -> Dict[str, KeywordProcessor]:
     return processors
 
 
-def generate_intersect_categories_ingredients() -> Dict[str, Set[str]]:
+def generate_intersect_categories_ingredients() -> dict[str, set[str]]:
     """Return all taxonomized values that are present both in the ingredient
     and in the category taxonomy.
 
@@ -259,7 +259,7 @@ def generate_intersect_categories_ingredients() -> Dict[str, Set[str]]:
     """
     ingredient_match_maps = get_match_maps(TaxonomyType.ingredient.name)
     category_match_maps = get_match_maps(TaxonomyType.category.name)
-    matches: Dict[str, Set[str]] = {}
+    matches: dict[str, set[str]] = {}
     for lang in SUPPORTED_LANG:
         matches[lang] = set()
 
@@ -288,7 +288,7 @@ def get_intersect_categories_ingredients():
     }
 
 
-def match(query: str, lang: str) -> List[Tuple[str, str, str, str, Tuple[int, int]]]:
+def match(query: str, lang: str) -> list[tuple[str, str, str, str, tuple[int, int]]]:
     """Perform category matching.
 
     If a match is also an ingredient (see
@@ -328,7 +328,7 @@ def match(query: str, lang: str) -> List[Tuple[str, str, str, str, Tuple[int, in
     return filtered
 
 
-def predict_by_lang(product: Dict) -> Dict[str, List[Prediction]]:
+def predict_by_lang(product: dict) -> dict[str, list[Prediction]]:
     """Predict product categories using a matching algorithm on product names
     for all supported languages.
 
@@ -337,7 +337,7 @@ def predict_by_lang(product: Dict) -> Dict[str, List[Prediction]]:
     :return: a dict mapping for each supported lang a list of detected
     category Prediction
     """
-    predictions: Dict[str, List[Prediction]] = {}
+    predictions: dict[str, list[Prediction]] = {}
     for lang in set(product.get("languages_codes", [])) & SUPPORTED_LANG:
         product_name = product.get(f"product_name_{lang}")
 
@@ -376,7 +376,7 @@ def predict_by_lang(product: Dict) -> Dict[str, List[Prediction]]:
     return predictions
 
 
-def predict(product: Dict) -> List[Prediction]:
+def predict(product: dict) -> list[Prediction]:
     """Predict product categories using a matching algorithm on product names.
 
     Flashtext always return the longuest match if several patterns match

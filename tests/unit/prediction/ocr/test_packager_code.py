@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 from robotoff.prediction.ocr.packager_code import find_packager_codes
@@ -20,7 +18,7 @@ from robotoff.prediction.ocr.packager_code import find_packager_codes
         # ("M31779+  P31779+  \tV31779", ["M31779", "P31779", "V31779"]),
     ],
 )
-def test_find_packager_codes(text: str, values: List[str]):
+def test_find_packager_codes(text: str, values: list[str]):
     insights = find_packager_codes(text)
     detected_values = set(i.value for i in insights)
     assert detected_values == set(values)

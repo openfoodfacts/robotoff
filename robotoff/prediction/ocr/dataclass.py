@@ -3,7 +3,7 @@ import math
 import operator
 import re
 from collections import Counter, defaultdict
-from typing import Callable, Dict, List, Optional, Pattern, Tuple, Union
+from typing import Callable, Optional, Union
 
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
@@ -28,14 +28,14 @@ class OCRRegex:
 
     def __init__(
         self,
-        regex: Pattern,
+        regex: re.Pattern,
         field: OCRField,
         lowercase: bool = False,
         processing_func: Optional[Callable] = None,
         priority: Optional[int] = None,
         notify: bool = False,
     ):
-        self.regex: Pattern = regex
+        self.regex: re.Pattern = regex
         self.field: OCRField = field
         self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
@@ -63,7 +63,7 @@ class OrientationResult:
         else:
             self.orientation = ImageOrientation.unknown
 
-        self.count: Dict[str, int] = {key.name: value for key, value in count.items()}
+        self.count: dict[str, int] = {key.name: value for key, value in count.items()}
 
     def to_json(self) -> JSONType:
         return {
@@ -92,10 +92,10 @@ class OCRResult:
     )
 
     def __init__(self, data: JSONType, lazy: bool = True):
-        self.text_annotations: List[OCRTextAnnotation] = []
+        self.text_annotations: list[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
-        self.logo_annotations: List[LogoAnnotation] = []
-        self.label_annotations: List[LabelAnnotation] = []
+        self.logo_annotations: list[LogoAnnotation] = []
+        self.label_annotations: list[LabelAnnotation] = []
         self.safe_search_annotation: Optional[SafeSearchAnnotation] = None
 
         for text_annotation_data in data.get("textAnnotations", []):
@@ -181,10 +181,10 @@ class OCRResult:
     def get_text(self, ocr_regex: OCRRegex) -> str:
         return self._get_text(ocr_regex.field, ocr_regex.lowercase)
 
-    def get_logo_annotations(self) -> List["LogoAnnotation"]:
+    def get_logo_annotations(self) -> list["LogoAnnotation"]:
         return self.logo_annotations
 
-    def get_label_annotations(self) -> List["LabelAnnotation"]:
+    def get_label_annotations(self) -> list["LabelAnnotation"]:
         return self.label_annotations
 
     def get_safe_search_annotation(self):
@@ -215,7 +215,7 @@ class OCRResult:
         except Exception as e:
             raise OCRParsingException("Error during OCR parsing") from e
 
-    def get_languages(self) -> Optional[Dict[str, int]]:
+    def get_languages(self) -> Optional[dict[str, int]]:
         if self.full_text_annotation is not None:
             return self.full_text_annotation.get_languages()
 
@@ -264,13 +264,13 @@ class OCRFullTextAnnotation:
         self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(" ", self.contiguous_text)
         self.contiguous_text_lower = self.contiguous_text.lower()
         self._pages_data = data["pages"]
-        self._pages: List[TextAnnotationPage] = []
+        self._pages: list[TextAnnotationPage] = []
 
         if not lazy:
             self.load_pages()
 
-    def get_languages(self) -> Dict[str, int]:
-        counts: Dict[str, int] = defaultdict(int)
+    def get_languages(self) -> dict[str, int]:
+        counts: dict[str, int] = defaultdict(int)
         for page in self.pages:
             page_counts = page.get_languages()
 
@@ -280,7 +280,7 @@ class OCRFullTextAnnotation:
         return dict(counts)
 
     @property
-    def pages(self) -> List["TextAnnotationPage"]:
+    def pages(self) -> list["TextAnnotationPage"]:
         if self._pages_data is not None:
             self.load_pages()
 
@@ -291,7 +291,7 @@ class OCRFullTextAnnotation:
         self._pages_data = None
 
     def detect_orientation(self) -> OrientationResult:
-        word_orientations: List[ImageOrientation] = []
+        word_orientations: list[ImageOrientation] = []
 
         for page in self.pages:
             word_orientations += page.detect_words_orientation()
@@ -304,10 +304,10 @@ class TextAnnotationPage:
     def __init__(self, data: JSONType):
         self.width = data["width"]
         self.height = data["height"]
-        self.blocks: List[Block] = [Block(d) for d in data["blocks"]]
+        self.blocks: list[Block] = [Block(d) for d in data["blocks"]]
 
-    def get_languages(self) -> Dict[str, int]:
-        counts: Dict[str, int] = defaultdict(int)
+    def get_languages(self) -> dict[str, int]:
+        counts: dict[str, int] = defaultdict(int)
         for block in self.blocks:
             block_counts = block.get_languages()
 
@@ -316,8 +316,8 @@ class TextAnnotationPage:
 
         return dict(counts)
 
-    def detect_words_orientation(self) -> List[ImageOrientation]:
-        word_orientations: List[ImageOrientation] = []
+    def detect_words_orientation(self) -> list[ImageOrientation]:
+        word_orientations: list[ImageOrientation] = []
 
         for block in self.blocks:
             word_orientations += block.detect_words_orientation()
@@ -328,7 +328,7 @@ class TextAnnotationPage:
 class Block:
     def __init__(self, data: JSONType):
         self.type = data["blockType"]
-        self.paragraphs: List[Paragraph] = [
+        self.paragraphs: list[Paragraph] = [
             Paragraph(paragraph) for paragraph in data["paragraphs"]
         ]
 
@@ -336,8 +336,8 @@ class Block:
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
 
-    def get_languages(self) -> Dict[str, int]:
-        counts: Dict[str, int] = defaultdict(int)
+    def get_languages(self) -> dict[str, int]:
+        counts: dict[str, int] = defaultdict(int)
         for paragraph in self.paragraphs:
             paragraph_counts = paragraph.get_languages()
 
@@ -352,8 +352,8 @@ class Block:
 
         return None
 
-    def detect_words_orientation(self) -> List[ImageOrientation]:
-        word_orientations: List[ImageOrientation] = []
+    def detect_words_orientation(self) -> list[ImageOrientation]:
+        word_orientations: list[ImageOrientation] = []
 
         for paragraph in self.paragraphs:
             word_orientations += paragraph.detect_words_orientation()
@@ -363,14 +363,14 @@ class Block:
 
 class Paragraph:
     def __init__(self, data: JSONType):
-        self.words: List[Word] = [Word(word) for word in data["words"]]
+        self.words: list[Word] = [Word(word) for word in data["words"]]
 
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
 
-    def get_languages(self) -> Dict[str, int]:
-        counts: Dict[str, int] = defaultdict(int)
+    def get_languages(self) -> dict[str, int]:
+        counts: dict[str, int] = defaultdict(int)
 
         for word in self.words:
             if word.languages is not None:
@@ -388,7 +388,7 @@ class Paragraph:
 
         return None
 
-    def detect_words_orientation(self) -> List[ImageOrientation]:
+    def detect_words_orientation(self) -> list[ImageOrientation]:
         return [word.detect_orientation() for word in self.words]
 
     def get_text(self) -> str:
@@ -401,9 +401,9 @@ class Word:
 
     def __init__(self, data: JSONType):
         self.bounding_poly = BoundingPoly(data["boundingBox"])
-        self.symbols: List[Symbol] = [Symbol(s) for s in data["symbols"]]
+        self.symbols: list[Symbol] = [Symbol(s) for s in data["symbols"]]
 
-        self.languages: Optional[List[DetectedLanguage]] = None
+        self.languages: Optional[list[DetectedLanguage]] = None
         word_property = data.get("property", {})
 
         if "detectedLanguages" in word_property:
@@ -524,7 +524,7 @@ class BoundingPoly:
             (point.get("x", 0), point.get("y", 0)) for point in data["vertices"]
         ]
 
-    def get_direction_vector(self) -> List[Tuple[int, int]]:
+    def get_direction_vector(self) -> list[tuple[int, int]]:
         left_point = (
             (self.vertices[0][0] + self.vertices[3][0]) / 2,
             (self.vertices[0][1] + self.vertices[3][1]) / 2,
@@ -536,7 +536,7 @@ class BoundingPoly:
 
         return [left_point, right_point]
 
-    def get_direction_vector_alpha_distance(self) -> Tuple[float, float]:
+    def get_direction_vector_alpha_distance(self) -> tuple[float, float]:
         left_point, right_point = self.get_direction_vector()
         alpha = (right_point[1] - left_point[1]) / (right_point[0] - left_point[0])
         distance = math.sqrt(

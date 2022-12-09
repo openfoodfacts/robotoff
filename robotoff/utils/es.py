@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Iterable, Tuple
+from typing import Iterable
 
 import elasticsearch
 
@@ -11,7 +11,7 @@ def get_es_client():
 
 
 def perform_export(
-    client, data: Iterable[Tuple[str, Dict]], index: str, batch_size=100
+    client, data: Iterable[tuple[str, dict]], index: str, batch_size=100
 ) -> int:
     batch = []
     rows_inserted = 0
@@ -31,7 +31,7 @@ def perform_export(
     return rows_inserted
 
 
-def insert_batch(client, batch: Iterable[Tuple[Dict, Dict]], index: str):
+def insert_batch(client, batch: Iterable[tuple[dict, dict]], index: str):
     body = ""
     for action, source in batch:
         body += "{}\n{}\n".format(json.dumps(action), json.dumps(source))
@@ -39,7 +39,7 @@ def insert_batch(client, batch: Iterable[Tuple[Dict, Dict]], index: str):
     client.bulk(body=body, index=index, doc_type=settings.ELASTICSEARCH_TYPE)
 
 
-def generate_msearch_body(index: str, queries: Iterable[Dict]):
+def generate_msearch_body(index: str, queries: Iterable[dict]):
     lines = []
 
     for query in queries:

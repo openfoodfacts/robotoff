@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List
+from typing import Iterable
 
 from robotoff import settings
 from robotoff.utils.es import generate_msearch_body
@@ -31,10 +31,10 @@ class ElasticsearchHandler:
             body={"tokenizer": "standard", "text": text},
         )["tokens"]
 
-    def suggest(self, text: str) -> Dict:
+    def suggest(self, text: str) -> dict:
         return self.suggest_batch([text])[0]
 
-    def suggest_batch(self, texts: Iterable[str]) -> List[Dict]:
+    def suggest_batch(self, texts: Iterable[str]) -> list[dict]:
         queries = [self.__generate_query(text) for text in texts]
         body = generate_msearch_body(self.index_name, queries)
         response = self.client.msearch(body=body)

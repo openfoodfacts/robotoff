@@ -1,11 +1,11 @@
 import re
-from typing import List, Optional
+from typing import Optional
 
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.vocabulary.utils import Vocabulary
 from robotoff.utils.text import get_blank_nlp
 
-TOKENS = List[str]
+TOKENS = list[str]
 ADDITIVES_REGEX = re.compile(r"(?:E ?\d{3,5}[a-z]*)", re.IGNORECASE)
 VERSION = "1"
 

@@ -1,5 +1,5 @@
 import itertools
-from typing import Dict, List, Optional
+from typing import Optional
 
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 
@@ -8,12 +8,12 @@ from .neural.category_classifier import CategoryClassifier
 
 
 def predict_category(
-    product: Dict,
+    product: dict,
     neural_predictor: bool,
     matcher_predictor: bool,
     deepest_only: bool,
     threshold: Optional[float] = None,
-) -> Dict[str, List[Dict]]:
+) -> dict[str, list[dict]]:
     """Predict categories for a product.
 
     Two predictors are available:

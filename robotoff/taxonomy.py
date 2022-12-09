@@ -1,7 +1,7 @@
 import collections
 import pathlib
 from enum import Enum
-from typing import Any, Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Iterable, Optional, Union
 
 import cachetools
 import requests
@@ -35,14 +35,14 @@ class TaxonomyNode:
     def __init__(
         self,
         identifier: str,
-        names: Dict[str, str],
-        synonyms: Optional[Dict[str, List[str]]],
-        additional_data: Optional[Dict[str, Any]] = None,
+        names: dict[str, str],
+        synonyms: Optional[dict[str, list[str]]],
+        additional_data: Optional[dict[str, Any]] = None,
     ):
         self.id: str = identifier
-        self.names: Dict[str, str] = names
-        self.parents: List["TaxonomyNode"] = []
-        self.children: List["TaxonomyNode"] = []
+        self.names: dict[str, str] = names
+        self.parents: list["TaxonomyNode"] = []
+        self.children: list["TaxonomyNode"] = []
         self.additional_data = additional_data or {}
 
         if synonyms:
@@ -76,10 +76,10 @@ class TaxonomyNode:
 
         return False
 
-    def get_parents_hierarchy(self) -> List["TaxonomyNode"]:
+    def get_parents_hierarchy(self) -> list["TaxonomyNode"]:
         """Return the list of all parent nodes (direct and indirect)."""
         all_parents = []
-        seen: Set[str] = set()
+        seen: set[str] = set()
 
         if not self.parents:
             return []
@@ -102,7 +102,7 @@ class TaxonomyNode:
 
         return self.id
 
-    def get_synonyms(self, lang: str) -> List[str]:
+    def get_synonyms(self, lang: str) -> list[str]:
         return self.synonyms.get(lang, [])
 
     def add_parents(self, parents: Iterable["TaxonomyNode"]):
@@ -120,7 +120,7 @@ class TaxonomyNode:
 
 class Taxonomy:
     def __init__(self):
-        self.nodes: Dict[str, TaxonomyNode] = {}
+        self.nodes: dict[str, TaxonomyNode] = {}
 
     def add(self, key: str, node: TaxonomyNode) -> None:
         self.nodes[key] = node
@@ -141,7 +141,7 @@ class Taxonomy:
     def keys(self):
         return self.nodes.keys()
 
-    def find_deepest_nodes(self, nodes: List[TaxonomyNode]) -> List[TaxonomyNode]:
+    def find_deepest_nodes(self, nodes: list[TaxonomyNode]) -> list[TaxonomyNode]:
         """Given a list of nodes, returns the list of nodes where all the parents
         within the list have been removed.
 
@@ -150,7 +150,7 @@ class Taxonomy:
         ['fish', 'salmon'] -> ['salmon']
         ['fish', 'smoked-salmon'] -> [smoked-salmon']
         """
-        excluded: Set[str] = set()
+        excluded: set[str] = set()
 
         for node in nodes:
             for second_node in (
@@ -181,7 +181,7 @@ class Taxonomy:
             else:
                 return False
 
-        to_check_nodes: Set[TaxonomyNode] = set()
+        to_check_nodes: set[TaxonomyNode] = set()
 
         for candidate in candidates:
             candidate_node = self[candidate]
@@ -247,9 +247,9 @@ class Taxonomy:
 
 
 def generate_category_hierarchy(
-    taxonomy: Taxonomy, category_to_index: Dict[str, int], root: int
+    taxonomy: Taxonomy, category_to_index: dict[str, int], root: int
 ):
-    categories_hierarchy: Dict[int, Set] = collections.defaultdict(set)
+    categories_hierarchy: dict[int, set] = collections.defaultdict(set)
 
     for node in taxonomy.iter_nodes():
         category_index = category_to_index[node.id]
@@ -320,13 +320,13 @@ def is_prefixed_value(value: str) -> bool:
 
 
 @cachetools.cached(cachetools.TTLCache(maxsize=2, ttl=43200))  # 12h TTL
-def get_taxonomy_mapping(taxonomy_type: str) -> Dict[str, str]:
+def get_taxonomy_mapping(taxonomy_type: str) -> dict[str, str]:
     """Return for label type a mapping of prefixed taxonomy values in all
     languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
     canonical value (`en:organic` for the previous example).
     """
     taxonomy = get_taxonomy(taxonomy_type)
-    ids: Dict[str, str] = {}
+    ids: dict[str, str] = {}
 
     for key in taxonomy.keys():
         if taxonomy_type == TaxonomyType.brand.name:

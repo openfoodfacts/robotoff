@@ -1,15 +1,15 @@
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from robotoff.prediction.types import Prediction, PredictionType
 
 from .dataclass import OCRResult
 
 
-def get_image_lang(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
+def get_image_lang(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
     if isinstance(ocr_result, str):
         return []
 
-    image_lang: Optional[Dict[str, int]] = ocr_result.get_languages()
+    image_lang: Optional[dict[str, int]] = ocr_result.get_languages()
 
     if image_lang is None:
         return []

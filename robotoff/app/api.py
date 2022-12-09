@@ -5,7 +5,7 @@ import hashlib
 import io
 import tempfile
 import uuid
-from typing import List, Optional
+from typing import Optional
 
 import falcon
 import orjson
@@ -135,7 +135,7 @@ class InsightCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        keep_types: Optional[List[str]] = req.get_param_as_list(
+        keep_types: Optional[list[str]] = req.get_param_as_list(
             "insight_types", required=False
         )
         barcode: Optional[str] = req.get_param("barcode")
@@ -414,7 +414,7 @@ class CategoryPredictorResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         """Predict categories using neural categorizer and matching algorithm
         for a specific product."""
-        predictors: List[str] = req.media.get("predictors") or ["neural", "matcher"]
+        predictors: list[str] = req.media.get("predictors") or ["neural", "matcher"]
 
         if "barcode" in req.media:
             # Fetch product from DB
@@ -583,7 +583,7 @@ class ImagePredictionFetchResource:
 class ImagePredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         image_url = req.get_param("image_url", required=True)
-        models: List[str] = req.get_param_as_list("models", required=True)
+        models: list[str] = req.get_param_as_list("models", required=True)
 
         available_models = ObjectDetectionModelRegistry.get_available_models()
 
@@ -638,7 +638,7 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        logo_ids: List[str] = req.get_param_as_list("logo_ids", required=True)
+        logo_ids: list[str] = req.get_param_as_list("logo_ids", required=True)
         logos = []
         for logo in (
             LogoAnnotation.select()
@@ -954,7 +954,7 @@ class ProductQuestionsResource:
             response["questions"] = []
             response["status"] = "no_questions"
         else:
-            questions: List[JSONType] = []
+            questions: list[JSONType] = []
 
             for insight in insights:
                 formatter_cls = QuestionFormatterFactory.get(insight.type)
@@ -985,7 +985,7 @@ def get_questions_resource_on_get(
     page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
-    keep_types: Optional[List[str]] = req.get_param_as_list(
+    keep_types: Optional[list[str]] = req.get_param_as_list(
         "insight_types", required=False
     )
     country: Optional[str] = req.get_param("country")
@@ -1042,7 +1042,7 @@ def get_questions_resource_on_get(
         response["questions"] = []
         response["status"] = "no_questions"
     else:
-        questions: List[JSONType] = []
+        questions: list[JSONType] = []
 
         for insight in insights:
             formatter_cls = QuestionFormatterFactory.get(insight.type)
@@ -1082,7 +1082,7 @@ class HealthResource:
 
 class DumpResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        keep_types: List[str] = req.get_param_as_list(
+        keep_types: list[str] = req.get_param_as_list(
             "insight_types", required=False, default=[]
         )[:10]
 
@@ -1167,7 +1167,7 @@ class PredictionCollection:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         barcode: Optional[str] = req.get_param("barcode")
         value_tag: str = req.get_param("value_tag")
-        keep_types: Optional[List[str]] = req.get_param_as_list(
+        keep_types: Optional[list[str]] = req.get_param_as_list(
             "insight_types", required=False
         )
         brands = req.get_param_as_list("brands") or None
@@ -1290,7 +1290,7 @@ class LogoAnnotationCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
         barcode: Optional[str] = req.get_param("barcode")
-        keep_types: Optional[List[str]] = req.get_param_as_list("types", required=False)
+        keep_types: Optional[list[str]] = req.get_param_as_list("types", required=False)
         value_tag: str = req.get_param("value_tag")
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)

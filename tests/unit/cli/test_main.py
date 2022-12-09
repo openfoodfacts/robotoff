@@ -1,4 +1,3 @@
-from typing import Dict
 from unittest.mock import ANY, call
 
 import pytest
@@ -37,13 +36,13 @@ def test_init_elasticsearch(
 
 
 class MockResponse:
-    def __init__(self, prediction: Dict):
+    def __init__(self, prediction: dict):
         self.prediction = prediction
 
     def raise_for_status(self):
         pass
 
-    def json(self) -> Dict:
+    def json(self) -> dict:
         return self.prediction
 
 

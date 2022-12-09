@@ -3,7 +3,7 @@ import gzip
 import json
 import re
 from pathlib import Path
-from typing import BinaryIO, Iterable, List, Optional, Set, Tuple, Union
+from typing import BinaryIO, Iterable, Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -25,11 +25,11 @@ class City:
     spaces."""
     postal_code: str
     """The city's postal code. The format depends on the country."""
-    coordinates: Optional[Tuple[float, float]]
+    coordinates: Optional[tuple[float, float]]
     """The GPS coordinates of the city as a tuple of two floats, or None."""
 
 
-def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> Set[City]:
+def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
     """Load French cities dataset.
 
     French cities are taken from the La Poste hexasmal dataset:
@@ -120,7 +120,7 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_addresses(self, content: Union[str, OCRResult]) -> List[Prediction]:
+    def extract_addresses(self, content: Union[str, OCRResult]) -> list[Prediction]:
         """Extract addresses from the given OCR result.
 
         Args:
@@ -188,7 +188,7 @@ class AddressExtractor:
         text = strip_accents_ascii(text)
         return text.replace("'", " ").replace("-", " ")
 
-    def find_city_names(self, text: str) -> List[Tuple[City, int, int]]:
+    def find_city_names(self, text: str) -> list[tuple[City, int, int]]:
         """Find all cities from the search set in the text.
 
         Args:
@@ -203,7 +203,7 @@ class AddressExtractor:
 
     def find_nearby_postal_code(
         self, text: str, city: City, city_start: int, city_end: int
-    ) -> Optional[Tuple[str, int, int]]:
+    ) -> Optional[tuple[str, int, int]]:
         """Search for a city's postal code close to its name in the text.
 
         The postal code is searched at a maximum distance of
@@ -248,7 +248,7 @@ ADDRESS_EXTRACTOR_STORE = CachedStore(
 )
 
 
-def find_locations(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_locations(content: Union[OCRResult, str]) -> list[Prediction]:
     """Find location predictions in the text content.
 
     See :class:`.AddressExtractor`.

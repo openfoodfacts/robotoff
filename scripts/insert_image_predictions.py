@@ -1,6 +1,5 @@
 import datetime
 import pathlib
-from typing import Set, Tuple
 
 import tqdm
 
@@ -18,8 +17,8 @@ MODEL_VERSION = "tf-universal-logo-detector-1.0"
 TYPE = "object_detection"
 
 
-def get_seen_set() -> Set[Tuple[str, str]]:
-    seen_set: Set[Tuple[str, str]] = set()
+def get_seen_set() -> set[tuple[str, str]]:
+    seen_set: set[tuple[str, str]] = set()
     for prediction in (
         ImagePrediction.select(ImagePrediction.model_name, ImageModel.source_image)
         .join(ImageModel)

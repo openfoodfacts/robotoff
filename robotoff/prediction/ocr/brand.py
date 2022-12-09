@@ -1,5 +1,5 @@
 import functools
-from typing import Dict, Iterable, List, Optional, Set, Union
+from typing import Iterable, Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -19,7 +19,7 @@ def generate_brand_keyword_processor(
     brands: Iterable[str],
     blacklist: bool = True,
 ):
-    blacklisted_brands: Optional[Set[str]] = None
+    blacklisted_brands: Optional[set[str]] = None
     if blacklist:
         blacklisted_brands = BRAND_BLACKLIST_STORE.get()
 
@@ -30,8 +30,8 @@ def generate_brand_keyword_processor(
     return generate_keyword_processor(brands, keep_func=keep_func)
 
 
-def get_logo_annotation_brands() -> Dict[str, str]:
-    brands: Dict[str, str] = {}
+def get_logo_annotation_brands() -> dict[str, str]:
+    brands: dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
         if "||" in item:
@@ -45,7 +45,7 @@ def get_logo_annotation_brands() -> Dict[str, str]:
     return brands
 
 
-LOGO_ANNOTATION_BRANDS: Dict[str, str] = get_logo_annotation_brands()
+LOGO_ANNOTATION_BRANDS: dict[str, str] = get_logo_annotation_brands()
 TAXONOMY_BRAND_PROCESSOR = generate_brand_keyword_processor(
     text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
 )
@@ -59,7 +59,7 @@ def extract_brands(
     text: str,
     data_source_name: str,
     automatic_processing: bool,
-) -> List[Prediction]:
+) -> list[Prediction]:
     predictions = []
 
     for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
@@ -80,7 +80,7 @@ def extract_brands(
     return predictions
 
 
-def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[Prediction]:
+def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction]:
     predictions = []
     for logo_annotation in ocr_result.logo_annotations:
         if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
@@ -100,8 +100,8 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> List[Prediction
     return predictions
 
 
-def find_brands(content: Union[OCRResult, str]) -> List[Prediction]:
-    predictions: List[Prediction] = []
+def find_brands(content: Union[OCRResult, str]) -> list[Prediction]:
+    predictions: list[Prediction] = []
     text = get_text(content)
 
     if text:

@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -145,8 +145,8 @@ PACKAGER_CODE = {
 }
 
 
-def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
-    results: List[Prediction] = []
+def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
+    results: list[Prediction] = []
 
     for regex_code, regex_list in PACKAGER_CODE.items():
         for ocr_regex in regex_list:
@@ -183,7 +183,7 @@ def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
 
 
-def extract_fishing_code(processor: KeywordProcessor, text: str) -> List[Prediction]:
+def extract_fishing_code(processor: KeywordProcessor, text: str) -> list[Prediction]:
     predictions = []
 
     for (key, _), span_start, span_end in processor.extract_keywords(
@@ -208,7 +208,7 @@ FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packager_codes(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
+def find_packager_codes(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
     predictions = find_packager_codes_regex(ocr_result)
     processor = FISHING_KEYWORD_PROCESSOR_STORE.get()
     text = get_text(ocr_result)

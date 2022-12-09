@@ -3,7 +3,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import sentry_sdk
 from sentry_sdk.integrations import Integration
@@ -119,7 +119,7 @@ _off_user = os.environ.get("OFF_USER", "")
 _off_request_auth = ("off", "off") if _instance_tld() == "net" else None
 
 
-def off_credentials() -> Dict[str, str]:
+def off_credentials() -> dict[str, str]:
     return {"user_id": _off_user, "password": _off_password}
 
 
@@ -215,7 +215,7 @@ def slack_token() -> str:
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
 
-def init_sentry(integrations: Optional[List[Integration]] = None):
+def init_sentry(integrations: Optional[list[Integration]] = None):
     if _sentry_dsn:
         integrations = integrations or []
         integrations.append(

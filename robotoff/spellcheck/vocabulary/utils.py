@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import AbstractSet, Callable, Dict, List, Optional, Tuple
+from typing import AbstractSet, Callable, Optional
 
 from robotoff.settings import (
     FR_TOKENS_PATH,
@@ -10,7 +10,7 @@ from robotoff.settings import (
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
-DEACCENTED_TOKENS = Dict[str, List[str]]
+DEACCENTED_TOKENS = dict[str, list[str]]
 
 
 class Vocabulary(object):
@@ -53,19 +53,19 @@ class Vocabulary(object):
         )
 
     def suggest(self, token: str) -> Optional[str]:
-        deaccent_suggestions: Optional[List[str]] = self._suggest_deaccent(token)
+        deaccent_suggestions: Optional[list[str]] = self._suggest_deaccent(token)
         if deaccent_suggestions is not None:
             if len(deaccent_suggestions) == 1:
                 return deaccent_suggestions[0]
             elif len(deaccent_suggestions) > 1:
                 return None
 
-        split_suggestions: List[Tuple[str, str]] = self._suggest_split(token)
+        split_suggestions: list[tuple[str, str]] = self._suggest_split(token)
         if len(split_suggestions) == 1:
             return split_suggestions[0][0] + " " + split_suggestions[0][1]
         return None
 
-    def _suggest_deaccent(self, token: str) -> Optional[List[str]]:
+    def _suggest_deaccent(self, token: str) -> Optional[list[str]]:
         if token in self:
             return None
         deaccented_token = self.deaccent(token)
@@ -73,7 +73,7 @@ class Vocabulary(object):
             return self.deaccented_tokens[deaccented_token]
         return None
 
-    def _suggest_split(self, token: str) -> List[Tuple[str, str]]:
+    def _suggest_split(self, token: str) -> list[tuple[str, str]]:
         if token in self:
             return []
 
@@ -142,12 +142,12 @@ def get_deaccent_cache(voc_cache: CachedStore) -> CachedStore:
     return CachedStore(Vocabulary.deaccent_tokens_fn(voc_cache.get()))
 
 
-VOC_CACHE: Dict[str, CachedStore] = {
+VOC_CACHE: dict[str, CachedStore] = {
     "wikipedia_lower": get_voc_cache(FR_TOKENS_PATH),
     "ingredients_fr": get_voc_cache(INGREDIENTS_FR_PATH),
     "ingredients_fr_tokens": get_voc_cache(INGREDIENT_TOKENS_PATH),
 }
 
-DEACCENTED_TOKENS_CACHE: Dict[str, CachedStore] = {}
+DEACCENTED_TOKENS_CACHE: dict[str, CachedStore] = {}
 for key, voc_cache in VOC_CACHE.items():
     DEACCENTED_TOKENS_CACHE[key] = get_deaccent_cache(voc_cache)

@@ -1,7 +1,7 @@
 import datetime
 import functools
 import re
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from robotoff.prediction.types import Prediction, PredictionType
 
@@ -26,7 +26,7 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
     return date
 
 
-EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
+EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
     "full_digits_short": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)"),
         field=OCRField.full_text,
@@ -46,10 +46,10 @@ EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_expiration_date(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
     # Parse expiration date
     #        "À consommer de préférence avant",
-    results: List[Prediction] = []
+    results: list[Prediction] = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
         text = get_text(content, ocr_regex)

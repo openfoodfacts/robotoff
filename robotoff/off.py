@@ -3,7 +3,7 @@
 import enum
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 from robotoff import settings
@@ -70,7 +70,7 @@ class ServerType(enum.Enum):
     opf = 4
 
 
-API_URLS: Dict[ServerType, str] = {
+API_URLS: dict[ServerType, str] = {
     ServerType.off: settings.BaseURLProvider().get(),
     ServerType.obf: "https://world.openbeautyfacts.org",
     ServerType.opf: "https://world.openproductfacts.org",
@@ -155,7 +155,7 @@ def get_server_type(server_domain: str) -> ServerType:
     raise ValueError("unknown server domain: {}".format(server_domain))
 
 
-def split_barcode(barcode: str) -> List[str]:
+def split_barcode(barcode: str) -> list[str]:
     if not barcode.isdigit():
         raise ValueError("unknown barcode format: {}".format(barcode))
 
@@ -198,10 +198,10 @@ def is_valid_image(barcode: str, image_id: str) -> bool:
 
 def get_product(
     barcode: str,
-    fields: Optional[List[str]] = None,
+    fields: Optional[list[str]] = None,
     server: Optional[Union[ServerType, str]] = None,
     timeout: Optional[int] = 10,
-) -> Optional[Dict]:
+) -> Optional[dict]:
     fields = fields or []
 
     if server is None:
@@ -261,7 +261,7 @@ def update_quantity(
 
 
 def update_emb_codes(
-    barcode: str, emb_codes: List[str], insight_id: Optional[str] = None, **kwargs
+    barcode: str, emb_codes: list[str], insight_id: Optional[str] = None, **kwargs
 ):
     emb_codes_str = ",".join(emb_codes)
 
@@ -381,7 +381,7 @@ def save_ingredients(
 
 
 def update_product(
-    params: Dict,
+    params: dict,
     server_domain: Optional[str] = None,
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,

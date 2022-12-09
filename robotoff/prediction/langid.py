@@ -1,6 +1,5 @@
 import abc
 import dataclasses
-from typing import List
 
 from langid import langid
 
@@ -17,7 +16,7 @@ class LanguageIdentifier(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def predict(
         self, text: str, k: int = 10, threshold: float = 0.0
-    ) -> List[LanguagePrediction]:
+    ) -> list[LanguagePrediction]:
         pass
 
 
@@ -34,8 +33,8 @@ class LangidLanguageIdentifier(LanguageIdentifier):
 
     def predict(
         self, text: str, k: int = 10, threshold: float = 0.0
-    ) -> List[LanguagePrediction]:
-        predictions: List[LanguagePrediction] = []
+    ) -> list[LanguagePrediction]:
+        predictions: list[LanguagePrediction] = []
         rank = self.model.rank(text)
 
         added: int = 0
@@ -59,8 +58,8 @@ class FastTextLanguageIdentifier(LanguageIdentifier):
 
     def predict(
         self, text: str, k: int = 10, threshold: float = 0.0
-    ) -> List[LanguagePrediction]:
-        predictions: List[LanguagePrediction] = []
+    ) -> list[LanguagePrediction]:
+        predictions: list[LanguagePrediction] = []
         languages, confidences = self.model.predict(text, k=k, threshold=threshold)
 
         for language, confidence in zip(languages, confidences):

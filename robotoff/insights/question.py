@@ -1,6 +1,6 @@
 import abc
 import pathlib
-from typing import Dict, List, Optional
+from typing import Optional
 
 from robotoff import settings
 from robotoff.insights import InsightType
@@ -20,7 +20,7 @@ SMALL_IMAGE_SIZE = 200
 THUMB_IMAGE_SIZE = 100
 
 
-LABEL_IMAGES: Dict[str, str] = load_json(settings.LABEL_LOGOS_PATH)  # type: ignore
+LABEL_IMAGES: dict[str, str] = load_json(settings.LABEL_LOGOS_PATH)  # type: ignore
 
 
 class Question(metaclass=abc.ABCMeta):
@@ -97,7 +97,7 @@ class IngredientSpellcheckQuestion(Question):
         self.barcode: str = insight.barcode
         self.corrected: str = insight.data["corrected"]
         self.text: str = insight.data["text"]
-        self.corrections: List[JSONType] = insight.data["corrections"]
+        self.corrections: list[JSONType] = insight.data["corrections"]
         self.lang: str = insight.data["lang"]
         self.ref_image_url: Optional[str] = ref_image_url
 
@@ -173,7 +173,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
     @staticmethod
     def generate_selected_images(
         images: JSONType, barcode: str
-    ) -> Dict[str, Dict[str, Dict[str, str]]]:
+    ) -> dict[str, dict[str, dict[str, str]]]:
         """Generate the same `selected_images` field as returned by Product
         Opener API.
 
@@ -181,7 +181,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
         :param barcode: the product barcode
         :return: the `selected_images` data
         """
-        selected_images: Dict[str, Dict[str, Dict[str, str]]] = {
+        selected_images: dict[str, dict[str, dict[str, str]]] = {
             image_type: {}
             for image_type in ("front", "nutrition", "ingredients", "packaging")
         }
@@ -342,7 +342,7 @@ def get_display_image(source_image: str) -> str:
 
 
 class QuestionFormatterFactory:
-    formatters: Dict[str, type] = {
+    formatters: dict[str, type] = {
         InsightType.category.name: CategoryQuestionFormatter,
         InsightType.label.name: LabelQuestionFormatter,
         InsightType.product_weight.name: ProductWeightQuestionFormatter,
@@ -356,11 +356,11 @@ class QuestionFormatterFactory:
         return cls.formatters.get(insight_type)
 
     @classmethod
-    def get_available_types(cls) -> List[str]:
+    def get_available_types(cls) -> list[str]:
         return list(cls.formatters.keys())
 
     @classmethod
-    def get_default_types(cls) -> List[str]:
+    def get_default_types(cls) -> list[str]:
         return [
             InsightType.category.name,
             InsightType.label.name,

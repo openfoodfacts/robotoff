@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import pytest
 
 from robotoff.insights.dataclass import InsightType
@@ -37,17 +35,17 @@ def test_category_prediction_to_prediction_auto(monkeypatch):
 
 
 class MockResponse:
-    def __init__(self, prediction: Dict):
+    def __init__(self, prediction: dict):
         self.prediction = prediction
 
     def raise_for_status(self):
         pass
 
-    def json(self) -> Dict:
+    def json(self) -> dict:
         return self.prediction
 
 
-def _prediction_resp(categories: List[str], confs: List[float]) -> MockResponse:
+def _prediction_resp(categories: list[str], confs: list[float]) -> MockResponse:
     return MockResponse(
         prediction={
             "predictions": [

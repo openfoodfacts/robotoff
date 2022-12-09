@@ -1,5 +1,4 @@
 import pathlib
-from typing import Set
 
 from robotoff import settings
 from robotoff.off import generate_image_url
@@ -15,7 +14,7 @@ IMAGE_DATASET_DIR = settings.PROJECT_DIR / "image_dataset"
 NUTRITION_TABLE_IMAGE_DIR = IMAGE_DATASET_DIR / "nutrition-table-2"
 
 
-def load_seen_set() -> Set[str]:
+def load_seen_set() -> set[str]:
     seen_set = set()
 
     with open(IMAGE_DATASET_DIR / "dataset.txt") as f:

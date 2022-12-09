@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Union
 
 from robotoff.prediction.types import Prediction, PredictionType
 
@@ -20,7 +20,7 @@ def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> 
         raise ValueError("unknown image orientation: {}".format(image_orientation))
 
 
-def find_image_orientation(ocr_result: Union[OCRResult, str]) -> List[Prediction]:
+def find_image_orientation(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
     if isinstance(ocr_result, str):
         return []
 

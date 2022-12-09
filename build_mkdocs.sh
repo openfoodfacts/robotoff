@@ -25,7 +25,7 @@ cp ./README.md ./doc/README.md
 cli_md=doc/references/cli.md
 
 # Generate CLI reference
-poetry run typer robotoff/cli/main.py utils docs --name robotoff-cli --output $cli_md
+# poetry run typer robotoff/cli/main.py utils docs --name robotoff-cli --output $cli_md
 
 # Remove header (first line) in CLI reference
 # Taken from https://www.baeldung.com/linux/remove-first-line-text-file#using-thesed-command

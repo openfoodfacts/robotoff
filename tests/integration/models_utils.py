@@ -5,7 +5,7 @@ although archived, this is lightweight, and should be easy to maintain or replac
 """
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import factory
 from factory_peewee import PeeweeModelFactory
@@ -39,10 +39,10 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     id = factory.LazyFunction(uuid.uuid4)  # type: ignore
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
-    data: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
     timestamp: datetime = factory.LazyFunction(datetime.utcnow)
     countries = ["en:france"]
-    brands: List[str] = []
+    brands: list[str] = []
     n_votes = 0
     value_tag = "en:seeds"
     # we use a lazy function for settings can change in a test
@@ -59,7 +59,7 @@ class PredictionFactory(PeeweeModelFactory):
 
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
-    data: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
     timestamp = factory.LazyFunction(datetime.utcnow)
     value_tag = "en:seeds"
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)

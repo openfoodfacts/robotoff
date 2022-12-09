@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from robotoff.off import normalize_tag
 from robotoff.prediction.types import Prediction, PredictionType
@@ -80,7 +80,7 @@ AOC_REGEX = {
 }
 
 
-def find_category(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
     """This function returns a prediction of the product category.
     For now we are extracting categories via REGEX
     only thanks to an AOP syntax but we may find in the future

@@ -2,7 +2,7 @@ import contextlib
 import gzip
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 import _io
 import click
@@ -99,7 +99,7 @@ def import_insights(
     product_store = get_product_store()
     imported: int = 0
 
-    prediction_batch: List[Prediction]
+    prediction_batch: list[Prediction]
     for prediction_batch in chunked(predictions, batch_size):
         with db.atomic():
             imported += import_insights_(

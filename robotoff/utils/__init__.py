@@ -4,7 +4,7 @@ import os
 import pathlib
 import sys
 from io import BytesIO
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Iterable, Optional, Union
 
 import orjson
 import PIL
@@ -52,19 +52,19 @@ def configure_root_logger(logger, level: int = 20):
 logger = get_logger(__name__)
 
 
-def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
+def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[dict]:
     open_fn = get_open_fn(jsonl_path)
 
     with open_fn(str(jsonl_path), "rt", encoding="utf-8") as f:
         yield from jsonl_iter_fp(f)
 
 
-def gzip_jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[Dict]:
+def gzip_jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[dict]:
     with gzip.open(jsonl_path, "rt", encoding="utf-8") as f:
         yield from jsonl_iter_fp(f)
 
 
-def jsonl_iter_fp(fp) -> Iterable[Dict]:
+def jsonl_iter_fp(fp) -> Iterable[dict]:
     for line in fp:
         line = line.strip("\n")
         if line:
@@ -73,7 +73,7 @@ def jsonl_iter_fp(fp) -> Iterable[Dict]:
 
 def load_json(
     path: Union[str, pathlib.Path], compressed: bool = False
-) -> Union[Dict, List]:
+) -> Union[dict, list]:
     """Load a JSON file.
 
     :param path: the path of the file

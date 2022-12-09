@@ -12,7 +12,7 @@ Usage:
 """
 import json
 import os
-from typing import Dict, Iterator, List, Optional, Set
+from typing import Iterator, Optional
 
 from sklearn.model_selection import train_test_split
 
@@ -27,9 +27,7 @@ logger = get_logger()
 WRITE_PATH = settings.PROJECT_DIR / "datasets" / "category"
 
 
-def infer_category_tags(
-    categories: List["str"], taxonomy: Taxonomy
-) -> Set[TaxonomyNode]:
+def infer_category_tags(categories: list[str], taxonomy: Taxonomy) -> set[TaxonomyNode]:
     category_nodes = []
     for category_tag in categories:
         if category_tag:
@@ -53,8 +51,8 @@ def generate_base_dataset(
     lang: Optional[str],
 ) -> Iterator[JSONType]:
     for product in stream.iter():
-        categories_tags: List[str] = product["categories_tags"]
-        inferred_categories_tags: List[TaxonomyNode] = list(
+        categories_tags: list[str] = product["categories_tags"]
+        inferred_categories_tags: list[TaxonomyNode] = list(
             infer_category_tags(categories_tags, category_taxonomy)
         )
 
@@ -92,7 +90,7 @@ def generate_train_test_val_datasets(
     ingredient_taxonomy: Taxonomy,
     stream: ProductStream,
     lang: Optional[str],
-) -> Dict[str, Iterator[JSONType]]:
+) -> dict[str, Iterator[JSONType]]:
     base_dataset = generate_base_dataset(
         category_taxonomy, ingredient_taxonomy, stream, lang
     )

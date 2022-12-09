@@ -4,7 +4,7 @@ import itertools
 import operator
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type
+from typing import Any, Iterable, Iterator, Optional, Type
 
 from playhouse.shortcuts import model_to_dict
 
@@ -36,14 +36,14 @@ from robotoff.utils.cache import CachedStore
 logger = get_logger(__name__)
 
 
-def load_authorized_labels() -> Set[str]:
+def load_authorized_labels() -> set[str]:
     return set(text_file_iter(settings.OCR_LABEL_WHITELIST_DATA_PATH))
 
 
 AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interval=None)
 
 
-def is_selected_image(images: Dict[str, Any], image_id: str) -> bool:
+def is_selected_image(images: dict[str, Any], image_id: str) -> bool:
     """Return True if the image referenced by `image_id` is selected as a
     front, ingredients, nutrition or packaging image in any language.
 
@@ -59,7 +59,7 @@ def is_selected_image(images: Dict[str, Any], image_id: str) -> bool:
 
 
 def is_recent_image(
-    images: Dict[str, Any], image_id: str, max_timedelta: datetime.timedelta
+    images: dict[str, Any], image_id: str, max_timedelta: datetime.timedelta
 ) -> bool:
     """Return True if the image referenced by `image_id` is less than
     `max_timedelta` older than the most recent image, return False otherwise.
@@ -92,7 +92,7 @@ def is_recent_image(
     return True
 
 
-def is_valid_insight_image(images: Dict[str, Any], source_image: Optional[str]):
+def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
     """Return True if the source image is valid for insight generation,
     i.e. the image ID is a digit and is referenced in `images`.
 
@@ -110,7 +110,7 @@ def is_valid_insight_image(images: Dict[str, Any], source_image: Optional[str]):
 
 
 def is_trustworthy_insight_image(
-    images: Dict[str, Any],
+    images: dict[str, Any],
     source_image: Optional[str],
     max_timedelta: datetime.timedelta = settings.IMAGE_MAX_TIMEDELTA,
 ):
@@ -142,7 +142,7 @@ def is_trustworthy_insight_image(
 
 def get_existing_insight(
     insight_type: InsightType, barcode: str, server_domain: str
-) -> List[ProductInsight]:
+) -> list[ProductInsight]:
     """Get all insights for specific product and `insight_type`."""
     return list(
         ProductInsight.select().where(
@@ -160,7 +160,7 @@ def is_reserved_barcode(barcode: str) -> bool:
     return barcode.startswith("2")
 
 
-def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
+def sort_predictions(predictions: Iterable[Prediction]) -> list[Prediction]:
     """Sort predictions by priority, using as keys:
     - priority, specified by data["priority"], prediction with lowest priority
     values (high priority) come first
@@ -186,7 +186,7 @@ def sort_predictions(predictions: Iterable[Prediction]) -> List[Prediction]:
     )
 
 
-def sort_candidates(candidates: Iterable[ProductInsight]) -> List[ProductInsight]:
+def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight]:
     """Sort candidates by priority, using as keys:
 
     - priority, specified by data["priority"], candidate with lowest priority
@@ -221,7 +221,7 @@ def sort_candidates(candidates: Iterable[ProductInsight]) -> List[ProductInsight
 
 
 def select_deepest_taxonomized_candidates(
-    candidates: List[Prediction], taxonomy: Taxonomy
+    candidates: list[Prediction], taxonomy: Taxonomy
 ):
     """Filter predictions to only keep the deepest items in the taxonomy.
 
@@ -262,7 +262,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         """Return the prediction types that are necessary to generate the
         insight type.
 
@@ -276,7 +276,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def import_insights(
         cls,
         barcode: str,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
         server_domain: str,
         product_store: DBProductStore,
     ) -> int:
@@ -327,10 +327,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def generate_insights(
         cls,
         barcode: str,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
         server_domain: str,
         product_store: DBProductStore,
-    ) -> Tuple[List[ProductInsight], List[ProductInsight], List[ProductInsight]]:
+    ) -> tuple[list[ProductInsight], list[ProductInsight], list[ProductInsight]]:
         """Given a list of predictions, yield tuples of ProductInsight to
         create, update and delete.
 
@@ -397,7 +397,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         """From a list of Predictions associated with a product, yield
         candidate ProductInsights for import.
@@ -414,11 +414,11 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     @classmethod
     def get_insight_update(
-        cls, candidates: List[ProductInsight], reference_insights: List[ProductInsight]
-    ) -> Tuple[
-        List[ProductInsight],
-        List[Tuple[ProductInsight, ProductInsight]],
-        List[ProductInsight],
+        cls, candidates: list[ProductInsight], reference_insights: list[ProductInsight]
+    ) -> tuple[
+        list[ProductInsight],
+        list[tuple[ProductInsight, ProductInsight]],
+        list[ProductInsight],
     ]:
         """Return a tuple containing:
         - a list of ProductInsight to create
@@ -430,7 +430,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
         """
-        to_create_or_update: List[Tuple[ProductInsight, Optional[ProductInsight]]] = []
+        to_create_or_update: list[tuple[ProductInsight, Optional[ProductInsight]]] = []
         # Keep already annotated insights in DB
         to_keep_ids = set(
             reference.id
@@ -589,7 +589,7 @@ class PackagerCodeInsightImporter(InsightImporter):
         return InsightType.packager_code
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.packager_code}
 
     @classmethod
@@ -612,7 +612,7 @@ class PackagerCodeInsightImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         yield from (
             ProductInsight(**prediction.to_dict())
@@ -627,7 +627,7 @@ class LabelInsightImporter(InsightImporter):
         return InsightType.label
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.label}
 
     @classmethod
@@ -646,7 +646,7 @@ class LabelInsightImporter(InsightImporter):
         )
 
     @classmethod
-    def is_parent_label(cls, tag: str, to_check_labels: Set[str]) -> bool:
+    def is_parent_label(cls, tag: str, to_check_labels: set[str]) -> bool:
         # Check that the predicted label is not a parent of a
         # current/already predicted label
         return get_taxonomy(InsightType.label.name).is_parent_of_any(
@@ -657,7 +657,7 @@ class LabelInsightImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         candidates = [
             prediction
@@ -691,7 +691,7 @@ class CategoryImporter(InsightImporter):
         return InsightType.category
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.category}
 
     @classmethod
@@ -703,7 +703,7 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def is_parent_category(cls, category: str, to_check_categories: Set[str]):
+    def is_parent_category(cls, category: str, to_check_categories: set[str]):
         # Check that the predicted category is not a parent of a
         # current/already predicted category
         return get_taxonomy(InsightType.category.name).is_parent_of_any(
@@ -714,7 +714,7 @@ class CategoryImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         candidates = [
             prediction
@@ -759,7 +759,7 @@ class ProductWeightImporter(InsightImporter):
         return InsightType.product_weight
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.product_weight}
 
     @classmethod
@@ -769,8 +769,8 @@ class ProductWeightImporter(InsightImporter):
         return candidate.value == reference.value
 
     @staticmethod
-    def group_by_subtype(predictions: List[Prediction]) -> Dict[str, List[Prediction]]:
-        predictions_by_subtype: Dict[str, List[Prediction]] = {}
+    def group_by_subtype(predictions: list[Prediction]) -> dict[str, list[Prediction]]:
+        predictions_by_subtype: dict[str, list[Prediction]] = {}
 
         for prediction in predictions:
             matcher_type = prediction.data["matcher_type"]
@@ -783,7 +783,7 @@ class ProductWeightImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         if product.quantity is not None or not predictions:
             # Don't generate candidates if the product weight is already
@@ -815,7 +815,7 @@ class ExpirationDateImporter(InsightImporter):
         return InsightType.expiration_date
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.expiration_date}
 
     @classmethod
@@ -828,7 +828,7 @@ class ExpirationDateImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         if (product and product.expiration_date) or not predictions:
             return
@@ -849,7 +849,7 @@ class BrandInsightImporter(InsightImporter):
         return InsightType.brand
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.brand}
 
     @classmethod
@@ -872,7 +872,7 @@ class BrandInsightImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         if product.brands_tags:
             # For now, don't create an insight if a brand has already been provided
@@ -904,7 +904,7 @@ class StoreInsightImporter(InsightImporter):
         return InsightType.store
 
     @staticmethod
-    def get_required_prediction_types() -> Set[PredictionType]:
+    def get_required_prediction_types() -> set[PredictionType]:
         return {PredictionType.store}
 
     @classmethod
@@ -917,7 +917,7 @@ class StoreInsightImporter(InsightImporter):
     def generate_candidates(
         cls,
         product: Product,
-        predictions: List[Prediction],
+        predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         for prediction in predictions:
             insight = ProductInsight(**prediction.to_dict())
@@ -1019,7 +1019,7 @@ def import_product_predictions(
     return batch_insert(PredictionModel, to_import, 50)
 
 
-IMPORTERS: List[Type] = [
+IMPORTERS: list[Type] = [
     PackagerCodeInsightImporter,
     LabelInsightImporter,
     CategoryImporter,
@@ -1052,7 +1052,7 @@ def import_insights(
 
 
 def import_insights_for_products(
-    prediction_types_by_barcode: Dict[str, Set[PredictionType]],
+    prediction_types_by_barcode: dict[str, set[PredictionType]],
     server_domain: str,
     product_store: DBProductStore,
 ) -> int:
@@ -1068,7 +1068,7 @@ def import_insights_for_products(
     imported = 0
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
-        selected_barcodes: List[str] = []
+        selected_barcodes: list[str] = []
         for barcode, prediction_types in prediction_types_by_barcode.items():
             if prediction_types >= required_prediction_types:
                 selected_barcodes.append(barcode)
@@ -1106,13 +1106,13 @@ def import_predictions(
     predictions: Iterable[Prediction],
     product_store: DBProductStore,
     server_domain: str,
-) -> Dict[str, Set[PredictionType]]:
+) -> dict[str, set[PredictionType]]:
     """Check validity and import provided Prediction.
 
     :param predictions: the Predictions to import
     :param product_store: The product store to use
     :param server_domain: The server domain associated with the predictions
-    :return: Dict associating each barcode with prediction types that where
+    :return: dict associating each barcode with prediction types that where
     updated in order to re-compute associated insights
     """
     predictions = [
@@ -1122,7 +1122,7 @@ def import_predictions(
     ]
 
     predictions_imported = 0
-    updated_prediction_types_by_barcode: Dict[str, Set[PredictionType]] = {}
+    updated_prediction_types_by_barcode: dict[str, set[PredictionType]] = {}
     for barcode, product_predictions_iter in itertools.groupby(
         sorted(predictions, key=operator.attrgetter("barcode")),
         operator.attrgetter("barcode"),
@@ -1179,8 +1179,8 @@ def refresh_insights(
 
 
 def get_product_predictions(
-    barcodes: List[str], prediction_types: Optional[List[str]] = None
-) -> Iterator[Dict]:
+    barcodes: list[str], prediction_types: Optional[list[str]] = None
+) -> Iterator[dict]:
     where_clauses = [PredictionModel.barcode.in_(barcodes)]
 
     if prediction_types is not None:

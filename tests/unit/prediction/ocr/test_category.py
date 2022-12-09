@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 from robotoff.prediction.ocr.category import find_category
@@ -20,7 +18,7 @@ from robotoff.prediction.ocr.category import find_category
         ("Mixed puffed cereals    AOP", ["en:mixed-puffed-cereals"]),
     ],
 )
-def test_find_category_from_AOC(text: str, value_tags: List[str]):
+def test_find_category_from_AOC(text: str, value_tags: list[str]):
     insights = find_category(text)
     detected_value_tags = set(i.value_tag for i in insights)
     assert detected_value_tags == set(value_tags)

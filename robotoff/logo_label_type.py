@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 # Extracted into a separate module to avoid circular dependencies.
-LogoLabelType = Tuple[str, Optional[str]]
+LogoLabelType = tuple[str, Optional[str]]

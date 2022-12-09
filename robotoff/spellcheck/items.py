@@ -1,7 +1,7 @@
 import operator
 import re
 from dataclasses import InitVar, asdict, dataclass, field
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable, Optional
 
 from robotoff.prediction.langid import DEFAULT_LANGUAGE_IDENTIFIER, LanguageIdentifier
 from robotoff.spellcheck.utils import FR_KNOWN_TOKENS_CACHE
@@ -79,7 +79,7 @@ class SpellcheckIteration:
     original: str
     model: Optional[str] = None
     correction: InitVar[Optional[str]] = None
-    atomic_corrections: List[AtomicCorrection] = field(default_factory=list)
+    atomic_corrections: list[AtomicCorrection] = field(default_factory=list)
 
     def __post_init__(self, correction: str):
         if correction is not None:
@@ -150,7 +150,7 @@ class SpellcheckIteration:
 
 class SpellcheckItem:
     def __init__(self, original: str):
-        self.iterations: List[SpellcheckIteration] = []
+        self.iterations: list[SpellcheckIteration] = []
         self.original: str = original
         self.is_lang_allowed: bool = self.__is_lang_allowed()
 
@@ -162,7 +162,7 @@ class SpellcheckItem:
             return self.original
 
     @property
-    def corrections(self) -> List[Dict]:
+    def corrections(self) -> list[dict]:
         return [
             dict(asdict(atomic_correction), is_valid=atomic_correction.is_valid())
             for atomic_correction in self.all_atomic_corrections
@@ -170,7 +170,7 @@ class SpellcheckItem:
         ]
 
     @property
-    def all_atomic_corrections(self) -> List[AtomicCorrection]:
+    def all_atomic_corrections(self) -> list[AtomicCorrection]:
         return [
             atomic_correction
             for iteration in self.iterations
@@ -197,7 +197,7 @@ class SpellcheckItem:
 class Ingredients:
     text: str
     normalized_text: str
-    offsets: List[Offset] = field(default_factory=list)
+    offsets: list[Offset] = field(default_factory=list)
 
     def __iter__(self) -> Iterable[str]:
         yield from self.get_iter()

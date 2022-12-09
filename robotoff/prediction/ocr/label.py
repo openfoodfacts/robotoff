@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Iterable, Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -196,8 +196,8 @@ LABELS_REGEX = {
 }
 
 
-def get_logo_annotation_labels() -> Dict[str, str]:
-    labels: Dict[str, str] = {}
+def get_logo_annotation_labels() -> dict[str, str]:
+    labels: dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_LABELS_DATA_PATH):
         if "||" in item:
@@ -218,7 +218,7 @@ def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
     return generate_keyword_processor(labels)
 
 
-def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[Prediction]:
+def extract_label_flashtext(processor: KeywordProcessor, text: str) -> list[Prediction]:
     predictions = []
 
     for (label_tag, _), span_start, span_end in processor.extract_keywords(
@@ -238,13 +238,13 @@ def extract_label_flashtext(processor: KeywordProcessor, text: str) -> List[Pred
     return predictions
 
 
-LOGO_ANNOTATION_LABELS: Dict[str, str] = get_logo_annotation_labels()
+LOGO_ANNOTATION_LABELS: dict[str, str] = get_logo_annotation_labels()
 LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(
     fetch_func=generate_label_keyword_processor, expiration_interval=None
 )
 
 
-def find_labels(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = []
 
     for label_tag, regex_list in LABELS_REGEX.items():

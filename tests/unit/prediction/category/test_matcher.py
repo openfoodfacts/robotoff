@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import pytest
 
 from robotoff.prediction.category.matcher import match, predict, process
@@ -52,7 +50,7 @@ def test_process(text: str, lang: str, expected: str):
         ("Pollo limpio", "es", ["en:chickens"]),
     ],
 )
-def test_match(text: str, lang: str, expected: List[str], mocker):
+def test_match(text: str, lang: str, expected: list[str], mocker):
     mocker.patch(
         "robotoff.prediction.category.matcher.get_taxonomy",
         return_value=get_taxonomy("category", offline=True),
@@ -87,7 +85,7 @@ def test_predict(
     product_name: str,
     expected_value_tag: str,
     expected_pattern: str,
-    additional_data: Dict,
+    additional_data: dict,
 ):
     product = {
         f"product_name_{lang}": product_name,

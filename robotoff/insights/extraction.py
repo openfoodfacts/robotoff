@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 from PIL import Image
 
@@ -18,7 +18,7 @@ from robotoff.utils import get_logger, http_session
 logger = get_logger(__name__)
 
 
-DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
+DEFAULT_OCR_PREDICTION_TYPES: list[PredictionType] = [
     PredictionType.category,
     PredictionType.label,
     PredictionType.packager_code,
@@ -34,7 +34,7 @@ DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
 ]
 
 
-PRODUCT_NAME_PREDICTION_TYPES: List[PredictionType] = [
+PRODUCT_NAME_PREDICTION_TYPES: list[PredictionType] = [
     PredictionType.label,
     PredictionType.product_weight,
     PredictionType.brand,
@@ -98,7 +98,7 @@ def run_object_detection_model(
 
 def get_predictions_from_product_name(
     barcode: str, product_name: str
-) -> List[Prediction]:
+) -> list[Prediction]:
     predictions_all = []
     for prediction_type in PRODUCT_NAME_PREDICTION_TYPES:
         predictions = ocr.extract_predictions(
@@ -116,10 +116,10 @@ def get_predictions_from_product_name(
 
 def extract_ocr_predictions(
     barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
-) -> List[Prediction]:
+) -> list[Prediction]:
     logger.info(f"Generating OCR predictions from OCR {ocr_url}")
 
-    predictions_all: List[Prediction] = []
+    predictions_all: list[Prediction] = []
     source_image = get_source_from_url(ocr_url)
     ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
 

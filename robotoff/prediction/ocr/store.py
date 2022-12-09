@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Set, Tuple, Union
+from typing import Union
 
 from robotoff import settings
 from robotoff.prediction.types import Prediction, PredictionType
@@ -22,8 +22,8 @@ def store_sort_key(item):
     return -len(store), store
 
 
-def get_sorted_stores() -> List[Tuple[str, str]]:
-    sorted_stores: Dict[str, str] = {}
+def get_sorted_stores() -> list[tuple[str, str]]:
+    sorted_stores: dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_STORES_DATA_PATH):
         if "||" in item:
@@ -41,13 +41,13 @@ SORTED_STORES = get_sorted_stores()
 STORE_REGEX_STR = "|".join(
     r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in SORTED_STORES
 )
-NOTIFY_STORES: Set[str] = set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
+NOTIFY_STORES: set[str] = set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
 STORE_REGEX = OCRRegex(
     re.compile(STORE_REGEX_STR), field=OCRField.full_text_contiguous, lowercase=True
 )
 
 
-def find_stores(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
 
     text = get_text(content, STORE_REGEX)

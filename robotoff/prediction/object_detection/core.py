@@ -1,7 +1,7 @@
 import dataclasses
 import enum
 import pathlib
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import cachetools
 import grpc
@@ -34,7 +34,7 @@ OBJECT_DETECTION_MODEL_VERSION = {
 
 @dataclasses.dataclass
 class ObjectDetectionResult:
-    bounding_box: Tuple
+    bounding_box: tuple
     score: float
     label: str
 
@@ -45,11 +45,11 @@ class ObjectDetectionRawResult:
     detection_boxes: np.ndarray
     detection_scores: np.ndarray
     detection_classes: np.ndarray
-    label_names: List[str]
+    label_names: list[str]
     detection_masks: Optional[np.ndarray] = None
     boxed_image: Optional[Image.Image] = None
 
-    def select(self, threshold: Optional[float] = None) -> List[ObjectDetectionResult]:
+    def select(self, threshold: Optional[float] = None) -> list[ObjectDetectionResult]:
         if threshold is None:
             threshold = 0.5
 
@@ -74,7 +74,7 @@ class ObjectDetectionRawResult:
 
         return results
 
-    def to_json(self, threshold: Optional[float] = None) -> List[JSONType]:
+    def to_json(self, threshold: Optional[float] = None) -> list[JSONType]:
         return [dataclasses.asdict(r) for r in self.select(threshold)]
 
 
@@ -102,7 +102,7 @@ def add_boxes_and_labels(image_array: np.ndarray, raw_result: ObjectDetectionRaw
     raw_result.boxed_image = image_with_boxes
 
 
-def resize_image(image: Image.Image, max_size: Tuple[int, int]) -> Image.Image:
+def resize_image(image: Image.Image, max_size: tuple[int, int]) -> Image.Image:
     width, height = image.size
     max_width, max_height = max_size
 
@@ -121,7 +121,7 @@ def get_triton_inference_stub():
 
 
 class RemoteModel:
-    def __init__(self, name: str, label_names: List[str]):
+    def __init__(self, name: str, label_names: list[str]):
         self.name: str = name
         self.label_names = label_names
 
@@ -203,11 +203,11 @@ class RemoteModel:
 
 
 class ObjectDetectionModelRegistry:
-    models: Dict[str, RemoteModel] = {}
+    models: dict[str, RemoteModel] = {}
     _loaded = False
 
     @classmethod
-    def get_available_models(cls) -> List[str]:
+    def get_available_models(cls) -> list[str]:
         cls.load_all()
         return list(cls.models.keys())
 

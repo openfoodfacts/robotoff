@@ -7,7 +7,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import Dict, Iterable, Iterator, List, Optional, Union
+from typing import Iterable, Iterator, Optional, Union
 
 import requests
 from pymongo import MongoClient
@@ -343,7 +343,7 @@ class ProductStream:
         for item in self:
             yield Product(item)
 
-    def collect(self) -> List[JSONType]:
+    def collect(self) -> list[JSONType]:
         return list(self)
 
 
@@ -396,14 +396,14 @@ class Product:
 
     def __init__(self, product: JSONType):
         self.barcode: Optional[str] = product.get("code")
-        self.countries_tags: List[str] = product.get("countries_tags") or []
-        self.categories_tags: List[str] = product.get("categories_tags") or []
-        self.emb_codes_tags: List[str] = product.get("emb_codes_tags") or []
-        self.labels_tags: List[str] = product.get("labels_tags") or []
+        self.countries_tags: list[str] = product.get("countries_tags") or []
+        self.categories_tags: list[str] = product.get("categories_tags") or []
+        self.emb_codes_tags: list[str] = product.get("emb_codes_tags") or []
+        self.labels_tags: list[str] = product.get("labels_tags") or []
         self.quantity: Optional[str] = product.get("quantity") or None
         self.expiration_date: Optional[str] = product.get("expiration_date") or None
-        self.brands_tags: List[str] = product.get("brands_tags") or []
-        self.stores_tags: List[str] = product.get("stores_tags") or []
+        self.brands_tags: list[str] = product.get("brands_tags") or []
+        self.stores_tags: list[str] = product.get("stores_tags") or []
         self.unique_scans_n: int = product.get("unique_scans_n") or 0
         self.images: JSONType = product.get("images") or {}
 
@@ -435,8 +435,8 @@ class ProductStore(metaclass=abc.ABCMeta):
 
 
 class MemoryProductStore(ProductStore):
-    def __init__(self, store: Dict[str, Product]):
-        self.store: Dict[str, Product] = store
+    def __init__(self, store: dict[str, Product]):
+        self.store: dict[str, Product] = store
 
     def __len__(self):
         return len(self.store)
@@ -447,7 +447,7 @@ class MemoryProductStore(ProductStore):
         ds = ProductDataset(path)
         stream = ds.stream()
 
-        store: Dict[str, Product] = {}
+        store: dict[str, Product] = {}
 
         for product in stream.iter_product():
             if product.barcode:
@@ -480,7 +480,7 @@ class DBProductStore(ProductStore):
         return len(self.collection.estimated_document_count())
 
     def get_product(
-        self, barcode: str, projection: Optional[List[str]] = None
+        self, barcode: str, projection: Optional[list[str]] = None
     ) -> Optional[JSONType]:
         return self.collection.find_one({"code": barcode}, projection)
 
@@ -511,7 +511,7 @@ def get_product_store() -> DBProductStore:
 
 
 def get_product(
-    barcode: str, projection: Optional[List[str]] = None
+    barcode: str, projection: Optional[list[str]] = None
 ) -> Optional[JSONType]:
     """Get product from MongoDB.
 

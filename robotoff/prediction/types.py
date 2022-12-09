@@ -1,7 +1,7 @@
 import dataclasses
 import datetime
 from enum import Enum, unique
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 @unique
@@ -35,7 +35,7 @@ class PredictionType(str, Enum):
 @dataclasses.dataclass
 class Prediction:
     type: PredictionType
-    data: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    data: dict[str, Any] = dataclasses.field(default_factory=dict)
     value_tag: Optional[str] = None
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
@@ -46,7 +46,7 @@ class Prediction:
     server_domain: Optional[str] = None
     id: Optional[int] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)
 
 

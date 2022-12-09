@@ -1,5 +1,4 @@
 import re
-from typing import List
 
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 
@@ -35,7 +34,7 @@ class PercentagesSpellchecker(BaseSpellchecker):
             - "fumée 17.1% [viande de"     -> "fumée 17,1% [viande de"
             - "concentré 13 %, acidifiant" -> "concentré 13%, acidifiant"
         """
-        formatted_text_list: List[str] = []
+        formatted_text_list: list[str] = []
         last_index: int = 0
         for match in PERCENTAGE_REGEX.finditer(text):
             first_char, first_digits, sep, last_digits = match.groups()

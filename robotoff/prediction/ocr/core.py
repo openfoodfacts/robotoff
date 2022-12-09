@@ -1,6 +1,6 @@
 import json
 import pathlib
-from typing import Callable, Dict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import Callable, Iterable, Optional, TextIO, Union
 
 import requests
 
@@ -28,8 +28,8 @@ from .trace import find_traces
 logger = get_logger(__name__)
 
 
-PREDICTION_TYPE_TO_FUNC: Dict[
-    str, Callable[[Union[OCRResult, str]], List[Prediction]]
+PREDICTION_TYPE_TO_FUNC: dict[
+    str, Callable[[Union[OCRResult, str]], list[Prediction]]
 ] = {
     PredictionType.category: find_category,
     PredictionType.packager_code: find_packager_codes,
@@ -78,7 +78,7 @@ def get_ocr_result(
         return None
 
     try:
-        ocr_data: Dict = r.json()
+        ocr_data: dict = r.json()
     except json.JSONDecodeError as e:
         error_message = "Error while decoding OCR JSON"
         if error_raise:
@@ -102,7 +102,7 @@ def extract_predictions(
     prediction_type: PredictionType,
     barcode: Optional[str] = None,
     source_image: Optional[str] = None,
-) -> List[Prediction]:
+) -> list[Prediction]:
     """Extract predictions from OCR using for provided prediction type.
 
     :param content: OCR output to extract predictions from.
@@ -137,7 +137,7 @@ def get_source(
     return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
 
-def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[Tuple[Optional[str], Dict]]:
+def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[Optional[str], dict]]:
     for item in items:
         if "content" in item:
             source = item["source"].replace("//", "/").replace(".json", ".jpg")
@@ -146,7 +146,7 @@ def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[Tuple[Optional[str],
 
 def ocr_iter(
     source: Union[str, TextIO, pathlib.Path]
-) -> Iterable[Tuple[Optional[str], Dict]]:
+) -> Iterable[tuple[Optional[str], dict]]:
     if isinstance(source, pathlib.Path):
         items = jsonl_iter(source)
         yield from ocr_content_iter(items)

@@ -1,5 +1,5 @@
 import operator
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional
 
 import cachetools
 import numpy as np
@@ -16,7 +16,7 @@ from robotoff.utils.types import JSONType
 logger = get_logger(__name__)
 
 
-LOGO_TYPE_MAPPING: Dict[str, PredictionType] = {
+LOGO_TYPE_MAPPING: dict[str, PredictionType] = {
     "brand": PredictionType.brand,
     "label": PredictionType.label,
 }
@@ -24,7 +24,7 @@ LOGO_TYPE_MAPPING: Dict[str, PredictionType] = {
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
 
 
-BoundingBoxType = Tuple[float, float, float, float]
+BoundingBoxType = tuple[float, float, float, float]
 
 
 def load_resources():
@@ -56,8 +56,8 @@ def compute_iou(box_1: BoundingBoxType, box_2: BoundingBoxType) -> float:
 
 
 def filter_logos(
-    logos: List[JSONType], score_threshold: float, iou_threshold: float = 0.95
-) -> List[Tuple[int, JSONType]]:
+    logos: list[JSONType], score_threshold: float, iou_threshold: float = 0.95
+) -> list[tuple[int, JSONType]]:
     """Select logos that don't intersect with each other
     (IoU < `iou_threshold`) and that have a confidence score above
     `score_threshold`.
@@ -85,7 +85,7 @@ def filter_logos(
 
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
-def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
+def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
     thresholds = {}
 
     for item in LogoConfidenceThreshold.select().iterator():
@@ -94,7 +94,7 @@ def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
     return thresholds
 
 
-def get_stored_logo_ids() -> Set[int]:
+def get_stored_logo_ids() -> set[int]:
     r = http_session.get(
         settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/stored", timeout=30
     )
@@ -108,7 +108,7 @@ def get_stored_logo_ids() -> Set[int]:
     return set(r.json()["stored"])
 
 
-def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
+def add_logos_to_ann(image: ImageModel, logos: list[LogoAnnotation]) -> int:
     if not logos:
         return 0
 
@@ -131,7 +131,7 @@ def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
     return r.json()["added"]
 
 
-def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
+def save_nearest_neighbors(logos: list[LogoAnnotation]) -> int:
     logo_ids_params = ",".join((str(logo.id) for logo in logos))
     r = http_session.get(
         settings.BaseURLProvider().robotoff().get()
@@ -168,8 +168,8 @@ def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
 
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
-def get_logo_annotations() -> Dict[int, LogoLabelType]:
-    annotations: Dict[int, LogoLabelType] = {}
+def get_logo_annotations() -> dict[int, LogoLabelType]:
+    annotations: dict[int, LogoLabelType] = {}
 
     for logo in (
         LogoAnnotation.select(
@@ -200,7 +200,7 @@ def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
 
 def predict_proba(
     logo: LogoAnnotation, weights: str = "distance"
-) -> Optional[Dict[LogoLabelType, float]]:
+) -> Optional[dict[LogoLabelType, float]]:
     if logo.nearest_neighbors is None:
         return None
 
@@ -209,7 +209,7 @@ def predict_proba(
 
     logo_annotations = get_logo_annotations()
 
-    nn_labels: List[LogoLabelType] = []
+    nn_labels: list[LogoLabelType] = []
     for nn_logo_id in nn_logo_ids:
         nn_labels.append(logo_annotations.get(nn_logo_id, UNKNOWN_LABEL))
 
@@ -217,13 +217,13 @@ def predict_proba(
 
 
 def _predict_proba(
-    logo_ids: List[int],
-    nn_labels: List[LogoLabelType],
-    nn_distances: List[float],
+    logo_ids: list[int],
+    nn_labels: list[LogoLabelType],
+    nn_distances: list[float],
     weights: str,
-) -> Dict[LogoLabelType, float]:
+) -> dict[LogoLabelType, float]:
     weights = get_weights(np.array(nn_distances), weights)
-    labels: List[LogoLabelType] = [UNKNOWN_LABEL] + [
+    labels: list[LogoLabelType] = [UNKNOWN_LABEL] + [
         x for x in set(nn_labels) if x != UNKNOWN_LABEL
     ]
     label_to_id = {label: i for i, label in enumerate(labels)}
@@ -235,7 +235,7 @@ def _predict_proba(
 
     proba_k /= proba_k.sum()
 
-    prediction: Dict[LogoLabelType, float] = {}
+    prediction: dict[LogoLabelType, float] = {}
     for i in range(len(proba_k)):
         prediction[labels[i]] = float(proba_k[i])
 
@@ -277,9 +277,9 @@ def get_weights(dist: np.ndarray, weights: str = "uniform"):
 
 
 def import_logo_insights(
-    logos: List[LogoAnnotation],
+    logos: list[LogoAnnotation],
     server_domain: str,
-    thresholds: Dict[LogoLabelType, float],
+    thresholds: dict[LogoLabelType, float],
     default_threshold: float = 0.1,
 ):
     selected_logos = []
@@ -313,7 +313,7 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos(
-    logos: List[LogoAnnotation],
+    logos: list[LogoAnnotation],
     server_domain: str,
 ) -> int:
     predictions = []
@@ -351,9 +351,9 @@ def generate_insights_from_annotated_logos(
 
 
 def predict_logo_predictions(
-    logos: List[LogoAnnotation],
-    logo_probs: List[Dict[LogoLabelType, float]],
-) -> List[Prediction]:
+    logos: list[LogoAnnotation],
+    logo_probs: list[dict[LogoLabelType, float]],
+) -> list[Prediction]:
     predictions = []
 
     for logo, probs in zip(logos, logo_probs):
@@ -391,7 +391,7 @@ def predict_logo_predictions(
 def generate_prediction(
     logo_type: str,
     logo_value: Optional[str],
-    data: Dict,
+    data: dict,
     automatic_processing: Optional[bool] = False,
 ) -> Optional[Prediction]:
     """Generate a Prediction from a logo.

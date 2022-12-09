@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from flashtext import KeywordProcessor
 
@@ -78,8 +78,8 @@ def extract_image_flag_flashtext(
     return None
 
 
-def flag_image(content: Union[OCRResult, str]) -> List[Prediction]:
-    predictions: List[Prediction] = []
+def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
+    predictions: list[Prediction] = []
 
     text = get_text(content)
     prediction = extract_image_flag_flashtext(PROCESSOR, text)

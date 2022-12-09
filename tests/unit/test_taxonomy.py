@@ -1,5 +1,3 @@
-from typing import List, Set
-
 import pytest
 
 from robotoff import settings
@@ -32,7 +30,7 @@ class TestTaxonomy:
         ],
     )
     def test_is_child_of_any(
-        self, taxonomy: Taxonomy, item: str, candidates: List, output: bool
+        self, taxonomy: Taxonomy, item: str, candidates: list, output: bool
     ):
         assert taxonomy.is_parent_of_any(item, candidates) is output
 
@@ -65,7 +63,7 @@ class TestTaxonomy:
         ],
     )
     def test_get_parents_hierarchy(
-        self, taxonomy: Taxonomy, item: str, output: Set[str]
+        self, taxonomy: Taxonomy, item: str, output: set[str]
     ):
         node = taxonomy[item]
         parents = node.get_parents_hierarchy()
@@ -90,7 +88,7 @@ class TestTaxonomy:
         ],
     )
     def test_find_deepest_nodes(
-        self, taxonomy: Taxonomy, items: List[str], output: List[str]
+        self, taxonomy: Taxonomy, items: list[str], output: list[str]
     ):
         item_nodes = [taxonomy[item] for item in items]
         output_nodes = [taxonomy[o] for o in output]
