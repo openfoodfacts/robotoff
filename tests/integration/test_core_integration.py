@@ -20,11 +20,12 @@ from .models_utils import (
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    clean_db()
-    # Run the test case.
-    yield
-    clean_db()
+    with peewee_db:
+        # clean db
+        clean_db()
+        # Run the test case.
+        yield
+        clean_db()
 
 
 def prediction_ids(data):

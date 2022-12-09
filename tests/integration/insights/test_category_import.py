@@ -14,27 +14,28 @@ barcode1 = "00001"
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    clean_db()
-    # a category already exists
-    PredictionFactory(
-        barcode=barcode1,
-        type="category",
-        value_tag="en:salmons",
-        automatic_processing=False,
-        predictor="matcher",
-    )
-    ProductInsightFactory(
-        id=insight_id1,
-        barcode=barcode1,
-        type="category",
-        value_tag="en:salmons",
-        predictor="matcher",
-    )
-    # Run the test case.
-    yield
-    # Tear down.
-    clean_db()
+    with peewee_db:
+        # clean db
+        clean_db()
+        # a category already exists
+        PredictionFactory(
+            barcode=barcode1,
+            type="category",
+            value_tag="en:salmons",
+            automatic_processing=False,
+            predictor="matcher",
+        )
+        ProductInsightFactory(
+            id=insight_id1,
+            barcode=barcode1,
+            type="category",
+            value_tag="en:salmons",
+            predictor="matcher",
+        )
+        # Run the test case.
+        yield
+        # Tear down.
+        clean_db()
 
 
 def matcher_prediction(category):
