@@ -123,6 +123,13 @@ dl-model-categorizer:
 	tar -xzvf saved_model.tar.gz --strip-component=1; \
 	rm saved_model.tar.gz
 
+lauch-burst-worker:
+ifdef queues
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker ${queues} --burst
+else
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker robotoff-low robotoff-high --burst
+endif
+
 #------------#
 # Quality    #
 #------------#
