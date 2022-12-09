@@ -61,11 +61,7 @@ else
 endif
 
 build:
-ifdef service
-	${DOCKER_COMPOSE} build ${service} 2>&1
-else
-	${DOCKER_COMPOSE} build 2>&1
-endif
+	${DOCKER_COMPOSE} build api 2>&1
 
 down:
 	@echo "🥫 Bringing down containers …"
