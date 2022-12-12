@@ -638,7 +638,9 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        logo_ids: list[str] = req.get_param_as_list("logo_ids", required=True)
+        logo_ids: list[str] = req.get_param_as_list(
+            "logo_ids", transform=int, required=True
+        )
         logos = []
         for logo in (
             LogoAnnotation.select()
