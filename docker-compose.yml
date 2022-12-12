@@ -43,6 +43,8 @@ services:
     mem_limit: 2g
     ports:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
+    depends_on:
+      - postgres
     networks:
       - webnet
 
