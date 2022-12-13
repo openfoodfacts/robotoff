@@ -137,18 +137,20 @@ def import_insights_from_image(
         logger.info(f"Import finished, {imported} insights imported")
 
 
-@with_db
 def save_image_job(batch: list[tuple[str, str]], server_domain: str):
     """Save a batch of images in DB.
 
     :param batch: a batch of (barcode, source_image) tuples
     :param server_domain: the server domain to use
     """
-    for barcode, source_image in batch:
-        product = get_product_store()[barcode]
-        if product is None:
-            continue
-        save_image(barcode, source_image, product, server_domain)
+    with db.connection_context():
+        for barcode, source_image in batch:
+            product = get_product_store()[barcode]
+            if product is None:
+                continue
+
+            with db.atomic():
+                save_image(barcode, source_image, product, server_domain)
 
 
 def save_image(
@@ -259,21 +261,22 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
             ObjectDetectionModel.nutriscore, image, source_image
         )
 
-        if not image_prediction:
-            return
+    if not image_prediction:
+        return
 
-        results = [
-            item for item in image_prediction.data["objects"] if item["score"] >= 0.5
-        ]
+    results = [
+        item for item in image_prediction.data["objects"] if item["score"] >= 0.5
+    ]
 
-        if len(results) > 1:
-            logger.info("more than one nutriscore detected, discarding detections")
-            return
+    if len(results) > 1:
+        logger.info("more than one nutriscore detected, discarding detections")
+        return
 
-        result = results[0]
-        score = result["score"]
-        label_tag = NUTRISCORE_LABELS[result["label"]]
+    result = results[0]
+    score = result["score"]
+    label_tag = NUTRISCORE_LABELS[result["label"]]
 
+    with db:
         prediction = Prediction(
             type=PredictionType.label,
             barcode=barcode,
