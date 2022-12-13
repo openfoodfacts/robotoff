@@ -8,8 +8,9 @@ from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
+from robotoff.types import PredictionType
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
 

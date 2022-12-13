@@ -4,7 +4,8 @@ from typing import Optional, Union
 
 import pint
 
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
+from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text

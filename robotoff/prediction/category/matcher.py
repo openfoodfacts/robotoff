@@ -8,9 +8,10 @@ import cachetools
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import PredictionType
 from robotoff.utils import dump_json, get_logger, load_json
 from robotoff.utils.text import (
     get_lemmatizing_nlp,

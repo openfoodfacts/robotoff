@@ -23,9 +23,10 @@ from robotoff.insights.importer import (
     sort_predictions,
 )
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.products import Product
 from robotoff.taxonomy import get_taxonomy
+from robotoff.types import PredictionType
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"

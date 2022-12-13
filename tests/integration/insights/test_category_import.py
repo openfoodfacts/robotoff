@@ -3,8 +3,9 @@ import pytest
 from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.products import Product
+from robotoff.types import PredictionType
 
 from ..models_utils import PredictionFactory, ProductInsightFactory, clean_db
 

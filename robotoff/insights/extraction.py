@@ -11,8 +11,8 @@ from robotoff.prediction.object_detection import (
     ObjectDetectionModelRegistry,
 )
 from robotoff.prediction.ocr.core import get_ocr_result
-from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.types import ObjectDetectionModel
+from robotoff.prediction.types import Prediction
+from robotoff.types import ObjectDetectionModel, PredictionType
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)

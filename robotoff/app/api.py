@@ -54,10 +54,10 @@ from robotoff.off import (
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.dataclass import OCRParsingException
-from robotoff.prediction.types import PredictionType
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
+from robotoff.types import PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore

@@ -2,8 +2,9 @@ import re
 from typing import Optional, Union
 
 from robotoff.off import normalize_tag
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import get_taxonomy
+from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text

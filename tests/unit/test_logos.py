@@ -1,7 +1,8 @@
 import pytest
 
 from robotoff.logos import compute_iou, generate_prediction
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
+from robotoff.types import PredictionType
 
 
 @pytest.mark.parametrize(

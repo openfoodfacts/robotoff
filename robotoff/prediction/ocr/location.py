@@ -8,7 +8,8 @@ from typing import BinaryIO, Iterable, Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
+from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import strip_accents_ascii

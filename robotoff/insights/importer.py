@@ -15,7 +15,7 @@ from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.products import (
     DBProductStore,
     Product,
@@ -30,6 +30,7 @@ from robotoff.taxonomy import (
     get_taxonomy,
     match_taxonomized_value,
 )
+from robotoff.types import PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 

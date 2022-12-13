@@ -6,7 +6,8 @@ import pytest
 
 from robotoff import settings, slack
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
+from robotoff.types import PredictionType
 
 
 class MockSlackResponse:

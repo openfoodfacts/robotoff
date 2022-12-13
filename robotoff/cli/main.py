@@ -5,7 +5,7 @@ from typing import Optional
 
 import typer
 
-from robotoff.types import ObjectDetectionModel, WorkerQueue
+from robotoff.types import ObjectDetectionModel, PredictionType, WorkerQueue
 
 app = typer.Typer()
 
@@ -92,7 +92,6 @@ def generate_ocr_predictions(
 ) -> None:
     """Generate OCR predictions of the requested type."""
     from robotoff.cli import insights
-    from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     get_logger()
@@ -187,7 +186,6 @@ def import_insights(
     from robotoff.cli.insights import generate_from_ocr_archive, insights_iter
     from robotoff.insights import importer
     from robotoff.models import db
-    from robotoff.prediction.types import PredictionType
     from robotoff.utils import get_logger
 
     logger = get_logger()

@@ -5,8 +5,9 @@ from typing import Callable, Iterable, Optional, TextIO, Union
 import requests
 
 from robotoff.off import generate_json_ocr_url, get_barcode_from_path, split_barcode
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.settings import BaseURLProvider
+from robotoff.types import PredictionType
 from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
 from robotoff.utils.types import JSONType
 

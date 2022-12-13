@@ -2,7 +2,8 @@ import re
 from typing import Optional, Union
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
+from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 

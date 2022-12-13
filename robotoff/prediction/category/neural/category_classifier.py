@@ -1,8 +1,9 @@
 from typing import Optional
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
+from robotoff.types import PredictionType
 from robotoff.utils import http_session
 
 
