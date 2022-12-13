@@ -474,8 +474,10 @@ class ImageImporterResource:
             }
             return
 
-        high_queue.enqueue(
+        enqueue_job(
             run_import_image_job,
+            high_queue,
+            job_kwargs={"result_ttl": 0},
             barcode=barcode,
             image_url=image_url,
             ocr_url=ocr_url,
@@ -910,8 +912,10 @@ class WebhookProductResource:
                 server_domain=server_domain,
             )
         elif action == "deleted":
-            high_queue.enqueue(
+            enqueue_job(
                 delete_product_insights_job,
+                high_queue,
+                job_kwargs={"result_ttl": 0},
                 barcode=barcode,
                 server_domain=server_domain,
             )
