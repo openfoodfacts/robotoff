@@ -78,6 +78,10 @@ def run_import_image_job(
         ocr_url=ocr_url,
         server_domain=server_domain,
     )
+    # The two following tasks take longer than the previous one, so it
+    # shouldn't be an issue to launch tasks concurrently (and we still have
+    # the insight import lock to avoid concurrent insight import in DB for the
+    # same product)
     enqueue_job(
         run_logo_object_detection,
         high_queue,

@@ -31,6 +31,11 @@ def update_insights_job(barcode: str, server_domain: str):
         with Lock(
             name=f"robotoff:product_update_job:{barcode}", expire=300, timeout=10
         ):
+            # We handle concurrency thanks to the lock as the task will fetch
+            # product from MongoDB at the time it runs, it's not worth
+            # reprocessing with another task arriving concurrently.
+            # The expire is there only in case the lock is not released
+            # (process killed)
             product_dict = get_product(barcode)
 
             if product_dict is None:
