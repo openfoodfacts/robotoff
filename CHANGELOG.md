@@ -1,5 +1,75 @@
 # Changelog
 
+## [1.15.0](https://github.com/openfoodfacts/robotoff/compare/v1.14.0...v1.15.0) (2022-12-13)
+
+
+### Features
+
+* add a lock during product update jobs ([a94632e](https://github.com/openfoodfacts/robotoff/commit/a94632e078ea3feb36211a96c1bf2834bbb31bc5))
+* add more logs during resource loading ([7aedd8d](https://github.com/openfoodfacts/robotoff/commit/7aedd8df531bf74e16e655723b677105c2c514bd))
+* add new CLI commands to launch background tasks ([6c3184e](https://github.com/openfoodfacts/robotoff/commit/6c3184e9d5951dd3bb4a035addefba6298ecf7d7))
+* add redis lock to avoid concurrent insight import for the same product ([f596c97](https://github.com/openfoodfacts/robotoff/commit/f596c973ed5533bc40228bcc1436ac2cce578572))
+* add two kind of workers: worker_high and worker_low ([f5eddf0](https://github.com/openfoodfacts/robotoff/commit/f5eddf076129ceabe1f00c1cc9f1a34a51b5bef1))
+* create more atomic tasks during image import ([69497f1](https://github.com/openfoodfacts/robotoff/commit/69497f101728183f0ad4d20423384839b8523806))
+* don't process logos when running batch logo detector model ([24ed944](https://github.com/openfoodfacts/robotoff/commit/24ed94497f76dcbe619c301e69ef2858c4147f07))
+* enable `python -m robotoff` to call CLI ([7286053](https://github.com/openfoodfacts/robotoff/commit/72860536ed2ac95b2ed2c904fccdaec56b973f41))
+* improve CLI import commands ([f5491d1](https://github.com/openfoodfacts/robotoff/commit/f5491d18a67bbc30d1e4d55ae39742228bff8634))
+* improve generate-ocr-predictions CLI command ([15ef7c3](https://github.com/openfoodfacts/robotoff/commit/15ef7c3d67846c1fae1c048a7bd31c16eec236e1))
+* improve import-insights CLI command ([7766feb](https://github.com/openfoodfacts/robotoff/commit/7766feb3b08a7d93dff6f5cbd29a673b990589bb))
+* make object detection jobs idempotent ([a8f002e](https://github.com/openfoodfacts/robotoff/commit/a8f002ef72bff6924f0190c51e4ca242327039e7))
+* only accept predictions from one product during insight import ([58cf2d4](https://github.com/openfoodfacts/robotoff/commit/58cf2d47e1bb8bd7db1afdc5555f24adec37f90e))
+* refresh cache when performing worker maintenance tasks ([240490b](https://github.com/openfoodfacts/robotoff/commit/240490ba6649659b770a688364f5a8c8898525cf))
+* remove orphan containers when doing make up ([6452db7](https://github.com/openfoodfacts/robotoff/commit/6452db73066cd677e58d33152ccaad68d0ec527d))
+* save brand prefix as gzipped file ([c7c8322](https://github.com/openfoodfacts/robotoff/commit/c7c8322be01747de54eb06437f04a85410b9675f))
+* simplify image import process ([ec272a3](https://github.com/openfoodfacts/robotoff/commit/ec272a3356967f6a77fb50d69c365e36a668219d))
+* update brand_from_taxonomy.gz ([1f5cee8](https://github.com/openfoodfacts/robotoff/commit/1f5cee8d5c78e03e3a842d11f3d353d7d9281cf9))
+* update prediction duplicate detection mecanism ([ef658ca](https://github.com/openfoodfacts/robotoff/commit/ef658ca9b4e48ff6edadd2e4a8a3d57b08e2bb0e))
+* use batches in refresh_insights job ([66fea3b](https://github.com/openfoodfacts/robotoff/commit/66fea3b05416cb426971b89d25dc905d39c3eaef))
+* use built-in types instead of typing.* ([289dc17](https://github.com/openfoodfacts/robotoff/commit/289dc174e36a0bf6a70e36bd98214f8dd63a6da8))
+* use queues for refresh_insight job on all DB ([71e5319](https://github.com/openfoodfacts/robotoff/commit/71e531918ce0ef3161639744405d71c8fd6a4554))
+* use robotoff.types.PredictionType enum in Robotoff CLI ([032213f](https://github.com/openfoodfacts/robotoff/commit/032213f2e25d1ce7dae5fd6de471775509086a28))
+* use rq to send tasks to workers ([7163610](https://github.com/openfoodfacts/robotoff/commit/71636108c47537490b5cefa11120bad7faf0fa59))
+
+
+### Bug Fixes
+
+* add default TF_SERVING_HOST in .env file ([21c0760](https://github.com/openfoodfacts/robotoff/commit/21c0760c7cdd52c11a7e04fa89d379ae70f44266))
+* add default timeout during TF serving request ([9aaceea](https://github.com/openfoodfacts/robotoff/commit/9aaceeafb784db11c00db89f3156eda2794fa39e))
+* add predictor=regex for store predictions ([ecac885](https://github.com/openfoodfacts/robotoff/commit/ecac8851c0be3167bface90652002cfc94a2be7f))
+* add with_db decorator to generate_fiber_quality_facet ([c62f14c](https://github.com/openfoodfacts/robotoff/commit/c62f14cdcca56dbd7c98ac26864930f38190e92e))
+* disable deepsource autofix ([ace1df3](https://github.com/openfoodfacts/robotoff/commit/ace1df367b8908d7d409ca75dbbe74faac29c406))
+* disable INFO log message from selected dependencies ([b5eeeab](https://github.com/openfoodfacts/robotoff/commit/b5eeeab79a3b049cf051740e4222788ca69cb65a))
+* don't refresh ES indexes during scheduler startup ([fa72748](https://github.com/openfoodfacts/robotoff/commit/fa7274823cd2d4783bab7264c76b959b3bb2560c))
+* fix DB connection in workers ([2333b41](https://github.com/openfoodfacts/robotoff/commit/2333b41092a73487b5e541681cc49ed95cada424))
+* fix flake8 and isort errors ([7ed93fc](https://github.com/openfoodfacts/robotoff/commit/7ed93fc6d061e0beb30d5a94ebf451024694be07))
+* fix integration tests after adding autoconnect=False ([0382e35](https://github.com/openfoodfacts/robotoff/commit/0382e357784ea5b2de5c942671d14dac42b3585c))
+* fix integration tests after switch to manual DB connection management ([2f3e8f4](https://github.com/openfoodfacts/robotoff/commit/2f3e8f4a59fc622d81946a12866e53f39b72525e))
+* fix wrong import ([15894e5](https://github.com/openfoodfacts/robotoff/commit/15894e57b253aced5b43087f54ad79e2e74bac22))
+* improve DB transaction management during image import ([a2e390a](https://github.com/openfoodfacts/robotoff/commit/a2e390afd3fe61dea21a1d9130240462ae30e485))
+* move PredictionType to robotoff/types.py ([7f374e6](https://github.com/openfoodfacts/robotoff/commit/7f374e6875bd20b7de87c387de4c12b20d41167e))
+* move types required by CLI in robotoff/types.py ([d66d7e0](https://github.com/openfoodfacts/robotoff/commit/d66d7e0754937f89637766543e5e70a79c1f5b6b))
+* no need to use db.atomic() when db context manager is used ([f24a600](https://github.com/openfoodfacts/robotoff/commit/f24a6002c8c1525b611706adc1d4c309b1b832c3))
+* open DB connection when needed in scheduler ([3e1ec39](https://github.com/openfoodfacts/robotoff/commit/3e1ec39a03714cdd911015cee9c2ecc79c5d12f3))
+* remove CLI documentation generation ([4258748](https://github.com/openfoodfacts/robotoff/commit/42587484f6fd6fc786a77d68560d4891336366af))
+* remove legacy script comments ([2d96e7a](https://github.com/openfoodfacts/robotoff/commit/2d96e7a2218c484627b1ed3202002ae06ff2e082))
+* remove legacy test file ([21c39c5](https://github.com/openfoodfacts/robotoff/commit/21c39c56b0be9f248b098bdcdc2e909889652e53))
+* revert container-deploy-ml.yml update ([667d19d](https://github.com/openfoodfacts/robotoff/commit/667d19dfb91d7ceac1a10799e13fb24943896810))
+* switch from redis-stack to classic redis ([123fcbf](https://github.com/openfoodfacts/robotoff/commit/123fcbf4129caf2c765b138f30ebbeb634f773ab))
+* Update Makefile ([0c90461](https://github.com/openfoodfacts/robotoff/commit/0c90461e17b92a008161ef9fa574f4b813a41261))
+* update poetry lock file ([1cfd0c2](https://github.com/openfoodfacts/robotoff/commit/1cfd0c2c16459b5a123bea2e1a4fcb3364eaf78e))
+* updating log level of a log message ([ac2a479](https://github.com/openfoodfacts/robotoff/commit/ac2a4795fd0df4efe59705badedfa65b49163599))
+* use autoconnect=False during DB connection ([683ba6a](https://github.com/openfoodfacts/robotoff/commit/683ba6a1b1da258f9707731839ccf8c4437acec3))
+* use db.connection_context in with_db decorator ([bac669c](https://github.com/openfoodfacts/robotoff/commit/bac669ccf60b95ff73f8c6b900fdfc2a193cd8ab))
+* use enqueue_job function everywhere ([0dc53c7](https://github.com/openfoodfacts/robotoff/commit/0dc53c74d356407d59741ef720580e172a987ad7))
+* validate params in GET /images/logos route ([b265686](https://github.com/openfoodfacts/robotoff/commit/b2656867a8ab3796f6cd59f2d1ae6da35371c575))
+
+
+### Documentation
+
+* add docstrings ([4771657](https://github.com/openfoodfacts/robotoff/commit/47716571fd20233adb93d7021c848afe335d8a10))
+* improve documentation ([7e43b4d](https://github.com/openfoodfacts/robotoff/commit/7e43b4d773308849f4717f2cd8a8503bdb6cf01d))
+* update documentation in maintenance.md ([64d495d](https://github.com/openfoodfacts/robotoff/commit/64d495d04bad5462524e13562f476973c895c526))
+
 ## [1.14.0](https://github.com/openfoodfacts/robotoff/compare/v1.13.0...v1.14.0) (2022-12-06)
 
 
