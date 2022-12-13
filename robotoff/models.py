@@ -221,7 +221,7 @@ class ImagePrediction(BaseModel):
     or cli `import_logos`
 
     Predictions come from a model, see `ObjectDetectionModel` in
-    predictions/object_detection/core.py for available models.
+    robotoff/types.py for available models.
     """
 
     type = peewee.CharField(max_length=256)

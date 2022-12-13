@@ -5,10 +5,10 @@ from PIL import Image
 from robotoff.insights.extraction import run_object_detection_model
 from robotoff.models import ImagePrediction
 from robotoff.prediction.object_detection.core import (
-    ObjectDetectionModel,
     ObjectDetectionRawResult,
     RemoteModel,
 )
+from robotoff.types import ObjectDetectionModel
 
 from ..models_utils import ImageModelFactory, clean_db
 

@@ -1,10 +1,11 @@
-import enum
 import pathlib
 import sys
 from pathlib import Path
 from typing import Optional
 
 import typer
+
+from robotoff.types import ObjectDetectionModel, WorkerQueue
 
 app = typer.Typer()
 
@@ -18,11 +19,6 @@ def run_scheduler():
     # Defining a root logger
     get_logger()
     scheduler.run()
-
-
-class WorkerQueue(enum.Enum):
-    robotoff_high = "robotoff-high"
-    robotoff_low = "robotoff-low"
 
 
 @app.command()
@@ -338,12 +334,6 @@ def import_images_in_db(
                 batch=batch,
                 server_domain=settings.OFF_SERVER_DOMAIN,
             )
-
-
-class ObjectDetectionModel(enum.Enum):
-    nutriscore = "nutriscore"
-    universal_logo_detector = "universal-logo-detector"
-    nutrition_table = "nutrition-table"
 
 
 @app.command()

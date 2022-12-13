@@ -8,11 +8,11 @@ from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import (
     OBJECT_DETECTION_MODEL_VERSION,
-    ObjectDetectionModel,
     ObjectDetectionModelRegistry,
 )
 from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.types import ObjectDetectionModel
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)

@@ -1,5 +1,4 @@
 import dataclasses
-import enum
 import pathlib
 from typing import Optional
 
@@ -11,18 +10,13 @@ from tritonclient.grpc import service_pb2, service_pb2_grpc
 
 from robotoff import settings
 from robotoff.prediction.object_detection.utils import visualization_utils as vis_util
+from robotoff.types import ObjectDetectionModel
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
 LABEL_NAMES_FILENAME = "labels.txt"
-
-
-class ObjectDetectionModel(enum.Enum):
-    nutriscore = "nutriscore"
-    universal_logo_detector = "universal-logo-detector"
-    nutrition_table = "nutrition-table"
 
 
 OBJECT_DETECTION_MODEL_VERSION = {
