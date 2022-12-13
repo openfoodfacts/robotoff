@@ -80,7 +80,7 @@ def generate_ocr_predictions(
     input_path: Path = typer.Argument(
         ..., help="Path to a (gzipped-)OCR JSONL archive"
     ),
-    prediction_type: str = typer.Argument(
+    prediction_type: PredictionType = typer.Argument(
         ..., help="Type of the predictions to generate (label, brand,...)"
     ),
     output: Optional[Path] = typer.Option(
@@ -95,7 +95,7 @@ def generate_ocr_predictions(
     from robotoff.utils import get_logger
 
     get_logger()
-    insights.run_from_ocr_archive(input_path, PredictionType[prediction_type], output)
+    insights.run_from_ocr_archive(input_path, prediction_type, output)
 
 
 @app.command()
@@ -160,9 +160,9 @@ def categorize(
 
 @app.command()
 def import_insights(
-    insight_type: Optional[str] = typer.Option(
+    prediction_type: Optional[PredictionType] = typer.Option(
         None,
-        help="Type of the insight to generate, only needed when --generate-from is used",
+        help="Type of the prediction to generate, only needed when --generate-from is used",
     ),
     batch_size: int = typer.Option(
         128,
@@ -192,12 +192,10 @@ def import_insights(
 
     if generate_from is not None:
         logger.info(f"Generating and importing insights from {generate_from}")
-        if insight_type is None:
-            sys.exit("Required option: --insight-type")
+        if prediction_type is None:
+            sys.exit("Required option: --prediction-type")
 
-        predictions = generate_from_ocr_archive(
-            generate_from, PredictionType[insight_type]
-        )
+        predictions = generate_from_ocr_archive(generate_from, prediction_type)
     elif input_path is not None:
         logger.info(f"Importing insights from {input_path}")
         predictions = insights_iter(input_path)
