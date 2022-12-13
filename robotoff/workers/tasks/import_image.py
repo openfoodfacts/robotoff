@@ -26,10 +26,9 @@ from robotoff.models import (
     with_db,
 )
 from robotoff.off import get_server_type, get_source_from_url
-from robotoff.prediction.object_detection import ObjectDetectionModel
 from robotoff.products import Product, get_product_store
 from robotoff.slack import NotifierFactory
-from robotoff.types import PredictionType
+from robotoff.types import ObjectDetectionModel, PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.workers.queues import enqueue_job, high_queue
 
