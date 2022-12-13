@@ -12,7 +12,6 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
-from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
     InsightAnnotatorFactory,
@@ -33,7 +32,6 @@ from robotoff.products import (
     has_dataset_changed,
 )
 from robotoff.utils import get_logger
-from robotoff.utils.es import get_es_client
 
 from .latent import generate_quality_facets
 
@@ -194,28 +192,13 @@ def _download_product_dataset():
         fetch_dataset()
 
 
-def _refresh_elasticsearch():
-    logger.info("Refreshing Elasticsearch data")
-
-    es_client = get_es_client()
-    exporter = ElasticsearchExporter(es_client)
-
-    for index, config_path in settings.ElasticsearchIndex.SUPPORTED_INDICES.items():
-        exporter.load_index(index, config_path)
-        exporter.export_index_data(index)
-
-
 # this job does no use database
 def _update_data():
     """Refreshes the PO product dump and updates the Elasticsearch index data."""
     try:
         _download_product_dataset()
-        # Elasticsearch is dependent on the availability of the product dump from Product Opener
-        # (main Open Food Facts backend)
-        # it it called after the download product dataset call.
-        _refresh_elasticsearch()
     except requests.exceptions.RequestException:
-        logger.exception("Exception while running ES updates for categories")
+        logger.exception("Exception during product dataset refresh")
 
 
 def generate_insights():
