@@ -11,8 +11,6 @@ services:
       - ./tf_models:/models
     entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
     mem_limit: 10g
-    networks:
-      - webnet
 
   triton:
     restart: $RESTART_POLICY
@@ -31,5 +29,3 @@ services:
       - ./models:/models
     entrypoint: "tritonserver --model-repository=/models"
     mem_limit: 10g
-    networks:
-      - webnet

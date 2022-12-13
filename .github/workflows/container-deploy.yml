@@ -111,8 +111,8 @@ jobs:
           # Set app variables
           echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
           echo "ROBOTOFF_DOMAIN=${{ env.ROBOTOFF_DOMAIN }}" >> .env
-          echo "REDIS_HOST=redis" >> .env
-          echo "POSTGRES_HOST=postgres" >> .env
+          echo "REDIS_HOST=redis.robotoff_default" >> .env
+          echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
           echo "POSTGRES_DB=postgres" >> .env
           echo "POSTGRES_USER=postgres" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
@@ -120,7 +120,7 @@ jobs:
           echo "OFF_USER=roboto-app" >> .env
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
-          echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
+          echo "ELASTICSEARCH_HOSTS=elasticsearch.robotoff_default" >> .env
           echo "TF_SERVING_HOST=${{ env.TF_SERVING_HOST }}" >> .env
           echo "TRITON_HOST=${{ env.TRITON_HOST }}" >> .env
           echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env

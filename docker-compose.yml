@@ -45,8 +45,6 @@ services:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
     depends_on:
       - postgres
-    networks:
-      - webnet
 
   worker_high:
     <<: *robotoff-base
@@ -58,10 +56,6 @@ services:
     depends_on:
       - postgres
     mem_limit: 8g
-    networks:
-      - webnet
-    extra_hosts:
-      - host.docker.internal:host-gateway
 
   worker_low:
     <<: *robotoff-base
@@ -73,18 +67,12 @@ services:
     depends_on:
       - postgres
     mem_limit: 8g
-    networks:
-      - webnet
-    extra_hosts:
-      - host.docker.internal:host-gateway
 
   scheduler:
     <<: *robotoff-base
     environment: *robotoff-base-env
     command: python -m robotoff run-scheduler
     mem_limit: 4g
-    networks:
-      - webnet
 
   postgres:
     restart: $RESTART_POLICY
@@ -100,8 +88,6 @@ services:
     shm_size: 1g
     ports:
       - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"
-    networks:
-      - webnet
 
   redis:
     restart: $RESTART_POLICY
@@ -113,8 +99,6 @@ services:
     mem_limit: 4g
     ports:
       - "${REDIS_EXPOSE:-127.0.0.1:6379}:6379"
-    networks:
-      - webnet
 
   elasticsearch:
     restart: $RESTART_POLICY
@@ -134,8 +118,6 @@ services:
     mem_limit: 2g
     volumes:
       - es-data:/usr/share/elasticsearch/data
-    networks:
-      - webnet
 
 volumes:
   postgres-data:
@@ -144,5 +126,4 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
 
 networks:
-  webnet:
-    name: webnet
+  default:
