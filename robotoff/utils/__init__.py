@@ -10,6 +10,7 @@ import orjson
 import PIL
 import requests
 from PIL import Image
+from requests.adapters import HTTPAdapter
 
 from robotoff import settings
 
@@ -208,3 +209,6 @@ USER_AGENT_HEADERS = {
     "User-Agent": settings.ROBOTOFF_USER_AGENT,
 }
 http_session.headers.update(USER_AGENT_HEADERS)
+static_adapter = HTTPAdapter(max_retries=3)
+http_session.mount("https://static.openfoodfacts.", static_adapter)
+http_session.mount("https://images.openfoodfacts.", static_adapter)
