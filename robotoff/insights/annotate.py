@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from requests.exceptions import HTTPError, JSONDecodeError, SSLError, Timeout
+
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db
@@ -54,6 +56,7 @@ class AnnotationStatus(Enum):
     error_missing_data = 7
     error_invalid_image = 8
     vote_saved = 9
+    error_failed_update = 10
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -91,6 +94,11 @@ SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
     status=AnnotationStatus.vote_saved.name,
     description="the annotation vote was saved",
 )
+FAILED_UPDATE_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_failed_update.value,
+    status=AnnotationStatus.error_failed_update.name,
+    description="Open Food Facts update failed",
+)
 
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
@@ -103,8 +111,23 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: Optional[OFFAuthentication] = None,
         automatic: bool = False,
     ) -> AnnotationResult:
-        with db.atomic():
-            return self._annotate(insight, annotation, update, data, auth, automatic)
+        with db.atomic() as tx:
+            try:
+                return self._annotate(
+                    insight, annotation, update, data, auth, automatic
+                )
+            except (
+                HTTPError,
+                JSONDecodeError,
+                Timeout,
+                SSLError,
+            ) as e:
+                logger.info(
+                    f"Error occurred during OFF update: {type(e).__name__}, {e}"
+                )
+                logger.info("Rolling back SQL transaction")
+                tx.rollback()
+                return FAILED_UPDATE_RESULT
 
     def _annotate(
         self,
