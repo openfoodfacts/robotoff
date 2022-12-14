@@ -264,6 +264,10 @@ class AnnotateInsightResource:
         data = req.get_param_as_json("data")
 
         auth = parse_auth(req)
+        if auth is not None and auth.get_username() == "null":
+            # Smoothie currently sends 'null' as username for anonymous voters
+            auth = None
+
         trusted_annotator = auth is not None
 
         device_id = device_id_from_request(req)
