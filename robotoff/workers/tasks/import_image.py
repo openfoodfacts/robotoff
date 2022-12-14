@@ -267,6 +267,9 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
         item for item in image_prediction.data["objects"] if item["score"] >= 0.5
     ]
 
+    if not results:
+        return
+
     if len(results) > 1:
         logger.info("more than one nutriscore detected, discarding detections")
         return
