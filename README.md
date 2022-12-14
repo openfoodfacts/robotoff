@@ -37,7 +37,7 @@ Robotoff works together with [Product Opener](https://github.com/openfoodfacts/o
 - If you want to help, go to [Contributing](https://openfoodfacts.github.io/robotoff/introduction/contributing/).
 - Robotoff can be used as...
   - an [online API](https://openfoodfacts.github.io/robotoff/references/api/)
-  - a [CLI tool](https://openfoodfacts.github.io/robotoff/references/cli)
+  - a CLI tool
   - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
 - If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
