@@ -13,7 +13,7 @@ def test_get_image_from_url_http_error(mocker):
     response_mock.ok = False
     response_mock.status_code = 404
     session_mock.get.return_value = response_mock
-    with pytest.raises(ImageLoadingException, match="Cannot load image.*"):
+    with pytest.raises(ImageLoadingException, match="Cannot download image.*"):
         get_image_from_url("MOCK_URL", error_raise=True, session=session_mock)
 
     image = get_image_from_url("MOCK_URL", error_raise=False, session=session_mock)

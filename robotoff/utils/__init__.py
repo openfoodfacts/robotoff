@@ -11,6 +11,7 @@ import PIL
 import requests
 from PIL import Image
 from requests.adapters import HTTPAdapter
+from requests.exceptions import SSLError, Timeout
 
 from robotoff import settings
 
@@ -176,16 +177,23 @@ def get_image_from_url(
     :raises ImageLoadingException: _description_
     :return: the Pillow Image or None.
     """
-    if session:
-        r = session.get(image_url)
-    else:
-        r = requests.get(image_url)
+    try:
+        if session:
+            r = session.get(image_url)
+        else:
+            r = requests.get(image_url)
+    except (ConnectionError, SSLError, Timeout) as e:
+        error_message = f"Cannot download image {image_url}: {type(e).__name__}, {e}"
+        if error_raise:
+            raise ImageLoadingException(error_message) from e
+        logger.info(error_message)
+        return None
 
     if not r.ok:
-        error_message = f"Cannot load image {image_url}: HTTP {r.status_code}"
+        error_message = f"Cannot download image {image_url}: HTTP {r.status_code}"
         if error_raise:
             raise ImageLoadingException(error_message)
-        logger.warning(error_message)
+        logger.info(error_message)
         return None
 
     try:
@@ -194,12 +202,12 @@ def get_image_from_url(
         error_message = f"Cannot identify image {image_url}"
         if error_raise:
             raise ImageLoadingException(error_message)
-        logger.warning(error_message)
+        logger.info(error_message)
     except PIL.Image.DecompressionBombError:
         error_message = f"Decompression bomb error for image {image_url}"
         if error_raise:
             raise ImageLoadingException(error_message)
-        logger.warning(error_message)
+        logger.info(error_message)
 
     return None
 
