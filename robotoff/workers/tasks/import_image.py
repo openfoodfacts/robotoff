@@ -61,7 +61,7 @@ def run_import_image_job(
 
     product = get_product_store()[barcode]
     if product is None:
-        logger.warning(
+        logger.info(
             "Product %s does not exist during image import (%s)", barcode, source_image
         )
         return
@@ -165,31 +165,31 @@ def save_image(
     image_id = pathlib.Path(source_image).stem
 
     if not image_id.isdigit():
-        logger.warning("Non raw image was sent: %s", source_image)
+        logger.info("Non raw image was sent: %s", source_image)
         return None
 
     if image_id not in product.images:
-        logger.warning("Unknown image for product %s: %s", barcode, source_image)
+        logger.info("Unknown image for product %s: %s", barcode, source_image)
         return None
 
     image = product.images[image_id]
     sizes = image.get("sizes", {}).get("full")
 
     if not sizes:
-        logger.warning("Image with missing size information: %s", image)
+        logger.info("Image with missing size information: %s", image)
         return None
 
     width = sizes["w"]
     height = sizes["h"]
 
     if "uploaded_t" not in image:
-        logger.warning("Missing uploaded_t field: %s", list(image))
+        logger.info("Missing uploaded_t field: %s", list(image))
         return None
 
     uploaded_t = image["uploaded_t"]
     if isinstance(uploaded_t, str):
         if not uploaded_t.isdigit():
-            logger.warning("Non digit uploaded_t value: %s", uploaded_t)
+            logger.info("Non digit uploaded_t value: %s", uploaded_t)
             return None
 
         uploaded_t = int(uploaded_t)
