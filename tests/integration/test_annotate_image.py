@@ -134,7 +134,7 @@ def test_logo_annotation_incorrect_value_label_type(client, peewee_db):
     with peewee_db:
         ann = LogoAnnotationFactory(
             image_prediction__image__source_image="/images/2.jpg",
-            annotation_type="label",
+            annotation_type=None,
         )
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -157,7 +157,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     with peewee_db:
         ann = LogoAnnotationFactory(
             image_prediction__image__source_image="/images/2.jpg",
-            annotation_type="brand",
+            annotation_type=None,
         )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
@@ -235,7 +235,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
     """
     with peewee_db:
         ann = LogoAnnotationFactory(
-            image_prediction__image__source_image="/images/2.jpg"
+            image_prediction__image__source_image="/images/2.jpg", annotation_type=None
         )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)

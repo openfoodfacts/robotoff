@@ -819,6 +819,10 @@ class ImageLogoAnnotateResource:
             except LogoAnnotation.DoesNotExist:
                 raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
 
+            if logo.annotation_type is not None:
+                # Logo is already annotated, skip
+                continue
+
             if value is not None:
                 if type_ == "label" and not is_prefixed_value(value):
                     raise falcon.HTTPBadRequest(
