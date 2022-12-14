@@ -472,7 +472,7 @@ class ImageImporterResource:
         server_domain = req.get_param("server_domain", required=True)
 
         if server_domain != settings.OFF_SERVER_DOMAIN:
-            logger.info(f"Rejecting image import from {server_domain}")
+            logger.info("Rejecting image import from %s", server_domain)
             resp.media = {
                 "status": "rejected",
             }

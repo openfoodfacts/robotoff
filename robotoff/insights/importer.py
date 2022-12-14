@@ -85,7 +85,7 @@ def is_recent_image(
 
     for upload_datetime in remaining_datetimes:
         if upload_datetime - image_datetime > max_timedelta:
-            logger.debug(f"More recent image: {upload_datetime} > {image_datetime}")
+            logger.debug("More recent image: %s > %s", upload_datetime, image_datetime)
             return False
 
     return True
@@ -306,7 +306,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         )
         if to_delete:
             to_delete_ids = [insight.id for insight in to_delete]
-            logger.info(f"Deleting {len(to_delete_ids)} insights")
+            logger.info("Deleting %s insights", len(to_delete_ids))
             ProductInsight.delete().where(
                 ProductInsight.id.in_(to_delete_ids)
             ).execute()
@@ -862,7 +862,7 @@ class BrandInsightImporter(InsightImporter):
         brand_prefix = get_brand_prefix()
 
         if not in_barcode_range(brand_prefix, tag, barcode):
-            logger.info(f"Barcode {barcode} of brand {tag} not in barcode range")
+            logger.info("Barcode %s of brand %s not in barcode range", barcode, tag)
             return False
 
         return True
@@ -938,7 +938,7 @@ def is_valid_product_prediction(
     """
     if not product:
         # the product does not exist (deleted)
-        logger.info(f"Prediction of deleted product {prediction.barcode}")
+        logger.info("Prediction of deleted product %s", prediction.barcode)
         return False
 
     if prediction.source_image and not is_valid_image(
@@ -1138,7 +1138,7 @@ def import_predictions(
         updated_prediction_types_by_barcode[barcode] = set(
             prediction.type for prediction in product_predictions_group
         )
-    logger.info(f"{predictions_imported} predictions imported")
+    logger.info("%s predictions imported", predictions_imported)
     return updated_prediction_types_by_barcode
 
 

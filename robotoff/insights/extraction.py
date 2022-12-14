@@ -117,7 +117,7 @@ def get_predictions_from_product_name(
 def extract_ocr_predictions(
     barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
 ) -> list[Prediction]:
-    logger.info(f"Generating OCR predictions from OCR {ocr_url}")
+    logger.info("Generating OCR predictions from OCR %s", ocr_url)
 
     predictions_all: list[Prediction] = []
     source_image = get_source_from_url(ocr_url)

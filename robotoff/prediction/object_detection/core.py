@@ -213,10 +213,10 @@ class ObjectDetectionModelRegistry:
             model_name = model.value
             file_path = settings.MODELS_DIR / model_name
             if file_path.is_dir():
-                logger.info(f"Model '{model_name}' found")
+                logger.info("Model %s found", model_name)
                 cls.models[model_name] = cls.load(model_name, file_path)
             else:
-                logger.info(f"Missing model: '{model_name}'")
+                logger.info("Missing model: %s", model_name)
         cls._loaded = True
 
     @classmethod

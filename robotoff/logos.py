@@ -344,7 +344,7 @@ def generate_insights_from_annotated_logos(
     imported = import_insights(predictions, server_domain)
 
     if imported:
-        logger.info(f"{imported} logo insights imported after annotation")
+        logger.info("%s logo insights imported after annotation", imported)
     return imported
 
 

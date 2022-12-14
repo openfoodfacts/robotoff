@@ -25,7 +25,7 @@ def update_insights_job(barcode: str, server_domain: str):
     1. Generate new predictions related to the product's category and name.
     2. Regenerate all insights from the product associated predictions.
     """
-    logger.info(f"Running `update_insights` for product {barcode} ({server_domain})")
+    logger.info("Running `update_insights` for product %s (%s)", barcode, server_domain)
 
     try:
         with Lock(
@@ -45,7 +45,7 @@ def update_insights_job(barcode: str, server_domain: str):
             updated_product_predict_insights(barcode, product_dict, server_domain)
             logger.info("Refreshing insights...")
             imported = refresh_insights(barcode, server_domain)
-            logger.info(f"{imported} insights created after refresh")
+            logger.info("%s insights created after refresh", imported)
     except LockedResourceException:
         logger.info(
             f"Couldn't acquire product_update lock, skipping product_update for product {barcode}"
@@ -85,7 +85,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
         prediction.barcode = barcode
 
     imported = import_insights(product_predictions, server_domain)
-    logger.info(f"{imported} category insight imported for product {barcode}")
+    logger.info("%s category insight imported for product %s", imported, barcode)
 
     return bool(imported)
 
@@ -102,7 +102,7 @@ def updated_product_predict_insights(
     logger.info("Generating predictions from product name...")
     predictions_all = get_predictions_from_product_name(barcode, product_name)
     imported = import_insights(predictions_all, server_domain)
-    logger.info(f"{imported} insights imported for product {barcode}")
+    logger.info("%s insights imported for product %s", imported, barcode)
 
     if imported:
         updated = True

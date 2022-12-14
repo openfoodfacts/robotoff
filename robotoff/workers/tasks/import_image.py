@@ -54,7 +54,7 @@ def run_import_image_job(
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
     if image is None:
-        logger.info(f"Error while downloading image {image_url}")
+        logger.info("Error while downloading image %s", image_url)
         return
 
     source_image = get_source_from_url(image_url)
@@ -106,7 +106,7 @@ def import_insights_from_image(
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
     if image is None:
-        logger.info(f"Error while downloading image {image_url}")
+        logger.info("Error while downloading image %s", image_url)
         return
 
     source_image = get_source_from_url(image_url)
@@ -133,7 +133,7 @@ def import_insights_from_image(
 
     with db:
         imported = import_insights(predictions, server_domain)
-        logger.info(f"Import finished, {imported} insights imported")
+        logger.info("Import finished, %s insights imported", imported)
 
 
 def save_image_job(batch: list[tuple[str, str]], server_domain: str):
@@ -221,7 +221,7 @@ def run_nutrition_table_object_detection(
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
     if image is None:
-        logger.info(f"Error while downloading image {image_url}")
+        logger.info("Error while downloading image %s", image_url)
         return
 
     source_image = get_source_from_url(image_url)
@@ -250,7 +250,7 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
     if image is None:
-        logger.info(f"Error while downloading image {image_url}")
+        logger.info("Error while downloading image %s", image_url)
         return
 
     source_image = get_source_from_url(image_url)
@@ -312,7 +312,7 @@ def run_logo_object_detection(
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
     if image is None:
-        logger.info(f"Error while downloading image {image_url}")
+        logger.info("Error while downloading image %s", image_url)
         return
 
     source_image = get_source_from_url(image_url)
@@ -342,7 +342,7 @@ def run_logo_object_detection(
                 ).id
             )
 
-    logger.info(f"{len(logo_ids)} logos found for image {source_image}")
+    logger.info("%s logos found for image %s", len(logo_ids), source_image)
     if logo_ids and process_logos:
         enqueue_job(
             process_created_logos,
@@ -369,7 +369,9 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
             add_logos_to_ann(image_instance, logos)
         except (HTTPError, Timeout) as e:
             logger.info(
-                f"Request error during logo addition to ANN: {type(e).__name__}, {e}"
+                "Request error during logo addition to ANN: %s, %s",
+                type(e).__name__,
+                e,
             )
             return
 
@@ -377,7 +379,9 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
             save_nearest_neighbors(logos)
         except (HTTPError, Timeout) as e:
             logger.info(
-                f"Request error during ANN batch query: {type(e).__name__}: {e}",
+                "Request error during ANN batch query: %s, %s",
+                type(e).__name__,
+                e,
             )
             return
 

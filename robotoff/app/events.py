@@ -57,7 +57,7 @@ def send_event(
         "device_id": device_id,
         "barcode": barcode,
     }
-    logger.debug(f"Event: {event}")
+    logger.debug("Event: %s", event)
     response = requests.post(api_url, json=event)
-    logger.debug(f"Event API response: {response}")
+    logger.debug("Event API response: %s", response)
     return response

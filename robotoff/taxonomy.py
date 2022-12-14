@@ -286,7 +286,7 @@ def fetch_taxonomy(
         r = http_session.get(url, timeout=120)  # might take some time
         if r.status_code >= 300:
             raise requests.HTTPError(
-                "Taxonomy download at %s returned status code {r.status_code}", url
+                "Taxonomy download at %s returned status code %s", url, r.status_code
             )
         data = r.json()
     except Exception as e:

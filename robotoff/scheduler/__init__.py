@@ -216,7 +216,7 @@ def generate_insights():
         imported = import_insights(
             product_predictions_iter, server_domain=settings.OFF_SERVER_DOMAIN
         )
-    logger.info(f"{imported} category insights imported")
+    logger.info("%s category insights imported", imported)
 
 
 def transform_insight_iter(insights_iter: Iterable[dict]):

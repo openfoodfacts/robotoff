@@ -72,7 +72,7 @@ def regenerate_ocr_insights(
     with db:
         imported = importer.import_insights(predictions, settings.OFF_SERVER_DOMAIN)
 
-    logger.info(f"Import finished, {imported} insights imported")
+    logger.info("Import finished, %s insights imported", imported)
 
 
 @app.command()

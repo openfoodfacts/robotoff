@@ -26,7 +26,7 @@ class ElasticsearchExporter:
             doc_type=settings.ELASTICSEARCH_TYPE,
         )
 
-        logger.info(f"Deleted %d documents from {index}", resp["deleted"])
+        logger.info("Deleted %d documents from %s", resp["deleted"], index)
 
     def _get_data(self, index: str) -> Iterable[tuple[str, dict]]:
         if index == settings.ElasticsearchIndex.PRODUCT:
@@ -37,7 +37,7 @@ class ElasticsearchExporter:
     def load_index(self, index: str, index_filepath: Path) -> None:
         """Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index=index):
-            logger.info(f"Creating index: {index}")
+            logger.info("Creating index: %s", index)
             with open(index_filepath, "rb") as f:
                 conf = orjson.loads(f.read())
             self.es_client.indices.create(index=index, body=conf)
@@ -52,14 +52,14 @@ class ElasticsearchExporter:
            but only async ones for categories.
 
         Returns the number of rows inserted into the index."""
-        logger.info(f"Deleting existing {index} data...")
+        logger.info("Deleting existing %s data...", index)
         self._delete_existing_data(index)
 
         index_data = self._get_data(index)
 
-        logger.info(f"Starting {index} export to Elasticsearch...")
+        logger.info("Starting %s export to Elasticsearch...", index)
 
         rows_inserted = perform_export(self.es_client, index_data, index)
 
-        logger.info(f"Inserted %d rows for index {index}", rows_inserted)
+        logger.info("Inserted %d rows for index %s", rows_inserted, index)
         return rows_inserted

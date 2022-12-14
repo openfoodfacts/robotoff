@@ -24,7 +24,7 @@ def delete_product_insights_job(barcode: str, server_domain: str):
     we must delete all of the associated predictions and insights that have
     not been annotated.
     """
-    logger.info(f"Product {barcode} deleted, deleting associated insights...")
+    logger.info("Product %s deleted, deleting associated insights...", barcode)
     deleted_predictions = (
         Prediction.delete()
         .where(
