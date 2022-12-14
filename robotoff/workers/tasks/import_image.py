@@ -2,7 +2,7 @@ import datetime
 import pathlib
 from typing import Optional
 
-import requests
+from requests.exceptions import HTTPError, Timeout
 
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -364,16 +364,22 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
 
     if logos:
         image_instance = logos[0].image_prediction.image
-        add_logos_to_ann(image_instance, logos)
+
+        try:
+            add_logos_to_ann(image_instance, logos)
+        except (HTTPError, Timeout) as e:
+            logger.info(
+                f"Request error during logo addition to ANN: {type(e).__name__}, {e}"
+            )
+            return
 
         try:
             save_nearest_neighbors(logos)
-        except requests.exceptions.HTTPError as e:
-            resp = e.response
-            logger.warning(
-                f"Could not save nearest neighbors in ANN: {resp.status_code}: %s",
-                resp.text,
+        except (HTTPError, Timeout) as e:
+            logger.info(
+                f"Request error during ANN batch query: {type(e).__name__}: {e}",
             )
+            return
 
         thresholds = get_logo_confidence_thresholds()
         import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)

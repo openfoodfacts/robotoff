@@ -125,10 +125,7 @@ def add_logos_to_ann(image: ImageModel, logos: list[LogoAnnotation]) -> int:
         timeout=30,
     )
 
-    if not r.ok:
-        logger.warning(f"error while adding image to ANN ({r.status_code}): %s", r.text)
-        return 0
-
+    r.raise_for_status()
     return r.json()["added"]
 
 
@@ -150,7 +147,7 @@ def save_nearest_neighbors(logos: list[LogoAnnotation]) -> int:
     missing_logo_ids = set(logo_id_to_logo.keys()).difference(set(results.keys()))
 
     if missing_logo_ids:
-        logger.warning("Missing logo IDs in response: %s", missing_logo_ids)
+        logger.info("Missing logo IDs in response: %s", missing_logo_ids)
 
     saved = 0
     for logo_id, logo_results in results.items():
