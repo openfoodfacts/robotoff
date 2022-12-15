@@ -122,7 +122,6 @@ LABELS_REGEX = {
             re.compile(r"NUTRI-SCORE"),
             field=OCRField.full_text,
             lowercase=False,
-            notify=True,
         ),
     ],
     "en:eu-non-eu-agriculture": [
