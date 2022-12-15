@@ -197,7 +197,6 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
         "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
-        "notify": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert prediction.value == "Etorki"
@@ -217,7 +216,6 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
         "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
-        "notify": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert insight.value == "Etorki"
@@ -272,7 +270,6 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
         "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
-        "notify": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert prediction.value is None
@@ -291,7 +288,6 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
         "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
-        "notify": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
     assert insight.value is None

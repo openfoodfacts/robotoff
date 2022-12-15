@@ -333,10 +333,6 @@ def generate_insights_from_annotated_logos(
             continue
 
         image = logo.image_prediction.image
-
-        if prediction.automatic_processing:
-            prediction.data["notify"] = True
-
         prediction.barcode = image.barcode
         prediction.source_image = image.source_image
         predictions.append(prediction)
