@@ -1,3 +1,4 @@
+import logging
 import operator
 from typing import Optional
 
@@ -101,8 +102,11 @@ def get_stored_logo_ids() -> set[int]:
     )
 
     if not r.ok:
-        logger.warning(
-            f"error while fetching stored logo IDs ({r.status_code}): %s", r.text
+        logger.log(
+            logging.INFO if r.status_code >= 500 else logging.WARNING,
+            "error while fetching stored logo IDs (%s): %s",
+            r.status_code,
+            r.text,
         )
         return set()
 

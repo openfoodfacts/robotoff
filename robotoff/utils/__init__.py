@@ -183,17 +183,22 @@ def get_image_from_url(
         else:
             r = requests.get(image_url)
     except (ConnectionError, SSLError, Timeout) as e:
-        error_message = f"Cannot download image {image_url}: {type(e).__name__}, {e}"
+        error_message = "Cannot download image %s"
         if error_raise:
-            raise ImageLoadingException(error_message) from e
-        logger.info(error_message)
+            raise ImageLoadingException(error_message % image_url) from e
+        logger.info(error_message, image_url, exc_info=e)
         return None
 
     if not r.ok:
-        error_message = f"Cannot download image {image_url}: HTTP {r.status_code}"
+        error_message = "Cannot download image %s: HTTP %s"
+        error_args = (image_url, r.status_code)
         if error_raise:
-            raise ImageLoadingException(error_message)
-        logger.info(error_message)
+            raise ImageLoadingException(error_message % error_args)
+        logger.log(
+            logging.INFO if r.status_code >= 500 else logging.WARNING,
+            error_message,
+            *error_args,
+        )
         return None
 
     try:

@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -155,14 +156,15 @@ def generate_metrics_from_path(
     try:
         r = http_session.get(url, timeout=60, auth=settings._off_request_auth)
     except (ConnectionError, SSLError, Timeout) as e:
-        logger.info(
-            "Error during metrics retrieval: url=%s, %s, %s", url, type(e).__name__, e
-        )
+        logger.info("Error during metrics retrieval: url=%s", url, exc_info=e)
         return inserts
 
     if not r.ok:
-        logger.info(
-            "HTTPError during metrics retrieval: url=%s, %s", url, r.status_code
+        logger.log(
+            logging.INFO if r.status_code >= 500 else logging.WARNING,
+            "HTTPError during metrics retrieval: url=%s, %s",
+            url,
+            r.status_code,
         )
         return inserts
 

@@ -371,21 +371,13 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
         try:
             add_logos_to_ann(image_instance, logos)
         except (ConnectionError, HTTPError, Timeout) as e:
-            logger.info(
-                "Request error during logo addition to ANN: %s, %s",
-                type(e).__name__,
-                e,
-            )
+            logger.info("Request error during logo addition to ANN", exc_info=e)
             return
 
         try:
             save_nearest_neighbors(logos)
         except (ConnectionError, HTTPError, Timeout) as e:
-            logger.info(
-                "Request error during ANN batch query: %s, %s",
-                type(e).__name__,
-                e,
-            )
+            logger.info("Request error during ANN batch query", exc_info=e)
             return
 
         thresholds = get_logo_confidence_thresholds()

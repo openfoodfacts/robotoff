@@ -118,15 +118,16 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                 )
             except HTTPError as e:
                 if e.response.status_code >= 500:
-                    logger.info("HTTPError occurred during OFF update: %s", e)
+                    logger.info(
+                        "HTTPError occurred during OFF update: %s",
+                        e.response.status_code,
+                    )
                     logger.info("Rolling back SQL transaction")
                     tx.rollback()
                     return FAILED_UPDATE_RESULT
                 raise e
-            except (Timeout, SSLError) as e:
-                logger.info(
-                    "Error occurred during OFF update: %s, %s", type(e).__name__, e
-                )
+            except (ConnectionError, Timeout, SSLError) as e:
+                logger.info("Error occurred during OFF update", exc_info=e)
                 logger.info("Rolling back SQL transaction")
                 tx.rollback()
                 return FAILED_UPDATE_RESULT
