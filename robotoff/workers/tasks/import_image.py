@@ -370,7 +370,7 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
 
         try:
             add_logos_to_ann(image_instance, logos)
-        except (HTTPError, Timeout) as e:
+        except (ConnectionError, HTTPError, Timeout) as e:
             logger.info(
                 "Request error during logo addition to ANN: %s, %s",
                 type(e).__name__,
@@ -380,7 +380,7 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
 
         try:
             save_nearest_neighbors(logos)
-        except (HTTPError, Timeout) as e:
+        except (ConnectionError, HTTPError, Timeout) as e:
             logger.info(
                 "Request error during ANN batch query: %s, %s",
                 type(e).__name__,

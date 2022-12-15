@@ -2,10 +2,10 @@ import datetime
 from typing import Optional
 from urllib.parse import urlparse
 
-import requests
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from peewee import fn
+from requests.exceptions import JSONDecodeError, SSLError, Timeout
 
 from robotoff import settings
 from robotoff.models import ProductInsight, with_db
@@ -154,18 +154,22 @@ def generate_metrics_from_path(
 
     try:
         r = http_session.get(url, timeout=60, auth=settings._off_request_auth)
-    except requests.exceptions.Timeout:
-        logger.error("OFF request timeout (60s): {}".format(url))
+    except (ConnectionError, SSLError, Timeout) as e:
+        logger.info(
+            "Error during metrics retrieval: url=%s, %s, %s", url, type(e).__name__, e
+        )
         return inserts
 
     if not r.ok:
-        logger.error("Error during OFF request: {}".format(r.status_code))
+        logger.info(
+            "HTTPError during metrics retrieval: url=%s, %s", url, r.status_code
+        )
         return inserts
 
     try:
         data = r.json()
-    except requests.exceptions.JSONDecodeError as e:
-        logger.error("Error during OFF request JSON decoding:\n{}".format(e))
+    except JSONDecodeError as e:
+        logger.info("Error during OFF request JSON decoding:\n%s", e)
         return inserts
 
     for tag in data["tags"]:
