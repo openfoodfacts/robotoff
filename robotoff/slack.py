@@ -3,6 +3,7 @@ import operator
 from typing import Optional
 
 import requests
+from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
 from robotoff.insights.dataclass import InsightType
@@ -296,6 +297,10 @@ class SlackNotifier(NotifierInterface):
             r = http_session.post(self.POST_MESSAGE_URL, data=params)
             response_json = _get_slack_json(r)
             return response_json
+        except (ConnectionError, JSONDecodeError) as e:
+            logger.info(
+                "An exception occurred when sending a Slack notification", exc_info=e
+            )
         except Exception as e:
             logger.error(
                 "An exception occurred when sending a Slack notification", exc_info=e
