@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.15.1](https://github.com/openfoodfacts/robotoff/compare/v1.15.0...v1.15.1) (2022-12-15)
+
+
+### Bug Fixes
+
+* add better request error handling during annotations ([e60a719](https://github.com/openfoodfacts/robotoff/commit/e60a7197a53abd0dd71f32396bb7f6f4fd2e20ec))
+* add better request error handling in process_created_logos ([c9b6d9e](https://github.com/openfoodfacts/robotoff/commit/c9b6d9eafd4fbc4cb92e02015ccd682fc53f5c2c))
+* don't notify on Slack when annotating logos ([3503425](https://github.com/openfoodfacts/robotoff/commit/35034259d57628729458a84787cd7431170cd939))
+* Don't overwrite annotations in /images/logos/annotate ([9d82321](https://github.com/openfoodfacts/robotoff/commit/9d82321b29f9a09c575fb6b58329578a9d99e617))
+* fix auth error on OFF due to Smoothie ([368b07b](https://github.com/openfoodfacts/robotoff/commit/368b07b83510933f29e4cd5611b4431f605f67fa))
+* fix IndexError when no nutriscore is detected ([55d4829](https://github.com/openfoodfacts/robotoff/commit/55d4829ae43b639b5b96fa1cd6f14ca7077dc492))
+* improve get_image_from_url exception handling ([c5d0b3e](https://github.com/openfoodfacts/robotoff/commit/c5d0b3e404d63124d53526853a8c5b397a55f592))
+* improve HTTPError handling during insight annotation ([cb9c47a](https://github.com/openfoodfacts/robotoff/commit/cb9c47a3d49bcc3061a9ecbe4a4562df78376062))
+* make logging call uniform ([390e144](https://github.com/openfoodfacts/robotoff/commit/390e1440d23a67fc7bffa61ccdfc6eaef159dd91))
+* remove en:nutriscore detection alert ([d201d90](https://github.com/openfoodfacts/robotoff/commit/d201d9044f5236bbb8a7cee5a78ef142d5792f4e))
+* remove nutriscore Slack alerts ([160c6ad](https://github.com/openfoodfacts/robotoff/commit/160c6ad932a6c3e319364e47501bf2ee2afbb36d))
+* retry 3 times when getting an image/static resource from OFF ([901ed97](https://github.com/openfoodfacts/robotoff/commit/901ed97662c3959e956d151cd1537ce7dc21c1da))
+* switch to INFO level for most warning log messages in save_images ([717471d](https://github.com/openfoodfacts/robotoff/commit/717471df4263453a939cd6355181ac66d40f09a9))
+
+
+### Documentation
+
+* update OpenAPI documentation ([a8594e2](https://github.com/openfoodfacts/robotoff/commit/a8594e27ef11c0cd7e288e9f21944dda35dadbfe))
+* update README.md ([952e152](https://github.com/openfoodfacts/robotoff/commit/952e1526232478f217f29f9ee9efa38594e935f3))
+
 ## [1.15.0](https://github.com/openfoodfacts/robotoff/compare/v1.14.0...v1.15.0) (2022-12-13)
 
 
