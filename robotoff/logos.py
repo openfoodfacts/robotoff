@@ -102,7 +102,7 @@ def get_stored_logo_ids() -> set[int]:
 
     if not r.ok:
         logger.warning(
-            f"error while fetching stored logo IDs ({r.status_code}): %s", r.text
+            "error while fetching stored logo IDs (%s): %s", r.status_code, r.text
         )
         return set()
 
