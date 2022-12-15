@@ -440,7 +440,7 @@ paths:
                   - count
 
   /predict/category:
-    get:
+    post:
       tags:
         - Predict
       summary: Predict categories for a product
