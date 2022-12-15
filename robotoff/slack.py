@@ -174,24 +174,12 @@ class SlackNotifier(NotifierInterface):
     """Notifier to send messages on specific slack channels"""
 
     # Slack channel IDs.
-    ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"
-    ROBOTOFF_USER_ALERT_CHANNEL = "CGWSXDGSF"
-    ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"
-    ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL = "CT2N423PA"
-    NUTRISCORE_ALERT_CHANNEL = "CJZNFCSNP"
+    ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"  # robotoff-alerts-annotations
+    ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"  # moderation-off-alerts-private
+    ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL = "CT2N423PA"  # moderation-off-alerts
 
     BASE_URL = "https://slack.com/api"
     POST_MESSAGE_URL = BASE_URL + "/chat.postMessage"
-
-    NUTRISCORE_LABELS = {
-        "en:nutriscore",
-        "en:nutriscore-grade-a",
-        "en:nutriscore-grade-b",
-        "en:nutriscore-grade-c",
-        "en:nutriscore-grade-d",
-        "en:nutriscore-grade-e",
-    }
-
     COLLAPSE_LINKS_PARAMS = {
         "unfurl_links": False,
         "unfurl_media": False,
@@ -235,7 +223,6 @@ class SlackNotifier(NotifierInterface):
 
     def notify_automatic_processing(self, insight: ProductInsight):
         product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
-        edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={insight.barcode}"
 
         if insight.source_image:
             if insight.data and "bounding_box" in insight.data:
@@ -248,8 +235,6 @@ class SlackNotifier(NotifierInterface):
         else:
             metadata_text = f"(<{product_url}|product>)"
 
-        edit_text = f"(<{edit_url}|edit>)"
-
         value = insight.value or insight.value_tag
 
         if insight.type in {
@@ -261,16 +246,6 @@ class SlackNotifier(NotifierInterface):
             text = f"The `{value}` {insight.type} was automatically added to product {insight.barcode}"
 
         message = _slack_message_block(f"{text} {metadata_text}")
-        nutriscore_message = _slack_message_block(f"{text} {metadata_text} {edit_text}")
-
-        if insight.value_tag in self.NUTRISCORE_LABELS:
-            self._post_message(
-                nutriscore_message,
-                self.NUTRISCORE_ALERT_CHANNEL,
-                **self.COLLAPSE_LINKS_PARAMS,
-            )
-            return
-
         self._post_message(
             message, self.ROBOTOFF_ALERT_CHANNEL, **self.COLLAPSE_LINKS_PARAMS
         )
