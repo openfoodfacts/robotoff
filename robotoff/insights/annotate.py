@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from requests.exceptions import HTTPError, JSONDecodeError, SSLError, Timeout
+from requests.exceptions import HTTPError, SSLError, Timeout
 
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
@@ -116,14 +116,16 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                 return self._annotate(
                     insight, annotation, update, data, auth, automatic
                 )
-            except (
-                HTTPError,
-                JSONDecodeError,
-                Timeout,
-                SSLError,
-            ) as e:
+            except HTTPError as e:
+                if e.response.status_code >= 500:
+                    logger.info("HTTPError occurred during OFF update: %s", e)
+                    logger.info("Rolling back SQL transaction")
+                    tx.rollback()
+                    return FAILED_UPDATE_RESULT
+                raise e
+            except (Timeout, SSLError) as e:
                 logger.info(
-                    f"Error occurred during OFF update: {type(e).__name__}, {e}"
+                    "Error occurred during OFF update: %s, %s", type(e).__name__, e
                 )
                 logger.info("Rolling back SQL transaction")
                 tx.rollback()
