@@ -2,14 +2,13 @@ import dataclasses
 import pathlib
 from typing import Optional
 
-import cachetools
-import grpc
 import numpy as np
 from PIL import Image
-from tritonclient.grpc import service_pb2, service_pb2_grpc
+from tritonclient.grpc import service_pb2
 
 from robotoff import settings
 from robotoff.prediction.object_detection.utils import visualization_utils as vis_util
+from robotoff.triton import get_triton_inference_stub
 from robotoff.types import ObjectDetectionModel
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.types import JSONType
@@ -106,12 +105,6 @@ def resize_image(image: Image.Image, max_size: tuple[int, int]) -> Image.Image:
         return new_image
 
     return image
-
-
-@cachetools.cached(cachetools.Cache(maxsize=1))
-def get_triton_inference_stub():
-    channel = grpc.insecure_channel(settings.TRITON_URI)
-    return service_pb2_grpc.GRPCInferenceServiceStub(channel)
 
 
 class RemoteModel:
