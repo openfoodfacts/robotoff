@@ -3,6 +3,7 @@ import pathlib
 from typing import Optional
 
 from requests.exceptions import ConnectionError as RequestConnectionError
+from PIL import Image
 from requests.exceptions import HTTPError, Timeout
 
 from robotoff.insights.extraction import (
@@ -22,6 +23,7 @@ from robotoff.models import (
     ImageModel,
     ImagePrediction,
     LogoAnnotation,
+    LogoEmbedding,
     Prediction,
     db,
     with_db,
@@ -29,6 +31,7 @@ from robotoff.models import (
 from robotoff.off import get_server_type, get_source_from_url
 from robotoff.products import Product, get_product_store
 from robotoff.slack import NotifierFactory
+from robotoff.triton import generate_clip_embedding
 from robotoff.types import ObjectDetectionModel, PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.workers.queues import enqueue_job, high_queue
@@ -331,23 +334,25 @@ def run_logo_object_detection(
             # already exists for this image and model
             return
 
-        logo_ids = []
+        logos: list[LogoAnnotation] = []
         for i, item in filter_logos(
             image_prediction.data["objects"],
             score_threshold=0.5,
             iou_threshold=0.95,
         ):
-            logo_ids.append(
+            logos.append(
                 LogoAnnotation.create(
                     image_prediction=image_prediction,
                     index=i,
                     score=item["score"],
                     bounding_box=item["bounding_box"],
-                ).id
+                )
             )
 
-    logger.info("%s logos found for image %s", len(logo_ids), source_image)
-    if logo_ids and process_logos:
+    logger.info("%s logos found for image %s", len(logos), source_image)
+    if logos and process_logos:
+        with db:
+            save_logo_embeddings(logos, image)
         enqueue_job(
             process_created_logos,
             high_queue,
@@ -357,29 +362,55 @@ def run_logo_object_detection(
         )
 
 
+def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
+    """Generate logo embeddings using CLIP model and save them in
+    logo_embedding table."""
+    cropped_images = []
+    for logo in logos:
+        y_min, x_min, y_max, x_max = logo.bounding_box
+        (left, right, top, bottom) = (
+            x_min * image.width,
+            x_max * image.width,
+            y_min * image.height,
+            y_max * image.height,
+        )
+        cropped_images = image.crop((left, top, right, bottom))
+    embeddings = generate_clip_embedding(cropped_images)
+
+    with db:
+        for i in range(len(logos)):
+            logo_id = logos[i].id
+            logo_embedding = embeddings[i]
+            LogoEmbedding.create(logo_id=logo_id, embedding=logo_embedding.tobytes())
+
+
 @with_db
 def process_created_logos(image_prediction_id: int, server_domain: str):
     logos = (
         LogoAnnotation.select()
         .join(ImagePrediction)
         .join(ImageModel)
+        .switch(LogoAnnotation)
+        .join(LogoEmbedding)
         .where(ImagePrediction.id == image_prediction_id)
     )
 
-    if logos:
-        image_instance = logos[0].image_prediction.image
+    if not logos:
+        return
 
-        try:
-            add_logos_to_ann(image_instance, logos)
-        except (RequestConnectionError, HTTPError, Timeout) as e:
-            logger.info("Request error during logo addition to ANN", exc_info=e)
-            return
+    image_instance = logos[0].image_prediction.image
 
-        try:
-            save_nearest_neighbors(logos)
-        except (RequestConnectionError, HTTPError, Timeout) as e:
-            logger.info("Request error during ANN batch query", exc_info=e)
-            return
+    try:
+        add_logos_to_ann(image_instance, logos)
+    except (RequestConnectionError, HTTPError, Timeout) as e:
+        logger.info("Request error during logo addition to ANN", exc_info=e)
+        return
 
-        thresholds = get_logo_confidence_thresholds()
-        import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)
+    try:
+        save_nearest_neighbors(logos)
+    except (RequestConnectionError, HTTPError, Timeout) as e:
+        logger.info("Request error during ANN batch query", exc_info=e)
+        return
+
+    thresholds = get_logo_confidence_thresholds()
+    import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)
