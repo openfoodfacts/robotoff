@@ -385,7 +385,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
 
 @with_db
 def process_created_logos(image_prediction_id: int, server_domain: str):
-    logo_embeddings = (
+    logo_embeddings = list(
         LogoEmbedding.select()
         .join(LogoAnnotation)
         .join(ImagePrediction)
