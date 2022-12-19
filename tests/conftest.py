@@ -18,6 +18,7 @@ def disable_redis_lock():
 def peewee_db_create():
     models.db.close()  # insure creating a new connection
     with models.db as db:
+        models.db.execute_sql("CREATE SCHEMA IF NOT EXISTS embedding;")
         db.create_tables(models.MODELS, safe=True)
         print("DEBUG: models created ", db.get_tables())
     yield models.db
