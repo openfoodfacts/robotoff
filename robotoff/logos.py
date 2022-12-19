@@ -8,7 +8,7 @@ import numpy as np
 from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
+from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbedding
 from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
 from robotoff.types import PredictionType
@@ -113,24 +113,8 @@ def get_stored_logo_ids() -> set[int]:
     return set(r.json()["stored"])
 
 
-def add_logos_to_ann(image: ImageModel, logos: list[LogoAnnotation]) -> int:
-    if not logos:
-        return 0
-
-    image_url = settings.OFF_IMAGE_BASE_URL + image.source_image
-
-    data = {
-        "image_url": image_url,
-        "logos": [{"bounding_box": logo.bounding_box, "id": logo.id} for logo in logos],
-    }
-    r = http_session.post(
-        settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/add",
-        json=data,
-        timeout=30,
-    )
-
-    r.raise_for_status()
-    return r.json()["added"]
+def add_logos_to_ann(logo_embeddings: list[LogoEmbedding]) -> int:
+    return 1
 
 
 def save_nearest_neighbors(logos: list[LogoAnnotation]) -> int:
