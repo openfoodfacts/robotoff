@@ -17,6 +17,7 @@ from robotoff.models import (
     ImagePrediction,
     LogoAnnotation,
     LogoConfidenceThreshold,
+    LogoEmbedding,
     Prediction,
     ProductInsight,
 )
@@ -140,6 +141,7 @@ def clean_db():
         ImagePrediction,
         ImageModel,
         LogoConfidenceThreshold,
+        LogoEmbedding,
         Prediction,
         ProductInsight,
     ):

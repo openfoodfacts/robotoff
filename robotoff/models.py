@@ -277,6 +277,21 @@ class LogoAnnotation(BaseModel):
         )
 
 
+class LogoEmbedding(BaseModel):
+    logo = peewee.ForeignKeyField(
+        LogoAnnotation,
+        null=False,
+        backref="logo_embeddings",
+        on_delete="CASCADE",
+        unique=True,
+        primary_key=True,
+    )
+    embedding = peewee.BlobField(null=False)
+
+    class Meta:
+        schema = "embedding"
+
+
 class LogoConfidenceThreshold(BaseModel):
     type = peewee.CharField(null=True, index=True)
     value = peewee.CharField(null=True, index=True)
@@ -289,6 +304,7 @@ MODELS = [
     ImageModel,
     ImagePrediction,
     LogoAnnotation,
+    LogoEmbedding,
     LogoConfidenceThreshold,
     AnnotationVote,
 ]
