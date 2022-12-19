@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any
 
 import factory
+import numpy as np
 from factory_peewee import PeeweeModelFactory
 
 from robotoff import models, settings
@@ -130,6 +131,14 @@ class LogoConfidenceThresholdFactory(PeeweeModelFactory):
         model = LogoConfidenceThreshold
 
     threshold = 0.7
+
+
+class LogoEmbeddingFactory(PeeweeModelFactory):
+    class Meta:
+        model = LogoEmbedding
+
+    logo = factory.SubFactory(LogoAnnotation)
+    embedding = factory.LazyFunction(lambda: np.random.rand(512))
 
 
 def clean_db():

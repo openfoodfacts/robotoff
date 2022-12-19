@@ -385,26 +385,23 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
 
 @with_db
 def process_created_logos(image_prediction_id: int, server_domain: str):
-    logos = (
-        LogoAnnotation.select()
+    logo_embeddings = (
+        LogoEmbedding.select()
+        .join(LogoAnnotation)
         .join(ImagePrediction)
-        .join(ImageModel)
-        .switch(LogoAnnotation)
-        .join(LogoEmbedding)
         .where(ImagePrediction.id == image_prediction_id)
     )
 
-    if not logos:
+    if not logo_embeddings:
         return
 
-    image_instance = logos[0].image_prediction.image
-
     try:
-        add_logos_to_ann(image_instance, logos)
+        add_logos_to_ann(logo_embeddings)
     except (ConnectionError, HTTPError, Timeout) as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
 
+    logos = [embedding.logo for embedding in logo_embeddings]
     try:
         save_nearest_neighbors(logos)
     except (ConnectionError, HTTPError, Timeout) as e:
