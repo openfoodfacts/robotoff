@@ -11,6 +11,7 @@ import PIL
 import requests
 from PIL import Image
 from requests.adapters import HTTPAdapter
+from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import SSLError, Timeout
 
 from robotoff import settings
@@ -182,7 +183,7 @@ def get_image_from_url(
             r = session.get(image_url)
         else:
             r = requests.get(image_url)
-    except (ConnectionError, SSLError, Timeout) as e:
+    except (RequestConnectionError, SSLError, Timeout) as e:
         error_message = "Cannot download image %s"
         if error_raise:
             raise ImageLoadingException(error_message % image_url) from e

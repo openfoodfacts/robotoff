@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import HTTPError, SSLError, Timeout
 
 from robotoff.insights.dataclass import InsightType
@@ -126,7 +127,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                     tx.rollback()
                     return FAILED_UPDATE_RESULT
                 raise e
-            except (ConnectionError, Timeout, SSLError) as e:
+            except (RequestConnectionError, Timeout, SSLError) as e:
                 logger.info("Error occurred during OFF update", exc_info=e)
                 logger.info("Rolling back SQL transaction")
                 tx.rollback()

@@ -3,6 +3,7 @@ import operator
 from typing import Optional
 
 import requests
+from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
@@ -297,7 +298,7 @@ class SlackNotifier(NotifierInterface):
             r = http_session.post(self.POST_MESSAGE_URL, data=params)
             response_json = _get_slack_json(r)
             return response_json
-        except (ConnectionError, JSONDecodeError) as e:
+        except (RequestConnectionError, JSONDecodeError) as e:
             logger.info(
                 "An exception occurred when sending a Slack notification", exc_info=e
             )

@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from peewee import fn
+from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import JSONDecodeError, SSLError, Timeout
 
 from robotoff import settings
@@ -155,7 +156,7 @@ def generate_metrics_from_path(
 
     try:
         r = http_session.get(url, timeout=60, auth=settings._off_request_auth)
-    except (ConnectionError, SSLError, Timeout) as e:
+    except (RequestConnectionError, SSLError, Timeout) as e:
         logger.info("Error during metrics retrieval: url=%s", url, exc_info=e)
         return inserts
 
