@@ -138,7 +138,7 @@ class LogoEmbeddingFactory(PeeweeModelFactory):
         model = LogoEmbedding
 
     logo = factory.SubFactory(LogoAnnotation)
-    embedding = factory.LazyFunction(lambda: np.random.rand(512))
+    embedding = factory.LazyFunction(lambda: np.random.rand(512).tobytes())
 
 
 def clean_db():
