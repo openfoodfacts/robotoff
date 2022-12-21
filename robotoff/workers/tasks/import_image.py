@@ -2,10 +2,9 @@ import datetime
 import pathlib
 from typing import Optional
 
-from requests.exceptions import ConnectionError as RequestConnectionError
 from PIL import Image
-from requests.exceptions import HTTPError, Timeout
 
+import elasticsearch
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -398,16 +397,17 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
 
     try:
         add_logos_to_ann(logo_embeddings)
-    except (RequestConnectionError, HTTPError, Timeout) as e:
+    except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
 
-    logos = [embedding.logo for embedding in logo_embeddings]
     try:
-        save_nearest_neighbors(logos)
-    except (RequestConnectionError, HTTPError, Timeout) as e:
+        save_nearest_neighbors(logo_embeddings)
+    except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during ANN batch query", exc_info=e)
         return
+
+    logos = [embedding.logo for embedding in logo_embeddings]
 
     thresholds = get_logo_confidence_thresholds()
     import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)
