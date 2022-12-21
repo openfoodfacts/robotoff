@@ -31,6 +31,7 @@ from robotoff.app.core import (
     save_annotation,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
+from robotoff.elasticsearch import get_es_client
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -59,7 +60,6 @@ from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
-from robotoff.utils.es import get_es_client
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.utils.types import JSONType

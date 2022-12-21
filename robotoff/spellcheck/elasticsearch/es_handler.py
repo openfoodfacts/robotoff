@@ -1,7 +1,7 @@
+import json
 from typing import Iterable
 
-from robotoff import settings
-from robotoff.utils.es import generate_msearch_body
+from robotoff.types import ElasticSearchIndex
 
 
 class ElasticsearchHandler:
@@ -14,7 +14,7 @@ class ElasticsearchHandler:
         suggest_mode: str = "missing",
         suggester_name: str = "autocorrect",
         reverse: bool = True,
-        index_name: str = settings.ElasticsearchIndex.PRODUCT,
+        index_name: str = ElasticSearchIndex.product,
     ):
         self.client = client
         self.confidence = confidence
@@ -27,7 +27,7 @@ class ElasticsearchHandler:
 
     def analyze(self, text: str):
         return self.client.indices.analyze(
-            index=settings.ElasticsearchIndex.PRODUCT,
+            index=self.index_name,
             body={"tokenizer": "standard", "text": text},
         )["tokens"]
 
@@ -87,3 +87,13 @@ class ElasticsearchHandler:
                 continue
             suggestions.append(r["suggest"][self.suggester_name][0])
         return suggestions
+
+
+def generate_msearch_body(index: str, queries: Iterable[dict]):
+    lines = []
+
+    for query in queries:
+        lines.append(json.dumps({"index": index}))
+        lines.append(json.dumps(query))
+
+    return "\n".join(lines)

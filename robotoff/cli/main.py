@@ -393,38 +393,19 @@ def run_object_detection_model(
 
 
 @app.command()
-def init_elasticsearch(
-    load_index: bool = False,
-    load_data: bool = True,
-    to_load: Optional[list[str]] = None,
-) -> None:
+def init_elasticsearch(load_data: bool = True) -> None:
     """
     This command is used for manual insertion of the Elasticsearch data and/or indexes
-    for products and categorties.
-
-    to_load specifies which indexes/data should be loaded - supported values are
-    in robotoff.settings.ElasticsearchIndex.
+    for products.
     """
+    from robotoff.elasticsearch import get_es_client
     from robotoff.elasticsearch.export import ElasticsearchExporter
-    from robotoff.settings import ElasticsearchIndex
-    from robotoff.utils import get_logger
-    from robotoff.utils.es import get_es_client
-
-    logger = get_logger()
+    from robotoff.types import ElasticSearchIndex
 
     es_exporter = ElasticsearchExporter(get_es_client())
-
-    if not to_load:
-        return
-
-    for item in to_load:
-        if item not in ElasticsearchIndex.SUPPORTED_INDICES:
-            logger.error(f"Skipping over unknown Elasticsearch type: '{item}'")
-            continue
-        if load_index:
-            es_exporter.load_index(item, ElasticsearchIndex.SUPPORTED_INDICES[item])
-        if load_data:
-            es_exporter.export_index_data(item)
+    es_exporter.load_all_indices()
+    if load_data:
+        es_exporter.export_index_data(ElasticSearchIndex.product)
 
 
 @app.command()

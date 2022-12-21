@@ -4,17 +4,16 @@ from typing import Optional
 
 import cachetools
 import numpy as np
-import orjson
 
 from robotoff import settings
+from robotoff.elasticsearch import get_es_client
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbedding
 from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
-from robotoff.types import PredictionType
+from robotoff.types import ElasticSearchIndex, PredictionType
 from robotoff.utils import get_logger, http_session
-from robotoff.utils.es import get_es_client
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -116,40 +115,29 @@ def get_stored_logo_ids() -> set[int]:
 
 
 def add_logos_to_ann(logos: list[LogoEmbedding]) -> None:
-    es_exporter = get_es_client()
-    index = settings.ElasticsearchIndex.LOGOS
-
-    if not es_exporter.es_client.indices.exists(index=index):
-        logger.info("Creating index: %s", index)
-        with open(settings.ElasticsearchIndex.SUPPORTED_INDICES[index], "rb") as f:
-            conf = orjson.loads(f.read())
-        es_exporter.es_client.indices.create(index=index, body=conf)
+    es_client = get_es_client()
 
     for logo in logos:
-        external_id = logo.logo_id
-        data = {"external_id": external_id, "embedding": np.frombuffer(logo.embedding)}
-        if es_exporter.es_client.indices.exists(index=index):
-            es_exporter.index(index=index, id=external_id, document=data)
+        data = {
+            "embedding": np.frombuffer(logo.embedding, dtype=np.float32),
+        }
+        es_client.index(index=ElasticSearchIndex.logo, id=logo.logo_id, document=data)
 
 
 def save_nearest_neighbors(embeddings: list[LogoEmbedding]) -> None:
-
-    es_exporter = get_es_client()
-
-    index = settings.ElasticsearchIndex.LOGOS
+    es_client = get_es_client()
 
     for embedding in embeddings:
-
         request = {
             "knn": {
                 "field": "embedding",
-                "query_vector": np.frombuffer(embedding.embedding),
+                "query_vector": np.frombuffer(embedding.embedding, dtype=np.float32),
                 "k": settings.K_NEAREST_NEIGHBORS + 1,
                 "num_candidates": settings.NUM_CANDIDATES + 1,
             }
         }
 
-        results = es_exporter.knn_search(index=index, body=request)
+        results = es_client.knn_search(index=ElasticSearchIndex.logo, body=request)
 
         if results:
             hits = results["hits"]["hits"]
