@@ -1,5 +1,6 @@
 """
 This modules host Elasticsearch based methods to compute various insight
-
-index folder, contains index definitions.
 """
+
+# flake8: noqa
+from .client import get_es_client

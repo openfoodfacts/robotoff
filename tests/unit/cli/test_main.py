@@ -1,27 +1,12 @@
-from unittest.mock import ANY, call
+from unittest.mock import call
 
 import pytest
 
 from robotoff.cli.main import categorize, init_elasticsearch
+from robotoff.types import ElasticSearchIndex
 
 
-@pytest.mark.parametrize(
-    "load_index,load_data,to_load,index_loads_calls,data_loads_calls",
-    [
-        (False, False, [], [], []),
-        (False, True, ["non-existent"], [], []),
-        (
-            True,
-            True,
-            ["product"],
-            [call("product", ANY)],
-            [call("product")],
-        ),
-    ],
-)
-def test_init_elasticsearch(
-    mocker, load_index, load_data, to_load, index_loads_calls, data_loads_calls
-):
+def test_init_elasticsearch(mocker):
     fake_exporter = mocker.MagicMock()
 
     mocker.patch(
@@ -29,10 +14,9 @@ def test_init_elasticsearch(
         return_value=fake_exporter,
     )
 
-    init_elasticsearch(load_index, load_data, to_load)
-
-    fake_exporter.load_index.assert_has_calls(index_loads_calls)
-    fake_exporter.export_index_data.assert_has_calls(data_loads_calls)
+    init_elasticsearch(True)
+    fake_exporter.load_all_indices.assert_has_calls([])
+    fake_exporter.export_index_data.assert_has_calls([call(ElasticSearchIndex.product)])
 
 
 class MockResponse:

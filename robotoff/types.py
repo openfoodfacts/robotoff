@@ -38,3 +38,9 @@ class PredictionType(str, enum.Enum):
     image_lang = "image_lang"
     nutrition_image = "nutrition_image"
     nutrition_table_structure = "nutrition_table_structure"
+
+
+@enum.unique
+class ElasticSearchIndex(str, enum.Enum):
+    product = "product"
+    logo = "logo"

@@ -178,16 +178,6 @@ ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").sp
 ELASTICSEARCH_TYPE = "document"
 
 
-class ElasticsearchIndex:
-    PRODUCT = "product"
-    LOGOS = "logos"
-
-    SUPPORTED_INDICES = {
-        PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
-        LOGOS: (PROJECT_DIR / "robotoff/elasticsearch/index/logos.json"),
-    }
-
-
 # ANN index parameters
 
 NUM_CANDIDATES = 100
