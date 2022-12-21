@@ -153,9 +153,7 @@ FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
 # Spellchecking parameters. Wauplin and Raphael are the experts.
 
 SPELLCHECK_DIR = DATA_DIR / "spellcheck"
-SPELLCHECK_PATTERNS_PATHS = {
-    "fr": SPELLCHECK_DIR / "patterns_fr.txt",
-}
+SPELLCHECK_PATTERNS_PATHS = {"fr": SPELLCHECK_DIR / "patterns_fr.txt"}
 
 # Credentials for the Robotoff insights database
 
@@ -174,7 +172,7 @@ REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 
-# Elastic Search is used for simple category prediction and spellchecking.
+# Elastic Search is used for simple category prediction, spellchecking and logo classification.
 
 ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
 ELASTICSEARCH_TYPE = "document"
@@ -182,11 +180,18 @@ ELASTICSEARCH_TYPE = "document"
 
 class ElasticsearchIndex:
     PRODUCT = "product"
+    LOGOS = "logos"
 
     SUPPORTED_INDICES = {
         PRODUCT: (PROJECT_DIR / "robotoff/elasticsearch/index/product_index.json"),
+        LOGOS: (PROJECT_DIR / "robotoff/elasticsearch/index/logos.json"),
     }
 
+
+# ANN index parameters
+
+NUM_CANDIDATES = 100
+K_NEAREST_NEIGHBORS = 100
 
 # image moderation service
 IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
@@ -225,9 +230,7 @@ def init_sentry(integrations: Optional[list[Integration]] = None):
             )
         )
         sentry_sdk.init(  # type:ignore # mypy say it's abstract
-            _sentry_dsn,
-            environment=ROBOTOFF_INSTANCE,
-            integrations=integrations,
+            _sentry_dsn, environment=ROBOTOFF_INSTANCE, integrations=integrations
         )
     elif ROBOTOFF_INSTANCE == "prod":
         raise ValueError("No SENTRY_DSN specified for prod Robotoff")

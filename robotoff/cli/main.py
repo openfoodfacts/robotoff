@@ -126,10 +126,7 @@ def download_dataset(minify: bool = False) -> None:
 
 
 @app.command()
-def categorize(
-    barcode: str,
-    deepest_only: bool = False,
-) -> None:
+def categorize(barcode: str, deepest_only: bool = False) -> None:
     """Predict product categories based on the neural category classifier.
 
     deepest_only: controls whether the returned predictions should only contain the deepmost
@@ -165,8 +162,7 @@ def import_insights(
         help="Type of the prediction to generate, only needed when --generate-from is used",
     ),
     batch_size: int = typer.Option(
-        128,
-        help="Number of insights that are imported in each atomic SQL transaction",
+        128, help="Number of insights that are imported in each atomic SQL transaction"
     ),
     input_path: Optional[pathlib.Path] = typer.Option(
         None,
@@ -210,8 +206,7 @@ def import_insights(
             # Create a new transaction for every batch
             with db.atomic():
                 batch_imported = importer.import_insights(
-                    prediction_batch,
-                    settings.OFF_SERVER_DOMAIN,
+                    prediction_batch, settings.OFF_SERVER_DOMAIN
                 )
                 logger.info(f"{batch_imported} insights imported in batch")
                 imported += batch_imported
@@ -437,17 +432,32 @@ def add_logo_to_ann(sleep_time: float = 0.5) -> None:
     import time
     from itertools import groupby
 
-    import requests
+    import elasticsearch
     import tqdm
 
     from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
-    from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+    from robotoff.models import (
+        ImageModel,
+        ImagePrediction,
+        LogoAnnotation,
+        LogoEmbedding,
+        db,
+    )
     from robotoff.utils import get_logger
 
     logger = get_logger()
     seen = get_stored_logo_ids()
 
     with db:
+        logos_iter = tqdm.tqdm(
+            LogoEmbedding.select()
+            .join(LogoAnnotation)
+            .join(ImagePrediction)
+            .join(ImageModel)
+            .where(LogoAnnotation.nearest_neighbors.is_null())
+            .order_by(ImageModel.id)
+            .iterator()
+        )
         logos_iter = tqdm.tqdm(
             LogoAnnotation.select()
             .join(ImagePrediction)
@@ -456,21 +466,25 @@ def add_logo_to_ann(sleep_time: float = 0.5) -> None:
             .order_by(ImageModel.id)
             .iterator()
         )
-        for _, logo_batch in groupby(logos_iter, lambda x: x.image_prediction.image.id):
+        for _, logo_batch in groupby(
+            logos_iter, lambda x: x.logo.image_prediction.image.id
+        ):
             logos = list(logo_batch)
 
-            if all(logo.id in seen for logo in logos):
+            if all(logo.logo_id in seen for logo in logos):
                 continue
 
-            image = logos[0].image_prediction.image
+            image = logos[0].logo.image_prediction.image
             logger.info(f"Adding logos of image {image.id}")
             try:
-                added = add_logos_to_ann(image, logos)
-            except requests.exceptions.ReadTimeout:
-                logger.warning("Request timed-out during logo addition")
-                continue
+                add_logos_to_ann(logos)
+            except (
+                elasticsearch.ConnectionError,
+                elasticsearch.ConnectionTimeout,
+            ) as e:
+                logger.info("Request error during logo addition to ANN", exc_info=e)
 
-            logger.info(f"Added: {added}")
+            logger.info(f"Logos of image {image.id} were added.")
 
             if sleep_time:
                 time.sleep(sleep_time)

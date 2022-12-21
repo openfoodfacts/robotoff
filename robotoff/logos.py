@@ -4,6 +4,7 @@ from typing import Optional
 
 import cachetools
 import numpy as np
+import orjson
 
 from robotoff import settings
 from robotoff.insights.importer import import_insights
@@ -13,6 +14,7 @@ from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger, http_session
+from robotoff.utils.es import get_es_client
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -113,44 +115,52 @@ def get_stored_logo_ids() -> set[int]:
     return set(r.json()["stored"])
 
 
-def add_logos_to_ann(logo_embeddings: list[LogoEmbedding]) -> int:
-    return 1
+def add_logos_to_ann(logos: list[LogoEmbedding]) -> None:
+    es_exporter = get_es_client()
+    index = settings.ElasticsearchIndex.LOGOS
+
+    if not es_exporter.es_client.indices.exists(index=index):
+        logger.info("Creating index: %s", index)
+        with open(settings.ElasticsearchIndex.SUPPORTED_INDICES[index], "rb") as f:
+            conf = orjson.loads(f.read())
+        es_exporter.es_client.indices.create(index=index, body=conf)
+
+    for logo in logos:
+        external_id = logo.logo_id
+        data = {"external_id": external_id, "embedding": np.frombuffer(logo.embedding)}
+        if es_exporter.es_client.indices.exists(index=index):
+            es_exporter.index(index=index, id=external_id, document=data)
 
 
-def save_nearest_neighbors(logos: list[LogoAnnotation]) -> int:
-    logo_ids_params = ",".join((str(logo.id) for logo in logos))
-    r = http_session.get(
-        settings.BaseURLProvider().robotoff().get()
-        + "/api/v1/ann/batch?logo_ids="
-        + logo_ids_params,
-        timeout=30,
-    )
+def save_nearest_neighbors(embeddings: list[LogoEmbedding]) -> None:
 
-    r.raise_for_status()
-    response = r.json()
+    es_exporter = get_es_client()
 
-    results = {int(key): value for key, value in response["results"].items()}
+    index = settings.ElasticsearchIndex.LOGOS
 
-    logo_id_to_logo = {logo.id: logo for logo in logos}
-    missing_logo_ids = set(logo_id_to_logo.keys()).difference(set(results.keys()))
+    for embedding in embeddings:
 
-    if missing_logo_ids:
-        logger.info("Missing logo IDs in response: %s", missing_logo_ids)
+        request = {
+            "knn": {
+                "field": "embedding",
+                "query_vector": np.frombuffer(embedding.embedding),
+                "k": settings.K_NEAREST_NEIGHBORS + 1,
+                "num_candidates": settings.NUM_CANDIDATES + 1,
+            }
+        }
 
-    saved = 0
-    for logo_id, logo_results in results.items():
-        if logo_id in logo_id_to_logo:
-            logo = logo_id_to_logo[logo_id]
-            distances = [n["distance"] for n in logo_results]
-            logo_ids = [n["logo_id"] for n in logo_results]
-            logo.nearest_neighbors = {
+        results = es_exporter.knn_search(index=index, body=request)
+
+        if results:
+            hits = results["hits"]["hits"]
+            logo_ids, distances = zip(
+                *[(hit["_source"]["external_id"], hit["_score"]) for hit in hits]
+            )
+            embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
             }
-            logo.save()
-            saved += 1
-
-    return saved
+            embedding.logo.save()
 
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
@@ -299,8 +309,7 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos(
-    logos: list[LogoAnnotation],
-    server_domain: str,
+    logos: list[LogoAnnotation], server_domain: str
 ) -> int:
     predictions = []
     for logo in logos:
@@ -333,8 +342,7 @@ def generate_insights_from_annotated_logos(
 
 
 def predict_logo_predictions(
-    logos: list[LogoAnnotation],
-    logo_probs: list[dict[LogoLabelType, float]],
+    logos: list[LogoAnnotation], logo_probs: list[dict[LogoLabelType, float]]
 ) -> list[Prediction]:
     predictions = []
 
