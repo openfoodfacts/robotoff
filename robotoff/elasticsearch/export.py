@@ -38,30 +38,34 @@ ES_INDEX_CONFIGS: dict[ElasticSearchIndex, dict] = {
             },
         },
         "mappings": {
-            "document": {
-                "properties": {
-                    "ingredients_text_fr": {
-                        "type": "text",
-                        "fields": {
-                            "trigram": {"type": "text", "analyzer": "trigram"},
-                            "reverse": {"type": "text", "analyzer": "reverse"},
-                        },
+            "properties": {
+                "ingredients_text_fr": {
+                    "type": "text",
+                    "fields": {
+                        "trigram": {"type": "text", "analyzer": "trigram"},
+                        "reverse": {"type": "text", "analyzer": "reverse"},
                     },
-                    "code": {"type": "keyword"},
-                }
+                },
+                "code": {"type": "keyword"},
             }
         },
     },
     ElasticSearchIndex.logo: {
-        "properties": {
-            "embedding": {
-                "type": "dense_vector",
-                "dims": 512,
-                "index": True,
-                "similarity": "dot_product",
-                "index_options": {"type": "hnsw", "m": 16, "ef_construction": 100},
-            },
-        }
+        "settings": {
+            "number_of_shards": 1,
+            "number_of_replicas": 0,
+        },
+        "mappings": {
+            "properties": {
+                "embedding": {
+                    "type": "dense_vector",
+                    "dims": 512,
+                    "index": True,
+                    "similarity": "dot_product",
+                    "index_options": {"type": "hnsw", "m": 16, "ef_construction": 100},
+                },
+            }
+        },
     },
 }
 
@@ -74,10 +78,9 @@ class ElasticsearchExporter:
 
     def _delete_existing_data(self, index: ElasticSearchIndex) -> None:
         resp = self.es_client.delete_by_query(
-            body={"query": {"match_all": {}}},
+            query={"match_all": {}},
             index=index,
             ignore_unavailable=True,
-            doc_type=settings.ELASTICSEARCH_TYPE,
         )
 
         logger.info("Deleted %d documents from %s", resp["deleted"], index)
@@ -92,7 +95,7 @@ class ElasticsearchExporter:
         """Creates the given index if it doesn't already exist."""
         if not self.es_client.indices.exists(index=index):
             logger.info("Creating index: %s", index)
-            self.es_client.indices.create(index=index, body=ES_INDEX_CONFIGS[index])
+            self.es_client.indices.create(index=index, **ES_INDEX_CONFIGS[index])
 
     def load_all_indices(self) -> None:
         """Create all ES indices if they do not already exist."""

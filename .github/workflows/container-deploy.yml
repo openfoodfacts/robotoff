@@ -114,7 +114,9 @@ jobs:
           echo "OFF_USER=roboto-app" >> .env
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
-          echo "ELASTICSEARCH_HOSTS=elasticsearch.robotoff_default" >> .env
+          echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
+          echo "ELASTIC_USER=elastic" >> .env
+          echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
           echo "TF_SERVING_HOST=tf_serving" >> .env
           echo "TRITON_HOST=triton" >> .env
           echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env

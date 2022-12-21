@@ -174,7 +174,9 @@ UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10)
 
 # Elastic Search is used for simple category prediction, spellchecking and logo classification.
 
-ELASTICSEARCH_HOSTS = os.environ.get("ELASTICSEARCH_HOSTS", "localhost:9200").split(",")
+ELASTIC_HOST = os.environ.get("ELASTIC_HOST", "localhost:9200")
+ELASTIC_USER = os.environ.get("ELASTIC_USER")
+ELASTIC_PASSWORD = os.environ.get("ELASTIC_PASSWORD")
 ELASTICSEARCH_TYPE = "document"
 
 

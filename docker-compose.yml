@@ -31,7 +31,9 @@ x-robotoff-base-env:
   INFLUXDB_AUTH_TOKEN:
   SLACK_TOKEN:
   SENTRY_DSN:
-  ELASTICSEARCH_HOSTS:
+  ELASTIC_HOST:
+  ELASTIC_PASSWORD:
+  ELASTIC_USER:
   TF_SERVING_HOST:
   TRITON_HOST:
 
@@ -102,12 +104,12 @@ services:
 
   elasticsearch:
     restart: $RESTART_POLICY
-    image: raphael0202/elasticsearch
+    image: elasticsearch:8.5.3
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - cluster.routing.allocation.disk.watermark.high=95%
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD
     ulimits:
       memlock:
         soft: -1
@@ -115,13 +117,14 @@ services:
       nofile:
         soft: 262144
         hard: 262144
-    mem_limit: 2g
+    mem_limit: 15g
     volumes:
       - es-data:/usr/share/elasticsearch/data
 
 volumes:
   postgres-data:
   es-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
   redis-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
 
