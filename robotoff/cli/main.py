@@ -373,7 +373,7 @@ def run_object_detection_model(
                 JOIN.LEFT_OUTER,
                 on=(
                     (ImagePrediction.image_id == ImageModel.id)
-                    & (ImagePrediction.model_name == model_name)
+                    & (ImagePrediction.model_name == model_name.value)
                 ),
             )
             .where(ImagePrediction.model_name.is_null())
@@ -382,9 +382,6 @@ def run_object_detection_model(
         if limit:
             query = query.limit(limit)
         missing_items = list(query)
-
-    if limit:
-        missing_items = missing_items[:limit]
 
     if typer.confirm(f"{len(missing_items)} jobs are going to be launched, confirm?"):
         for barcode, image_id in tqdm.tqdm(missing_items, desc="image"):
