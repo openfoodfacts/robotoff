@@ -3,6 +3,7 @@ import operator
 from typing import Optional
 
 import cachetools
+import elasticsearch
 import numpy as np
 
 from robotoff import settings
@@ -132,25 +133,35 @@ def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
     es_client = get_es_client()
 
     for logo_embedding in logo_embeddings:
-        embedding = np.frombuffer(logo_embedding.embedding, dtype=np.float32)
-        knn_body = {
-            "field": "embedding",
-            "query_vector": embedding / np.linalg.norm(embedding),
-            "k": settings.K_NEAREST_NEIGHBORS + 1,
-            "num_candidates": settings.NUM_CANDIDATES + 1,
-        }
+        logo_ids, distances = knn_search(es_client, logo_embedding)
 
-        results = es_client.search(
-            index=ElasticSearchIndex.logo, knn=knn_body, source_excludes=["embedding"]
-        )
-
-        if hits := results["hits"]["hits"]:
-            logo_ids, distances = zip(*[(hit["_id"], hit["_score"]) for hit in hits])
+        if logo_ids and distances:
             logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
             }
             logo_embedding.logo.save()
+
+
+def knn_search(
+    client: elasticsearch.Elasticsearch, logo_embedding: LogoEmbedding
+) -> tuple[list[int], list[float]]:
+    embedding = np.frombuffer(logo_embedding.embedding, dtype=np.float32)
+    knn_body = {
+        "field": "embedding",
+        "query_vector": embedding / np.linalg.norm(embedding),
+        "k": settings.K_NEAREST_NEIGHBORS + 1,
+        "num_candidates": settings.NUM_CANDIDATES + 1,
+    }
+
+    results = client.search(
+        index=ElasticSearchIndex.logo, knn=knn_body, source_excludes=["embedding"]
+    )
+    if hits := results["hits"]["hits"]:
+        logo_ids, distances = zip(*[(hit["_id"], hit["_score"]) for hit in hits])
+        return logo_ids, distances
+
+    return [], []
 
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
