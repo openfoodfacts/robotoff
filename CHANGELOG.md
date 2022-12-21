@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.15.2](https://github.com/openfoodfacts/robotoff/compare/v1.15.1...v1.15.2) (2022-12-21)
+
+
+### Bug Fixes
+
+* add nutriscore predictor for nutriscore model predictions ([3a61b24](https://github.com/openfoodfacts/robotoff/commit/3a61b2408b5710b4c81edc25326908a5bfde7ea3))
+* catch ConnectionError from requests.exceptions and not from stdlib ([2357d3e](https://github.com/openfoodfacts/robotoff/commit/2357d3e9f0249a6ee4ab249ba9b1215c55c5cd51))
+* improve request exception handling ([36b675e](https://github.com/openfoodfacts/robotoff/commit/36b675e4c0d3bf6586cb9b990c7db924ef03a7a6))
+* improve request exception handling ([b7e3665](https://github.com/openfoodfacts/robotoff/commit/b7e3665b06eb6296185a2017e64a89ed1b472531))
+* improve Slack notification request exception handling ([41d37f6](https://github.com/openfoodfacts/robotoff/commit/41d37f6072a8055adbb89ec3025d11c38ce51090))
+
 ## [1.15.1](https://github.com/openfoodfacts/robotoff/compare/v1.15.0...v1.15.1) (2022-12-15)
 
 
