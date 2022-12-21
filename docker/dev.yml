@@ -48,6 +48,9 @@ services:
   scheduler:
     <<: *robotoff-dev
 
+  elasticsearch:
+    ports:
+      - "127.0.0.1:9200:9200"
 
 volumes:
   postgres-data:

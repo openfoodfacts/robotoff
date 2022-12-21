@@ -373,7 +373,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
             y_min * image.height,
             y_max * image.height,
         )
-        cropped_images = image.crop((left, top, right, bottom))
+        cropped_images.append(image.crop((left, top, right, bottom)))
     embeddings = generate_clip_embedding(cropped_images)
 
     with db:

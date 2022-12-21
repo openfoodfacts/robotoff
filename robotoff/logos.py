@@ -118,32 +118,33 @@ def add_logos_to_ann(logos: list[LogoEmbedding]) -> None:
     es_client = get_es_client()
 
     for logo in logos:
-        data = {
-            "embedding": np.frombuffer(logo.embedding, dtype=np.float32),
-        }
-        es_client.index(index=ElasticSearchIndex.logo, id=logo.logo_id, document=data)
+        embedding = np.frombuffer(logo.embedding, dtype=np.float32)
+        es_client.index(
+            index=ElasticSearchIndex.logo,
+            id=logo.logo_id,
+            document={
+                "embedding": embedding / np.linalg.norm(embedding),
+            },
+        )
 
 
 def save_nearest_neighbors(embeddings: list[LogoEmbedding]) -> None:
     es_client = get_es_client()
 
     for embedding in embeddings:
-        request = {
-            "knn": {
-                "field": "embedding",
-                "query_vector": np.frombuffer(embedding.embedding, dtype=np.float32),
-                "k": settings.K_NEAREST_NEIGHBORS + 1,
-                "num_candidates": settings.NUM_CANDIDATES + 1,
-            }
+        knn_body = {
+            "field": "embedding",
+            "query_vector": np.frombuffer(embedding.embedding, dtype=np.float32),
+            "k": settings.K_NEAREST_NEIGHBORS + 1,
+            "num_candidates": settings.NUM_CANDIDATES + 1,
         }
 
-        results = es_client.knn_search(index=ElasticSearchIndex.logo, body=request)
+        results = es_client.search(
+            index=ElasticSearchIndex.logo, knn=knn_body, source_excludes=["embedding"]
+        )
 
-        if results:
-            hits = results["hits"]["hits"]
-            logo_ids, distances = zip(
-                *[(hit["_source"]["external_id"], hit["_score"]) for hit in hits]
-            )
+        if hits := results["hits"]["hits"]:
+            logo_ids, distances = zip(*[(hit["_id"], hit["_score"]) for hit in hits])
             embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
