@@ -62,7 +62,7 @@ services:
     deploy:
       mode: replicated
       replicas: 2
-    command: python -m robotoff run-worker robotoff-low robotoff-high
+    command: python -m robotoff run-worker robotoff-high robotoff-low
     environment: *robotoff-base-env
     depends_on:
       - postgres
