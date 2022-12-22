@@ -129,9 +129,15 @@ def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
     es_client = get_es_client()
 
     for logo_embedding in logo_embeddings:
-        logo_ids, distances = knn_search(es_client, logo_embedding)
+        results = knn_search(
+            es_client, logo_embedding.embedding, settings.K_NEAREST_NEIGHBORS
+        )
+        results = [item for item in results if item[0] != logo_embedding.logo_id][
+            : settings.K_NEAREST_NEIGHBORS
+        ]
 
-        if logo_ids and distances:
+        if results:
+            logo_ids, distances = zip(*results)
             logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
@@ -140,24 +146,25 @@ def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
 
 
 def knn_search(
-    client: elasticsearch.Elasticsearch, logo_embedding: LogoEmbedding
-) -> tuple[list[int], list[float]]:
-    embedding = np.frombuffer(logo_embedding.embedding, dtype=np.float32)
+    client: elasticsearch.Elasticsearch,
+    embedding_bytes: bytes,
+    k: int = settings.K_NEAREST_NEIGHBORS,
+) -> list[tuple[int, float]]:
+    embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
     knn_body = {
         "field": "embedding",
         "query_vector": embedding / np.linalg.norm(embedding),
-        "k": settings.K_NEAREST_NEIGHBORS + 1,
-        "num_candidates": settings.NUM_CANDIDATES + 1,
+        "k": k + 1,
+        "num_candidates": k + 1,
     }
 
     results = client.search(
-        index=ElasticSearchIndex.logo, knn=knn_body, source_excludes=["embedding"]
+        index=ElasticSearchIndex.logo, knn=knn_body, source=False, size=k + 1
     )
     if hits := results["hits"]["hits"]:
-        logo_ids, distances = zip(*[(int(hit["_id"]), hit["_score"]) for hit in hits])
-        return logo_ids, distances
+        return [(int(hit["_id"]), 1.0 - hit["_score"]) for hit in hits]
 
-    return [], []
+    return []
 
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
