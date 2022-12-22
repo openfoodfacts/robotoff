@@ -415,6 +415,7 @@ def add_logo_to_ann(
     )
 ) -> None:
     """Index all missing logos in Elasticsearch ANN index."""
+    import logging
     import time
     from itertools import groupby
 
@@ -432,9 +433,12 @@ def add_logo_to_ann(
     from robotoff.utils import get_logger
 
     logger = get_logger()
-    seen = get_stored_logo_ids()
+    logging.getLogger("elastic_transport.transport").setLevel(logging.WARNING)
 
+    seen = get_stored_logo_ids()
+    added = 0
     with db:
+        logger.info("Fetching logo embedding to index...")
         logo_embedding_iter = tqdm.tqdm(
             LogoEmbedding.select(LogoEmbedding, LogoAnnotation, ImageModel.id)
             .join(LogoAnnotation)
@@ -443,7 +447,7 @@ def add_logo_to_ann(
             .order_by(ImageModel.id)
             .iterator()
         )
-        for image_id, logo_embedding_batch in groupby(
+        for _, logo_embedding_batch in groupby(
             logo_embedding_iter, lambda x: x.logo.image_prediction.image.id
         ):
             logo_embeddings = list(logo_embedding_batch)
@@ -456,7 +460,6 @@ def add_logo_to_ann(
             if not to_process:
                 continue
 
-            logger.info(f"Adding logos of image {image_id} ({len(to_process)} to add)")
             try:
                 add_logos_to_ann(to_process)
             except (
@@ -465,10 +468,12 @@ def add_logo_to_ann(
             ) as e:
                 logger.info("Request error during logo addition to ANN", exc_info=e)
 
-            logger.info(f"Logos of image {image_id} were added.")
+            added += len(to_process)
 
             if sleep_time:
                 time.sleep(sleep_time)
+
+    logger.info(f"{added} embeddings indexed")
 
 
 @app.command()
