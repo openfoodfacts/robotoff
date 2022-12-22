@@ -62,7 +62,7 @@ def test_run_object_detection_model(mocker, image_model, model_name, label_names
     image_prediction = run_object_detection_model(
         model_name,
         None,
-        source_image=image_model.source_image,
+        image_model=image_model,
         threshold=0.1,
     )
     assert isinstance(image_prediction, ImagePrediction)
@@ -74,14 +74,3 @@ def test_run_object_detection_model(mocker, image_model, model_name, label_names
         ]
     }
     assert image_prediction.max_confidence == 0.8
-
-
-def test_run_object_detection_model_no_image_instance(peewee_db):
-    with peewee_db:
-        image_prediction = run_object_detection_model(
-            ObjectDetectionModel.nutriscore,
-            None,
-            source_image="/images/1/1.jpg",
-            threshold=0.1,
-        )
-    assert image_prediction is None
