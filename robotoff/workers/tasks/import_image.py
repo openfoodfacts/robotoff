@@ -347,6 +347,7 @@ def run_logo_object_detection(
             )
 
     logger.info("%s logos found for image %s", len(logo_ids), source_image)
+    process_logos = False
     if logo_ids and process_logos:
         enqueue_job(
             process_created_logos,
