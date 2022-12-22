@@ -496,10 +496,10 @@ def import_logos(
 
 
 @app.command()
-def export_logos_ann(
+def export_logos(
     output: pathlib.Path = typer.Argument(
         ...,
-        help="Path to the output file, can either have .json or .json.gz as "
+        help="Path to the output file, can either have .jsonl or .jsonl.gz as "
         "extension",
     ),
 ) -> None:
@@ -512,8 +512,14 @@ def export_logos_ann(
         query = (
             LogoAnnotation.select(
                 LogoAnnotation.id,
+                LogoAnnotation.index,
                 LogoAnnotation.bounding_box,
                 LogoAnnotation.score,
+                LogoAnnotation.annotation_type,
+                LogoAnnotation.annotation_value,
+                LogoAnnotation.annotation_value_tag,
+                LogoAnnotation.taxonomy_value,
+                LogoAnnotation.username,
                 ImageModel.image_id,
                 ImageModel.barcode,
             )
