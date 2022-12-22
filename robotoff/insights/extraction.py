@@ -44,8 +44,9 @@ PRODUCT_NAME_PREDICTION_TYPES: list[PredictionType] = [
 def run_object_detection_model(
     model_name: ObjectDetectionModel,
     image: Image.Image,
-    source_image: str,
+    image_model: ImageModel,
     threshold: float = 0.1,
+    return_null_if_exist: bool = True,
 ) -> Optional[ImagePrediction]:
     """Run a model detection model and save the results in the
     `image_prediction` table.
@@ -56,6 +57,7 @@ def run_object_detection_model(
 
     :param model_name: name of the object detection model to use
     :param image: the input Pillow image
+    :param image_model: the image in DB
     :param source_image: the source image path (used to fetch the image from
       `image` table)
     :param threshold: the minimum object score above which we keep the object data
@@ -63,21 +65,14 @@ def run_object_detection_model(
     :return: return None if the image does not exist in DB, or the created
       `ImagePrediction` otherwise
     """
-    image_instance = ImageModel.get_or_none(source_image=source_image)
-
-    if image_instance is None:
-        logger.warning("Missing image in DB for image %s", source_image)
-        return None
-
-    existing_image_prediction = ImagePrediction.get_or_none(
-        image=image_instance, model_name=model_name.value
-    )
-    if existing_image_prediction is not None:
-        logger.info(
-            f"Object detection results for {model_name} already exist for "
-            f"image {source_image}: ID {existing_image_prediction.id}"
+    if (
+        existing_image_prediction := ImagePrediction.get_or_none(
+            image=image_model, model_name=model_name.value
         )
-        return None
+    ) is not None:
+        if return_null_if_exist:
+            return None
+        return existing_image_prediction
 
     timestamp = datetime.datetime.utcnow()
     results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
@@ -86,7 +81,7 @@ def run_object_detection_model(
     data = results.to_json(threshold=threshold)
     max_confidence = max([item["score"] for item in data], default=None)
     return ImagePrediction.create(
-        image=image_instance,
+        image=image_model,
         type="object_detection",
         model_name=model_name.value,
         model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],

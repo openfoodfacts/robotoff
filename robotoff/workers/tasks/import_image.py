@@ -75,6 +75,7 @@ def run_import_image_job(
     enqueue_job(
         import_insights_from_image,
         high_queue,
+        job_kwargs={"result_ttl": 0},
         barcode=barcode,
         image_url=image_url,
         ocr_url=ocr_url,
@@ -87,6 +88,7 @@ def run_import_image_job(
     enqueue_job(
         run_logo_object_detection,
         high_queue,
+        job_kwargs={"result_ttl": 0},
         barcode=barcode,
         image_url=image_url,
         server_domain=server_domain,
@@ -94,6 +96,7 @@ def run_import_image_job(
     enqueue_job(
         run_nutrition_table_object_detection,
         high_queue,
+        job_kwargs={"result_ttl": 0},
         barcode=barcode,
         image_url=image_url,
         server_domain=server_domain,
@@ -124,6 +127,7 @@ def import_insights_from_image(
         enqueue_job(
             run_nutriscore_object_detection,
             high_queue,
+            job_kwargs={"result_ttl": 0},
             barcode=barcode,
             image_url=image_url,
             server_domain=server_domain,
@@ -230,9 +234,12 @@ def run_nutrition_table_object_detection(
     source_image = get_source_from_url(image_url)
 
     with db:
-        run_object_detection_model(
-            ObjectDetectionModel.nutrition_table, image, source_image
-        )
+        if image_model := ImageModel.get_or_none(source_image=source_image):
+            run_object_detection_model(
+                ObjectDetectionModel.nutrition_table, image, image_model
+            )
+        else:
+            logger.warning("Missing image in DB for image %s", source_image)
 
 
 NUTRISCORE_LABELS = {
@@ -259,11 +266,16 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
     source_image = get_source_from_url(image_url)
 
     with db:
+        if (image_model := ImageModel.get_or_none(source_image=source_image)) is None:
+            logger.warning("Missing image in DB for image %s", source_image)
+            return
+
         image_prediction = run_object_detection_model(
-            ObjectDetectionModel.nutriscore, image, source_image
+            ObjectDetectionModel.nutriscore, image, image_model
         )
 
-    if not image_prediction:
+    if image_prediction is None:
+        # an ImagePrediction already exist
         return
 
     results = [
@@ -324,38 +336,50 @@ def run_logo_object_detection(
     source_image = get_source_from_url(image_url)
 
     with db:
-        image_prediction = run_object_detection_model(
-            ObjectDetectionModel.universal_logo_detector, image, source_image
-        )
-
-        if image_prediction is None:
-            # Can occur in normal conditions if an image prediction
-            # already exists for this image and model
+        if (image_model := ImageModel.get_or_none(source_image=source_image)) is None:
+            logger.warning("Missing image in DB for image %s", source_image)
             return
 
-        logos: list[LogoAnnotation] = []
-        for i, item in filter_logos(
-            image_prediction.data["objects"],
-            score_threshold=0.5,
-            iou_threshold=0.95,
-        ):
-            logos.append(
-                LogoAnnotation.create(
-                    image_prediction=image_prediction,
-                    index=i,
-                    score=item["score"],
-                    bounding_box=item["bounding_box"],
-                )
-            )
+        image_prediction: ImagePrediction = run_object_detection_model(  # type: ignore
+            ObjectDetectionModel.universal_logo_detector,
+            image,
+            image_model,
+            return_null_if_exist=False,
+        )
+        existing_logos = list(image_prediction.logos)
 
-    logger.info("%s logos found for image %s", len(logos), source_image)
+        if not existing_logos:
+            logos: list[LogoAnnotation] = []
+            for i, item in filter_logos(
+                image_prediction.data["objects"],
+                score_threshold=0.5,
+                iou_threshold=0.95,
+            ):
+                logos.append(
+                    LogoAnnotation.create(
+                        image_prediction=image_prediction,
+                        index=i,
+                        score=item["score"],
+                        bounding_box=item["bounding_box"],
+                    )
+                )
+            logger.info("%s logos found for image %s", len(logos), source_image)
+        else:
+            # Logos already exist for this image prediction, we just make sure embeddings
+            # are in DB as well
+            logos = [
+                existing_logo
+                for existing_logo in existing_logos
+                if list(existing_logo.embeddings) == 0
+            ]
+
     if logos and process_logos:
         with db:
             save_logo_embeddings(logos, image)
         enqueue_job(
             process_created_logos,
             high_queue,
-            job_kwargs={},
+            job_kwargs={"result_ttl": 0},
             image_prediction_id=image_prediction.id,
             server_domain=server_domain,
         )
