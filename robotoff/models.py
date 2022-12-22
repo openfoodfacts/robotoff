@@ -281,7 +281,7 @@ class LogoEmbedding(BaseModel):
     logo = peewee.ForeignKeyField(
         LogoAnnotation,
         null=False,
-        backref="logo_embeddings",
+        backref="embeddings",
         on_delete="CASCADE",
         unique=True,
         primary_key=True,
