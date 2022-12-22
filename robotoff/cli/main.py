@@ -351,10 +351,8 @@ def run_object_detection_model(
         run_nutrition_table_object_detection,
     )
 
-    kwargs = {}
     if model_name == ObjectDetectionModel.universal_logo_detector:
         func: Callable = run_logo_object_detection
-        kwargs["process_logos"] = False
     elif model_name == ObjectDetectionModel.nutrition_table:
         func = run_nutrition_table_object_detection
     else:
@@ -388,7 +386,6 @@ def run_object_detection_model(
                 barcode=barcode,
                 image_url=image_url,
                 server_domain=settings.OFF_SERVER_DOMAIN,
-                **kwargs,
             )
 
 

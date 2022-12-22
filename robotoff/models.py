@@ -249,7 +249,7 @@ class LogoAnnotation(BaseModel):
     """
 
     image_prediction = peewee.ForeignKeyField(
-        ImagePrediction, null=False, backref="logo_detections"
+        ImagePrediction, null=False, backref="logos"
     )
     index = peewee.IntegerField(null=False, constraints=[peewee.Check("index >= 0")])
     bounding_box = BinaryJSONField(null=False)
