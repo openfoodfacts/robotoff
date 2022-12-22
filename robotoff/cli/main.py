@@ -496,33 +496,6 @@ def import_logos(
 
 
 @app.command()
-def export_logo_annotation(
-    output: pathlib.Path,
-    server_domain: Optional[str] = None,
-    annotated: Optional[bool] = None,
-) -> None:
-    from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
-    from robotoff.utils import dump_jsonl
-
-    with db:
-        where_clauses = []
-
-        if server_domain is not None:
-            where_clauses.append(ImageModel.server_domain == server_domain)
-
-        if annotated is not None:
-            where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
-
-        query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
-        if where_clauses:
-            query = query.where(*where_clauses)
-
-        logo_iter = query.iterator()
-        dict_iter = (logo.to_dict() for logo in logo_iter)
-        dump_jsonl(output, dict_iter)
-
-
-@app.command()
 def export_logos_ann(
     output: pathlib.Path = typer.Argument(
         ...,
