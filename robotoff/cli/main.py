@@ -409,7 +409,12 @@ def init_elasticsearch(load_data: bool = True) -> None:
 
 
 @app.command()
-def add_logo_to_ann(sleep_time: float = 0.5) -> None:
+def add_logo_to_ann(
+    sleep_time: float = typer.Option(
+        0.0, help="Time to sleep between each query (in s)"
+    )
+) -> None:
+    """Index all missing logos in Elasticsearch ANN index."""
     import time
     from itertools import groupby
 
@@ -430,42 +435,37 @@ def add_logo_to_ann(sleep_time: float = 0.5) -> None:
     seen = get_stored_logo_ids()
 
     with db:
-        logos_iter = tqdm.tqdm(
-            LogoEmbedding.select()
+        logo_embedding_iter = tqdm.tqdm(
+            LogoEmbedding.select(LogoEmbedding, LogoAnnotation, ImageModel.id)
             .join(LogoAnnotation)
             .join(ImagePrediction)
             .join(ImageModel)
-            .where(LogoAnnotation.nearest_neighbors.is_null())
             .order_by(ImageModel.id)
             .iterator()
         )
-        logos_iter = tqdm.tqdm(
-            LogoAnnotation.select()
-            .join(ImagePrediction)
-            .join(ImageModel)
-            .where(LogoAnnotation.nearest_neighbors.is_null())
-            .order_by(ImageModel.id)
-            .iterator()
-        )
-        for _, logo_batch in groupby(
-            logos_iter, lambda x: x.logo.image_prediction.image.id
+        for image_id, logo_embedding_batch in groupby(
+            logo_embedding_iter, lambda x: x.logo.image_prediction.image.id
         ):
-            logos = list(logo_batch)
+            logo_embeddings = list(logo_embedding_batch)
 
-            if all(logo.logo_id in seen for logo in logos):
+            to_process = [
+                logo_embedding
+                for logo_embedding in logo_embeddings
+                if logo_embedding.logo_id not in seen
+            ]
+            if not to_process:
                 continue
 
-            image = logos[0].logo.image_prediction.image
-            logger.info(f"Adding logos of image {image.id}")
+            logger.info(f"Adding logos of image {image_id} ({len(to_process)} to add)")
             try:
-                add_logos_to_ann(logos)
+                add_logos_to_ann(to_process)
             except (
                 elasticsearch.ConnectionError,
                 elasticsearch.ConnectionTimeout,
             ) as e:
                 logger.info("Request error during logo addition to ANN", exc_info=e)
 
-            logger.info(f"Logos of image {image.id} were added.")
+            logger.info(f"Logos of image {image_id} were added.")
 
             if sleep_time:
                 time.sleep(sleep_time)
