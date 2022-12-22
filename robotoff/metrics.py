@@ -162,7 +162,7 @@ def generate_metrics_from_path(
 
     if not r.ok:
         logger.log(
-            logging.INFO if r.status_code >= 500 else logging.WARNING,
+            logging.INFO if r.status_code < 500 else logging.WARNING,
             "HTTPError during metrics retrieval: url=%s, %s",
             url,
             r.status_code,

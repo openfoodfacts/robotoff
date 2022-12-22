@@ -196,7 +196,7 @@ def get_image_from_url(
         if error_raise:
             raise ImageLoadingException(error_message % error_args)
         logger.log(
-            logging.INFO if r.status_code >= 500 else logging.WARNING,
+            logging.INFO if r.status_code < 500 else logging.WARNING,
             error_message,
             *error_args,
         )
