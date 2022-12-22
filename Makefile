@@ -129,7 +129,7 @@ lauch-burst-worker:
 ifdef queues
 	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker ${queues} --burst
 else
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker robotoff-low robotoff-high --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker robotoff-high robotoff-low --burst
 endif
 
 #------------#
