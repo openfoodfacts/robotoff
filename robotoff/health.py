@@ -7,6 +7,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from redis import Redis
 
 from robotoff import settings
+from robotoff.elasticsearch import get_es_client
 from robotoff.utils import get_logger
 
 health = HealthCheck()
@@ -64,12 +65,10 @@ def test_connect_robotoff_api():
     return resp.json()["status"] == "running", "Robotoff API connection success !"
 
 
-def test_connect_ann():
-    logger.debug("health: testing robotoff ann status")
-    resp = requests.get(
-        f"{settings.BaseURLProvider().robotoff().get()}/api/v1/ann/?count=1"
-    )
-    return "count" in resp.json(), "ANN API connection success !"
+def test_connect_elasticsearch():
+    logger.debug("health: testing Elasticsearch status")
+    up = get_es_client().ping()
+    return up, "Elasticsearch connection success!"
 
 
 health.add_check(test_connect_mongodb)
@@ -77,4 +76,4 @@ health.add_check(test_connect_postgres)
 health.add_check(test_connect_influxdb)
 health.add_check(test_connect_redis)
 health.add_check(test_connect_robotoff_api)
-health.add_check(test_connect_ann)
+health.add_check(test_connect_elasticsearch)
