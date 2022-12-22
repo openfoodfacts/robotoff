@@ -239,7 +239,7 @@ def run_nutrition_table_object_detection(
                 ObjectDetectionModel.nutrition_table, image, image_model
             )
         else:
-            logger.warning("Missing image in DB for image %s", source_image)
+            logger.info("Missing image in DB for image %s", source_image)
 
 
 NUTRISCORE_LABELS = {
@@ -267,7 +267,7 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
 
     with db:
         if (image_model := ImageModel.get_or_none(source_image=source_image)) is None:
-            logger.warning("Missing image in DB for image %s", source_image)
+            logger.info("Missing image in DB for image %s", source_image)
             return
 
         image_prediction = run_object_detection_model(
@@ -337,7 +337,7 @@ def run_logo_object_detection(
 
     with db:
         if (image_model := ImageModel.get_or_none(source_image=source_image)) is None:
-            logger.warning("Missing image in DB for image %s", source_image)
+            logger.info("Missing image in DB for image %s", source_image)
             return
 
         image_prediction: ImagePrediction = run_object_detection_model(  # type: ignore
