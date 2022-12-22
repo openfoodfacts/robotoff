@@ -110,6 +110,7 @@ def get_stored_logo_ids() -> set[int]:
 
 
 def add_logos_to_ann(logo_embeddings: list[LogoEmbedding]) -> None:
+    """Index logo embeddings in Elasticsearch ANN index."""
     es_client = get_es_client()
 
     for logo_embedding in logo_embeddings:
@@ -124,6 +125,7 @@ def add_logos_to_ann(logo_embeddings: list[LogoEmbedding]) -> None:
 
 
 def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
+    """Save nearest neighbors of a batch of logo embedding."""
     es_client = get_es_client()
 
     for logo_embedding in logo_embeddings:
@@ -152,7 +154,7 @@ def knn_search(
         index=ElasticSearchIndex.logo, knn=knn_body, source_excludes=["embedding"]
     )
     if hits := results["hits"]["hits"]:
-        logo_ids, distances = zip(*[(hit["_id"], hit["_score"]) for hit in hits])
+        logo_ids, distances = zip(*[(int(hit["_id"]), hit["_score"]) for hit in hits])
         return logo_ids, distances
 
     return [], []
