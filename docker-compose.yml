@@ -110,6 +110,7 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - ELASTIC_PASSWORD
+      - xpack.security.http.ssl.enabled=false
     ulimits:
       memlock:
         soft: -1
