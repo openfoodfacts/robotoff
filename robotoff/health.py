@@ -67,8 +67,9 @@ def test_connect_robotoff_api():
 
 def test_connect_elasticsearch():
     logger.debug("health: testing Elasticsearch status")
-    up = get_es_client().ping()
-    return up, "Elasticsearch connection success!"
+    if get_es_client().ping():
+        return True, "Elasticsearch connection success!"
+    return False, "Elasticsearch connection failed!"
 
 
 health.add_check(test_connect_mongodb)
