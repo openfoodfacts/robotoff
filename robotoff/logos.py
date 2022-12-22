@@ -1,3 +1,4 @@
+import datetime
 import operator
 from typing import Optional
 
@@ -141,6 +142,7 @@ def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
             logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
             }
             logo_embedding.logo.save()
 
