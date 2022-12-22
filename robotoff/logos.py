@@ -1,10 +1,10 @@
-import logging
 import operator
 from typing import Optional
 
 import cachetools
 import elasticsearch
 import numpy as np
+from elasticsearch.helpers import scan as elasticsearch_scan
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
@@ -14,7 +14,7 @@ from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbeddi
 from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
 from robotoff.types import ElasticSearchIndex, PredictionType
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
@@ -99,20 +99,14 @@ def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
 
 
 def get_stored_logo_ids() -> set[int]:
-    r = http_session.get(
-        settings.BaseURLProvider().robotoff().get() + "/api/v1/ann/stored", timeout=30
+    es_client = get_es_client()
+    scan_iter = elasticsearch_scan(
+        es_client,
+        query={"query": {"match_all": {}}},
+        index=ElasticSearchIndex.logo,
+        source=False,
     )
-
-    if not r.ok:
-        logger.log(
-            logging.INFO if r.status_code >= 500 else logging.WARNING,
-            "error while fetching stored logo IDs (%s): %s",
-            r.status_code,
-            r.text,
-        )
-        return set()
-
-    return set(r.json()["stored"])
+    return set(int(item["_id"]) for item in scan_iter)
 
 
 def add_logos_to_ann(logo_embeddings: list[LogoEmbedding]) -> None:
