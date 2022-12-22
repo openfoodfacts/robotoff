@@ -101,7 +101,7 @@ dl-model-archives:
 			dir=`echo $${asset_name} | sed 's/tf-//g'`; \
 			mkdir -p $${dir} $${dir}/1; \
 			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
-	done
+	done; \
 	mkdir -p clip clip/1; \
 	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx;
 
