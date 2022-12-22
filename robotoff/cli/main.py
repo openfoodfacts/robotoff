@@ -472,6 +472,62 @@ def add_logo_to_ann(
 
 
 @app.command()
+def import_embedding(
+    input_dir: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        help="Directory containing .npz files",
+    )
+) -> None:
+    """Import logo embeddings in DB."""
+    import numpy as np
+    import tqdm
+    from more_itertools import chunked
+
+    from robotoff.models import LogoAnnotation, LogoEmbedding, db
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    logger.info(f"Importing logo embeddings from {input_dir}")
+
+    with db:
+        existing_logo_ids = set(
+            x[0] for x in LogoAnnotation.select(LogoAnnotation.id).tuples().iterator()
+        )
+        existing_embedding_logo_ids = set(
+            x[0]
+            for x in LogoEmbedding.select(LogoEmbedding.logo_id).tuples().iterator()
+        )
+
+    imported = 0
+    for npz_path in tqdm.tqdm(input_dir.glob("*.npz"), desc="archive"):
+        archive = np.load(npz_path)
+        logo_ids = archive["logo_id"]
+        embeddings = archive["embedding"]
+        assert embeddings.shape[0] == logo_ids.shape[0]
+        assert embeddings.shape[1] == 512
+        assert embeddings.dtype == np.float32
+
+        with db.connection_context():
+            for batch_indices in chunked(range(embeddings.shape[0]), 1000):
+                with db.atomic():
+                    for i in batch_indices:
+                        logo_id = int(logo_ids[i])
+                        if (
+                            logo_id in existing_logo_ids
+                            and logo_id not in existing_embedding_logo_ids
+                        ):
+                            LogoEmbedding.create(
+                                logo_id=logo_id, embedding=embeddings[i].tobytes()
+                            )
+                            imported += 1
+
+    logger.info(f"{imported} embeddings imported")
+
+
+@app.command()
 def import_logos(
     data_path: pathlib.Path,
     model_name: str = "universal-logo-detector",
