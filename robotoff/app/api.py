@@ -37,11 +37,12 @@ from robotoff.insights.extraction import (
     extract_ocr_predictions,
 )
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
-from robotoff.logos import generate_insights_from_annotated_logos
+from robotoff.logos import generate_insights_from_annotated_logos, knn_search
 from robotoff.models import (
     ImageModel,
     ImagePrediction,
     LogoAnnotation,
+    LogoEmbedding,
     ProductInsight,
     batch_insert,
 )
@@ -58,7 +59,7 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
-from robotoff.types import PredictionType
+from robotoff.types import ElasticSearchIndex, PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
@@ -885,6 +886,46 @@ class ImageLogoUpdateResource:
         resp.media = {"updated": updated}
 
 
+class ANNResource:
+    def on_get(
+        self, req: falcon.Request, resp: falcon.Response, logo_id: Optional[int] = None
+    ):
+        """Search for nearest neighbors of:
+        - a random logo (if logo_id not provided)
+        - a specific logo otherwise
+        """
+        count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
+
+        if logo_id is None:
+            response = es_client.search(
+                index=ElasticSearchIndex.logo,
+                size=1,
+                query={
+                    "function_score": {"query": {"match_all": {}}, "random_score": {}}
+                },
+                source=False,
+            )
+            if not response["hits"]["hits"]:
+                # We don't have any embedding indexed
+                resp.media = {"results": [], "count": 0}
+                return
+            logo_id = int(response["hits"]["hits"][0]["_id"])
+
+        logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
+
+        if logo_embedding is None:
+            resp.status = falcon.HTTP_404
+            return
+
+        raw_results = [
+            item
+            for item in knn_search(es_client, logo_embedding.embedding, count)
+            if item[0] != logo_id
+        ][:count]
+        results = [{"logo_id": item[0], "distance": item[1]} for item in raw_results]
+        resp.media = {"results": results, "count": len(results)}
+
+
 class WebhookProductResource:
     """This handles requests from product opener
     that act as webhooks on product update or deletion.
@@ -1382,6 +1423,10 @@ api.add_route("/api/v1/images/logos/search", ImageLogoSearchResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
+api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
+api.add_route("/api/v1/ann", ANNResource())
+api.add_route("/api/v1/ann/search/{logo_id:int}", ANNResource())
+api.add_route("/api/v1/ann/search", ANNResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())

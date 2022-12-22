@@ -181,8 +181,6 @@ ELASTICSEARCH_TYPE = "document"
 
 
 # ANN index parameters
-
-NUM_CANDIDATES = 100
 K_NEAREST_NEIGHBORS = 100
 
 # image moderation service
