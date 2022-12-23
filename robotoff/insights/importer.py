@@ -4,7 +4,7 @@ import itertools
 import operator
 import uuid
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Optional, Type
+from typing import Any, Iterable, Iterator, Optional, Type, Union
 
 from playhouse.shortcuts import model_to_dict
 
@@ -14,6 +14,7 @@ from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
+from robotoff.prediction.ocr.packaging import SHAPE_ONLY_EXCLUDE_SET
 from robotoff.prediction.types import Prediction
 from robotoff.products import (
     DBProductStore,
@@ -32,6 +33,7 @@ from robotoff.taxonomy import (
 from robotoff.types import (
     InsightImportResult,
     InsightType,
+    PackagingElementProperty,
     PredictionImportResult,
     PredictionType,
     ProductInsightImportResult,
@@ -133,32 +135,6 @@ def is_reserved_barcode(barcode: str) -> bool:
     return barcode.startswith("2")
 
 
-def sort_predictions(predictions: Iterable[Prediction]) -> list[Prediction]:
-    """Sort predictions by priority, using as keys:
-    - priority, specified by data["priority"], prediction with lowest priority
-    values (high priority) come first
-    - source image upload datetime (most recent first): images IDs are
-    auto-incremented integers, so the most recent images have the highest IDs.
-    Images with `source_image = None` have a lower priority that images with a
-    source image.
-    - predictor, predictions with predictor value have higher priority
-
-    :param predictions: The predictions to sort
-    :return: Sorted predictions
-    """
-    return sorted(
-        predictions,
-        key=lambda prediction: (
-            prediction.data.get("priority", 1),
-            -int(get_image_id(prediction.source_image) or 0)
-            if prediction.source_image
-            else 0,
-            # hack to set a higher priority to prediction with a predictor value
-            prediction.predictor or "z",
-        ),
-    )
-
-
 def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight]:
     """Sort candidates by priority, using as keys:
 
@@ -173,7 +149,7 @@ def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight
 
     This function should be used to make sure most important candidates are
     looked into first in `get_insight_update`. Note that the sorting keys are
-    a superset of those used in `sort_predictions`.
+    a superset of those used in `InsightImporter.sort_predictions`.
 
     :param candidates: The candidates to sort
     :return: Sorted candidates
@@ -349,7 +325,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             )
             return [], [], references
 
-        predictions = sort_predictions(predictions)
+        predictions = cls.sort_predictions(predictions)
         candidates = [
             candidate
             for candidate in cls.generate_candidates(product, predictions)
@@ -385,6 +361,32 @@ class InsightImporter(metaclass=abc.ABCMeta):
             )
 
         return (to_create, to_update, to_delete)
+
+    @classmethod
+    def sort_predictions(cls, predictions: Iterable[Prediction]) -> list[Prediction]:
+        """Sort predictions by priority, using as keys:
+        - priority, specified by data["priority"], prediction with lowest priority
+        values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+        auto-incremented integers, so the most recent images have the highest IDs.
+        Images with `source_image = None` have a lower priority that images with a
+        source image.
+        - predictor, predictions with predictor value have higher priority
+
+        :param predictions: The predictions to sort
+        :return: Sorted predictions
+        """
+        return sorted(
+            predictions,
+            key=lambda prediction: (
+                prediction.data.get("priority", 1),
+                -int(get_image_id(prediction.source_image) or 0)
+                if prediction.source_image
+                else 0,
+                # hack to set a higher priority to prediction with a predictor value
+                prediction.predictor or "z",
+            ),
+        )
 
     @classmethod
     @abc.abstractmethod
@@ -435,7 +437,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             # automatically soon
             or reference.automatic_processing is True
         )
-        for candidate in sort_candidates(candidates):
+        for candidate in cls.sort_candidates(candidates):
             # if match is True, candidate conflicts with existing insight,
             # keeping existing insight and discarding candidate
             match = any(
@@ -489,6 +491,44 @@ class InsightImporter(metaclass=abc.ABCMeta):
             if ref_insight is not None
         ]
         return to_create, to_update, to_delete
+
+    @classmethod
+    def sort_candidates(
+        cls, candidates: Iterable[ProductInsight]
+    ) -> list[ProductInsight]:
+        """Sort candidates by priority, using as keys:
+
+        - priority, specified by data["priority"], candidate with lowest priority
+        values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+        auto-incremented integers, so the most recent images have the highest IDs.
+        Images with `source_image = None` have a lower priority that images with a
+        source image.
+        - automatic processing status: candidates that are automatically
+        processable have higher priority
+
+        This function should be used to make sure most important candidates are
+        looked into first in `get_insight_update`. Note that the sorting keys are
+        a superset of those used in `InsightImporter.sort_predictions`.
+
+        :param candidates: The candidates to sort
+        :return: Sorted candidates
+        """
+        return sorted(
+            candidates,
+            key=lambda candidate: (
+                candidate.data.get("priority", 1),
+                (
+                    -int(get_image_id(candidate.source_image) or 0)
+                    if candidate.source_image
+                    else 0
+                ),
+                # automatically processable insights come first
+                -int(candidate.automatic_processing),
+                # hack to set a higher priority to prediction with a predictor value
+                candidate.predictor or "z",
+            ),
+        )
 
     @classmethod
     @abc.abstractmethod
@@ -900,6 +940,178 @@ class StoreInsightImporter(InsightImporter):
             yield insight
 
 
+class PackagingElementTaxonomyException(Exception):
+    pass
+
+
+class PackagingImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.packaging
+
+    @staticmethod
+    def get_required_prediction_types() -> set[PredictionType]:
+        return {PredictionType.packaging}
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Only keep one insight per element (=shape)
+        return candidate.data["element"].get("shape", {}).get(
+            "value_tag"
+        ) == reference.data["element"].get("shape", {}).get("value_tag")
+
+    @staticmethod
+    def discard_packaging_element(
+        candidate_element: dict,
+        ref_element: dict,
+        taxonomies: dict[str, Taxonomy],
+    ):
+        """Return True if `candidate_element` is a superset of `ref_element`.
+
+        `ref_element` is a packaging element that is currently present on the
+        product, `candidate_element` is a packaging element that was
+        predicted. The purpose of this method is to discard predicted
+        candidate elements that don't bring any information to the product.
+
+        Examples:
+        - candidate {shape: bottle} is uninformative if product already has an
+          element {shape: bottle, material: plastic}
+        - candidate {shape: bottle-cap, material: PET} is informative and
+          should be kept even if product already has an element
+          {shape: bottle-cap, material: plastic} (as plastic is a parent of
+          PET in material taxonomy)
+        """
+        # normalize to be sure to have all needed keys
+        for prop in PackagingElementProperty:
+            candidate_element.setdefault(prop.value, None)
+            ref_element.setdefault(prop.value, None)
+
+        candidate_shape_is_parent_of_ref = False
+        for prop_value, taxonomy in (
+            (
+                PackagingElementProperty.shape.value,
+                taxonomies[TaxonomyType.packaging_shape.name],
+            ),
+            (
+                PackagingElementProperty.material.value,
+                taxonomies[TaxonomyType.packaging_material.name],
+            ),
+            (
+                PackagingElementProperty.recycling.value,
+                taxonomies[TaxonomyType.packaging_recycling.name],
+            ),
+        ):
+            if candidate_element[prop_value]:
+                if not ref_element[prop_value]:
+                    # candidate has a property that reference doesn't have,
+                    # so it cannot be a superset
+                    return False
+
+                candidate_node = taxonomy[candidate_element[prop_value]]
+                ref_node = taxonomy[ref_element[prop_value]]
+
+                if candidate_node is None:
+                    logger.warning(
+                        "packaging element %s not found", candidate_element[prop_value]
+                    )
+                    return True
+
+                if ref_node is None:
+                    # Reference value was not found in taxonomy, keep the
+                    # candidate
+                    return False
+
+                if ref_node.is_parent_of(candidate_node):
+                    return False
+
+                if prop_value == PackagingElementProperty.shape.value:
+                    candidate_shape_is_parent_of_ref = (
+                        candidate_node.is_parent_of(ref_node)
+                        or candidate_node.id == ref_node.id
+                    )
+
+        # if `candidate_shape_is_parent_of_ref` is True, the candidate shape
+        # is the same or is a parent of the reference shape, and is not more
+        # precise for any other property, so discard it
+        return candidate_shape_is_parent_of_ref
+
+    @staticmethod
+    def keep_prediction(prediction: Prediction, product: Product) -> bool:
+        """element may contain the following properties:
+        - shape
+        - recycling
+        - material
+
+        Each property value is a dict containing the following properties:
+        - `value` (non-null)
+        - `value_tag` (may be null)
+        """
+        element = prediction.data["element"]
+        if "shape" not in element:
+            # If the prediction doesn't contain a shape, it's not informative
+            # enough to generate an insight
+            return False
+
+        candidate_element = {
+            prop: element[prop]["value_tag"] for prop in element.keys()
+        }
+
+        if candidate_element["shape"] in SHAPE_ONLY_EXCLUDE_SET and not (
+            candidate_element.get("material") or candidate_element.get("recycling")
+        ):
+            # Double-check here that we don't import shape-only predictions
+            # with excluded shapes
+            return False
+
+        taxonomies = {
+            name: get_taxonomy(name)
+            for name in (
+                TaxonomyType.packaging_shape.name,
+                TaxonomyType.packaging_material.name,
+                TaxonomyType.packaging_recycling.name,
+            )
+        }
+        return not any(
+            PackagingImporter.discard_packaging_element(
+                candidate_element, existing_element, taxonomies
+            )
+            for existing_element in product.packagings
+        )
+
+    @staticmethod
+    def _prediction_sort_fn(prediction: Union[Prediction, ProductInsight]) -> int:
+        """We use the number of element as an approximation of how much
+        informative the prediction is (eg. prioritize predictions with
+        recycling, material and shape)."""
+        return len(prediction.data["element"])
+
+    @classmethod
+    def sort_predictions(cls, predictions: Iterable[Prediction]) -> list[Prediction]:
+        return sorted(predictions, key=cls._prediction_sort_fn, reverse=True)
+
+    @classmethod
+    def sort_candidates(
+        cls, candidates: Iterable[ProductInsight]
+    ) -> list[ProductInsight]:
+        return sorted(candidates, key=cls._prediction_sort_fn, reverse=True)
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Product,
+        predictions: list[Prediction],
+    ) -> Iterator[ProductInsight]:
+        # 1 prediction = 1 packaging element
+        for prediction in (
+            prediction
+            for prediction in predictions
+            if cls.keep_prediction(prediction, product)
+        ):
+            yield ProductInsight(**prediction.to_dict())
+
+
 def is_valid_product_prediction(
     prediction: Prediction, product: Optional[Product] = None
 ) -> bool:
@@ -1002,6 +1214,7 @@ IMPORTERS: list[Type] = [
     ExpirationDateImporter,
     BrandInsightImporter,
     StoreInsightImporter,
+    PackagingImporter,
 ]
 
 

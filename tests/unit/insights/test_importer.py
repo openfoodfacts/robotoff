@@ -11,6 +11,7 @@ from robotoff.insights.importer import (
     InsightImporter,
     LabelInsightImporter,
     PackagerCodeInsightImporter,
+    PackagingImporter,
     ProductWeightImporter,
     StoreInsightImporter,
     import_insights_for_products,
@@ -18,12 +19,11 @@ from robotoff.insights.importer import (
     is_selected_image,
     is_valid_insight_image,
     select_deepest_taxonomized_candidates,
-    sort_predictions,
 )
 from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction
 from robotoff.products import Product
-from robotoff.taxonomy import get_taxonomy
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import InsightType, PredictionType, ProductInsightImportResult
 
 DEFAULT_BARCODE = "3760094310634"
@@ -150,7 +150,9 @@ def test_is_valid_insight_image(images, image_id, expected):
     ],
 )
 def test_sort_predictions(predictions, order):
-    assert sort_predictions(predictions) == [predictions[idx] for idx in order]
+    assert InsightImporter.sort_predictions(predictions) == [
+        predictions[idx] for idx in order
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1128,6 +1130,113 @@ class TestStoreInsightImporter:
         assert not StoreInsightImporter.is_conflicting_insight(
             ProductInsight(value_tag="tag1"), ProductInsight(value_tag="tag2")
         )
+
+
+class TestPackagingImporter:
+    @pytest.mark.parametrize(
+        "candidate_element,ref_element,expected,reverse",
+        [
+            ({"shape": "en:tablespoon"}, {"shape": "en:tube"}, False, False),
+            ({"shape": "en:tube"}, {"shape": "en:tube"}, True, False),
+            (
+                {"shape": "en:tube", "recycling": "en:reuse"},
+                {"shape": "en:tube"},
+                False,
+                True,
+            ),
+            (
+                {"shape": "en:tube", "material": "en:plastic", "recycling": "en:reuse"},
+                {"shape": "en:tube", "recycling": "en:reuse"},
+                False,
+                True,
+            ),
+            (
+                {"shape": "en:tube", "material": "en:plastic"},
+                {"shape": "en:tube", "material": "en:ldpe-low-density-polyethylene"},
+                True,
+                True,
+            ),
+            (
+                {"shape": "en:tube", "material": "en:ldpe-low-density-polyethylene"},
+                {"shape": "en:tube", "material": "en:plastic"},
+                False,
+                True,
+            ),
+            (
+                {"shape": "en:pizza-box", "material": "en:plastic"},
+                {"shape": "en:box", "material": "en:ldpe-low-density-polyethylene"},
+                False,
+                False,
+            ),
+            (
+                {"shape": "en:box", "material": "en:ldpe-low-density-polyethylene"},
+                {"shape": "en:pizza-box", "material": "en:plastic"},
+                False,
+                False,
+            ),
+            (
+                {"shape": "en:box"},
+                {"shape": "en:pizza-box"},
+                True,
+                True,
+            ),
+        ],
+    )
+    def test_discard_packaging_element(
+        self, candidate_element, ref_element, expected, reverse
+    ):
+        taxonomies = {
+            name: get_taxonomy(name, offline=True)
+            for name in (
+                TaxonomyType.packaging_shape.name,
+                TaxonomyType.packaging_material.name,
+                TaxonomyType.packaging_recycling.name,
+            )
+        }
+        assert (
+            PackagingImporter.discard_packaging_element(
+                candidate_element, ref_element, taxonomies
+            )
+            is expected
+        )
+        if reverse:
+            # assert we get the opposite result by switching candidate and reference
+            # for the test cases where we expect it to be valid
+            assert (
+                PackagingImporter.discard_packaging_element(
+                    ref_element, candidate_element, taxonomies
+                )
+                is not expected
+            )
+
+    @pytest.mark.parametrize(
+        "elements,sort_indices",
+        [
+            (
+                [
+                    {"shape": None},
+                    {"shape": None, "recycling": None},
+                ],
+                [1, 0],
+            ),
+            (
+                [
+                    {"shape": None, "recycling": None},
+                    {"shape": None},
+                    {"shape": None, "recycling": None, "material": None},
+                ],
+                [2, 0, 1],
+            ),
+        ],
+    )
+    def test_sort_predictions(self, elements, sort_indices):
+        predictions = [
+            Prediction(type=PredictionType.packaging, data={"element": element})
+            for element in elements
+        ]
+        assert PackagingImporter.sort_predictions(predictions) == [
+            predictions[i] for i in sort_indices
+        ]
 
 
 class TestImportInsightsForProducts:
