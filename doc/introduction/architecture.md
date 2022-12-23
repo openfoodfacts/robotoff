@@ -22,7 +22,7 @@ We use simple string matching algorithms to find patterns in the OCR text to gen
 We also use a ML model to extract objects from images. [^image_predictions]
 
 One model tries to detect any logo [^logos].
-Detected logos are then embedded in a vector space using a pre-trained model.
+Detected logos are then embedded in a vector space using the openAI pre-trained model CLIP-vit-base-patch32.
 In this space we use a k-nearest-neighbor approach to try to classify the logo, predicting a brand or a label.
 Hunger game also collects users annotations to have ground truth ([logo game](https://hunger.openfoodfacts.org/logos)).
 
@@ -69,6 +69,7 @@ Robotoff also depends on the following services:
 - a single node Elasticsearch instance, used to:
   - infer the product category from the product name, using an improved string matching algorithm. [^predict_category] (used in conjunction with ML detection)
   - perform spellcheck on ingredient lists [^spellcheck_ingredients]
+  - index all logos to run ANN search for automatic logo classification [^logos]
 - a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) [^robotoff_ml].
 - a Tensorflow Serving instance, used to serve the category detection model. We're going to get rid of Tensorflow Serving once a new categorizer is trained. [^robotoff_ml]
 - [robotoff-ann](https://github.com/openfoodfacts/robotoff-ann/) which uses an approximate KNN approach to predict logo label
