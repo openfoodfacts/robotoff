@@ -439,6 +439,73 @@ paths:
                   - logos
                   - count
 
+  /ann/search:
+    get:
+      tags:
+        - ANN
+      summary: Approximate search for nearest neighbors of a random query logo
+      description: Return id and distance of each logo found, the number of neighbors returned and the id of the query logo.
+      parameters:
+        - name: count
+          description: Number of neigbors to find
+          in: query
+          schema:
+            type: int
+      responses:
+        "200":
+          description: The search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: list of dict
+                    description: Each dict corresponds to a neighbor logo returned and has "logo_id" and "distance" keys
+                  count:
+                    type: int
+                    description: Number of returned results
+                  query_logo_id:
+                    type: int
+                    description: Id of the query logo
+                required:
+                  - results
+                  - count
+                  - query_logo_id
+  /ann/search/{logo_id:int}:
+      get:
+        tags:
+          - ANN
+        summary: Approximate search for nearest neighbors of a specified query logo
+        description: Return id and distance of each logo found, the number of neighbors returned and the id of the query logo.
+        parameters:
+          - name: count
+            description: Number of neigbors to find
+            in: query
+            schema:
+              type: int
+        responses:
+          "200":
+            description: The search results
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    results:
+                      type: list of dict
+                      description: Each dict corresponds to a neighbor logo returned and has "logo_id" and "distance" keys
+                    count:
+                      type: int
+                      description: Number of returned results
+                    query_logo_id:
+                      type: int
+                      description: Id of the query logo
+                  required:
+                    - results
+                    - count
+                    - query_logo_id
+
   /predict/category:
     post:
       tags:
