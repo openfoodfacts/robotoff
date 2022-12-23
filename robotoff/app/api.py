@@ -907,7 +907,7 @@ class ANNResource:
             )
             if not response["hits"]["hits"]:
                 # We don't have any embedding indexed
-                resp.media = {"results": [], "count": 0}
+                resp.media = {"results": [], "count": 0, "query_logo_id": None}
                 return
             logo_id = int(response["hits"]["hits"][0]["_id"])
 
@@ -923,7 +923,11 @@ class ANNResource:
             if item[0] != logo_id
         ][:count]
         results = [{"logo_id": item[0], "distance": item[1]} for item in raw_results]
-        resp.media = {"results": results, "count": len(results)}
+        resp.media = {
+            "results": results,
+            "count": len(results),
+            "query_logo_id": logo_id,
+        }
 
 
 class WebhookProductResource:
