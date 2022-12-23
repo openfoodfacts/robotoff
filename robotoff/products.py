@@ -392,6 +392,7 @@ class Product:
         "stores_tags",
         "unique_scans_n",
         "images",
+        "packagings",
     )
 
     def __init__(self, product: JSONType):
@@ -404,6 +405,7 @@ class Product:
         self.expiration_date: Optional[str] = product.get("expiration_date") or None
         self.brands_tags: list[str] = product.get("brands_tags") or []
         self.stores_tags: list[str] = product.get("stores_tags") or []
+        self.packagings: list = product.get("packagings") or []
         self.unique_scans_n: int = product.get("unique_scans_n") or 0
         self.images: JSONType = product.get("images") or {}
 
