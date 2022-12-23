@@ -155,10 +155,6 @@ _off_user = os.environ.get("OFF_USER", "")
 _off_request_auth = ("off", "off") if _instance_tld() == "net" else None
 
 
-def off_credentials() -> dict[str, str]:
-    return {"user_id": _off_user, "password": _off_password}
-
-
 CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
 CATEGORY_MATCHER_MATCH_MAPS = {
     "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",

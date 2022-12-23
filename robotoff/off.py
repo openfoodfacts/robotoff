@@ -110,10 +110,6 @@ def get_barcode_from_path(path: str) -> Optional[str]:
     return barcode or None
 
 
-def get_product_update_url(server: Union[ServerType, str]) -> str:
-    return "{}/cgi/product_jqm2.pl".format(get_base_url(server))
-
-
 def get_product_image_select_url(server: Union[ServerType, str]) -> str:
     return "{}/cgi/product_image_crop.pl".format(get_base_url(server))
 
@@ -197,6 +193,10 @@ def is_valid_image(barcode: str, image_id: str) -> bool:
     images = product.get("images", {})
 
     return image_id in images
+
+
+def off_credentials() -> dict[str, str]:
+    return {"user_id": settings._off_user, "password": settings._off_password}
 
 
 def get_product(
@@ -342,19 +342,28 @@ def add_store(barcode: str, store: str, insight_id: Optional[str] = None, **kwar
 
 
 def add_packaging(
-    barcode: str, packaging: str, insight_id: Optional[str] = None, **kwargs
+    barcode: str, packaging: dict, insight_id: Optional[str] = None, **kwargs
 ):
-    comment = "[robotoff] Adding packaging '{}'".format(packaging)
+    shape_value_tag = packaging["shape"]["value_tag"]
+    comment = f"[robotoff] Updating/adding packaging elements '{shape_value_tag}'"
 
     if insight_id:
-        comment += ", ID: {}".format(insight_id)
+        comment += f", ID: {insight_id}"
 
-    params = {
-        "code": barcode,
-        "add_packaging": packaging,
+    body = {
+        "product": {
+            "packagings_add": [
+                {
+                    prop: {"id": element.get("value_tag")}
+                    for prop, element in packaging.items()
+                    if element.get("value_tag")
+                }
+            ],
+        },
+        "fields": "none",
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product_v3(barcode, body, **kwargs)
 
 
 def save_ingredients(
@@ -392,7 +401,7 @@ def update_product(
     if server_domain is None:
         server_domain = settings.BaseURLProvider.server_domain()
 
-    url = get_product_update_url(server_domain)
+    url = f"{get_base_url(server_domain)}/cgi/product_jqm2.pl"
 
     comment = params.get("comment")
     cookies = None
@@ -406,7 +415,7 @@ def update_product(
             params["user_id"] = auth.username
             params["password"] = auth.password
     else:
-        params.update(settings.off_credentials())
+        params.update(off_credentials())
 
         if comment:
             params["comment"] = comment + " (automated edit)"
@@ -432,6 +441,54 @@ def update_product(
         logger.warning("Unexpected status during product update: %s", status)
 
 
+def update_product_v3(
+    barcode: str,
+    body: dict,
+    server_domain: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    timeout: Optional[int] = 15,
+):
+    if server_domain is None:
+        server_domain = settings.BaseURLProvider.server_domain()
+
+    url = f"{get_base_url(server_domain)}/api/v3/product/{barcode}"
+
+    comment = body.get("comment")
+    cookies = None
+
+    if auth is not None:
+        if auth.session_cookie:
+            cookies = {
+                "session": auth.session_cookie,
+            }
+        elif auth.username:
+            body["user_id"] = auth.username
+            body["password"] = auth.password
+    else:
+        body.update(off_credentials())
+
+        if comment:
+            body["comment"] = comment + " (automated edit)"
+
+    if cookies is None and not body.get("password"):
+        raise ValueError(
+            "a password or a session cookie is required to update a product"
+        )
+    r = http_session.patch(
+        url,
+        json=body,
+        auth=settings._off_request_auth,
+        cookies=cookies,
+        timeout=timeout,
+    )
+
+    r.raise_for_status()
+    json = r.json()
+
+    if json.get("errors"):
+        raise ValueError("Errors during product update: %s", str(json["errors"]))
+
+
 def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     if get_product(barcode, server=to) is not None:
         return False
@@ -441,7 +498,7 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
         "type": "edit",
         "code": barcode,
         "new_code": str(to),
-        **settings.off_credentials(),
+        **off_credentials(),
     }
     r = http_session.get(url, params=params, timeout=timeout)
     data = r.json()
@@ -485,7 +542,7 @@ def select_rotate_image(
             params["user_id"] = auth.username
             params["password"] = auth.password
     else:
-        params.update(settings.off_credentials())
+        params.update(off_credentials())
 
     if cookies is None and not params.get("password"):
         raise ValueError(
