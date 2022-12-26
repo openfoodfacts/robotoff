@@ -59,7 +59,7 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
-from robotoff.types import ElasticSearchIndex, PredictionType
+from robotoff.types import PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
@@ -897,25 +897,21 @@ class ANNResource:
         count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
 
         if logo_id is None:
-            response = es_client.search(
-                index=ElasticSearchIndex.logo,
-                size=1,
-                query={
-                    "function_score": {"query": {"match_all": {}}, "random_score": {}}
-                },
-                source=False,
+            logo_embeddings = list(
+                LogoEmbedding.select().order_by(peewee.fn.Random()).limit(1)
             )
-            if not response["hits"]["hits"]:
-                # We don't have any embedding indexed
+
+            if not logo_embeddings:
                 resp.media = {"results": [], "count": 0, "query_logo_id": None}
                 return
-            logo_id = int(response["hits"]["hits"][0]["_id"])
 
-        logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
+            logo_embedding = logo_embeddings[0]
+        else:
+            logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
 
-        if logo_embedding is None:
-            resp.status = falcon.HTTP_404
-            return
+            if logo_embedding is None:
+                resp.status = falcon.HTTP_404
+                return
 
         raw_results = [
             item
