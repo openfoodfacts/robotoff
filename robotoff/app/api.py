@@ -797,6 +797,7 @@ class ImageLogoDetailResource:
             logo.username = username
             logo.completed_at = datetime.datetime.utcnow()
             logo.save()
+            generate_insights_from_annotated_logos([logo], settings.OFF_SERVER_DOMAIN)
 
         resp.status = falcon.HTTP_204
 
