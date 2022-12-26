@@ -91,7 +91,7 @@ def test_process_created_logos(peewee_db, mocker):
             image_prediction.id, server_domain=settings.OFF_SERVER_DOMAIN
         )
         add_logos_to_ann_mock.assert_called()
-        embedding_args = add_logos_to_ann_mock.mock_calls[0].args[0]
+        embedding_args = add_logos_to_ann_mock.mock_calls[0].args[1]
         assert sorted(embedding_args, key=lambda x: x.logo_id) == logo_embeddings
         save_nearest_neighbors_mock.assert_called()
         get_logo_confidence_thresholds_mock.assert_called()
