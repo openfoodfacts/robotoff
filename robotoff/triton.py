@@ -1,6 +1,7 @@
 import cachetools
 import grpc
 import numpy as np
+from more_itertools import chunked
 from PIL import Image
 from transformers import CLIPImageProcessor
 from tritonclient.grpc import service_pb2, service_pb2_grpc
@@ -59,10 +60,18 @@ def generate_clip_embedding_request(images: list[Image.Image]):
 
 
 def generate_clip_embedding(images: list[Image.Image]) -> np.ndarray:
-    request = generate_clip_embedding_request(images)
+    embedding_batches = []
     stub = get_triton_inference_stub()
-    response = stub.ModelInfer(request)
-    return np.frombuffer(
-        response.raw_output_contents[0],
-        dtype=np.float32,
-    ).reshape((len(images), -1))
+    # max_batch_size is currently set to default value of 4 for CLIP
+    # TODO(raphael): Supply a custom model config file to increase this
+    # value
+    for image_batch in chunked(images, 4):
+        request = generate_clip_embedding_request(image_batch)
+        response = stub.ModelInfer(request)
+        embedding_batch = np.frombuffer(
+            response.raw_output_contents[0],
+            dtype=np.float32,
+        ).reshape((len(image_batch), -1))
+        embedding_batches.append(embedding_batch)
+
+    return np.concatenate(embedding_batches)
