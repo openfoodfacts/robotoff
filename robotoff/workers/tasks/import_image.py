@@ -380,7 +380,7 @@ def run_logo_object_detection(
             ]
 
     if logos and process_logos:
-        with db:
+        with db.connection_context():
             save_logo_embeddings(logos, image)
         enqueue_job(
             process_created_logos,
@@ -406,7 +406,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
         cropped_images.append(image.crop((left, top, right, bottom)))
     embeddings = generate_clip_embedding(cropped_images)
 
-    with db:
+    with db.atomic():
         for i in range(len(logos)):
             logo_id = logos[i].id
             logo_embedding = embeddings[i]
