@@ -1,16 +1,6 @@
-import pytest
-
 from robotoff.elasticsearch import get_es_client
 from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.types import ElasticSearchIndex
-
-
-def test_export_index_data_unsupported(mocker):
-    fake_client = mocker.MagicMock()
-
-    exporter = ElasticsearchExporter(fake_client)
-    with pytest.raises(ValueError):
-        exporter.export_index_data("i-dont-exist")
 
 
 def test_load_index_already_exists(mocker):

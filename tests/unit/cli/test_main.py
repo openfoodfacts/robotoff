@@ -1,9 +1,6 @@
-from unittest.mock import call
-
 import pytest
 
 from robotoff.cli.main import categorize, init_elasticsearch
-from robotoff.types import ElasticSearchIndex
 
 
 def test_init_elasticsearch(mocker):
@@ -16,7 +13,7 @@ def test_init_elasticsearch(mocker):
 
     init_elasticsearch(True)
     fake_exporter.load_all_indices.assert_has_calls([])
-    fake_exporter.export_index_data.assert_has_calls([call(ElasticSearchIndex.product)])
+    fake_exporter.export_index_data.assert_has_calls([])
 
 
 class MockResponse:

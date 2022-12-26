@@ -398,12 +398,11 @@ def init_elasticsearch(load_data: bool = True) -> None:
     """
     from robotoff.elasticsearch import get_es_client
     from robotoff.elasticsearch.export import ElasticsearchExporter
-    from robotoff.types import ElasticSearchIndex
 
     es_exporter = ElasticsearchExporter(get_es_client())
     es_exporter.load_all_indices()
     if load_data:
-        es_exporter.export_index_data(ElasticSearchIndex.product)
+        es_exporter.export_index_data()
 
 
 @app.command()

@@ -1,9 +1,8 @@
-import json
-from typing import Iterable
+from typing import Iterator
 
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
 
-from robotoff import settings
 from robotoff.elasticsearch.product.dump import generate_product_data
 from robotoff.types import ElasticSearchIndex
 from robotoff.utils import get_logger
@@ -76,20 +75,13 @@ class ElasticsearchExporter:
     def __init__(self, es_client: Elasticsearch):
         self.es_client = es_client
 
-    def _delete_existing_data(self, index: ElasticSearchIndex) -> None:
-        resp = self.es_client.delete_by_query(
-            query={"match_all": {}},
-            index=index,
-            ignore_unavailable=True,
-        )
-
-        logger.info("Deleted %d documents from %s", resp["deleted"], index)
-
-    def _get_data(self, index: ElasticSearchIndex) -> Iterable[tuple[str, dict]]:
-        if index == ElasticSearchIndex.product:
-            return generate_product_data()
-
-        raise ValueError(f"unknown index: {index}")
+    def _get_product_data(self) -> Iterator[dict]:
+        for barcode, item in generate_product_data():
+            yield {
+                "_id": barcode,
+                "_index": ElasticSearchIndex.product.value,
+                **item,
+            }
 
     def load_index(self, index: ElasticSearchIndex) -> None:
         """Creates the given index if it doesn't already exist."""
@@ -102,7 +94,7 @@ class ElasticsearchExporter:
         for index in ES_INDEX_CONFIGS:
             self.load_index(index)
 
-    def export_index_data(self, index: ElasticSearchIndex) -> int:
+    def export_index_data(self) -> None:
         """Given the index to export data for, this function removes existing data and exports a newer version.
 
         .. warning: right now, we delete then recreate the index.
@@ -110,43 +102,13 @@ class ElasticsearchExporter:
            some request might be silently handled erroneously (with a partial index).
            This is not a problem right now, as we don't have *real-time* requests,
            but only async ones for categories.
-
-        Returns the number of rows inserted into the index."""
-        logger.info("Deleting existing %s data...", index)
-        self._delete_existing_data(index)
-        index_data = self._get_data(index)
-
-        logger.info("Starting %s export to Elasticsearch...", index)
-        rows_inserted = perform_export(self.es_client, index_data, index)
-
-        logger.info("Inserted %d rows for index %s", rows_inserted, index)
-        return rows_inserted
-
-
-def perform_export(
-    client, data: Iterable[tuple[str, dict]], index: str, batch_size=100
-) -> int:
-    batch = []
-    rows_inserted = 0
-
-    for id_, item in data:
-        batch.append(({"index": {"_id": id_}}, item))
-
-        if len(batch) >= batch_size:
-            insert_batch(client, batch, index)
-            rows_inserted += len(batch)
-            batch = []
-
-    if batch:
-        insert_batch(client, batch, index)
-        rows_inserted += len(batch)
-
-    return rows_inserted
-
-
-def insert_batch(client, batch: Iterable[tuple[dict, dict]], index: str):
-    body = ""
-    for action, source in batch:
-        body += "{}\n{}\n".format(json.dumps(action), json.dumps(source))
-
-    client.bulk(body=body, index=index, doc_type=settings.ELASTICSEARCH_TYPE)
+        """
+        logger.info("Deleting existing product data...")
+        resp = self.es_client.delete_by_query(
+            query={"match_all": {}},
+            index=ElasticSearchIndex.product.value,
+            ignore_unavailable=True,
+        )
+        logger.info("Deleted %d documents from product", resp["deleted"])
+        logger.info("Starting product export to Elasticsearch...")
+        bulk(self.es_client, self._get_product_data())
