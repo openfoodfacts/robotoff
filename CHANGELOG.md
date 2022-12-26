@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.16.1](https://github.com/openfoodfacts/robotoff/compare/v1.16.0...v1.16.1) (2022-12-26)
+
+
+### Bug Fixes
+
+* check that brand prediction is not in blacklist during import ([45bc014](https://github.com/openfoodfacts/robotoff/commit/45bc0147c16417ba4a9611b3247b15e096e54409))
+* improve logging messages for cached resources ([844bfd3](https://github.com/openfoodfacts/robotoff/commit/844bfd3dbe67bc71fcbdc9779f21ffc10d256142))
+* limit CLIP batch size to 4 ([ab0cc99](https://github.com/openfoodfacts/robotoff/commit/ab0cc992c42e6f35dfda862d803550d74ca9299e))
+* set TTL of 1h for get_logo_annotations function ([28e2505](https://github.com/openfoodfacts/robotoff/commit/28e25059d96b94cd2de7a8fab2e86af84a284074))
+
 ## [1.16.0](https://github.com/openfoodfacts/robotoff/compare/v1.15.2...v1.16.0) (2022-12-23)
 
 
