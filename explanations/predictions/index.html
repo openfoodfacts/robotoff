@@ -746,12 +746,6 @@ This is the different between <em>insights</em> and <em>predictions</em>: <em>pr
 <p>Every insight type has a single <code>InsightImporter</code> that is in charge of creating/updating/deleting insights from a list of predictions.</p>
 <p>The importer must have a <code>generate_candidates</code> method that returns a list of candidate insights — <code>ProductInsight</code>s should be created from predictions in this method. This is also where all the selection logic is (what prediction data to keep, what to ignore).</p>
 <p>From the list of candidate insight, we update the <code>product_insight</code> table, by deleting all insights and importing all candidates. The import mechanism is actually a bit smarter, we avoid unnecessary DB insertion/deletion by trying to match each candidate with a reference insight — an insight that is already in DB.</p>
-<p>For each insight, if <code>automatic_processing=True</code>, we check that the insight can indeed be applied automatically: we don't want to apply insights based on very old images that are not relevant anymore.</p>
-<p>We keep automatic processing on if any of the following conditions are true:</p>
-<ul>
-<li>the image is a selected image, in any language (<code>front</code>, <code>nutrition</code>, <code>ingredients</code>, <code>packaging</code> )</li>
-<li>the image has been uploaded no more than 120 days (3 months) before the last uploaded image.</li>
-</ul>
 <p>Once insights are refreshed/imported, they become available as questions in <code>/questions/*</code> API routes. Automatically processable insights are applied by the scheduler, once <code>current_timestamp &gt;= ${process_after}</code>.</p>
                 
               
