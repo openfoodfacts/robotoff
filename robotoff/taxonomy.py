@@ -302,6 +302,8 @@ def fetch_taxonomy(
 @cachetools.cached(cache=cachetools.TTLCache(maxsize=100, ttl=12 * 60 * 60))  # 12h
 def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
     """Returned the requested Taxonomy."""
+    logger.info("Loading taxonomy %s...", taxonomy_type)
+
     if taxonomy_type not in settings.TAXONOMY_URLS:
         raise ValueError(f"unknown taxonomy type: {taxonomy_type}")
 
@@ -325,6 +327,7 @@ def get_taxonomy_mapping(taxonomy_type: str) -> dict[str, str]:
     languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
     canonical value (`en:organic` for the previous example).
     """
+    logger.info("Loading taxonomy mapping %s...", taxonomy_type)
     taxonomy = get_taxonomy(taxonomy_type)
     ids: dict[str, str] = {}
 
@@ -361,7 +364,6 @@ def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]
 
 def load_resources():
     """Load and cache resources."""
-    logger.info("Loading taxonomy resources...")
     for taxonomy_type in settings.TAXONOMY_URLS.keys():
         get_taxonomy(taxonomy_type)
 
