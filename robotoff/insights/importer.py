@@ -9,7 +9,7 @@ from typing import Any, Iterable, Iterator, Optional, Type
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
-from robotoff.brands import get_brand_prefix, in_barcode_range
+from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_range
 from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
@@ -867,6 +867,24 @@ class BrandInsightImporter(InsightImporter):
 
         return True
 
+    @staticmethod
+    def is_prediction_valid(prediction: Prediction) -> bool:
+        brand_blacklist = get_brand_blacklist()
+        if prediction.value_tag in brand_blacklist:
+            return False
+
+        if (
+            prediction.predictor == "universal-logo-detector"
+            and "username" in prediction.data
+        ):
+            # Check barcode range for all predictors except logos detected using
+            # universal-logo-detector model and annotated manually
+            return True
+
+        return BrandInsightImporter.is_in_barcode_range(
+            prediction.barcode, prediction.value_tag  # type: ignore
+        )
+
     @classmethod
     def generate_candidates(
         cls,
@@ -878,14 +896,7 @@ class BrandInsightImporter(InsightImporter):
             return
 
         for prediction in predictions:
-            if not (
-                prediction.predictor == "universal-logo-detector"
-                and "username" in prediction.data
-            ) and not cls.is_in_barcode_range(
-                product.barcode, prediction.value_tag  # type: ignore
-            ):
-                # Check barcode range for all predictors except logos detected using
-                # universal-logo-detector model and annotated manually
+            if not cls.is_prediction_valid(prediction):
                 continue
             insight = ProductInsight(**prediction.to_dict())
             if insight.automatic_processing is None:

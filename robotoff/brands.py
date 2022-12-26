@@ -6,8 +6,16 @@ import cachetools
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.utils import dump_json, dump_text, http_session, load_json, text_file_iter
-from robotoff.utils.cache import CachedStore
+from robotoff.utils import (
+    dump_json,
+    dump_text,
+    get_logger,
+    http_session,
+    load_json,
+    text_file_iter,
+)
+
+logger = get_logger(__name__)
 
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
@@ -17,10 +25,13 @@ def get_brand_prefix() -> set[tuple[str, str]]:
     Each tuple has the format (brand_tag, prefix) where prefix is a digit with
     13 elements (EAN-13).
     """
+    logger.info("Loading brand prefix...")
     return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
+@cachetools.cached(cachetools.LRUCache(maxsize=1))
 def get_brand_blacklist() -> set[str]:
+    logger.info("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
 
@@ -142,9 +153,11 @@ def in_barcode_range(
     return True
 
 
-BRAND_BLACKLIST_STORE = CachedStore(
-    fetch_func=get_brand_blacklist, expiration_interval=None
-)
+def load_resources():
+    """Load and cache resources."""
+    get_brand_prefix()
+    get_brand_blacklist()
+
 
 if __name__ == "__main__":
     blacklisted_brands = get_brand_blacklist()
