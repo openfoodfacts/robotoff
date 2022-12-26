@@ -961,6 +961,7 @@ class WebhookProductResource:
                 update_insights_job,
                 high_queue,
                 settings.UPDATED_PRODUCT_WAIT,
+                job_kwargs={"result_ttl": 0},
                 barcode=barcode,
                 server_domain=server_domain,
             )
