@@ -169,7 +169,7 @@ def knn_search(
     return []
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@cachetools.cached(cachetools.TTLCache(maxsize=1, ttl=3600))  # 1h
 def get_logo_annotations() -> dict[int, LogoLabelType]:
     logger.info("Loading logo annotations from DB...")
     annotations: dict[int, LogoLabelType] = {}
