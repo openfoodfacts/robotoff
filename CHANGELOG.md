@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.16.3](https://github.com/openfoodfacts/robotoff/compare/v1.16.2...v1.16.3) (2022-12-26)
+
+
+### Bug Fixes
+
+* bulk-index logo embeddings (instead of indexing one by one) ([4768cfb](https://github.com/openfoodfacts/robotoff/commit/4768cfb75f656892721621f6dce174eb26b01378))
+* fix ES product export ([ea9cd21](https://github.com/openfoodfacts/robotoff/commit/ea9cd21944f9b575876ed01b4cea988b8be546e4))
+* fix test_import_image integration test ([2031fa4](https://github.com/openfoodfacts/robotoff/commit/2031fa48d39760f9491588b0a6e4404952e9bc3b))
+* remove automatic processing disabling ([081f4a9](https://github.com/openfoodfacts/robotoff/commit/081f4a95a2b5aa41afa2ea60fec4681eec3ab3f1))
+
 ## [1.16.2](https://github.com/openfoodfacts/robotoff/compare/v1.16.1...v1.16.2) (2022-12-26)
 
 
