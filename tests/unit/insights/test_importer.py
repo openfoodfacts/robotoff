@@ -17,7 +17,6 @@ from robotoff.insights.importer import (
     import_insights_for_products,
     is_recent_image,
     is_selected_image,
-    is_trustworthy_insight_image,
     is_valid_insight_image,
     select_deepest_taxonomized_candidates,
     sort_predictions,
@@ -84,65 +83,6 @@ def test_is_recent_image(images, image_id, max_timedelta, expected):
 )
 def test_is_selected_image(images, image_id, expected):
     assert is_selected_image(images, image_id) is expected
-
-
-@pytest.mark.parametrize(
-    "images,image_id,max_timedelta,expected",
-    [
-        (
-            {"1": {"uploaded_t": DEFAULT_UPLOADED_T}},
-            "1",
-            datetime.timedelta(seconds=10),
-            True,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 9)},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            True,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 11)},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            False,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "2": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "ingredients_fr": {"imgid": "1"},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            True,
-        ),
-        (
-            {
-                "2": {"uploaded_t": DEFAULT_UPLOADED_T},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            False,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-            },
-            "front_fr",
-            datetime.timedelta(seconds=10),
-            False,
-        ),
-    ],
-)
-def test_is_trustworthy_insight_image(images, image_id, max_timedelta, expected):
-    assert is_trustworthy_insight_image(images, image_id, max_timedelta) is expected
 
 
 @pytest.mark.parametrize(

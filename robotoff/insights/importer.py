@@ -108,37 +108,6 @@ def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
     return image_id.isdigit() and image_id in images
 
 
-def is_trustworthy_insight_image(
-    images: dict[str, Any],
-    source_image: Optional[str],
-    max_timedelta: datetime.timedelta = settings.IMAGE_MAX_TIMEDELTA,
-):
-    """Return True if the source image is trustworthy for insight generation,
-      - the image ID is a digit and is referenced in `images`
-      - the image is either selected or recent enough
-
-    If `source_image` is None, we always consider the insight as trustworthy.
-    Insights considered as trustworthy can have automatic_processing = True.
-
-    :param images: The image dict as stored in MongoDB.
-    :param source_image: The insight source image, should be the path of the
-    image path or None.
-    :param max_timedelta: Maximum timedelta between most recent image and
-    source image, default settings.IMAGE_MAX_TIMEDELTA.
-    """
-    if source_image is None:
-        return True
-
-    image_id = Path(source_image).stem
-
-    if not image_id.isdigit() or image_id not in images:
-        return False
-
-    return is_selected_image(images, image_id) or is_recent_image(
-        images, image_id, max_timedelta
-    )
-
-
 def get_existing_insight(
     insight_type: InsightType, barcode: str, server_domain: str
 ) -> list[ProductInsight]:
@@ -361,10 +330,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 )
                 candidate.automatic_processing = False
 
-            if not is_trustworthy_insight_image(product.images, candidate.source_image):
-                # Don't process automatically if the insight image is not
-                # trustworthy (too old and not selected)
-                candidate.automatic_processing = False
             if candidate.data.get("is_annotation"):
                 username = candidate.data.get("username")
                 if username:

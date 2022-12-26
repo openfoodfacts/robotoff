@@ -1,5 +1,4 @@
 import copy
-import datetime
 import logging
 import os
 from pathlib import Path
@@ -284,15 +283,6 @@ INFLUXDB_ORG = os.environ.get("INFLUXDB_ORG", "off")
 
 TEST_DIR = PROJECT_DIR / "tests"
 TEST_DATA_DIR = TEST_DIR / "unit/data"
-
-# Maximum interval between the upload of the insight image and the upload of
-# the most recent image of the product to consider the insight image as
-# trustworthy. Insights with untrustworthy images cannot be applied
-# automatically.
-# For example if days=120, it means that an insight based on an image that is
-# more than 120 days older than the most recent product image cannot be applied
-# automatically.
-IMAGE_MAX_TIMEDELTA = datetime.timedelta(days=120)
 
 # Number of minutes to wait before processing an insight automatically
 INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
