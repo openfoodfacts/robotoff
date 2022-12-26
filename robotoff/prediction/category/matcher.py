@@ -102,7 +102,6 @@ def load_resources():
     get_intersect_categories_ingredients()
 
     for lang in SUPPORTED_LANG:
-        logger.info("Loading NLP for %s...", lang)
         get_lemmatizing_nlp(lang)
 
 
