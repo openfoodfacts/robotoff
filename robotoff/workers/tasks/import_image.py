@@ -3,6 +3,7 @@ import pathlib
 from typing import Optional
 
 import elasticsearch
+from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
 from robotoff.elasticsearch.client import get_es_client
@@ -427,7 +428,7 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
     es_client = get_es_client()
     try:
         add_logos_to_ann(es_client, logo_embeddings)
-    except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
+    except BulkIndexError as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
 

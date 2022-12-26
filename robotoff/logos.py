@@ -5,6 +5,7 @@ from typing import Optional
 import cachetools
 import elasticsearch
 import numpy as np
+from elasticsearch.helpers import bulk as elasticsearch_bulk
 from elasticsearch.helpers import scan as elasticsearch_scan
 
 from robotoff import settings
@@ -113,15 +114,19 @@ def add_logos_to_ann(
     es_client: elasticsearch.Elasticsearch, logo_embeddings: list[LogoEmbedding]
 ) -> None:
     """Index logo embeddings in Elasticsearch ANN index."""
-    for logo_embedding in logo_embeddings:
-        embedding = np.frombuffer(logo_embedding.embedding, dtype=np.float32)
-        es_client.index(
-            index=ElasticSearchIndex.logo,
-            id=logo_embedding.logo_id,
-            document={
-                "embedding": embedding / np.linalg.norm(embedding),
-            },
-        )
+    embeddings = [
+        np.frombuffer(logo_embedding.embedding, dtype=np.float32)
+        for logo_embedding in logo_embeddings
+    ]
+    actions = (
+        {
+            "_index": ElasticSearchIndex.logo.name,
+            "_id": logo_embedding.logo_id,
+            "embedding": embedding / np.linalg.norm(embedding),
+        }
+        for logo_embedding, embedding in zip(logo_embeddings, embeddings)
+    )
+    elasticsearch_bulk(es_client, actions)
 
 
 def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:

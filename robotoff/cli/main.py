@@ -416,8 +416,10 @@ def add_logo_to_ann(
     import logging
     import time
 
-    import elasticsearch
     import tqdm
+    from elasticsearch.helpers import BulkIndexError
+    from more_itertools import chunked
+    from playhouse.postgres_ext import ServerSide
 
     from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
     from robotoff.models import LogoEmbedding, db
@@ -432,17 +434,20 @@ def add_logo_to_ann(
 
     with db:
         logger.info("Fetching logo embedding to index...")
-        for logo_embedding in tqdm.tqdm(LogoEmbedding.select().iterator()):
-            if logo_embedding.logo_id in seen:
-                continue
-
+        query = LogoEmbedding.select().objects()
+        logo_embedding_iter = tqdm.tqdm(
+            (
+                logo_embedding
+                for logo_embedding in ServerSide(query)
+                if logo_embedding.logo_id not in seen
+            ),
+            desc="logo",
+        )
+        for logo_embedding_batch in chunked(logo_embedding_iter, 500):
             try:
-                add_logos_to_ann(es_client, [logo_embedding])
-                added += 1
-            except (
-                elasticsearch.ConnectionError,
-                elasticsearch.ConnectionTimeout,
-            ) as e:
+                add_logos_to_ann(es_client, logo_embedding_batch)
+                added += len(logo_embedding_batch)
+            except BulkIndexError as e:
                 logger.info("Request error during logo addition to ANN", exc_info=e)
 
             if sleep_time:
