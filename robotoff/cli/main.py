@@ -5,6 +5,7 @@ from typing import Optional
 
 import typer
 
+from robotoff.elasticsearch.client import get_es_client
 from robotoff.types import ObjectDetectionModel, PredictionType, WorkerQueue
 
 app = typer.Typer()
@@ -414,58 +415,35 @@ def add_logo_to_ann(
     """Index all missing logos in Elasticsearch ANN index."""
     import logging
     import time
-    from itertools import groupby
 
     import elasticsearch
     import tqdm
 
     from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
-    from robotoff.models import (
-        ImageModel,
-        ImagePrediction,
-        LogoAnnotation,
-        LogoEmbedding,
-        db,
-    )
+    from robotoff.models import LogoEmbedding, db
     from robotoff.utils import get_logger
 
     logger = get_logger()
     logging.getLogger("elastic_transport.transport").setLevel(logging.WARNING)
 
-    seen = get_stored_logo_ids()
+    es_client = get_es_client()
+    seen = get_stored_logo_ids(es_client)
     added = 0
+
     with db:
         logger.info("Fetching logo embedding to index...")
-        logo_embedding_iter = tqdm.tqdm(
-            LogoEmbedding.select(LogoEmbedding, LogoAnnotation, ImageModel.id)
-            .join(LogoAnnotation)
-            .join(ImagePrediction)
-            .join(ImageModel)
-            .order_by(ImageModel.id)
-            .iterator()
-        )
-        for _, logo_embedding_batch in groupby(
-            logo_embedding_iter, lambda x: x.logo.image_prediction.image.id
-        ):
-            logo_embeddings = list(logo_embedding_batch)
-
-            to_process = [
-                logo_embedding
-                for logo_embedding in logo_embeddings
-                if logo_embedding.logo_id not in seen
-            ]
-            if not to_process:
+        for logo_embedding in tqdm.tqdm(LogoEmbedding.select().iterator()):
+            if logo_embedding.logo_id in seen:
                 continue
 
             try:
-                add_logos_to_ann(to_process)
+                add_logos_to_ann(es_client, [logo_embedding])
+                added += 1
             except (
                 elasticsearch.ConnectionError,
                 elasticsearch.ConnectionTimeout,
             ) as e:
                 logger.info("Request error during logo addition to ANN", exc_info=e)
-
-            added += len(to_process)
 
             if sleep_time:
                 time.sleep(sleep_time)

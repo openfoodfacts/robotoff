@@ -99,8 +99,7 @@ def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
     return thresholds
 
 
-def get_stored_logo_ids() -> set[int]:
-    es_client = get_es_client()
+def get_stored_logo_ids(es_client: elasticsearch.Elasticsearch) -> set[int]:
     scan_iter = elasticsearch_scan(
         es_client,
         query={"query": {"match_all": {}}},
@@ -110,10 +109,10 @@ def get_stored_logo_ids() -> set[int]:
     return set(int(item["_id"]) for item in scan_iter)
 
 
-def add_logos_to_ann(logo_embeddings: list[LogoEmbedding]) -> None:
+def add_logos_to_ann(
+    es_client: elasticsearch.Elasticsearch, logo_embeddings: list[LogoEmbedding]
+) -> None:
     """Index logo embeddings in Elasticsearch ANN index."""
-    es_client = get_es_client()
-
     for logo_embedding in logo_embeddings:
         embedding = np.frombuffer(logo_embedding.embedding, dtype=np.float32)
         es_client.index(

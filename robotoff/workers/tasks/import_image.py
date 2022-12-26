@@ -5,6 +5,7 @@ from typing import Optional
 import elasticsearch
 from PIL import Image
 
+from robotoff.elasticsearch.client import get_es_client
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -423,8 +424,9 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
     if not logo_embeddings:
         return
 
+    es_client = get_es_client()
     try:
-        add_logos_to_ann(logo_embeddings)
+        add_logos_to_ann(es_client, logo_embeddings)
     except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
