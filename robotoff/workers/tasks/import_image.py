@@ -70,7 +70,11 @@ def run_import_image_job(
         return
 
     with db:
-        save_image(barcode, source_image, product, server_domain)
+        image_model = save_image(barcode, source_image, product, server_domain)
+
+    if image_model is None:
+        # The image is invalid, no need to perform image extraction jobs
+        return
 
     enqueue_job(
         import_insights_from_image,
