@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.16.4](https://github.com/openfoodfacts/robotoff/compare/v1.16.3...v1.16.4) (2022-12-26)
+
+
+### Bug Fixes
+
+* don't open DB connection twice ([3319c0b](https://github.com/openfoodfacts/robotoff/commit/3319c0bfbb00179802d65602c7f594c5d8c5ff41))
+* generate insights from annotated logos after PUT logo/{logo_id} ([e45bd3a](https://github.com/openfoodfacts/robotoff/commit/e45bd3a61abb49e6517b272effa44bdeb13abdd4))
+* simplify call to /ann/search ([1164f65](https://github.com/openfoodfacts/robotoff/commit/1164f65a5f4ce3cae433e930ed51d1fc40a62228))
+
 ## [1.16.3](https://github.com/openfoodfacts/robotoff/compare/v1.16.2...v1.16.3) (2022-12-26)
 
 
