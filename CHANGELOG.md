@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.16.2](https://github.com/openfoodfacts/robotoff/compare/v1.16.1...v1.16.2) (2022-12-26)
+
+
+### Bug Fixes
+
+* add result_ttl=0 for upate_insight job ([09862f1](https://github.com/openfoodfacts/robotoff/commit/09862f1f836e6e5bbeafabcf40271d40d281e2e9))
+* don't perform image extraction jobs on invalid images ([02458c4](https://github.com/openfoodfacts/robotoff/commit/02458c484978759c54ad21100334569b27dad70b))
+* fix add-logo-to-ann CLI command ([8385689](https://github.com/openfoodfacts/robotoff/commit/8385689951ffe2cf9915443e8d56a8a2906d87b5))
+* remove useless log message ([7ded92d](https://github.com/openfoodfacts/robotoff/commit/7ded92d63565dadc3ee164a99f56b87ebba96924))
+
 ## [1.16.1](https://github.com/openfoodfacts/robotoff/compare/v1.16.0...v1.16.1) (2022-12-26)
 
 
