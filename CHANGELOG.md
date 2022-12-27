@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.6](https://github.com/openfoodfacts/robotoff/compare/v1.16.5...v1.16.6) (2022-12-27)
+
+
+### Bug Fixes
+
+* add CLI to refresh all nearest neighbors ([80fa554](https://github.com/openfoodfacts/robotoff/commit/80fa554b09efef54b8c5a04d75a0147aaf5bec5c))
+* allow to run object detection models on URL list file ([6b04692](https://github.com/openfoodfacts/robotoff/commit/6b046920758d1ace4f3b4361917040da0110cc79))
+* don't perform full update during insight update ([671af07](https://github.com/openfoodfacts/robotoff/commit/671af07f8cb4f2b91e34bc3621fdf660984f1fba))
+* don't refresh nearest neighbors of annotated logos ([27fa3de](https://github.com/openfoodfacts/robotoff/commit/27fa3dea8bdcf20aae10522be6597f4c27d88fb0))
+* open DB connection when refreshing product insight ([f8c9a36](https://github.com/openfoodfacts/robotoff/commit/f8c9a36697a39da6263cf170eef8d359c0edf47d))
+* use better default for MONGO_URI ([5a392db](https://github.com/openfoodfacts/robotoff/commit/5a392dbb3494c1aad07645a35cd817f1593e16e8))
+
 ## [1.16.5](https://github.com/openfoodfacts/robotoff/compare/v1.16.4...v1.16.5) (2022-12-27)
 
 
