@@ -907,6 +907,7 @@ class ANNResource:
                 return
 
             logo_embedding = logo_embeddings[0]
+            logo_id = logo_embedding.logo_id
         else:
             logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
 
