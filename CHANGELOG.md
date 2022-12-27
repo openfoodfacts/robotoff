@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.5](https://github.com/openfoodfacts/robotoff/compare/v1.16.4...v1.16.5) (2022-12-27)
+
+
+### Bug Fixes
+
+* fix /ann/search route ([9016968](https://github.com/openfoodfacts/robotoff/commit/90169682e4c60872d04eb36f35bf6aa5ccf879c6))
+
 ## [1.16.4](https://github.com/openfoodfacts/robotoff/compare/v1.16.3...v1.16.4) (2022-12-26)
 
 
