@@ -433,7 +433,7 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
         return
 
     try:
-        save_nearest_neighbors(logo_embeddings)
+        save_nearest_neighbors(es_client, logo_embeddings)
     except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during ANN batch query", exc_info=e)
         return

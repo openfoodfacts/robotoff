@@ -482,6 +482,28 @@ def add_logo_to_ann(
 
 
 @app.command()
+def refresh_logo_nearest_neighbors(
+    day_offset: int = typer.Option(7, help="Number of days since last refresh", min=1),
+    batch_size: int = typer.Option(500, help="Number of logos to process at once"),
+):
+    """Refresh each logo nearest neighbors if the last refresh is more than
+    `day_offset` days old."""
+    import logging
+
+    from robotoff.logos import refresh_nearest_neighbors
+    from robotoff.models import db
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    logging.getLogger("elastic_transport.transport").setLevel(logging.WARNING)
+
+    logger.info("Starting refresh of logo nearest neighbors")
+
+    with db.connection_context():
+        refresh_nearest_neighbors(day_offset, batch_size)
+
+
+@app.command()
 def import_embedding(
     input_dir: Path = typer.Argument(
         ...,

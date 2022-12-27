@@ -7,12 +7,21 @@ import elasticsearch
 import numpy as np
 from elasticsearch.helpers import bulk as elasticsearch_bulk
 from elasticsearch.helpers import scan as elasticsearch_scan
+from more_itertools import chunked
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbedding
+from robotoff.models import (
+    ImageModel,
+    ImagePrediction,
+    LogoAnnotation,
+    LogoConfidenceThreshold,
+    LogoEmbedding,
+)
+from robotoff.models import Prediction as PredictionModel
+from robotoff.models import db
 from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
 from robotoff.types import ElasticSearchIndex, PredictionType
@@ -129,10 +138,11 @@ def add_logos_to_ann(
     elasticsearch_bulk(es_client, actions)
 
 
-def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
+def save_nearest_neighbors(
+    es_client: elasticsearch.Elasticsearch, logo_embeddings: list[LogoEmbedding]
+) -> None:
     """Save nearest neighbors of a batch of logo embedding."""
-    es_client = get_es_client()
-
+    updated = []
     for logo_embedding in logo_embeddings:
         results = knn_search(
             es_client, logo_embedding.embedding, settings.K_NEAREST_NEIGHBORS
@@ -148,7 +158,10 @@ def save_nearest_neighbors(logo_embeddings: list[LogoEmbedding]) -> None:
                 "logo_ids": logo_ids,
                 "updated_at": datetime.datetime.utcnow().isoformat(),
             }
-            logo_embedding.logo.save()
+            updated.append(logo_embedding.logo)
+
+    if updated:
+        LogoAnnotation.bulk_update(updated, fields=["nearest_neighbors"], batch_size=50)
 
 
 def knn_search(
@@ -288,6 +301,7 @@ def import_logo_insights(
     server_domain: str,
     thresholds: dict[LogoLabelType, float],
     default_threshold: float = 0.1,
+    notify: bool = True,
 ):
     selected_logos = []
     logo_probs = []
@@ -310,11 +324,31 @@ def import_logo_insights(
         selected_logos.append(logo)
         logo_probs.append(probs)
 
+    if not logos:
+        return
+
+    # Delete all predictions for these logos from universal logo detectors
+    # that are not from a human annotator
+    PredictionModel.delete().where(
+        (
+            PredictionModel.data["logo_id"]
+            .cast("integer")
+            .in_([logo.id for logo in logos])
+        )
+        & (~(PredictionModel.data["is_annotation"].cast("bool") == True))  # noqa: E712
+        # Add a filter on barcode to speed-up filtering
+        & (
+            PredictionModel.barcode.in_(
+                [logo.image_prediction.image.barcode for logo in logos]
+            )
+        )
+    ).execute()
     predictions = predict_logo_predictions(selected_logos, logo_probs)
     imported = import_insights(predictions, server_domain)
 
-    for logo, probs in zip(selected_logos, logo_probs):
-        NotifierFactory.get_notifier().send_logo_notification(logo, probs)
+    if notify:
+        for logo, probs in zip(selected_logos, logo_probs):
+            NotifierFactory.get_notifier().send_logo_notification(logo, probs)
 
     return imported
 
@@ -427,3 +461,54 @@ def generate_prediction(
         predictor="universal-logo-detector",
         data=data,
     )
+
+
+def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
+    """Refresh each logo nearest neighbors if the last refresh is more than
+    `day_offset` days old."""
+    sql_query = """
+        SELECT
+        id
+        FROM
+        logo_annotation
+        WHERE
+        (
+            logo_annotation.nearest_neighbors IS NULL
+            OR ((logo_annotation.nearest_neighbors ->> 'updated_at') ::timestamp < (now() - '%s days' ::interval))
+        );"""
+    logo_ids = [item[0] for item in db.execute_sql(sql_query, (day_offset,))]
+    logger.info("%s logos to refresh", len(logo_ids))
+
+    es_client = get_es_client()
+    thresholds = get_logo_confidence_thresholds()
+
+    for logo_id_batch in chunked(logo_ids, batch_size):
+        with db.atomic():
+            logo_embeddings = list(
+                LogoEmbedding.select(
+                    LogoEmbedding,
+                    LogoAnnotation,
+                    ImageModel.barcode,
+                )
+                .join(LogoAnnotation)
+                .join(ImagePrediction)
+                .join(ImageModel)
+                .where(LogoEmbedding.logo_id.in_(logo_id_batch))
+            )
+            try:
+                save_nearest_neighbors(es_client, logo_embeddings)
+            except (
+                elasticsearch.ConnectionError,
+                elasticsearch.ConnectionTimeout,
+            ) as e:
+                logger.info("Request error during ANN batch query", exc_info=e)
+            else:
+                logos = [embedding.logo for embedding in logo_embeddings]
+                import_logo_insights(
+                    logos,
+                    thresholds=thresholds,
+                    server_domain=settings.OFF_SERVER_DOMAIN,
+                    notify=False,
+                )
+
+    logger.info("refresh of logo nearest neighbors finished")
