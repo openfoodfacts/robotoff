@@ -163,7 +163,7 @@ POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
 
 # Mongo used to be on the same server as Robotoff
 
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb://mongodb:27017")
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017")
 
 # Redis
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
