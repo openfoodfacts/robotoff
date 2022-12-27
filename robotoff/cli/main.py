@@ -246,7 +246,8 @@ def refresh_insights(
 
     if barcode is not None:
         logger.info(f"Refreshing product {barcode}")
-        imported = refresh_insights_(barcode, settings.OFF_SERVER_DOMAIN)
+        with db:
+            imported = refresh_insights_(barcode, settings.OFF_SERVER_DOMAIN)
         logger.info(f"Refreshed insights: {imported}")
     else:
         logger.info("Launching insight refresh on full database")
@@ -431,7 +432,7 @@ def add_logo_to_ann(
     seen = get_stored_logo_ids(es_client)
     added = 0
 
-    with db:
+    with db.connection_context():
         logger.info("Fetching logo embedding to index...")
         query = LogoEmbedding.select().objects()
         logo_embedding_iter = tqdm.tqdm(
