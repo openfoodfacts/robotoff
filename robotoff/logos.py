@@ -473,8 +473,11 @@ def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
         logo_annotation
         WHERE
         (
-            logo_annotation.nearest_neighbors IS NULL
-            OR ((logo_annotation.nearest_neighbors ->> 'updated_at') ::timestamp < (now() - '%s days' ::interval))
+            logo_annotation.completed_at IS NULL
+            AND (
+                logo_annotation.nearest_neighbors IS NULL
+                OR ((logo_annotation.nearest_neighbors ->> 'updated_at') ::timestamp < (now() - '%s days' ::interval))
+            )
         );"""
     logo_ids = [item[0] for item in db.execute_sql(sql_query, (day_offset,))]
     logger.info("%s logos to refresh", len(logo_ids))
