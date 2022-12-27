@@ -492,6 +492,7 @@ def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
                     LogoEmbedding,
                     LogoAnnotation,
                     ImageModel.barcode,
+                    ImageModel.source_image,
                 )
                 .join(LogoAnnotation)
                 .join(ImagePrediction)
