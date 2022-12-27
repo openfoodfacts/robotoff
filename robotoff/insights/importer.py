@@ -286,8 +286,22 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 50,
             )
 
-        for insight in to_update:
-            insight.save()
+        for insight, reference_insight in to_update:
+            update = {}
+            for field_name in (
+                key
+                for key in insight.__data__.keys()
+                if key not in ("id", "barcode", "type", "server_domain", "server_type")
+            ):
+                if getattr(insight, field_name) != getattr(
+                    reference_insight, field_name
+                ):
+                    update[field_name] = getattr(insight, field_name)
+
+            if update:
+                ProductInsight.update(**update).where(
+                    ProductInsight.id == reference_insight.id
+                ).execute()
 
         return inserts
 
@@ -298,7 +312,11 @@ class InsightImporter(metaclass=abc.ABCMeta):
         predictions: list[Prediction],
         server_domain: str,
         product_store: DBProductStore,
-    ) -> tuple[list[ProductInsight], list[ProductInsight], list[ProductInsight]]:
+    ) -> tuple[
+        list[ProductInsight],
+        list[tuple[ProductInsight, ProductInsight]],
+        list[ProductInsight],
+    ]:
         """Given a list of predictions, yield tuples of ProductInsight to
         create, update and delete.
 
@@ -344,17 +362,15 @@ class InsightImporter(metaclass=abc.ABCMeta):
             cls.add_fields(insight, product, timestamp, server_domain, server_type)
 
         for insight, reference_insight in to_update:
-            # Keep `reference_insight` in DB (as the value/value_tag/source_image is the same),
-            # but update information from `insight`.
-            # This way, we don't unnecessarily insert/delete rows in ProductInsight table
-            # and we keep associated votes
-            cls.update_fields(insight, reference_insight, product, timestamp)
+            cls.add_fields(
+                insight,
+                product,
+                timestamp,
+                reference_insight.server_domain,
+                reference_insight.server_type,
+            )
 
-        return (
-            to_create,
-            [reference_insight for (_, reference_insight) in to_update],
-            to_delete,
-        )
+        return (to_create, to_update, to_delete)
 
     @classmethod
     @abc.abstractmethod
@@ -502,36 +518,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
             )
 
         cls.add_optional_fields(insight, product)
-
-    @classmethod
-    def update_fields(
-        cls,
-        insight: ProductInsight,
-        reference_insight: ProductInsight,
-        product: Product,
-        timestamp: datetime.datetime,
-    ):
-        """Update `reference_insight` fields with data from `insight`.
-
-        This is used to refresh `reference_insight` with potentially fresher
-        information, while avoiding row deletion/insertion each time
-        `import_insights` is called.
-        """
-        cls.add_fields(
-            insight,
-            product,
-            timestamp,
-            reference_insight.server_domain,
-            reference_insight.server_type,
-        )
-
-        for field_name in (
-            key
-            for key in insight.__data__.keys()
-            if key not in ("id", "barcode", "type", "server_domain", "server_type")
-        ):
-            if getattr(insight, field_name) != getattr(reference_insight, field_name):
-                setattr(reference_insight, field_name, getattr(insight, field_name))
 
     @classmethod
     def add_optional_fields(  # noqa: B027
