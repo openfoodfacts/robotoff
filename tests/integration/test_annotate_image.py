@@ -8,6 +8,7 @@ import pytest
 import robotoff.insights.importer
 import robotoff.taxonomy
 from robotoff.app.api import api
+from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT
 from robotoff.models import LogoAnnotation, Prediction, ProductInsight
 from robotoff.products import Product
 
@@ -164,6 +165,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     mocker.patch(
         "robotoff.brands.get_brand_prefix", return_value={("Etorki", "0000000xxxxxx")}
     )
+    mocker.patch("robotoff.logos.annotate", return_value=UPDATED_ANNOTATION_RESULT)
     start = datetime.utcnow()
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -203,7 +205,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     assert prediction.value_tag == "Etorki"
     assert prediction.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
-    assert prediction.automatic_processing
+    assert prediction.automatic_processing is False
     # We check that this prediction in turn generates an insight
 
     with peewee_db:
@@ -222,12 +224,12 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     assert insight.value_tag == "Etorki"
     assert insight.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
-    assert insight.automatic_processing
+    assert insight.automatic_processing is False
     assert insight.username == "a"
     assert insight.completed_at is None  # we did not run annotate yet
 
 
-def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
+def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mocker):
     """This test will check that, given an image with a logo above the confidence threshold,
     that is then fed into the ANN logos and labels model, we annotate properly a product.
     """
@@ -237,6 +239,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
         )
     barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
+    mocker.patch("robotoff.logos.annotate", return_value=UPDATED_ANNOTATION_RESULT)
     start = datetime.utcnow()
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -276,7 +279,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
     assert prediction.value_tag == "en:eu-organic"
     assert prediction.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
-    assert prediction.automatic_processing
+    assert prediction.automatic_processing is False
     # We check that this prediction in turn generates an insight
     with peewee_db:
         insights = list(ProductInsight.select().filter(barcode=barcode).execute())
@@ -294,6 +297,6 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy):
     assert insight.value_tag == "en:eu-organic"
     assert insight.predictor == "universal-logo-detector"
     assert start <= prediction.timestamp <= end
-    assert insight.automatic_processing
+    assert insight.automatic_processing is False
     assert insight.username == "a"
     assert insight.completed_at is None

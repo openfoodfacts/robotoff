@@ -13,7 +13,7 @@ from robotoff.insights.annotate import (
     SAVED_ANNOTATION_VOTE_RESULT,
     UNKNOWN_INSIGHT_RESULT,
     AnnotationResult,
-    InsightAnnotatorFactory,
+    annotate,
 )
 from robotoff.models import (
     AnnotationVote,
@@ -385,8 +385,7 @@ def save_annotation(
         if not verified:
             return SAVED_ANNOTATION_VOTE_RESULT
 
-    annotator = InsightAnnotatorFactory.get(insight.type)
-    result = annotator.annotate(insight, annotation, update, data=data, auth=auth)
+    result = annotate(insight, annotation, update, data=data, auth=auth)
     username = auth.get_username() if auth else "unknown annotator"
     events.event_processor.send_async(
         "question_answered", username, device_id, insight.barcode
