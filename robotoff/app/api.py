@@ -764,6 +764,12 @@ class ImageLogoDetailResource:
 
     @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
     def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        auth = parse_auth(req)
+        if auth is None:
+            raise falcon.HTTPForbidden(
+                description="authentication is required to annotate logos"
+            )
+
         logo = LogoAnnotation.get_or_none(id=logo_id)
 
         if logo is None:
@@ -792,9 +798,7 @@ class ImageLogoDetailResource:
             updated = True
 
         if updated:
-            auth = parse_auth(req)
-            username = None if auth is None else auth.get_username()
-            logo.username = username
+            logo.username = auth.get_username()
             logo.completed_at = datetime.datetime.utcnow()
             logo.save()
             generate_insights_from_annotated_logos([logo], settings.OFF_SERVER_DOMAIN)
@@ -805,10 +809,14 @@ class ImageLogoDetailResource:
 class ImageLogoAnnotateResource:
     @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        auth = parse_auth(req)
+        if auth is None:
+            raise falcon.HTTPForbidden(
+                description="authentication is required to annotate logos"
+            )
         server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
-        auth = parse_auth(req)
-        username = None if auth is None else auth.get_username()
+        username = auth.get_username()
         completed_at = datetime.datetime.utcnow()
         annotated_logos = []
 
