@@ -380,6 +380,9 @@ def run_object_detection_model(
             if not parsed_url.netloc or not parsed_url.scheme:
                 raise ValueError(f"invalid image URL: {image_url}")
 
+        if limit:
+            image_urls = image_urls[:limit]
+
     else:
         with db:
             query = (
