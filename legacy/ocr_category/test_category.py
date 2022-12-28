@@ -1,7 +1,7 @@
 import pytest
 
-from robotoff.insights import InsightType
 from robotoff.prediction.ocr.category import find_category
+from robotoff.types import InsightType
 
 
 @pytest.mark.parametrize(

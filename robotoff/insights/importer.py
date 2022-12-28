@@ -10,7 +10,6 @@ from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
 from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_range
-from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
@@ -30,7 +29,7 @@ from robotoff.taxonomy import (
     get_taxonomy,
     match_taxonomized_value,
 )
-from robotoff.types import PredictionType
+from robotoff.types import InsightType, PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
