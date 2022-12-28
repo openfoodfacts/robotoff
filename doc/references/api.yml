@@ -463,67 +463,31 @@ paths:
       tags:
         - ANN
       summary: Approximate search for nearest neighbors of a random query logo
-      description: Return id and distance of each logo found, the number of neighbors returned and the id of the query logo.
+      description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
-        - name: count
-          description: Number of neighbors to find
-          in: query
-          schema:
-            type: int
+        - $ref: "#/components/parameters/ann_search_count"
       responses:
         "200":
-          description: The search results
+          description: Response from ANN search
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  results:
-                    type: array
-                    description: Each dict corresponds to a neighbor logo returned and has "logo_id" and "distance" keys
-                  count:
-                    type: int
-                    description: Number of returned results
-                  query_logo_id:
-                    type: int
-                    description: Id of the query logo
-                required:
-                  - results
-                  - count
-                  - query_logo_id
+                $ref: "#/components/schemas/LogoANNSearchResponse"
   /ann/search/{logo_id:int}:
       get:
         tags:
           - ANN
         summary: Approximate search for nearest neighbors of a specified query logo
-        description: Return id and distance of each logo found, the number of neighbors returned and the id of the query logo.
+        description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
         parameters:
-          - name: count
-            description: Number of neigbors to find
-            in: query
-            schema:
-              type: int
+          - $ref: "#/components/parameters/ann_search_count"
         responses:
           "200":
-            description: The search results
+            description: Response from ANN search
             content:
               application/json:
                 schema:
-                  type: object
-                  properties:
-                    results:
-                      type: array
-                      description: Each dict corresponds to a neighbor logo returned and has "logo_id" and "distance" keys
-                    count:
-                      type: int
-                      description: Number of returned results
-                    query_logo_id:
-                      type: int
-                      description: ID of the query logo
-                  required:
-                    - results
-                    - count
-                    - query_logo_id
+                  $ref: "#/components/schemas/LogoANNSearchResponse"
 
   /predict/category:
     post:
@@ -702,6 +666,36 @@ paths:
 
 components:
   schemas:
+    LogoANNSearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            properties:
+              logo_id:
+                type: integer
+                description: ID of the result logo
+                example: 1
+              distance:
+                type: number
+                description: |
+                  distance between the query logo and the result logo (closer to 0 means a more similar logo)
+                example: 0.1
+            required:
+              - logo_id
+              - distance
+          description: Each item corresponds to a neighbor logo
+        count:
+          type: integer
+          description: Number of returned results
+        query_logo_id:
+          type: integer
+          description: ID of the query logo
+      required:
+        - results
+        - count
+        - query_logo_id
     InsightSearchResult:
       description: An insight search result as returned by /insights/random or /insights/{barcode}
       required:
@@ -815,6 +809,15 @@ components:
       schema:
         type: string
         example: universal-logo-detector
+    ann_search_count:
+      name: count
+      in: query
+      description: Number of neighbors to return
+      schema:
+        type: integer
+        default: 25
+        minimum: 1
+        maximum: 2000
     barcode_path:
       name: barcode
       in: path
