@@ -1122,7 +1122,6 @@ def import_predictions(
         updated_prediction_types_by_barcode[barcode] = set(
             prediction.type for prediction in product_predictions_group
         )
-    logger.info("%s predictions imported", predictions_imported)
     return updated_prediction_types_by_barcode, predictions_import_results
 
 
