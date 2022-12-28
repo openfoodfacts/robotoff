@@ -145,8 +145,8 @@ def import_insights_from_image(
     )
 
     with db:
-        imported = import_insights(predictions, server_domain)
-        logger.info("Import finished, %s insights imported", imported)
+        import_result = import_insights(predictions, server_domain)
+        logger.info(import_result)
 
 
 def save_image_job(batch: list[tuple[str, str]], server_domain: str):
@@ -313,7 +313,8 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
                 "bounding_box": result["bounding_box"],
             },
         )
-        import_insights([prediction], server_domain)
+        import_result = import_insights([prediction], server_domain)
+        logger.info(import_result)
 
 
 def run_logo_object_detection(

@@ -1,6 +1,6 @@
 from robotoff import settings
 from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import InsightImportResult, PredictionType
 from robotoff.workers.tasks.product_updated import add_category_insight
 
 # TODO: refactor function under test to make it easier to test
@@ -46,10 +46,10 @@ def test_add_category_insight_with_ml_insights(mocker):
     )
     import_insights_mock = mocker.patch(
         "robotoff.workers.tasks.product_updated.import_insights",
-        return_value=1,
+        return_value=InsightImportResult(),
     )
     server_domain = settings.BaseURLProvider().get()
-    imported = add_category_insight("123", {"code": "123"}, server_domain)
+    add_category_insight("123", {"code": "123"}, server_domain)
 
     import_insights_mock.assert_called_once_with(
         [
@@ -64,5 +64,3 @@ def test_add_category_insight_with_ml_insights(mocker):
         ],
         server_domain,
     )
-
-    assert imported

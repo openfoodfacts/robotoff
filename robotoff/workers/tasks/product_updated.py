@@ -44,15 +44,16 @@ def update_insights_job(barcode: str, server_domain: str):
 
             updated_product_predict_insights(barcode, product_dict, server_domain)
             logger.info("Refreshing insights...")
-            imported = refresh_insights(barcode, server_domain)
-            logger.info("%s insights created after refresh", imported)
+            import_results = refresh_insights(barcode, server_domain)
+            for import_result in import_results:
+                logger.info(import_result)
     except LockedResourceException:
         logger.info(
             f"Couldn't acquire product_update lock, skipping product_update for product {barcode}"
         )
 
 
-def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
+def add_category_insight(barcode: str, product: JSONType, server_domain: str):
     """Predict categories for product and import predicted category insight.
 
     :param barcode: product barcode
@@ -61,7 +62,7 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
     :return: True if at least one category insight was imported
     """
     if get_server_type(server_domain) != ServerType.off:
-        return False
+        return
 
     logger.info("Predicting product categories...")
     # predict category using matching algorithm on product name
@@ -79,32 +80,25 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str) ->
         )
 
     if len(product_predictions) < 1:
-        return False
+        return
 
     for prediction in product_predictions:
         prediction.barcode = barcode
 
-    imported = import_insights(product_predictions, server_domain)
-    logger.info("%s category insight imported for product %s", imported, barcode)
-
-    return bool(imported)
+    import_result = import_insights(product_predictions, server_domain)
+    logger.info(import_result)
 
 
 def updated_product_predict_insights(
     barcode: str, product: JSONType, server_domain: str
-) -> bool:
-    updated = add_category_insight(barcode, product, server_domain)
+) -> None:
+    add_category_insight(barcode, product, server_domain)
     product_name = product.get("product_name")
 
     if not product_name:
-        return updated
+        return
 
     logger.info("Generating predictions from product name...")
     predictions_all = get_predictions_from_product_name(barcode, product_name)
-    imported = import_insights(predictions_all, server_domain)
-    logger.info("%s insights imported for product %s", imported, barcode)
-
-    if imported:
-        updated = True
-
-    return updated
+    import_result = import_insights(predictions_all, server_domain)
+    logger.info(import_result)

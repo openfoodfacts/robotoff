@@ -29,6 +29,7 @@ from robotoff.app.core import (
     get_logo_annotation,
     get_predictions,
     save_annotation,
+    update_logo_annotations,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.elasticsearch import get_es_client
@@ -45,6 +46,7 @@ from robotoff.models import (
     LogoEmbedding,
     ProductInsight,
     batch_insert,
+    db,
 )
 from robotoff.off import (
     OFFAuthentication,
@@ -749,6 +751,16 @@ class ImageLogoSearchResource:
         resp.media = {"logos": items, "count": query_count}
 
 
+def check_logo_annotation(type_: str, value: Optional[str] = None):
+    if value is not None:
+        if type_ == "label" and not is_prefixed_value(value):
+            raise falcon.HTTPBadRequest(
+                description=f"language-prefixed value are required for label type (here: {value})"
+            )
+    elif type_ in ("brand", "category", "label", "store"):
+        raise falcon.HTTPBadRequest(description=f"value required for type {type_})")
+
+
 class ImageLogoDetailResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
         logo = LogoAnnotation.get_or_none(id=logo_id)
@@ -770,38 +782,25 @@ class ImageLogoDetailResource:
                 description="authentication is required to annotate logos"
             )
 
-        logo = LogoAnnotation.get_or_none(id=logo_id)
+        with db.atomic():
+            logo = LogoAnnotation.get_or_none(id=logo_id)
+            if logo is None:
+                resp.status = falcon.HTTP_404
+                return
 
-        if logo is None:
-            resp.status = falcon.HTTP_404
-            return
+            type_ = req.media["type"]
+            value = req.media["value"] or None
+            check_logo_annotation(type_, value)
 
-        type_ = req.media["type"]
-        value = req.media["value"] or None
-        updated = False
-
-        if type_ != logo.annotation_type:
-            logo.annotation_type = type_
-            updated = True
-
-        if value != logo.annotation_value:
-            logo.annotation_value = value
-
-            if value is not None:
-                value_tag = get_tag(value)
-                logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
-            else:
-                logo.annotation_value_tag = None
-                logo.taxonomy_value = None
-
-            updated = True
-
-        if updated:
-            logo.username = auth.get_username()
-            logo.completed_at = datetime.datetime.utcnow()
-            logo.save()
-            generate_insights_from_annotated_logos([logo], settings.OFF_SERVER_DOMAIN)
+            if type_ != logo.annotation_type or value != logo.annotation_value:
+                annotated_logos = update_logo_annotations(
+                    [(type_, value, logo)],
+                    username=auth.get_username() or "unknown",
+                    completed_at=datetime.datetime.utcnow(),
+                )
+                generate_insights_from_annotated_logos(
+                    annotated_logos, settings.OFF_SERVER_DOMAIN, auth
+                )
 
         resp.status = falcon.HTTP_204
 
@@ -816,47 +815,37 @@ class ImageLogoAnnotateResource:
             )
         server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
-        username = auth.get_username()
         completed_at = datetime.datetime.utcnow()
-        annotated_logos = []
+        annotation_logos = []
 
-        for annotation in annotations:
-            logo_id = annotation["logo_id"]
-            type_ = annotation["type"]
-            value = annotation["value"] or None
-            try:
-                logo = LogoAnnotation.get_by_id(logo_id)
-            except LogoAnnotation.DoesNotExist:
-                raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
+        with db.atomic():
+            for annotation in annotations:
+                logo_id = annotation["logo_id"]
+                type_ = annotation["type"]
+                value = annotation["value"] or None
+                check_logo_annotation(type_, value)
 
-            if logo.annotation_type is not None:
-                # Logo is already annotated, skip
-                continue
+                try:
+                    logo = LogoAnnotation.get_by_id(logo_id)
+                except LogoAnnotation.DoesNotExist:
+                    raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
 
-            if value is not None:
-                if type_ == "label" and not is_prefixed_value(value):
-                    raise falcon.HTTPBadRequest(
-                        description=f"language-prefixed value are required for label type (here: {value})"
-                    )
-                logo.annotation_value = value
-                value_tag = get_tag(value)
-                logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
-            elif type_ in ("brand", "category", "label", "store"):
-                raise falcon.HTTPBadRequest(
-                    description=f"value required for type {type_} (logo {logo_id})"
+                if logo.annotation_type is None:
+                    # Don't annotate already annotated logos
+                    annotation_logos.append((type_, value, logo))
+
+            if annotation_logos:
+                annotated_logos = update_logo_annotations(
+                    annotation_logos,
+                    username=auth.get_username() or "unknown",
+                    completed_at=completed_at,
                 )
-
-            logo.annotation_type = type_
-            logo.username = username
-            logo.completed_at = completed_at
-            annotated_logos.append(logo)
-
-        for logo in annotated_logos:
-            logo.save()
-
-        created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
-        resp.media = {"created insights": created}
+                annotated = generate_insights_from_annotated_logos(
+                    annotated_logos, server_domain, auth
+                )
+            else:
+                annotated = 0
+        resp.media = {"created insights": annotated}
 
 
 class ImageLogoUpdateResource:

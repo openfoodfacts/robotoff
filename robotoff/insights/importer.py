@@ -29,7 +29,13 @@ from robotoff.taxonomy import (
     get_taxonomy,
     match_taxonomized_value,
 )
-from robotoff.types import InsightType, PredictionType
+from robotoff.types import (
+    InsightImportResult,
+    InsightType,
+    PredictionImportResult,
+    PredictionType,
+    ProductInsightImportResult,
+)
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -246,7 +252,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         predictions: list[Prediction],
         server_domain: str,
         product_store: DBProductStore,
-    ) -> int:
+    ) -> ProductInsightImportResult:
         """Import insights, this is the main method.
 
         :return: the number of insights that were imported.
@@ -272,19 +278,21 @@ class InsightImporter(metaclass=abc.ABCMeta):
         to_create, to_update, to_delete = cls.generate_insights(
             barcode, predictions, server_domain, product_store
         )
-        if to_delete:
-            to_delete_ids = [insight.id for insight in to_delete]
-            logger.info("Deleting %s insights", len(to_delete_ids))
+        to_delete_ids = [insight.id for insight in to_delete]
+        if to_delete_ids:
             ProductInsight.delete().where(
                 ProductInsight.id.in_(to_delete_ids)
             ).execute()
+
         if to_create:
             inserts += batch_insert(
                 ProductInsight,
                 (model_to_dict(insight) for insight in to_create),
                 50,
             )
+        created_ids = [insight.id for insight in to_create]
 
+        updated_ids = []
         for insight, reference_insight in to_update:
             update = {}
             for field_name in (
@@ -298,11 +306,18 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     update[field_name] = getattr(insight, field_name)
 
             if update:
+                updated_ids.append(reference_insight.id)
                 ProductInsight.update(**update).where(
                     ProductInsight.id == reference_insight.id
                 ).execute()
 
-        return inserts
+        return ProductInsightImportResult(
+            insight_created_ids=created_ids,
+            insight_deleted_ids=to_delete_ids,
+            insight_updated_ids=updated_ids,
+            barcode=barcode,
+            type=cls.get_type(),
+        )
 
     @classmethod
     def generate_insights(
@@ -999,7 +1014,7 @@ def import_insights(
     predictions: Iterable[Prediction],
     server_domain: str,
     product_store: Optional[DBProductStore] = None,
-) -> int:
+) -> InsightImportResult:
     """Import predictions and generate (and import) insights from these
     predictions.
 
@@ -1008,11 +1023,15 @@ def import_insights(
     if product_store is None:
         product_store = get_product_store()
 
-    updated_prediction_types_by_barcode = import_predictions(
+    updated_prediction_types_by_barcode, prediction_import_results = import_predictions(
         predictions, product_store, server_domain
     )
-    return import_insights_for_products(
+    product_insight_import_results = import_insights_for_products(
         updated_prediction_types_by_barcode, server_domain, product_store
+    )
+    return InsightImportResult(
+        product_insight_import_results=product_insight_import_results,
+        prediction_import_results=prediction_import_results,
     )
 
 
@@ -1020,7 +1039,7 @@ def import_insights_for_products(
     prediction_types_by_barcode: dict[str, set[PredictionType]],
     server_domain: str,
     product_store: DBProductStore,
-) -> int:
+) -> list[ProductInsightImportResult]:
     """Re-compute insights for products with new predictions.
 
     :param prediction_types_by_barcode: a dict that associates each barcode
@@ -1030,7 +1049,7 @@ def import_insights_for_products(
 
     :return: Number of imported insights
     """
-    imported = 0
+    import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
         selected_barcodes: list[str] = []
@@ -1052,26 +1071,27 @@ def import_insights_for_products(
             ):
                 try:
                     with Lock(name=f"robotoff:import:{barcode}", expire=60, timeout=10):
-                        imported += importer.import_insights(
+                        result = importer.import_insights(
                             barcode,
                             list(product_predictions),
                             server_domain,
                             product_store,
                         )
+                        import_results.append(result)
                 except LockedResourceException:
                     logger.info(
                         "Couldn't acquire insight import lock, skipping insight import for product %s",
                         barcode,
                     )
                     continue
-    return imported
+    return import_results
 
 
 def import_predictions(
     predictions: Iterable[Prediction],
     product_store: DBProductStore,
     server_domain: str,
-) -> dict[str, set[PredictionType]]:
+) -> tuple[dict[str, set[PredictionType]], list[PredictionImportResult]]:
     """Check validity and import provided Prediction.
 
     :param predictions: the Predictions to import
@@ -1086,28 +1106,31 @@ def import_predictions(
         if is_valid_product_prediction(p, product_store[p.barcode])  # type: ignore
     ]
 
-    predictions_imported = 0
+    predictions_import_results = []
     updated_prediction_types_by_barcode: dict[str, set[PredictionType]] = {}
     for barcode, product_predictions_iter in itertools.groupby(
         sorted(predictions, key=operator.attrgetter("barcode")),
         operator.attrgetter("barcode"),
     ):
         product_predictions_group = list(product_predictions_iter)
-        predictions_imported += import_product_predictions(
+        predictions_imported = import_product_predictions(
             barcode, product_predictions_group, server_domain
+        )
+        predictions_import_results.append(
+            PredictionImportResult(created=predictions_imported, barcode=barcode)
         )
         updated_prediction_types_by_barcode[barcode] = set(
             prediction.type for prediction in product_predictions_group
         )
     logger.info("%s predictions imported", predictions_imported)
-    return updated_prediction_types_by_barcode
+    return updated_prediction_types_by_barcode, predictions_import_results
 
 
 def refresh_insights(
     barcode: str,
     server_domain: str,
     product_store: Optional[DBProductStore] = None,
-) -> int:
+) -> list[InsightImportResult]:
     """Refresh all insights for specific product.
 
     All predictions are fetched, and insights are created/deleted by each
@@ -1129,18 +1152,18 @@ def refresh_insights(
     predictions = [Prediction(**p) for p in get_product_predictions([barcode])]
     prediction_types = set(p.type for p in predictions)
 
-    imported = 0
+    import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
         if prediction_types >= required_prediction_types:
-            imported += importer.import_insights(
+            import_result = importer.import_insights(
                 barcode,
                 [p for p in predictions if p.type in required_prediction_types],
                 server_domain,
                 product_store,
             )
-
-    return imported
+            import_results.append(import_result)
+    return import_results
 
 
 def get_product_predictions(

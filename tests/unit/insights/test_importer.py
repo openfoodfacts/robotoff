@@ -24,7 +24,7 @@ from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction
 from robotoff.products import Product
 from robotoff.taxonomy import get_taxonomy
-from robotoff.types import InsightType, PredictionType
+from robotoff.types import InsightType, PredictionType, ProductInsightImportResult
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
@@ -667,13 +667,15 @@ class TestInsightImporter:
         batch_insert_mock = mocker.patch(
             "robotoff.insights.importer.batch_insert", return_value=1
         )
-        imported = FakeImporter.import_insights(
+        import_result = FakeImporter.import_insights(
             DEFAULT_BARCODE,
             [Prediction(type=PredictionType.label)],
             DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         )
-        assert imported == 1
+        assert len(import_result.insight_created_ids) == 1
+        assert len(import_result.insight_updated_ids) == 0
+        assert len(import_result.insight_deleted_ids) == 1
         batch_insert_mock.assert_called_once()
         product_insight_delete_mock.assert_called_once()
 
@@ -1165,15 +1167,17 @@ class TestImportInsightsForProducts:
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
-            return_value=1,
+            return_value=ProductInsightImportResult(
+                [], [], [], DEFAULT_BARCODE, InsightType.category
+            ),
         )
         product_store = FakeProductStore()
-        imported = import_insights_for_products(
+        import_result = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
             DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
         )
-        assert imported == 1
+        assert len(import_result) == 1
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_called_once_with(
             DEFAULT_BARCODE, [prediction], DEFAULT_SERVER_DOMAIN, product_store
@@ -1193,14 +1197,16 @@ class TestImportInsightsForProducts:
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
-            return_value=0,
+            return_value=ProductInsightImportResult(
+                [], [], [], DEFAULT_BARCODE, InsightType.image_orientation
+            ),
         )
         product_store = FakeProductStore()
-        imported = import_insights_for_products(
+        import_results = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.image_orientation}},
             DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
         )
-        assert imported == 0
+        assert len(import_results) == 0
         assert not get_product_predictions_mock.called
         assert not import_insights_mock.called
