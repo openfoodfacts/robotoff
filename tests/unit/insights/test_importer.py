@@ -4,7 +4,6 @@ from typing import Any, Optional
 
 import pytest
 
-from robotoff.insights.dataclass import InsightType
 from robotoff.insights.importer import (
     BrandInsightImporter,
     CategoryImporter,
@@ -25,7 +24,7 @@ from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction
 from robotoff.products import Product
 from robotoff.taxonomy import get_taxonomy
-from robotoff.types import PredictionType
+from robotoff.types import InsightType, PredictionType
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"

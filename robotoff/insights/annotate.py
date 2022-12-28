@@ -7,7 +7,6 @@ from typing import Optional
 from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import HTTPError, SSLError, Timeout
 
-from robotoff.insights.dataclass import InsightType
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db
 from robotoff.off import (
@@ -23,6 +22,7 @@ from robotoff.off import (
     update_quantity,
 )
 from robotoff.products import get_image_id, get_product
+from robotoff.types import InsightType
 from robotoff.utils import get_logger
 
 """

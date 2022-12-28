@@ -3,7 +3,6 @@ from typing import Optional
 
 import pytest
 
-from robotoff.insights.dataclass import InsightType
 from robotoff.insights.question import (
     CategoryQuestionFormatter,
     LabelQuestionFormatter,
@@ -13,6 +12,7 @@ from robotoff.insights.question import (
 from robotoff.models import ProductInsight
 from robotoff.off import split_barcode
 from robotoff.settings import TEST_DATA_DIR
+from robotoff.types import InsightType
 from robotoff.utils.i18n import TranslationStore
 
 

@@ -1,12 +1,12 @@
 import pytest
 
-from robotoff.insights.dataclass import InsightType
 from robotoff.prediction.category.neural.category_classifier import (
     CategoryClassifier,
     CategoryPrediction,
 )
 from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
+from robotoff.types import InsightType
 
 
 def test_category_prediction_to_prediction():

@@ -76,7 +76,7 @@ class ProductInsight(BaseModel):
     # Barcode represents the barcode of the product for which the insight was generated.
     barcode = peewee.CharField(max_length=100, null=False, index=True)
 
-    # Type represents the insight type - must match one of the types in robotoff.insights.dataclass.InsightType.
+    # Type represents the insight type - must match one of the types in robotoff.types.InsightType.
     type = peewee.CharField(max_length=256, index=True)
 
     # Contains some additional data based on the type of the insight from above.

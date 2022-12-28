@@ -7,10 +7,10 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
-from robotoff.insights.dataclass import InsightType
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation, ProductInsight, crop_image_url
 from robotoff.prediction.types import Prediction
+from robotoff.types import InsightType
 from robotoff.utils import get_logger, http_session
 from robotoff.utils.types import JSONType
 
