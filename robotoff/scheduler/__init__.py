@@ -220,10 +220,10 @@ def generate_insights():
     product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
     with db:
-        imported = import_insights(
+        import_result = import_insights(
             product_predictions_iter, server_domain=settings.OFF_SERVER_DOMAIN
         )
-    logger.info("%s category insights imported", imported)
+    logger.info(import_result)
 
 
 def transform_insight_iter(insights_iter: Iterable[dict]):

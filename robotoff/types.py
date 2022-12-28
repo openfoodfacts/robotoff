@@ -1,4 +1,6 @@
+import dataclasses
 import enum
+import uuid
 
 
 class WorkerQueue(enum.Enum):
@@ -136,3 +138,55 @@ class InsightType(str, enum.Enum):
 class ElasticSearchIndex(str, enum.Enum):
     product = "product"
     logo = "logo"
+
+
+@dataclasses.dataclass
+class ProductInsightImportResult:
+    insight_created_ids: list[uuid.UUID]
+    insight_updated_ids: list[uuid.UUID]
+    insight_deleted_ids: list[uuid.UUID]
+    barcode: str
+    type: InsightType
+
+
+@dataclasses.dataclass
+class PredictionImportResult:
+    created: int
+    barcode: str
+
+
+@dataclasses.dataclass
+class InsightImportResult:
+    product_insight_import_results: list[
+        ProductInsightImportResult
+    ] = dataclasses.field(default_factory=list)
+    prediction_import_results: list[PredictionImportResult] = dataclasses.field(
+        default_factory=list
+    )
+
+    def created_predictions_count(self) -> int:
+        return sum(x.created for x in self.prediction_import_results)
+
+    def created_insights_count(self) -> int:
+        return sum(
+            len(x.insight_created_ids) for x in self.product_insight_import_results
+        )
+
+    def deleted_insights_count(self) -> int:
+        return sum(
+            len(x.insight_deleted_ids) for x in self.product_insight_import_results
+        )
+
+    def updated_insights_count(self) -> int:
+        return sum(
+            len(x.insight_updated_ids) for x in self.product_insight_import_results
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<InsightImportResult insights: created={self.created_insights_count()}, "
+            f"updated={self.updated_insights_count()}, "
+            f"deleted={self.deleted_insights_count()}\n"
+            f"types: {list(set(result.type.value for result in self.product_insight_import_results))}"
+            f" predictions: created: {self.created_predictions_count()}>"
+        )

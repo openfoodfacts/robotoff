@@ -4,6 +4,7 @@ from PIL import Image
 
 from robotoff import settings
 from robotoff.models import LogoEmbedding
+from robotoff.types import InsightImportResult
 from robotoff.workers.tasks.import_image import (
     process_created_logos,
     save_logo_embeddings,
@@ -77,7 +78,7 @@ def test_process_created_logos(peewee_db, mocker):
     )
     import_logo_insights_mock = mocker.patch(
         "robotoff.workers.tasks.import_image.import_logo_insights",
-        return_value=1,
+        return_value=InsightImportResult(),
     )
 
     with peewee_db:

@@ -72,9 +72,10 @@ def regenerate_ocr_insights(
         )
 
     with db:
-        imported = importer.import_insights(predictions, settings.OFF_SERVER_DOMAIN)
-
-    logger.info("Import finished, %s insights imported", imported)
+        import_result = importer.import_insights(
+            predictions, settings.OFF_SERVER_DOMAIN
+        )
+        logger.info(import_result)
 
 
 @app.command()
@@ -200,20 +201,16 @@ def import_insights(
     else:
         raise ValueError("--generate-from or --input-path must be provided")
 
-    imported = 0
     with db.connection_context():
         for prediction_batch in tqdm.tqdm(
             chunked(predictions, batch_size), desc="prediction batch"
         ):
             # Create a new transaction for every batch
             with db.atomic():
-                batch_imported = importer.import_insights(
+                import_results = importer.import_insights(
                     prediction_batch, settings.OFF_SERVER_DOMAIN
                 )
-                logger.info(f"{batch_imported} insights imported in batch")
-                imported += batch_imported
-
-    logger.info(f"{imported} insights imported")
+                logger.info(import_results)
 
 
 @app.command()

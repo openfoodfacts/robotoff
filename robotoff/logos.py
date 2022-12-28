@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import operator
 from typing import Optional
 
@@ -11,6 +12,10 @@ from more_itertools import chunked
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
+from robotoff.insights.annotate import (
+    UPDATED_ANNOTATION_RESULT,
+    InsightAnnotatorFactory,
+)
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import (
@@ -21,10 +26,11 @@ from robotoff.models import (
     LogoEmbedding,
 )
 from robotoff.models import Prediction as PredictionModel
-from robotoff.models import db
+from robotoff.models import ProductInsight, db
+from robotoff.off import OFFAuthentication
 from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
-from robotoff.types import ElasticSearchIndex, PredictionType
+from robotoff.types import ElasticSearchIndex, InsightImportResult, PredictionType
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 
@@ -302,7 +308,7 @@ def import_logo_insights(
     thresholds: dict[LogoLabelType, float],
     default_threshold: float = 0.1,
     notify: bool = True,
-):
+) -> InsightImportResult:
     selected_logos = []
     logo_probs = []
     for logo in logos:
@@ -325,7 +331,7 @@ def import_logo_insights(
         logo_probs.append(probs)
 
     if not logos:
-        return
+        return InsightImportResult()
 
     # Delete all predictions for these logos from universal logo detectors
     # that are not from a human annotator
@@ -344,24 +350,25 @@ def import_logo_insights(
         )
     ).execute()
     predictions = predict_logo_predictions(selected_logos, logo_probs)
-    imported = import_insights(predictions, server_domain)
+    import_result = import_insights(predictions, server_domain)
 
     if notify:
         for logo, probs in zip(selected_logos, logo_probs):
             NotifierFactory.get_notifier().send_logo_notification(logo, probs)
 
-    return imported
+    return import_result
 
 
 def generate_insights_from_annotated_logos(
-    logos: list[LogoAnnotation], server_domain: str
+    logos: list[LogoAnnotation], server_domain: str, auth: OFFAuthentication
 ) -> int:
+    """Generate and apply insights from annotated logos."""
     predictions = []
     for logo in logos:
         prediction = generate_prediction(
             logo_type=logo.annotation_type,
             logo_value=logo.taxonomy_value,
-            automatic_processing=True,  # because this is a user annotation, which we trust.
+            automatic_processing=False,  # we're going to apply it immediately
             data={
                 "confidence": 1.0,
                 "logo_id": logo.id,
@@ -379,11 +386,25 @@ def generate_insights_from_annotated_logos(
         prediction.source_image = image.source_image
         predictions.append(prediction)
 
-    imported = import_insights(predictions, server_domain)
+    import_result = import_insights(predictions, server_domain)
+    if import_result.created_predictions_count():
+        logger.info(import_result)
 
-    if imported:
-        logger.info("%s logo insights imported after annotation", imported)
-    return imported
+    annotated = 0
+    for created_id in itertools.chain.from_iterable(
+        insight_import_result.insight_created_ids
+        for insight_import_result in import_result.product_insight_import_results
+    ):
+        insight = ProductInsight.get_or_none(id=created_id)
+        if insight:
+            annotator = InsightAnnotatorFactory.get(insight.type)
+            logger.info(
+                "Annotating insight %s (product: %s)", insight.id, insight.barcode
+            )
+            annotation_result = annotator.annotate(insight, 1, auth=auth)
+            annotated += int(annotation_result == UPDATED_ANNOTATION_RESULT)
+
+    return annotated
 
 
 def predict_logo_predictions(
