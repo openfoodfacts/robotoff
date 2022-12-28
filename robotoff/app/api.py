@@ -44,6 +44,7 @@ from robotoff.models import (
     ImagePrediction,
     LogoAnnotation,
     LogoEmbedding,
+    Prediction,
     ProductInsight,
     batch_insert,
     db,
@@ -805,6 +806,55 @@ class ImageLogoDetailResource:
         resp.status = falcon.HTTP_204
 
 
+class ImageLogoResetResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        with db.atomic():
+            logo = LogoAnnotation.get_or_none(id=logo_id)
+            if logo is None:
+                resp.status = falcon.HTTP_404
+                return
+
+            annotation_type = logo.annotation_type
+            logo.annotation_value = None
+            logo.annotation_value_tag = None
+            logo.taxonomy_value = None
+            logo.annotation_type = None
+            logo.username = None
+            logo.completed_at = None
+            logo.save()
+
+            if annotation_type in ("brand", "label"):
+                barcode = logo.image_prediction.image.barcode
+                prediction_deleted = (
+                    Prediction.delete()
+                    .where(
+                        # Speed-up filtering by providing additional filters
+                        Prediction.barcode == barcode,
+                        Prediction.type == annotation_type,
+                        Prediction.predictor == "universal-logo-detector",
+                        Prediction.data["logo_id"] == str(logo.id),
+                    )
+                    .execute()
+                )
+                insights_deleted = (
+                    ProductInsight.delete()
+                    .where(
+                        ProductInsight.barcode == barcode,
+                        ProductInsight.type == annotation_type,
+                        ProductInsight.predictor == "universal-logo-detector",
+                        ProductInsight.data["logo_id"] == str(logo_id),
+                    )
+                    .execute()
+                )
+                logger.info(
+                    "prediction deleted: %s, insight deleted: %s",
+                    prediction_deleted,
+                    insights_deleted,
+                )
+
+        resp.status = falcon.HTTP_204
+
+
 class ImageLogoAnnotateResource:
     @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
@@ -1421,6 +1471,7 @@ api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
 api.add_route("/api/v1/images/logos/search", ImageLogoSearchResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
+api.add_route("/api/v1/images/logos/{logo_id:int}/reset", ImageLogoResetResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
