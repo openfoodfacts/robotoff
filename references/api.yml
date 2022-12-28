@@ -439,6 +439,26 @@ paths:
                   - logos
                   - count
 
+  /images/logos/{logo_id}/reset:
+    post:
+      tags:
+        - Logos
+      summary: Reset logo annotation
+      description: Reset logo annotations, and delete all annotation-associated predictions and insights
+      parameters:
+        - name: logo_id
+          in: path
+          required: true
+          description: The ID of the logo whose annotation to reset
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "204":
+          description: HTTP 204 is returned if the reset operation was successful
+        "404":
+          description: HTTP 404 is returned if the `logo_id` was not found
+  
   /predict/category:
     post:
       tags:
