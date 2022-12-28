@@ -12,10 +12,7 @@ from more_itertools import chunked
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
-from robotoff.insights.annotate import (
-    UPDATED_ANNOTATION_RESULT,
-    InsightAnnotatorFactory,
-)
+from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import (
@@ -397,11 +394,10 @@ def generate_insights_from_annotated_logos(
     ):
         insight = ProductInsight.get_or_none(id=created_id)
         if insight:
-            annotator = InsightAnnotatorFactory.get(insight.type)
             logger.info(
                 "Annotating insight %s (product: %s)", insight.id, insight.barcode
             )
-            annotation_result = annotator.annotate(insight, 1, auth=auth)
+            annotation_result = annotate(insight, 1, auth=auth)
             annotated += int(annotation_result == UPDATED_ANNOTATION_RESULT)
 
     return annotated

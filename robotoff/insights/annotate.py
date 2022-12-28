@@ -504,5 +504,24 @@ class InsightAnnotatorFactory:
         return cls.mapping[identifier]
 
 
+def annotate(
+    insight: ProductInsight,
+    annotation: int,
+    update: bool = True,
+    data: Optional[dict] = None,
+    auth: Optional[OFFAuthentication] = None,
+    automatic: bool = False,
+) -> AnnotationResult:
+    annotator = InsightAnnotatorFactory.get(insight.type)
+    return annotator.annotate(
+        insight=insight,
+        annotation=annotation,
+        update=update,
+        data=data,
+        auth=auth,
+        automatic=automatic,
+    )
+
+
 class InvalidInsight(Exception):
     pass
