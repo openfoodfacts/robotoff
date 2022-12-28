@@ -98,12 +98,10 @@ MatchMapType = dict[str, dict[str, list[tuple[str, str]]]]
 
 def load_resources():
     """Load and cache resources."""
-    logger.info("Loading matcher resources...")
     get_processors()
     get_intersect_categories_ingredients()
 
     for lang in SUPPORTED_LANG:
-        logger.info("Loading NLP for %s...", lang)
         get_lemmatizing_nlp(lang)
 
 

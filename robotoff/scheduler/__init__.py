@@ -14,10 +14,7 @@ from sentry_sdk import capture_exception
 from robotoff import settings, slack
 from robotoff.elasticsearch import get_es_client
 from robotoff.elasticsearch.export import ElasticsearchExporter
-from robotoff.insights.annotate import (
-    UPDATED_ANNOTATION_RESULT,
-    InsightAnnotatorFactory,
-)
+from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights
 from robotoff.metrics import (
     ensure_influx_database,
@@ -56,11 +53,10 @@ def process_insights():
             .iterator()
         ):
             try:
-                annotator = InsightAnnotatorFactory.get(insight.type)
                 logger.info(
                     "Annotating insight %s (product: %s)", insight.id, insight.barcode
                 )
-                annotation_result = annotator.annotate(insight, 1, update=True)
+                annotation_result = annotate(insight, 1, update=True)
                 processed += 1
 
                 if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
@@ -220,10 +216,10 @@ def generate_insights():
     product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
 
     with db:
-        imported = import_insights(
+        import_result = import_insights(
             product_predictions_iter, server_domain=settings.OFF_SERVER_DOMAIN
         )
-    logger.info("%s category insights imported", imported)
+    logger.info(import_result)
 
 
 def transform_insight_iter(insights_iter: Iterable[dict]):

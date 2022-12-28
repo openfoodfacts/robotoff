@@ -1,5 +1,107 @@
 # Changelog
 
+## [1.16.7](https://github.com/openfoodfacts/robotoff/compare/v1.16.6...v1.16.7) (2022-12-27)
+
+
+### Bug Fixes
+
+* add missing field in SQL query ([e49af95](https://github.com/openfoodfacts/robotoff/commit/e49af95a64c31c4cfad36fbf14a24a1c847642aa))
+
+## [1.16.6](https://github.com/openfoodfacts/robotoff/compare/v1.16.5...v1.16.6) (2022-12-27)
+
+
+### Bug Fixes
+
+* add CLI to refresh all nearest neighbors ([80fa554](https://github.com/openfoodfacts/robotoff/commit/80fa554b09efef54b8c5a04d75a0147aaf5bec5c))
+* allow to run object detection models on URL list file ([6b04692](https://github.com/openfoodfacts/robotoff/commit/6b046920758d1ace4f3b4361917040da0110cc79))
+* don't perform full update during insight update ([671af07](https://github.com/openfoodfacts/robotoff/commit/671af07f8cb4f2b91e34bc3621fdf660984f1fba))
+* don't refresh nearest neighbors of annotated logos ([27fa3de](https://github.com/openfoodfacts/robotoff/commit/27fa3dea8bdcf20aae10522be6597f4c27d88fb0))
+* open DB connection when refreshing product insight ([f8c9a36](https://github.com/openfoodfacts/robotoff/commit/f8c9a36697a39da6263cf170eef8d359c0edf47d))
+* use better default for MONGO_URI ([5a392db](https://github.com/openfoodfacts/robotoff/commit/5a392dbb3494c1aad07645a35cd817f1593e16e8))
+
+## [1.16.5](https://github.com/openfoodfacts/robotoff/compare/v1.16.4...v1.16.5) (2022-12-27)
+
+
+### Bug Fixes
+
+* fix /ann/search route ([9016968](https://github.com/openfoodfacts/robotoff/commit/90169682e4c60872d04eb36f35bf6aa5ccf879c6))
+
+## [1.16.4](https://github.com/openfoodfacts/robotoff/compare/v1.16.3...v1.16.4) (2022-12-26)
+
+
+### Bug Fixes
+
+* don't open DB connection twice ([3319c0b](https://github.com/openfoodfacts/robotoff/commit/3319c0bfbb00179802d65602c7f594c5d8c5ff41))
+* generate insights from annotated logos after PUT logo/{logo_id} ([e45bd3a](https://github.com/openfoodfacts/robotoff/commit/e45bd3a61abb49e6517b272effa44bdeb13abdd4))
+* simplify call to /ann/search ([1164f65](https://github.com/openfoodfacts/robotoff/commit/1164f65a5f4ce3cae433e930ed51d1fc40a62228))
+
+## [1.16.3](https://github.com/openfoodfacts/robotoff/compare/v1.16.2...v1.16.3) (2022-12-26)
+
+
+### Bug Fixes
+
+* bulk-index logo embeddings (instead of indexing one by one) ([4768cfb](https://github.com/openfoodfacts/robotoff/commit/4768cfb75f656892721621f6dce174eb26b01378))
+* fix ES product export ([ea9cd21](https://github.com/openfoodfacts/robotoff/commit/ea9cd21944f9b575876ed01b4cea988b8be546e4))
+* fix test_import_image integration test ([2031fa4](https://github.com/openfoodfacts/robotoff/commit/2031fa48d39760f9491588b0a6e4404952e9bc3b))
+* remove automatic processing disabling ([081f4a9](https://github.com/openfoodfacts/robotoff/commit/081f4a95a2b5aa41afa2ea60fec4681eec3ab3f1))
+
+## [1.16.2](https://github.com/openfoodfacts/robotoff/compare/v1.16.1...v1.16.2) (2022-12-26)
+
+
+### Bug Fixes
+
+* add result_ttl=0 for upate_insight job ([09862f1](https://github.com/openfoodfacts/robotoff/commit/09862f1f836e6e5bbeafabcf40271d40d281e2e9))
+* don't perform image extraction jobs on invalid images ([02458c4](https://github.com/openfoodfacts/robotoff/commit/02458c484978759c54ad21100334569b27dad70b))
+* fix add-logo-to-ann CLI command ([8385689](https://github.com/openfoodfacts/robotoff/commit/8385689951ffe2cf9915443e8d56a8a2906d87b5))
+* remove useless log message ([7ded92d](https://github.com/openfoodfacts/robotoff/commit/7ded92d63565dadc3ee164a99f56b87ebba96924))
+
+## [1.16.1](https://github.com/openfoodfacts/robotoff/compare/v1.16.0...v1.16.1) (2022-12-26)
+
+
+### Bug Fixes
+
+* check that brand prediction is not in blacklist during import ([45bc014](https://github.com/openfoodfacts/robotoff/commit/45bc0147c16417ba4a9611b3247b15e096e54409))
+* improve logging messages for cached resources ([844bfd3](https://github.com/openfoodfacts/robotoff/commit/844bfd3dbe67bc71fcbdc9779f21ffc10d256142))
+* limit CLIP batch size to 4 ([ab0cc99](https://github.com/openfoodfacts/robotoff/commit/ab0cc992c42e6f35dfda862d803550d74ca9299e))
+* set TTL of 1h for get_logo_annotations function ([28e2505](https://github.com/openfoodfacts/robotoff/commit/28e25059d96b94cd2de7a8fab2e86af84a284074))
+
+## [1.16.0](https://github.com/openfoodfacts/robotoff/compare/v1.15.2...v1.16.0) (2022-12-23)
+
+
+### Features
+
+* Adding ES ANN for logos in robotoff ([e4beaad](https://github.com/openfoodfacts/robotoff/commit/e4beaad7343ece5a757efb76908e9a31f62ae4f0))
+* create elasticsearch indices at startup ([17c0f17](https://github.com/openfoodfacts/robotoff/commit/17c0f172c643da4913d5e10c2854f8330743672c))
+* disable temporarily logo processing ([10bc089](https://github.com/openfoodfacts/robotoff/commit/10bc08911b6451a637dba7d5e1f7e7336bb67d33))
+* save CLIP embeddings in DB ([dbc4d34](https://github.com/openfoodfacts/robotoff/commit/dbc4d34b631779d5272459e7dd1bdcd21fad7993))
+
+
+### Bug Fixes
+
+* add `query_logo_id` field in /ann/search response ([698025c](https://github.com/openfoodfacts/robotoff/commit/698025cdf4bb9ef79f66fd55f31054b86dd203d3))
+* add integration tests to process_created_logos ([0e02f7b](https://github.com/openfoodfacts/robotoff/commit/0e02f7b125f93fb6ed72c850d4127f4c05e5c3dd))
+* add robotoff-ann API to robotoff ([895264a](https://github.com/openfoodfacts/robotoff/commit/895264a9a99023fb996a819c628e6c2c1931df28))
+* add robotoff.triton module ([5fe1332](https://github.com/openfoodfacts/robotoff/commit/5fe13324d2102bc49644df1826c2f882a2d942ea))
+* add updated_at field to logo.nearest_neighbors JSON ([db0c44d](https://github.com/openfoodfacts/robotoff/commit/db0c44d2f054450834329f51c8c2fb0d2c54fe75))
+* cast logo_id to int in ES ANN response ([abeec15](https://github.com/openfoodfacts/robotoff/commit/abeec15e80638bf1e0e1417cf41907b599422149))
+* fix add-logo-to-ann CLI command ([52ae430](https://github.com/openfoodfacts/robotoff/commit/52ae4304cd11b71e41959a8048eaa59564d4011d))
+* fix ES healthcheck ([1b54761](https://github.com/openfoodfacts/robotoff/commit/1b54761d2d403f9ffbc60efaf57655b80fcd7a53))
+* fix integration tests ([316d330](https://github.com/openfoodfacts/robotoff/commit/316d330bd47c318b627f7c2486dbc4c29d984846))
+* fix LogoEmbedding model backref name ([b8f2d04](https://github.com/openfoodfacts/robotoff/commit/b8f2d0425c9d489d1ce14b683a889ed2ad04b21c))
+* fix process_created_logos function ([a3aa2c4](https://github.com/openfoodfacts/robotoff/commit/a3aa2c47a68c89005ce63f200eed0580f62165ca))
+* fix run_object_detection_model CLI command ([1480350](https://github.com/openfoodfacts/robotoff/commit/1480350c3b3bf822c0108379e6905801c5c92956))
+* fix wrong logging level for error messages ([9002356](https://github.com/openfoodfacts/robotoff/commit/90023560449bb4aaea6cbc7cda5c50b7045e5a5a))
+* improve add-logo-to-ann CLI command ([a6c6fc7](https://github.com/openfoodfacts/robotoff/commit/a6c6fc76042adaf78677fc53f328a50684659b12))
+* Improve export-logos CLI command ([8441163](https://github.com/openfoodfacts/robotoff/commit/84411632ab97a7f10a76056c2ddfd2a45289e0a4))
+* improve run_object_detection model function ([a8040c5](https://github.com/openfoodfacts/robotoff/commit/a8040c5a3aa5b8900ecdf617f472a6d36e70aa8e))
+* move knn_search to distinct function ([aa7eff6](https://github.com/openfoodfacts/robotoff/commit/aa7eff6a25485ee7bbda715cdbc14d09c1cf5ac1))
+* normalize vector before ANN query ([d6f18af](https://github.com/openfoodfacts/robotoff/commit/d6f18afe532c8e01a0fee77561e6481b2422709e))
+* pyproject-fix ([daaed91](https://github.com/openfoodfacts/robotoff/commit/daaed91c4291107704872b10c15adfa07dbd680c))
+* remove ANN healthcheck and add an healthcheck for ES ([b962659](https://github.com/openfoodfacts/robotoff/commit/b962659ad03abd750829de0db54d6bab737b84c0))
+* remove legacy export_logo_annotation CLI command ([0a3ffdc](https://github.com/openfoodfacts/robotoff/commit/0a3ffdcd851f9d7f45c3b27ad6be765fa554574e))
+* switch log messages from WARNING to INFO ([89c0933](https://github.com/openfoodfacts/robotoff/commit/89c09339d230ae26e62db80dd40ce66552958393))
+* use good defaults for ES config in settings.py ([71320a9](https://github.com/openfoodfacts/robotoff/commit/71320a9524e7a7d617b8672bf860bebabb5d1fe2))
+
 ## [1.15.2](https://github.com/openfoodfacts/robotoff/compare/v1.15.1...v1.15.2) (2022-12-21)
 
 

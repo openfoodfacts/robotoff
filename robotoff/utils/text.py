@@ -4,7 +4,11 @@ import unicodedata
 
 import spacy
 
+from robotoff.utils import get_logger
+
 from .fold_to_ascii import fold
+
+logger = get_logger(__name__)
 
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 
@@ -41,12 +45,14 @@ def strip_consecutive_spaces(text: str) -> str:
 @functools.lru_cache()
 def get_blank_nlp(lang: str) -> spacy.Language:
     """Return a blank (without model) spaCy language pipeline."""
+    logger.info("Loading NLP for %s...", lang)
     return spacy.blank(lang)
 
 
 @functools.lru_cache()
 def get_lemmatizing_nlp(lang: str) -> spacy.Language:
     """Return a spaCy language pipeline with a lookup lemmatizer."""
+    logger.info("Loading NLP with lemmatizer for %s...", lang)
     nlp = spacy.blank(lang)
     nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
     nlp.initialize()

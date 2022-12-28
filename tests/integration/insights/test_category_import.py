@@ -76,12 +76,11 @@ class TestCategoryImporter:
     def _run_import(self, predictions, product_store=None):
         if product_store is None:
             product_store = self.fake_product_store()
-        imported = import_insights(
+        return import_insights(
             predictions,
             server_domain=settings.OFF_SERVER_DOMAIN,
             product_store=product_store,
         )
-        return imported
 
     @pytest.mark.parametrize(
         "predictions",
@@ -107,8 +106,10 @@ class TestCategoryImporter:
         original_insights = ProductInsight.select()
         assert len(original_insights) == 1
         original_timestamp = original_insights[0].timestamp
-        imported = self._run_import(predictions)
-        assert imported == 0
+        import_result = self._run_import(predictions)
+        assert import_result.created_insights_count() == 0
+        assert import_result.updated_insights_count() == 1
+        assert import_result.deleted_insights_count() == 0
         # no insight created
         insights = list(ProductInsight.select())
         assert len(insights) == 1
@@ -133,8 +134,10 @@ class TestCategoryImporter:
     def test_import_one_different_value_tag(self, predictions):
         """Test when a more precise category is available as prediction: the
         prediction should be used as insight instead of the less precise one."""
-        imported = self._run_import(predictions)
-        assert imported == 1
+        import_result = self._run_import(predictions)
+        assert import_result.created_insights_count() == 1
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 1
         # no insight created
         assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
@@ -143,10 +146,12 @@ class TestCategoryImporter:
         assert not inserted.automatic_processing
 
     def test_import_auto(self):
-        imported = self._run_import(
+        import_result = self._run_import(
             [neural_prediction("en:smoked-salmons", confidence=0.91, auto=True)]
         )
-        assert imported == 1
+        assert import_result.created_insights_count() == 1
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 1
         # no insight created
         assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
@@ -165,7 +170,9 @@ class TestCategoryImporter:
     )
     def test_import_product_not_in_store(self, predictions):
         # we should not create insight for non existing products !
-        imported = self._run_import(predictions, product_store={barcode1: None})
-        assert imported == 0
+        import_result = self._run_import(predictions, product_store={barcode1: None})
+        assert import_result.created_insights_count() == 0
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 0
         # no insight created
         assert ProductInsight.select().count() == 1

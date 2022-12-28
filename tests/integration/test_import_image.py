@@ -4,6 +4,7 @@ from PIL import Image
 
 from robotoff import settings
 from robotoff.models import LogoEmbedding
+from robotoff.types import InsightImportResult
 from robotoff.workers.tasks.import_image import (
     process_created_logos,
     save_logo_embeddings,
@@ -77,7 +78,7 @@ def test_process_created_logos(peewee_db, mocker):
     )
     import_logo_insights_mock = mocker.patch(
         "robotoff.workers.tasks.import_image.import_logo_insights",
-        return_value=1,
+        return_value=InsightImportResult(),
     )
 
     with peewee_db:
@@ -91,7 +92,7 @@ def test_process_created_logos(peewee_db, mocker):
             image_prediction.id, server_domain=settings.OFF_SERVER_DOMAIN
         )
         add_logos_to_ann_mock.assert_called()
-        embedding_args = add_logos_to_ann_mock.mock_calls[0].args[0]
+        embedding_args = add_logos_to_ann_mock.mock_calls[0].args[1]
         assert sorted(embedding_args, key=lambda x: x.logo_id) == logo_embeddings
         save_nearest_neighbors_mock.assert_called()
         get_logo_confidence_thresholds_mock.assert_called()

@@ -4,7 +4,7 @@ from typing import Iterable, Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.brands import BRAND_BLACKLIST_STORE, keep_brand_from_taxonomy
+from robotoff.brands import get_brand_blacklist, keep_brand_from_taxonomy
 from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger, text_file_iter
@@ -22,7 +22,7 @@ def generate_brand_keyword_processor(
 ):
     blacklisted_brands: Optional[set[str]] = None
     if blacklist:
-        blacklisted_brands = BRAND_BLACKLIST_STORE.get()
+        blacklisted_brands = get_brand_blacklist()
 
     keep_func = functools.partial(
         keep_brand_from_taxonomy,

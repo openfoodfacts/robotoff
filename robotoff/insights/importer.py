@@ -9,8 +9,7 @@ from typing import Any, Iterable, Iterator, Optional, Type
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
-from robotoff.brands import get_brand_prefix, in_barcode_range
-from robotoff.insights.dataclass import InsightType
+from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_range
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
@@ -30,7 +29,13 @@ from robotoff.taxonomy import (
     get_taxonomy,
     match_taxonomized_value,
 )
-from robotoff.types import PredictionType
+from robotoff.types import (
+    InsightImportResult,
+    InsightType,
+    PredictionImportResult,
+    PredictionType,
+    ProductInsightImportResult,
+)
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
@@ -106,37 +111,6 @@ def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
 
     image_id = Path(source_image).stem
     return image_id.isdigit() and image_id in images
-
-
-def is_trustworthy_insight_image(
-    images: dict[str, Any],
-    source_image: Optional[str],
-    max_timedelta: datetime.timedelta = settings.IMAGE_MAX_TIMEDELTA,
-):
-    """Return True if the source image is trustworthy for insight generation,
-      - the image ID is a digit and is referenced in `images`
-      - the image is either selected or recent enough
-
-    If `source_image` is None, we always consider the insight as trustworthy.
-    Insights considered as trustworthy can have automatic_processing = True.
-
-    :param images: The image dict as stored in MongoDB.
-    :param source_image: The insight source image, should be the path of the
-    image path or None.
-    :param max_timedelta: Maximum timedelta between most recent image and
-    source image, default settings.IMAGE_MAX_TIMEDELTA.
-    """
-    if source_image is None:
-        return True
-
-    image_id = Path(source_image).stem
-
-    if not image_id.isdigit() or image_id not in images:
-        return False
-
-    return is_selected_image(images, image_id) or is_recent_image(
-        images, image_id, max_timedelta
-    )
 
 
 def get_existing_insight(
@@ -278,7 +252,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         predictions: list[Prediction],
         server_domain: str,
         product_store: DBProductStore,
-    ) -> int:
+    ) -> ProductInsightImportResult:
         """Import insights, this is the main method.
 
         :return: the number of insights that were imported.
@@ -304,23 +278,46 @@ class InsightImporter(metaclass=abc.ABCMeta):
         to_create, to_update, to_delete = cls.generate_insights(
             barcode, predictions, server_domain, product_store
         )
-        if to_delete:
-            to_delete_ids = [insight.id for insight in to_delete]
-            logger.info("Deleting %s insights", len(to_delete_ids))
+        to_delete_ids = [insight.id for insight in to_delete]
+        if to_delete_ids:
             ProductInsight.delete().where(
                 ProductInsight.id.in_(to_delete_ids)
             ).execute()
+
         if to_create:
             inserts += batch_insert(
                 ProductInsight,
                 (model_to_dict(insight) for insight in to_create),
                 50,
             )
+        created_ids = [insight.id for insight in to_create]
 
-        for insight in to_update:
-            insight.save()
+        updated_ids = []
+        for insight, reference_insight in to_update:
+            update = {}
+            for field_name in (
+                key
+                for key in insight.__data__.keys()
+                if key not in ("id", "barcode", "type", "server_domain", "server_type")
+            ):
+                if getattr(insight, field_name) != getattr(
+                    reference_insight, field_name
+                ):
+                    update[field_name] = getattr(insight, field_name)
 
-        return inserts
+            if update:
+                updated_ids.append(reference_insight.id)
+                ProductInsight.update(**update).where(
+                    ProductInsight.id == reference_insight.id
+                ).execute()
+
+        return ProductInsightImportResult(
+            insight_created_ids=created_ids,
+            insight_deleted_ids=to_delete_ids,
+            insight_updated_ids=updated_ids,
+            barcode=barcode,
+            type=cls.get_type(),
+        )
 
     @classmethod
     def generate_insights(
@@ -329,7 +326,11 @@ class InsightImporter(metaclass=abc.ABCMeta):
         predictions: list[Prediction],
         server_domain: str,
         product_store: DBProductStore,
-    ) -> tuple[list[ProductInsight], list[ProductInsight], list[ProductInsight]]:
+    ) -> tuple[
+        list[ProductInsight],
+        list[tuple[ProductInsight, ProductInsight]],
+        list[ProductInsight],
+    ]:
         """Given a list of predictions, yield tuples of ProductInsight to
         create, update and delete.
 
@@ -361,10 +362,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 )
                 candidate.automatic_processing = False
 
-            if not is_trustworthy_insight_image(product.images, candidate.source_image):
-                # Don't process automatically if the insight image is not
-                # trustworthy (too old and not selected)
-                candidate.automatic_processing = False
             if candidate.data.get("is_annotation"):
                 username = candidate.data.get("username")
                 if username:
@@ -379,17 +376,15 @@ class InsightImporter(metaclass=abc.ABCMeta):
             cls.add_fields(insight, product, timestamp, server_domain, server_type)
 
         for insight, reference_insight in to_update:
-            # Keep `reference_insight` in DB (as the value/value_tag/source_image is the same),
-            # but update information from `insight`.
-            # This way, we don't unnecessarily insert/delete rows in ProductInsight table
-            # and we keep associated votes
-            cls.update_fields(insight, reference_insight, product, timestamp)
+            cls.add_fields(
+                insight,
+                product,
+                timestamp,
+                reference_insight.server_domain,
+                reference_insight.server_type,
+            )
 
-        return (
-            to_create,
-            [reference_insight for (_, reference_insight) in to_update],
-            to_delete,
-        )
+        return (to_create, to_update, to_delete)
 
     @classmethod
     @abc.abstractmethod
@@ -537,36 +532,6 @@ class InsightImporter(metaclass=abc.ABCMeta):
             )
 
         cls.add_optional_fields(insight, product)
-
-    @classmethod
-    def update_fields(
-        cls,
-        insight: ProductInsight,
-        reference_insight: ProductInsight,
-        product: Product,
-        timestamp: datetime.datetime,
-    ):
-        """Update `reference_insight` fields with data from `insight`.
-
-        This is used to refresh `reference_insight` with potentially fresher
-        information, while avoiding row deletion/insertion each time
-        `import_insights` is called.
-        """
-        cls.add_fields(
-            insight,
-            product,
-            timestamp,
-            reference_insight.server_domain,
-            reference_insight.server_type,
-        )
-
-        for field_name in (
-            key
-            for key in insight.__data__.keys()
-            if key not in ("id", "barcode", "type", "server_domain", "server_type")
-        ):
-            if getattr(insight, field_name) != getattr(reference_insight, field_name):
-                setattr(reference_insight, field_name, getattr(insight, field_name))
 
     @classmethod
     def add_optional_fields(  # noqa: B027
@@ -867,6 +832,24 @@ class BrandInsightImporter(InsightImporter):
 
         return True
 
+    @staticmethod
+    def is_prediction_valid(prediction: Prediction) -> bool:
+        brand_blacklist = get_brand_blacklist()
+        if prediction.value_tag in brand_blacklist:
+            return False
+
+        if (
+            prediction.predictor == "universal-logo-detector"
+            and "username" in prediction.data
+        ):
+            # Check barcode range for all predictors except logos detected using
+            # universal-logo-detector model and annotated manually
+            return True
+
+        return BrandInsightImporter.is_in_barcode_range(
+            prediction.barcode, prediction.value_tag  # type: ignore
+        )
+
     @classmethod
     def generate_candidates(
         cls,
@@ -878,14 +861,7 @@ class BrandInsightImporter(InsightImporter):
             return
 
         for prediction in predictions:
-            if not (
-                prediction.predictor == "universal-logo-detector"
-                and "username" in prediction.data
-            ) and not cls.is_in_barcode_range(
-                product.barcode, prediction.value_tag  # type: ignore
-            ):
-                # Check barcode range for all predictors except logos detected using
-                # universal-logo-detector model and annotated manually
+            if not cls.is_prediction_valid(prediction):
                 continue
             insight = ProductInsight(**prediction.to_dict())
             if insight.automatic_processing is None:
@@ -1038,7 +1014,7 @@ def import_insights(
     predictions: Iterable[Prediction],
     server_domain: str,
     product_store: Optional[DBProductStore] = None,
-) -> int:
+) -> InsightImportResult:
     """Import predictions and generate (and import) insights from these
     predictions.
 
@@ -1047,11 +1023,15 @@ def import_insights(
     if product_store is None:
         product_store = get_product_store()
 
-    updated_prediction_types_by_barcode = import_predictions(
+    updated_prediction_types_by_barcode, prediction_import_results = import_predictions(
         predictions, product_store, server_domain
     )
-    return import_insights_for_products(
+    product_insight_import_results = import_insights_for_products(
         updated_prediction_types_by_barcode, server_domain, product_store
+    )
+    return InsightImportResult(
+        product_insight_import_results=product_insight_import_results,
+        prediction_import_results=prediction_import_results,
     )
 
 
@@ -1059,7 +1039,7 @@ def import_insights_for_products(
     prediction_types_by_barcode: dict[str, set[PredictionType]],
     server_domain: str,
     product_store: DBProductStore,
-) -> int:
+) -> list[ProductInsightImportResult]:
     """Re-compute insights for products with new predictions.
 
     :param prediction_types_by_barcode: a dict that associates each barcode
@@ -1069,7 +1049,7 @@ def import_insights_for_products(
 
     :return: Number of imported insights
     """
-    imported = 0
+    import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
         selected_barcodes: list[str] = []
@@ -1091,26 +1071,27 @@ def import_insights_for_products(
             ):
                 try:
                     with Lock(name=f"robotoff:import:{barcode}", expire=60, timeout=10):
-                        imported += importer.import_insights(
+                        result = importer.import_insights(
                             barcode,
                             list(product_predictions),
                             server_domain,
                             product_store,
                         )
+                        import_results.append(result)
                 except LockedResourceException:
                     logger.info(
                         "Couldn't acquire insight import lock, skipping insight import for product %s",
                         barcode,
                     )
                     continue
-    return imported
+    return import_results
 
 
 def import_predictions(
     predictions: Iterable[Prediction],
     product_store: DBProductStore,
     server_domain: str,
-) -> dict[str, set[PredictionType]]:
+) -> tuple[dict[str, set[PredictionType]], list[PredictionImportResult]]:
     """Check validity and import provided Prediction.
 
     :param predictions: the Predictions to import
@@ -1125,28 +1106,30 @@ def import_predictions(
         if is_valid_product_prediction(p, product_store[p.barcode])  # type: ignore
     ]
 
-    predictions_imported = 0
+    predictions_import_results = []
     updated_prediction_types_by_barcode: dict[str, set[PredictionType]] = {}
     for barcode, product_predictions_iter in itertools.groupby(
         sorted(predictions, key=operator.attrgetter("barcode")),
         operator.attrgetter("barcode"),
     ):
         product_predictions_group = list(product_predictions_iter)
-        predictions_imported += import_product_predictions(
+        predictions_imported = import_product_predictions(
             barcode, product_predictions_group, server_domain
+        )
+        predictions_import_results.append(
+            PredictionImportResult(created=predictions_imported, barcode=barcode)
         )
         updated_prediction_types_by_barcode[barcode] = set(
             prediction.type for prediction in product_predictions_group
         )
-    logger.info("%s predictions imported", predictions_imported)
-    return updated_prediction_types_by_barcode
+    return updated_prediction_types_by_barcode, predictions_import_results
 
 
 def refresh_insights(
     barcode: str,
     server_domain: str,
     product_store: Optional[DBProductStore] = None,
-) -> int:
+) -> list[InsightImportResult]:
     """Refresh all insights for specific product.
 
     All predictions are fetched, and insights are created/deleted by each
@@ -1168,18 +1151,18 @@ def refresh_insights(
     predictions = [Prediction(**p) for p in get_product_predictions([barcode])]
     prediction_types = set(p.type for p in predictions)
 
-    imported = 0
+    import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
         if prediction_types >= required_prediction_types:
-            imported += importer.import_insights(
+            import_result = importer.import_insights(
                 barcode,
                 [p for p in predictions if p.type in required_prediction_types],
                 server_domain,
                 product_store,
             )
-
-    return imported
+            import_results.append(import_result)
+    return import_results
 
 
 def get_product_predictions(

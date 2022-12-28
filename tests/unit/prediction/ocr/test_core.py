@@ -1,7 +1,7 @@
 import pytest
 
-from robotoff.insights import InsightType
 from robotoff.prediction.ocr.core import extract_predictions
+from robotoff.types import InsightType
 
 
 def test_extract_insights_unknown_raises():

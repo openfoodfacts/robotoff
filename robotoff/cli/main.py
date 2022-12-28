@@ -5,6 +5,8 @@ from typing import Optional
 
 import typer
 
+from robotoff.elasticsearch.client import get_es_client
+from robotoff.off import get_barcode_from_url
 from robotoff.types import ObjectDetectionModel, PredictionType, WorkerQueue
 
 app = typer.Typer()
@@ -70,9 +72,10 @@ def regenerate_ocr_insights(
         )
 
     with db:
-        imported = importer.import_insights(predictions, settings.OFF_SERVER_DOMAIN)
-
-    logger.info("Import finished, %s insights imported", imported)
+        import_result = importer.import_insights(
+            predictions, settings.OFF_SERVER_DOMAIN
+        )
+        logger.info(import_result)
 
 
 @app.command()
@@ -198,20 +201,16 @@ def import_insights(
     else:
         raise ValueError("--generate-from or --input-path must be provided")
 
-    imported = 0
     with db.connection_context():
         for prediction_batch in tqdm.tqdm(
             chunked(predictions, batch_size), desc="prediction batch"
         ):
             # Create a new transaction for every batch
             with db.atomic():
-                batch_imported = importer.import_insights(
+                import_results = importer.import_insights(
                     prediction_batch, settings.OFF_SERVER_DOMAIN
                 )
-                logger.info(f"{batch_imported} insights imported in batch")
-                imported += batch_imported
-
-    logger.info(f"{imported} insights imported")
+                logger.info(import_results)
 
 
 @app.command()
@@ -245,7 +244,8 @@ def refresh_insights(
 
     if barcode is not None:
         logger.info(f"Refreshing product {barcode}")
-        imported = refresh_insights_(barcode, settings.OFF_SERVER_DOMAIN)
+        with db:
+            imported = refresh_insights_(barcode, settings.OFF_SERVER_DOMAIN)
         logger.info(f"Refreshed insights: {imported}")
     else:
         logger.info("Launching insight refresh on full database")
@@ -332,11 +332,21 @@ def run_object_detection_model(
     model_name: ObjectDetectionModel = typer.Argument(
         ..., help="Name of the object detection model"
     ),
+    input_path: Optional[Path] = typer.Option(
+        None,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        help="text file with image URLs to run object detection on. "
+        "If null, a query is performed in DB to fetch images without image predictions "
+        "for the specified model.",
+    ),
     limit: Optional[int] = typer.Option(None, help="Maximum numbers of job to launch"),
 ):
     """Launch object detection model jobs on all missing images (images
     without an ImagePrediction item for this model) in DB."""
     from typing import Callable
+    from urllib.parse import urlparse
 
     import tqdm
     from peewee import JOIN
@@ -344,6 +354,7 @@ def run_object_detection_model(
     from robotoff import settings
     from robotoff.models import ImageModel, ImagePrediction, db
     from robotoff.off import generate_image_url
+    from robotoff.utils import text_file_iter
     from robotoff.workers.queues import enqueue_job, low_queue
     from robotoff.workers.tasks.import_image import (
         run_logo_object_detection,
@@ -358,27 +369,43 @@ def run_object_detection_model(
     else:
         func = run_nutriscore_object_detection
 
-    with db:
-        query = (
-            ImageModel.select(ImageModel.barcode, ImageModel.id)
-            .join(
-                ImagePrediction,
-                JOIN.LEFT_OUTER,
-                on=(
-                    (ImagePrediction.image_id == ImageModel.id)
-                    & (ImagePrediction.model_name == model_name.value)
-                ),
-            )
-            .where(ImagePrediction.model_name.is_null())
-            .tuples()
-        )
-        if limit:
-            query = query.limit(limit)
-        missing_items = list(query)
+    if input_path:
+        image_urls = list(text_file_iter(input_path))
 
-    if typer.confirm(f"{len(missing_items)} jobs are going to be launched, confirm?"):
-        for barcode, image_id in tqdm.tqdm(missing_items, desc="image"):
-            image_url = generate_image_url(barcode, image_id)
+        for image_url in image_urls:
+            parsed_url = urlparse(image_url)
+            if not parsed_url.netloc or not parsed_url.scheme:
+                raise ValueError(f"invalid image URL: {image_url}")
+
+        if limit:
+            image_urls = image_urls[:limit]
+
+    else:
+        with db:
+            query = (
+                ImageModel.select(ImageModel.barcode, ImageModel.id)
+                .join(
+                    ImagePrediction,
+                    JOIN.LEFT_OUTER,
+                    on=(
+                        (ImagePrediction.image_id == ImageModel.id)
+                        & (ImagePrediction.model_name == model_name.value)
+                    ),
+                )
+                .where(ImagePrediction.model_name.is_null())
+                .tuples()
+            )
+            if limit:
+                query = query.limit(limit)
+            image_urls = [
+                generate_image_url(barcode, image_id)
+                for barcode, image_id in query
+                if barcode.isdigit()
+            ]
+
+    if typer.confirm(f"{len(image_urls)} jobs are going to be launched, confirm?"):
+        for image_url in tqdm.tqdm(image_urls, desc="image"):
+            barcode = get_barcode_from_url(image_url)
             enqueue_job(
                 func,
                 low_queue,
@@ -397,12 +424,11 @@ def init_elasticsearch(load_data: bool = True) -> None:
     """
     from robotoff.elasticsearch import get_es_client
     from robotoff.elasticsearch.export import ElasticsearchExporter
-    from robotoff.types import ElasticSearchIndex
 
     es_exporter = ElasticsearchExporter(get_es_client())
     es_exporter.load_all_indices()
     if load_data:
-        es_exporter.export_index_data(ElasticSearchIndex.product)
+        es_exporter.export_index_data()
 
 
 @app.command()
@@ -414,63 +440,67 @@ def add_logo_to_ann(
     """Index all missing logos in Elasticsearch ANN index."""
     import logging
     import time
-    from itertools import groupby
 
-    import elasticsearch
     import tqdm
+    from elasticsearch.helpers import BulkIndexError
+    from more_itertools import chunked
+    from playhouse.postgres_ext import ServerSide
 
     from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
-    from robotoff.models import (
-        ImageModel,
-        ImagePrediction,
-        LogoAnnotation,
-        LogoEmbedding,
-        db,
-    )
+    from robotoff.models import LogoEmbedding, db
     from robotoff.utils import get_logger
 
     logger = get_logger()
     logging.getLogger("elastic_transport.transport").setLevel(logging.WARNING)
 
-    seen = get_stored_logo_ids()
+    es_client = get_es_client()
+    seen = get_stored_logo_ids(es_client)
     added = 0
-    with db:
+
+    with db.connection_context():
         logger.info("Fetching logo embedding to index...")
+        query = LogoEmbedding.select().objects()
         logo_embedding_iter = tqdm.tqdm(
-            LogoEmbedding.select(LogoEmbedding, LogoAnnotation, ImageModel.id)
-            .join(LogoAnnotation)
-            .join(ImagePrediction)
-            .join(ImageModel)
-            .order_by(ImageModel.id)
-            .iterator()
-        )
-        for _, logo_embedding_batch in groupby(
-            logo_embedding_iter, lambda x: x.logo.image_prediction.image.id
-        ):
-            logo_embeddings = list(logo_embedding_batch)
-
-            to_process = [
+            (
                 logo_embedding
-                for logo_embedding in logo_embeddings
+                for logo_embedding in ServerSide(query)
                 if logo_embedding.logo_id not in seen
-            ]
-            if not to_process:
-                continue
-
+            ),
+            desc="logo",
+        )
+        for logo_embedding_batch in chunked(logo_embedding_iter, 500):
             try:
-                add_logos_to_ann(to_process)
-            except (
-                elasticsearch.ConnectionError,
-                elasticsearch.ConnectionTimeout,
-            ) as e:
+                add_logos_to_ann(es_client, logo_embedding_batch)
+                added += len(logo_embedding_batch)
+            except BulkIndexError as e:
                 logger.info("Request error during logo addition to ANN", exc_info=e)
-
-            added += len(to_process)
 
             if sleep_time:
                 time.sleep(sleep_time)
 
     logger.info(f"{added} embeddings indexed")
+
+
+@app.command()
+def refresh_logo_nearest_neighbors(
+    day_offset: int = typer.Option(7, help="Number of days since last refresh", min=1),
+    batch_size: int = typer.Option(500, help="Number of logos to process at once"),
+):
+    """Refresh each logo nearest neighbors if the last refresh is more than
+    `day_offset` days old."""
+    import logging
+
+    from robotoff.logos import refresh_nearest_neighbors
+    from robotoff.models import db
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    logging.getLogger("elastic_transport.transport").setLevel(logging.WARNING)
+
+    logger.info("Starting refresh of logo nearest neighbors")
+
+    with db.connection_context():
+        refresh_nearest_neighbors(day_offset, batch_size)
 
 
 @app.command()

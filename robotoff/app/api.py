@@ -29,6 +29,7 @@ from robotoff.app.core import (
     get_logo_annotation,
     get_predictions,
     save_annotation,
+    update_logo_annotations,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.elasticsearch import get_es_client
@@ -43,8 +44,10 @@ from robotoff.models import (
     ImagePrediction,
     LogoAnnotation,
     LogoEmbedding,
+    Prediction,
     ProductInsight,
     batch_insert,
+    db,
 )
 from robotoff.off import (
     OFFAuthentication,
@@ -59,7 +62,7 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
-from robotoff.types import ElasticSearchIndex, PredictionType
+from robotoff.types import PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
@@ -749,6 +752,16 @@ class ImageLogoSearchResource:
         resp.media = {"logos": items, "count": query_count}
 
 
+def check_logo_annotation(type_: str, value: Optional[str] = None):
+    if value is not None:
+        if type_ == "label" and not is_prefixed_value(value):
+            raise falcon.HTTPBadRequest(
+                description=f"language-prefixed value are required for label type (here: {value})"
+            )
+    elif type_ in ("brand", "category", "label", "store"):
+        raise falcon.HTTPBadRequest(description=f"value required for type {type_})")
+
+
 class ImageLogoDetailResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
         logo = LogoAnnotation.get_or_none(id=logo_id)
@@ -764,39 +777,82 @@ class ImageLogoDetailResource:
 
     @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
     def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
-        logo = LogoAnnotation.get_or_none(id=logo_id)
+        auth = parse_auth(req)
+        if auth is None:
+            raise falcon.HTTPForbidden(
+                description="authentication is required to annotate logos"
+            )
 
-        if logo is None:
-            resp.status = falcon.HTTP_404
-            return
+        with db.atomic():
+            logo = LogoAnnotation.get_or_none(id=logo_id)
+            if logo is None:
+                resp.status = falcon.HTTP_404
+                return
 
-        type_ = req.media["type"]
-        value = req.media["value"] or None
-        updated = False
+            type_ = req.media["type"]
+            value = req.media["value"] or None
+            check_logo_annotation(type_, value)
 
-        if type_ != logo.annotation_type:
-            logo.annotation_type = type_
-            updated = True
+            if type_ != logo.annotation_type or value != logo.annotation_value:
+                annotated_logos = update_logo_annotations(
+                    [(type_, value, logo)],
+                    username=auth.get_username() or "unknown",
+                    completed_at=datetime.datetime.utcnow(),
+                )
+                generate_insights_from_annotated_logos(
+                    annotated_logos, settings.OFF_SERVER_DOMAIN, auth
+                )
 
-        if value != logo.annotation_value:
-            logo.annotation_value = value
+        resp.status = falcon.HTTP_204
 
-            if value is not None:
-                value_tag = get_tag(value)
-                logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
-            else:
-                logo.annotation_value_tag = None
-                logo.taxonomy_value = None
 
-            updated = True
+class ImageLogoResetResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
+        with db.atomic():
+            logo = LogoAnnotation.get_or_none(id=logo_id)
+            if logo is None:
+                resp.status = falcon.HTTP_404
+                return
 
-        if updated:
-            auth = parse_auth(req)
-            username = None if auth is None else auth.get_username()
-            logo.username = username
-            logo.completed_at = datetime.datetime.utcnow()
+            annotation_type = logo.annotation_type
+            logo.annotation_value = None
+            logo.annotation_value_tag = None
+            logo.taxonomy_value = None
+            logo.annotation_type = None
+            logo.username = None
+            logo.completed_at = None
             logo.save()
+
+            if annotation_type in ("brand", "label"):
+                barcode = logo.image_prediction.image.barcode
+                prediction_deleted = (
+                    Prediction.delete()
+                    .where(
+                        # Speed-up filtering by providing additional filters
+                        Prediction.barcode == barcode,
+                        Prediction.type == annotation_type,
+                        Prediction.predictor == "universal-logo-detector",
+                        Prediction.data["logo_id"] == str(logo.id),
+                    )
+                    .execute()
+                )
+                insights_deleted = (
+                    ProductInsight.delete()
+                    .where(
+                        ProductInsight.barcode == barcode,
+                        ProductInsight.type == annotation_type,
+                        # never delete annotated insights
+                        ProductInsight.annotation.is_null(),
+                        ProductInsight.predictor == "universal-logo-detector",
+                        ProductInsight.data["logo_id"] == str(logo_id),
+                    )
+                    .execute()
+                )
+                logger.info(
+                    "prediction deleted: %s, insight deleted: %s",
+                    prediction_deleted,
+                    insights_deleted,
+                )
 
         resp.status = falcon.HTTP_204
 
@@ -804,50 +860,44 @@ class ImageLogoDetailResource:
 class ImageLogoAnnotateResource:
     @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        auth = parse_auth(req)
+        if auth is None:
+            raise falcon.HTTPForbidden(
+                description="authentication is required to annotate logos"
+            )
         server_domain = req.media.get("server_domain", settings.OFF_SERVER_DOMAIN)
         annotations = req.media["annotations"]
-        auth = parse_auth(req)
-        username = None if auth is None else auth.get_username()
         completed_at = datetime.datetime.utcnow()
-        annotated_logos = []
+        annotation_logos = []
 
-        for annotation in annotations:
-            logo_id = annotation["logo_id"]
-            type_ = annotation["type"]
-            value = annotation["value"] or None
-            try:
-                logo = LogoAnnotation.get_by_id(logo_id)
-            except LogoAnnotation.DoesNotExist:
-                raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
+        with db.atomic():
+            for annotation in annotations:
+                logo_id = annotation["logo_id"]
+                type_ = annotation["type"]
+                value = annotation["value"] or None
+                check_logo_annotation(type_, value)
 
-            if logo.annotation_type is not None:
-                # Logo is already annotated, skip
-                continue
+                try:
+                    logo = LogoAnnotation.get_by_id(logo_id)
+                except LogoAnnotation.DoesNotExist:
+                    raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
 
-            if value is not None:
-                if type_ == "label" and not is_prefixed_value(value):
-                    raise falcon.HTTPBadRequest(
-                        description=f"language-prefixed value are required for label type (here: {value})"
-                    )
-                logo.annotation_value = value
-                value_tag = get_tag(value)
-                logo.annotation_value_tag = value_tag
-                logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
-            elif type_ in ("brand", "category", "label", "store"):
-                raise falcon.HTTPBadRequest(
-                    description=f"value required for type {type_} (logo {logo_id})"
+                if logo.annotation_type is None:
+                    # Don't annotate already annotated logos
+                    annotation_logos.append((type_, value, logo))
+
+            if annotation_logos:
+                annotated_logos = update_logo_annotations(
+                    annotation_logos,
+                    username=auth.get_username() or "unknown",
+                    completed_at=completed_at,
                 )
-
-            logo.annotation_type = type_
-            logo.username = username
-            logo.completed_at = completed_at
-            annotated_logos.append(logo)
-
-        for logo in annotated_logos:
-            logo.save()
-
-        created = generate_insights_from_annotated_logos(annotated_logos, server_domain)
-        resp.media = {"created insights": created}
+                annotated = generate_insights_from_annotated_logos(
+                    annotated_logos, server_domain, auth
+                )
+            else:
+                annotated = 0
+        resp.media = {"created insights": annotated}
 
 
 class ImageLogoUpdateResource:
@@ -897,25 +947,22 @@ class ANNResource:
         count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
 
         if logo_id is None:
-            response = es_client.search(
-                index=ElasticSearchIndex.logo,
-                size=1,
-                query={
-                    "function_score": {"query": {"match_all": {}}, "random_score": {}}
-                },
-                source=False,
+            logo_embeddings = list(
+                LogoEmbedding.select().order_by(peewee.fn.Random()).limit(1)
             )
-            if not response["hits"]["hits"]:
-                # We don't have any embedding indexed
+
+            if not logo_embeddings:
                 resp.media = {"results": [], "count": 0, "query_logo_id": None}
                 return
-            logo_id = int(response["hits"]["hits"][0]["_id"])
 
-        logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
+            logo_embedding = logo_embeddings[0]
+            logo_id = logo_embedding.logo_id
+        else:
+            logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
 
-        if logo_embedding is None:
-            resp.status = falcon.HTTP_404
-            return
+            if logo_embedding is None:
+                resp.status = falcon.HTTP_404
+                return
 
         raw_results = [
             item
@@ -961,6 +1008,7 @@ class WebhookProductResource:
                 update_insights_job,
                 high_queue,
                 settings.UPDATED_PRODUCT_WAIT,
+                job_kwargs={"result_ttl": 0},
                 barcode=barcode,
                 server_domain=server_domain,
             )
@@ -1425,6 +1473,7 @@ api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
 api.add_route("/api/v1/images/logos/search", ImageLogoSearchResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
+api.add_route("/api/v1/images/logos/{logo_id:int}/reset", ImageLogoResetResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
 api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())

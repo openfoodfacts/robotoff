@@ -3,8 +3,10 @@ import pathlib
 from typing import Optional
 
 import elasticsearch
+from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
+from robotoff.elasticsearch.client import get_es_client
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -70,7 +72,11 @@ def run_import_image_job(
         return
 
     with db:
-        save_image(barcode, source_image, product, server_domain)
+        image_model = save_image(barcode, source_image, product, server_domain)
+
+    if image_model is None:
+        # The image is invalid, no need to perform image extraction jobs
+        return
 
     enqueue_job(
         import_insights_from_image,
@@ -139,8 +145,8 @@ def import_insights_from_image(
     )
 
     with db:
-        imported = import_insights(predictions, server_domain)
-        logger.info("Import finished, %s insights imported", imported)
+        import_result = import_insights(predictions, server_domain)
+        logger.info(import_result)
 
 
 def save_image_job(batch: list[tuple[str, str]], server_domain: str):
@@ -307,7 +313,8 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
                 "bounding_box": result["bounding_box"],
             },
         )
-        import_insights([prediction], server_domain)
+        import_result = import_insights([prediction], server_domain)
+        logger.info(import_result)
 
 
 def run_logo_object_detection(
@@ -374,7 +381,7 @@ def run_logo_object_detection(
             ]
 
     if logos and process_logos:
-        with db:
+        with db.connection_context():
             save_logo_embeddings(logos, image)
         enqueue_job(
             process_created_logos,
@@ -400,7 +407,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
         cropped_images.append(image.crop((left, top, right, bottom)))
     embeddings = generate_clip_embedding(cropped_images)
 
-    with db:
+    with db.atomic():
         for i in range(len(logos)):
             logo_id = logos[i].id
             logo_embedding = embeddings[i]
@@ -419,14 +426,15 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
     if not logo_embeddings:
         return
 
+    es_client = get_es_client()
     try:
-        add_logos_to_ann(logo_embeddings)
-    except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
+        add_logos_to_ann(es_client, logo_embeddings)
+    except BulkIndexError as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
 
     try:
-        save_nearest_neighbors(logo_embeddings)
+        save_nearest_neighbors(es_client, logo_embeddings)
     except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during ANN batch query", exc_info=e)
         return

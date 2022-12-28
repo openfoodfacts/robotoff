@@ -4,7 +4,6 @@ from typing import Any, Optional
 
 import pytest
 
-from robotoff.insights.dataclass import InsightType
 from robotoff.insights.importer import (
     BrandInsightImporter,
     CategoryImporter,
@@ -17,7 +16,6 @@ from robotoff.insights.importer import (
     import_insights_for_products,
     is_recent_image,
     is_selected_image,
-    is_trustworthy_insight_image,
     is_valid_insight_image,
     select_deepest_taxonomized_candidates,
     sort_predictions,
@@ -26,7 +24,7 @@ from robotoff.models import ProductInsight
 from robotoff.prediction.types import Prediction
 from robotoff.products import Product
 from robotoff.taxonomy import get_taxonomy
-from robotoff.types import PredictionType
+from robotoff.types import InsightType, PredictionType, ProductInsightImportResult
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
@@ -84,65 +82,6 @@ def test_is_recent_image(images, image_id, max_timedelta, expected):
 )
 def test_is_selected_image(images, image_id, expected):
     assert is_selected_image(images, image_id) is expected
-
-
-@pytest.mark.parametrize(
-    "images,image_id,max_timedelta,expected",
-    [
-        (
-            {"1": {"uploaded_t": DEFAULT_UPLOADED_T}},
-            "1",
-            datetime.timedelta(seconds=10),
-            True,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 9)},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            True,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "2": {"uploaded_t": str(int(DEFAULT_UPLOADED_T) + 11)},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            False,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "2": {"uploaded_t": DEFAULT_UPLOADED_T},
-                "ingredients_fr": {"imgid": "1"},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            True,
-        ),
-        (
-            {
-                "2": {"uploaded_t": DEFAULT_UPLOADED_T},
-            },
-            "1",
-            datetime.timedelta(seconds=10),
-            False,
-        ),
-        (
-            {
-                "1": {"uploaded_t": DEFAULT_UPLOADED_T},
-            },
-            "front_fr",
-            datetime.timedelta(seconds=10),
-            False,
-        ),
-    ],
-)
-def test_is_trustworthy_insight_image(images, image_id, max_timedelta, expected):
-    assert is_trustworthy_insight_image(images, image_id, max_timedelta) is expected
 
 
 @pytest.mark.parametrize(
@@ -728,13 +667,15 @@ class TestInsightImporter:
         batch_insert_mock = mocker.patch(
             "robotoff.insights.importer.batch_insert", return_value=1
         )
-        imported = FakeImporter.import_insights(
+        import_result = FakeImporter.import_insights(
             DEFAULT_BARCODE,
             [Prediction(type=PredictionType.label)],
             DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         )
-        assert imported == 1
+        assert len(import_result.insight_created_ids) == 1
+        assert len(import_result.insight_updated_ids) == 0
+        assert len(import_result.insight_deleted_ids) == 1
         batch_insert_mock.assert_called_once()
         product_insight_delete_mock.assert_called_once()
 
@@ -1226,15 +1167,17 @@ class TestImportInsightsForProducts:
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
-            return_value=1,
+            return_value=ProductInsightImportResult(
+                [], [], [], DEFAULT_BARCODE, InsightType.category
+            ),
         )
         product_store = FakeProductStore()
-        imported = import_insights_for_products(
+        import_result = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
             DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
         )
-        assert imported == 1
+        assert len(import_result) == 1
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_called_once_with(
             DEFAULT_BARCODE, [prediction], DEFAULT_SERVER_DOMAIN, product_store
@@ -1254,14 +1197,16 @@ class TestImportInsightsForProducts:
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
-            return_value=0,
+            return_value=ProductInsightImportResult(
+                [], [], [], DEFAULT_BARCODE, InsightType.image_orientation
+            ),
         )
         product_store = FakeProductStore()
-        imported = import_insights_for_products(
+        import_results = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.image_orientation}},
             DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
         )
-        assert imported == 0
+        assert len(import_results) == 0
         assert not get_product_predictions_mock.called
         assert not import_insights_mock.called

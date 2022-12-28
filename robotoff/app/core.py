@@ -1,3 +1,4 @@
+import datetime
 import functools
 from enum import Enum
 from typing import Iterable, NamedTuple, Optional, Union
@@ -12,7 +13,7 @@ from robotoff.insights.annotate import (
     SAVED_ANNOTATION_VOTE_RESULT,
     UNKNOWN_INSIGHT_RESULT,
     AnnotationResult,
-    InsightAnnotatorFactory,
+    annotate,
 )
 from robotoff.models import (
     AnnotationVote,
@@ -24,7 +25,9 @@ from robotoff.models import (
     db,
 )
 from robotoff.off import OFFAuthentication
+from robotoff.taxonomy import match_taxonomized_value
 from robotoff.utils import get_logger
+from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
 
@@ -382,8 +385,7 @@ def save_annotation(
         if not verified:
             return SAVED_ANNOTATION_VOTE_RESULT
 
-    annotator = InsightAnnotatorFactory.get(insight.type)
-    result = annotator.annotate(insight, annotation, update, data=data, auth=auth)
+    result = annotate(insight, annotation, update, data=data, auth=auth)
     username = auth.get_username() if auth else "unknown annotator"
     events.event_processor.send_async(
         "question_answered", username, device_id, insight.barcode
@@ -434,3 +436,36 @@ def get_logo_annotation(
         return query.count()
     else:
         return query.iterator()
+
+
+def update_logo_annotations(
+    annotation_logos: list[tuple[str, Optional[str], LogoAnnotation]],
+    username: str,
+    completed_at: datetime.datetime,
+) -> list[LogoAnnotation]:
+    updated_fields = set()
+    updated_logos = []
+    for type_, value, logo in annotation_logos:
+        logo.annotation_type = type_
+        updated_fields.add("annotation_type")
+
+        if value is not None:
+            value_tag = get_tag(value)
+            logo.annotation_value = value
+            logo.annotation_value_tag = value_tag
+            logo.taxonomy_value = match_taxonomized_value(value_tag, type_)
+            logo.username = username
+            logo.completed_at = completed_at
+            updated_fields |= {
+                "annotation_value",
+                "annotation_value_tag",
+                "taxonomy_value",
+                "username",
+                "completed_at",
+            }
+        updated_logos.append(logo)
+
+    if updated_logos:
+        LogoAnnotation.bulk_update(updated_logos, fields=list(updated_fields))
+
+    return updated_logos

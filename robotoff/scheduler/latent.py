@@ -3,7 +3,6 @@ import uuid
 from typing import Optional
 
 from robotoff import settings
-from robotoff.insights.dataclass import InsightType
 from robotoff.models import Prediction, ProductInsight, with_db
 from robotoff.off import get_server_type
 from robotoff.products import (
@@ -14,7 +13,7 @@ from robotoff.products import (
     is_nutrition_image,
     is_valid_image,
 )
-from robotoff.types import PredictionType
+from robotoff.types import InsightType, PredictionType
 from robotoff.utils import get_logger
 from robotoff.utils.types import JSONType
 

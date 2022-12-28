@@ -55,4 +55,6 @@ def refresh_insights_job(barcodes: list[str], server_domain: str):
         f"Refreshing insights for {len(barcodes)} products, server_domain: {server_domain}"
     )
     for barcode in barcodes:
-        refresh_insights(barcode, server_domain)
+        import_results = refresh_insights(barcode, server_domain)
+        for import_result in import_results:
+            logger.info(import_result)

@@ -60,11 +60,4 @@ The importer must have a `generate_candidates` method that returns a list of can
 
 From the list of candidate insight, we update the `product_insight` table, by deleting all insights and importing all candidates. The import mechanism is actually a bit smarter, we avoid unnecessary DB insertion/deletion by trying to match each candidate with a reference insight — an insight that is already in DB.
 
-For each insight, if `automatic_processing=True`, we check that the insight can indeed be applied automatically: we don't want to apply insights based on very old images that are not relevant anymore.
-
-We keep automatic processing on if any of the following conditions are true:
-
-- the image is a selected image, in any language (`front`, `nutrition`, `ingredients`, `packaging` )
-- the image has been uploaded no more than 120 days (3 months) before the last uploaded image.
-
 Once insights are refreshed/imported, they become available as questions in `/questions/*` API routes. Automatically processable insights are applied by the scheduler, once `current_timestamp >= ${process_after}`.
