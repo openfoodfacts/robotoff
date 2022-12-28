@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.17.0](https://github.com/openfoodfacts/robotoff/compare/v1.16.7...v1.17.0) (2022-12-28)
+
+
+### Features
+
+* add new endpoint to reset logo annotation ([089d289](https://github.com/openfoodfacts/robotoff/commit/089d2890a93c1f3806a3966681fbe9c6c6ff4a06))
+
+
+### Bug Fixes
+
+* create annotate function to centralize annotation ([b55d72c](https://github.com/openfoodfacts/robotoff/commit/b55d72cade14cae62c752dc4f4ac6282ebaf0450))
+* give credit to annotator when annotating logos ([02f7e2e](https://github.com/openfoodfacts/robotoff/commit/02f7e2ed661dcced1fecf92a428f05c05d4f13d7))
+* honor limit parameter in all cases in run-object-detection CLI ([4268939](https://github.com/openfoodfacts/robotoff/commit/42689394da734a060578d08b0a775273213c76bd))
+* move InsightType to robotoff.types ([a5420c8](https://github.com/openfoodfacts/robotoff/commit/a5420c813dd8f2e2332ba5bf2e45f7e000183cc0))
+* never delete annotated insights ([8c67dbe](https://github.com/openfoodfacts/robotoff/commit/8c67dbe984e39bd0afb7de5553ecc422a309891a))
+* remove legacy log message ([20aab5a](https://github.com/openfoodfacts/robotoff/commit/20aab5a583c7452022c057da59aaf2848cce15ff))
+* require auth for logo annotation ([4420346](https://github.com/openfoodfacts/robotoff/commit/44203462e537245d29b8693521f4d18aaee865c3))
+
 ## [1.16.7](https://github.com/openfoodfacts/robotoff/compare/v1.16.6...v1.16.7) (2022-12-27)
 
 
