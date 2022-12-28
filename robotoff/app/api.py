@@ -841,6 +841,8 @@ class ImageLogoResetResource:
                     .where(
                         ProductInsight.barcode == barcode,
                         ProductInsight.type == annotation_type,
+                        # never delete annotated insights
+                        ProductInsight.annotation.is_null(),
                         ProductInsight.predictor == "universal-logo-detector",
                         ProductInsight.data["logo_id"] == str(logo_id),
                     )
