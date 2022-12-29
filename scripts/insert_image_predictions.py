@@ -71,6 +71,8 @@ def insert_batch(data_path: pathlib.Path, model_name: str, model_version: str) -
                     index=i,
                     score=item["score"],
                     bounding_box=item["bounding_box"],
+                    barcode=image_instance.barcode,
+                    source_image=image_instance.source_image,
                 )
         seen_set.add(key)
 

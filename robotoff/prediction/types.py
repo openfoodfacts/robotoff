@@ -18,6 +18,7 @@ class Prediction:
     source_image: Optional[str] = None
     server_domain: Optional[str] = None
     id: Optional[int] = None
+    confidence: Optional[float] = None
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)

@@ -160,6 +160,8 @@ class ProductInsight(BaseModel):
     # Hunger Games) on a subset of products. Each product have 0+ campaign
     # tags
     campaign = BinaryJSONField(null=True, index=True, default=list)
+    # Confidence score of the insight, may be null
+    confidence = peewee.FloatField(null=True, index=True)
 
 
 class Prediction(BaseModel):
@@ -175,6 +177,7 @@ class Prediction(BaseModel):
         help_text="server domain linked to the insight", index=True
     )
     predictor = peewee.CharField(max_length=100, null=True)
+    confidence = peewee.FloatField(null=True, index=False)
 
 
 class AnnotationVote(BaseModel):
@@ -267,6 +270,8 @@ class LogoAnnotation(BaseModel):
     username = peewee.TextField(null=True, index=True)
     completed_at = peewee.DateTimeField(null=True, index=True)
     nearest_neighbors = BinaryJSONField(null=True)
+    barcode = peewee.CharField(max_length=100, null=True, index=True)
+    source_image = peewee.TextField(null=True, index=True)
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
