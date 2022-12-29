@@ -9,8 +9,8 @@ from robotoff.prediction.category.neural.category_classifier import CategoryClas
 from robotoff.products import get_product
 from robotoff.redis import Lock, LockedResourceException
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import JSONType
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 

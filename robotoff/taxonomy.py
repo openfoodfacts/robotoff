@@ -7,9 +7,9 @@ import cachetools
 import requests
 
 from robotoff import settings
+from robotoff.types import JSONType
 from robotoff.utils import get_logger, http_session, load_json
 from robotoff.utils.text import get_tag
-from robotoff.utils.types import JSONType
 
 try:
     import networkx

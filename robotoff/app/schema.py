@@ -1,4 +1,4 @@
-from robotoff.utils.types import JSONType
+from robotoff.types import JSONType
 
 IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
     "$schema": "http://json-schema.org/draft-07/schema#",

@@ -2,6 +2,7 @@ import itertools
 from typing import Optional
 
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import JSONType
 
 from .matcher import predict_by_lang
 from .neural.category_classifier import CategoryClassifier
@@ -36,7 +37,7 @@ def predict_category(
     :param threshold: the score above which we consider the category to be
     detected for neural predictor (default: 0.5)
     """
-    response = {}
+    response: JSONType = {}
     taxonomy = get_taxonomy(TaxonomyType.category.name)
     if neural_predictor:
         predictions = CategoryClassifier(taxonomy).predict(

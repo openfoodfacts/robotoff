@@ -13,9 +13,8 @@ from robotoff.products import (
     is_nutrition_image,
     is_valid_image,
 )
-from robotoff.types import InsightType, PredictionType
+from robotoff.types import InsightType, JSONType, PredictionType
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 

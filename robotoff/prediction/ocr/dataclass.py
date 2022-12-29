@@ -5,8 +5,8 @@ import re
 from collections import Counter, defaultdict
 from typing import Callable, Optional, Union
 
+from robotoff.types import JSONType
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 

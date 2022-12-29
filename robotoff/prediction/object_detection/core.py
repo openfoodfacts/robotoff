@@ -9,9 +9,8 @@ from tritonclient.grpc import service_pb2
 from robotoff import settings
 from robotoff.prediction.object_detection.utils import visualization_utils as vis_util
 from robotoff.triton import get_triton_inference_stub
-from robotoff.types import ObjectDetectionModel
+from robotoff.types import JSONType, ObjectDetectionModel
 from robotoff.utils import get_logger, text_file_iter
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 

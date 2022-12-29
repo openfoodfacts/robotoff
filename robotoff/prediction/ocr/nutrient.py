@@ -2,8 +2,7 @@ import re
 from typing import Union
 
 from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
-from robotoff.utils.types import JSONType
+from robotoff.types import JSONType, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 

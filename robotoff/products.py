@@ -14,9 +14,9 @@ from pymongo import MongoClient
 
 from robotoff import settings
 from robotoff.mongo import MONGO_CLIENT_CACHE
+from robotoff.types import JSONType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
 from robotoff.utils.cache import CachedStore
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 

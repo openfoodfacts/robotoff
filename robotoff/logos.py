@@ -21,9 +21,13 @@ from robotoff.models import ProductInsight, db
 from robotoff.off import OFFAuthentication
 from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
-from robotoff.types import ElasticSearchIndex, InsightImportResult, PredictionType
+from robotoff.types import (
+    ElasticSearchIndex,
+    InsightImportResult,
+    JSONType,
+    PredictionType,
+)
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 

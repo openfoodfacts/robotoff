@@ -62,11 +62,10 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
-from robotoff.types import PredictionType
+from robotoff.types import JSONType, PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
-from robotoff.utils.types import JSONType
 from robotoff.workers.queues import enqueue_in_job, enqueue_job, high_queue, low_queue
 from robotoff.workers.tasks import (
     delete_product_insights_job,

@@ -3,8 +3,8 @@ import pathlib
 from robotoff import settings
 from robotoff.off import generate_image_url
 from robotoff.products import ProductDataset
+from robotoff.types import JSONType
 from robotoff.utils import get_logger, http_session
-from robotoff.utils.types import JSONType
 
 logger = get_logger()
 

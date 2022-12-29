@@ -9,8 +9,7 @@ from robotoff.spellcheck.items import SpellcheckItem
 from robotoff.spellcheck.patterns import PatternsSpellchecker
 from robotoff.spellcheck.percentages import PercentagesSpellchecker
 from robotoff.spellcheck.vocabulary import VocabularySpellchecker
-from robotoff.types import PredictionType
-from robotoff.utils.types import JSONType
+from robotoff.types import JSONType, PredictionType
 
 SPELLCHECKERS = {
     "elasticsearch": ElasticSearchSpellchecker,

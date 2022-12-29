@@ -1,7 +1,7 @@
 import pytest
 
 from robotoff.prediction.ocr.nutrient import find_nutrient_mentions
-from robotoff.utils.types import JSONType
+from robotoff.types import JSONType
 
 
 @pytest.mark.parametrize(
