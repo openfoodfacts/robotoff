@@ -2,7 +2,7 @@ import abc
 import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Type
 
 from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import HTTPError, SSLError, Timeout
@@ -29,9 +29,8 @@ from robotoff.utils import get_logger
 This file allows to annotate products.
 
 To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
-    from robotoff.insights.annotate import InsightAnnotatorFactor
-    annotator = InsightAnnotatorFactory.get(insight_type)
-    annotator.annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[dict] = None, auth: Optional[OFFAuthentication] = None, automatic: bool = False)
+    from robotoff.insights.annotate import annotate
+    annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[dict] = None, auth: Optional[OFFAuthentication] = None)
 
 If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
 """
@@ -103,20 +102,18 @@ FAILED_UPDATE_RESULT = AnnotationResult(
 
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
+    @classmethod
     def annotate(
-        self,
+        cls,
         insight: ProductInsight,
         annotation: int,
         update: bool = True,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
-        automatic: bool = False,
     ) -> AnnotationResult:
         with db.atomic() as tx:
             try:
-                return self._annotate(
-                    insight, annotation, update, data, auth, automatic
-                )
+                return cls._annotate(insight, annotation, update, data, auth)
             except HTTPError as e:
                 if e.response.status_code >= 500:
                     logger.info(
@@ -133,16 +130,16 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                 tx.rollback()
                 return FAILED_UPDATE_RESULT
 
+    @classmethod
     def _annotate(
-        self,
+        cls,
         insight: ProductInsight,
         annotation: int,
         update: bool = True,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
-        automatic: bool = False,
     ) -> AnnotationResult:
-        if self.is_data_required() and data is None:
+        if cls.is_data_required() and data is None:
             return DATA_REQUIRED_RESULT
 
         username: Optional[str] = None
@@ -153,13 +150,10 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.annotation = annotation
         insight.completed_at = datetime.datetime.utcnow()
 
-        if automatic:
-            insight.automatic_processing = True
-
         if annotation == 1 and update:
             # Save insight before processing the annotation
             insight.save()
-            annotation_result = self.process_annotation(
+            annotation_result = cls.process_annotation(
                 insight, data=data, auth=auth
             )  # calls the process_annotation function of the class corresponding to the current insight type
         else:
@@ -177,22 +171,25 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 
         return annotation_result
 
+    @classmethod
     @abc.abstractmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
     ) -> AnnotationResult:
         pass
 
-    def is_data_required(self) -> bool:
+    @classmethod
+    def is_data_required(cls) -> bool:
         return False
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -210,7 +207,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
         if emb_codes_str:
             emb_codes = emb_codes_str.split(",")
 
-        if self.already_exists(emb_code, emb_codes):
+        if cls.already_exists(emb_code, emb_codes):
             return ALREADY_ANNOTATED_RESULT
 
         emb_codes.append(emb_code)
@@ -236,8 +233,9 @@ class PackagerCodeAnnotator(InsightAnnotator):
 
 
 class LabelAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -263,8 +261,9 @@ class LabelAnnotator(InsightAnnotator):
 
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -304,8 +303,9 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
 
 
 class CategoryAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -332,8 +332,9 @@ class CategoryAnnotator(InsightAnnotator):
 
 
 class ProductWeightAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -359,8 +360,9 @@ class ProductWeightAnnotator(InsightAnnotator):
 
 
 class ExpirationDateAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -386,8 +388,9 @@ class ExpirationDateAnnotator(InsightAnnotator):
 
 
 class BrandAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -409,8 +412,9 @@ class BrandAnnotator(InsightAnnotator):
 
 
 class StoreAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -436,8 +440,9 @@ class StoreAnnotator(InsightAnnotator):
 
 
 class NutritionImageAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -468,8 +473,9 @@ class NutritionImageAnnotator(InsightAnnotator):
 
 
 class NutritionTableStructureAnnotator(InsightAnnotator):
+    @classmethod
     def process_annotation(
-        self,
+        cls,
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
@@ -482,26 +488,18 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
         return True
 
 
-class InsightAnnotatorFactory:
-    mapping = {
-        InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator(),
-        InsightType.packager_code.name: PackagerCodeAnnotator(),
-        InsightType.label.name: LabelAnnotator(),
-        InsightType.category.name: CategoryAnnotator(),
-        InsightType.product_weight.name: ProductWeightAnnotator(),
-        InsightType.expiration_date.name: ExpirationDateAnnotator(),
-        InsightType.brand.name: BrandAnnotator(),
-        InsightType.store.name: StoreAnnotator(),
-        InsightType.nutrition_image.name: NutritionImageAnnotator(),
-        InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator(),
-    }
-
-    @classmethod
-    def get(cls, identifier: str) -> InsightAnnotator:
-        if identifier not in cls.mapping:
-            raise ValueError("unknown annotator: {}".format(identifier))
-
-        return cls.mapping[identifier]
+ANNOTATOR_MAPPING: dict[str, Type] = {
+    InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
+    InsightType.packager_code.name: PackagerCodeAnnotator,
+    InsightType.label.name: LabelAnnotator,
+    InsightType.category.name: CategoryAnnotator,
+    InsightType.product_weight.name: ProductWeightAnnotator,
+    InsightType.expiration_date.name: ExpirationDateAnnotator,
+    InsightType.brand.name: BrandAnnotator,
+    InsightType.store.name: StoreAnnotator,
+    InsightType.nutrition_image.name: NutritionImageAnnotator,
+    InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator,
+}
 
 
 def annotate(
@@ -510,16 +508,13 @@ def annotate(
     update: bool = True,
     data: Optional[dict] = None,
     auth: Optional[OFFAuthentication] = None,
-    automatic: bool = False,
 ) -> AnnotationResult:
-    annotator = InsightAnnotatorFactory.get(insight.type)
-    return annotator.annotate(
+    return ANNOTATOR_MAPPING[insight.type].annotate(
         insight=insight,
         annotation=annotation,
         update=update,
         data=data,
         auth=auth,
-        automatic=automatic,
     )
 
 

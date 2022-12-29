@@ -25,11 +25,7 @@ def test_annotation_fails_is_rolledback(mocker):
     )
     insight = ProductInsightFactory()
     with pytest.raises(Exception):
-        annotator().annotate(
-            insight=insight,
-            annotation=1,
-            automatic=True,
-        )
+        annotator().annotate(insight=insight, annotation=1)
     insight = ProductInsight.get(id=insight.id)
     # unchanged
     assert insight.completed_at is None

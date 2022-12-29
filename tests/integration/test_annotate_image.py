@@ -8,7 +8,6 @@ import pytest
 import robotoff.insights.importer
 import robotoff.taxonomy
 from robotoff.app.api import api
-from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT
 from robotoff.models import LogoAnnotation, Prediction, ProductInsight
 from robotoff.products import Product
 
@@ -167,7 +166,11 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     mocker.patch(
         "robotoff.brands.get_brand_prefix", return_value={("Etorki", "0000000xxxxxx")}
     )
-    mocker.patch("robotoff.logos.annotate", return_value=UPDATED_ANNOTATION_RESULT)
+    mocker.patch("robotoff.insights.annotate.add_brand", return_value=None)
+    mocker.patch(
+        "robotoff.insights.annotate.get_product",
+        return_value={"barcode": barcode, "brands_tags": []},
+    )
     start = datetime.utcnow()
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -230,7 +233,9 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     assert start <= prediction.timestamp <= end
     assert insight.automatic_processing is False
     assert insight.username == "a"
-    assert insight.completed_at is None  # we did not run annotate yet
+    assert insight.annotation == 1
+    assert insight.annotated_result == 2
+    assert isinstance(insight.completed_at, datetime)
 
 
 def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mocker):
@@ -244,7 +249,11 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
             barcode=barcode, source_image=source_image, annotation_type=None
         )
     _fake_store(monkeypatch, barcode)
-    mocker.patch("robotoff.logos.annotate", return_value=UPDATED_ANNOTATION_RESULT)
+    mocker.patch("robotoff.insights.annotate.add_label_tag", return_value=None)
+    mocker.patch(
+        "robotoff.insights.annotate.get_product",
+        return_value={"barcode": barcode, "labels_tags": []},
+    )
     start = datetime.utcnow()
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -304,4 +313,6 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
     assert start <= prediction.timestamp <= end
     assert insight.automatic_processing is False
     assert insight.username == "a"
-    assert insight.completed_at is None
+    assert insight.annotation == 1
+    assert insight.annotated_result == 2
+    assert isinstance(insight.completed_at, datetime)
