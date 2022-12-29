@@ -81,7 +81,7 @@ class ProductInsight(BaseModel):
 
     # Contains some additional data based on the type of the insight from above.
     # NOTE: there is no 1:1 mapping between the type and the JSON format provided here, for example for
-    # type==label, the data here could be: {"logo_id":X,"confidence":Y}, or {"text":X,"notify":Y}
+    # type==label, the data here could be: {"logo_id":X,"bounding_box":Y}, or {"text":X,"notify":Y}
     data = BinaryJSONField(index=True, default=dict)
 
     # Timestamp is the timestamp of when this insight was imported into the DB.

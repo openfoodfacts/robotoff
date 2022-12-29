@@ -196,11 +196,11 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     assert prediction.type == "brand"
     assert prediction.data == {
         "logo_id": ann.id,
-        "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
+    assert prediction.confidence == 1.0
     assert prediction.value == "Etorki"
     assert prediction.value_tag == "Etorki"
     assert prediction.predictor == "universal-logo-detector"
@@ -215,11 +215,11 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     assert insight.type == "brand"
     assert insight.data == {
         "logo_id": ann.id,
-        "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
+    assert insight.confidence == 1.0
     assert insight.value == "Etorki"
     assert insight.value_tag == "Etorki"
     assert insight.predictor == "universal-logo-detector"
@@ -270,11 +270,11 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
     assert prediction.type == "label"
     assert prediction.data == {
         "logo_id": ann.id,
-        "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
+    assert prediction.confidence == 1.0
     assert prediction.value is None
     assert prediction.value_tag == "en:eu-organic"
     assert prediction.predictor == "universal-logo-detector"
@@ -288,11 +288,11 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
     assert insight.type == "label"
     assert insight.data == {
         "logo_id": ann.id,
-        "confidence": 1.0,
         "username": "a",
         "is_annotation": True,
         "bounding_box": [0.4, 0.4, 0.6, 0.6],
     }
+    assert insight.confidence == 1.0
     assert insight.value is None
     assert insight.value_tag == "en:eu-organic"
     assert insight.predictor == "universal-logo-detector"

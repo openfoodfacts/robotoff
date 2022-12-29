@@ -94,7 +94,8 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction
                     value_tag=get_tag(brand),
                     automatic_processing=False,
                     predictor="google-cloud-vision",
-                    data={"confidence": logo_annotation.score, "notify": False},
+                    data={"notify": False},
+                    confidence=logo_annotation.score,
                 )
             )
 

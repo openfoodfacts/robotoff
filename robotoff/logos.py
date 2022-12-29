@@ -368,12 +368,12 @@ def generate_insights_from_annotated_logos(
             logo_value=logo.taxonomy_value,
             automatic_processing=False,  # we're going to apply it immediately
             data={
-                "confidence": 1.0,
                 "logo_id": logo.id,
                 "bounding_box": logo.bounding_box,
                 "username": logo.username,
                 "is_annotation": True,  # it's worth restating it
             },
+            confidence=1.0,
         )
 
         if prediction is None:
@@ -425,8 +425,8 @@ def predict_logo_predictions(
         prediction = generate_prediction(
             logo_type=label[0],
             logo_value=label[1],
+            confidence=max_prob,
             data={
-                "confidence": max_prob,
                 "logo_id": logo.id,
                 "bounding_box": logo.bounding_box,
             },
@@ -445,14 +445,14 @@ def generate_prediction(
     logo_type: str,
     logo_value: Optional[str],
     data: dict,
+    confidence: float,
     automatic_processing: Optional[bool] = False,
 ) -> Optional[Prediction]:
     """Generate a Prediction from a logo.
 
     The Prediction may either be created after the annotation of the logo by
-    a human (in which case `automatic_processing` is True), or by infering the
-    logo value from nearest neighbor labels (in which case
-    `automatic_processing` is False).
+    a human (in which case the insight should be annotated right after
+    creation), or by infering the logo value from nearest neighbor labels.
 
     Currently, only brand and label logo types are supported: None is returned
     if the logo type is different, or if the logo_value is None.
@@ -478,6 +478,7 @@ def generate_prediction(
         automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
         data=data,
+        confidence=confidence,
     )
 
 

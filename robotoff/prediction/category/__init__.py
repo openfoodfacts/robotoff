@@ -43,8 +43,7 @@ def predict_category(
             product, deepest_only, threshold
         )
         response["neural"] = [
-            {"value_tag": p.value_tag, "confidence": p.data["confidence"]}
-            for p in predictions
+            {"value_tag": p.value_tag, "confidence": p.confidence} for p in predictions
         ]
     if matcher_predictor:
         predictions = list(

@@ -289,7 +289,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                         value_tag=label_tag,
                         automatic_processing=False,
                         predictor="google-cloud-vision",
-                        data={"confidence": logo_annotation.score},
+                        confidence=logo_annotation.score,
                     )
                 )
 

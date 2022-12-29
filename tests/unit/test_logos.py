@@ -19,7 +19,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
 
 
 @pytest.mark.parametrize(
-    "logo_type,logo_value,data,automatic_processing,prediction",
+    "logo_type,logo_value,data,automatic_processing,confidence,prediction",
     [
         ("category", "en:breads", {}, False, None),
         ("label", None, {}, False, None),
@@ -28,6 +28,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
             "en:eu-organic",
             {},
             False,
+            0.8,
             Prediction(
                 type=PredictionType.label,
                 data={},
@@ -35,6 +36,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
                 value=None,
                 automatic_processing=False,
                 predictor="universal-logo-detector",
+                confidence=0.5,
             ),
         ),
         (
@@ -42,6 +44,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
             "carrefour",
             {},
             False,
+            0.5,
             Prediction(
                 type=PredictionType.brand,
                 data={},
@@ -49,14 +52,17 @@ def test_compute_iou(box_1, box_2, expected_iou):
                 value="carrefour",
                 automatic_processing=False,
                 predictor="universal-logo-detector",
+                confidence=0.5,
             ),
         ),
     ],
 )
 def test_generate_prediction(
-    logo_type, logo_value, data, automatic_processing, prediction
+    logo_type, logo_value, data, automatic_processing, confidence, prediction
 ):
     assert (
-        generate_prediction(logo_type, logo_value, data, automatic_processing)
+        generate_prediction(
+            logo_type, logo_value, data, confidence, automatic_processing
+        )
         == prediction
     )

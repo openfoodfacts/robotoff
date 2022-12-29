@@ -308,10 +308,8 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
             automatic_processing=False,
             server_domain=server_domain,
             predictor="nutriscore",
-            data={
-                "confidence": score,
-                "bounding_box": result["bounding_box"],
-            },
+            data={"bounding_box": result["bounding_box"]},
+            confidence=score,
         )
         import_result = import_insights([prediction], server_domain)
         logger.info(import_result)

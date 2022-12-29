@@ -32,9 +32,10 @@ def test_add_category_insight_with_ml_insights(mocker):
         barcode="123",
         type=PredictionType.category,
         value_tag="en:chicken",
-        data={"lang": "xx", "confidence": 0.9},
+        data={"lang": "xx"},
         automatic_processing=True,
         predictor="neural",
+        confidence=0.9,
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.predict_category_matcher",
@@ -57,9 +58,10 @@ def test_add_category_insight_with_ml_insights(mocker):
                 barcode="123",
                 type=PredictionType.category,
                 value_tag="en:chicken",
-                data={"lang": "xx", "confidence": 0.9},
+                data={"lang": "xx"},
                 automatic_processing=True,
                 predictor="neural",
+                confidence=0.9,
             )
         ],
         server_domain,

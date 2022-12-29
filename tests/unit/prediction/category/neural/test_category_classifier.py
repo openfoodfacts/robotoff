@@ -15,9 +15,10 @@ def test_category_prediction_to_prediction():
     assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
-        data={"lang": "xx", "confidence": 0.5},
+        data={"lang": "xx"},
         automatic_processing=False,
         predictor="neural",
+        confidence=0.5,
     )
 
 
@@ -28,9 +29,10 @@ def test_category_prediction_to_prediction_auto(monkeypatch):
     assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
-        data={"lang": "xx", "confidence": 0.9},
+        data={"lang": "xx"},
         automatic_processing=True,
         predictor="neural",
+        confidence=0.9,
     )
 
 
@@ -91,7 +93,7 @@ def test_predict_ingredients_only(mocker, data):
     assert len(predictions) == 1
     prediction = predictions[0]
     assert prediction.value_tag == "en:meat"
-    assert prediction.data.get("confidence") == 0.99
+    assert prediction.confidence == 0.99
 
 
 @pytest.mark.parametrize(
@@ -172,4 +174,4 @@ def test_predict(mocker, deepest_only, mock_response, expected_values):
 
     for prediction, (value_tag, confidence) in zip(predictions, expected_values):
         assert prediction.value_tag == value_tag
-        assert prediction.data.get("confidence") == confidence
+        assert prediction.confidence == confidence

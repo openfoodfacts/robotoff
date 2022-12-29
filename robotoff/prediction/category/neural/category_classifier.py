@@ -22,9 +22,10 @@ class CategoryPrediction:
         return Prediction(
             type=PredictionType.category,
             value_tag=self.category,
-            data={"lang": "xx", "confidence": self.confidence},
+            data={"lang": "xx"},
             automatic_processing=self.confidence >= self.NEURAL_CONFIDENCE_THRESHOLD,
             predictor="neural",
+            confidence=self.confidence,
         )
 
     def __eq__(self, other):

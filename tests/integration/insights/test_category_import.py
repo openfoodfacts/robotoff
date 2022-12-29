@@ -58,9 +58,10 @@ def neural_prediction(category, confidence=0.7, auto=False):
         barcode=barcode1,
         type=PredictionType.category,
         value_tag=category,
-        data={"lang": "xx", "confidence": confidence},
+        data={"lang": "xx"},
         automatic_processing=auto,
         predictor="neural",
+        confidence=confidence,
     )
 
 
