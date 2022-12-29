@@ -15,13 +15,7 @@ from robotoff.elasticsearch import get_es_client
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights
 from robotoff.logo_label_type import LogoLabelType
-from robotoff.models import (
-    ImageModel,
-    ImagePrediction,
-    LogoAnnotation,
-    LogoConfidenceThreshold,
-    LogoEmbedding,
-)
+from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbedding
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
 from robotoff.off import OFFAuthentication
@@ -379,9 +373,8 @@ def generate_insights_from_annotated_logos(
         if prediction is None:
             continue
 
-        image = logo.image_prediction.image
-        prediction.barcode = image.barcode
-        prediction.source_image = image.source_image
+        prediction.barcode = logo.barcode
+        prediction.source_image = logo.source_image
         predictions.append(prediction)
 
     import_result = import_insights(predictions, server_domain)
@@ -433,9 +426,8 @@ def predict_logo_predictions(
         )
 
         if prediction is not None:
-            image = logo.image_prediction.image
-            prediction.barcode = image.barcode
-            prediction.source_image = image.source_image
+            prediction.barcode = logo.barcode
+            prediction.source_image = logo.source_image
             predictions.append(prediction)
 
     return predictions
@@ -507,15 +499,8 @@ def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
     for logo_id_batch in chunked(logo_ids, batch_size):
         with db.atomic():
             logo_embeddings = list(
-                LogoEmbedding.select(
-                    LogoEmbedding,
-                    LogoAnnotation,
-                    ImageModel.barcode,
-                    ImageModel.source_image,
-                )
+                LogoEmbedding.select(LogoEmbedding, LogoAnnotation)
                 .join(LogoAnnotation)
-                .join(ImagePrediction)
-                .join(ImageModel)
                 .where(LogoEmbedding.logo_id.in_(logo_id_batch))
             )
             try:

@@ -712,8 +712,7 @@ class ImageLogoSearchResource:
             join_image_model = True
 
         if barcode is not None:
-            where_clauses.append(ImageModel.barcode == barcode)
-            join_image_model = True
+            where_clauses.append(LogoAnnotation.barcode == barcode)
 
         if type_ is not None:
             where_clauses.append(LogoAnnotation.annotation_type == type_)
@@ -824,12 +823,11 @@ class ImageLogoResetResource:
             logo.save()
 
             if annotation_type in ("brand", "label"):
-                barcode = logo.image_prediction.image.barcode
                 prediction_deleted = (
                     Prediction.delete()
                     .where(
                         # Speed-up filtering by providing additional filters
-                        Prediction.barcode == barcode,
+                        Prediction.barcode == logo.barcode,
                         Prediction.type == annotation_type,
                         Prediction.predictor == "universal-logo-detector",
                         Prediction.data["logo_id"] == str(logo.id),
@@ -839,7 +837,7 @@ class ImageLogoResetResource:
                 insights_deleted = (
                     ProductInsight.delete()
                     .where(
-                        ProductInsight.barcode == barcode,
+                        ProductInsight.barcode == logo.barcode,
                         ProductInsight.type == annotation_type,
                         # never delete annotated insights
                         ProductInsight.annotation.is_null(),

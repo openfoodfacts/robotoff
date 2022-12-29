@@ -588,26 +588,22 @@ def export_logos(
 ) -> None:
     """Export all information about logo in DB necessary to generate logo
     crops."""
-    from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+    from robotoff.models import LogoAnnotation, db
     from robotoff.utils import dump_jsonl
 
     with db:
-        query = (
-            LogoAnnotation.select(
-                LogoAnnotation.id,
-                LogoAnnotation.index,
-                LogoAnnotation.bounding_box,
-                LogoAnnotation.score,
-                LogoAnnotation.annotation_type,
-                LogoAnnotation.annotation_value,
-                LogoAnnotation.annotation_value_tag,
-                LogoAnnotation.taxonomy_value,
-                LogoAnnotation.username,
-                ImageModel.image_id,
-                ImageModel.barcode,
-            )
-            .join(ImagePrediction)
-            .join(ImageModel)
+        query = LogoAnnotation.select(
+            LogoAnnotation.id,
+            LogoAnnotation.index,
+            LogoAnnotation.bounding_box,
+            LogoAnnotation.score,
+            LogoAnnotation.annotation_type,
+            LogoAnnotation.annotation_value,
+            LogoAnnotation.annotation_value_tag,
+            LogoAnnotation.taxonomy_value,
+            LogoAnnotation.username,
+            LogoAnnotation.source_image,
+            LogoAnnotation.barcode,
         )
         dump_jsonl(output, query.dicts().iterator())
 

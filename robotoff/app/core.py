@@ -413,7 +413,7 @@ def get_logo_annotation(
     ]
 
     if barcode:
-        where_clauses.append(LogoAnnotation.image_prediction.image.barcode == barcode)
+        where_clauses.append(LogoAnnotation.barcode == barcode)
 
     if value_tag:
         where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
