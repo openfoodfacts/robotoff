@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.18.0](https://github.com/openfoodfacts/robotoff/compare/v1.17.0...v1.18.0) (2022-12-29)
+
+
+### Features
+
+* add DB columns ([ffc0de8](https://github.com/openfoodfacts/robotoff/commit/ffc0de839a2a8c6a69fccec7832b4aeb32518e7c))
+
+
+### Bug Fixes
+
+* fix condition check for logo processing ([ba72538](https://github.com/openfoodfacts/robotoff/commit/ba725383e0e52923c7096ba01f440a572382b6a8))
+
 ## [1.17.0](https://github.com/openfoodfacts/robotoff/compare/v1.16.7...v1.17.0) (2022-12-28)
 
 
