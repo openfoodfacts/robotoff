@@ -368,6 +368,8 @@ def run_logo_object_detection(
                         index=i,
                         score=item["score"],
                         bounding_box=item["bounding_box"],
+                        barcode=image_model.barcode,
+                        source_image=image_model.source_image,
                     )
                 )
             logger.info("%s logos found for image %s", len(logos), source_image)

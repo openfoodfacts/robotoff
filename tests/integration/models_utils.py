@@ -67,6 +67,7 @@ class PredictionFactory(PeeweeModelFactory):
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     automatic_processing = None
     predictor = None
+    confidence = None
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):
