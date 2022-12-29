@@ -172,6 +172,7 @@ def knn_search(
     embedding_bytes: bytes,
     k: int = settings.K_NEAREST_NEIGHBORS,
 ) -> list[tuple[int, float]]:
+    """Search for k approximate nearest neighbors of embedding_bytes in the elasticsearch logos index."""
     embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
     knn_body = {
         "field": "embedding",
