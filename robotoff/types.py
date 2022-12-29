@@ -191,7 +191,7 @@ class InsightImportResult:
         return (
             f"<InsightImportResult insights: created={self.created_insights_count()}, "
             f"updated={self.updated_insights_count()}, "
-            f"deleted={self.deleted_insights_count()}\n"
-            f"types: {list(set(result.type.value for result in self.product_insight_import_results))}"
-            f" predictions: created: {self.created_predictions_count()}>"
+            f"deleted={self.deleted_insights_count()}, "
+            f"types: {list(set(result.type.value for result in self.product_insight_import_results))}, "
+            f"predictions: created={self.created_predictions_count()}>"
         )

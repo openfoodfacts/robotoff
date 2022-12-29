@@ -211,12 +211,13 @@ def test_noop_slack_notifier_logging(caplog):
     notifier.send_logo_notification(
         LogoAnnotation(
             image_prediction=ImagePrediction(
-                barcode="123",
                 image=ImageModel(
-                    source_image="/path/to/image.jpg", width=10, height=10
+                    barcode="123", source_image="/123/1.jpg", width=10, height=10
                 ),
             ),
             bounding_box=(1, 1, 2, 2),
+            barcode="123",
+            source_image="/123/1.jpg",
         ),
         {},
     )

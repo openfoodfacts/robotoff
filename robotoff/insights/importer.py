@@ -933,17 +933,12 @@ def create_prediction_model(
     server_domain: str,
     timestamp: datetime.datetime,
 ):
+    prediction_dict = prediction.to_dict()
+    prediction_dict.pop("id")
     return {
-        "barcode": prediction.barcode,
-        "type": prediction.type.name,
-        "data": prediction.data,
+        **prediction_dict,
         "timestamp": timestamp,
-        "value_tag": prediction.value_tag,
-        "value": prediction.value,
-        "source_image": prediction.source_image,
-        "automatic_processing": prediction.automatic_processing,
         "server_domain": server_domain,
-        "predictor": prediction.predictor,
     }
 
 

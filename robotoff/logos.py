@@ -339,11 +339,7 @@ def import_logo_insights(
         )
         & (~(PredictionModel.data["is_annotation"].cast("bool") == True))  # noqa: E712
         # Add a filter on barcode to speed-up filtering
-        & (
-            PredictionModel.barcode.in_(
-                [logo.image_prediction.image.barcode for logo in logos]
-            )
-        )
+        & (PredictionModel.barcode.in_([logo.barcode for logo in logos]))
     ).execute()
     predictions = predict_logo_predictions(selected_logos, logo_probs)
     import_result = import_insights(predictions, server_domain)

@@ -821,11 +821,13 @@ def test_image_prediction_collection_empty(client):
 def test_image_prediction_collection(client, peewee_db):
     with peewee_db:
         logo_annotation_category_123 = LogoAnnotationFactory(
+            barcode="123",
             image_prediction__image__barcode="123",
             image_prediction__type="category",
         )
         prediction_category_123 = logo_annotation_category_123.image_prediction
         logo_annotation_label_789 = LogoAnnotationFactory(
+            barcode="789",
             image_prediction__image__barcode="789",
             image_prediction__type="label",
         )
@@ -904,31 +906,37 @@ def test_logo_annotation_collection_api(client, peewee_db):
     with peewee_db:
         LogoAnnotation.delete().execute()  # remove default sample
         annotation_123_1 = LogoAnnotationFactory(
+            barcode="123",
             image_prediction__image__barcode="123",
             annotation_value_tag="etorki",
             annotation_type="brand",
         )
         annotation_123_2 = LogoAnnotationFactory(
+            barcode="123",
             image_prediction__image__barcode="123",
             annotation_value_tag="etorki",
             annotation_type="brand",
         )
         annotation_295 = LogoAnnotationFactory(
+            barcode="295",
             image_prediction__image__barcode="295",
             annotation_value_tag="cheese",
             annotation_type="dairies",
         )
         annotation_789 = LogoAnnotationFactory(
+            barcode="789",
             image_prediction__image__barcode="789",
             annotation_value_tag="creme",
             annotation_type="dairies",
         )
         annotation_306 = LogoAnnotationFactory(
+            barcode="306",
             image_prediction__image__barcode="306",
             annotation_value_tag="yoghurt",
             annotation_type="dairies",
         )
         annotation_604 = LogoAnnotationFactory(
+            barcode="604",
             image_prediction__image__barcode="604",
             annotation_value_tag="meat",
             annotation_type="category",

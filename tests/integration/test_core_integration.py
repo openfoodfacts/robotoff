@@ -203,29 +203,34 @@ def test_get_unanswered_questions_list():
 
 def test_get_logo_annotation():
     annotation_123 = LogoAnnotationFactory(
+        barcode="123",
         image_prediction__image__barcode="123",
         annotation_value_tag="etorki",
         annotation_type="brand",
     )
 
     annotation_789 = LogoAnnotationFactory(
+        barcode="789",
         image_prediction__image__barcode="789",
         annotation_value_tag="creme",
         annotation_type="dairies",
     )
 
     annotation_295 = LogoAnnotationFactory(
+        barcode="295",
         image_prediction__image__barcode="295",
         annotation_value_tag="cheese",
         annotation_type="dairies",
     )
 
     annotation_396 = LogoAnnotationFactory(
+        barcode="396",
         image_prediction__image__barcode="396",
         annotation_type="label",
     )
 
     LogoAnnotationFactory(
+        barcode="306",
         image_prediction__image__barcode="306",
         annotation_value_tag="yoghurt",
         annotation_type="dairies",

@@ -5,7 +5,7 @@ although archived, this is lightweight, and should be easy to maintain or replac
 """
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import factory
 import numpy as np
@@ -67,7 +67,7 @@ class PredictionFactory(PeeweeModelFactory):
     server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     automatic_processing = None
     predictor = None
-    confidence = None
+    confidence: Optional[float] = None
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):
@@ -125,6 +125,8 @@ class LogoAnnotationFactory(PeeweeModelFactory):
     taxonomy_value = "fr:ab-agriculture-biologique"
     annotation_type = "label"
     nearest_neighbors = {"logo_ids": [111111, 222222], "distances": [11.1, 12.4]}
+    barcode = factory.Sequence(lambda n: f"{n:013}")
+    source_image = factory.Sequence(lambda n: f"/images/{n:02}.jpg")
 
 
 class LogoConfidenceThresholdFactory(PeeweeModelFactory):

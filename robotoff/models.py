@@ -277,9 +277,7 @@ class LogoAnnotation(BaseModel):
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
 
     def get_crop_image_url(self) -> str:
-        return crop_image_url(
-            self.image_prediction.image.source_image, self.bounding_box
-        )
+        return crop_image_url(self.source_image, self.bounding_box)
 
 
 class LogoEmbedding(BaseModel):

@@ -271,7 +271,7 @@ class SlackNotifier(NotifierInterface):
                 )
             )
         )
-        barcode = logo.image_prediction.image.barcode
+        barcode = logo.barcode
         base_off_url = settings.BaseURLProvider().get()
         text = (
             f"Prediction for <{crop_url}|image> "

@@ -155,12 +155,14 @@ def test_logo_annotation_incorrect_value_label_type(client, peewee_db):
 
 
 def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxonomy):
+    barcode = "0000000000001"
+    source_image = "/000/000/000/0001/2.jpg"
     with peewee_db:
         ann = LogoAnnotationFactory(
-            image_prediction__image__source_image="/images/2.jpg",
+            barcode=barcode,
+            source_image=source_image,
             annotation_type=None,
         )
-    barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
     mocker.patch(
         "robotoff.brands.get_brand_prefix", return_value={("Etorki", "0000000xxxxxx")}
@@ -190,7 +192,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     # we generate a prediction
 
     with peewee_db:
-        predictions = list(Prediction.select().filter(barcode=barcode).execute())
+        predictions = list(Prediction.select().where(Prediction.barcode == barcode))
     assert len(predictions) == 1
     (prediction,) = predictions
     assert prediction.type == "brand"
@@ -209,7 +211,9 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     # We check that this prediction in turn generates an insight
 
     with peewee_db:
-        insights = list(ProductInsight.select().filter(barcode=barcode).execute())
+        insights = list(
+            ProductInsight.select().where(ProductInsight.barcode == barcode)
+        )
     assert len(insights) == 1
     (insight,) = insights
     assert insight.type == "brand"
@@ -233,11 +237,12 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
     """This test will check that, given an image with a logo above the confidence threshold,
     that is then fed into the ANN logos and labels model, we annotate properly a product.
     """
+    barcode = "0000000000001"
+    source_image = "/000/000/000/0001/2.jpg"
     with peewee_db:
         ann = LogoAnnotationFactory(
-            image_prediction__image__source_image="/images/2.jpg", annotation_type=None
+            barcode=barcode, source_image=source_image, annotation_type=None
         )
-    barcode = ann.image_prediction.image.barcode
     _fake_store(monkeypatch, barcode)
     mocker.patch("robotoff.logos.annotate", return_value=UPDATED_ANNOTATION_RESULT)
     start = datetime.utcnow()

@@ -21,8 +21,8 @@ def test_compute_iou(box_1, box_2, expected_iou):
 @pytest.mark.parametrize(
     "logo_type,logo_value,data,automatic_processing,confidence,prediction",
     [
-        ("category", "en:breads", {}, False, None),
-        ("label", None, {}, False, None),
+        ("category", "en:breads", {}, 0.1, False, None),
+        ("label", None, {}, 0.1, False, None),
         (
             "label",
             "en:eu-organic",
@@ -36,7 +36,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
                 value=None,
                 automatic_processing=False,
                 predictor="universal-logo-detector",
-                confidence=0.5,
+                confidence=0.8,
             ),
         ),
         (

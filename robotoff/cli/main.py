@@ -153,7 +153,7 @@ def categorize(barcode: str, deepest_only: bool = False) -> None:
 
     if predictions:
         for prediction in predictions:
-            print(f"{prediction.value_tag}: {prediction.data['confidence']}")
+            print(f"{prediction.value_tag}: {prediction.confidence}")
     else:
         print(f"Nothing predicted for product {barcode}")
 
