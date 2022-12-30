@@ -1,5 +1,5 @@
 import datetime
-import pathlib
+from pathlib import Path
 from typing import Optional
 
 import elasticsearch
@@ -56,14 +56,7 @@ def run_import_image_job(
     logger.info(
         f"Running `import_image` for product {barcode} ({server_domain}), image {image_url}"
     )
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
-
-    if image is None:
-        logger.info("Error while downloading image %s", image_url)
-        return
-
     source_image = get_source_from_url(image_url)
-
     product = get_product_store()[barcode]
     if product is None:
         logger.info(
@@ -74,9 +67,20 @@ def run_import_image_job(
     with db:
         image_model = save_image(barcode, source_image, product, server_domain)
 
-    if image_model is None:
-        # The image is invalid, no need to perform image extraction jobs
-        return
+        if image_model is None:
+            # The image is invalid, no need to perform image extraction jobs
+            return
+
+        if image_model.deleted:
+            return
+
+        image_id = Path(source_image).stem
+        if image_id not in product.images:
+            # It happens when the image has been deleted after Robotoff import
+            logger.info("Unknown image for product %s: %s", barcode, source_image)
+            image_model.deleted = True
+            ImageModel.bulk_update([image_model], fields=["deleted"])
+            return
 
     enqueue_job(
         import_insights_from_image,
@@ -175,7 +179,7 @@ def save_image(
         )
         return existing_image_model
 
-    image_id = pathlib.Path(source_image).stem
+    image_id = Path(source_image).stem
 
     if not image_id.isdigit():
         logger.info("Non raw image was sent: %s", source_image)

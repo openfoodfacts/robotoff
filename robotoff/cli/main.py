@@ -392,7 +392,10 @@ def run_object_detection_model(
                         & (ImagePrediction.model_name == model_name.value)
                     ),
                 )
-                .where(ImagePrediction.model_name.is_null())
+                .where(
+                    ImagePrediction.model_name.is_null()
+                    & (ImageModel.deleted == False)  # noqa: E712
+                )
                 .tuples()
             )
             if limit:
