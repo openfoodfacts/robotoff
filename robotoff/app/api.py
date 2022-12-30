@@ -1189,24 +1189,30 @@ class DumpResource:
         keep_types: list[str] = req.get_param_as_list(
             "insight_types", required=False, default=[]
         )[:10]
-
         barcode = req.get_param("barcode")
         annotated = req.get_param_as_bool("annotated", blank_as_true=False)
         value_tag = req.get_param("value_tag")
 
-        insights_iter = get_insights(
+        get_insights_ = functools.partial(
+            get_insights,
             barcode=barcode,
             keep_types=keep_types,
             annotated=annotated,
             value_tag=value_tag,
-            limit=None,
         )
+        count: int = get_insights_(count=True)  # type: ignore
+        if count > 10_000:
+            raise falcon.HTTPBadRequest(
+                description=f"more than 10 000 insights matching criteria (here: {count}), use more specific criteria"
+            )
+
+        insights_iter = get_insights_(limit=None, as_dict=True)
 
         writer = None
 
         with tempfile.TemporaryFile("w+", newline="") as temp_f:
-            for insight in insights_iter:
-                serial = orjson.loads(orjson.dumps(insight.to_dict()))
+            for insight_dict in insights_iter:
+                serial = orjson.loads(orjson.dumps(insight_dict))
 
                 if writer is None:
                     writer = csv.DictWriter(temp_f, fieldnames=serial.keys())
@@ -1456,6 +1462,7 @@ api.add_route("/api/v1/insights/detail/{insight_id:uuid}", ProductInsightDetail(
 api.add_route("/api/v1/insights", InsightCollection())
 api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
+api.add_route("/api/v1/insights/dump", DumpResource())
 api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
 api.add_route("/api/v1/predict/nutrient", NutrientPredictorResource())
 api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())
@@ -1483,7 +1490,6 @@ api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/questions/unanswered", UnansweredQuestionCollection())
 api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
-api.add_route("/api/v1/dump", DumpResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
