@@ -1192,6 +1192,7 @@ class DumpResource:
         barcode = req.get_param("barcode")
         annotated = req.get_param_as_bool("annotated", blank_as_true=False)
         value_tag = req.get_param("value_tag")
+        count = req.get_param_as_int("count", min_value=0, max_value=10_000)
 
         get_insights_ = functools.partial(
             get_insights,
@@ -1200,14 +1201,14 @@ class DumpResource:
             annotated=annotated,
             value_tag=value_tag,
         )
-        count: int = get_insights_(count=True)  # type: ignore
-        if count > 10_000:
+        insight_count: int = get_insights_(count=True)  # type: ignore
+        if insight_count > 10_000 and count is None:
             raise falcon.HTTPBadRequest(
-                description=f"more than 10 000 insights matching criteria (here: {count}), use more specific criteria"
+                description=f"more than 10 000 insights matching criteria (here: {insight_count}), "
+                "use more specific criteria or use count parameter"
             )
 
-        insights_iter = get_insights_(limit=None, as_dict=True)
-
+        insights_iter = get_insights_(limit=count, as_dict=True)
         writer = None
 
         with tempfile.TemporaryFile("w+", newline="") as temp_f:

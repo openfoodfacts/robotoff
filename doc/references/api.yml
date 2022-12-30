@@ -278,8 +278,10 @@ paths:
           content: {}
   /insights/dump:
     get:
-      summary: Generate a CSV dump of insights
-      description: Generate a CSV dump of insights with specific criteria. If more than 10,000 insights match provided criteria, a `HTTP 400` is returned
+      summary: Generate a CSV dump
+      description: |
+        Generate a CSV dump of insights with specific criteria.
+        If more than 10,000 insights match provided criteria and `count` is not provided, a `HTTP 400` is returned
       tags:
         - Insights
       parameters:
@@ -298,6 +300,15 @@ paths:
             schema:
               type: boolean
               default: null
+          - name: count
+            description: Maximum number of insights to return.
+              If not provided, an HTTP 400 response may be returned if more than 10,000 insights match the criteria
+            in: query
+            schema:
+              type: integer
+              default: null
+              minimum: 0
+              maximum: 10000
       responses:
         "200":
           description: The CSV dump
@@ -308,7 +319,7 @@ paths:
         "204":
           description: HTTP 204 is returned if no insights were found
         "400":
-          description: HTTP 400 is returned if more than 10,000 insights match the criteria
+          description: HTTP 400 is returned if more than 10,000 insights match the criteria and `count` is not provided
 
   /images/crop:
     get:
