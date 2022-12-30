@@ -39,7 +39,7 @@ def update_insights_job(barcode: str, server_domain: str):
             product_dict = get_product(barcode)
 
             if product_dict is None:
-                logger.warning("Updated product does not exist: %s", barcode)
+                logger.info("Updated product does not exist: %s", barcode)
                 return
 
             updated_product_predict_insights(barcode, product_dict, server_domain)
