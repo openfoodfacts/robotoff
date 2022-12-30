@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.18.1](https://github.com/openfoodfacts/robotoff/compare/v1.18.0...v1.18.1) (2022-12-30)
+
+
+### Bug Fixes
+
+* delete robotoff.utils.types module ([e8949da](https://github.com/openfoodfacts/robotoff/commit/e8949dad05071db5fc4731eea1ac6b1db024b5de))
+* fix /dump route ([27dd472](https://github.com/openfoodfacts/robotoff/commit/27dd472b75ccc42b7e7af3134046e87b63293b44))
+* fix unit and integration tests ([ab17fd2](https://github.com/openfoodfacts/robotoff/commit/ab17fd217a6a7c9b030df7bf05f05269711b58d0))
+* improve /insights/dump route ([bc9029c](https://github.com/openfoodfacts/robotoff/commit/bc9029cd31e09f7882180c79808f48b10e7a6d50))
+* improve annotator classes and  logo annotation tests ([3a7fc7a](https://github.com/openfoodfacts/robotoff/commit/3a7fc7a491bb18b79ddcd410b8a2b4aeb2d4ba18))
+* improve handling of deleted images in import_image.py ([2d24a99](https://github.com/openfoodfacts/robotoff/commit/2d24a99dde560cfc963131c904619ec5140877ea))
+* return xx name if exists in taxonomy.get_localized_name() ([64c9175](https://github.com/openfoodfacts/robotoff/commit/64c91751e9c8d8df401027933b4f0b5660efc30b))
+* save confidence score in Prediction.confidence ([1aebdc5](https://github.com/openfoodfacts/robotoff/commit/1aebdc5e71e3cd8e7551485fb55eccf1c360f13a))
+* turn a warning log into an info ([f1fa4b9](https://github.com/openfoodfacts/robotoff/commit/f1fa4b9b33cd674193a55f36ea0a8908adee0013))
+* use directly LogoAnnotation.{barcode,source_image} ([e31cedb](https://github.com/openfoodfacts/robotoff/commit/e31cedb4cb66c1997780e1a635419910de9d2439))
+
+
+### Documentation
+
+* improve API documentation ([3b5c607](https://github.com/openfoodfacts/robotoff/commit/3b5c6073e483c16c3fff5fb023f4fbfcf758116b))
+* improve documentation on Robotoff maintenance ([75b1459](https://github.com/openfoodfacts/robotoff/commit/75b1459add89935dc9df40d63ba5b3306e0d2b69))
+
 ## [1.18.0](https://github.com/openfoodfacts/robotoff/compare/v1.17.0...v1.18.0) (2022-12-29)
 
 
