@@ -100,6 +100,10 @@ class TaxonomyNode:
         if lang in self.names:
             return self.names[lang]
 
+        if "xx" in self.names:
+            # Return international name if it exists
+            return self.names["xx"]
+
         return self.id
 
     def get_synonyms(self, lang: str) -> list[str]:
