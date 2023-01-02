@@ -99,7 +99,7 @@ def ensure_influx_database():
 
 def get_product_count(country_tag: str) -> int:
     r = http_session.get(
-        settings.BaseURLProvider().country(country_tag).get() + "/3.json?fields=null",
+        settings.BaseURLProvider.country(country_tag) + "/3.json?fields=null",
         auth=settings._off_request_auth,
     ).json()
     return int(r["count"])
@@ -149,7 +149,7 @@ def generate_metrics_from_path(
     facet: Optional[str] = None,
 ) -> list[dict]:
     inserts: list[dict] = []
-    url = settings.BaseURLProvider().country(country_tag + "-en").get() + path
+    url = settings.BaseURLProvider.country(country_tag + "-en") + path
 
     if facet is None:
         facet = get_facet_name(url)

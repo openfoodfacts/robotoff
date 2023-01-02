@@ -159,7 +159,7 @@ class ImageModerationNotifier(NotifierInterface):
         """Send image to the moderation server so that a human can moderate it"""
         if not predictions:
             return
-        image_url = f"{settings.OFF_IMAGE_BASE_URL}/{source_image.lstrip('/')}"
+        image_url = settings.BaseURLProvider.image_url(source_image)
         image_id = int(source_image.rsplit("/", 1)[-1].split(".", 1)[0])
         params = {"imgid": image_id, "url": image_url}
         try:
@@ -214,8 +214,8 @@ class SlackNotifier(NotifierInterface):
                 match_text = flagged.data["text"]
                 text += f"type: {flag_type}\nlabel: *{label}*, match: {match_text}\n"
 
-        edit_url = f"{settings.BaseURLProvider().get()}/cgi/product.pl?type=edit&code={barcode}"
-        image_url = settings.OFF_IMAGE_BASE_URL + source_image
+        edit_url = f"{settings.BaseURLProvider.world()}/cgi/product.pl?type=edit&code={barcode}"
+        image_url = settings.BaseURLProvider.image_url(source_image)
 
         full_text = f"{text}\n <{image_url}|Image> -- <{edit_url}|*Edit*>"
         message = _slack_message_block(full_text, with_image=image_url)
@@ -223,7 +223,7 @@ class SlackNotifier(NotifierInterface):
         self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
     def notify_automatic_processing(self, insight: ProductInsight):
-        product_url = f"{settings.BaseURLProvider().get()}/product/{insight.barcode}"
+        product_url = f"{settings.BaseURLProvider.world()}/product/{insight.barcode}"
 
         if insight.source_image:
             if insight.data and "bounding_box" in insight.data:
@@ -231,7 +231,7 @@ class SlackNotifier(NotifierInterface):
                     insight.source_image, insight.data.get("bounding_box")
                 )
             else:
-                image_url = f"{settings.BaseURLProvider().static().get()}/images/products{insight.source_image}"
+                image_url = f"{settings.BaseURLProvider.static()}/images/products{insight.source_image}"
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
@@ -272,7 +272,7 @@ class SlackNotifier(NotifierInterface):
             )
         )
         barcode = logo.barcode
-        base_off_url = settings.BaseURLProvider().get()
+        base_off_url = settings.BaseURLProvider.world()
         text = (
             f"Prediction for <{crop_url}|image> "
             f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "

@@ -28,9 +28,9 @@ class EventProcessor:
         return self.queue
 
     def send_async(self, *args, **kwargs):
-        if settings.EVENTS_API_URL:
+        if settings.BaseURLProvider.event_api():
             queue = self.get()
-            queue.put((settings.EVENTS_API_URL, args, kwargs))
+            queue.put((settings.BaseURLProvider.event_api(), args, kwargs))
 
 
 # a singleton for event processor

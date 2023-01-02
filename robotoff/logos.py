@@ -527,7 +527,7 @@ def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
                 import_logo_insights(
                     logos,
                     thresholds=thresholds,
-                    server_domain=settings.OFF_SERVER_DOMAIN,
+                    server_domain=settings.BaseURLProvider.api(),
                     notify=False,
                 )
 

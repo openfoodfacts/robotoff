@@ -61,7 +61,7 @@ def test_connect_influxdb():
 
 def test_connect_robotoff_api():
     logger.debug("health: testing robotoff API status")
-    resp = requests.get(f"{settings.BaseURLProvider().robotoff().get()}/api/v1/status")
+    resp = requests.get(f"{settings.BaseURLProvider.robotoff()}/api/v1/status")
     return resp.json()["status"] == "running", "Robotoff API connection success !"
 
 

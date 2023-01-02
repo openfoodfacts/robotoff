@@ -79,7 +79,7 @@ class TestCategoryImporter:
             product_store = self.fake_product_store()
         return import_insights(
             predictions,
-            server_domain=settings.OFF_SERVER_DOMAIN,
+            server_domain=settings.BaseURLProvider.api(),
             product_store=product_store,
         )
 
@@ -143,7 +143,7 @@ class TestCategoryImporter:
         assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
         assert inserted.value_tag == "en:smoked-salmons"
-        assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
+        assert inserted.server_domain == settings.BaseURLProvider.api()
         assert not inserted.automatic_processing
 
     def test_import_auto(self):
@@ -157,7 +157,7 @@ class TestCategoryImporter:
         assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
         assert inserted.value_tag == "en:smoked-salmons"
-        assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
+        assert inserted.server_domain == settings.BaseURLProvider.api()
         assert inserted.automatic_processing
 
     @pytest.mark.parametrize(

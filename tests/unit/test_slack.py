@@ -103,14 +103,17 @@ def test_notify_image_flag_public(mocker, monkeypatch):
     mock_slack.assert_called_once_with(
         slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.BaseURLProvider.image_url('/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world()}/cgi/product.pl?type=edit&code=123|*Edit*>",
             slack_notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
-            f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg",
+            settings.BaseURLProvider.image_url("/source_image/2.jpg"),
         ),
     )
     mock_image_moderation.assert_called_once_with(
         "http://images.org/123",
-        data={"imgid": 2, "url": f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg"},
+        data={
+            "imgid": 2,
+            "url": settings.BaseURLProvider.image_url("/source_image/2.jpg"),
+        },
     )
 
 
@@ -143,14 +146,17 @@ def test_notify_image_flag_private(mocker, monkeypatch):
     mock_slack.assert_called_once_with(
         slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg|Image> -- <https://world.{settings._robotoff_domain}/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.BaseURLProvider.image_url('/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world()}/cgi/product.pl?type=edit&code=123|*Edit*>",
             slack_notifier.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL,
-            f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg",
+            settings.BaseURLProvider.image_url("/source_image/2.jpg"),
         ),
     )
     mock_image_moderation.assert_called_once_with(
         "http://images.org/123",
-        data={"imgid": 2, "url": f"{settings.OFF_IMAGE_BASE_URL}/source_image/2.jpg"},
+        data={
+            "imgid": 2,
+            "url": settings.BaseURLProvider.image_url("/source_image/2.jpg"),
+        },
     )
 
 
@@ -175,7 +181,7 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `200g` weight was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <{settings.OFF_IMAGE_BASE_URL}/image/1|source image>)",
+            f"The `200g` weight was automatically added to product 123 (<{settings.BaseURLProvider.world()}/product/123|product>, <{settings.BaseURLProvider.image_url('/image/1')}|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
@@ -198,7 +204,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `en:vegan` label was automatically added to product 123 (<https://world.{settings._robotoff_domain}/product/123|product>, <{settings.OFF_IMAGE_BASE_URL}/image/1|source image>)",
+            f"The `en:vegan` label was automatically added to product 123 (<{settings.BaseURLProvider.world()}/product/123|product>, <{settings.BaseURLProvider.image_url('/image/1')}|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )

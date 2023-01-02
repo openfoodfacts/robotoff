@@ -70,7 +70,7 @@ def test_process_insight_category(mocker, peewee_db):
             "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
         },
         auth=None,
-        server_domain=settings.OFF_SERVER_DOMAIN,
+        server_domain=settings.BaseURLProvider.api(),
     )
 
 
@@ -150,7 +150,7 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
             "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
         },
         auth=None,
-        server_domain=settings.OFF_SERVER_DOMAIN,
+        server_domain=settings.BaseURLProvider.api(),
     )
 
     with peewee_db:
@@ -167,7 +167,7 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
             "comment": f"[robotoff] Adding category 'en:Tuna', ID: {id2}",
         },
         auth=None,
-        server_domain=settings.OFF_SERVER_DOMAIN,
+        server_domain=settings.BaseURLProvider.api(),
     )
     # we add only two calls
     assert mock.call_count == 2
@@ -206,7 +206,7 @@ def test_process_insight_same_product(mocker, peewee_db):
             "comment": f"[robotoff] Adding category 'en:Big fish', ID: {id2}",
         },
         auth=None,
-        server_domain=settings.OFF_SERVER_DOMAIN,
+        server_domain=settings.BaseURLProvider.api(),
     )
     mock.assert_any_call(
         {
@@ -215,5 +215,5 @@ def test_process_insight_same_product(mocker, peewee_db):
             "comment": f"[robotoff] Adding category 'en:Smoked Salmon', ID: {id3}",
         },
         auth=None,
-        server_domain=settings.OFF_SERVER_DOMAIN,
+        server_domain=settings.BaseURLProvider.api(),
     )

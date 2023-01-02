@@ -49,7 +49,7 @@ PREDICTION_TYPE_TO_FUNC: dict[
 
 
 def fetch_images_for_ean(ean: str):
-    url = BaseURLProvider().get() + "/api/v0/product/{}.json?fields=images".format(ean)
+    url = BaseURLProvider.world() + "/api/v0/product/{}.json?fields=images".format(ean)
     images = http_session.get(url).json()
     return images
 

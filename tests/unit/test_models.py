@@ -23,6 +23,6 @@ def test_crop_image_url(monkeypatch):
     )
 
     assert logo_annotation.get_crop_image_url() == (
-        f"https://robotoff.{settings._robotoff_domain}/api/v1/images/crop"
-        + f"?image_url={settings.OFF_IMAGE_BASE_URL}/123/1.jpg&y_min=1&x_min=1&y_max=2&x_max=2"
+        f"{settings.BaseURLProvider.robotoff()}/api/v1/images/crop"
+        + f"?image_url={settings.BaseURLProvider.image_url('/123/1.jpg')}&y_min=1&x_min=1&y_max=2&x_max=2"
     )

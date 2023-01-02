@@ -37,7 +37,10 @@ with db:
 
             try:
                 save_image(
-                    product.barcode, image_url, product, settings.OFF_SERVER_DOMAIN
+                    product.barcode,
+                    image_url,
+                    product,
+                    settings.BaseURLProvider.api(),
                 )
             except Exception as e:
                 logger.info("Exception for product {}\n{}".format(product.barcode, e))

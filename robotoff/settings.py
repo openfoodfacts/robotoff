@@ -1,4 +1,3 @@
-import copy
 import logging
 import os
 from pathlib import Path
@@ -8,75 +7,103 @@ import sentry_sdk
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+
 # Robotoff instance gives the environment, either `prod` or `dev`
 # (`dev` by default).
 # If `prod` is used, openfoodfacts.org domain will be used by default,
 # and openfoodfacts.net if `dev` is used.
 # Messages to Slack are only enabled if `ROBOTOFF_INSTANCE=prod`.
-ROBOTOFF_INSTANCE = os.environ.get("ROBOTOFF_INSTANCE", "dev")
+def _robotoff_instance():
+    return os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
 
 # Returns the top-level-domain (TLD) for the Robotoff instance.
 def _instance_tld() -> str:
-    if ROBOTOFF_INSTANCE == "prod":
+    robotoff_instance = _robotoff_instance()
+    if robotoff_instance == "prod":
         return "org"
-    elif ROBOTOFF_INSTANCE == "dev":
+    elif robotoff_instance == "dev":
         return "net"
     else:
-        return ROBOTOFF_INSTANCE
+        return robotoff_instance
 
 
-_default_robotoff_domain = f"openfoodfacts.{_instance_tld()}"
-
-# `ROBOTOFF_DOMAIN` can be used to overwrite the Product Opener domain used.
-# If empty, the domain will be inferred from `ROBOTOFF_INSTANCE`
-_robotoff_domain = os.environ.get("ROBOTOFF_DOMAIN", _default_robotoff_domain)
+def _get_default_scheme() -> str:
+    return os.environ.get("ROBOTOFF_SCHEME", "https")
 
 
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
-    Example usage: BaseURLProvider().robotoff().get() returns the Robotoff URL.
+    Example usage: BaseURLProvider.robotoff() returns the Robotoff URL.
     """
 
-    def __init__(self):
-        self.domain = os.environ.get(
-            "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
-        )
-        self.url = "%(scheme)s://%(prefix)s.%(domain)s"
-        self.prefix = "world"
-        self.scheme = os.environ.get("ROBOTOFF_SCHEME", "https")
+    @staticmethod
+    def _get_url(
+        prefix: Optional[str] = "world",
+        domain: Optional[str] = None,
+        scheme: Optional[str] = None,
+    ):
+        # `ROBOTOFF_DOMAIN` can be used to overwrite the Product Opener domain used.
+        # If empty, the domain will be inferred from `ROBOTOFF_INSTANCE`
+        data = {
+            "domain": os.environ.get(
+                "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
+            ),
+            "scheme": _get_default_scheme(),
+        }
+        if prefix:
+            data["prefix"] = prefix
+        if scheme:
+            data["scheme"] = scheme
+        if domain:
+            data["domain"] = domain
 
-    def clone(self):
-        return copy.deepcopy(self)
+        if data["prefix"]:
+            return "%(scheme)s://%(prefix)s.%(domain)s" % data
 
-    def robotoff(self):
-        result = self.clone()
-        result.prefix = "robotoff"
-        return result
+        return "%(scheme)s://%(domain)s" % data
 
-    def static(self):
-        result = self.clone()
-        result.prefix = "static"
+    @staticmethod
+    def world():
+        return BaseURLProvider._get_url(prefix="world")
+
+    @staticmethod
+    def robotoff() -> str:
+        return BaseURLProvider._get_url(prefix="robotoff")
+
+    @staticmethod
+    def api() -> str:
+        return BaseURLProvider._get_url(prefix="api")
+
+    @staticmethod
+    def static() -> str:
         # locally we may want to change it, give environment a chance
         static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
         if static_domain:
             if "://" in static_domain:
-                result.scheme, static_domain = static_domain.split("://", 1)
-            result.domain = static_domain
-        return result
+                scheme, static_domain = static_domain.split("://", 1)
+            else:
+                scheme = _get_default_scheme()
+            return BaseURLProvider._get_url(
+                prefix=None, scheme=scheme, domain=static_domain
+            )
 
-    def country(self, country_code: str):
-        result = self.clone()
-        result.prefix = country_code
-        return result
+        return BaseURLProvider._get_url(prefix="static")
 
-    def get(self):
-        return self.url % {
-            "scheme": self.scheme,
-            "prefix": self.prefix,
-            "domain": self.domain,
-        }
+    @staticmethod
+    def image_url(image_path: str) -> str:
+        return BaseURLProvider.static() + f"/images/products{image_path}"
+
+    @staticmethod
+    def country(country_code: str) -> str:
+        return BaseURLProvider._get_url(prefix=country_code)
+
+    @staticmethod
+    def event_api() -> str:
+        return os.environ.get(
+            "EVENTS_API_URL", BaseURLProvider._get_url(prefix="events")
+        )
 
 
 PROJECT_DIR = Path(__file__).parent.parent
@@ -92,26 +119,20 @@ DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
 
 # Products JSONL
 
-JSONL_DATASET_URL = (
-    BaseURLProvider().static().get() + "/data/openfoodfacts-products.jsonl.gz"
-)
+JSONL_DATASET_URL = BaseURLProvider.static() + "/data/openfoodfacts-products.jsonl.gz"
 
 TAXONOMY_URLS = {
-    "category": BaseURLProvider().static().get()
-    + "/data/taxonomies/categories.full.json",
-    "ingredient": BaseURLProvider().static().get()
-    + "/data/taxonomies/ingredients.full.json",
-    "label": BaseURLProvider().static().get() + "/data/taxonomies/labels.full.json",
-    "brand": BaseURLProvider().static().get() + "/data/taxonomies/brands.full.json",
-    "packaging_shape": BaseURLProvider().static().get()
+    "category": BaseURLProvider.static() + "/data/taxonomies/categories.full.json",
+    "ingredient": BaseURLProvider.static() + "/data/taxonomies/ingredients.full.json",
+    "label": BaseURLProvider.static() + "/data/taxonomies/labels.full.json",
+    "brand": BaseURLProvider.static() + "/data/taxonomies/brands.full.json",
+    "packaging_shape": BaseURLProvider.static()
     + "/data/taxonomies/packaging_shapes.full.json",
-    "packaging_material": BaseURLProvider().static().get()
+    "packaging_material": BaseURLProvider.static()
     + "/data/taxonomies/packaging_materials.full.json",
-    "packaging_recycling": BaseURLProvider().static().get()
+    "packaging_recycling": BaseURLProvider.static()
     + "/data/taxonomies/packaging_recycling.full.json",
 }
-
-OFF_IMAGE_BASE_URL = BaseURLProvider().static().get() + "/images/products"
 
 _off_password = os.environ.get("OFF_PASSWORD", "")
 _off_user = os.environ.get("OFF_USER", "")
@@ -121,11 +142,6 @@ _off_request_auth = ("off", "off") if _instance_tld() == "net" else None
 def off_credentials() -> dict[str, str]:
     return {"user_id": _off_user, "password": _off_password}
 
-
-OFF_SERVER_DOMAIN = "api." + BaseURLProvider().domain
-EVENTS_API_URL = os.environ.get(
-    "EVENTS_API_URL", "https://events." + BaseURLProvider().domain
-)
 
 CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
 CATEGORY_MATCHER_MATCH_MAPS = {
@@ -194,7 +210,7 @@ _slack_token = os.environ.get("SLACK_TOKEN", "")
 # Returns the slack token to use for posting alerts if the current instance is the 'prod' instance.
 # For all other instances, the empty string is returned.
 def slack_token() -> str:
-    if ROBOTOFF_INSTANCE == "prod":
+    if _robotoff_instance() == "prod":
         if _slack_token != "":
             return _slack_token
         else:
@@ -210,6 +226,7 @@ _sentry_dsn = os.environ.get("SENTRY_DSN")
 
 
 def init_sentry(integrations: Optional[list[Integration]] = None):
+    robotoff_instance = _robotoff_instance()
     if _sentry_dsn:
         integrations = integrations or []
         integrations.append(
@@ -219,9 +236,9 @@ def init_sentry(integrations: Optional[list[Integration]] = None):
             )
         )
         sentry_sdk.init(  # type:ignore # mypy say it's abstract
-            _sentry_dsn, environment=ROBOTOFF_INSTANCE, integrations=integrations
+            _sentry_dsn, environment=robotoff_instance, integrations=integrations
         )
-    elif ROBOTOFF_INSTANCE == "prod":
+    elif robotoff_instance == "prod":
         raise ValueError("No SENTRY_DSN specified for prod Robotoff")
 
 

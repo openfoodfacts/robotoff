@@ -71,7 +71,7 @@ class ServerType(enum.Enum):
 
 
 API_URLS: dict[ServerType, str] = {
-    ServerType.off: settings.BaseURLProvider().get(),
+    ServerType.off: settings.BaseURLProvider.world(),
     ServerType.obf: "https://world.openbeautyfacts.org",
     ServerType.opf: "https://world.openproductfacts.org",
     ServerType.opff: "https://world.openpetfoodfacts.org",
@@ -126,7 +126,7 @@ def get_base_url(server: Union[ServerType, str]) -> str:
     if isinstance(server, str):
         server = server.replace("api", "world")
         # get scheme, https on prod, but http in dev
-        scheme = settings.BaseURLProvider().scheme
+        scheme = settings._get_default_scheme()
         return f"{scheme}://{server}"
     else:
         if server not in API_URLS:
@@ -178,11 +178,11 @@ def generate_json_path(barcode: str, image_id: str) -> str:
 
 
 def generate_json_ocr_url(barcode: str, image_id: str) -> str:
-    return settings.OFF_IMAGE_BASE_URL + generate_json_path(barcode, image_id)
+    return settings.BaseURLProvider.image_url(generate_json_path(barcode, image_id))
 
 
 def generate_image_url(barcode: str, image_id: str) -> str:
-    return settings.OFF_IMAGE_BASE_URL + generate_image_path(barcode, image_id)
+    return settings.BaseURLProvider.image_url(generate_image_path(barcode, image_id))
 
 
 def is_valid_image(barcode: str, image_id: str) -> bool:
@@ -387,7 +387,7 @@ def update_product(
     timeout: Optional[int] = 15,
 ):
     if server_domain is None:
-        server_domain = settings.OFF_SERVER_DOMAIN
+        server_domain = settings.BaseURLProvider.api()
 
     url = get_product_update_url(server_domain)
 
@@ -433,7 +433,7 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     if get_product(barcode, server=to) is not None:
         return False
 
-    url = "{}/cgi/product_jqm.pl".format(settings.BaseURLProvider().get())
+    url = "{}/cgi/product_jqm.pl".format(settings.BaseURLProvider.world())
     params = {
         "type": "edit",
         "code": barcode,
@@ -455,7 +455,7 @@ def select_rotate_image(
     timeout: Optional[int] = 15,
 ):
     if server_domain is None:
-        server_domain = settings.OFF_SERVER_DOMAIN
+        server_domain = settings.BaseURLProvider.api()
 
     url = get_product_image_select_url(server_domain)
     cookies = None

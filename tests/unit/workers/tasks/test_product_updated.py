@@ -20,7 +20,7 @@ def test_add_category_insight_no_insights(mocker):
         "robotoff.workers.tasks.product_updated.import_insights"
     )
     imported = add_category_insight(
-        "123", {"code": "123"}, settings.BaseURLProvider().get()
+        "123", {"code": "123"}, settings.BaseURLProvider.world()
     )
 
     assert not import_insights_mock.called
@@ -49,7 +49,7 @@ def test_add_category_insight_with_ml_insights(mocker):
         "robotoff.workers.tasks.product_updated.import_insights",
         return_value=InsightImportResult(),
     )
-    server_domain = settings.BaseURLProvider().get()
+    server_domain = settings.BaseURLProvider.world()
     add_category_insight("123", {"code": "123"}, server_domain)
 
     import_insights_mock.assert_called_once_with(
