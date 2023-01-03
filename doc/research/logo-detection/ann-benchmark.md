@@ -34,7 +34,7 @@ HNSW indexes are adjustable trhough three parameters:
 
 ## Benchmark
 
-You can find the code of the various benchmarks [here](https://github.com/openfoodfacts/openfoodfacts-ai/tree/607ec6a/logo-ann/benchmark-ann).
+You can find the code of the various benchmarks [here](https://github.com/openfoodfacts/openfoodfacts-ai/tree/develop/logo-ann/benchmarks/ANN_benchmark).
 
 Here are the results obtained with **Faiss** :
 
