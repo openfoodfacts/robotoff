@@ -9,6 +9,7 @@ import shutil
 import tempfile
 from typing import Iterable, Iterator, Optional, Union
 
+import cachetools
 import requests
 from pymongo import MongoClient
 
@@ -16,7 +17,6 @@ from robotoff import settings
 from robotoff.mongo import MONGO_CLIENT_CACHE
 from robotoff.types import JSONType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
-from robotoff.utils.cache import CachedStore
 
 logger = get_logger(__name__)
 
@@ -499,9 +499,11 @@ class DBProductStore(ProductStore):
         yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
-def load_min_dataset() -> ProductStore:
+@cachetools.cached(cachetools.LRUCache(maxsize=1))
+def get_min_product_store() -> ProductStore:
+    logger.info("Loading product store in memory...")
     ps = MemoryProductStore.load_min()
-    logger.info("product store loaded ({} items)".format(len(ps)))
+    logger.info("product store loaded (%s items)", len(ps))
     return ps
 
 
@@ -522,6 +524,3 @@ def get_product(
     """
     mongo_client = MONGO_CLIENT_CACHE.get()
     return mongo_client.off.products.find_one({"code": barcode}, projection)
-
-
-CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)

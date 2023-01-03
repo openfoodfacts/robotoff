@@ -24,10 +24,10 @@ from robotoff.metrics import (
 from robotoff.models import ProductInsight, db, with_db
 from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
-    CACHED_PRODUCT_STORE,
     Product,
     ProductDataset,
     fetch_dataset,
+    get_min_product_store,
     has_dataset_changed,
 )
 from robotoff.utils import get_logger
@@ -80,7 +80,7 @@ def process_insights():
 def refresh_insights(with_deletion: bool = False):
     deleted = 0
     updated = 0
-    product_store = CACHED_PRODUCT_STORE.get()
+    product_store = get_min_product_store()
 
     datetime_threshold = datetime.datetime.utcnow().replace(
         hour=0, minute=0, second=0, microsecond=0
