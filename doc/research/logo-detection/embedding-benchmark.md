@@ -8,7 +8,7 @@ Logo embeddings were computed using each model. For each logo, two different dis
 
 To keep the comparison fair and avoid favoring classes with many samples, for each target image, we only considered at most 4 items of each class. These items were sampled at random among the class items. As each class contains at least 5 items, all classes (including the target class, i.e. the class of the target logo) have 4 candidates. With this setting, an oracle model would have a recall@4 of 1.
 
-The *val* split was used to perform this benchmark. The benchmark code can be found [here](https://github.com/openfoodfacts/openfoodfacts-ai/tree/607ec6a/logo-ann/benchmark).
+The *val* split was used to perform this benchmark. The benchmark code can be found [here](https://github.com/openfoodfacts/openfoodfacts-ai/tree/607ec6a/logo-ann/benchmark-embedding).
 
 We use the following metrics:
 
