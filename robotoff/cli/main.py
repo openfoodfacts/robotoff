@@ -564,21 +564,52 @@ def import_embedding(
 
 @app.command()
 def import_logos(
-    data_path: pathlib.Path,
-    model_name: str = "universal-logo-detector",
-    model_version: str = "tf-universal-logo-detector-1.0",
+    data_path: pathlib.Path = typer.Argument(
+        ...,
+        help="Path to the JSONL file containing data to import",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+    ),
+    batch_size: int = typer.Option(
+        1024, help="Number of predictions to insert in DB in a single SQL transaction"
+    ),
 ) -> None:
-    from robotoff.cli.logos import insert_batch
+    """Import object detection predictions for universal-logo-detector model.
+
+    This command creates ImagePrediction and associated LogoAnnotation, but do
+    not generate logo embedding or index the embeddings in the ANN index.
+
+    Each JSON item should have the following field:
+
+    - barcode: the barcode of the product
+    - image_id: the image ID ("1", "2",...), must be a digit
+    - result: a dict, containing:
+        - score: the confidence score (float)
+        - bounding_box: a list with 4 elements, corresponding to the
+          normalized detected bounding box
+        - label: either `label` or `brand`
+
+    """
+    from robotoff.cli import logos
     from robotoff.models import db
+    from robotoff.prediction.object_detection import OBJECT_DETECTION_MODEL_VERSION
     from robotoff.utils import get_logger
 
     logger = get_logger()
-    logger.info("Starting image prediction import...")
+    logger.info("Starting logo import...")
 
-    with db:
-        inserted = insert_batch(data_path, model_name, model_version)
+    with db.connection_context():
+        imported = logos.import_logos(
+            data_path,
+            ObjectDetectionModel.universal_logo_detector.value,
+            OBJECT_DETECTION_MODEL_VERSION[
+                ObjectDetectionModel.universal_logo_detector
+            ],
+            batch_size,
+        )
 
-    logger.info("{} image predictions inserted".format(inserted))
+    logger.info("%s image predictions created", imported)
 
 
 @app.command()
