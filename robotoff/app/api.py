@@ -895,16 +895,19 @@ class ImageLogoAnnotateResource:
                     username=auth.get_username() or "unknown",
                     completed_at=completed_at,
                 )
+            else:
+                annotated_logos = []
 
-        logo_ids = [logo.id for logo in annotated_logos]
-        enqueue_job(
-            generate_insights_from_annotated_logos_job,
-            high_queue,
-            {"result_ttl": 0, "timeout": "5m"},
-            logo_ids=logo_ids,
-            server_domain=server_domain,
-            auth=auth,
-        )
+        if annotated_logos:
+            logo_ids = [logo.id for logo in annotated_logos]
+            enqueue_job(
+                generate_insights_from_annotated_logos_job,
+                high_queue,
+                {"result_ttl": 0, "timeout": "5m"},
+                logo_ids=logo_ids,
+                server_domain=server_domain,
+                auth=auth,
+            )
         resp.media = {"annotated": len(annotated_logos)}
 
 
