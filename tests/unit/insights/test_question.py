@@ -47,52 +47,52 @@ def test_generate_selected_images(monkeypatch):
 
     assert selected_images["front"] == {
         "display": {
-            "es": "https://static.openfoodfacts.net/images/products/541/004/104/0807/front_es.130.400.jpg",
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/front_fr.142.400.jpg",
+            "es": "https://images.openfoodfacts.net/images/products/541/004/104/0807/front_es.130.400.jpg",
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/front_fr.142.400.jpg",
         },
         "small": {
-            "es": "https://static.openfoodfacts.net/images/products/541/004/104/0807/front_es.130.200.jpg",
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/front_fr.142.200.jpg",
+            "es": "https://images.openfoodfacts.net/images/products/541/004/104/0807/front_es.130.200.jpg",
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/front_fr.142.200.jpg",
         },
         "thumb": {
-            "es": "https://static.openfoodfacts.net/images/products/541/004/104/0807/front_es.130.100.jpg",
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/front_fr.142.100.jpg",
+            "es": "https://images.openfoodfacts.net/images/products/541/004/104/0807/front_es.130.100.jpg",
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/front_fr.142.100.jpg",
         },
     }
 
     assert selected_images["nutrition"] == {
         "display": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/nutrition_fr.145.400.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/nutrition_fr.145.400.jpg"
         },
         "small": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/nutrition_fr.145.200.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/nutrition_fr.145.200.jpg"
         },
         "thumb": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/nutrition_fr.145.100.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/nutrition_fr.145.100.jpg"
         },
     }
 
     assert selected_images["ingredients"] == {
         "display": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/ingredients_fr.144.400.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/ingredients_fr.144.400.jpg"
         },
         "small": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/ingredients_fr.144.200.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/ingredients_fr.144.200.jpg"
         },
         "thumb": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/ingredients_fr.144.100.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/ingredients_fr.144.100.jpg"
         },
     }
 
     assert selected_images["packaging"] == {
         "display": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.400.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.400.jpg"
         },
         "small": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.200.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.200.jpg"
         },
         "thumb": {
-            "fr": "https://static.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.100.jpg"
+            "fr": "https://images.openfoodfacts.net/images/products/541/004/104/0807/packaging_fr.146.100.jpg"
         },
     }
 
@@ -174,7 +174,7 @@ def test_category_question_formatter(
         "question": expected_question_str,
         "insight_id": str(insight.id),
         "insight_type": InsightType.category.name,
-        "source_image_url": "https://static.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
+        "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
     }
 
 
@@ -227,7 +227,7 @@ def test_label_question_formatter(
         "question": expected_question_str,
         "insight_id": str(insight.id),
         "insight_type": InsightType.label.name,
-        "source_image_url": "https://static.openfoodfacts.net/images/products/111/111/111/1/1.400.jpg",
+        "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/1.400.jpg",
     }
 
     if ref_image_url is not None:
