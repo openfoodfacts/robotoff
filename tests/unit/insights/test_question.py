@@ -7,6 +7,7 @@ from robotoff.insights.question import (
     CategoryQuestionFormatter,
     LabelQuestionFormatter,
     Question,
+    generate_selected_images,
     get_display_image,
 )
 from robotoff.models import ProductInsight
@@ -33,7 +34,7 @@ def test_generate_selected_images():
     with (TEST_DATA_DIR / "generate_selected_images.json").open("r") as f:
         IMAGE_DATA = json.load(f)
 
-    selected_images = CategoryQuestionFormatter.generate_selected_images(
+    selected_images = generate_selected_images(
         IMAGE_DATA["product"]["images"], IMAGE_DATA["code"]
     )
 

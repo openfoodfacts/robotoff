@@ -22,6 +22,89 @@ THUMB_IMAGE_SIZE = 100
 LABEL_IMAGES: dict[str, str] = load_json(settings.LABEL_LOGOS_PATH)  # type: ignore
 
 
+def generate_selected_images(
+    images: JSONType, barcode: str
+) -> dict[str, dict[str, dict[str, str]]]:
+    """Generate the same `selected_images` field as returned by Product
+    Opener API.
+
+    :param images: the `images` data of the product
+    :param barcode: the product barcode
+    :return: the `selected_images` data
+    """
+    selected_images: dict[str, dict[str, dict[str, str]]] = {
+        image_type: {}
+        for image_type in ("front", "nutrition", "ingredients", "packaging")
+    }
+
+    for key, image_data in images.items():
+        if (
+            key.startswith("front_")
+            or key.startswith("nutrition_")
+            or key.startswith("ingredients_")
+            or key.startswith("packaging_")
+        ):
+            image_type = key.split("_")[
+                0
+            ]  # to get image type: `front`, `nutrition`, `ingredients` or `packaging`
+            language = key.split("_")[1]  # splitting to get the language name
+            revision_id = image_data["rev"]  # get revision_id for all languages
+            available_image_sizes = set(
+                int(size) for size in image_data["sizes"] if size.isdigit()
+            )
+
+            for field_name, image_size in (
+                ("display", DISPLAY_IMAGE_SIZE),
+                ("small", SMALL_IMAGE_SIZE),
+                ("thumb", THUMB_IMAGE_SIZE),
+            ):
+                if image_size in available_image_sizes:
+                    image_url = generate_image_url(
+                        barcode, f"{key}.{revision_id}.{image_size}"
+                    )
+                    selected_images[image_type].setdefault(field_name, {})
+                    selected_images[image_type][field_name][language] = image_url
+
+    return selected_images
+
+
+def get_source_image_url(
+    barcode: str, field_types: Optional[list[str]] = None
+) -> Optional[str]:
+    """Generate the URL of a generic image to display for an insight.
+
+    By default, we check in order that the product has an image in any
+    language of the following types ("front", "ingredients", "nutrition"),
+    and use this image to generate the image URL.
+
+    :param barcode: the barcode of the product
+    :param field_types: the image field types to check. If not provided,
+      we use ["front", "ingredients", "nutrition"]
+    :return: The image URL or None if no suitable image has been found
+    """
+    if field_types is None:
+        field_types = ["front", "ingredients", "nutrition"]
+
+    product: Optional[JSONType] = get_product(barcode, ["images"])
+
+    if product is None or "images" not in product:
+        return None
+
+    selected_images = generate_selected_images(product["images"], barcode)
+
+    for key in field_types:
+        if key in selected_images:
+            images = selected_images[key]
+
+            if "display" in images:
+                display_images = list(images["display"].values())
+
+                if display_images:
+                    return display_images[0]
+
+    return None
+
+
 class Question(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def serialize(self) -> JSONType:
@@ -137,7 +220,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
         localized_value: str = taxonomy.get_localized_name(insight.value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = self.get_source_image_url(insight.barcode)
+        source_image_url = get_source_image_url(insight.barcode)
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
@@ -145,29 +228,6 @@ class CategoryQuestionFormatter(QuestionFormatter):
             insight=insight,
             source_image_url=source_image_url,
         )
-
-    @staticmethod
-    def get_source_image_url(barcode: str) -> Optional[str]:
-        product: Optional[JSONType] = get_product(barcode)
-
-        if product is None or "images" not in product:
-            return None
-
-        selected_images = CategoryQuestionFormatter.generate_selected_images(
-            product["images"], barcode
-        )
-
-        for key in ("front", "ingredients", "nutrition"):
-            if key in selected_images:
-                images = selected_images[key]
-
-                if "display" in images:
-                    display_images = list(images["display"].values())
-
-                    if display_images:
-                        return display_images[0]
-
-        return None
 
     @staticmethod
     def generate_selected_images(
@@ -270,7 +330,13 @@ class BrandQuestionFormatter(QuestionFormatter):
         localized_question = self.translation_store.gettext(lang, self.question)
 
         source_image_url = None
-        if insight.source_image:
+        if insight.predictor in ("curated-list", "taxonomy", "whitelisted-brands"):
+            # Use front image as default for flashtext-brand insights
+            source_image_url = get_source_image_url(
+                insight.barcode, field_types=["front"]
+            )
+
+        if source_image_url is None and insight.source_image:
             source_image_url = settings.OFF_IMAGE_BASE_URL + get_display_image(
                 insight.source_image
             )
