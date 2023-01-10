@@ -168,6 +168,7 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
 
     notifier = slack.SlackNotifier("")
 
+    print(settings.BaseURLProvider.image_url("/image/1"))
     notifier.notify_automatic_processing(
         ProductInsight(
             barcode="123",

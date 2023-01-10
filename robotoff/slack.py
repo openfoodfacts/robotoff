@@ -231,7 +231,7 @@ class SlackNotifier(NotifierInterface):
                     insight.source_image, insight.data.get("bounding_box")
                 )
             else:
-                image_url = f"{settings.BaseURLProvider.static()}/images/products{insight.source_image}"
+                image_url = settings.BaseURLProvider.image_url(insight.source_image)
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
