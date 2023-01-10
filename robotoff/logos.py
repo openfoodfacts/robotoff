@@ -351,6 +351,18 @@ def import_logo_insights(
     return import_result
 
 
+def generate_insights_from_annotated_logos_job(
+    logo_ids: list[int], server_domain: str, auth: OFFAuthentication
+):
+    """Wrap generate_insights_from_annotated_logos function into a python-rq
+    compatible job."""
+    with db:
+        logos = list(LogoAnnotation.select().where(LogoAnnotation.id.in_(logo_ids)))
+
+        if logos:
+            generate_insights_from_annotated_logos(logos, server_domain, auth)
+
+
 def generate_insights_from_annotated_logos(
     logos: list[LogoAnnotation], server_domain: str, auth: OFFAuthentication
 ) -> int:

@@ -38,7 +38,11 @@ from robotoff.insights.extraction import (
     extract_ocr_predictions,
 )
 from robotoff.insights.question import QuestionFormatter, QuestionFormatterFactory
-from robotoff.logos import generate_insights_from_annotated_logos, knn_search
+from robotoff.logos import (
+    generate_insights_from_annotated_logos,
+    generate_insights_from_annotated_logos_job,
+    knn_search,
+)
 from robotoff.models import (
     ImageModel,
     ImagePrediction,
@@ -889,12 +893,17 @@ class ImageLogoAnnotateResource:
                     username=auth.get_username() or "unknown",
                     completed_at=completed_at,
                 )
-                annotated = generate_insights_from_annotated_logos(
-                    annotated_logos, server_domain, auth
-                )
-            else:
-                annotated = 0
-        resp.media = {"created insights": annotated}
+
+        logo_ids = [logo.id for logo in annotated_logos]
+        enqueue_job(
+            generate_insights_from_annotated_logos_job,
+            high_queue,
+            {"result_ttl": 0, "timeout": "5m"},
+            logo_ids=logo_ids,
+            server_domain=server_domain,
+            auth=auth,
+        )
+        resp.media = {"annotated": len(annotated_logos)}
 
 
 class ImageLogoUpdateResource:
