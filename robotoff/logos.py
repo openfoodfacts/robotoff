@@ -28,6 +28,7 @@ from robotoff.types import (
     PredictionType,
 )
 from robotoff.utils import get_logger
+from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
 
@@ -470,7 +471,8 @@ def generate_prediction(
     value = None
 
     if prediction_type == PredictionType.brand:
-        value_tag = value = logo_value
+        value = logo_value
+        value_tag = get_tag(value)
 
     elif prediction_type == PredictionType.label:
         value_tag = logo_value

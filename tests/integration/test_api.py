@@ -70,7 +70,7 @@ def test_random_question(client, mocker):
                 "question": "Does the product belong to this category?",
                 "insight_id": insight_id,
                 "insight_type": "category",
-                "source_image_url": "https://static.openfoodfacts.net/images/products/1/ingredients_fr.51.400.jpg",
+                "source_image_url": "https://images.openfoodfacts.net/images/products/1/ingredients_fr.51.400.jpg",
             }
         ],
         "status": "found",
@@ -597,7 +597,7 @@ def test_image_collection(client, peewee_db):
 
 def test_annotation_event(client, monkeypatch, httpserver):
     """Test that annotation sends an event"""
-    monkeypatch.setattr(settings, "EVENTS_API_URL", httpserver.url_for("/"))
+    monkeypatch.setenv("EVENTS_API_URL", httpserver.url_for("/"))
     # setup a new event_processor, to be sure settings is taken into account
     monkeypatch.setattr(events, "event_processor", events.EventProcessor())
     # We expect to have a call to events server

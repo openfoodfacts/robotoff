@@ -8,8 +8,7 @@ import pytest
 import robotoff.insights.importer
 import robotoff.taxonomy
 from robotoff.app.api import api
-from robotoff.models import LogoAnnotation, Prediction, ProductInsight
-from robotoff.products import Product
+from robotoff.models import LogoAnnotation
 
 from .models_utils import LogoAnnotationFactory, clean_db
 
@@ -28,24 +27,6 @@ def _set_up_and_tear_down(peewee_db):
 
     with peewee_db:
         clean_db()
-
-
-def _fake_store(monkeypatch, barcode):
-    monkeypatch.setattr(
-        robotoff.insights.importer,
-        "get_product_store",
-        lambda: {
-            barcode: Product(
-                {
-                    "code": barcode,  # needed to validate brand/label
-                    # needed to validate image
-                    "images": {
-                        "2": {"rev": 1, "uploaded_t": datetime.utcnow().timestamp()}
-                    },
-                }
-            )
-        },
-    )
 
 
 @pytest.fixture
@@ -162,15 +143,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
             source_image=source_image,
             annotation_type=None,
         )
-    _fake_store(monkeypatch, barcode)
-    mocker.patch(
-        "robotoff.brands.get_brand_prefix", return_value={("Etorki", "0000000xxxxxx")}
-    )
-    mocker.patch("robotoff.insights.annotate.add_brand", return_value=None)
-    mocker.patch(
-        "robotoff.insights.annotate.get_product",
-        return_value={"barcode": barcode, "brands_tags": []},
-    )
+    mocker.patch("robotoff.app.api.enqueue_job", return_value=None)
     start = datetime.utcnow()
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -182,7 +155,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     )
     end = datetime.utcnow()
     assert result.status_code == 200
-    assert result.json == {"created insights": 1}
+    assert result.json == {"annotated": 1}
 
     with peewee_db:
         ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
@@ -192,50 +165,6 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
     assert ann.taxonomy_value == "Etorki"
     assert ann.username == "a"
     assert start <= ann.completed_at <= end
-    # we generate a prediction
-
-    with peewee_db:
-        predictions = list(Prediction.select().where(Prediction.barcode == barcode))
-    assert len(predictions) == 1
-    (prediction,) = predictions
-    assert prediction.type == "brand"
-    assert prediction.data == {
-        "logo_id": ann.id,
-        "username": "a",
-        "is_annotation": True,
-        "bounding_box": [0.4, 0.4, 0.6, 0.6],
-    }
-    assert prediction.confidence == 1.0
-    assert prediction.value == "Etorki"
-    assert prediction.value_tag == "Etorki"
-    assert prediction.predictor == "universal-logo-detector"
-    assert start <= prediction.timestamp <= end
-    assert prediction.automatic_processing is False
-    # We check that this prediction in turn generates an insight
-
-    with peewee_db:
-        insights = list(
-            ProductInsight.select().where(ProductInsight.barcode == barcode)
-        )
-    assert len(insights) == 1
-    (insight,) = insights
-    assert insight.type == "brand"
-    assert insight.data == {
-        "logo_id": ann.id,
-        "username": "a",
-        "is_annotation": True,
-        "bounding_box": [0.4, 0.4, 0.6, 0.6],
-    }
-    assert insight.confidence == 1.0
-    assert insight.value == "Etorki"
-    assert insight.value_tag == "Etorki"
-    assert insight.predictor == "universal-logo-detector"
-    assert start <= prediction.timestamp <= end
-    assert insight.automatic_processing is False
-    assert insight.username == "a"
-    assert insight.annotation == 1
-    assert insight.annotated_result == 2
-    assert isinstance(insight.completed_at, datetime)
 
 
 def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mocker):
@@ -248,12 +177,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
         ann = LogoAnnotationFactory(
             barcode=barcode, source_image=source_image, annotation_type=None
         )
-    _fake_store(monkeypatch, barcode)
-    mocker.patch("robotoff.insights.annotate.add_label_tag", return_value=None)
-    mocker.patch(
-        "robotoff.insights.annotate.get_product",
-        return_value={"barcode": barcode, "labels_tags": []},
-    )
+    mocker.patch("robotoff.app.api.enqueue_job", return_value=None)
     start = datetime.utcnow()
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
@@ -267,7 +191,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
     )
     end = datetime.utcnow()
     assert result.status_code == 200
-    assert result.json == {"created insights": 1}
+    assert result.json == {"annotated": 1}
     with peewee_db:
         ann = LogoAnnotation.get(LogoAnnotation.id == ann.id)
     assert ann.annotation_type == "label"
@@ -276,43 +200,3 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
     assert ann.taxonomy_value == "en:eu-organic"
     assert ann.username == "a"
     assert start <= ann.completed_at <= end
-    # we generate a prediction
-    with peewee_db:
-        predictions = list(Prediction.select().filter(barcode=barcode).execute())
-    assert len(predictions) == 1
-    (prediction,) = predictions
-    assert prediction.type == "label"
-    assert prediction.data == {
-        "logo_id": ann.id,
-        "username": "a",
-        "is_annotation": True,
-        "bounding_box": [0.4, 0.4, 0.6, 0.6],
-    }
-    assert prediction.confidence == 1.0
-    assert prediction.value is None
-    assert prediction.value_tag == "en:eu-organic"
-    assert prediction.predictor == "universal-logo-detector"
-    assert start <= prediction.timestamp <= end
-    assert prediction.automatic_processing is False
-    # We check that this prediction in turn generates an insight
-    with peewee_db:
-        insights = list(ProductInsight.select().filter(barcode=barcode).execute())
-    assert len(insights) == 1
-    (insight,) = insights
-    assert insight.type == "label"
-    assert insight.data == {
-        "logo_id": ann.id,
-        "username": "a",
-        "is_annotation": True,
-        "bounding_box": [0.4, 0.4, 0.6, 0.6],
-    }
-    assert insight.confidence == 1.0
-    assert insight.value is None
-    assert insight.value_tag == "en:eu-organic"
-    assert insight.predictor == "universal-logo-detector"
-    assert start <= prediction.timestamp <= end
-    assert insight.automatic_processing is False
-    assert insight.username == "a"
-    assert insight.annotation == 1
-    assert insight.annotated_result == 2
-    assert isinstance(insight.completed_at, datetime)

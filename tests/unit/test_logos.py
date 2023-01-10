@@ -41,7 +41,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
         ),
         (
             "brand",
-            "carrefour",
+            "Carrefour",
             {},
             False,
             0.5,
@@ -49,7 +49,7 @@ def test_compute_iou(box_1, box_2, expected_iou):
                 type=PredictionType.brand,
                 data={},
                 value_tag="carrefour",
-                value="carrefour",
+                value="Carrefour",
                 automatic_processing=False,
                 predictor="universal-logo-detector",
                 confidence=0.5,
