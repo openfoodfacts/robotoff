@@ -533,7 +533,7 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
         "1",  # barcode
         "en:seeds",  # category_tag
         insight_id=uuid.UUID(insight_id),
-        server_domain=settings.BaseURLProvider.api(),
+        server_domain=settings.BaseURLProvider.server_domain(),
         auth=OFFAuthentication(username="a", password="b"),
     )
 

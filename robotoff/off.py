@@ -390,7 +390,7 @@ def update_product(
     timeout: Optional[int] = 15,
 ):
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     url = get_product_update_url(server_domain)
 
@@ -458,7 +458,7 @@ def select_rotate_image(
     timeout: Optional[int] = 15,
 ):
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     url = get_product_image_select_url(server_domain)
     cookies = None

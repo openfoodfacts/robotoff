@@ -102,7 +102,7 @@ def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
         .where(
             Prediction.barcode == barcode,
             Prediction.type == PredictionType.image_orientation.name,
-            Prediction.server_domain == settings.BaseURLProvider.api(),
+            Prediction.server_domain == settings.BaseURLProvider.server_domain(),
             Prediction.source_image.is_null(False),
         )
         .iterator()
@@ -123,7 +123,7 @@ def generate_nutrition_image_insights():
         .where(
             ProductInsight.annotation.is_null(),
             ProductInsight.type == InsightType.nutrition_image.name,
-            ProductInsight.server_domain == settings.BaseURLProvider.api(),
+            ProductInsight.server_domain == settings.BaseURLProvider.server_domain(),
         )
         .execute()
     )
@@ -171,7 +171,8 @@ def generate_nutrition_image_insights():
                         Prediction.type == PredictionType.nutrition_image.name,
                         Prediction.barcode == barcode,
                         Prediction.value_tag == lang,
-                        Prediction.server_domain == settings.BaseURLProvider.api(),
+                        Prediction.server_domain
+                        == settings.BaseURLProvider.server_domain(),
                     )
                     .count()
                 ):

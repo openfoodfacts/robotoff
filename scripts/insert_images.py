@@ -40,7 +40,7 @@ with db:
                     product.barcode,
                     image_url,
                     product,
-                    settings.BaseURLProvider.api(),
+                    settings.BaseURLProvider.server_domain(),
                 )
             except Exception as e:
                 logger.info("Exception for product {}\n{}".format(product.barcode, e))

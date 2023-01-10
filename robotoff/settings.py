@@ -32,6 +32,12 @@ def _get_default_scheme() -> str:
     return os.environ.get("ROBOTOFF_SCHEME", "https")
 
 
+def _get_default_domain():
+    # `ROBOTOFF_DOMAIN` can be used to overwrite the Product Opener domain used.
+    # If empty, the domain will be inferred from `ROBOTOFF_INSTANCE`
+    return os.environ.get("ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld())
+
+
 class BaseURLProvider(object):
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
@@ -44,12 +50,8 @@ class BaseURLProvider(object):
         domain: Optional[str] = None,
         scheme: Optional[str] = None,
     ):
-        # `ROBOTOFF_DOMAIN` can be used to overwrite the Product Opener domain used.
-        # If empty, the domain will be inferred from `ROBOTOFF_INSTANCE`
         data = {
-            "domain": os.environ.get(
-                "ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld()
-            ),
+            "domain": _get_default_domain(),
             "scheme": _get_default_scheme(),
         }
         if prefix:
@@ -63,6 +65,11 @@ class BaseURLProvider(object):
             return "%(scheme)s://%(prefix)s.%(domain)s" % data
 
         return "%(scheme)s://%(domain)s" % data
+
+    @staticmethod
+    def server_domain():
+        """Return the server domain: `api.openfoodfacts.*`"""
+        return "api." + _get_default_domain()
 
     @staticmethod
     def world():

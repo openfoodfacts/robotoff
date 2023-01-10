@@ -100,7 +100,7 @@ def refresh_insights(with_deletion: bool = False):
         .where(
             ProductInsight.annotation.is_null(),
             ProductInsight.timestamp <= datetime_threshold,
-            ProductInsight.server_domain == settings.BaseURLProvider.api(),
+            ProductInsight.server_domain == settings.BaseURLProvider.server_domain(),
         )
         .iterator()
     ):
@@ -218,7 +218,7 @@ def generate_insights():
     with db:
         import_result = import_insights(
             product_predictions_iter,
-            server_domain=settings.BaseURLProvider.api(),
+            server_domain=settings.BaseURLProvider.server_domain(),
         )
     logger.info(import_result)
 

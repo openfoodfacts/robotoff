@@ -87,7 +87,7 @@ def get_insights(
     predictor: Optional[str] = None,
 ) -> Iterable[ProductInsight]:
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     where_clauses = [ProductInsight.server_domain == server_domain]
 
@@ -176,7 +176,7 @@ def get_images(
     limit: Optional[int] = 25,
 ) -> Iterable[ImageModel]:
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     where_clauses = [ImageModel.server_domain == server_domain]
 
@@ -210,7 +210,7 @@ def get_predictions(
     count: bool = False,
 ) -> Iterable[Prediction]:
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     where_clauses = [Prediction.server_domain == server_domain]
 
@@ -249,7 +249,7 @@ def get_image_predictions(
     query = ImagePrediction.select()
 
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     query = query.switch(ImagePrediction).join(ImageModel)
     where_clauses = [ImagePrediction.image.server_domain == server_domain]
@@ -404,7 +404,7 @@ def get_logo_annotation(
 ) -> Iterable[LogoAnnotation]:
 
     if server_domain is None:
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
     query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 

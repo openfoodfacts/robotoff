@@ -478,7 +478,7 @@ class ImageImporterResource:
         ocr_url = req.get_param("ocr_url", required=True)
         server_domain = req.get_param("server_domain", required=True)
 
-        if server_domain != settings.BaseURLProvider.api():
+        if server_domain != settings.BaseURLProvider.server_domain():
             logger.info("Rejecting image import from %s", server_domain)
             resp.media = {
                 "status": "rejected",
@@ -529,7 +529,7 @@ class ImagePredictionImporterResource:
 
         for prediction in req.media["predictions"]:
             server_domain: str = prediction.get(
-                "server_domain", settings.BaseURLProvider.api()
+                "server_domain", settings.BaseURLProvider.server_domain()
             )
             server_type: str = get_server_type(server_domain).name
             source_image = generate_image_path(
@@ -802,7 +802,7 @@ class ImageLogoDetailResource:
                     completed_at=datetime.datetime.utcnow(),
                 )
                 generate_insights_from_annotated_logos(
-                    annotated_logos, settings.BaseURLProvider.api(), auth
+                    annotated_logos, settings.BaseURLProvider.server_domain(), auth
                 )
 
         resp.status = falcon.HTTP_204
@@ -866,7 +866,9 @@ class ImageLogoAnnotateResource:
             raise falcon.HTTPForbidden(
                 description="authentication is required to annotate logos"
             )
-        server_domain = req.media.get("server_domain", settings.BaseURLProvider.api())
+        server_domain = req.media.get(
+            "server_domain", settings.BaseURLProvider.server_domain()
+        )
         annotations = req.media["annotations"]
         completed_at = datetime.datetime.utcnow()
         annotation_logos = []
@@ -992,7 +994,7 @@ class WebhookProductResource:
         barcode = req.get_param("barcode", required=True)
         action = req.get_param("action", required=True)
         server_domain = req.get_param("server_domain", required=True)
-        if server_domain != settings.BaseURLProvider.api():
+        if server_domain != settings.BaseURLProvider.server_domain():
             logger.info("Rejecting webhook event from {}".format(server_domain))
             resp.media = {
                 "status": "rejected",
@@ -1257,7 +1259,7 @@ class ImageCollection:
             "with_predictions", default=False
         )
         barcode: Optional[str] = req.get_param("barcode")
-        server_domain = settings.BaseURLProvider.api()
+        server_domain = settings.BaseURLProvider.server_domain()
 
         get_images_ = functools.partial(
             get_images,

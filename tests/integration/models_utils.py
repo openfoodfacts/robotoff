@@ -48,7 +48,9 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     n_votes = 0
     value_tag = "en:seeds"
     # we use a lazy function for settings can change in a test
-    server_domain: str = factory.LazyFunction(lambda: settings.BaseURLProvider.api())
+    server_domain: str = factory.LazyFunction(
+        lambda: settings.BaseURLProvider.server_domain()
+    )
     server_type = "off"
     unique_scans_n = 10
     annotation = None
@@ -64,7 +66,9 @@ class PredictionFactory(PeeweeModelFactory):
     data: dict[str, Any] = {}
     timestamp = factory.LazyFunction(datetime.utcnow)
     value_tag = "en:seeds"
-    server_domain = factory.LazyFunction(lambda: settings.BaseURLProvider.api())
+    server_domain = factory.LazyFunction(
+        lambda: settings.BaseURLProvider.server_domain()
+    )
     automatic_processing = None
     predictor = None
     confidence: Optional[float] = None
@@ -92,7 +96,9 @@ class ImageModelFactory(PeeweeModelFactory):
     source_image = factory.Sequence(lambda n: f"/images/{n:02}.jpg")
     width = 400
     height = 400
-    server_domain = factory.LazyFunction(lambda: settings.BaseURLProvider.api())
+    server_domain = factory.LazyFunction(
+        lambda: settings.BaseURLProvider.server_domain()
+    )
     server_type = "off"
 
 

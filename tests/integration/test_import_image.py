@@ -89,7 +89,7 @@ def test_process_created_logos(peewee_db, mocker):
         ]
         logo_embeddings = [LogoEmbeddingFactory(logo=logo) for logo in logos]
         process_created_logos(
-            image_prediction.id, server_domain=settings.BaseURLProvider.api()
+            image_prediction.id, server_domain=settings.BaseURLProvider.server_domain()
         )
         add_logos_to_ann_mock.assert_called()
         embedding_args = add_logos_to_ann_mock.mock_calls[0].args[1]

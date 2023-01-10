@@ -73,7 +73,7 @@ def regenerate_ocr_insights(
 
     with db:
         import_result = importer.import_insights(
-            predictions, settings.BaseURLProvider.api()
+            predictions, settings.BaseURLProvider.server_domain()
         )
         logger.info(import_result)
 
@@ -208,7 +208,7 @@ def import_insights(
             # Create a new transaction for every batch
             with db.atomic():
                 import_results = importer.import_insights(
-                    prediction_batch, settings.BaseURLProvider.api()
+                    prediction_batch, settings.BaseURLProvider.server_domain()
                 )
                 logger.info(import_results)
 
@@ -245,7 +245,9 @@ def refresh_insights(
     if barcode is not None:
         logger.info(f"Refreshing product {barcode}")
         with db:
-            imported = refresh_insights_(barcode, settings.BaseURLProvider.api())
+            imported = refresh_insights_(
+                barcode, settings.BaseURLProvider.server_domain()
+            )
         logger.info(f"Refreshed insights: {imported}")
     else:
         logger.info("Launching insight refresh on full database")
@@ -272,7 +274,7 @@ def refresh_insights(
                 low_queue,
                 job_kwargs={"result_ttl": 0, "timeout": "5m"},
                 barcodes=barcode_batch,
-                server_domain=settings.BaseURLProvider.api(),
+                server_domain=settings.BaseURLProvider.server_domain(),
             )
 
 
@@ -323,7 +325,7 @@ def import_images_in_db(
                 low_queue,
                 job_kwargs={"result_ttl": 0},
                 batch=batch,
-                server_domain=settings.BaseURLProvider.api(),
+                server_domain=settings.BaseURLProvider.server_domain(),
             )
 
 
@@ -415,7 +417,7 @@ def run_object_detection_model(
                 job_kwargs={"result_ttl": 0},
                 barcode=barcode,
                 image_url=image_url,
-                server_domain=settings.BaseURLProvider.api(),
+                server_domain=settings.BaseURLProvider.server_domain(),
             )
 
 
