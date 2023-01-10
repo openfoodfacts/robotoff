@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.18.2](https://github.com/openfoodfacts/robotoff/compare/v1.18.1...v1.18.2) (2023-01-10)
+
+
+### Bug Fixes
+
+* create and annotate logo insights in job ([0e825ed](https://github.com/openfoodfacts/robotoff/commit/0e825edca8a83a5246204b68cd879c1767cd0708))
+* display front image as default for regex-based brand insights ([e898b1d](https://github.com/openfoodfacts/robotoff/commit/e898b1da5596dc95659c246721e75d41efe81ecb))
+* fix server_domain bug ([80730e4](https://github.com/openfoodfacts/robotoff/commit/80730e4437c210216a7895fd9eb6148d55419115))
+* fix unit tests in test_question.py ([a05d4ac](https://github.com/openfoodfacts/robotoff/commit/a05d4ac6f442db83c88f821d3328e3eccccf0e15))
+* improve BaseURLProvider class ([5178bac](https://github.com/openfoodfacts/robotoff/commit/5178bac94a6be1ad6a7fb5be0d9faeb641bf3345))
+* improve import-logos CLI command ([0e1e92b](https://github.com/openfoodfacts/robotoff/commit/0e1e92bf08c8ac5aeeee682f98a5cb22134e1adf))
+* remove CachedStore use in products.py ([57b0970](https://github.com/openfoodfacts/robotoff/commit/57b0970ff8f5620b42179db5562bacb26cd17683))
+* use correct image subdomain for slack notifications ([1345e94](https://github.com/openfoodfacts/robotoff/commit/1345e94bbf0a9c7b5afa854db44abbfef394f7fe))
+* use image.openfoodfacts.* as default server for serving images ([70aceee](https://github.com/openfoodfacts/robotoff/commit/70aceee8e41c1f6616f170b400794dfeecdcded3))
+
 ## [1.18.1](https://github.com/openfoodfacts/robotoff/compare/v1.18.0...v1.18.1) (2022-12-30)
 
 
