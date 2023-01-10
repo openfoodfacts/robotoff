@@ -93,7 +93,15 @@ class BaseURLProvider(object):
 
     @staticmethod
     def image_url(image_path: str) -> str:
-        return BaseURLProvider.static() + f"/images/products{image_path}"
+        # If STATIC_OFF_DOMAIN is defined, used the custom static domain
+        # configured
+        # Otherwise use images.openfoodfacts.{net,org} as proxy server
+        prefix = (
+            BaseURLProvider.static()
+            if os.environ.get("STATIC_OFF_DOMAIN")
+            else BaseURLProvider._get_url(prefix="images")
+        )
+        return prefix + f"/images/products{image_path}"
 
     @staticmethod
     def country(country_code: str) -> str:

@@ -178,7 +178,10 @@ def generate_json_path(barcode: str, image_id: str) -> str:
 
 
 def generate_json_ocr_url(barcode: str, image_id: str) -> str:
-    return settings.BaseURLProvider.image_url(generate_json_path(barcode, image_id))
+    return (
+        settings.BaseURLProvider.static()
+        + f"/images/products{generate_json_path(barcode, image_id)}"
+    )
 
 
 def generate_image_url(barcode: str, image_id: str) -> str:
