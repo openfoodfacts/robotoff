@@ -55,6 +55,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     unique_scans_n = 10
     annotation = None
     automatic_processing = False
+    confidence: Optional[float] = None
 
 
 class PredictionFactory(PeeweeModelFactory):

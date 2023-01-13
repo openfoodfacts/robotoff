@@ -22,6 +22,7 @@ from .models_utils import (
 )
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
+DEFAULT_BARCODE = "1"
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +31,7 @@ def _set_up_and_tear_down(peewee_db):
         # clean db
         clean_db()
         # Set up.
-        ProductInsightFactory(id=insight_id, barcode=1)
+        ProductInsightFactory(id=insight_id, barcode=DEFAULT_BARCODE)
     # Run the test case.
     yield
     with peewee_db:
@@ -56,7 +57,7 @@ def test_random_question(client, mocker):
         }
     }
     mocker.patch("robotoff.insights.question.get_product", return_value=product)
-    result = client.simulate_get("/api/v1/questions/random")
+    result = client.simulate_get("/api/v1/questions?order_by=random")
 
     assert result.status_code == 200
     assert result.json == {
@@ -85,7 +86,7 @@ def test_random_question_user_has_already_seen(client, mocker, peewee_db):
             device_id="device1",
         )
 
-    result = client.simulate_get("/api/v1/questions/random?device_id=device1")
+    result = client.simulate_get("/api/v1/questions?order_by=random&device_id=device1")
 
     assert result.status_code == 200
     assert result.json == {"count": 0, "questions": [], "status": "no_questions"}
@@ -93,7 +94,7 @@ def test_random_question_user_has_already_seen(client, mocker, peewee_db):
 
 def test_popular_question(client, mocker):
     mocker.patch("robotoff.insights.question.get_product", return_value={})
-    result = client.simulate_get("/api/v1/questions/popular")
+    result = client.simulate_get("/api/v1/questions?order_by=popularity")
 
     assert result.status_code == 200
     assert result.json == {
@@ -121,30 +122,56 @@ def test_popular_question_pagination(client, mocker, peewee_db):
         for i in range(0, 12):
             ProductInsightFactory(barcode=i, unique_scans_n=100 - i)
 
-    result = client.simulate_get("/api/v1/questions/popular?count=5&page=1")
+    result = client.simulate_get("/api/v1/questions?order_by=popularity&count=5&page=1")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
     assert [q["barcode"] for q in data["questions"]] == ["0", "1", "2", "3", "4"]
-    result = client.simulate_get("/api/v1/questions/popular?count=5&page=2")
+    result = client.simulate_get("/api/v1/questions?order_by=popularity&count=5&page=2")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
     assert [q["barcode"] for q in data["questions"]] == ["5", "6", "7", "8", "9"]
-    result = client.simulate_get("/api/v1/questions/popular?count=5&page=3")
+    result = client.simulate_get("/api/v1/questions?order_by=popularity&count=5&page=3")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "found"
     assert [q["barcode"] for q in data["questions"]] == ["10", "11"]
-    result = client.simulate_get("/api/v1/questions/popular?count=5&page=4")
+    result = client.simulate_get("/api/v1/questions?order_by=popularity&count=5&page=4")
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 12
     assert data["status"] == "no_questions"
     assert len(data["questions"]) == 0
+
+
+def test_question_rank_by_confidence(client, mocker, peewee_db):
+    mocker.patch("robotoff.insights.question.get_source_image_url", return_value=None)
+
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        ProductInsightFactory(
+            barcode="1", type="category", value_tag="en:salmon", confidence=0.9
+        )
+        ProductInsightFactory(
+            barcode="3", type="category", value_tag="en:breads", confidence=0.4
+        )
+        ProductInsightFactory(
+            barcode="2", type="label", value_tag="en:eu-organic", confidence=0.7
+        )
+        ProductInsightFactory(
+            barcode="4", type="brand", value_tag="carrefour", confidence=None
+        )
+
+    result = client.simulate_get("/api/v1/questions?order_by=confidence")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 4
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["questions"]] == ["1", "2", "3", "4"]
 
 
 def test_barcode_question_not_found(client):
