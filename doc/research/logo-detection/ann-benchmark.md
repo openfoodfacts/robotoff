@@ -14,6 +14,8 @@ For each framework, multiple parameters were used to find the best index in our 
 
 The data used to test the performance of the indexes was made of 4.371.343 vectors (each one issued from the CLIP vision model with a logo as input) of dimension 768 and type float32.
 
+The dimension of each vector used in the benchmark is 768, the size of embeddings CLIP outputs before processing through the projection layer. However, in production, as this last layer of the CLIP model is used, the dimension of the embeddings that are indexed is actually 512. The process to go from 768 to 512 being only a projection, the change of dimensionality should not impact the results. A test of elasticsearch with 512 dimension vectors did indeed lead to very similar results as the ones computed with 768 dimension vectors.  
+
 The goal is to search for nearest neighbors in real time.
 The search time must be short.
 The precision of the search matters as it is important to get logos as close as possible from the query logo for the annotators to be efficient.
@@ -34,7 +36,7 @@ HNSW indexes are adjustable trhough three parameters:
 
 ## Benchmark
 
-You can find the code of the various benchmarks [here](https://github.com/openfoodfacts/openfoodfacts-ai/tree/develop/logo-ann/benchmarks/ANN_benchmark).
+You can find the code of the various benchmarks [here](https://github.com/openfoodfacts/openfoodfacts-ai/tree/d74dba0/logo-ann/benchmarks/ANN_benchmark).
 
 Here are the results obtained with **Faiss** :
 
