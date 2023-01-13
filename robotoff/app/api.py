@@ -5,7 +5,7 @@ import hashlib
 import io
 import tempfile
 import uuid
-from typing import Optional
+from typing import Literal, Optional
 
 import falcon
 import orjson
@@ -1096,8 +1096,21 @@ class PopularQuestionsResource:
         get_questions_resource_on_get(req, resp, "popularity")
 
 
+class QuestionsCollectionResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        order_by = req.get_param("order_by", default="popularity")
+
+        if order_by not in ("random", "popularity", "confidence"):
+            raise falcon.HTTPBadRequest(
+                description=f"invalid '{order_by}' value for `order_by` parameter"
+            )
+        get_questions_resource_on_get(req, resp, order_by)
+
+
 def get_questions_resource_on_get(
-    req: falcon.Request, resp: falcon.Response, order_by: str
+    req: falcon.Request,
+    resp: falcon.Response,
+    order_by: Literal["random", "popularity", "confidence"],
 ):
     response: JSONType = {}
     page: int = req.get_param_as_int("page", min_value=1, default=1)
@@ -1500,6 +1513,7 @@ api.add_route("/api/v1/ann", ANNResource())
 api.add_route("/api/v1/ann/search/{logo_id:int}", ANNResource())
 api.add_route("/api/v1/ann/search", ANNResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
+api.add_route("/api/v1/questions", QuestionsCollectionResource())
 api.add_route("/api/v1/questions/random", RandomQuestionsResource())
 api.add_route("/api/v1/questions/popular", PopularQuestionsResource())
 api.add_route("/api/v1/questions/unanswered", UnansweredQuestionCollection())

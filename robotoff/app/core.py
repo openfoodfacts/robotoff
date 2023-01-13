@@ -1,10 +1,10 @@
 import datetime
 import functools
 from enum import Enum
-from typing import Iterable, NamedTuple, Optional, Union
+from typing import Iterable, Literal, NamedTuple, Optional, Union
 
 import peewee
-from peewee import JOIN, fn
+from peewee import JOIN, SQL, fn
 
 from robotoff import settings
 from robotoff.app import events
@@ -72,7 +72,7 @@ def get_insights(
     brands: Optional[list[str]] = None,
     annotated: Optional[bool] = False,
     annotation: Optional[int] = None,
-    order_by: Optional[str] = None,
+    order_by: Optional[Literal["random", "popularity", "n_votes", "confidence"]] = None,
     value_tag: Optional[str] = None,
     server_domain: Optional[str] = None,
     reserved_barcode: Optional[bool] = None,
@@ -157,6 +157,9 @@ def get_insights(
 
         elif order_by == "popularity":
             query = query.order_by(ProductInsight.unique_scans_n.desc())
+
+        elif order_by == "confidence":
+            query = query.order_by(SQL("confidence DESC NULLS LAST"))
 
         elif order_by == "n_votes":
             query = query.order_by(ProductInsight.n_votes.desc())
