@@ -103,14 +103,17 @@ def run_import_image_job(
         image_url=image_url,
         server_domain=server_domain,
     )
-    enqueue_job(
-        run_nutrition_table_object_detection,
-        high_queue,
-        job_kwargs={"result_ttl": 0},
-        barcode=barcode,
-        image_url=image_url,
-        server_domain=server_domain,
-    )
+    # Nutrition table detection is not used at the moment, and every new image
+    # is costly in CPU (as we perform object detection)
+    # Disable it until we either need it or get a GPU server
+    # enqueue_job(
+    #     run_nutrition_table_object_detection,
+    #     high_queue,
+    #     job_kwargs={"result_ttl": 0},
+    #     barcode=barcode,
+    #     image_url=image_url,
+    #     server_domain=server_domain,
+    # )
 
 
 def import_insights_from_image(
