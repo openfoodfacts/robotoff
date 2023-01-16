@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.19.0](https://github.com/openfoodfacts/robotoff/compare/v1.18.2...v1.19.0) (2023-01-16)
+
+
+### Features
+
+* allow users to filter by confidence in /questions ([8af5719](https://github.com/openfoodfacts/robotoff/commit/8af57191a5d590569d7b73f7c8eddc833282cda9))
+
+
+### Bug Fixes
+
+* fix UnboundLocalError exception ([6c3ea9a](https://github.com/openfoodfacts/robotoff/commit/6c3ea9a0935ae82270c968dcba66ff24137d8b7c))
+
 ## [1.18.2](https://github.com/openfoodfacts/robotoff/compare/v1.18.1...v1.18.2) (2023-01-10)
 
 
