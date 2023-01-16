@@ -21,7 +21,6 @@ paths:
       tags:
         - Questions
       summary: Get questions for a given product
-      operationId: getQuestionsBarcode
       parameters:
         - name: count
           in: query
@@ -50,13 +49,64 @@ paths:
                     type: array
                     items:
                       type: object
+  /questions:
+    get:
+      tags:
+        - Questions
+      summary: Fetch questions
+      parameters:
+        - $ref: "#/components/parameters/lang"
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/insight_types"
+        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/brands"
+        - $ref: "#/components/parameters/value_tag"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/reserved_barcode"
+        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/predictor"
+        - name: order_by
+          in: query
+          description: |
+            The field to use for ordering results:
+              - confidence: order by (descending) model confidence, null confidence insights come last
+              - popularity: order by (descending) popularity (=scan count)
+              - random: use a random order
+          schema:
+            type: string
+            default: popularity
+            enum:
+              - confidence
+              - random
+              - popularity
+      responses:
+        "200":
+          description: The questions matching the filters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
 
   /questions/random:
     get:
       tags:
         - Questions
       summary: Get random questions
-      operationId: getQuestionsRandom
+      deprecated: true
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
@@ -95,9 +145,9 @@ paths:
       tags:
         - Questions
       summary: Get questions about popular products
+      deprecated: true
       description: |
         Questions are ranked by the product popularity (based on scan count).
-      operationId: GetQuestionsPopular
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
@@ -122,7 +172,6 @@ paths:
       description: |
         Get number of unanswered questions grouped by `value_tag`.
         The list is ordered from highest count to lowest.
-      operationId: GetQuestionsUnanswered
       parameters:
         - name: count
           in: query
@@ -173,7 +222,6 @@ paths:
       tags:
         - Insights
       summary: Get a random insight
-      operationId: GetInsightsRandom
       parameters:
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
@@ -199,7 +247,6 @@ paths:
       tags:
         - Insights
       summary: Get all insights for a specific product
-      operationId: Getallinsightsforaspecificproduct
       parameters:
         - $ref: "#/components/parameters/barcode_path"
       responses:
@@ -211,7 +258,6 @@ paths:
       tags:
         - Insights
       summary: Get a specific insight
-      operationId: GetInsightsDetail
       parameters:
         - name: id
           in: path
@@ -244,7 +290,6 @@ paths:
         (so it won't be applied), `1` means it is correct (so it will be applied) and `-1` means the insight
         won't be returned to the user (_skip_). We use the voting mecanism system to remember which insight
         to skip for a user (authenticated or not).
-      operationId: Submitanannotation
       requestBody:
         required: true
         content:
