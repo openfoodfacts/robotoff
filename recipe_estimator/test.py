@@ -1,6 +1,24 @@
 from ortools.linear_solver import pywraplp
+import csv
+from robotoff.mongo import MONGO_CLIENT_CACHE
+import os
 
 def LinearProgrammingExample():
+    # Load Ciqual data
+    ciqual = {}
+    filename = os.path.join(os.path.dirname(__file__), 'Ciqual.csv.0')
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            ciqual[row['alim_code']] = row
+
+    print(ciqual['42501'])
+
+    mongo_client = MONGO_CLIENT_CACHE.get()
+    collection = mongo_client.off.products
+    product = collection.find_one({"code": "0011150989664"})
+    print(product)
+
     """Linear programming sample."""
     # Instantiate a Glop solver, naming it LinearExample.
     solver = pywraplp.Solver.CreateSolver('GLOP')
@@ -109,7 +127,6 @@ def LinearProgrammingExample():
         },
     }
 
-    """
     # Simple test
     product_nutrients = {
         'proteins': 20,
@@ -171,7 +188,8 @@ def LinearProgrammingExample():
             'id': 'en:white-pepper'
         },
     ]
-    
+        """
+
 
     ingredient_percentages = [solver.NumVar(0.0, solver.infinity(), ingredient['id']) for ingredient in product_ingredients]
     
@@ -230,7 +248,7 @@ def LinearProgrammingExample():
 
     # Check that the problem has an optimal solution.
     if status == solver.OPTIMAL:
-        print('An optional solution was found in', solver.iterations(), 'iterations')
+        print('An optimal solution was found in', solver.iterations(), 'iterations')
     else:
         print('The problem does not have an optimal solution!')
         if status == solver.FEASIBLE:
@@ -243,4 +261,3 @@ def LinearProgrammingExample():
         print(ingredient_percentage.name(), ingredient_percentage.solution_value())
 
 
-LinearProgrammingExample()
