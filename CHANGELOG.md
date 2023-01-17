@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.19.1](https://github.com/openfoodfacts/robotoff/compare/v1.19.0...v1.19.1) (2023-01-17)
+
+
+### Bug Fixes
+
+* disable nutrition table detection ([d9fa78b](https://github.com/openfoodfacts/robotoff/commit/d9fa78b9e7777d632c95a02075f6458dae9cf4d6))
+* fix UPDATE_LOGO_SCHEMA JSON schema ([d6a4b22](https://github.com/openfoodfacts/robotoff/commit/d6a4b229d916120b60c0773fdac537fd434036d1))
+
 ## [1.19.0](https://github.com/openfoodfacts/robotoff/compare/v1.18.2...v1.19.0) (2023-01-16)
 
 
