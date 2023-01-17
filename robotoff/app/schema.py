@@ -38,7 +38,7 @@ UPDATE_LOGO_SCHEMA: JSONType = {
         "value": {"type": ["string", "null"]},
         "type": {"type": "string", "minLength": 1},
     },
-    "required": ["value", "type"],
+    "required": ["type"],
 }
 
 PREDICT_CATEGORY_SCHEMA: JSONType = {
