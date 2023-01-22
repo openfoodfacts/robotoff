@@ -6,3 +6,33 @@ then
 
 poetry add ortools
 
+
+Get nutrient types:
+
+```js
+db.products.aggregate([
+  {
+    $project: {
+      keys: {
+        $map: {
+          input: {
+            "$objectToArray": "$nutriments"
+          },
+          in: "$$this.k"
+        }
+      }
+    }
+  },
+  {
+    $unwind: "$keys"
+  },
+  {
+    $group: {
+      _id: "$keys",
+      count: {
+        "$sum": 1
+      }
+    }
+  }
+])
+```
