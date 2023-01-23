@@ -32,9 +32,10 @@ def EstimateRecipe(query):
 
     product_ingredients = product['ingredients']
     product_off_nutrients = product['nutriments']
+    print(product['product_name'])
     #print(product_ingredients)
-    print(product_off_nutrients)
     print(product['ingredients_text'])
+    print(product_off_nutrients)
 
     """Linear programming sample."""
     # Instantiate a Glop solver, naming it LinearExample.
@@ -64,9 +65,14 @@ def EstimateRecipe(query):
     # Add constraints so each ingredient can never be bigger than the one preceding it
     # TODO: Cope with hierarchies
     for i,ingredient in enumerate(product_ingredients[1:]):
+        # Ingredient n - Ingredient (n+1) >= 0
+        # But if ingredient n+1 contains water then it could be dried
+        ciqual_ingredient = ciqual_ingredients[ingredient['ciqual_food_code']]
+        # TODO: Put quantity parsing in a function
+        water_content = float(ciqual_ingredient.get('Water (g/100g)','0').replace(',','.').replace('<','').replace('traces','0'))
         limit = solver.Constraint(0,solver.infinity(), ingredient['id'])
         limit.SetCoefficient(ingredient_percentages[i], 1)
-        limit.SetCoefficient(ingredient_percentages[i+1], -1)
+        limit.SetCoefficient(ingredient_percentages[i+1], -0.01 * (100 - water_content))
     
     # And total of ingredients must add up to at least 100 (allow more than 100 to account for loss of water in processing)
     total_ingredients = solver.Constraint(100,solver.infinity(), 'sum')
@@ -100,7 +106,7 @@ def EstimateRecipe(query):
             # TODO: Figure out whether to do anything special with < ...
             ingredient['ciqual_nutrient_value'] = float(ciqual_nutrient.replace(',','.').replace('<','').replace('traces','0'))
         else:
-            #print(nutrient + ':')
+            print(nutrient + ':')
             # This should only happen if the above loop completed without a break
             total_nutrient = product_nutrients[nutrient]
             # TODO: Decide weighting where product nutrient is zero
@@ -113,7 +119,7 @@ def EstimateRecipe(query):
             positive_constraint.SetCoefficient(nutrient_distance, 1)
             for j, ingredient in enumerate(product_ingredients):
                 ciqual_nutrient_value = ingredient['ciqual_nutrient_value']
-                #print(' - ' + ingredient['text'] + ': ' + str(ciqual_nutrient_value))
+                print(' - ' + ingredient['text'] + ' (' + ingredient['ciqual_food_code'] + ') : ' + str(ciqual_nutrient_value))
                 negative_constraint.SetCoefficient(ingredient_percentages[j], -nutrient_weighting * ciqual_nutrient_value / 100)
                 positive_constraint.SetCoefficient(ingredient_percentages[j], nutrient_weighting * ciqual_nutrient_value / 100)
 
