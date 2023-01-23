@@ -5,19 +5,36 @@ import os
 
 def LinearProgrammingExample():
     # Load Ciqual data
-    ciqual = {}
+    ciqual_ingredients = {}
     filename = os.path.join(os.path.dirname(__file__), 'Ciqual.csv.0')
     with open(filename, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            ciqual[row['alim_code']] = row
+            ciqual_ingredients[row['alim_code']] = row
 
-    print(ciqual['42501'])
+    #print(ciqual_ingredients['42501'])
+
+    # Load OFF Ciqual Nitrient mapping
+    nutrient_map = {}
+    filename = os.path.join(os.path.dirname(__file__), 'nutrient_map.csv')
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if (row['ciqual_id']):
+                nutrient_map[row['off_id']] = row
+
+    #print(nutrient_map['pantothenic-acid'])
+    #print(len(nutrient_map))
+
 
     mongo_client = MONGO_CLIENT_CACHE.get()
     collection = mongo_client.off.products
-    product = collection.find_one({"code": "0011150989664"})
-    print(product)
+    product = collection.find_one({"ingredients_without_ciqual_codes_n": 0,"ingredients_n":{"$gt": 1}})
+
+    product_ingredients = product['ingredients']
+    product_off_nutrients = product['nutriments']
+    print(product_ingredients)
+    print(product_off_nutrients)
 
     """Linear programming sample."""
     # Instantiate a Glop solver, naming it LinearExample.
@@ -25,171 +42,22 @@ def LinearProgrammingExample():
     if not solver:
         return
 
-    ciqual_ingredients = {
-        'en:Rehydrated Textured _Soya_ Protein': {
-            'starch': 0.35,
-            'salt': 0.013,
-            'proteins': 18.6,
-            'fiber': 5.61,
-            'fat': 2.9,
-            'sugars': 3.65,
-            'carbohydrates': 7.03,
-        },
-        'en:rapeseed-oil': {
-            'starch': 0,
-            'salt': 0,
-            'proteins': 0,
-            'fiber': 0,
-            'fat': 100,
-            'sugars': 0,
-            'carbohydrates': 0,
-        },
-        'en:yeast-extract': {
-            'starch': 0,
-            'salt': 0,
-            'proteins': 32,
-            'fiber': 0,
-            'fat': 0,
-            'sugars': 0,
-            'carbohydrates': 53,
-        },
-        'en:barley-malt-extract': {
-            'starch': 0,
-            'salt': 0,
-            'proteins': 4,
-            'fiber': 0,
-            'fat': 0,
-            'sugars': 0,
-            'carbohydrates': 76,
-        },
-        'en:onion-powder': {
-            'starch': 0,
-            'salt': 0.053,
-            'proteins': 8.95,
-            'fiber': 9.2,
-            'fat': 0.46,
-            'sugars': 37.4,
-            'carbohydrates': 75,
-        },
-        'en:garlic-powder': {
-            'starch': 0,
-            'salt': 0.11,
-            'proteins': 16.7,
-            'fiber': 9.45,
-            'fat': 0.77,
-            'sugars': 2.43,
-            'carbohydrates': 62.8,
-        },
-        'en:corn-flour': {
-            'starch': 0,
-            'salt': 0.0025,
-            'proteins': 6.23,
-            'fiber': 2.55,
-            'fat': 2.1,
-            'sugars': 0.64,
-            'carbohydrates': 78.1,
-        },
-        'en:dextrose': {
-            'starch': 0,
-            'salt': 0,
-            'proteins': 0,
-            'fiber': 0,
-            'fat': 0,
-            'sugars': 100,
-            'carbohydrates': 100,
-        },
-        'en:salt': {
-            'starch': 0,
-            'salt': 100,
-            'proteins': 0,
-            'fiber': 0,
-            'fat': 0,
-            'sugars': 0,
-            'carbohydrates': 0,
-        },
-        'en:white-pepper': {
-            'starch': 0,
-            'salt': 0.013,
-            'proteins': 11.4,
-            'fiber': 26.2,
-            'fat': 2.11,
-            'sugars': 0,
-            'carbohydrates': 48.3,
-        },
-        'en:protein': {
-            'starch': 0,
-            'salt': 0,
-            'proteins': 100,
-            'fiber': 0,
-            'fat': 0,
-            'sugars': 0,
-            'carbohydrates': 0,
-        },
-    }
-
-    # Simple test
-    product_nutrients = {
-        'proteins': 20,
-        'fat': 10,
-        'carbohydrates': 70,
-    }
-    product_ingredients = [
-        {
-            'id': 'en:dextrose'
-        },
-        {
-            'id': 'en:protein'
-        },
-        {
-            'id': 'en:rapeseed-oil'
-        },
-    ]
-
-    """
-    # Vege Mince
-    product_nutrients = {
-        'starch': 5.1,
-        'salt': 0.51,
-        'proteins': 20.1,
-        'fiber': 5.1,
-        'fat': 2.6,
-        'sugars': 1.6,
-        'carbohydrates': 6.7,
-    }
-    product_ingredients = [
-        {
-            'id': 'en:Rehydrated Textured _Soya_ Protein'
-        },
-        {
-            'id': 'en:rapeseed-oil'
-        },
-        {
-            'id': 'en:yeast-extract'
-        },
-        {
-            'id': 'en:barley-malt-extract'
-        },
-        {
-            'id': 'en:onion-powder'
-        },
-        {
-            'id': 'en:garlic-powder'
-        },
-        {
-            'id': 'en:corn-flour'
-        },
-        {
-            'id': 'en:dextrose'
-        },
-        {
-            'id': 'en:salt'
-        },
-        {
-            'id': 'en:white-pepper'
-        },
-    ]
-        """
-
+    product_nutrients = {}
+    for off_nutrient_key in product_off_nutrients:
+        off_value_key = off_nutrient_key + '_value'
+        if off_nutrient_key in nutrient_map:
+            ciqual_nutrient = nutrient_map[off_nutrient_key]
+            ciqual_unit = ciqual_nutrient['ciqual_unit']
+            off_unit = product_off_nutrients.get(off_nutrient_key + '_unit', ciqual_unit)
+            factor = 1.0
+            # TODO: More conversions
+            if off_unit == 'g' and ciqual_unit == 'mg':
+                factor = 1000.0
+            elif off_unit == 'mg' and ciqual_unit == 'g':
+                factor = 0.001
+            # TODO: Convet units
+            product_nutrients[ciqual_nutrient['ciqual_id']] = product_off_nutrients[off_value_key] * factor
+    print(product_nutrients)
 
     ingredient_percentages = [solver.NumVar(0.0, solver.infinity(), ingredient['id']) for ingredient in product_ingredients]
     
@@ -197,10 +65,8 @@ def LinearProgrammingExample():
     #known = solver.Constraint(95.97,96.03,'known')
     #known.SetCoefficient(ingredient_percentages[0],1)
     
-    # Use 1% tolerance for now
-    tolerance = 0.00
-
     # Add constraints so each ingredient can never be bigger than the one preceding it
+    # TODO: Cope with hierarchies
     for i,ingredient in enumerate(product_ingredients[1:]):
         limit = solver.Constraint(0,solver.infinity(), ingredient['id'])
         limit.SetCoefficient(ingredient_percentages[i], 1)
@@ -226,21 +92,35 @@ def LinearProgrammingExample():
     """
 
     objective = solver.Objective()
-    for i, nutrient in enumerate(product_nutrients):
-        total_nutrient = product_nutrients[nutrient]
-        nutrient_weighting = 1 / total_nutrient
-        nutrient_distance = solver.NumVar(0, solver.infinity(), nutrient)
-
-        negative_constraint = solver.Constraint(-nutrient_weighting * total_nutrient,solver.infinity())
-        negative_constraint.SetCoefficient(nutrient_distance, 1)
-        positive_constraint = solver.Constraint(nutrient_weighting * total_nutrient, solver.infinity())
-        positive_constraint.SetCoefficient(nutrient_distance, 1)
+    for nutrient in product_nutrients:
         for j, ingredient in enumerate(product_ingredients):
-            ciqual_ingredient = ciqual_ingredients[ingredient['id']]
-            negative_constraint.SetCoefficient(ingredient_percentages[j], -nutrient_weighting * ciqual_ingredient[nutrient] / 100)
-            positive_constraint.SetCoefficient(ingredient_percentages[j], nutrient_weighting * ciqual_ingredient[nutrient] / 100)
+            # TODO: Ingredients with no ciqual code
+            # TODO: Ciqual code not found
+            ciqual_ingredient = ciqual_ingredients[ingredient['ciqual_food_code']]
+            ciqual_nutrient = ciqual_ingredient[nutrient]
+            if ciqual_nutrient == '-':
+                print('Skippping ' + nutrient + ' as no known value for ' + ingredient['text'] + ' (' + ingredient['ciqual_food_code'] + ')')
+                break
+            ingredient['ciqual_nutrient_value'] = float(ciqual_nutrient.replace(',','.')) 
+        else:
+            print(nutrient + ':')
+            # This should only happen if the above loop completed without a break
+            total_nutrient = product_nutrients[nutrient]
+            # TODO: Decide weighting where product nutrient is zero
+            nutrient_weighting = 1 / total_nutrient
+            nutrient_distance = solver.NumVar(0, solver.infinity(), nutrient)
 
-        objective.SetCoefficient(nutrient_distance, 1)
+            negative_constraint = solver.Constraint(-nutrient_weighting * total_nutrient,solver.infinity())
+            negative_constraint.SetCoefficient(nutrient_distance, 1)
+            positive_constraint = solver.Constraint(nutrient_weighting * total_nutrient, solver.infinity())
+            positive_constraint.SetCoefficient(nutrient_distance, 1)
+            for j, ingredient in enumerate(product_ingredients):
+                ciqual_nutrient_value = ingredient['ciqual_nutrient_value']
+                print(' - ' + ingredient['text'] + ': ' + str(ciqual_nutrient_value))
+                negative_constraint.SetCoefficient(ingredient_percentages[j], -nutrient_weighting * ciqual_nutrient_value / 100)
+                positive_constraint.SetCoefficient(ingredient_percentages[j], nutrient_weighting * ciqual_nutrient_value / 100)
+
+            objective.SetCoefficient(nutrient_distance, 1)
 
     objective.SetMinimization()
 
