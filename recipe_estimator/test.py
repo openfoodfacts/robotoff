@@ -95,6 +95,7 @@ def EstimateRecipe(query):
 
     objective = solver.Objective()
     for nutrient in product_nutrients:
+        ingredient_nutrient_sum = 0
         for j, ingredient in enumerate(product_ingredients):
             # TODO: Ingredients with no ciqual code
             # TODO: Ciqual code not found
@@ -104,12 +105,21 @@ def EstimateRecipe(query):
                 print('Skippping ' + nutrient + ' as no known value for ' + ingredient['text'] + ' (' + ingredient['ciqual_food_code'] + ')')
                 break
             # TODO: Figure out whether to do anything special with < ...
-            ingredient['ciqual_nutrient_value'] = float(ciqual_nutrient.replace(',','.').replace('<','').replace('traces','0'))
+            ciqual_nutrient_value = float(ciqual_nutrient.replace(',','.').replace('<','').replace('traces','0'))
+            ingredient['ciqual_nutrient_value'] = ciqual_nutrient_value
+            ingredient_nutrient_sum += ciqual_nutrient_value
         else:
             print(nutrient + ':')
             # This should only happen if the above loop completed without a break
             total_nutrient = product_nutrients[nutrient]
-            # TODO: Decide weighting where product nutrient is zero
+            if total_nutrient == 0:
+                # Use average from ingredients for weighting if nothing declared
+                total_nutrient = ingredient_nutrient_sum / len(product_ingredients)
+            if total_nutrient == 0:
+                 # If still zero then no point proceeding with nutrient
+                print('Skippping ' + nutrient + ' as all ingredints are zero')
+                continue
+
             nutrient_weighting = 1 / total_nutrient
             nutrient_distance = solver.NumVar(0, solver.infinity(), nutrient)
 
