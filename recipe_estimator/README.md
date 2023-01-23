@@ -36,3 +36,5 @@ db.products.aggregate([
   }
 ])
 ```
+
+Need to skip any nutrients where Ciqual value is '-' as this means not known, not zero
