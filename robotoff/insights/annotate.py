@@ -14,6 +14,7 @@ from robotoff.off import (
     add_brand,
     add_category,
     add_label_tag,
+    add_packaging,
     add_store,
     save_ingredients,
     select_rotate_image,
@@ -439,6 +440,29 @@ class StoreAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class PackagingAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+    ) -> AnnotationResult:
+        product = get_product(insight.barcode, ["code"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        add_packaging(
+            insight.barcode,
+            insight.data["element"],
+            insight_id=insight.id,
+            server_domain=insight.server_domain,
+            auth=auth,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+
 class NutritionImageAnnotator(InsightAnnotator):
     @classmethod
     def process_annotation(
@@ -497,6 +521,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.expiration_date.name: ExpirationDateAnnotator,
     InsightType.brand.name: BrandAnnotator,
     InsightType.store.name: StoreAnnotator,
+    InsightType.packaging.name: PackagingAnnotator,
     InsightType.nutrition_image.name: NutritionImageAnnotator,
     InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator,
 }

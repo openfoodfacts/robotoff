@@ -323,6 +323,45 @@ class LabelQuestionFormatter(QuestionFormatter):
         )
 
 
+class PackagingQuestionFormatter(QuestionFormatter):
+    question = "Does the product have this packaging element?"
+    packaging_taxonomy_types = {
+        "shape": TaxonomyType.packaging_shape,
+        "material": TaxonomyType.packaging_material,
+        "recycling": TaxonomyType.packaging_recycling,
+    }
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        element = insight.data["element"]
+        taxonomies: dict[TaxonomyType, Taxonomy] = {
+            taxonomy_type: get_taxonomy(taxonomy_type.name)
+            for taxonomy_type in self.packaging_taxonomy_types.values()
+        }
+
+        localized_value_list = []
+        for element_property, taxonomy_type in self.packaging_taxonomy_types.items():
+            value = element.get(element_property, {}).get("value_tag")
+            if value:
+                localized_value_list.append(
+                    taxonomies[taxonomy_type].get_localized_name(value, lang)
+                )
+        localized_value = ", ".join(localized_value_list)
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_url = None
+        if insight.source_image:
+            source_image_url = settings.BaseURLProvider.image_url(
+                get_display_image(insight.source_image)
+            )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=localized_value,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
 class BrandQuestionFormatter(QuestionFormatter):
     question = "Does the product belong to this brand?"
 
@@ -414,6 +453,7 @@ class QuestionFormatterFactory:
         InsightType.brand.name: BrandQuestionFormatter,
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
         InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
+        InsightType.packaging.name: PackagingQuestionFormatter,
     }
 
     @classmethod
