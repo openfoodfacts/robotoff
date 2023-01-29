@@ -44,7 +44,7 @@ STORE_REGEX_STR = "|".join(
 )
 NOTIFY_STORES: set[str] = set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
 STORE_REGEX = OCRRegex(
-    re.compile(STORE_REGEX_STR), field=OCRField.full_text_contiguous, lowercase=True
+    re.compile(STORE_REGEX_STR, re.I), field=OCRField.full_text_contiguous
 )
 
 

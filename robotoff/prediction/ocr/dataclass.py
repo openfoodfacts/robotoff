@@ -28,20 +28,18 @@ class OCRField(enum.Enum):
 
 
 class OCRRegex:
-    __slots__ = ("regex", "field", "lowercase", "processing_func", "priority", "notify")
+    __slots__ = ("regex", "field", "processing_func", "priority", "notify")
 
     def __init__(
         self,
         regex: re.Pattern,
         field: OCRField,
-        lowercase: bool = False,
         processing_func: Optional[Callable] = None,
         priority: Optional[int] = None,
         notify: bool = False,
     ):
         self.regex: re.Pattern = regex
         self.field: OCRField = field
-        self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
         self.priority = priority
         self.notify = notify
@@ -88,7 +86,6 @@ class OCRResult:
     __slots__ = (
         "text_annotations",
         "text_annotations_str",
-        "text_annotations_str_lower",
         "full_text_annotation",
         "logo_annotations",
         "safe_search_annotation",
@@ -107,11 +104,9 @@ class OCRResult:
             self.text_annotations.append(text_annotation)
 
         self.text_annotations_str: str = ""
-        self.text_annotations_str_lower: str = ""
 
         if self.text_annotations:
             self.text_annotations_str = self.text_annotations[0].text
-            self.text_annotations_str_lower = self.text_annotations_str.lower()
 
         full_text_annotation_data = data.get("fullTextAnnotation")
 
@@ -133,57 +128,48 @@ class OCRResult:
                 data["safeSearchAnnotation"]
             )
 
-    def get_full_text(self, lowercase: bool = False) -> str:
+    def get_full_text(self) -> str:
         if self.full_text_annotation is not None:
-            if lowercase:
-                return self.full_text_annotation.text_lower
-
             return self.full_text_annotation.text
 
         return ""
 
-    def get_full_text_contiguous(self, lowercase: bool = False) -> str:
+    def get_full_text_contiguous(self) -> str:
         if self.full_text_annotation is not None:
-            if lowercase:
-                return self.full_text_annotation.contiguous_text_lower
-
             return self.full_text_annotation.contiguous_text
 
         return ""
 
-    def get_text_annotations(self, lowercase: bool = False) -> str:
-        if lowercase:
-            return self.text_annotations_str_lower
-        else:
-            return self.text_annotations_str
+    def get_text_annotations(self) -> str:
+        return self.text_annotations_str
 
-    def _get_text(self, field: OCRField, lowercase: bool) -> str:
+    def _get_text(self, field: OCRField) -> str:
         if field == OCRField.full_text:
-            text = self.get_full_text(lowercase)
+            text = self.get_full_text()
 
             if text is None:
                 # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations(lowercase)
+                return self.get_text_annotations()
             else:
                 return text
 
         elif field == OCRField.full_text_contiguous:
-            text = self.get_full_text_contiguous(lowercase)
+            text = self.get_full_text_contiguous()
 
             if text is None:
                 # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations(lowercase)
+                return self.get_text_annotations()
             else:
                 return text
 
         elif field == OCRField.text_annotations:
-            return self.get_text_annotations(lowercase)
+            return self.get_text_annotations()
 
         else:
             raise ValueError("invalid field: {}".format(field))
 
     def get_text(self, ocr_regex: OCRRegex) -> str:
-        return self._get_text(ocr_regex.field, ocr_regex.lowercase)
+        return self._get_text(ocr_regex.field)
 
     def get_logo_annotations(self) -> list["LogoAnnotation"]:
         return self.logo_annotations
@@ -245,24 +231,19 @@ class OCRResult:
 
 
 def get_text(
-    content: Union[OCRResult, str],
-    ocr_regex: Optional[OCRRegex] = None,
-    lowercase: bool = True,
+    content: Union[OCRResult, str], ocr_regex: Optional[OCRRegex] = None
 ) -> str:
     if isinstance(content, str):
-        if ocr_regex and ocr_regex.lowercase:
-            return content.lower()
-
-        return content.lower() if lowercase else content
+        return content
 
     elif isinstance(content, OCRResult):
         if ocr_regex:
             return content.get_text(ocr_regex)
         else:
-            text = content.get_full_text_contiguous(lowercase=lowercase)
+            text = content.get_full_text_contiguous()
 
             if not text:
-                text = content.get_text_annotations(lowercase=lowercase)
+                text = content.get_text_annotations()
 
             return text
 
@@ -278,19 +259,15 @@ class OCRFullTextAnnotation:
 
     __slots__ = (
         "text",
-        "text_lower",
         "_pages",
         "_pages_data",
         "contiguous_text",
-        "contiguous_text_lower",
     )
 
     def __init__(self, data: JSONType, lazy: bool = True):
         self.text = MULTIPLE_SPACES_REGEX.sub(" ", data["text"])
-        self.text_lower = self.text.lower()
         self.contiguous_text = self.text.replace("\n", " ")
         self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(" ", self.contiguous_text)
-        self.contiguous_text_lower = self.contiguous_text.lower()
         self._pages_data = data["pages"]
         self._pages: list[TextAnnotationPage] = []
 

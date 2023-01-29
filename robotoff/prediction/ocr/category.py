@@ -35,46 +35,42 @@ AOC_REGEX = {
         OCRRegex(
             # re.compile(r"(?<=appellation\s).*(?=(\scontr[ôo]l[ée]e)|(\sprot[ée]g[ée]e))"),
             re.compile(
-                r"(appellation)\s*(?P<category>.+)\s*(contr[ôo]l[ée]e|prot[ée]g[ée]e)"
+                r"(appellation)\s*(?P<category>.+)\s*(contr[ôo]l[ée]e|prot[ée]g[ée]e)",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
             re.compile(
-                r"(?P<category>.+)\s*(appellation d'origine contr[ôo]l[ée]e|appellation d'origine prot[ée]g[ée]e)"
+                r"(?P<category>.+)\s*(appellation d'origine contr[ôo]l[ée]e|appellation d'origine prot[ée]g[ée]e)",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=category_taxonomisation,
         ),
     ],
     "es:": [
         OCRRegex(
-            re.compile(r"(?P<category>.+)(\s*denominacion de origen protegida)"),
+            re.compile(r"(?P<category>.+)(\s*denominacion de origen protegida)", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
-            re.compile(r"(denominacion de origen protegida\s*)(?P<category>.+)"),
+            re.compile(r"(denominacion de origen protegida\s*)(?P<category>.+)", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=category_taxonomisation,
         ),
     ],
     "en:": [
         OCRRegex(
-            re.compile(r"(?P<category>.+)\s*(aop|dop|pdo)"),
+            re.compile(r"(?P<category>.+)\s*(aop|dop|pdo)", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
-            re.compile(r"(aop|dop|pdo)\s*(?P<category>.+)"),
+            re.compile(r"(aop|dop|pdo)\s*(?P<category>.+)", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=category_taxonomisation,
         ),
     ],
