@@ -1,21 +1,26 @@
 import json
 import pathlib
 import re
+from typing import Callable, Optional
 
 import pytest
 
 from robotoff.prediction.ocr.dataclass import OCRParsingException, OCRResult
+from robotoff.utils.fold_to_ascii import fold
 
 data_dir = pathlib.Path(__file__).parent / "data"
 
 
-@pytest.mark.parametrize("ocr_name", ["3038350013804_11.json"])
-def test_ocr_result_extraction_non_regression(ocr_name: str):
-    with (data_dir / ocr_name).open("r") as f:
+@pytest.fixture(scope="session")
+def example_ocr_result():
+    with (data_dir / "3038350013804_11.json").open("r") as f:
         data = json.load(f)
 
-    result = OCRResult.from_json(data)
-    assert result
+    yield OCRResult.from_json(data)
+
+
+def test_ocr_result_extraction_non_regression(example_ocr_result):
+    assert example_ocr_result
 
 
 class TestOCRResult:
@@ -45,3 +50,55 @@ class TestOCRResult:
             match=re.escape("Error in OCR response: [{'this is an error'}"),
         ):
             OCRResult.from_json({"responses": [{"error": [{"this is an error"}]}]})
+
+
+@pytest.mark.parametrize(
+    "pattern,expected_matches,preprocess_func",
+    [
+        (
+            "fromage de chèvre frais",
+            [
+                [
+                    "fromage ",
+                    "de ",
+                    "chèvre ",
+                    "frais ",
+                ]
+            ],
+            None,
+        ),
+        # no preprocessing, in OCR it's "Mélangez bien les pâtes" (notice the upper letter)
+        ("mélangez bien les pâtes", [], None),
+        (
+            "mélangez bien les pâtes",
+            [["Mélangez ", "bien ", "les ", "pâtes "]],
+            lambda x: x.lower(),
+        ),
+        # Fold + lowercase should return a match
+        (
+            "MELANGEZ BIEN LES PATES",
+            [["Mélangez ", "bien ", "les ", "pâtes "]],
+            lambda x: fold(x.lower()),
+        ),
+        # Test that ', ' is stripped after last word ('ciboulette, ')
+        ("brins de ciboulette", [["brins ", "de ", "ciboulette, "]], None),
+        # Test multiple matches, we expect 2 matches
+        ("rondelles", [["rondelles. "], ["rondelles "]], None),
+    ],
+)
+def test_match(
+    pattern: str,
+    expected_matches: Optional[list[list[str]]],
+    preprocess_func: Optional[Callable[[str], str]],
+    example_ocr_result: OCRResult,
+):
+    matches = example_ocr_result.match(pattern, preprocess_func)
+
+    if expected_matches is None:
+        assert matches is None
+    else:
+        assert matches is not None
+        assert len(matches) == len(expected_matches)
+
+        for match, expected_words in zip(matches, expected_matches):
+            assert [word.text for word in match] == expected_words
