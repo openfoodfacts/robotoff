@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.20.0](https://github.com/openfoodfacts/robotoff/compare/v1.19.1...v1.20.0) (2023-01-29)
+
+
+### Features
+
+* add detailed packaging detection ([4916845](https://github.com/openfoodfacts/robotoff/commit/4916845e563e797e74aaa9900a60bde2861d664f))
+* add packaging formatter and annotator ([cd6ec75](https://github.com/openfoodfacts/robotoff/commit/cd6ec75a446c2ebdc152fcf2a742a6d319feca56))
+* add PackagingImporter ([ce9af41](https://github.com/openfoodfacts/robotoff/commit/ce9af41d8d9498fe92f57f749f131a6ff9f2ecb4))
+* implement new packaging API ([3e292f5](https://github.com/openfoodfacts/robotoff/commit/3e292f576df27c40e2a127782378ccc7f1e540aa))
+
+
+### Bug Fixes
+
+* add brand to taxonomy exclude list ([fe39f1d](https://github.com/openfoodfacts/robotoff/commit/fe39f1d483b5b4298c0294a11bd4dbe9e3837d88))
+* add water brand to taxonomy exclude list ([50cb021](https://github.com/openfoodfacts/robotoff/commit/50cb02104becd44c612a53c2783bd08ff80e5a54))
+* increase memory limit of robotoff api service to 4G ([9cb2454](https://github.com/openfoodfacts/robotoff/commit/9cb2454895ed13d2981354e9f7f73685a8555aeb))
+* increase MongoDB timeout from 5s to 10s ([6fc1a0d](https://github.com/openfoodfacts/robotoff/commit/6fc1a0d461a5b0c9c28303edf3a5ec0339e1a682))
+* remove legacy code ([b209707](https://github.com/openfoodfacts/robotoff/commit/b209707cc062310b51f9886c87ee14be91527644))
+
+
+### Documentation
+
+* add section about robotoff models ([738cc9a](https://github.com/openfoodfacts/robotoff/commit/738cc9a53dc229ad4fa5325c565248f7d3c7080a))
+* adding ann benchmark ([ede4330](https://github.com/openfoodfacts/robotoff/commit/ede4330b542d626b50a9676285ab46dfcc35f93d))
+* Adding ann-doc in Robotoff Technical References ([4090568](https://github.com/openfoodfacts/robotoff/commit/4090568c24f0f4e4284a147726aaf54557cece39))
+* changing the link of the code ([eb7cd85](https://github.com/openfoodfacts/robotoff/commit/eb7cd8540ef8b79f0fd73acd1a1709beb1729a2c))
+* correcting mistakes in the doc ([84a6370](https://github.com/openfoodfacts/robotoff/commit/84a63703fcb3ed20da7c3033c9532e47cd9761ab))
+* english trad ([2254126](https://github.com/openfoodfacts/robotoff/commit/22541269973d52ca4e7a8355a1cc9d4673f4f92d))
+* fix typo ([5bdcb33](https://github.com/openfoodfacts/robotoff/commit/5bdcb33325b97fc70144b66bbad480a3b3e3e8ad))
+
 ## [1.19.1](https://github.com/openfoodfacts/robotoff/compare/v1.19.0...v1.19.1) (2023-01-17)
 
 
