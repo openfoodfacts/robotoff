@@ -102,3 +102,13 @@ def test_match(
 
         for match, expected_words in zip(matches, expected_matches):
             assert [word.text for word in match] == expected_words
+
+
+def test_word_offset(example_ocr_result: OCRResult):
+    assert example_ocr_result.full_text_annotation is not None
+    text = example_ocr_result.full_text_annotation.text
+    for page in example_ocr_result.full_text_annotation.pages:
+        for block in page.blocks:
+            for paragraph in block.paragraphs:
+                for word in paragraph.words:
+                    assert text[word.start_idx : word.end_idx] == word.text

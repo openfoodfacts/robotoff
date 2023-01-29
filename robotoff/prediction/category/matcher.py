@@ -15,7 +15,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import dump_json, get_logger, load_json
 from robotoff.utils.text import (
     get_lemmatizing_nlp,
-    strip_accents_ascii,
+    strip_accents_v1,
     strip_consecutive_spaces,
 )
 
@@ -169,7 +169,7 @@ def process(text: str, lang: str) -> str:
             continue
         lemmas.append(token.lemma_)
 
-    return strip_accents_ascii(" ".join(lemmas))
+    return strip_accents_v1(" ".join(lemmas))
 
 
 def generate_match_maps(taxonomy_type: str) -> MatchMapType:

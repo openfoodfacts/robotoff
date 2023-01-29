@@ -6,14 +6,14 @@ import spacy
 
 from robotoff.utils import get_logger
 
-from .fold_to_ascii import fold
+from .fold_to_ascii import fold, fold_without_replacement
 
 logger = get_logger(__name__)
 
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 
 
-def strip_accents_ascii(s: str) -> str:
+def strip_accents_v1(s: str) -> str:
     """Transform accentuated unicode symbols into ascii or nothing
 
     Warning: this solution is only suited for languages that have a direct
@@ -33,8 +33,16 @@ def strip_accents_ascii(s: str) -> str:
     return nkfd_form.encode("ASCII", "ignore").decode("ASCII")
 
 
-def strip_accents_ascii_v2(s):
-    return fold(s)
+def strip_accents(s: str, keep_length: bool = True):
+    """Strip accents and normalize string.
+
+    :param keep_length: if True (default), no character is deleted without a
+        subtitution of length 1: the length of the string is kept unchanged.
+    """
+    if keep_length:
+        return fold_without_replacement(s)
+    else:
+        return fold(s)
 
 
 def strip_consecutive_spaces(text: str) -> str:
@@ -69,7 +77,7 @@ def get_tag(text: str) -> str:
     - replacement of punctuation by either a comma ("-") or nothing, depending
     on the punctuation
     """
-    text = strip_accents_ascii_v2(text)
+    text = strip_accents(text)
     text = (
         text.lower()
         .replace(" & ", "-")

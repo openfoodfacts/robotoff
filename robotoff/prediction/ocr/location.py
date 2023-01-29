@@ -12,7 +12,7 @@ from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
-from robotoff.utils.text import strip_accents_ascii
+from robotoff.utils.text import strip_accents_v1
 
 from .dataclass import OCRResult
 
@@ -186,7 +186,7 @@ class AddressExtractor:
     @staticmethod
     def normalize_text(text: str) -> str:
         text = text.lower()
-        text = strip_accents_ascii(text)
+        text = strip_accents_v1(text)
         return text.replace("'", " ").replace("-", " ")
 
     def find_city_names(self, text: str) -> list[tuple[City, int, int]]:
