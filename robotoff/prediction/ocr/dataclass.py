@@ -8,6 +8,9 @@ from typing import Callable, Optional, Union
 from robotoff.types import JSONType
 from robotoff.utils import get_logger
 
+# Some classes documentation were adapted from Google documentation on
+# https://cloud.google.com/vision/docs/reference/rpc/google.cloud.vision.v1#google.cloud.vision.v1.Symbol
+
 MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 
 logger = get_logger(__name__)
@@ -248,6 +251,12 @@ def get_text(
 
 
 class OCRFullTextAnnotation:
+    """TextAnnotation contains a structured representation of OCR extracted
+    text. The hierarchy of an OCR extracted text structure is like this:
+    TextAnnotation -> Page -> Block -> Paragraph -> Word -> Symbol Each
+    structural component, starting from Page, may further have their own
+    properties. Properties describe detected languages, breaks etc.."""
+
     __slots__ = (
         "text",
         "text_lower",
@@ -301,6 +310,8 @@ class OCRFullTextAnnotation:
 
 
 class TextAnnotationPage:
+    """Detected page from OCR."""
+
     def __init__(self, data: JSONType):
         self.width = data["width"]
         self.height = data["height"]
@@ -326,6 +337,8 @@ class TextAnnotationPage:
 
 
 class Block:
+    """Logical element on the page."""
+
     def __init__(self, data: JSONType):
         self.type = data["blockType"]
         self.paragraphs: list[Paragraph] = [
@@ -362,6 +375,9 @@ class Block:
 
 
 class Paragraph:
+    """Structural unit of text representing a number of words in certain
+    order."""
+
     def __init__(self, data: JSONType):
         self.words: list[Word] = [Word(word) for word in data["words"]]
 
@@ -397,6 +413,8 @@ class Paragraph:
 
 
 class Word:
+    """A word representation."""
+
     __slots__ = ("bounding_poly", "symbols", "languages")
 
     def __init__(self, data: JSONType):
@@ -457,6 +475,8 @@ class Word:
 
 
 class Symbol:
+    """A single symbol representation."""
+
     __slots__ = ("bounding_poly", "text", "confidence", "symbol_break")
 
     def __init__(self, data: JSONType):
@@ -480,10 +500,22 @@ class Symbol:
 
 
 class DetectedBreak:
+    """Detected start or end of a structural component."""
+
     __slots__ = ("type", "is_prefix")
 
     def __init__(self, data: JSONType):
+        # Detected break type.
+        # Enum to denote the type of break found. New line, space etc.
+        # UNKNOWN: Unknown break label type.
+        # SPACE: Regular space.
+        # SURE_SPACE: Sure space (very wide).
+        # EOL_SURE_SPACE: Line-wrapping break.
+        # HYPHEN: End-line hyphen that is not present in text; does not co-occur
+        # with SPACE, LEADER_SPACE, or LINE_BREAK.
+        # LINE_BREAK: Line break that ends a paragraph.
         self.type = data["type"]
+        # True if break prepends the element.
         self.is_prefix = data.get("isPrefix", False)
 
     def __repr__(self):
