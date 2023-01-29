@@ -1,4 +1,5 @@
 import enum
+import itertools
 import math
 import operator
 import re
@@ -224,6 +225,24 @@ class OCRResult:
 
         return None
 
+    def match(
+        self,
+        pattern: str,
+        preprocess_func: Optional[Callable[[str], str]] = None,
+        strip_characters: Optional[str] = None,
+    ) -> Optional[list[list["Word"]]]:
+        """Find the words in the image that match the pattern words in the
+        same order.
+
+        Return None if full text annotations are not available.
+        See `Paragraph.match` for more details.
+        """
+        if self.full_text_annotation:
+            return self.full_text_annotation.match(
+                pattern, preprocess_func, strip_characters
+            )
+        return None
+
 
 def get_text(
     content: Union[OCRResult, str],
@@ -308,6 +327,24 @@ class OCRFullTextAnnotation:
         count = Counter(word_orientations)
         return OrientationResult(count)
 
+    def match(
+        self,
+        pattern: str,
+        preprocess_func: Optional[Callable[[str], str]] = None,
+        strip_characters: Optional[str] = None,
+    ) -> list[list["Word"]]:
+        """Find the words in the image that match the pattern words in the
+        same order.
+
+        See `Paragraph.match` for more details.
+        """
+        return list(
+            itertools.chain.from_iterable(
+                page.match(pattern, preprocess_func, strip_characters)
+                for page in self.pages
+            )
+        )
+
 
 class TextAnnotationPage:
     """Detected page from OCR."""
@@ -334,6 +371,24 @@ class TextAnnotationPage:
             word_orientations += block.detect_words_orientation()
 
         return word_orientations
+
+    def match(
+        self,
+        pattern: str,
+        preprocess_func: Optional[Callable[[str], str]] = None,
+        strip_characters: Optional[str] = None,
+    ) -> list[list["Word"]]:
+        """Find the words in the page that match the pattern words in the
+        same order.
+
+        See `Paragraph.match` for more details.
+        """
+        return list(
+            itertools.chain.from_iterable(
+                block.match(pattern, preprocess_func, strip_characters)
+                for block in self.blocks
+            )
+        )
 
 
 class Block:
@@ -373,6 +428,24 @@ class Block:
 
         return word_orientations
 
+    def match(
+        self,
+        pattern: str,
+        preprocess_func: Optional[Callable[[str], str]] = None,
+        strip_characters: Optional[str] = None,
+    ) -> list[list["Word"]]:
+        """Find the words in the block that match the pattern words in the
+        same order.
+
+        See `Paragraph.match` for more details.
+        """
+        return list(
+            itertools.chain.from_iterable(
+                paragraph.match(pattern, preprocess_func, strip_characters)
+                for paragraph in self.paragraphs
+            )
+        )
+
 
 class Paragraph:
     """Structural unit of text representing a number of words in certain
@@ -411,11 +484,56 @@ class Paragraph:
         """Return the text of the paragraph, by concatenating the words."""
         return "".join(w.text for w in self.words)
 
+    def match(
+        self,
+        pattern: str,
+        preprocess_func: Optional[Callable[[str], str]] = None,
+        strip_characters: Optional[str] = None,
+    ) -> list[list["Word"]]:
+        """Find the words in the paragraph that match the pattern words in
+        the same order.
+
+        The pattern is first splitted with a whitespace word delimiter, then
+        we iterate over both the words and the pattern words to find matches.
+
+        See `Word.match` for a description of `preprocess_func` and
+        `strip_characters` parameters or for more details about the matching
+        process.
+
+        :param pattern: the string pattern to look for
+        """
+        pattern_words = pattern.split()
+        matches = []
+        # Iterate over the words
+        for word_idx in range(len(self.words)):
+            current_word = self.words[word_idx]
+            stack = list(pattern_words)
+            matched_words = []
+            while stack:
+                pattern_word = stack.pop(0)
+                # if there is no match or if there is no word left while the
+                # pattern stack is not empty, there is no match: break to
+                # continue to next word
+                if not current_word.match(
+                    pattern_word, preprocess_func, strip_characters
+                ) or word_idx + 1 >= len(self.words):
+                    break
+                matched_words.append(current_word)
+                # there is a partial match, continue to next word to see if
+                # there is a full match
+                word_idx += 1
+                current_word = self.words[word_idx]
+            else:
+                # No break occured, so it's a full match
+                matches.append(matched_words)
+
+        return matches
+
 
 class Word:
     """A word representation."""
 
-    __slots__ = ("bounding_poly", "symbols", "languages")
+    __slots__ = ("bounding_poly", "symbols", "languages", "_text")
 
     def __init__(self, data: JSONType):
         self.bounding_poly = BoundingPoly(data["boundingBox"])
@@ -428,6 +546,9 @@ class Word:
             self.languages = [
                 DetectedLanguage(lang) for lang in data["property"]["detectedLanguages"]
             ]
+
+        # Attribute to store text generated from symbols
+        self._text = None
 
     @property
     def text(self):
@@ -473,6 +594,37 @@ class Word:
             word_width,
             word_symbol_width,
         )
+
+    def match(
+        self,
+        pattern: str,
+        preprocess_func: Optional[Callable[[str], str]] = None,
+        strip_characters: Optional[str] = None,
+    ) -> bool:
+        """Return True if the pattern is equal to the word string after
+        preprocessing, False otherwise.
+
+        A first preprocessing step is performed on the word and the
+        pattern: punctuation marks, spaces and line breaks are stripped.
+
+        :param pattern: a string to match
+        :param preprocess_func: a preprocessing function to apply to pattern
+            and word string, defaults to identity
+        :param strip_characters: word characters to strip before matching.
+            By default, the following character list is used: "\\n .,!?"
+            Pass an empty string to remove any character stripping.
+        """
+        preprocess_func = preprocess_func or (lambda x: x)
+
+        if strip_characters is None:
+            strip_characters = "\n .,!?"
+
+        return preprocess_func(self.text.strip(strip_characters)) == preprocess_func(
+            pattern.strip(strip_characters)
+        )
+
+    def __repr__(self) -> str:
+        return f"<Word: {self.text}>"
 
 
 class Symbol:
