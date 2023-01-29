@@ -409,7 +409,7 @@ class Paragraph:
 
     def get_text(self) -> str:
         """Return the text of the paragraph, by concatenating the words."""
-        return "".join(w.get_text() for w in self.words)
+        return "".join(w.text for w in self.words)
 
 
 class Word:
@@ -429,20 +429,21 @@ class Word:
                 DetectedLanguage(lang) for lang in data["property"]["detectedLanguages"]
             ]
 
-    def get_text(self) -> str:
+    @property
+    def text(self):
+        if not self._text:
+            self._text = self._get_text()
+
+        return self._text
+
+    def _get_text(self) -> str:
         text_list = []
         for symbol in self.symbols:
-            symbol_str = ""
-
             if symbol.symbol_break and symbol.symbol_break.is_prefix:
-                symbol_str = symbol.symbol_break.get_value()
-
-            symbol_str += symbol.text
-
+                text_list.append(symbol.symbol_break.get_value())
+            text_list.append(symbol.text)
             if symbol.symbol_break and not symbol.symbol_break.is_prefix:
-                symbol_str += symbol.symbol_break.get_value()
-
-            text_list.append(symbol_str)
+                text_list.append(symbol.symbol_break.get_value())
 
         return "".join(text_list)
 
