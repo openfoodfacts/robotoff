@@ -41,9 +41,10 @@ EN_ORGANIC_REGEX_STR = [
 LABELS_REGEX = {
     "en:organic": [
         OCRRegex(
-            re.compile(r"|".join([r"(?:{})".format(x) for x in EN_ORGANIC_REGEX_STR])),
+            re.compile(
+                r"|".join([r"(?:{})".format(x) for x in EN_ORGANIC_REGEX_STR]), re.I
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "xx-bio-xx": [
@@ -54,143 +55,129 @@ LABELS_REGEX = {
                 r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|Bio)[\-\s.](\d{2,3})"
             ),
             field=OCRField.text_annotations,
-            lowercase=False,
             processing_func=process_eu_bio_label_code,
         ),
         # Spain specific regex
         OCRRegex(
             re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2,3})"),
             field=OCRField.text_annotations,
-            lowercase=False,
             processing_func=process_es_bio_label_code,
         ),
     ],
     "fr:ab-agriculture-biologique": [
         OCRRegex(
-            re.compile(r"certifi[ée] ab[\s.,)]"),
+            re.compile(r"certifi[ée] ab[\s.,)]", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:pgi": [
         OCRRegex(
             re.compile(
-                r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe"
+                r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
         OCRRegex(
             re.compile(r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
             field=OCRField.full_text_contiguous,
-            lowercase=False,
         ),
     ],
     "fr:label-rouge": [
         OCRRegex(
-            re.compile(r"d[ée]cret du 0?5[./]01[./]07"),
+            re.compile(r"d[ée]cret du 0?5[./]01[./]07", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
         OCRRegex(
-            re.compile(r"(?<!\w)homologation(?: n°?)? ?la ?\d{2}\/\d{2}(?!\w)"),
+            re.compile(r"(?<!\w)homologation(?: n°?)? ?la ?\d{2}\/\d{2}(?!\w)", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:pdo": [
         OCRRegex(
             re.compile(r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
             field=OCRField.full_text_contiguous,
-            lowercase=False,
         ),
         OCRRegex(
-            re.compile(r"appellation d'origine prot[eé]g[eé]e"),
+            re.compile(r"appellation d'origine prot[eé]g[eé]e", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "fr:aoc": [
         OCRRegex(
-            re.compile(r"(?<!\w)(?:AOC)(?!\w)"),
-            field=OCRField.full_text_contiguous,
-            lowercase=False,
+            re.compile(r"(?<!\w)(?:AOC)(?!\w)"), field=OCRField.full_text_contiguous
         ),
     ],
     "en:nutriscore": [
-        OCRRegex(
-            re.compile(r"NUTRI-SCORE"),
-            field=OCRField.full_text,
-            lowercase=False,
-        ),
+        OCRRegex(re.compile(r"NUTRI-SCORE"), field=OCRField.full_text),
     ],
     "en:eu-non-eu-agriculture": [
         OCRRegex(
             re.compile(
-                r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture"
+                r"agriculture ue\s?/\s?non\s?(?:-\s?)?ue|eu\s?/\s?non\s?(?:-\s?)?eu agriculture",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:eu-agriculture": [
         # The negative lookafter/lookbehind forbid matching "agriculture ue/non ue"
         OCRRegex(
-            re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture"),
+            re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture", re.I),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:non-eu-agriculture": [
         OCRRegex(
-            re.compile(r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture"),
+            re.compile(
+                r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture", re.I
+            ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:no-preservatives": [
         OCRRegex(
             re.compile(
-                r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|(?<!\w)(?:sans|ni) conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe"
+                r"senza conservanti(?! arti)|без консервантов|conserveermiddelvrij|(?<!\w)(?:sans|ni) conservateur(?!s? arti)|fără conservanți|no preservative|sin conservante(?!s? arti)|ohne konservierungsstoffe",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:no-flavors": [
         OCRRegex(
             re.compile(
-                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?"
+                r"без ароматизаторов|senza aromi|zonder toegevoegde smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? ajout[ée]s|sin aromas?|ohne zusatz von aromen|no flavors?",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:no-artificial-flavors": [
         OCRRegex(
             re.compile(
-                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? artificiels?|no artificial flavors?"
+                r"без искусственных ароматизаторов|ohne künstliche aromen|sin aromas? artificiales?|vrij van kunstmatige smaakstoffen|(?<!\w)(?:sans|ni) ar[ôo]mes? artificiels?|no artificial flavors?",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:no-colorings": [
         OCRRegex(
             re.compile(
-                r"no colorings?|no colourants?|ohne farbstoffzusatz|(?<!\w)(?:sans|ni) colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti"
+                r"no colorings?|no colourants?|ohne farbstoffzusatz|(?<!\w)(?:sans|ni) colorants?|zonder kleurstoffen|sin colorantes?|без красителей|senza coloranti",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
     "en:no-additives": [
         OCRRegex(
             re.compile(
-                r"zonder toevoegingen|sin aditivos(?! arti)|(?<!\w)(?:sans|ni) additif(?!s? arti)|ohne zusätze|no additives?"
+                r"zonder toevoegingen|sin aditivos(?! arti)|(?<!\w)(?:sans|ni) additif(?!s? arti)|ohne zusätze|no additives?",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
         ),
     ],
 }

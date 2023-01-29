@@ -121,7 +121,8 @@ def generate_nutrient_regex(
     return re.compile(
         r"(?<!\w)({}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({})(?!\w)".format(
             nutrient_names_str, units_str
-        )
+        ),
+        re.I,
     )
 
 
@@ -130,14 +131,13 @@ def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]
         r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
         for i, (name, lang) in enumerate(nutrient_mentions)
     )
-    return re.compile(r"(?<!\w){}(?!\w)".format(sub_re))
+    return re.compile(r"(?<!\w){}(?!\w)".format(sub_re), re.I)
 
 
 NUTRIENT_VALUES_REGEX = {
     nutrient: OCRRegex(
         generate_nutrient_regex(NUTRIENT_MENTION[nutrient], units),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
     )
     for nutrient, units in NUTRIENT_UNITS.items()
 }
@@ -146,7 +146,6 @@ NUTRIENT_MENTIONS_REGEX: dict[str, OCRRegex] = {
     nutrient: OCRRegex(
         generate_nutrient_mention_regex(NUTRIENT_MENTION[nutrient]),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
     )
     for nutrient in NUTRIENT_MENTION
 }

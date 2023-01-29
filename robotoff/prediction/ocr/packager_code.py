@@ -78,37 +78,35 @@ USDA_CODE_KEYWORD_PROCESSOR_STORE = CachedStore(
 PACKAGER_CODE = {
     "fr_emb": [
         OCRRegex(
-            re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
+            re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])", re.I),
             field=OCRField.text_annotations,
-            lowercase=True,
             processing_func=process_fr_emb_match,
         ),
     ],
     "fsc": [
         OCRRegex(
-            re.compile(r"fsc.? ?(c\d{6})"),
+            re.compile(r"fsc.? ?(c\d{6})", re.I),
             field=OCRField.text_annotations,
-            lowercase=True,
             processing_func=process_fsc_match,
         ),
     ],
     "eu_fr": [
         OCRRegex(
             re.compile(
-                r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"
+                r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=process_fr_packaging_match,
         ),
     ],
     "eu_de": [
         OCRRegex(
             re.compile(
-                r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"
+                r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=process_de_packaging_match,
         ),
     ],
@@ -116,14 +114,12 @@ PACKAGER_CODE = {
         OCRRegex(
             re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)"),
             field=OCRField.full_text_contiguous,
-            lowercase=False,
         ),
     ],
     "fr_gluten": [
         OCRRegex(
             re.compile(r"FR-\d{3}-\d{3}"),
             field=OCRField.full_text_contiguous,
-            lowercase=False,
         ),
     ],
     # Temporarily disable USDA extraction until the overmatching bug is fixed
@@ -132,14 +128,12 @@ PACKAGER_CODE = {
     #     OCRRegex(
     #         re.compile(r"EST\.*\s*\d{1,5}[A-Z]{0,3}\.*"),
     #         field=OCRField.full_text_contiguous,
-    #         lowercase=False,
     #         processing_func=process_USDA_match_to_flashtext,
     #     ),
     #     # To match the USDA like "V34626"
     #     OCRRegex(
     #         re.compile(r"[A-Z]\d{1,5}[A-Z]?"),
     #         field=OCRField.full_text_contiguous,
-    #         lowercase=False,
     #         processing_func=process_USDA_match_to_flashtext,
     #     ),
     # ],
@@ -151,7 +145,7 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Predict
 
     for regex_code, regex_list in PACKAGER_CODE.items():
         for ocr_regex in regex_list:
-            text = get_text(ocr_result, ocr_regex, ocr_regex.lowercase)
+            text = get_text(ocr_result, ocr_regex)
 
             if not text:
                 continue

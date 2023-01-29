@@ -20,10 +20,10 @@ def generate_trace_keyword_processor(labels: Optional[list[str]] = None):
 
 TRACES_REGEX = OCRRegex(
     re.compile(
-        r"(?:possibilit[ée] de traces|conditionné dans un atelier qui manipule|peut contenir(?: des traces)?|traces? [ée]ventuelles? d[e']|traces? d[e']|may contain)"
+        r"(?:possibilit[ée] de traces|conditionné dans un atelier qui manipule|peut contenir(?: des traces)?|traces? [ée]ventuelles? d[e']|traces? d[e']|may contain)",
+        re.I,
     ),
     field=OCRField.full_text_contiguous,
-    lowercase=True,
 )
 
 TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
