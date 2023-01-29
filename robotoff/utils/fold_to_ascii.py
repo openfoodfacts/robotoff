@@ -1382,6 +1382,44 @@ codepoint_to_replacement = [
 translate_table = codepoint_to_self + codepoint_to_replacement
 
 
+class TranslateTableWithoutReplacement:
+    translate_table = dict(
+        (ordinal, replacement)
+        for (ordinal, replacement) in translate_table
+        if len(replacement) == 1
+    )
+
+    def __getitem__(self, value):
+        if (replacement_value := self.translate_table.get(value)) is None:
+            return value
+        return replacement_value
+
+
+translate_table_without_replacement = TranslateTableWithoutReplacement()
+
+
+def fold_without_replacement(string: str):
+    """Replace.
+
+    Unmapped characters should be replaced with empty string by default, or other
+    replacement if provided.
+
+    All astral plane characters are always removed, even if a replacement is
+    provided.
+    """
+    if string is None:
+        return ""
+
+    try:
+        # If string contains only ASCII characters, return it.
+        string.encode("ascii")
+        return string
+    except UnicodeEncodeError:
+        pass
+
+    return string.translate(translate_table_without_replacement)
+
+
 def fold(string: str, replacement: str = "") -> str:
     """Fold string to ASCII.
 

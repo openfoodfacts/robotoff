@@ -8,11 +8,11 @@ from typing import Callable, Optional, Union
 
 from robotoff.types import JSONType
 from robotoff.utils import get_logger
+from robotoff.utils.text import strip_accents
 
 # Some classes documentation were adapted from Google documentation on
 # https://cloud.google.com/vision/docs/reference/rpc/google.cloud.vision.v1#google.cloud.vision.v1.Symbol
 
-MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 
 logger = get_logger(__name__)
 
@@ -92,7 +92,7 @@ class OCRResult:
         "label_annotations",
     )
 
-    def __init__(self, data: JSONType, lazy: bool = True):
+    def __init__(self, data: JSONType):
         self.text_annotations: list[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
         self.logo_annotations: list[LogoAnnotation] = []
@@ -111,9 +111,7 @@ class OCRResult:
         full_text_annotation_data = data.get("fullTextAnnotation")
 
         if full_text_annotation_data:
-            self.full_text_annotation = OCRFullTextAnnotation(
-                full_text_annotation_data, lazy=lazy
-            )
+            self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
 
         for logo_annotation_data in data.get("logoAnnotations", []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
@@ -130,13 +128,13 @@ class OCRResult:
 
     def get_full_text(self) -> str:
         if self.full_text_annotation is not None:
-            return self.full_text_annotation.text
+            return self.full_text_annotation.api_text
 
         return ""
 
     def get_full_text_contiguous(self) -> str:
         if self.full_text_annotation is not None:
-            return self.full_text_annotation.contiguous_text
+            return self.full_text_annotation.api_text
 
         return ""
 
@@ -258,21 +256,33 @@ class OCRFullTextAnnotation:
     properties. Properties describe detected languages, breaks etc.."""
 
     __slots__ = (
+        "api_text",
         "text",
-        "_pages",
-        "_pages_data",
-        "contiguous_text",
+        "continuous_text",
+        "unnaccented_text",
+        "pages",
     )
 
-    def __init__(self, data: JSONType, lazy: bool = True):
-        self.text = MULTIPLE_SPACES_REGEX.sub(" ", data["text"])
-        self.contiguous_text = self.text.replace("\n", " ")
-        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(" ", self.contiguous_text)
-        self._pages_data = data["pages"]
-        self._pages: list[TextAnnotationPage] = []
-
-        if not lazy:
-            self.load_pages()
+    def __init__(self, data: JSONType):
+        self.api_text = data["text"]
+        self.pages = []
+        initial_offset = 0
+        text_list: list[str] = []
+        for page_data in data["pages"]:
+            page = TextAnnotationPage(page_data, initial_offset=initial_offset)
+            initial_offset += len(page.text) + 1
+            text_list.append(page.text)
+            self.pages.append(page)
+        self.text = "|".join(text_list)
+        # Replace line break with space characters to match over several lines
+        # We use to replace consecutive spaces (2+) with a single space so that
+        # spurious spaces don't prevent a match, but this is unnecessary: on
+        # X millions OCRs, only Y had double spaces, and it was m
+        # This way, the word offsets (word.start_idx, word.end_idx) match the
+        # FullTextAnnotation text, and we can very easily determine the
+        # position of the matched words
+        self.continuous_text = self.text.replace("\n", " ")
+        self.unnaccented_text = strip_accents(self.continuous_text, keep_length=True)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
@@ -283,17 +293,6 @@ class OCRFullTextAnnotation:
                 counts[key] += value
 
         return dict(counts)
-
-    @property
-    def pages(self) -> list["TextAnnotationPage"]:
-        if self._pages_data is not None:
-            self.load_pages()
-
-        return self._pages
-
-    def load_pages(self):
-        self._pages = [TextAnnotationPage(page) for page in self._pages_data]
-        self._pages_data = None
 
     def detect_orientation(self) -> OrientationResult:
         word_orientations: list[ImageOrientation] = []
@@ -326,10 +325,26 @@ class OCRFullTextAnnotation:
 class TextAnnotationPage:
     """Detected page from OCR."""
 
-    def __init__(self, data: JSONType):
+    __slots__ = (
+        "width",
+        "height",
+        "blocks",
+        "text",
+    )
+
+    def __init__(self, data: JSONType, initial_offset: int = 0):
         self.width = data["width"]
         self.height = data["height"]
-        self.blocks: list[Block] = [Block(d) for d in data["blocks"]]
+        self.blocks: list[Block] = []
+        text_list: list[str] = []
+        for block_data in data["blocks"]:
+            block = Block(block_data, initial_offset)
+            # We add a '|' between each block, so that it's not possible to
+            # match over several blocks, so we add + 1 to offset
+            initial_offset += len(block.text) + 1
+            text_list.append(block.text)
+            self.blocks.append(block)
+        self.text = "|".join(text_list)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
@@ -371,15 +386,42 @@ class TextAnnotationPage:
 class Block:
     """Logical element on the page."""
 
-    def __init__(self, data: JSONType):
+    __slots__ = (
+        "type",
+        "paragraphs",
+        "text",
+        "bounding_poly",
+    )
+
+    def __init__(self, data: JSONType, initial_offset: int = 0):
         self.type = data["blockType"]
-        self.paragraphs: list[Paragraph] = [
-            Paragraph(paragraph) for paragraph in data["paragraphs"]
-        ]
+        self.paragraphs: list[Paragraph] = []
+        text_list = []
+        add_space_prefix = False
+        for paragraph_data in data["paragraphs"]:
+            paragraph = Paragraph(paragraph_data, initial_offset)
+            # We add a space between each paragraph
+            initial_offset += len(paragraph.text) + 1
+            self.paragraphs.append(paragraph)
+            if add_space_prefix:
+                text_list.append(" ")
+            text_list.append(paragraph.text)
+            add_space_prefix = bool(paragraph.text) and paragraph.text[-1] not in (
+                " ",
+                "\n",
+            )
+        self.text: str = "".join(text_list)
 
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
+
+    def get_words(self):
+        return list(
+            itertools.chain.from_iterable(
+                paragraph.words for paragraph in self.paragraphs
+            )
+        )
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
@@ -428,9 +470,22 @@ class Paragraph:
     """Structural unit of text representing a number of words in certain
     order."""
 
-    def __init__(self, data: JSONType):
-        self.words: list[Word] = [Word(word) for word in data["words"]]
+    __slots__ = (
+        "words",
+        "text",
+        "bounding_poly",
+    )
 
+    def __init__(self, data: JSONType, initial_offset: int = 0):
+        self.words: list[Word] = []
+
+        offset = initial_offset
+        for word_data in data["words"]:
+            word = Word(word_data, offset)
+            self.words.append(word)
+            offset += len(word.text)
+
+        self.text: str = "".join(w.text for w in self.words)
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
@@ -510,9 +565,16 @@ class Paragraph:
 class Word:
     """A word representation."""
 
-    __slots__ = ("bounding_poly", "symbols", "languages", "_text")
+    __slots__ = (
+        "bounding_poly",
+        "symbols",
+        "languages",
+        "text",
+        "start_idx",
+        "end_idx",
+    )
 
-    def __init__(self, data: JSONType):
+    def __init__(self, data: JSONType, offset: int = 0):
         self.bounding_poly = BoundingPoly(data["boundingBox"])
         self.symbols: list[Symbol] = [Symbol(s) for s in data["symbols"]]
 
@@ -525,14 +587,9 @@ class Word:
             ]
 
         # Attribute to store text generated from symbols
-        self._text = None
-
-    @property
-    def text(self):
-        if not self._text:
-            self._text = self._get_text()
-
-        return self._text
+        self.text = self._get_text()
+        self.start_idx = offset
+        self.end_idx = offset + len(self.text)
 
     def _get_text(self) -> str:
         text_list = []
@@ -601,7 +658,7 @@ class Word:
         )
 
     def __repr__(self) -> str:
-        return f"<Word: {self.text}>"
+        return f"<Word: {self.text.__repr__()}>"
 
 
 class Symbol:
