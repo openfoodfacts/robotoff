@@ -471,4 +471,5 @@ class QuestionFormatterFactory:
             InsightType.label.name,
             InsightType.product_weight.name,
             InsightType.brand.name,
+            InsightType.packaging.name,
         ]
