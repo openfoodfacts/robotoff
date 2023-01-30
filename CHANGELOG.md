@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/openfoodfacts/robotoff/compare/v1.20.0...v1.20.1) (2023-01-30)
+
+
+### Bug Fixes
+
+* add packaging to default types for questions ([8c2988f](https://github.com/openfoodfacts/robotoff/commit/8c2988f1db75e1ecab6ddd64ecf7d97ab8eea75e))
+
 ## [1.20.0](https://github.com/openfoodfacts/robotoff/compare/v1.19.1...v1.20.0) (2023-01-29)
 
 
