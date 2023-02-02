@@ -398,7 +398,7 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
 def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
     """Generate logo embeddings using CLIP model and save them in
     logo_embedding table."""
-    cropped_images = []
+    resized_cropped_images = []
     for logo in logos:
         y_min, x_min, y_max, x_max = logo.bounding_box
         (left, right, top, bottom) = (
@@ -407,8 +407,9 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
             y_min * image.height,
             y_max * image.height,
         )
-        cropped_images.append(image.crop((left, top, right, bottom)))
-    embeddings = generate_clip_embedding(cropped_images)
+        cropped_image = image.crop((left, top, right, bottom))
+        resized_cropped_images.append(cropped_image.resize((224,224)))
+    embeddings = generate_clip_embedding(resized_cropped_images)
 
     with db.atomic():
         for i in range(len(logos)):
