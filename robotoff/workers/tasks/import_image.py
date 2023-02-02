@@ -117,10 +117,7 @@ def run_import_image_job(
 
 
 def import_insights_from_image(
-    barcode: str,
-    image_url: str,
-    ocr_url: str,
-    server_domain: str,
+    barcode: str, image_url: str, ocr_url: str, server_domain: str
 ):
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
@@ -178,7 +175,7 @@ def save_image(
     """Save imported image details in DB."""
     if existing_image_model := ImageModel.get_or_none(source_image=source_image):
         logger.info(
-            f"Image {source_image} already exist in DB, returning existing image",
+            f"Image {source_image} already exist in DB, returning existing image"
         )
         return existing_image_model
 
@@ -408,7 +405,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
             y_max * image.height,
         )
         cropped_image = image.crop((left, top, right, bottom))
-        resized_cropped_images.append(cropped_image.resize((224,224)))
+        resized_cropped_images.append(cropped_image.resize((224, 224)))
     embeddings = generate_clip_embedding(resized_cropped_images)
 
     with db.atomic():
