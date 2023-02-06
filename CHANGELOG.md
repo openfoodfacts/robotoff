@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.20.2](https://github.com/openfoodfacts/robotoff/compare/v1.20.1...v1.20.2) (2023-02-06)
+
+
+### Bug Fixes
+
+* adapt for autoblack ([93e75ca](https://github.com/openfoodfacts/robotoff/commit/93e75ca8081ef8164d36172d2aed8b104653f690))
+* add new question to robotoff.pot ([b13d505](https://github.com/openfoodfacts/robotoff/commit/b13d5059b945e407e58c4168a6f91bb23bf4583c))
+* manually cropping and resizing of logos before CLIP processor ([2a660e0](https://github.com/openfoodfacts/robotoff/commit/2a660e09f98764ec925c4474c8388ba04b5846a9))
+
 ## [1.20.1](https://github.com/openfoodfacts/robotoff/compare/v1.20.0...v1.20.1) (2023-01-30)
 
 
