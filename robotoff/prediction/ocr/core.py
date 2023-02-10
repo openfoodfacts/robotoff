@@ -4,11 +4,9 @@ from typing import Callable, Iterable, Optional, TextIO, Union
 
 import requests
 
-from robotoff.off import generate_json_ocr_url, get_barcode_from_path, split_barcode
 from robotoff.prediction.types import Prediction
-from robotoff.settings import BaseURLProvider
 from robotoff.types import JSONType, PredictionType
-from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
+from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 
 from .brand import find_brands
 from .category import find_category
@@ -48,22 +46,6 @@ PREDICTION_TYPE_TO_FUNC: dict[
     PredictionType.location: find_locations,
     PredictionType.image_lang: get_image_lang,
 }
-
-
-def fetch_images_for_ean(ean: str):
-    url = BaseURLProvider.world() + "/api/v0/product/{}.json?fields=images".format(ean)
-    images = http_session.get(url).json()
-    return images
-
-
-def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
-    url = generate_json_ocr_url(barcode, image_id)
-    r = http_session.get(url)
-
-    if r.status_code == 404:
-        return None
-
-    return r.json()
 
 
 def get_ocr_result(
@@ -121,22 +103,6 @@ def extract_predictions(
         return predictions
     else:
         raise ValueError(f"unknown prediction type: {prediction_type}")
-
-
-def is_barcode(text: str):
-    return text.isdigit()
-
-
-def get_source(
-    image_name: str, json_path: Optional[str] = None, barcode: Optional[str] = None
-) -> str:
-    if not barcode:
-        barcode = get_barcode_from_path(str(json_path))
-
-        if not barcode:
-            raise ValueError("invalid JSON path: {}".format(json_path))
-
-    return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
 
 
 def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[Optional[str], dict]]:
