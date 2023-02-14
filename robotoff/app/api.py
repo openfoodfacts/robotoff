@@ -66,7 +66,12 @@ from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.products import get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
-from robotoff.types import ElasticSearchIndex, JSONType, PredictionType
+from robotoff.types import (
+    ElasticSearchIndex,
+    JSONType,
+    NeuralCategoryClassifierModel,
+    PredictionType,
+)
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
@@ -427,6 +432,10 @@ class CategoryPredictorResource:
         for a specific product."""
         predictors: list[str] = req.media.get("predictors") or ["neural", "matcher"]
 
+        neural_model_name = None
+        if (neural_model_name_str := req.media.get("neural_model_name")) is not None:
+            neural_model_name = NeuralCategoryClassifierModel[neural_model_name_str]
+
         if "barcode" in req.media:
             # Fetch product from DB
             barcode: str = req.media["barcode"]
@@ -450,6 +459,7 @@ class CategoryPredictorResource:
             matcher_predictor="matcher" in predictors,
             deepest_only=req.media.get("deepest_only", False),
             threshold=req.media.get("threshold"),
+            neural_model_name=neural_model_name,
         )
 
 

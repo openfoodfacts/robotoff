@@ -8,29 +8,30 @@ from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
 from robotoff.types import InsightType
 
+MODEL_VERSION = "category-classifier"
+
 
 def test_category_prediction_to_prediction():
-    category_prediction = CategoryPrediction("category", 0.5)
+    category_prediction = CategoryPrediction("category", 0.5, MODEL_VERSION)
 
     assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
-        data={"lang": "xx"},
+        data={"model_version": MODEL_VERSION},
         automatic_processing=False,
         predictor="neural",
         confidence=0.5,
     )
 
 
-def test_category_prediction_to_prediction_auto(monkeypatch):
-    monkeypatch.setattr(CategoryPrediction, "NEURAL_CONFIDENCE_THRESHOLD", 0.9)
-    category_prediction = CategoryPrediction("category", 0.9)
+def test_category_prediction_to_prediction_auto():
+    category_prediction = CategoryPrediction("category", 0.9, MODEL_VERSION)
 
     assert category_prediction.to_prediction() == Prediction(
         type=InsightType.category,
         value_tag="category",
-        data={"lang": "xx"},
-        automatic_processing=True,
+        data={"model_version": MODEL_VERSION},
+        automatic_processing=False,
         predictor="neural",
         confidence=0.9,
     )
@@ -85,7 +86,7 @@ def test_predict_missing_data():
 )
 def test_predict_ingredients_only(mocker, data):
     mocker.patch(
-        "robotoff.prediction.category.neural.category_classifier.http_session.post",
+        "robotoff.prediction.category.neural.category_classifier.keras_category_classifier_2_0.http_session.post",
         return_value=_prediction_resp(["en:meat"], [0.99]),
     )
     classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
@@ -109,7 +110,7 @@ def test_predict_ingredients_only(mocker, data):
 )
 def test_predict_product_no_title(mocker, data):
     mocker.patch(
-        "robotoff.prediction.category.neural.category_classifier.http_session.post",
+        "robotoff.prediction.category.neural.category_classifier.keras_category_classifier_2_0.http_session.post",
         return_value=_prediction_resp(["en:meat"], [0.99]),
     )
     classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
@@ -161,7 +162,7 @@ def test_predict(mocker, deepest_only, mock_response, expected_values):
     classifier = CategoryClassifier(category_taxonomy)
 
     mocker.patch(
-        "robotoff.prediction.category.neural.category_classifier.http_session.post",
+        "robotoff.prediction.category.neural.category_classifier.keras_category_classifier_2_0.http_session.post",
         return_value=mock_response,
     )
 

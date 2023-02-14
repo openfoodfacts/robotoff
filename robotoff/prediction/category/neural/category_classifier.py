@@ -1,29 +1,27 @@
 from typing import Optional
 
-from robotoff import settings
 from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
-from robotoff.types import PredictionType
-from robotoff.utils import http_session
+from robotoff.types import NeuralCategoryClassifierModel, PredictionType
+
+from . import keras_category_classifier_2_0, keras_category_classifier_3_0
 
 
 class CategoryPrediction:
     """CategoryPrediction stores information about a category classification prediction."""
 
-    #: threshold on the neural model confidence to automatically apply prediction
-    NEURAL_CONFIDENCE_THRESHOLD = 1.1  # deactivated for now, 1.1 is above 1
-
-    def __init__(self, category: str, confidence: float):
+    def __init__(self, category: str, confidence: float, model_version: str):
         self.category = category
         self.confidence = confidence
+        self.model_version = model_version
 
     def to_prediction(self) -> Prediction:
         """Converts this category prediction to a Prediction."""
         return Prediction(
             type=PredictionType.category,
             value_tag=self.category,
-            data={"lang": "xx"},
-            automatic_processing=self.confidence >= self.NEURAL_CONFIDENCE_THRESHOLD,
+            data={"model_version": self.model_version},
+            automatic_processing=False,
             predictor="neural",
             confidence=self.confidence,
         )
@@ -37,10 +35,12 @@ class CategoryPrediction:
 
 
 class CategoryClassifier:
-    """CategoryClassifier is responsible for generating predictions for a given product.
+    """CategoryClassifier is responsible for generating predictions for a
+    given product.
 
     param category_taxonomy: the Taxonomy.
-        This is used to have hierarchy in order to remove parents from resulting category set.
+        This is used to have hierarchy in order to remove parents from
+        resulting category set.
     """
 
     def __init__(self, category_taxonomy: Taxonomy):
@@ -51,78 +51,50 @@ class CategoryClassifier:
         product: dict,
         deepest_only: bool = False,
         threshold: Optional[float] = None,
+        model_name: Optional[NeuralCategoryClassifierModel] = None,
     ) -> list[Prediction]:
         """Returns an unordered list of category predictions for the given
         product.
 
         :param product: the product to predict the categories from, should
-        have at least `product_name` and `ingredients_tags` fields
+            have at least `product_name` and `ingredients_tags` fields
         :param deepest_only: controls whether the returned list should only
-        contain the deepmost categories for a predicted taxonomy chain.
+            contain the deepmost categories for a predicted taxonomy chain.
 
             For example, if we predict 'fresh vegetables' -> 'legumes' ->
             'beans' for a product,
             setting deepest_only=True will return ['beans'].
         :param threshold: the score above which we consider the category to be
-        detected (default: 0.5)
+            detected (default: 0.5)
+        :param neural_model_name: the name of the neural model to use to perform
+            prediction. `keras_2_0` is used by default.
         """
         if threshold is None:
             threshold = 0.5
 
-        # model was train with product having a name
-        if not product.get("product_name"):
-            return []
-        # ingredients are not mandatory, just insure correct type
-        product.setdefault("ingredients_tags", [])
+        if model_name is None:
+            model_name = NeuralCategoryClassifierModel.keras_2_0
 
-        data = {
-            "signature_name": "serving_default",
-            "instances": [
-                {
-                    "ingredient": product["ingredients_tags"],
-                    "product_name": [product["product_name"]],
-                }
-            ],
-        }
+        if model_name == NeuralCategoryClassifierModel.keras_2_0:
+            predictions = keras_category_classifier_2_0.predict(product, threshold)
+        else:
+            if "ingredients_tags" in product and "ingredients" not in product:
+                # Add ingredients field
+                product["ingredients"] = [
+                    {"id": id_} for id_ in product["ingredients_tags"]
+                ]
 
-        r = http_session.post(
-            f"{settings.TF_SERVING_BASE_URL}/category-classifier:predict",
-            json=data,
-            timeout=(3.0, 10.0),
-        )
-        r.raise_for_status()
-        response = r.json()
-
-        # Since we only sent one product in the query, we can be guaranteed that only one
-        # prediction is returned by TF Serving.
-        prediction = response["predictions"][0]
-
-        # The response is always in the form:
-        #   "predictions": [
-        #     {
-        #         "output_mapper_layer": [0.868871808, 0.801418602, ...],
-        #         "output_mapper_layer_1": ["en:seafood", "en:fishes", ....],
-        #     }
-        #   ]
-        #
-        # where 'output_mapper_layer' is the confidence score for a prediction in descending order.
-        #       'output_mapper_layer_1' is the category for the prediction score above.
-        #
-        # The model only returns top 50 predictions.
-
-        category_predictions: list[CategoryPrediction] = []
-
-        # We only consider predictions with a confidence score of `threshold` and above.
-        for idx, confidence in enumerate(prediction["output_mapper_layer"]):
-            if confidence >= threshold:
-                category_predictions.append(
-                    CategoryPrediction(
-                        category=prediction["output_mapper_layer_1"][idx],
-                        confidence=prediction["output_mapper_layer"][idx],
-                    )
-                )
+            if "ocr" in product:
+                ocr_texts = product.pop("ocr")
             else:
-                break
+                ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
+            predictions = keras_category_classifier_3_0.predict(
+                product, ocr_texts, model_name, threshold=threshold
+            )
+
+        category_predictions = [
+            CategoryPrediction(*item, model_name.value) for item in predictions
+        ]
 
         if deepest_only:
             predicted_dict = {p.category: p for p in category_predictions}

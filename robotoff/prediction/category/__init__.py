@@ -2,7 +2,7 @@ import itertools
 from typing import Optional
 
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import JSONType
+from robotoff.types import JSONType, NeuralCategoryClassifierModel
 
 from .matcher import predict_by_lang
 from .neural.category_classifier import CategoryClassifier
@@ -14,6 +14,7 @@ def predict_category(
     matcher_predictor: bool,
     deepest_only: bool,
     threshold: Optional[float] = None,
+    neural_model_name: Optional[NeuralCategoryClassifierModel] = None,
 ) -> dict[str, list[dict]]:
     """Predict categories for a product.
 
@@ -27,21 +28,24 @@ def predict_category(
     predicted categories.
 
     :param product: the product to predict the categories from, should have at
-    least `product_name` and `ingredients_tags` fields for neural predictor
-    and `product_name_{lang}` and `languages_codes` for matching predictor
+        least `product_name` and `ingredients_tags` fields for neural
+        predictor and `product_name_{lang}` and `languages_codes` for matching
+        predictor
     :param neural_predictor: if True, add predictions of the neural predictor
     :param matcher_predictor: if True, add predictions of the matcher
-    predictor
+        predictor
     :param deepest_only: controls whether the returned list should only
-    contain the deepmost categories for a predicted taxonomy chain.
+        contain the deepmost categories for a predicted taxonomy chain.
     :param threshold: the score above which we consider the category to be
-    detected for neural predictor (default: 0.5)
+        detected for neural predictor (default: 0.5)
+    :param neural_model_name: the name of the neural model to use to perform
+        prediction
     """
     response: JSONType = {}
     taxonomy = get_taxonomy(TaxonomyType.category.name)
     if neural_predictor:
         predictions = CategoryClassifier(taxonomy).predict(
-            product, deepest_only, threshold
+            product, deepest_only, threshold, neural_model_name
         )
         response["neural"] = [
             {"value_tag": p.value_tag, "confidence": p.confidence} for p in predictions

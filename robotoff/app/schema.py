@@ -1,4 +1,4 @@
-from robotoff.types import JSONType
+from robotoff.types import JSONType, NeuralCategoryClassifierModel
 
 IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -60,6 +60,10 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                     "type": "array",
                     "items": {"enum": ["neural", "matcher"]},
                 },
+                "neural_model_name": {
+                    "type": "string",
+                    "enum": [x.name for x in NeuralCategoryClassifierModel],
+                },
             },
             "required": ["barcode"],
         },
@@ -77,8 +81,26 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                             "type": "array",
                             "items": {"type": "string"},
                         },
+                        "ocr": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "nutriments": {
+                            "type": "object",
+                            "properties": {
+                                "fat": {"type": "number"},
+                                "saturated_fat": {"type": "number"},
+                                "carbohydrates": {"type": "number"},
+                                "sugars": {"type": "number"},
+                                "fiber": {"type": "number"},
+                                "proteins": {"type": "number"},
+                                "salt": {"type": "number"},
+                                "energy_kcal": {"type": "number"},
+                                "fruits_vegetables_nuts": {"type": "number"},
+                            },
+                        },
                     },
-                    "required": ["product_name"],
+                    "required": [],
                 },
                 "deepest_only": {
                     "type": "boolean",
@@ -91,6 +113,10 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                 "lang": {
                     "type": "string",
                     "minLength": 1,
+                },
+                "neural_model_name": {
+                    "type": "string",
+                    "enum": [x.name for x in NeuralCategoryClassifierModel],
                 },
             },
             "required": ["product"],

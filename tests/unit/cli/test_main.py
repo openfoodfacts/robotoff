@@ -62,7 +62,7 @@ def test_categorize(mocker, capsys, confidence, want_nothing):
         },
     )
     mocker.patch(
-        "robotoff.prediction.category.neural.category_classifier.http_session.post",
+        "robotoff.prediction.category.neural.category_classifier.keras_category_classifier_2_0.http_session.post",
         return_value=_construct_prediction_resp("en:chicken", confidence),
     )
 
