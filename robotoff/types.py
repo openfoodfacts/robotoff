@@ -20,6 +20,16 @@ class ObjectDetectionModel(enum.Enum):
 
 
 @enum.unique
+class NeuralCategoryClassifierModel(enum.Enum):
+    keras_2_0 = "keras-2.0"
+    keras_sota_3_0 = "keras-sota-3-0"
+    keras_ingredient_ocr_3_0 = "keras-ingredient-ocr-3.0"
+    keras_baseline_3_0 = "keras-baseline-3.0"
+    keras_original_3_0 = "keras-original-3.0"
+    keras_product_name_only_3_0 = "keras-product-name-only-3.0"
+
+
+@enum.unique
 class PredictionType(str, enum.Enum):
     """PredictionType defines the type of the prediction.
 
