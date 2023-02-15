@@ -115,7 +115,9 @@ def get_product_image_select_url(server: Union[ServerType, str]) -> str:
 
 
 def get_api_product_url(server: Union[ServerType, str]) -> str:
-    return "{}/api/v0/product".format(get_base_url(server))
+    # V2 of API is required to have proper ingredient nesting
+    # for product categorization
+    return "{}/api/v2/product".format(get_base_url(server))
 
 
 def get_base_url(server: Union[ServerType, str]) -> str:
