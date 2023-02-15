@@ -61,7 +61,7 @@ def _prediction_resp(categories: list[str], confs: list[float]) -> MockResponse:
 def test_predict_missing_data():
     classifier = CategoryClassifier(None)
 
-    predicted = classifier.predict(
+    predicted, _ = classifier.predict(
         {"WRONG_ingredients_tags": ["ingredient1"]},
     )
 
@@ -90,7 +90,15 @@ def test_predict_ingredients_only(mocker, data):
         return_value=_prediction_resp(["en:meat"], [0.99]),
     )
     classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
-    predictions = classifier.predict(data)
+    predictions, debug = classifier.predict(data)
+    assert debug == {
+        "inputs": {
+            "ingredient": data["ingredients_tags"],
+            "product_name": [data["product_name"]],
+        },
+        "model_name": "keras-2.0",
+        "threshold": 0.5,
+    }
     assert len(predictions) == 1
     prediction = predictions[0]
     assert prediction.value_tag == "en:meat"
@@ -114,7 +122,7 @@ def test_predict_product_no_title(mocker, data):
         return_value=_prediction_resp(["en:meat"], [0.99]),
     )
     classifier = CategoryClassifier({"en:meat": {"names": "meat"}})
-    predictions = classifier.predict(data)
+    predictions, _ = classifier.predict(data)
     assert len(predictions) == 0
 
 
@@ -166,7 +174,7 @@ def test_predict(mocker, deepest_only, mock_response, expected_values):
         return_value=mock_response,
     )
 
-    predictions = classifier.predict(
+    predictions, _ = classifier.predict(
         {"ingredients_tags": ["ingredient1"], "product_name": "Test Product"},
         deepest_only,
     )

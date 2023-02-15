@@ -14,7 +14,7 @@ def test_add_category_insight_no_insights(mocker):
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
-        return_value=[],
+        return_value=([], {}),
     )
     import_insights_mock = mocker.patch(
         "robotoff.workers.tasks.product_updated.import_insights"
@@ -43,7 +43,7 @@ def test_add_category_insight_with_ml_insights(mocker):
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.CategoryClassifier.predict",
-        return_value=[expected_prediction],
+        return_value=([expected_prediction], {}),
     )
     import_insights_mock = mocker.patch(
         "robotoff.workers.tasks.product_updated.import_insights",

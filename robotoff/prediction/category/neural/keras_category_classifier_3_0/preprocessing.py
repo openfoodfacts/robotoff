@@ -3,13 +3,14 @@ import re
 import string
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 import cachetools
 import numpy as np
 from flashtext import KeywordProcessor
 
 from robotoff.taxonomy import Taxonomy, fetch_taxonomy
+from robotoff.types import JSONType
 
 from .text_utils import fold, get_tag
 
@@ -41,7 +42,7 @@ def get_ingredient_processor():
     )
 
 
-def generate_inputs_from_product(product: dict, ocr_texts: list[str]) -> dict[str, Any]:
+def generate_inputs_from_product(product: dict, ocr_texts: list[str]) -> JSONType:
     ingredient_taxonomy = get_ingredient_taxonomy()
     ingredient_processor = get_ingredient_processor()
 

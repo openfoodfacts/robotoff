@@ -147,9 +147,9 @@ def categorize(barcode: str, deepest_only: bool = False) -> None:
         print(f"Product {barcode} not found")
         return
 
-    predictions = CategoryClassifier(get_taxonomy(TaxonomyType.category.name)).predict(
-        product, deepest_only
-    )
+    predictions, _ = CategoryClassifier(
+        get_taxonomy(TaxonomyType.category.name)
+    ).predict(product, deepest_only)
 
     if predictions:
         for prediction in predictions:
@@ -586,7 +586,7 @@ def import_logos(
 
     - barcode: the barcode of the product
     - image_id: the image ID ("1", "2",...), must be a digit
-    - result: a dict, containing:
+    - result: a list of dict, containing:
         - score: the confidence score (float)
         - bounding_box: a list with 4 elements, corresponding to the
           normalized detected bounding box
