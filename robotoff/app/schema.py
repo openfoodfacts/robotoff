@@ -66,6 +66,7 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                 },
             },
             "required": ["barcode"],
+            "additionalProperties": False,
         },
         {
             "type": "object",
@@ -98,9 +99,11 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                                 "energy_kcal": {"type": "number"},
                                 "fruits_vegetables_nuts": {"type": "number"},
                             },
+                            "additionalProperties": False,
                         },
                     },
                     "required": [],
+                    "additionalProperties": False,
                 },
                 "deepest_only": {
                     "type": "boolean",
@@ -120,6 +123,7 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                 },
             },
             "required": ["product"],
+            "additionalProperties": False,
         },
     ],
 }
