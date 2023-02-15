@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 from tritonclient.grpc import service_pb2
@@ -10,13 +10,13 @@ from robotoff.triton import (
     get_triton_inference_stub,
     serialize_byte_tensor,
 )
-from robotoff.types import NeuralCategoryClassifierModel
+from robotoff.types import JSONType, NeuralCategoryClassifierModel
 from robotoff.utils import http_session
 
 from .preprocessing import NUTRIMENT_NAMES, generate_inputs_from_product
 
 
-def fetch_ocr_texts(product: dict[str, Any]) -> list[str]:
+def fetch_ocr_texts(product: JSONType) -> list[str]:
     barcode = product.get("code")
     if not barcode:
         return []
@@ -32,14 +32,21 @@ def fetch_ocr_texts(product: dict[str, Any]) -> list[str]:
 
 
 def predict(
-    product: dict[str, Any],
+    product: JSONType,
     ocr_texts: list[str],
     model_name: NeuralCategoryClassifierModel,
     threshold: Optional[float] = None,
-):
+) -> tuple[list[tuple[str, float]], JSONType]:
     if threshold is None:
         threshold = 0.5
-    scores, labels = _predict(product, ocr_texts, model_name)
+
+    inputs = generate_inputs_from_product(product, ocr_texts)
+    debug: JSONType = {
+        "model_name": model_name.value,
+        "threshold": threshold,
+        "inputs": inputs,
+    }
+    scores, labels = _predict(inputs, model_name)
     indices = np.argsort(-scores)
 
     category_predictions: list[tuple[str, float]] = []
@@ -53,7 +60,7 @@ def predict(
         else:
             break
 
-    return category_predictions
+    return category_predictions, debug
 
 
 model_input_flags: dict[NeuralCategoryClassifierModel, dict] = {
@@ -83,11 +90,8 @@ triton_model_names = {
 
 
 def _predict(
-    product: dict[str, Any],
-    ocr_texts: list[str],
-    model_name: NeuralCategoryClassifierModel,
+    inputs: JSONType, model_name: NeuralCategoryClassifierModel
 ) -> tuple[np.ndarray, list[str]]:
-    inputs = generate_inputs_from_product(product, ocr_texts)
     request = build_triton_request(
         inputs,
         model_name=triton_model_names[model_name],
@@ -103,7 +107,7 @@ def _predict(
 
 
 def build_triton_request(
-    inputs: dict[str, Any],
+    inputs: JSONType,
     model_name: str,
     add_product_name: bool = True,
     add_ingredient_tags: bool = True,

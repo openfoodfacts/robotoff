@@ -70,9 +70,10 @@ def add_category_insight(barcode: str, product: JSONType, server_domain: str):
 
     # predict category using neural model
     try:
-        product_predictions += CategoryClassifier(
+        neural_predictions, _ = CategoryClassifier(
             get_taxonomy(TaxonomyType.category.name)
         ).predict(product)
+        product_predictions += neural_predictions
     except requests.exceptions.HTTPError as e:
         resp = e.response
         logger.error(

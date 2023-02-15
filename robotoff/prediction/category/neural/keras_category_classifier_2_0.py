@@ -1,12 +1,13 @@
 from typing import Optional
 
 from robotoff import settings
+from robotoff.types import JSONType, NeuralCategoryClassifierModel
 from robotoff.utils import http_session
 
 
 def predict(
     product: dict, threshold: Optional[float] = None
-) -> list[tuple[str, float]]:
+) -> tuple[list[tuple[str, float]], JSONType]:
     """Returns an unordered list of category predictions for the given
     product.
 
@@ -24,20 +25,25 @@ def predict(
     if threshold is None:
         threshold = 0.5
 
+    debug: JSONType = {
+        "model_name": NeuralCategoryClassifierModel.keras_2_0.value,
+        "threshold": threshold,
+        "inputs": None,
+    }
     # model was train with product having a name
     if not product.get("product_name"):
-        return []
+        return [], debug
     # ingredients are not mandatory, just insure correct type
     product.setdefault("ingredients_tags", [])
+    inputs = {
+        "ingredient": product["ingredients_tags"],
+        "product_name": [product["product_name"]],
+    }
+    debug["inputs"] = inputs
 
     data = {
         "signature_name": "serving_default",
-        "instances": [
-            {
-                "ingredient": product["ingredients_tags"],
-                "product_name": [product["product_name"]],
-            }
-        ],
+        "instances": [inputs],
     }
 
     r = http_session.post(
@@ -79,4 +85,4 @@ def predict(
         else:
             break
 
-    return category_predictions
+    return category_predictions, debug

@@ -15,7 +15,7 @@ def predict_category(
     deepest_only: bool,
     threshold: Optional[float] = None,
     neural_model_name: Optional[NeuralCategoryClassifierModel] = None,
-) -> dict[str, list[dict]]:
+) -> JSONType:
     """Predict categories for a product.
 
     Two predictors are available:
@@ -44,12 +44,16 @@ def predict_category(
     response: JSONType = {}
     taxonomy = get_taxonomy(TaxonomyType.category.name)
     if neural_predictor:
-        predictions = CategoryClassifier(taxonomy).predict(
+        predictions, debug = CategoryClassifier(taxonomy).predict(
             product, deepest_only, threshold, neural_model_name
         )
-        response["neural"] = [
-            {"value_tag": p.value_tag, "confidence": p.confidence} for p in predictions
-        ]
+        response["neural"] = {
+            "predictions": [
+                {"value_tag": p.value_tag, "confidence": p.confidence}
+                for p in predictions
+            ],
+            "debug": debug,
+        }
     if matcher_predictor:
         predictions = list(
             itertools.chain.from_iterable(predict_by_lang(product).values())
@@ -64,21 +68,25 @@ def predict_category(
                 for x in taxonomy.find_deepest_nodes(taxonomy_nodes)
             ]
 
-        response["matcher"] = [
-            {
-                "value_tag": p.value_tag,
-                "debug": {
-                    "product_name": p.data["product_name"],
-                    "lang": p.data["lang"],
-                    "pattern": p.data["pattern"],
-                    "processed_product_name": p.data["processed_product_name"],
-                    "start_idx": p.data["start_idx"],
-                    "end_idx": p.data["end_idx"],
-                    "is_full_match": p.data["is_full_match"],
-                    "category_name": p.data["category_name"],
-                },
-            }
-            for p in itertools.chain.from_iterable(predict_by_lang(product).values())
-        ]
+        response["matcher"] = {
+            "predictions": [
+                {
+                    "value_tag": p.value_tag,
+                    "debug": {
+                        "product_name": p.data["product_name"],
+                        "lang": p.data["lang"],
+                        "pattern": p.data["pattern"],
+                        "processed_product_name": p.data["processed_product_name"],
+                        "start_idx": p.data["start_idx"],
+                        "end_idx": p.data["end_idx"],
+                        "is_full_match": p.data["is_full_match"],
+                        "category_name": p.data["category_name"],
+                    },
+                }
+                for p in itertools.chain.from_iterable(
+                    predict_by_lang(product).values()
+                )
+            ]
+        }
 
     return response

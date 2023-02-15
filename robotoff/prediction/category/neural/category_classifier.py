@@ -2,7 +2,7 @@ from typing import Optional
 
 from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
-from robotoff.types import NeuralCategoryClassifierModel, PredictionType
+from robotoff.types import JSONType, NeuralCategoryClassifierModel, PredictionType
 
 from . import keras_category_classifier_2_0, keras_category_classifier_3_0
 
@@ -52,9 +52,9 @@ class CategoryClassifier:
         deepest_only: bool = False,
         threshold: Optional[float] = None,
         model_name: Optional[NeuralCategoryClassifierModel] = None,
-    ) -> list[Prediction]:
-        """Returns an unordered list of category predictions for the given
-        product.
+    ) -> tuple[list[Prediction], JSONType]:
+        """Return an unordered list of category predictions for the given
+        product and additional debug information.
 
         :param product: the product to predict the categories from, should
             have at least `product_name` and `ingredients_tags` fields
@@ -76,7 +76,9 @@ class CategoryClassifier:
             model_name = NeuralCategoryClassifierModel.keras_2_0
 
         if model_name == NeuralCategoryClassifierModel.keras_2_0:
-            predictions = keras_category_classifier_2_0.predict(product, threshold)
+            predictions, debug = keras_category_classifier_2_0.predict(
+                product, threshold
+            )
         else:
             if "ingredients_tags" in product and "ingredients" not in product:
                 # Add ingredients field
@@ -88,7 +90,7 @@ class CategoryClassifier:
                 ocr_texts = product.pop("ocr")
             else:
                 ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
-            predictions = keras_category_classifier_3_0.predict(
+            predictions, debug = keras_category_classifier_3_0.predict(
                 product, ocr_texts, model_name, threshold=threshold
             )
 
@@ -108,4 +110,4 @@ class CategoryClassifier:
         return [
             category_prediction.to_prediction()
             for category_prediction in category_predictions
-        ]
+        ], debug
