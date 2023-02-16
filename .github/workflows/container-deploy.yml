@@ -36,7 +36,7 @@ jobs:
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
         echo "ROBOTOFF_DOMAIN=openfoodfacts.org" >> $GITHUB_ENV
-        echo "MONGO_URI=mongodb://off2.free.org:27017" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://213.36.253.195:27017" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
