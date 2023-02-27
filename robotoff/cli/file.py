@@ -37,5 +37,5 @@ def download_file(url: str, destination: Path, force: bool = False) -> None:
     logger.info(f"Start download from {url} to {destination}.")
     with requests.get(url, stream=True) as r:
         with destination.open("wb") as f:
-            shutil.copyfileobj(r.raw, f)
+            shutil.copyfileobj(r.raw, f)  # type: ignore
     logger.info("Download complete.")
