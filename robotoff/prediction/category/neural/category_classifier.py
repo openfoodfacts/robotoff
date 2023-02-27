@@ -81,14 +81,21 @@ class CategoryClassifier:
             )
         else:
             if "ingredients_tags" in product and "ingredients" not in product:
-                # Add ingredients field
+                # v3 models use the `ingredients` field instead of `ingredients_tags`,
+                # so that we only consider ingredients of depth 0.
+                # To keep a single interface between v2 and v3 models in Robotoff
+                # /predict/category route, we generate the `ingredients` field
+                # from `ingredients` tags if it is missing
                 product["ingredients"] = [
                     {"id": id_} for id_ in product["ingredients_tags"]
                 ]
 
             if "ocr" in product:
+                # We check that the OCR text list was not provided manually in `product`
+                # dict
                 ocr_texts = product.pop("ocr")
             else:
+                # Otherwise we fetch OCR texts from Product Opener
                 ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
             predictions, debug = keras_category_classifier_3_0.predict(
                 product, ocr_texts, model_name, threshold=threshold
