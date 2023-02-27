@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional
 
 import cachetools
-import numpy as np
 from flashtext import KeywordProcessor
 
 from robotoff.taxonomy import Taxonomy, fetch_taxonomy
@@ -42,7 +41,14 @@ def get_ingredient_processor():
     )
 
 
-def generate_inputs_from_product(product: dict, ocr_texts: list[str]) -> JSONType:
+def generate_inputs_from_product(product: JSONType, ocr_texts: list[str]) -> JSONType:
+    """Generate inputs for v3 category predictor model.
+
+    :param product: the product dict, the `product_name` and `ingredients`
+        fields are used, if provided
+    :param ocr_texts: a list of detected OCR texts, one per image
+    :return: a dict containing inputs for v3 category predictor model
+    """
     ingredient_taxonomy = get_ingredient_taxonomy()
     ingredient_processor = get_ingredient_processor()
 
@@ -85,6 +91,19 @@ def transform_ingredients_input(
 
 
 def transform_nutrition_input(value: Optional[float], nutriment_name: str) -> float:
+    """Transform nutritional values before model inference.
+
+    This function returns:
+
+    - -1, if the value is missing
+    - -2, if the value is obviously or suspiciously wrong (<0 or >=101 for all
+        nutriments except energy, <0 or >=3800 kcal for energy)
+    - the input value otherwise
+
+    :param value: the float value
+    :param nutriment_name: the name of the nutriment
+    :return: the transformed nutriment value
+    """
     if value is None:
         return -1
 
@@ -106,6 +125,15 @@ MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
 def extract_ocr_ingredients(
     values: list[str], processor: KeywordProcessor, debug: bool = False
 ) -> list[str]:
+    """Extract ingredient tags from OCR texts.
+
+    :param values: a list of OCR texts, one string per image
+    :param processor: the ingredient KeywordProcessor, see
+        `build_ingredient_processor`
+    :param debug: if True return `{INGREDIENT_TAG}|{LANG}` as output instead
+        of only `{INGREDIENT_TAG}`, defaults to False
+    :return: the list of detected ingredient tags
+    """
     texts = []
     for ocr_data in values:
         text = ocr_data.replace("\n", " ")
@@ -242,29 +270,3 @@ def extract_ingredient_from_text(
     """
     text = fold(text.lower())
     return processor.extract_keywords(text, span_info=True)
-
-
-def transform_image_embeddings(
-    image_embeddings: dict[int, np.ndarray], max_images: int, embedding_dim: int
-):
-    embeddings_batch = []
-    # Sort by descending key orders
-    sorted_image_ids = sorted(image_embeddings.keys(), reverse=True)[:max_images]
-    # Only take `max_images` most recent
-    for image_id in sorted_image_ids:
-        embeddings_batch.append(image_embeddings[image_id])
-
-    # Fill with "pad" zero-valued arrays
-    embeddings_batch += [np.zeros(embedding_dim, dtype=np.float32)] * (
-        max_images - len(sorted_image_ids)
-    )
-    return np.stack(embeddings_batch)
-
-
-def transform_image_embeddings_mask(
-    image_embeddings: dict[int, np.ndarray], max_images: int
-) -> np.ndarray:
-    number_images = min(len(image_embeddings.keys()), max_images)
-    mask = np.zeros(max_images, dtype=np.int64)
-    mask[:number_images] = 1
-    return mask
