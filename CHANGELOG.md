@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.21.0](https://github.com/openfoodfacts/robotoff/compare/v1.20.2...v1.21.0) (2023-02-28)
+
+
+### Features
+
+* add new category classification models ([60d167d](https://github.com/openfoodfacts/robotoff/commit/60d167d5e0226a519d164ff3fab07114cee159be))
+* return debug information in /predict/category route ([5b2b392](https://github.com/openfoodfacts/robotoff/commit/5b2b39220cc2776677d34f78d9b62696d0770f30))
+
+
+### Bug Fixes
+
+* fix category predictions ([347c72c](https://github.com/openfoodfacts/robotoff/commit/347c72c024d50722b3e30963ae5707968b71246e))
+* remove unused functions ([5b0f1ae](https://github.com/openfoodfacts/robotoff/commit/5b0f1aecb6c72e599258a80e5dc46f6d4958197e))
+* silence false-positive mypy error ([337777d](https://github.com/openfoodfacts/robotoff/commit/337777dccce4441fca253e46fd29affadfe1e54c))
+* update /predict/category schema ([f86c098](https://github.com/openfoodfacts/robotoff/commit/f86c098e1e2c4508d9059b54c0f792562d681235))
+* update poetry lock file ([48d921c](https://github.com/openfoodfacts/robotoff/commit/48d921ce9fc1d3575a77c6b991e9d4365ff774de))
+
+
+### Documentation
+
+* improve documentation in v3 category predictor code ([675e056](https://github.com/openfoodfacts/robotoff/commit/675e0564c98c9b229b29872e2fae01fd6654a2c8))
+
 ## [1.20.2](https://github.com/openfoodfacts/robotoff/compare/v1.20.1...v1.20.2) (2023-02-06)
 
 
