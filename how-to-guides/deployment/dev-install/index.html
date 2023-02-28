@@ -816,7 +816,7 @@ You should, consider those changes:</p>
 </code></pre></div>
 <p>This will build containers, pull images based containers, create containers and run them.</p>
 <p>Verify whether robotoff is running as expected, by executing the following command in CLI:
-<div class="highlight"><pre><span></span><code>curl http://localhost:5500/api/v1/status
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>http://localhost:5500/api/v1/status
 </code></pre></div>
 The expected response is <code>{"status":"running"}</code>.</p>
 <p>Also take a look at <a href="../maintenance/">maintenance</a>.</p>
@@ -827,18 +827,18 @@ The expected response is <code>{"status":"running"}</code>.</p>
 <ol>
 <li>
 <p>Configure Poetry to use Python 3.9:
-   <div class="highlight"><pre><span></span><code>poetry env use python3.9
+   <div class="highlight"><pre><span></span><code>poetry<span class="w"> </span>env<span class="w"> </span>use<span class="w"> </span>python3.9
 </code></pre></div></p>
 </li>
 <li>
 <p>Install the dependencies:</p>
-<div class="highlight"><pre><span></span><code>poetry install
+<div class="highlight"><pre><span></span><code>poetry<span class="w"> </span>install
 </code></pre></div>
 </li>
 <li>
 <p>Configure files required for the tests to run locally:</p>
 <p>Compile the i18n files:
-  <div class="highlight"><pre><span></span><code><span class="nb">cd</span> i18n <span class="o">&amp;&amp;</span> bash compile.sh <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
+  <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>i18n<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>compile.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>..
 </code></pre></div></p>
 </li>
 <li>
@@ -859,28 +859,28 @@ The expected response is <code>{"status":"running"}</code>.</p>
 <h3 id="postgresql-dump">PostgreSQL dump</h3>
 <p>Robotoff uses PostgreSQL as main database.</p>
 <p>First, download the latest DB dump:</p>
-<div class="highlight"><pre><span></span><code>wget https://openfoodfacts.org/data/dumps/robotoff_postgres_latest.dump
+<div class="highlight"><pre><span></span><code>wget<span class="w"> </span>https://openfoodfacts.org/data/dumps/robotoff_postgres_latest.dump
 </code></pre></div>
 <p>Start PostgreSQL container and copy the dump inside the container:</p>
-<div class="highlight"><pre><span></span><code>make up <span class="nv">service</span><span class="o">=</span>postgres
-docker cp -a robotoff_postgres_latest.dump robotoff_postgres_1:/tmp/
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>up<span class="w"> </span><span class="nv">service</span><span class="o">=</span>postgres
+docker<span class="w"> </span>cp<span class="w"> </span>-a<span class="w"> </span>robotoff_postgres_latest.dump<span class="w"> </span>robotoff_postgres_1:/tmp/
 </code></pre></div>
 <p>Then launch dump restore:</p>
-<div class="highlight"><pre><span></span><code>docker <span class="nb">exec</span> -it robotoff_postgres_1 pg_restore -v -d postgres -U postgres -c -j <span class="m">8</span> --if-exists /tmp/robotoff_postgres_latest.dump
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>robotoff_postgres_1<span class="w"> </span>pg_restore<span class="w"> </span>-v<span class="w"> </span>-d<span class="w"> </span>postgres<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-c<span class="w"> </span>-j<span class="w"> </span><span class="m">8</span><span class="w"> </span>--if-exists<span class="w"> </span>/tmp/robotoff_postgres_latest.dump
 </code></pre></div>
 <p>This command drops all existing tables (<code>-c</code> command) and perform restore using 8 cores. The database is huge, it may take several hours to run depending on your hardware.</p>
 <h3 id="mongodb-dump">MongoDB dump</h3>
 <p>Robotoff also relies on MongoDB to fetch product. On staging and production, it interacts directly with the same MongoDB instance used by Product Opener.</p>
 <p>To restore Product Opener MongoDB dump, start by downloading and extracting the archive:</p>
-<div class="highlight"><pre><span></span><code>wget https://static.openfoodfacts.org/data/openfoodfacts-mongodbdump.tar.gz
-tar xvzf openfoodfacts-mongodbdump.tar.gz
+<div class="highlight"><pre><span></span><code>wget<span class="w"> </span>https://static.openfoodfacts.org/data/openfoodfacts-mongodbdump.tar.gz
+tar<span class="w"> </span>xvzf<span class="w"> </span>openfoodfacts-mongodbdump.tar.gz
 </code></pre></div>
 <p>Make sure the MongoDB container is up and running and copy the dump directory inside the container:</p>
-<div class="highlight"><pre><span></span><code>make up <span class="nv">service</span><span class="o">=</span>mongodb
-docker cp -a dump robotoff_mongodb_1:/var/tmp/
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>up<span class="w"> </span><span class="nv">service</span><span class="o">=</span>mongodb
+docker<span class="w"> </span>cp<span class="w"> </span>-a<span class="w"> </span>dump<span class="w"> </span>robotoff_mongodb_1:/var/tmp/
 </code></pre></div>
 <p>Then launch dump restore:</p>
-<div class="highlight"><pre><span></span><code>docker <span class="nb">exec</span> -it robotoff_mongodb_1 mongorestore --drop /var/tmp/dump
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>robotoff_mongodb_1<span class="w"> </span>mongorestore<span class="w"> </span>--drop<span class="w"> </span>/var/tmp/dump
 </code></pre></div>
                 
               

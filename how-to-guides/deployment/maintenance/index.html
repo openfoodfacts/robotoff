@@ -793,12 +793,12 @@ robotoff_worker_high_1     /bin/sh -c /docker-entrypo ...   Up
 </code></pre></div>
 <h2 id="database-backup-and-restore">Database backup and restore</h2>
 <p>To backup the PostgreSQL database, run the following command:</p>
-<div class="highlight"><pre><span></span><code>docker <span class="nb">exec</span> -i robotoff_postgres_1 pg_dump -F c -U postgres postgres <span class="p">|</span> gzip &gt; robotoff_postgres<span class="k">$(</span>date +%Y-%m-%d<span class="k">)</span>.dump
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-i<span class="w"> </span>robotoff_postgres_1<span class="w"> </span>pg_dump<span class="w"> </span>-F<span class="w"> </span>c<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>postgres<span class="w"> </span><span class="p">|</span><span class="w"> </span>gzip<span class="w"> </span>&gt;<span class="w"> </span>robotoff_postgres<span class="k">$(</span>date<span class="w"> </span>+%Y-%m-%d<span class="k">)</span>.dump
 </code></pre></div>
 <p>All Robotoff PostgreSQL dumps are stored on <em>openfoodfacts.org</em> server, in <code>/srv2/off/html/data/dumps</code> folder. When backing up the database, please update the <code>robotoff_postgres_latest.dump</code> symlink so that http://openfoodfacts.org/data/dumps/robotoff_postgres_latest.dump always points to the latest dump.</p>
 <p>You can restore it easily by copying the dump file inside the container and launching <code>pg_restore</code>:</p>
-<div class="highlight"><pre><span></span><code>docker cp -a robotoff_postgres.dump robotoff_postgres_1:/tmp/
-docker <span class="nb">exec</span> -it robotoff_postgres_1 pg_restore -v -d postgres -U postgres -j <span class="m">8</span> --if-exists /tmp/robotoff_postgres.dump
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>cp<span class="w"> </span>-a<span class="w"> </span>robotoff_postgres.dump<span class="w"> </span>robotoff_postgres_1:/tmp/
+docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>robotoff_postgres_1<span class="w"> </span>pg_restore<span class="w"> </span>-v<span class="w"> </span>-d<span class="w"> </span>postgres<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-j<span class="w"> </span><span class="m">8</span><span class="w"> </span>--if-exists<span class="w"> </span>/tmp/robotoff_postgres.dump
 </code></pre></div>
                 
               

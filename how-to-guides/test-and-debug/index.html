@@ -701,15 +701,15 @@ If you are on Windows we recommend using <a href="https://git-scm.com/downloads"
 <h1 id="how-to-run-test-cases">How to run test cases?</h1>
 <p>We use <a href="https://docs.pytest.org/en/7.1.x/">pytest</a> to run test cases and <a href="../../Makefile">Makefile</a> to run our commands. </p>
 <p>The following command will run all the test cases one by one:</p>
-<div class="highlight"><pre><span></span><code>$ make tests
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>make<span class="w"> </span>tests
 </code></pre></div>
 <h2 id="how-to-run-a-single-test-case">How to run a single test case?</h2>
 <p>The simplest is to use the <em>pytest</em> make target for that:</p>
-<div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s1">&#39;path/to/test_file.py::the_function_name&#39;</span>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>pytest<span class="w"> </span><span class="nv">args</span><span class="o">=</span><span class="s1">&#39;path/to/test_file.py::the_function_name&#39;</span>
 </code></pre></div>
 <p>For example,
 to call <code>test_get_type()</code> from <code>tests/unit/insights/test_importer.py</code>:</p>
-<div class="highlight"><pre><span></span><code>$ make pytest <span class="nv">args</span><span class="o">=</span><span class="s2">&quot;tests/unit/insights/test_importer.py::TestLabelInsightImporter::test_get_type&quot;</span>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>make<span class="w"> </span>pytest<span class="w"> </span><span class="nv">args</span><span class="o">=</span><span class="s2">&quot;tests/unit/insights/test_importer.py::TestLabelInsightImporter::test_get_type&quot;</span>
 </code></pre></div>
 <p>Remember to put quotes especially if you have multiple arguments.</p>
 <blockquote>
@@ -726,7 +726,7 @@ Be sure to run <code>make create_external_networks</code> before if needed (espe
 <p>We encourage using <a href="https://docs.python.org/3/library/pdb.html">PDB</a> to debug.</p>
 <p>Running test with <code>--pdb</code> flags, pytest will stop and open the pdb console as soon as there is an error or an assert fails.
 This can be a good way to try to understand why a test is failing.</p>
-<p><div class="highlight"><pre><span></span><code>make pytest <span class="nv">args</span><span class="o">=</span><span class="s2">&quot;path/to/test.py --pdb&quot;</span>
+<p><div class="highlight"><pre><span></span><code>make<span class="w"> </span>pytest<span class="w"> </span><span class="nv">args</span><span class="o">=</span><span class="s2">&quot;path/to/test.py --pdb&quot;</span>
 </code></pre></div>
 If it's a <code>mock.assert_called_with</code>, you can look at the real data passed to a test case by calling mock.call_args in the pdb console.</p>
 <p>If you need more precise control to see code path before it breaks, you can add the following lines in your function to find out what your code does and where it breaks.</p>
@@ -740,7 +740,7 @@ we need the <code>--pdb</code> option, to view the inputs and outputs captured b
 <h1 id="how-to-run-checks-locally">How to run checks locally</h1>
 <p>When committing your modifications to the main branch, your code have to pass several tests automatically run by Github in order to be merged.</p>
 <p>You can run theses checks locally before committing by using the following command:</p>
-<div class="highlight"><pre><span></span><code>$   make checks
+<div class="highlight"><pre><span></span><code>$<span class="w">   </span>make<span class="w"> </span>checks
 </code></pre></div>
                 
               
