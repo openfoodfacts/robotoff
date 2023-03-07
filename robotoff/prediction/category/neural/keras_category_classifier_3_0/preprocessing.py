@@ -1,3 +1,4 @@
+import functools
 import itertools
 import re
 import string
@@ -5,7 +6,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
-import cachetools
 from flashtext import KeywordProcessor
 
 from robotoff.taxonomy import Taxonomy, fetch_taxonomy
@@ -13,6 +13,7 @@ from robotoff.types import JSONType
 
 from .text_utils import fold, get_tag
 
+# Nutriments we use as model input
 NUTRIMENT_NAMES = (
     "fat",
     "saturated_fat",
@@ -26,14 +27,14 @@ NUTRIMENT_NAMES = (
 )
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_ingredient_taxonomy():
     return fetch_taxonomy(
         "", Path(__file__).parent / "ingredients.full.json.gz", offline=True
     )
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_ingredient_processor():
     ingredient_taxonomy = get_ingredient_taxonomy()
     return build_ingredient_processor(
@@ -152,6 +153,7 @@ def extract_ocr_ingredients(
     return sorted(set(matches), key=matches.index)
 
 
+# List of ingredients that are in the taxonomy but are not real ingredients and should be ignored
 INGREDIENT_ID_EXCLUDE_LIST = {
     "en:n",
     "en:no1",
@@ -167,6 +169,10 @@ INGREDIENT_ID_EXCLUDE_LIST = {
     "en:no11",
     "en:no12",
 }
+
+
+# List of lang codes we support for ingredient detection
+INGREDIENT_PROCESSOR_SUPPORTED_LANG = ("xx", "en", "fr", "en", "es", "de", "nl", "it")
 
 
 def build_ingredient_processor(
@@ -194,7 +200,7 @@ def build_ingredient_processor(
         # dict mapping lang to a set of expressions for a specific ingredient
         seen: dict[str, set[str]] = defaultdict(set)
         for field in ("names", "synonyms"):
-            for lang in ("xx", "en", "fr", "en", "es", "de", "nl", "it"):
+            for lang in INGREDIENT_PROCESSOR_SUPPORTED_LANG:
                 names = getattr(node, field).get(lang)
                 if names is None:
                     continue
@@ -228,19 +234,21 @@ def build_ingredient_processor(
                 # found for any token, we will just generate the original
                 # normalized name again)
                 combinations = [{token} for token in tokens]
-                for token_idx in range(len(tokens)):
-                    token = tokens[token_idx]
+                for token_idx, token in enumerate(tokens):
                     if token in name_map:
                         # Lookup all ingredient IDs with the same lang that
                         # match the normalized token string
-                        for key in (
+                        lang_entries = (
                             (node_id, lang)
                             for (node_id, lang) in name_map[token]
                             if lang == current_lang
-                        ):
+                        )
+                        for key in lang_entries:
                             for synonym in synonyms[key]:
                                 combinations[token_idx].add(synonym)
 
+                # combinations contains every synonyms for each token
+                # itertools.product gives every combination thereof
                 for combination in itertools.product(*combinations):
                     # generate full ingredient name using one of the combinations
                     name = " ".join(combination)

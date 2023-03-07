@@ -79,8 +79,13 @@ def generate_clip_embedding(images: list[Image.Image]) -> np.ndarray:
     return np.concatenate(embedding_batches)
 
 
-def deserialize_byte_tensor(data: bytes):
+def deserialize_byte_tensor(data: bytes) -> list[str]:
+    """Deserialize a byte tensor into a list of string.
+
+    This is used to deserialize string array outputs from Triton models.
+    """
     offset = 0
+    # 4 bytes are used to encode string length
     int_byte_len = 4
     array = []
     while len(data) >= offset + int_byte_len:

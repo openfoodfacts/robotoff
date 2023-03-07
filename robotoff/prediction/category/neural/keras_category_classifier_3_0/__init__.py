@@ -24,7 +24,8 @@ def fetch_ocr_texts(product: JSONType) -> list[str]:
         return []
 
     ocr_texts = []
-    for image_id in (id_ for id_ in product.get("images", {}).keys() if id_.isdigit()):
+    image_ids = (id_ for id_ in product.get("images", {}).keys() if id_.isdigit())
+    for image_id in image_ids:
         ocr_url = generate_json_ocr_url(barcode, image_id)
         ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
         if ocr_result:
@@ -75,6 +76,7 @@ def predict(
     return category_predictions, debug
 
 
+# Parameters on how to prepare data for each model type, see `build_triton_request`
 model_input_flags: dict[NeuralCategoryClassifierModel, dict] = {
     NeuralCategoryClassifierModel.keras_sota_3_0: {},
     NeuralCategoryClassifierModel.keras_ingredient_ocr_3_0: {},
@@ -104,6 +106,7 @@ triton_model_names = {
 def _predict(
     inputs: JSONType, model_name: NeuralCategoryClassifierModel
 ) -> tuple[np.ndarray, list[str]]:
+    """Internal method to prepare and run triton request."""
     request = build_triton_request(
         inputs,
         model_name=triton_model_names[model_name],
@@ -154,6 +157,9 @@ def build_triton_request(
         product_name_input.datatype = "BYTES"
         product_name_input.shape.extend([1, 1])
         request.inputs.extend([product_name_input])
+        request.raw_input_contents.extend(
+            [serialize_byte_tensor(np.array([[product_name]], dtype=object))]
+        )
 
     if add_ingredient_tags:
         ingredients_tags_input = service_pb2.ModelInferRequest().InferInputTensor()
@@ -161,6 +167,9 @@ def build_triton_request(
         ingredients_tags_input.datatype = "BYTES"
         ingredients_tags_input.shape.extend([1, len(ingredients_tags)])
         request.inputs.extend([ingredients_tags_input])
+        request.raw_input_contents.extend(
+            [serialize_byte_tensor(np.array([ingredients_tags], dtype=object))]
+        )
 
     if add_nutriments:
         for nutriment_name in NUTRIMENT_NAMES:
@@ -169,6 +178,10 @@ def build_triton_request(
             nutriment_input.datatype = "FP32"
             nutriment_input.shape.extend([1, 1])
             request.inputs.extend([nutriment_input])
+            value = inputs[nutriment_name]
+            request.raw_input_contents.extend(
+                [np.array([[value]], dtype=np.float32).tobytes()]
+            )
 
     if add_ingredients_ocr_tags:
         ingredients_ocr_tags_input = service_pb2.ModelInferRequest().InferInputTensor()
@@ -176,25 +189,6 @@ def build_triton_request(
         ingredients_ocr_tags_input.datatype = "BYTES"
         ingredients_ocr_tags_input.shape.extend([1, len(ingredients_ocr_tags)])
         request.inputs.extend([ingredients_ocr_tags_input])
-
-    if add_product_name:
-        request.raw_input_contents.extend(
-            [serialize_byte_tensor(np.array([[product_name]], dtype=object))]
-        )
-
-    if add_ingredient_tags:
-        request.raw_input_contents.extend(
-            [serialize_byte_tensor(np.array([ingredients_tags], dtype=object))]
-        )
-
-    if add_nutriments:
-        for nutriment_name in NUTRIMENT_NAMES:
-            value = inputs[nutriment_name]
-            request.raw_input_contents.extend(
-                [np.array([[value]], dtype=np.float32).tobytes()]
-            )
-
-    if add_ingredients_ocr_tags:
         request.raw_input_contents.extend(
             [serialize_byte_tensor(np.array([ingredients_ocr_tags], dtype=object))]
         )

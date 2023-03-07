@@ -76,7 +76,7 @@ class CategoryClassifier:
             model_name = NeuralCategoryClassifierModel.keras_2_0
 
         if model_name == NeuralCategoryClassifierModel.keras_2_0:
-            predictions, debug = keras_category_classifier_2_0.predict(
+            raw_predictions, debug = keras_category_classifier_2_0.predict(
                 product, threshold
             )
         else:
@@ -97,12 +97,12 @@ class CategoryClassifier:
             else:
                 # Otherwise we fetch OCR texts from Product Opener
                 ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
-            predictions, debug = keras_category_classifier_3_0.predict(
+            raw_predictions, debug = keras_category_classifier_3_0.predict(
                 product, ocr_texts, model_name, threshold=threshold
             )
 
         category_predictions = [
-            CategoryPrediction(*item, model_name.value) for item in predictions
+            CategoryPrediction(*item, model_name.value) for item in raw_predictions
         ]
 
         if deepest_only:
@@ -114,7 +114,8 @@ class CategoryClassifier:
                 for x in self.taxonomy.find_deepest_nodes(taxonomy_nodes)
             ]
 
-        return [
+        predictions = [
             category_prediction.to_prediction()
             for category_prediction in category_predictions
-        ], debug
+        ]
+        return predictions, debug
