@@ -35,3 +35,7 @@ msgstr "¿Este peso coincide con el peso mostrado en el producto?"
 msgid "Is this image a nutrition image for this language?"
 msgstr "¿Es esta imagen una imagen de nutrición para este idioma?"
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product have this packaging element?"
+msgstr "¿El producto tiene este embalaje?"
+
