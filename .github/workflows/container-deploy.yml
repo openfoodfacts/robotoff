@@ -79,6 +79,13 @@ jobs:
           # Checkout current commit SHA
           git checkout -qf ${{ github.sha }}
 
+          # Setup git lfs on the repository, in case it's not setup yet
+          git lfs install
+
+          # Fetch and checkout LFS files
+          git lfs fetch
+          git lfs checkout
+
     - name: Set environment variables
       uses: appleboy/ssh-action@master
       with:
