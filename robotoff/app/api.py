@@ -802,7 +802,7 @@ class ImageLogoDetailResource:
                 return
 
             type_ = req.media["type"]
-            value = req.media["value"] or None
+            value = req.media.get("value") or None
             check_logo_annotation(type_, value)
 
             if type_ != logo.annotation_type or value != logo.annotation_value:
