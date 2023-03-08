@@ -30,77 +30,28 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Taken from https://github.com/snok/install-poetry
-
       #----------------------------------------------
-      #       check-out repo and set-up python
+      #       check-out repo
       #----------------------------------------------
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Set up python
-        uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python-version }}
+          lfs: true
 
       #----------------------------------------------
-      #  -----  install & configure poetry  -----
-      #----------------------------------------------
-      - name: Install Poetry
-        uses: snok/install-poetry@v1.3
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
-      - name: Install dependencies
-        run: poetry install
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-
-      #----------------------------------------------
-      # Run linters
-      #----------------------------------------------
-      - name: Toml config file quality
-        run: poetry run toml-sort --check poetry.toml pyproject.toml
-
-      - name: Code Quality Black
-        run: poetry run black . --check
-
-      - name: Code quality Flake8
-        run: poetry run flake8 --format github
-
-      - name: Code quality isort
-        run: poetry run isort . --check
-
-      - name: Typing check mypy
-        run: poetry run mypy .
-      #----------------------------------------------
-      # Compile i18n
-      #----------------------------------------------
-      - name: Install gettext
-        run: sudo apt-get install gettext
-
-      - name: Compile translations
-        run: (cd i18n && bash compile.sh)
-
-      #----------------------------------------------
-      # Launch tests
+      # Launch checks and tests
       #----------------------------------------------
       - name: Configure docker
         run: |
+          # ensure a new line for .env file might not have it !
+          echo "" >> .env
+          # align user id
           echo "OFF_UID=$UID" >> .env
           echo "PYTHON_VERSION=${{ matrix.python-version }}" >> .env
+
+      - name: Launch quality checks
+        run: make checks
+
       - name: Launch tests
         run: make tests
 
