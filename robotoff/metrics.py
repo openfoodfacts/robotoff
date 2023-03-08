@@ -98,6 +98,11 @@ def ensure_influx_database():
 
 
 def get_product_count(country_tag: str) -> int:
+    """Return the number of products in Product Opener for a specific country.
+
+    :param country_tag: ISO 2-letter country code
+    :return: the number of products currently in Product Opener
+    """
     r = http_session.get(
         settings.BaseURLProvider.country(country_tag) + "/3.json?fields=null",
         auth=settings._off_request_auth,
