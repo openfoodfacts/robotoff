@@ -48,7 +48,6 @@ RUN cd /opt/robotoff/i18n && \
     bash compile.sh && \
     chown off:off -R /opt/robotoff/
 COPY --chown=off:off robotoff /opt/robotoff/robotoff/
-COPY --chown=off:off data /opt/robotoff/data
 COPY --chown=off:off gunicorn.py /opt/robotoff/
 
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
