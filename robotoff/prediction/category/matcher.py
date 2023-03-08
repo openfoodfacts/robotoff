@@ -22,6 +22,10 @@ from robotoff.utils.text import (
 logger = get_logger(__name__)
 
 SUPPORTED_LANG = {"fr", "en", "de", "es", "it", "nl"}
+# There are too many false positive in these languages with partial matches,
+# so we require a full match
+# ex in english: "strawberry yogurt" matches category "strawberry"
+FULL_MATCH_REQUIRED_LANG = {"en"}
 
 WEIGHT_REGEX = re.compile(
     r"[0-9]+[,.]?[0-9]*\s?(fl oz|dl|cl|mg|ml|lbs|oz|g|kg|l)(?![a-z])"
@@ -343,35 +347,37 @@ def predict_by_lang(product: dict) -> dict[str, list[Prediction]]:
         if not product_name:
             continue
 
-        matches = match(product_name, lang)
+        for (
+            value_tag,
+            category_name,
+            pattern,
+            processed_product_name,
+            (start_idx, end_idx),
+        ) in match(product_name, lang):
+            is_full_match = end_idx - start_idx == len(processed_product_name)
 
-        predictions[lang] = [
-            Prediction(
-                type=PredictionType.category,
-                value_tag=value_tag,
-                data={
-                    "lang": lang,
-                    "product_name": product_name,
-                    "category_name": category_name,
-                    "pattern": pattern,
-                    "processed_product_name": processed_product_name,
-                    "start_idx": start_idx,
-                    "end_idx": end_idx,
-                    "is_full_match": (
-                        end_idx - start_idx == len(processed_product_name)
-                    ),
-                },
-                automatic_processing=False,
-                predictor="matcher",
+            if not is_full_match and lang in FULL_MATCH_REQUIRED_LANG:
+                continue
+
+            predictions.setdefault(lang, [])
+            predictions[lang].append(
+                Prediction(
+                    type=PredictionType.category,
+                    value_tag=value_tag,
+                    data={
+                        "lang": lang,
+                        "product_name": product_name,
+                        "category_name": category_name,
+                        "pattern": pattern,
+                        "processed_product_name": processed_product_name,
+                        "start_idx": start_idx,
+                        "end_idx": end_idx,
+                        "is_full_match": is_full_match,
+                    },
+                    automatic_processing=False,
+                    predictor="matcher",
+                )
             )
-            for (
-                value_tag,
-                category_name,
-                pattern,
-                processed_product_name,
-                (start_idx, end_idx),
-            ) in matches
-        ]
     return predictions
 
 
