@@ -3,11 +3,11 @@ import itertools
 import re
 import string
 from collections import defaultdict
-from pathlib import Path
 from typing import Optional
 
 from flashtext import KeywordProcessor
 
+from robotoff import settings
 from robotoff.taxonomy import Taxonomy, fetch_taxonomy
 from robotoff.types import JSONType
 
@@ -30,7 +30,9 @@ NUTRIMENT_NAMES = (
 @functools.cache
 def get_ingredient_taxonomy():
     return fetch_taxonomy(
-        "", Path(__file__).parent / "ingredients.full.json.gz", offline=True
+        "",
+        settings.DATA_DIR / "category/neural/v3/ingredients.full.json.gz",
+        offline=True,
     )
 
 

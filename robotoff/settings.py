@@ -155,7 +155,7 @@ _off_user = os.environ.get("OFF_USER", "")
 _off_request_auth = ("off", "off") if _instance_tld() == "net" else None
 
 
-CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
+CATEGORY_MATCHER_DIR = DATA_DIR / "category/matcher"
 CATEGORY_MATCHER_MATCH_MAPS = {
     "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
     "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
