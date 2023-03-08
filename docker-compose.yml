@@ -5,6 +5,7 @@ x-robotoff-base:
   restart: $RESTART_POLICY
   image: ghcr.io/openfoodfacts/robotoff:${TAG}
   volumes:
+    - ./data:/opt/robotoff/data
     - ./datasets:/opt/robotoff/datasets
     - ./tf_models:/opt/robotoff/tf_models
     - ./models:/opt/robotoff/models

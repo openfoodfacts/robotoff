@@ -1,6 +1,7 @@
 es
 ml
 ocr.jsonl.gz
+data
 datasets
 local_models
 models
