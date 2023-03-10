@@ -3,17 +3,65 @@ from typing import Optional
 import numpy as np
 from tritonclient.grpc import service_pb2
 
-from robotoff.off import generate_json_ocr_url
+from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.triton import (
     deserialize_byte_tensor,
+    generate_clip_embedding_request,
     get_triton_inference_stub,
     serialize_byte_tensor,
 )
 from robotoff.types import JSONType, NeuralCategoryClassifierModel
-from robotoff.utils import http_session
+from robotoff.utils import get_image_from_url, get_logger, http_session
 
-from .preprocessing import NUTRIMENT_NAMES, generate_inputs_from_product
+from .preprocessing import (
+    IMAGE_EMBEDDING_DIM,
+    MAX_IMAGE_EMBEDDING,
+    NUTRIMENT_NAMES,
+    generate_inputs_dict,
+)
+
+logger = get_logger(__name__)
+
+
+def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
+    """Generate image embeddings using CLIP model for the `MAX_IMAGE_EMBEDDING`
+    most recent images.
+
+    :param product: product data
+    :param stub: the triton inference stub to use
+    :return: None if no image was available or a numpy array of shape
+        (num_images, IMAGE_EMBEDDING_DIM)
+    """
+    # Fetch the `MAX_IMAGE_EMBEDDING` most recent "raw" images
+    image_ids = sorted(
+        (int(image_id) for image_id in product.get("images", {}) if image_id.isdigit()),
+        reverse=True,
+    )[:MAX_IMAGE_EMBEDDING]
+    if image_ids:
+        barcode = product["code"]
+        image_urls = [
+            generate_image_url(barcode, f"{image_id}.400") for image_id in image_ids
+        ]
+        images = [
+            get_image_from_url(image_url, error_raise=False, session=http_session)
+            for image_url in image_urls
+        ]
+        non_null_images = [image for image in images if image is not None]
+        if len(images) != len(non_null_images):
+            logger.info(
+                "%d images could not be fetched (over %d)",
+                len(images) - len(non_null_images),
+                len(images),
+            )
+
+        request = generate_clip_embedding_request(non_null_images)
+        response = stub.ModelInfer(request)
+        return np.frombuffer(
+            response.raw_output_contents[0],
+            dtype=np.float32,
+        ).reshape((len(images), -1))
+    return None
 
 
 def fetch_ocr_texts(product: JSONType) -> list[str]:
@@ -39,6 +87,7 @@ def predict(
     ocr_texts: list[str],
     model_name: NeuralCategoryClassifierModel,
     threshold: Optional[float] = None,
+    image_embeddings: Optional[np.ndarray] = None,
 ) -> tuple[list[tuple[str, float]], JSONType]:
     """Predict categories using v3 model.
 
@@ -53,7 +102,7 @@ def predict(
     if threshold is None:
         threshold = 0.5
 
-    inputs = generate_inputs_from_product(product, ocr_texts)
+    inputs = generate_inputs_dict(product, ocr_texts, image_embeddings)
     debug: JSONType = {
         "model_name": model_name.value,
         "threshold": threshold,
@@ -78,24 +127,31 @@ def predict(
 
 # Parameters on how to prepare data for each model type, see `build_triton_request`
 model_input_flags: dict[NeuralCategoryClassifierModel, dict] = {
-    NeuralCategoryClassifierModel.keras_sota_3_0: {},
-    NeuralCategoryClassifierModel.keras_ingredient_ocr_3_0: {},
+    NeuralCategoryClassifierModel.keras_image_embeddings_3_0: {},
+    NeuralCategoryClassifierModel.keras_300_epochs_3_0: {"add_image_embeddings": False},
+    NeuralCategoryClassifierModel.keras_ingredient_ocr_3_0: {
+        "add_image_embeddings": False,
+    },
     NeuralCategoryClassifierModel.keras_baseline_3_0: {
-        "add_ingredients_ocr_tags": False
+        "add_ingredients_ocr_tags": False,
+        "add_image_embeddings": False,
     },
     NeuralCategoryClassifierModel.keras_original_3_0: {
         "add_ingredients_ocr_tags": False,
         "add_nutriments": False,
+        "add_image_embeddings": False,
     },
     NeuralCategoryClassifierModel.keras_product_name_only_3_0: {
         "add_ingredients_ocr_tags": False,
         "add_nutriments": False,
         "add_ingredient_tags": False,
+        "add_image_embeddings": False,
     },
 }
 
 triton_model_names = {
-    NeuralCategoryClassifierModel.keras_sota_3_0: "category-classifier-keras-sota-3.0",
+    NeuralCategoryClassifierModel.keras_image_embeddings_3_0: "category-classifier-keras-image-embeddings-3.0",
+    NeuralCategoryClassifierModel.keras_300_epochs_3_0: "category-classifier-keras-300-epochs-3.0",
     NeuralCategoryClassifierModel.keras_ingredient_ocr_3_0: "category-classifier-keras-ingredient-ocr-3.0",
     NeuralCategoryClassifierModel.keras_baseline_3_0: "category-classifier-keras-baseline-3.0",
     NeuralCategoryClassifierModel.keras_original_3_0: "category-classifier-keras-original-3.0",
@@ -128,11 +184,12 @@ def build_triton_request(
     add_ingredient_tags: bool = True,
     add_nutriments: bool = True,
     add_ingredients_ocr_tags: bool = True,
+    add_image_embeddings: bool = True,
 ):
     """Build a Triton ModelInferRequest gRPC request.
 
     :param inputs: the input dict, as generated by
-        `generate_inputs_from_product`
+        `generate_inputs_dict`
     :param model_name: the name of the model to use, see global variable
         `triton_model_names` for possible values
     :param add_product_name: if True, add product name as input, defaults to
@@ -143,6 +200,8 @@ def build_triton_request(
         True
     :param add_ingredients_ocr_tags: if True, add ingredients extracted from
         OCR as input, defaults to True
+    :param add_image_embeddings: if True, add image embeddings as input,
+        defaults to True
     :return: the gRPC ModelInferRequest
     """
     product_name = inputs["product_name"]
@@ -192,5 +251,24 @@ def build_triton_request(
         request.raw_input_contents.extend(
             [serialize_byte_tensor(np.array([ingredients_ocr_tags], dtype=object))]
         )
+
+    if add_image_embeddings:
+        image_embeddings_input = service_pb2.ModelInferRequest().InferInputTensor()
+        image_embeddings_input.name = "image_embeddings"
+        image_embeddings_input.datatype = "FP32"
+        image_embeddings_input.shape.extend(
+            [1, MAX_IMAGE_EMBEDDING, IMAGE_EMBEDDING_DIM]
+        )
+        request.inputs.extend([image_embeddings_input])
+        value = inputs["image_embeddings"]
+        request.raw_input_contents.extend([value.tobytes()])
+
+        image_embeddings_mask_input = service_pb2.ModelInferRequest().InferInputTensor()
+        image_embeddings_mask_input.name = "image_embeddings_mask"
+        image_embeddings_mask_input.datatype = "FP32"
+        image_embeddings_mask_input.shape.extend([1, MAX_IMAGE_EMBEDDING])
+        request.inputs.extend([image_embeddings_mask_input])
+        value = inputs["image_embeddings_mask"]
+        request.raw_input_contents.extend([value.tobytes()])
 
     return request
