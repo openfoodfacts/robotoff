@@ -1,6 +1,7 @@
 import pytest
 
 from robotoff.cli.main import categorize, init_elasticsearch
+from robotoff.types import NeuralCategoryClassifierModel
 
 
 def test_init_elasticsearch(mocker):
@@ -55,7 +56,7 @@ def test_categorize_no_product(mocker, capsys):
 )
 def test_categorize(mocker, capsys, confidence, want_nothing):
     mocker.patch(
-        "robotoff.products.get_product",
+        "robotoff.off.get_product",
         return_value={
             "product_name": "Test Product",
             "ingredients_tags": ["ingredient1"],
@@ -66,7 +67,7 @@ def test_categorize(mocker, capsys, confidence, want_nothing):
         return_value=_construct_prediction_resp("en:chicken", confidence),
     )
 
-    categorize("123")
+    categorize("123", threshold=0.5, model_name=NeuralCategoryClassifierModel.keras_2_0)
     captured = capsys.readouterr()
 
-    assert captured.out.startswith("Nothing predicted") == want_nothing
+    assert ("Nothing predicted" in captured.out) == want_nothing

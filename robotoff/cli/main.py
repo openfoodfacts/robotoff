@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import sys
 from pathlib import Path
@@ -7,7 +8,12 @@ import typer
 
 from robotoff.elasticsearch.client import get_es_client
 from robotoff.off import get_barcode_from_url
-from robotoff.types import ObjectDetectionModel, PredictionType, WorkerQueue
+from robotoff.types import (
+    NeuralCategoryClassifierModel,
+    ObjectDetectionModel,
+    PredictionType,
+    WorkerQueue,
+)
 
 app = typer.Typer()
 
@@ -129,18 +135,28 @@ def download_dataset(minify: bool = False) -> None:
 
 
 @app.command()
-def categorize(barcode: str, deepest_only: bool = False) -> None:
+def categorize(
+    barcode: str,
+    deepest_only: bool = False,
+    model_name: NeuralCategoryClassifierModel = typer.Option(
+        NeuralCategoryClassifierModel.keras_2_0, help="name of the model to use"
+    ),
+    threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
+) -> None:
     """Predict product categories based on the neural category classifier.
 
     deepest_only: controls whether the returned predictions should only contain the deepmost
     categories for a predicted taxonomy chain.
     For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
     setting deepest_only=True will return 'beans'."""
+    from robotoff.off import get_product
     from robotoff.prediction.category.neural.category_classifier import (
         CategoryClassifier,
     )
-    from robotoff.products import get_product
     from robotoff.taxonomy import TaxonomyType, get_taxonomy
+    from robotoff.utils import get_logger
+
+    get_logger(level=logging.DEBUG)
 
     product = get_product(barcode)
     if product is None:
@@ -148,8 +164,8 @@ def categorize(barcode: str, deepest_only: bool = False) -> None:
         return
 
     predictions, _ = CategoryClassifier(
-        get_taxonomy(TaxonomyType.category.name)
-    ).predict(product, deepest_only)
+        get_taxonomy(TaxonomyType.category.name, offline=True)
+    ).predict(product, deepest_only, threshold=threshold, model_name=model_name)
 
     if predictions:
         for prediction in predictions:

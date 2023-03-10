@@ -2,9 +2,13 @@ from typing import Optional
 
 from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
+from robotoff.triton import get_triton_inference_stub
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, PredictionType
+from robotoff.utils import get_logger
 
 from . import keras_category_classifier_2_0, keras_category_classifier_3_0
+
+logger = get_logger(__name__)
 
 
 class CategoryPrediction:
@@ -69,6 +73,8 @@ class CategoryClassifier:
         :param neural_model_name: the name of the neural model to use to perform
             prediction. `keras_2_0` is used by default.
         """
+        logger.debug("predicting category with model %s", model_name)
+
         if threshold is None:
             threshold = 0.5
 
@@ -97,8 +103,17 @@ class CategoryClassifier:
             else:
                 # Otherwise we fetch OCR texts from Product Opener
                 ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
+
+            triton_stub = get_triton_inference_stub()
+            image_embeddings = keras_category_classifier_3_0.generate_image_embeddings(
+                product, triton_stub
+            )
             raw_predictions, debug = keras_category_classifier_3_0.predict(
-                product, ocr_texts, model_name, threshold=threshold
+                product,
+                ocr_texts,
+                model_name,
+                threshold=threshold,
+                image_embeddings=image_embeddings,
             )
 
         category_predictions = [
