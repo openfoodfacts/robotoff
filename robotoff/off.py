@@ -220,7 +220,7 @@ def get_product(
         # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
         url += "?fields={}".format(",".join(fields))
 
-    r = http_session.get(url, timeout=timeout)
+    r = http_session.get(url, timeout=timeout, auth=settings._off_request_auth)
 
     if r.status_code != 200:
         return None
