@@ -871,6 +871,14 @@
 </code></pre></div>
 </li>
 <li>
+<p>Robotoff uses git lfs to store binary files necessary for it to work. To setup git lfs:</p>
+<ol>
+<li>Install <a href="https://git-lfs.com/">git lfs</a></li>
+<li>go to <code>robotoff</code> directory and setup git lfs with <code>git lfs install</code>. This only has to be done once.</li>
+<li>Fetch LFS files with <code>git lfs fetch &amp;&amp; git lfs checkout</code></li>
+</ol>
+</li>
+<li>
 <p>choose between <a href="../../how-to-guides/deployment/dev-install/">docker install (recommended) or local install</a> and run it.</p>
 </li>
 <li>
@@ -886,7 +894,7 @@
 make checks
 make tests
 </code></pre></div>
-  To test the APIs on your localhost run </p>
+ To test the APIs on your localhost run </p>
 <div class="highlight"><pre><span></span><code>docker-compose up
 </code></pre></div>
 <p>You can make a post request through <a href="https://www.postman.com/">Postman</a> or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/</p>
@@ -901,7 +909,7 @@ poetry run pytest tests
 <p>Before running the test cases make sure you have a database created. Have a look at <code>.env</code> and <code>robotoff/settings.py</code> the default database name, user, and password is:</p>
 <p><div class="highlight"><pre><span></span><code>postgres
 </code></pre></div>
-  Configure them through environment (you may use <code>.env</code> if you use docker) as you like. See <a href="../../how-to-guides/deployment/dev-install/">dev install</a> for more information about how to restore database dumps.</p>
+ Configure them through environment (you may use <code>.env</code> if you use docker) as you like. See <a href="../../how-to-guides/deployment/dev-install/">dev install</a> for more information about how to restore database dumps.</p>
 </li>
 <li>
 <p>Commit your changes and push your branch to Github:</p>
