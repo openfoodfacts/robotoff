@@ -45,59 +45,65 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
 1. Fork the robotoff repo on Github.
 
-2.  Clone your fork locally:
+2. Clone your fork locally:
 
-    ```
-    git clone git@github.com:your_name_here/robotoff.git
-    ```
-    
-3. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md) and run it.
-   
-4. code!
+   ```
+   git clone git@github.com:your_name_here/robotoff.git
+   ```
 
-5.  When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
+3. Robotoff uses git lfs to store binary files necessary for it to work. To setup git lfs:
 
-    If you are on Windows, make sure you have [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) installed. Don't forget to add its path in your [system environment variables](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417).
+   1. Install [git lfs](https://git-lfs.com/)
+   2. go to `robotoff` directory and setup git lfs with `git lfs install`. This only has to be done once.
+   3. Fetch LFS files with `git lfs fetch && git lfs checkout`
 
-    A sample path may look like this: `C:\Program Files (x86)\GnuWin32\bin`
-    
-    It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  
+4. choose between [docker install (recommended) or local install](../how-to-guides/deployment/dev-install.md) and run it.
 
-    If you are using docker:
+5. code!
 
-    ```
-    make lint
-    make checks
-    make tests
-    ```
-    To test the APIs on your localhost run 
+6. When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
 
-    ```
-    docker-compose up
-    ```
+   If you are on Windows, make sure you have [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) installed. Don't forget to add its path in your [system environment variables](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417).
 
-    You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
+   A sample path may look like this: `C:\Program Files (x86)\GnuWin32\bin`
 
-    The mapping of functions and API path is at the end of `robotoff/app/api.py`
+   It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  
 
-    If you are on a local install:
+   If you are using docker:
 
-    ```
-    flake8
-    black --check .
-    mypy .
-    isort --check .
-    poetry run pytest tests
-    ```
+   ```
+   make lint
+   make checks
+   make tests
+   ```
+   To test the APIs on your localhost run 
 
-    Before running the test cases make sure you have a database created. Have a look at `.env` and `robotoff/settings.py` the default database name, user, and password is:
+   ```
+   docker-compose up
+   ```
 
-    ```
-    postgres
-    ```
-    Configure them through environment (you may use `.env` if you use docker) as you like. See [dev install](../how-to-guides/deployment/dev-install.md#) for more information about how to restore database dumps.
+   You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/
 
-6. Commit your changes and push your branch to Github:
+   The mapping of functions and API path is at the end of `robotoff/app/api.py`
+
+   If you are on a local install:
+
+   ```
+   flake8
+   black --check .
+   mypy .
+   isort --check .
+   poetry run pytest tests
+   ```
+
+   Before running the test cases make sure you have a database created. Have a look at `.env` and `robotoff/settings.py` the default database name, user, and password is:
+
+   ```
+   postgres
+   ```
+   Configure them through environment (you may use `.env` if you use docker) as you like. See [dev install](../how-to-guides/deployment/dev-install.md#) for more information about how to restore database dumps.
+
+7. Commit your changes and push your branch to Github:
 
    ```
    git status
@@ -115,7 +121,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
    More tips at <https://chris.beams.io/posts/git-commit>
 
-7.  Submit a pull request through the Github website.
+8. Submit a pull request through the Github website.
 
 ## Pull Request Guidelines
 
