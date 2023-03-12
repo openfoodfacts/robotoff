@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.22.0](https://github.com/openfoodfacts/robotoff/compare/v1.21.0...v1.22.0) (2023-03-12)
+
+
+### Features
+
+* add model with image embeddings as input ([d79bbc2](https://github.com/openfoodfacts/robotoff/commit/d79bbc22bb9b41952b6994256334ee6e15ef68f5))
+
+
+### Bug Fixes
+
+* add authentication for .net Product Opener when fetching products ([18cbb20](https://github.com/openfoodfacts/robotoff/commit/18cbb20c8778c46e38e7a78ac4ffa2392ac44baf))
+* add object detection label assets to repository ([c925558](https://github.com/openfoodfacts/robotoff/commit/c925558f2607c769dab848ca425db11e30fb0bd0))
+* add support for git LFS ([d6db888](https://github.com/openfoodfacts/robotoff/commit/d6db888100f1ade06572fe679b545741296a445e))
+* disable cat matcher (en) for partial matches ([649c016](https://github.com/openfoodfacts/robotoff/commit/649c01690b8ba52d6ff7d741b39700edff251687))
+* don't keep numpy ndarray in debug.inputs dict ([64e7124](https://github.com/openfoodfacts/robotoff/commit/64e71244931f750980686b2af973cb954496b08a))
+* fix integration test ([b2b4f5a](https://github.com/openfoodfacts/robotoff/commit/b2b4f5ace82c1097081e630effae1d0acbe8987b))
+* increase CLIP max_batch_size to 32 ([a39d61a](https://github.com/openfoodfacts/robotoff/commit/a39d61a77f2e751b2933cf9a84917dc0c3ae24ca))
+* refactor category predictor data structure ([812a406](https://github.com/openfoodfacts/robotoff/commit/812a4061a00dfbd302d998ae7ac2eea346783bac))
+* update code after code review [#1061](https://github.com/openfoodfacts/robotoff/issues/1061) ([deb20d8](https://github.com/openfoodfacts/robotoff/commit/deb20d863cf5fbf063f365123273bb96ba9b0024))
+* update PUT /images/logos/LOGO_ID route to accept null value field ([2e488ab](https://github.com/openfoodfacts/robotoff/commit/2e488ab81636258b5a6a5d4b841c2c6ecaffe9be))
+
+
+### Documentation
+
+* add docstring ([b4ace04](https://github.com/openfoodfacts/robotoff/commit/b4ace04f86c886e867be5d21ab2f89f15d53677d))
+* add documentation about install of git lfs ([1cd9866](https://github.com/openfoodfacts/robotoff/commit/1cd98662d6a5641b10af87b93b135fa190c1da1d))
+* add documentation in metrics.py ([0ce2b0e](https://github.com/openfoodfacts/robotoff/commit/0ce2b0ece71cd7ca89b0105f3be25abf501cb611))
+
 ## [1.21.0](https://github.com/openfoodfacts/robotoff/compare/v1.20.2...v1.21.0) (2023-02-28)
 
 
