@@ -39,7 +39,7 @@ def _construct_prediction_resp(category: str, conf: float) -> MockResponse:
 
 
 def test_categorize_no_product(mocker, capsys):
-    mocker.patch("robotoff.products.get_product", return_value=None)
+    mocker.patch("robotoff.off.get_product", return_value=None)
 
     categorize("123")
     captured = capsys.readouterr()
