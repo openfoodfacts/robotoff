@@ -95,6 +95,9 @@ def predict(
     :param ocr_texts: a list of OCR texts, one string per image
     :param model_name: the name of the model to use
     :param threshold: the detection threshold, default is 0.5
+    :param image_embeddings: image embeddings of up to the
+        `MAX_IMAGE_EMBEDDING` most recent images or None if no image was
+        available
     :return: the predicted categories as a list of
         (category_tag, confidence) tuples and a dict containing debug
         information
