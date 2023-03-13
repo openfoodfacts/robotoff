@@ -71,7 +71,7 @@ class CategoryClassifier:
         :param threshold: the score above which we consider the category to be
             detected (default: 0.5)
         :param neural_model_name: the name of the neural model to use to perform
-            prediction. `keras_2_0` is used by default.
+            prediction. `keras_image_embeddings_3_0` is used by default.
         """
         logger.debug("predicting category with model %s", model_name)
 
@@ -79,7 +79,7 @@ class CategoryClassifier:
             threshold = 0.5
 
         if model_name is None:
-            model_name = NeuralCategoryClassifierModel.keras_2_0
+            model_name = NeuralCategoryClassifierModel.keras_image_embeddings_3_0
 
         if model_name == NeuralCategoryClassifierModel.keras_2_0:
             raw_predictions, debug = keras_category_classifier_2_0.predict(
