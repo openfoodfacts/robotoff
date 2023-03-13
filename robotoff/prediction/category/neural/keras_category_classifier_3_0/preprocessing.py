@@ -30,11 +30,14 @@ MAX_IMAGE_EMBEDDING = 10
 IMAGE_EMBEDDING_DIM = 512
 
 
+V3_MODEL_DATA_DIR = settings.DATA_DIR / "category/neural/v3"
+
+
 @functools.cache
 def get_ingredient_taxonomy():
     return fetch_taxonomy(
         "",
-        settings.DATA_DIR / "category/neural/v3/ingredients.full.json.gz",
+        V3_MODEL_DATA_DIR / "ingredients.full.json.gz",
         offline=True,
     )
 

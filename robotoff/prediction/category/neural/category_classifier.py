@@ -11,31 +11,27 @@ from . import keras_category_classifier_2_0, keras_category_classifier_3_0
 logger = get_logger(__name__)
 
 
-class CategoryPrediction:
-    """CategoryPrediction stores information about a category classification prediction."""
+def create_prediction(
+    category: str, confidence: float, model_version: str, **kwargs
+) -> Prediction:
+    """Create a Prediction.
 
-    def __init__(self, category: str, confidence: float, model_version: str):
-        self.category = category
-        self.confidence = confidence
-        self.model_version = model_version
+    kwargs are added to the prediction data field.
 
-    def to_prediction(self) -> Prediction:
-        """Converts this category prediction to a Prediction."""
-        return Prediction(
-            type=PredictionType.category,
-            value_tag=self.category,
-            data={"model_version": self.model_version},
-            automatic_processing=False,
-            predictor="neural",
-            confidence=self.confidence,
-        )
-
-    def __eq__(self, other):
-        """A CategoryPrediction is equal to another prediction when their attributes match."""
-        if not isinstance(other, CategoryPrediction):
-            return NotImplemented
-
-        return self.category == other.category and self.confidence == other.confidence
+    :param category: canonical ID of the category, ex: en:cheeses
+    :param confidence: confidence score of the model, between 0.0 and 1.0
+    :param model_version: version of the model, see
+        NeuralCategoryClassifierModel values for possible values.
+        ex: `keras-image-embeddings-3.0`
+    """
+    return Prediction(
+        type=PredictionType.category,
+        value_tag=category,
+        data={"model_version": model_version, **kwargs},
+        automatic_processing=False,
+        predictor="neural",
+        confidence=confidence,
+    )
 
 
 class CategoryClassifier:
@@ -129,21 +125,45 @@ class CategoryClassifier:
                 image_embeddings=image_embeddings,
             )
 
-        category_predictions = [
-            CategoryPrediction(*item, model_name.value) for item in raw_predictions
-        ]
+        # Threshold for automatic detection, only available for
+        # `keras_image_embeddings_3_0` model.
+        # Currently we don't apply yet the category automatically, we only add
+        # a flag to add a specific annotation campaign during the insight
+        # import
+        thresholds = (
+            (keras_category_classifier_3_0.get_automatic_processing_thresholds())
+            if model_name.keras_image_embeddings_3_0
+            else {}
+        )
+
+        predictions = []
+
+        for category_id, score in raw_predictions:
+            # If the category is not in `thresholds` or if the score is
+            # below the threshold, set the above_threshold flag to False
+            above_threshold = score >= thresholds.get(category_id, 1.1)
+            predictions.append(
+                create_prediction(
+                    category_id,
+                    score,
+                    model_name.value,
+                    above_threshold=above_threshold,
+                    # We need to set a higher priority (=lower digit) if
+                    # above_threshold is True, as otherwise a deepest
+                    # predicted category with `above_threshold=False` will
+                    # take precedence, and we wouldn't generate any insight
+                    # for the prediction with `above_threshold=True`
+                    priority=0 if above_threshold else 1,
+                )
+            )
 
         if deepest_only:
-            predicted_dict = {p.category: p for p in category_predictions}
-            taxonomy_nodes = [self.taxonomy[p.category] for p in category_predictions]
+            predicted_dict = {p.value_tag: p for p in predictions}
+            taxonomy_nodes = [self.taxonomy[p.value_tag] for p in predictions]  # type: ignore
 
-            category_predictions = [
+            predictions = [
                 predicted_dict[x.id]
                 for x in self.taxonomy.find_deepest_nodes(taxonomy_nodes)
             ]
 
-        predictions = [
-            category_prediction.to_prediction()
-            for category_prediction in category_predictions
-        ]
         return predictions, debug
