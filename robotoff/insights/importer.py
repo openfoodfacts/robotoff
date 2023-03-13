@@ -33,6 +33,7 @@ from robotoff.taxonomy import (
 from robotoff.types import (
     InsightImportResult,
     InsightType,
+    NeuralCategoryClassifierModel,
     PackagingElementProperty,
     PredictionImportResult,
     PredictionType,
@@ -707,7 +708,7 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def is_parent_category(cls, category: str, to_check_categories: set[str]):
+    def is_parent_category(cls, category: str, to_check_categories: set[str]) -> bool:
         # Check that the predicted category is not a parent of a
         # current/already predicted category
         return get_taxonomy(InsightType.category.name).is_parent_of_any(
@@ -726,9 +727,18 @@ class CategoryImporter(InsightImporter):
             if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
         ]
         taxonomy = get_taxonomy(InsightType.category.name)
+
+        # Make sure we yield candidates with `above_threshold=True` even if
+        # there are candidates that are deepest in the category taxonomy
+        yield from (
+            ProductInsight(**candidate.to_dict())
+            for candidate in candidates
+            if candidate.data.get("above_threshold") is True
+        )
         yield from (
             ProductInsight(**candidate.to_dict())
             for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
+            if candidate.data.get("above_threshold") is False
         )
 
     @staticmethod
@@ -748,13 +758,25 @@ class CategoryImporter(InsightImporter):
     @classmethod
     def add_optional_fields(cls, insight: ProductInsight, product: Product):
         taxonomy = get_taxonomy(InsightType.category.name)
+        campaigns = []
         if (
             insight.value_tag in taxonomy
             and "agribalyse_food_code" in taxonomy[insight.value_tag].additional_data
         ):
             # This category is linked to an agribalyse category, add it as a
             # campaign tag
-            insight.campaign = ["agribalyse-category"]
+            campaigns.append("agribalyse-category")
+
+        if (
+            insight.predictor == "neural"
+            and insight.data.get("model_version")
+            == NeuralCategoryClassifierModel.keras_image_embeddings_3_0.value
+            and insight.data.get("above_threshold", False)
+        ):
+            # Add `v3_categorizer_automatic_processing` campaign for
+            campaigns.append("v3_categorizer_automatic_processing")
+
+        insight.campaign = campaigns
 
 
 class ProductWeightImporter(InsightImporter):
