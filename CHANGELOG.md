@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.1](https://github.com/openfoodfacts/robotoff/compare/v1.22.0...v1.22.1) (2023-03-13)
+
+
+### Bug Fixes
+
+* don't generate image embedding/fetch OCR texts if not required ([93fc96d](https://github.com/openfoodfacts/robotoff/commit/93fc96d235aaee4ad94f05737022809f94b96456))
+
 ## [1.22.0](https://github.com/openfoodfacts/robotoff/compare/v1.21.0...v1.22.0) (2023-03-12)
 
 
