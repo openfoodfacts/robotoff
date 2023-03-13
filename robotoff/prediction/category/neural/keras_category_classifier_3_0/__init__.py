@@ -28,6 +28,14 @@ from .preprocessing import (
 logger = get_logger(__name__)
 
 
+# Category IDs to ignore in v3 model predictions
+CATEGORY_EXCLUDE_SET = {
+    # generic category that was mistakenly forgotten in exclude list
+    # in category selection
+    "en:meats-and-their-products",
+}
+
+
 def fetch_cached_image_embeddings(
     barcode: str, image_ids: list[str]
 ) -> dict[str, np.ndarray]:
@@ -239,6 +247,10 @@ def predict(
     for idx in indices:
         confidence = float(scores[idx])
         category = labels[idx]
+
+        if category in CATEGORY_EXCLUDE_SET:
+            continue
+
         # We only consider predictions with a confidence score of `threshold` and above.
         if confidence >= threshold:
             category_predictions.append((category, confidence))
