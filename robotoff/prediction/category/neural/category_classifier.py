@@ -102,11 +102,24 @@ class CategoryClassifier:
                 ocr_texts = product.pop("ocr")
             else:
                 # Otherwise we fetch OCR texts from Product Opener
-                ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
+                # Only fetch OCR texts if it's required by the model
+                ocr_texts = (
+                    keras_category_classifier_3_0.fetch_ocr_texts(product)
+                    if keras_category_classifier_3_0.model_input_flags[model_name].get(
+                        "add_ingredients_ocr_tags", True
+                    )
+                    else []
+                )
 
-            triton_stub = get_triton_inference_stub()
-            image_embeddings = keras_category_classifier_3_0.generate_image_embeddings(
-                product, triton_stub
+            # Only generate image embeddings if it's required by the model
+            image_embeddings = (
+                keras_category_classifier_3_0.generate_image_embeddings(
+                    product, get_triton_inference_stub()
+                )
+                if keras_category_classifier_3_0.model_input_flags[model_name].get(
+                    "add_image_embeddings", True
+                )
+                else None
             )
             raw_predictions, debug = keras_category_classifier_3_0.predict(
                 product,
