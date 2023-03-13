@@ -1,8 +1,10 @@
 from typing import Optional
 
 import numpy as np
+from PIL import Image
 from tritonclient.grpc import service_pb2
 
+from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.triton import (
@@ -24,9 +26,70 @@ from .preprocessing import (
 logger = get_logger(__name__)
 
 
+def fetch_cached_image_embeddings(
+    barcode: str, image_ids: list[str]
+) -> dict[str, np.ndarray]:
+    """Fetch image embeddings cached in DB for a product and specific image
+    IDs.
+
+    Only the embeddings existing in DB are returned, image IDs that were not
+    found are ignored.
+
+    :param barcode: the product barcode
+    :param image_ids: a list of image IDs to fetch
+    :return: a dict mapping image IDs to CLIP image embedding
+    """
+    cached_embeddings = {}
+    for image_id, embedding in (
+        ImageEmbedding.select(ImageModel.image_id, ImageEmbedding.embedding)
+        .join(ImageModel)
+        .where(
+            ImageModel.barcode == barcode,
+            ImageModel.image_id.in_(image_ids),
+        )
+        .tuples()
+        .iterator()
+    ):
+        cached_embeddings[image_id] = np.frombuffer(embedding, dtype=np.float32)
+
+    return cached_embeddings
+
+
+def save_image_embeddings(barcode: str, embeddings: dict[str, np.ndarray]):
+    """Save computed image embeddings in ImageEmbedding table.
+
+    :param barcode: barcode of the product
+    :param embeddings: a dict mapping image ID to image embedding
+    """
+    image_id_to_model_id = {
+        image_id: model_id
+        for (model_id, image_id) in ImageModel.select(
+            ImageModel.id, ImageModel.image_id
+        )
+        .where(
+            ImageModel.barcode == barcode,
+            ImageModel.image_id.in_(list(embeddings.keys())),
+        )
+        .tuples()
+        .iterator()
+    }
+    rows = [
+        {"image_id": image_id_to_model_id[image_id], "embedding": embedding.tobytes()}
+        for image_id, embedding in embeddings.items()
+    ]
+    inserted = ImageEmbedding.insert_many(rows).execute()
+    logger.info("%d image embeddings created in db", inserted)
+
+
+@with_db
 def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
     """Generate image embeddings using CLIP model for the `MAX_IMAGE_EMBEDDING`
     most recent images.
+
+    We first fetch image embeddings cached in DB (from ImageEmbedding table),
+    and we generate embeddings for missing image IDs by sending a request to
+    Triton. We save the computed embeddings in DB (for future usage), and both
+    cached and newly-computed embeddings are concatenated and returned.
 
     :param product: product data
     :param stub: the triton inference stub to use
@@ -34,34 +97,79 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
         (num_images, IMAGE_EMBEDDING_DIM)
     """
     # Fetch the `MAX_IMAGE_EMBEDDING` most recent "raw" images
-    image_ids = sorted(
+    image_ids_int = sorted(
+        # We convert it to int to get a correct recent sorting
         (int(image_id) for image_id in product.get("images", {}) if image_id.isdigit()),
         reverse=True,
     )[:MAX_IMAGE_EMBEDDING]
+    # Convert image IDs back to string
+    image_ids = [str(image_id) for image_id in image_ids_int]
     if image_ids:
         barcode = product["code"]
-        image_urls = [
-            generate_image_url(barcode, f"{image_id}.400") for image_id in image_ids
-        ]
-        images = [
-            get_image_from_url(image_url, error_raise=False, session=http_session)
-            for image_url in image_urls
-        ]
-        non_null_images = [image for image in images if image is not None]
-        if len(images) != len(non_null_images):
-            logger.info(
-                "%d images could not be fetched (over %d)",
-                len(images) - len(non_null_images),
-                len(images),
-            )
+        embeddings_by_id = fetch_cached_image_embeddings(barcode, image_ids)
+        logger.debug("%d embeddings fetched from DB", len(embeddings_by_id))
+        missing_embedding_ids = set(image_ids) - set(embeddings_by_id)
 
-        request = generate_clip_embedding_request(non_null_images)
-        response = stub.ModelInfer(request)
-        return np.frombuffer(
-            response.raw_output_contents[0],
-            dtype=np.float32,
-        ).reshape((len(non_null_images), -1))
+        if missing_embedding_ids:
+            logger.debug(
+                "Computing embeddings for %d images", len(missing_embedding_ids)
+            )
+            images_by_id = {
+                image_id: get_image_from_url(
+                    # Images are resized to 224x224, so there is no need to
+                    # fetch the full-sized image, the 400px resized
+                    # version is enough
+                    generate_image_url(barcode, f"{image_id}.400"),
+                    error_raise=False,
+                    session=http_session,
+                )
+                for image_id in missing_embedding_ids
+            }
+            # image may be None if the image does not exist on the server
+            # or in case of network error, filter these images
+            non_null_image_by_ids = {
+                image_id: image
+                for image_id, image in images_by_id.items()
+                if image is not None
+            }
+            if len(missing_embedding_ids) != len(non_null_image_by_ids):
+                logger.info(
+                    "%d images could not be fetched (over %d)",
+                    len(missing_embedding_ids) - len(non_null_image_by_ids),
+                    len(missing_embedding_ids),
+                )
+
+            computed_embeddings_by_id = _generate_image_embeddings(
+                non_null_image_by_ids, stub
+            )
+            save_image_embeddings(barcode, computed_embeddings_by_id)
+            # Merge cached and newly-computed image embeddings
+            embeddings_by_id |= computed_embeddings_by_id
+
+        return np.stack(list(embeddings_by_id.values()), axis=0)
+
     return None
+
+
+def _generate_image_embeddings(
+    images_by_id: dict[str, Image.Image], stub
+) -> dict[str, np.ndarray]:
+    """Generate CLIP image embeddings by sending a request to Triton.
+
+    :param images_by_id: a dict mapping image ID to PIL Image
+    :param stub: the triton inference stub to use
+    :return: a dict mapping image ID to CLIP embedding
+    """
+    request = generate_clip_embedding_request(list(images_by_id.values()))
+    response = stub.ModelInfer(request)
+    computed_embeddings = np.frombuffer(
+        response.raw_output_contents[0],
+        dtype=np.float32,
+    ).reshape((len(images_by_id), -1))
+    return {
+        image_id: embedding
+        for image_id, embedding in zip(images_by_id.keys(), computed_embeddings)
+    }
 
 
 def fetch_ocr_texts(product: JSONType) -> list[str]:
