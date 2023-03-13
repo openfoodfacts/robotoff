@@ -1,5 +1,5 @@
 import functools
-from typing import Optional
+from typing import Literal, Optional
 
 import numpy as np
 from PIL import Image
@@ -8,6 +8,7 @@ from tritonclient.grpc import service_pb2
 from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.prediction.ocr.core import get_ocr_result
+from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
     deserialize_byte_tensor,
     generate_clip_embedding_request,
@@ -214,13 +215,24 @@ def get_automatic_processing_thresholds() -> dict[str, float]:
     return load_json(V3_MODEL_DATA_DIR / "image_embeddings_model_thresholds.json.gz", compressed=True)  # type: ignore
 
 
+# In NeighborPredictionType objects, we stores the score of parents, children
+# and sibling categories (relative to the predicted categories). Under each type
+# (siblings, children, parents), we store scores as a dict mapping the category
+# name to either the score (float) or None if the neighbor category is not part
+# of the predicted category list.
+NeighborPredictionType = Optional[
+    dict[Literal["siblings", "children", "parents"], dict[str, Optional[float]]]
+]
+
+
 def predict(
     product: JSONType,
     ocr_texts: list[str],
     model_name: NeuralCategoryClassifierModel,
     threshold: Optional[float] = None,
     image_embeddings: Optional[np.ndarray] = None,
-) -> tuple[list[tuple[str, float]], JSONType]:
+    category_taxonomy: Optional[Taxonomy] = None,
+) -> tuple[list[tuple[str, float, Optional[NeighborPredictionType]]], JSONType]:
     """Predict categories using v3 model.
 
     :param product: the product for which we want to predict categories
@@ -230,9 +242,13 @@ def predict(
     :param image_embeddings: image embeddings of up to the
         `MAX_IMAGE_EMBEDDING` most recent images or None if no image was
         available
+    :param category_taxonomy: the category Taxonomy (optional), if provided
+        the predicted scores of parents, children and siblings will be returned
     :return: the predicted categories as a list of
-        (category_tag, confidence) tuples and a dict containing debug
-        information
+        (category_tag, neighbor_predictions, confidence) tuples and a dict
+        containing debug information. `neighbor_predictions` is None if
+        taxonomy was not passed, otherwise it's a dict containing predicted
+        scores of parents, children and siblings
     """
     if threshold is None:
         threshold = 0.5
@@ -242,7 +258,8 @@ def predict(
     scores, labels = _predict(inputs, model_name)
     indices = np.argsort(-scores)
 
-    category_predictions: list[tuple[str, float]] = []
+    category_predictions: list[tuple[str, float, Optional[NeighborPredictionType]]] = []
+    label_to_idx = {label: idx for idx, label in enumerate(labels)}
 
     for idx in indices:
         confidence = float(scores[idx])
@@ -253,7 +270,35 @@ def predict(
 
         # We only consider predictions with a confidence score of `threshold` and above.
         if confidence >= threshold:
-            category_predictions.append((category, confidence))
+            neighbor_predictions: NeighborPredictionType
+            if category_taxonomy is not None and category in category_taxonomy:
+                neighbor_predictions = {"parents": {}, "children": {}, "siblings": {}}
+                current_node = category_taxonomy[category]
+                for parent in current_node.parents:
+                    neighbor_predictions["parents"][parent.id] = (
+                        scores[label_to_idx[parent.id]]
+                        if parent.id in label_to_idx
+                        else None
+                    )
+
+                    for sibling in (
+                        node for node in parent.children if node != current_node
+                    ):
+                        neighbor_predictions["siblings"][sibling.id] = (
+                            scores[label_to_idx[sibling.id]]
+                            if sibling.id in label_to_idx
+                            else None
+                        )
+
+                for child in current_node.children:
+                    neighbor_predictions["children"][child.id] = (
+                        scores[label_to_idx[child.id]]
+                        if child.id in label_to_idx
+                        else None
+                    )
+            else:
+                neighbor_predictions = None
+            category_predictions.append((category, confidence, neighbor_predictions))
         else:
             break
 

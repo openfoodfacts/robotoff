@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
@@ -78,9 +78,20 @@ class CategoryClassifier:
             model_name = NeuralCategoryClassifierModel.keras_image_embeddings_3_0
 
         if model_name == NeuralCategoryClassifierModel.keras_2_0:
-            raw_predictions, debug = keras_category_classifier_2_0.predict(
+            raw_v2_predictions, debug = keras_category_classifier_2_0.predict(
                 product, threshold
             )
+            # v3 models have an additional field for neighbor predictions, change
+            # the `raw_predictions` format to be compatible with v3 models
+            raw_predictions: list[
+                tuple[
+                    str,
+                    float,
+                    Optional[keras_category_classifier_3_0.NeighborPredictionType],
+                ]
+            ] = [
+                (category_id, score, None) for category_id, score in raw_v2_predictions
+            ]
         else:
             if "ingredients_tags" in product and "ingredients" not in product:
                 # v3 models use the `ingredients` field instead of `ingredients_tags`,
@@ -123,6 +134,7 @@ class CategoryClassifier:
                 model_name,
                 threshold=threshold,
                 image_embeddings=image_embeddings,
+                category_taxonomy=self.taxonomy,
             )
 
         # Threshold for automatic detection, only available for
@@ -138,10 +150,15 @@ class CategoryClassifier:
 
         predictions = []
 
-        for category_id, score in raw_predictions:
+        for category_id, score, neighbor_predictions in raw_predictions:
             # If the category is not in `thresholds` or if the score is
             # below the threshold, set the above_threshold flag to False
             above_threshold = score >= thresholds.get(category_id, 1.1)
+            kwargs: dict[str, Any] = (
+                {}
+                if neighbor_predictions is None
+                else {"neighbor_predictions": neighbor_predictions}
+            )
             predictions.append(
                 create_prediction(
                     category_id,
@@ -154,6 +171,7 @@ class CategoryClassifier:
                     # take precedence, and we wouldn't generate any insight
                     # for the prediction with `above_threshold=True`
                     priority=0 if above_threshold else 1,
+                    **kwargs,
                 )
             )
 
