@@ -13,7 +13,20 @@ logger = get_logger(__name__)
 def save_image(
     barcode: str, source_image: str, images: JSONType, server_domain: str
 ) -> Optional[ImageModel]:
-    """Save imported image details in DB."""
+    """Save imported image details in DB.
+
+    :param barcode: barcode of the product
+    :param source_image: source image, in the format '/325/543/254/5234/1.jpg'
+    :param images: image dict mapping image ID to image metadata, as returned
+        by Product Opener API
+    :param server_domain: the server domain to use, default to
+        BaseURLProvider.server_domain()    :type images: _type_
+    :return: this function return either:
+        - the ImageModel of the image if it already exist in DB
+        - None if the image is non raw (non-digit image ID), if it's not
+          referenced in `images` or if there are no size information
+        - the created ImageModel otherwise
+    """
     if existing_image_model := ImageModel.get_or_none(source_image=source_image):
         logger.info(
             f"Image {source_image} already exist in DB, returning existing image"
@@ -35,24 +48,25 @@ def save_image(
 
     if not sizes:
         logger.info("Image with missing size information: %s", image)
+        # width and height are non-null fields, so provide default values
         return None
 
     width = sizes["w"]
     height = sizes["h"]
 
-    if "uploaded_t" not in image:
-        logger.info("Missing uploaded_t field: %s", list(image))
-        return None
+    uploaded_t = image.get("uploaded_t")
+    if not uploaded_t:
+        logger.info("Missing uploaded_t information: %s", list(image))
 
-    uploaded_t = image["uploaded_t"]
-    if isinstance(uploaded_t, str):
-        if not uploaded_t.isdigit():
-            logger.info("Non digit uploaded_t value: %s", uploaded_t)
-            return None
-
+    elif isinstance(uploaded_t, str) and not uploaded_t.isdigit():
+        logger.info("Non digit uploaded_t value: %s", uploaded_t)
+        uploaded_t = None
+    else:
         uploaded_t = int(uploaded_t)
 
-    uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
+    if uploaded_t is not None:
+        uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
+
     image_model = ImageModel.create(
         barcode=barcode,
         image_id=image_id,
