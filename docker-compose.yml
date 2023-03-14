@@ -12,6 +12,7 @@ x-robotoff-base:
 
 x-robotoff-base-env:
   &robotoff-base-env
+  LOG_LEVEL:
   ROBOTOFF_INSTANCE:
   ROBOTOFF_DOMAIN:
   ROBOTOFF_SCHEME:
