@@ -289,7 +289,7 @@ def predict(
                 current_node = category_taxonomy[category]
                 for parent in current_node.parents:
                     neighbor_predictions["parents"][parent.id] = (
-                        scores[label_to_idx[parent.id]]
+                        float(scores[label_to_idx[parent.id]])
                         if parent.id in label_to_idx
                         else None
                     )
@@ -298,14 +298,14 @@ def predict(
                         node for node in parent.children if node != current_node
                     ):
                         neighbor_predictions["siblings"][sibling.id] = (
-                            scores[label_to_idx[sibling.id]]
+                            float(scores[label_to_idx[sibling.id]])
                             if sibling.id in label_to_idx
                             else None
                         )
 
                 for child in current_node.children:
                     neighbor_predictions["children"][child.id] = (
-                        scores[label_to_idx[child.id]]
+                        float(scores[label_to_idx[child.id]])
                         if child.id in label_to_idx
                         else None
                     )
