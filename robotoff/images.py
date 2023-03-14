@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Optional
 
 from robotoff.models import ImageModel
-from robotoff.off import get_server_type
+from robotoff.off import generate_image_path, get_server_type
+from robotoff.settings import BaseURLProvider
 from robotoff.types import JSONType
 from robotoff.utils import get_logger
 
@@ -80,3 +81,31 @@ def save_image(
     if image_model is not None:
         logger.info("New image %s created in DB", image_model.id)
     return image_model
+
+
+def refresh_images_in_db(
+    barcode: str, images: JSONType, server_domain: Optional[str] = None
+):
+    """Make sure all raw images present in `images` exist in DB in image table.
+
+    :param barcode: barcode of the product
+    :param images: image dict mapping image ID to image metadata, as returned
+        by Product Opener API
+    :param server_domain: the server domain to use, default to
+        BaseURLProvider.server_domain()
+    """
+    server_domain = server_domain or BaseURLProvider.server_domain()
+    image_ids = [image_id for image_id in images.keys() if image_id.isdigit()]
+    existing_image_ids = set(
+        image_id
+        for (image_id,) in ImageModel.select(ImageModel.image_id)
+        .where(ImageModel.barcode == barcode, ImageModel.image_id.in_(image_ids))
+        .tuples()
+        .iterator()
+    )
+    missing_image_ids = set(image_ids) - existing_image_ids
+
+    for missing_image_id in missing_image_ids:
+        source_image = generate_image_path(barcode, missing_image_id)
+        logger.debug("Creating missing image %s in DB", source_image)
+        save_image(barcode, source_image, images, server_domain)
