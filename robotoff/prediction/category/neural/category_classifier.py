@@ -153,6 +153,9 @@ class CategoryClassifier:
         predictions = []
 
         for category_id, score, neighbor_predictions in raw_predictions:
+            if category_id not in self.taxonomy:
+                # If the category no longer exist in the taxonomy, ignore it
+                continue
             # If the category is not in `thresholds` or if the score is
             # below the threshold, set the above_threshold flag to False
             above_threshold = score >= thresholds.get(category_id, 1.1)
