@@ -61,7 +61,7 @@ class BaseURLProvider(object):
         if domain:
             data["domain"] = domain
 
-        if data["prefix"]:
+        if "prefix" in data:
             return "%(scheme)s://%(prefix)s.%(domain)s" % data
 
         return "%(scheme)s://%(domain)s" % data
