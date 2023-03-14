@@ -929,11 +929,11 @@ class TestCategoryImporter:
         ],
     )
     def test_generate_candidates(
-        self, predictions, product, expected_value_tags, mocker
+        self, predictions, product, expected_value_tags, mocker, category_taxonomy
     ):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
+            return_value=category_taxonomy,
         )
         candidates = list(CategoryImporter.generate_candidates(product, predictions))
         assert all(isinstance(c, ProductInsight) for c in candidates)
