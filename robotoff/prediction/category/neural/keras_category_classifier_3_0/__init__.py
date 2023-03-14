@@ -423,12 +423,18 @@ def build_triton_request(
     request = service_pb2.ModelInferRequest()
     request.model_name = model_name
 
+    # for each input, we must specify the input name, the data type, the shape
+    # and the raw data as a byte-serialized numpy array
     if add_product_name:
         product_name_input = service_pb2.ModelInferRequest().InferInputTensor()
         product_name_input.name = "product_name"
+        # String must be provided as bytes
         product_name_input.datatype = "BYTES"
+        # First dimension is batch size
         product_name_input.shape.extend([1, 1])
+        # We must use extend method with protobuf to add an item to a list
         request.inputs.extend([product_name_input])
+        # String must be provided as byte-serialized object numpy arrays
         request.raw_input_contents.extend(
             [serialize_byte_tensor(np.array([[product_name]], dtype=object))]
         )
