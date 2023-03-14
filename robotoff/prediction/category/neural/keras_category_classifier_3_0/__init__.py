@@ -5,6 +5,7 @@ import numpy as np
 from PIL import Image
 from tritonclient.grpc import service_pb2
 
+from robotoff.images import refresh_images_in_db
 from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.prediction.ocr.core import get_ocr_result
@@ -83,9 +84,16 @@ def save_image_embeddings(barcode: str, embeddings: dict[str, np.ndarray]):
         .tuples()
         .iterator()
     }
+
+    if num_missing_images := sum(
+        int(image_id not in image_id_to_model_id) for image_id in embeddings.keys()
+    ):
+        logger.info("%d images were not found in image table", num_missing_images)
+
     rows = [
         {"image_id": image_id_to_model_id[image_id], "embedding": embedding.tobytes()}
         for image_id, embedding in embeddings.items()
+        if image_id in image_id_to_model_id
     ]
     inserted = ImageEmbedding.insert_many(rows).returning().execute()
     logger.info("%d image embeddings created in db", inserted)
@@ -152,6 +160,10 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
             computed_embeddings_by_id = _generate_image_embeddings(
                 non_null_image_by_ids, stub
             )
+            # Make sure all image IDs are in image table
+            refresh_images_in_db(barcode, product.get("images", {}))
+            # Save embeddings in embeddings.image_embeddings table for future
+            # use
             save_image_embeddings(barcode, computed_embeddings_by_id)
             # Merge cached and newly-computed image embeddings
             embeddings_by_id |= computed_embeddings_by_id
