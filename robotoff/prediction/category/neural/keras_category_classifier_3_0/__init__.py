@@ -132,7 +132,7 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
             logger.debug(
                 "Computing embeddings for %d images", len(missing_embedding_ids)
             )
-            images_by_id = {
+            images_by_id: dict[str, Optional[Image.Image]] = {
                 image_id: get_image_from_url(
                     # Images are resized to 224x224, so there is no need to
                     # fetch the full-sized image, the 400px resized
@@ -157,18 +157,21 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
                     len(missing_embedding_ids),
                 )
 
-            computed_embeddings_by_id = _generate_image_embeddings(
-                non_null_image_by_ids, stub
-            )
-            # Make sure all image IDs are in image table
-            refresh_images_in_db(barcode, product.get("images", {}))
-            # Save embeddings in embeddings.image_embeddings table for future
-            # use
-            save_image_embeddings(barcode, computed_embeddings_by_id)
-            # Merge cached and newly-computed image embeddings
-            embeddings_by_id |= computed_embeddings_by_id
+            if non_null_image_by_ids:
+                computed_embeddings_by_id = _generate_image_embeddings(
+                    non_null_image_by_ids, stub
+                )
+                # Make sure all image IDs are in image table
+                refresh_images_in_db(barcode, product.get("images", {}))
+                # Save embeddings in embeddings.image_embeddings table for future
+                # use
+                save_image_embeddings(barcode, computed_embeddings_by_id)
+                # Merge cached and newly-computed image embeddings
+                embeddings_by_id |= computed_embeddings_by_id
 
-        return np.stack(list(embeddings_by_id.values()), axis=0)
+        if embeddings_by_id:
+            # We need at least one array to stack
+            return np.stack(list(embeddings_by_id.values()), axis=0)
 
     return None
 
