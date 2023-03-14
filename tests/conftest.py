@@ -2,8 +2,9 @@
 """
 import pytest
 
-from robotoff import models
+from robotoff import models, settings
 from robotoff.redis import Lock
+from robotoff.taxonomy import Taxonomy
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -32,3 +33,8 @@ def peewee_db(peewee_db_create):
     if not models.db.is_closed():
         models.db.rollback()
         models.db.close()
+
+
+@pytest.fixture(scope="session")
+def category_taxonomy():
+    return Taxonomy.from_json(settings.TAXONOMY_PATHS["category"])
