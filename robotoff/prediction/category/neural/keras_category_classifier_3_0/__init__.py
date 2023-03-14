@@ -12,7 +12,6 @@ from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
     deserialize_byte_tensor,
     generate_clip_embedding_request,
-    get_triton_inference_stub,
     serialize_byte_tensor,
 )
 from robotoff.types import JSONType, NeuralCategoryClassifierModel
@@ -229,6 +228,7 @@ def predict(
     product: JSONType,
     ocr_texts: list[str],
     model_name: NeuralCategoryClassifierModel,
+    stub,
     threshold: Optional[float] = None,
     image_embeddings: Optional[np.ndarray] = None,
     category_taxonomy: Optional[Taxonomy] = None,
@@ -238,6 +238,7 @@ def predict(
     :param product: the product for which we want to predict categories
     :param ocr_texts: a list of OCR texts, one string per image
     :param model_name: the name of the model to use
+    :param stub: the triton inference stub to use
     :param threshold: the detection threshold, default is 0.5
     :param image_embeddings: image embeddings of up to the
         `MAX_IMAGE_EMBEDDING` most recent images or None if no image was
@@ -255,7 +256,7 @@ def predict(
 
     inputs = generate_inputs_dict(product, ocr_texts, image_embeddings)
     debug = generate_debug_dict(model_name, threshold, inputs)
-    scores, labels = _predict(inputs, model_name)
+    scores, labels = _predict(inputs, model_name, stub)
     indices = np.argsort(-scores)
 
     category_predictions: list[tuple[str, float, Optional[NeighborPredictionType]]] = []
@@ -373,7 +374,7 @@ triton_model_names = {
 
 
 def _predict(
-    inputs: JSONType, model_name: NeuralCategoryClassifierModel
+    inputs: JSONType, model_name: NeuralCategoryClassifierModel, stub
 ) -> tuple[np.ndarray, list[str]]:
     """Internal method to prepare and run triton request."""
     request = build_triton_request(
@@ -381,9 +382,8 @@ def _predict(
         model_name=triton_model_names[model_name],
         **model_input_flags[model_name],
     )
-    stub = get_triton_inference_stub()
     response = stub.ModelInfer(request)
-    scores = np.frombuffer(response.raw_output_contents[0], dtype=np.float32,).reshape(
+    scores = np.frombuffer(response.raw_output_contents[0], dtype=np.float32).reshape(
         (1, -1)
     )[0]
     labels = deserialize_byte_tensor(response.raw_output_contents[1])

@@ -119,9 +119,10 @@ class CategoryClassifier:
                 )
 
             # Only generate image embeddings if it's required by the model
+            triton_stub = get_triton_inference_stub()
             image_embeddings = (
                 keras_category_classifier_3_0.generate_image_embeddings(
-                    product, get_triton_inference_stub()
+                    product, triton_stub
                 )
                 if keras_category_classifier_3_0.model_input_flags[model_name].get(
                     "add_image_embeddings", True
@@ -132,6 +133,7 @@ class CategoryClassifier:
                 product,
                 ocr_texts,
                 model_name,
+                stub=triton_stub,
                 threshold=threshold,
                 image_embeddings=image_embeddings,
                 category_taxonomy=self.taxonomy,
