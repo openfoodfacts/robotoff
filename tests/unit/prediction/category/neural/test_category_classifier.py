@@ -1,40 +1,9 @@
 import pytest
 
-from robotoff.prediction.category.neural.category_classifier import (
-    CategoryClassifier,
-    CategoryPrediction,
-)
-from robotoff.prediction.types import Prediction
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.taxonomy import Taxonomy
-from robotoff.types import InsightType
 
 MODEL_VERSION = "category-classifier"
-
-
-def test_category_prediction_to_prediction():
-    category_prediction = CategoryPrediction("category", 0.5, MODEL_VERSION)
-
-    assert category_prediction.to_prediction() == Prediction(
-        type=InsightType.category,
-        value_tag="category",
-        data={"model_version": MODEL_VERSION},
-        automatic_processing=False,
-        predictor="neural",
-        confidence=0.5,
-    )
-
-
-def test_category_prediction_to_prediction_auto():
-    category_prediction = CategoryPrediction("category", 0.9, MODEL_VERSION)
-
-    assert category_prediction.to_prediction() == Prediction(
-        type=InsightType.category,
-        value_tag="category",
-        data={"model_version": MODEL_VERSION},
-        automatic_processing=False,
-        predictor="neural",
-        confidence=0.9,
-    )
 
 
 class MockResponse:
