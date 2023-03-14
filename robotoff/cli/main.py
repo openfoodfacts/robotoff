@@ -139,7 +139,8 @@ def categorize(
     barcode: str,
     deepest_only: bool = False,
     model_name: NeuralCategoryClassifierModel = typer.Option(
-        NeuralCategoryClassifierModel.keras_2_0, help="name of the model to use"
+        NeuralCategoryClassifierModel.keras_image_embeddings_3_0,
+        help="name of the model to use",
     ),
     threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
 ) -> None:
