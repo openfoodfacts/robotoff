@@ -39,7 +39,7 @@ with db:
                 save_image(
                     product.barcode,
                     image_url,
-                    product,
+                    product.images,
                     settings.BaseURLProvider.server_domain(),
                 )
             except Exception as e:

@@ -1,12 +1,11 @@
-import datetime
 from pathlib import Path
-from typing import Optional
 
 import elasticsearch
 from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
 from robotoff.elasticsearch.client import get_es_client
+from robotoff.images import save_image
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -29,8 +28,8 @@ from robotoff.models import (
     db,
     with_db,
 )
-from robotoff.off import get_server_type, get_source_from_url
-from robotoff.products import Product, get_product_store
+from robotoff.off import get_source_from_url
+from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.triton import generate_clip_embedding
 from robotoff.types import ObjectDetectionModel, PredictionType
@@ -65,7 +64,7 @@ def run_import_image_job(
         return
 
     with db:
-        image_model = save_image(barcode, source_image, product, server_domain)
+        image_model = save_image(barcode, source_image, product.images, server_domain)
 
         if image_model is None:
             # The image is invalid, no need to perform image extraction jobs
@@ -166,65 +165,7 @@ def save_image_job(batch: list[tuple[str, str]], server_domain: str):
                 continue
 
             with db.atomic():
-                save_image(barcode, source_image, product, server_domain)
-
-
-def save_image(
-    barcode: str, source_image: str, product: Product, server_domain: str
-) -> Optional[ImageModel]:
-    """Save imported image details in DB."""
-    if existing_image_model := ImageModel.get_or_none(source_image=source_image):
-        logger.info(
-            f"Image {source_image} already exist in DB, returning existing image"
-        )
-        return existing_image_model
-
-    image_id = Path(source_image).stem
-
-    if not image_id.isdigit():
-        logger.info("Non raw image was sent: %s", source_image)
-        return None
-
-    if image_id not in product.images:
-        logger.info("Unknown image for product %s: %s", barcode, source_image)
-        return None
-
-    image = product.images[image_id]
-    sizes = image.get("sizes", {}).get("full")
-
-    if not sizes:
-        logger.info("Image with missing size information: %s", image)
-        return None
-
-    width = sizes["w"]
-    height = sizes["h"]
-
-    if "uploaded_t" not in image:
-        logger.info("Missing uploaded_t field: %s", list(image))
-        return None
-
-    uploaded_t = image["uploaded_t"]
-    if isinstance(uploaded_t, str):
-        if not uploaded_t.isdigit():
-            logger.info("Non digit uploaded_t value: %s", uploaded_t)
-            return None
-
-        uploaded_t = int(uploaded_t)
-
-    uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
-    image_model = ImageModel.create(
-        barcode=barcode,
-        image_id=image_id,
-        width=width,
-        height=height,
-        source_image=source_image,
-        uploaded_at=uploaded_at,
-        server_domain=server_domain,
-        server_type=get_server_type(server_domain).name,
-    )
-    if image_model is not None:
-        logger.info("New image %s created in DB", image_model.id)
-    return image_model
+                save_image(barcode, source_image, product.images, server_domain)
 
 
 def run_nutrition_table_object_detection(
