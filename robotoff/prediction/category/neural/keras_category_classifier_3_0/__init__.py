@@ -87,7 +87,7 @@ def save_image_embeddings(barcode: str, embeddings: dict[str, np.ndarray]):
         {"image_id": image_id_to_model_id[image_id], "embedding": embedding.tobytes()}
         for image_id, embedding in embeddings.items()
     ]
-    inserted = ImageEmbedding.insert_many(rows).execute()
+    inserted = ImageEmbedding.insert_many(rows).returning().execute()
     logger.info("%d image embeddings created in db", inserted)
 
 
