@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.23.0](https://github.com/openfoodfacts/robotoff/compare/v1.22.1...v1.23.0) (2023-03-15)
+
+
+### Features
+
+* add missing_category campaign to track products without categories ([b103e66](https://github.com/openfoodfacts/robotoff/commit/b103e664bd5ae468d2cdda046bb2f8e0e0d037d9))
+* cache image embeddings in DB (ImageEmbedding table) ([ba25c75](https://github.com/openfoodfacts/robotoff/commit/ba25c7568be028140d32bfe8bce0782fa33c0fae))
+* store neighbor categories for v3 categorizer models ([8d1d727](https://github.com/openfoodfacts/robotoff/commit/8d1d727bd90030486f8c4f313465716c98b9e56f))
+* use keras new v3 model as default to predict categories ([c0f55cf](https://github.com/openfoodfacts/robotoff/commit/c0f55cff47ef204a784d361a0c16184f8d9c9a6e))
+* use keras v3 model as default ([a2d23a3](https://github.com/openfoodfacts/robotoff/commit/a2d23a32d549270a1bc01ab39be09d44402438c3))
+* use keras_image_embeddings_3_0 by default in categorize CLI ([737716e](https://github.com/openfoodfacts/robotoff/commit/737716ef57e08b13fadc1e539baaf519cb06ba4e))
+
+
+### Bug Fixes
+
+* allow to specify LOG_LEVEL in .env file ([50a3aa4](https://github.com/openfoodfacts/robotoff/commit/50a3aa4269cc1b027a8b5d65e85e422875b8651c))
+* deprecate campaign parameter in /questions* ([82c26fe](https://github.com/openfoodfacts/robotoff/commit/82c26fe834960f2c21448b501166f35bf5263cde))
+* exclude some categories from predictions ([503fa8d](https://github.com/openfoodfacts/robotoff/commit/503fa8d13a0961fad8d5baca5b58b5171c8994b9))
+* fix bug in save_image_embeddings ([a600502](https://github.com/openfoodfacts/robotoff/commit/a60050279088e00f3e628a0306672d63f157d684))
+* fix bug that occurs when image are missing in images table ([1968f56](https://github.com/openfoodfacts/robotoff/commit/1968f561b22c5d97367c67d318f4cd839430481f))
+* fix edge-case bug when no image is available ([fac1ab1](https://github.com/openfoodfacts/robotoff/commit/fac1ab1c7a51c4fc0d18a1d9a719c61dcfd74cf5))
+* fix newly introduced bug in category importer ([a1bb507](https://github.com/openfoodfacts/robotoff/commit/a1bb50731a08e6e7f709689d7660e73dcd4b4904))
+* fix serialization bug in predict ([1a69ab2](https://github.com/openfoodfacts/robotoff/commit/1a69ab2ef3e7ad15e78f7c0dee10ef62631b12e5))
+* fix SonarCloud-detected bug in BaseURLProvider ([290a3fb](https://github.com/openfoodfacts/robotoff/commit/290a3fbc06a0ffc612a1c782c154282036e4b68f))
+* fix unit tests ([61c6177](https://github.com/openfoodfacts/robotoff/commit/61c6177f1650b48dcf304a4377cb608c4f677b77))
+* fix unit tests ([0a3702f](https://github.com/openfoodfacts/robotoff/commit/0a3702f57ef7dfc4e0e406dd5e4376956445bc72))
+* ignore predicted category if it no longer exist in taxonomy ([c3c4fbe](https://github.com/openfoodfacts/robotoff/commit/c3c4fbe09c1311cd977d2b5b160eaf292a5fda20))
+* move save_image function to new robotoff.images module ([6efdaf2](https://github.com/openfoodfacts/robotoff/commit/6efdaf24104a881f9369ed1b7f0c8bec045c6f83))
+* pass stub as argument in predict for easier testing ([807c157](https://github.com/openfoodfacts/robotoff/commit/807c157bce8d9769f3f210e2ec5a811db6b53338))
+* relax checks in save_images function ([bcf998f](https://github.com/openfoodfacts/robotoff/commit/bcf998f8fd7b7c8a0533527a4c2b4f3eb7ed53d4))
+* remove legacy unit tests ([6f3e5e2](https://github.com/openfoodfacts/robotoff/commit/6f3e5e22af8a8cbed8098fb9c13e97042a00a9d0))
+
+
+### Documentation
+
+* add comment in build_triton_request function ([cf1e8db](https://github.com/openfoodfacts/robotoff/commit/cf1e8db1bf73af8c9e71d6b5d306387ca26fa569))
+* add documentation about category prediction ([0a21476](https://github.com/openfoodfacts/robotoff/commit/0a2147679390207fdb85084f1aa3872c4284f54e))
+
 ## [1.22.1](https://github.com/openfoodfacts/robotoff/compare/v1.22.0...v1.22.1) (2023-03-13)
 
 
