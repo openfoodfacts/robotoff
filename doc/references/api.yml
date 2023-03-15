@@ -64,7 +64,7 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
         - name: order_by
           in: query
@@ -117,7 +117,7 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
@@ -158,7 +158,7 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
@@ -185,7 +185,7 @@ paths:
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
@@ -886,11 +886,11 @@ components:
       schema:
         type: boolean
         default: false
-    campaign:
-      name: campaign
+    campaigns:
+      name: campaigns
       in: query
-      description: Filter by annotation campaign
-        An annotation campaign allows to only retrieve questions about selected products, based on arbitrary criteria
+      description: Filter by annotation campaigns (the insight must have all the campaigns)
+        An annotation campaigns allows to only retrieve questions about selected products, based on arbitrary criteria
       schema:
         type: string
         example: agribalyse-category

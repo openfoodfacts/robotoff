@@ -1136,8 +1136,14 @@ def get_questions_resource_on_get(
     reserved_barcode: Optional[bool] = req.get_param_as_bool(
         "reserved_barcode", default=False
     )
-    # filter by annotation campaign
-    campaign: Optional[str] = req.get_param("campaign")
+    # filter by annotation campaigns
+    campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
+
+    if campaigns is None:
+        # `campaign` is a deprecated field, use campaigns now instead
+        campaign: Optional[str] = req.get_param("campaign")
+        campaigns = [campaign] if campaign is not None else None
+
     predictor = req.get_param("predictor")
 
     # If the device_id is not provided as a request parameter, we use the
@@ -1171,7 +1177,7 @@ def get_questions_resource_on_get(
         reserved_barcode=reserved_barcode,
         avoid_voted_on=_get_skip_voted_on(auth, device_id),
         automatically_processable=False,
-        campaign=campaign,
+        campaigns=campaigns,
         predictor=predictor,
     )
 
@@ -1366,7 +1372,13 @@ class UnansweredQuestionCollection:
         reserved_barcode: Optional[bool] = req.get_param_as_bool(
             "reserved_barcode", default=False
         )
-        campaign: Optional[str] = req.get_param("campaign")
+        # filter by annotation campaigns
+        campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
+        if campaigns is None:
+            # `campaign` is a deprecated field, use campaigns now instead
+            campaign: Optional[str] = req.get_param("campaign")
+            campaigns = [campaign] if campaign is not None else None
+
         predictor = req.get_param("predictor")
 
         get_insights_ = functools.partial(
@@ -1378,7 +1390,7 @@ class UnansweredQuestionCollection:
             server_domain=server_domain,
             automatically_processable=False,
             reserved_barcode=reserved_barcode,
-            campaign=campaign,
+            campaigns=campaigns,
             predictor=predictor,
         )
 

@@ -83,9 +83,55 @@ def get_insights(
     avoid_voted_on: Optional[SkipVotedOn] = None,
     group_by_value_tag: Optional[bool] = False,
     automatically_processable: Optional[bool] = None,
-    campaign: Optional[str] = None,
+    campaigns: Optional[list[str]] = None,
     predictor: Optional[str] = None,
 ) -> Iterable[ProductInsight]:
+    """Fetch insights that meet the criteria passed as parameters.
+
+    If the parameter value is None, no where clause will be added for this
+    parameter.
+
+    :param barcode: only keep insights with this barcode, defaults to None
+    :param keep_types: only keep insights that have any of the these types,
+        defaults to None
+    :param country: only keep insights with this country, defaults to None
+    :param brands: only keep insights that have any of these brands, defaults
+        to None
+    :param annotated: only keep annotated (True), not annotated (False
+        insights), defaults to False
+    :param annotation: only keep insights with a specific annotation value,
+        defaults to None
+    :param order_by: order results either randomly (random), by popularity
+        (popularity), by number of votes on this insight (n_votes), by
+        decreasing confidence score (confidence) or don't order results
+        (None), defaults to None
+    :param value_tag: only keep insights with this value_tag, defaults to None
+    :param server_domain: Only keep insights with this server domain, defaults
+        to `BaseUrlProvider.server_domain()`
+    :param reserved_barcode: only keep insights with reserved barcodes (True)
+        or without reserved barcode (False), defaults to None
+    :param as_dict: if True, return results as dict instead of ProductInsight
+        peewee objects, defaults to False
+    :param limit: limit on the number of returned results, defaults to 25
+    :param offset: query offset (used for pagination), defaults to None
+    :param count: if True, return the number of results instead of the
+        results, defaults to False
+    :param avoid_voted_on: a SkipVotedOn used to remove results insights the
+        user previously ignored, defaults to None
+    :param group_by_value_tag: if True, group results by value_tag, defaults
+        to False
+    :param automatically_processable: only keep insights that are
+        automatically processable (True) or not (False), defaults to None
+    :param campaigns: only keep insights that have *all* of these campaigns,
+        defaults to None
+    :param predictor: only keep insights that have this predictor, defaults
+        to None
+    :return: the return value is either:
+        - an iterable of ProductInsight objects or dict (if `as_dict=True`)
+        - the number of products (if `count=True`)
+        - a iterable of objects or dict (if `as_dict=True`) containing product
+          count for each `value_tag`, if `group_by_value_tag=True`
+    """
     if server_domain is None:
         server_domain = settings.BaseURLProvider.server_domain()
 
@@ -120,8 +166,8 @@ def get_insights(
     if reserved_barcode is not None:
         where_clauses.append(ProductInsight.reserved_barcode == reserved_barcode)
 
-    if campaign is not None:
-        where_clauses.append(ProductInsight.campaign.contains(campaign))
+    if campaigns is not None:
+        where_clauses.append(ProductInsight.campaign.contains_all(campaigns))
 
     if predictor is not None:
         where_clauses.append(ProductInsight.predictor == predictor)
