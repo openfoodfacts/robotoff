@@ -773,8 +773,14 @@ class CategoryImporter(InsightImporter):
             == NeuralCategoryClassifierModel.keras_image_embeddings_3_0.value
             and insight.data.get("above_threshold", False)
         ):
-            # Add `v3_categorizer_automatic_processing` campaign for
+            # Add `v3_categorizer_automatic_processing` campaign to category
+            # insights that will be applied automatically soon
+            # (experimental phase)
             campaigns.append("v3_categorizer_automatic_processing")
+
+        if not product.categories_tags:
+            # Add a campaign to track products with no categories filled in
+            campaigns.append("missing_category")
 
         insight.campaign = campaigns
 
