@@ -732,7 +732,7 @@ class CategoryImporter(InsightImporter):
         # there are candidates that are deepest in the category taxonomy
         yield from (
             ProductInsight(**candidate.to_dict())
-            for candidate in candidates
+            for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
             if candidate.data.get("above_threshold") is True
         )
         yield from (
