@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.23.1](https://github.com/openfoodfacts/robotoff/compare/v1.23.0...v1.23.1) (2023-03-16)
+
+
+### Bug Fixes
+
+* always select deepest categorized nodes in category importer ([aba33f8](https://github.com/openfoodfacts/robotoff/commit/aba33f8b591fe8d7224f3b5af835755f793a3135))
+* improve healthcheck status check messages ([e24e136](https://github.com/openfoodfacts/robotoff/commit/e24e1361bf79ee2b424a844cc6d4a8c857c01efa))
+
 ## [1.23.0](https://github.com/openfoodfacts/robotoff/compare/v1.22.1...v1.23.0) (2023-03-15)
 
 
