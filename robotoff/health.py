@@ -21,15 +21,15 @@ def test_connect_mongodb():
     try:
         client.server_info()
     except ServerSelectionTimeoutError:
-        return False, "MongoDB DB connection failed!"
-    return True, "MongoDB DB connection succeeded!"
+        return False, "MongoDB DB connection check failed!"
+    return True, "MongoDB DB connection check succeeded!"
 
 
 def test_connect_redis():
     logger.debug("health: testing Redis connection to %s", settings.REDIS_HOST)
     client = Redis(host=settings.REDIS_HOST)
     client.ping()
-    return True, "Redis DB connection success!"
+    return True, "Redis DB connection check succeeded!"
 
 
 def test_connect_postgres():
@@ -42,7 +42,7 @@ def test_connect_postgres():
         port=5432,
     )
     client.connect()
-    return True, "Postgres db connection success !"
+    return True, "Postgres db connection check succeeded!"
 
 
 def test_connect_influxdb():
@@ -55,21 +55,27 @@ def test_connect_influxdb():
         org=settings.INFLUXDB_ORG,
     )
     if not client.ping():
-        return False, "InfluxDB connection failed!"
-    return True, "InfluxDB db connection success!"
+        return False, "InfluxDB connection check failed!"
+    return True, "InfluxDB db connection check succeedeed!"
 
 
 def test_connect_robotoff_api():
     logger.debug("health: testing robotoff API status")
-    resp = requests.get(f"{settings.BaseURLProvider.robotoff()}/api/v1/status")
-    return resp.json()["status"] == "running", "Robotoff API connection success !"
+    status = requests.get(
+        f"{settings.BaseURLProvider.robotoff()}/api/v1/status"
+    ).json()["status"]
+
+    if status != "running":
+        raise RuntimeError(f"invalid API status: {status}")
+
+    return True, "Robotoff API status call succeeded!"
 
 
 def test_connect_elasticsearch():
     logger.debug("health: testing Elasticsearch status")
     if get_es_client().ping():
-        return True, "Elasticsearch connection success!"
-    return False, "Elasticsearch connection failed!"
+        return True, "Elasticsearch connection check succeeded!"
+    return False, "Elasticsearch connection check failed!"
 
 
 health.add_check(test_connect_mongodb)
