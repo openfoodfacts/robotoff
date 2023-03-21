@@ -21,7 +21,7 @@ def save_image(
     :param images: image dict mapping image ID to image metadata, as returned
         by Product Opener API
     :param server_domain: the server domain to use, default to
-        BaseURLProvider.server_domain()    :type images: _type_
+        BaseURLProvider.server_domain()
     :return: this function return either:
         - the ImageModel of the image if it already exist in DB
         - None if the image is non raw (non-digit image ID), if it's not

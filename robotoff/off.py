@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Optional, Union
 from urllib.parse import urlparse
 
+import requests
+
 from robotoff import settings
 from robotoff.utils import get_logger, http_session
 
@@ -505,6 +507,157 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     r = http_session.get(url, params=params, timeout=timeout)
     data = r.json()
     return data["status"] == 1
+
+
+def delete_image_pipeline(
+    barcode: str,
+    image_id: str,
+    auth: OFFAuthentication,
+    server_domain: Optional[str] = None,
+) -> None:
+    """Delete an image and unselect all selected images that have this image
+    as image ID.
+
+    :param barcode: barcode of the product
+    :param image_id: ID of the image to delete (number)
+    :param auth: user authentication data
+    :param server_domain: the server domain to use, default to
+        BaseURLProvider.server_domain()
+    """
+    product = get_product(barcode, ["images"], server_domain)
+
+    if product is None:
+        logger.info("Product %s not found, cannot delete image %s", barcode, image_id)
+        return None
+
+    to_delete = False
+    to_unselect = []
+
+    images = product["images"]
+    if image_id in images:
+        to_delete = True
+
+    for image_field, image_data in (
+        (key, data) for key, data in images.items() if not key.isdigit()
+    ):
+        if image_data["imgid"] == image_id:
+            to_unselect.append(image_field)
+
+    if to_delete:
+        logger.info(
+            "Sending deletion request for image %s of product %s", image_id, barcode
+        )
+        delete_image(barcode, image_id, auth, server_domain)
+
+    for image_field in to_unselect:
+        logger.info(
+            "Sending unselect request for image %s of product %s", image_field, barcode
+        )
+        unselect_image(barcode, image_field, auth, server_domain)
+
+    logger.info("Image deletion pipeline completed")
+
+
+def unselect_image(
+    barcode: str,
+    image_field: str,
+    auth: OFFAuthentication,
+    server_domain: Optional[str] = None,
+    timeout: Optional[int] = 15,
+) -> requests.Response:
+    """Unselect an image.
+
+    :param barcode: barcode of the product
+    :param image_field: field name of the image to unselect, ex: front_fr
+    :param auth: user authentication data
+    :param server_domain: the server domain to use, default to
+        BaseURLProvider.server_domain()
+    :param timeout: request timeout value in seconds, defaults to 15s
+    :return: the request Response
+    """
+    if server_domain is None:
+        server_domain = settings.BaseURLProvider.server_domain()
+
+    url = f"{get_base_url(server_domain)}/cgi/product_image_unselect.pl"
+    cookies = None
+    params = {
+        "code": barcode,
+        "id": image_field,
+    }
+
+    if auth.session_cookie:
+        cookies = {
+            "session": auth.session_cookie,
+        }
+    elif auth.username and auth.password:
+        params["user_id"] = auth.username
+        params["password"] = auth.password
+
+    r = http_session.post(
+        url,
+        data=params,
+        auth=settings._off_request_auth,
+        cookies=cookies,
+        timeout=timeout,
+    )
+
+    r.raise_for_status()
+    return r
+
+
+def delete_image(
+    barcode: str,
+    image_id: str,
+    auth: OFFAuthentication,
+    server_domain: Optional[str] = None,
+    timeout: Optional[int] = 15,
+) -> requests.Response:
+    """Delete an image on Product Opener.
+
+    :param barcode: barcode of the product
+    :param image_id: ID of the image to delete (number)
+    :param auth: user authentication data
+    :param server_domain: the server domain to use, default to
+        BaseURLProvider.server_domain()
+    :param timeout: request timeout (in seconds), defaults to 15
+    :return: the requests Response
+    """
+    if server_domain is None:
+        server_domain = settings.BaseURLProvider.server_domain()
+
+    url = f"{get_base_url(server_domain)}/cgi/product_image_move.pl"
+    cookies = None
+    params = {
+        "type": "edit",
+        "code": barcode,
+        "imgids": image_id,
+        "action": "process",
+        "move_to_override": "trash",
+    }
+    form_data = {key: (None, value) for key, value in params.items()}
+
+    if auth.session_cookie:
+        cookies = {
+            "session": auth.session_cookie,
+        }
+    elif auth.username and auth.password:
+        params["user_id"] = auth.username
+        params["password"] = auth.password
+
+    r = http_session.post(
+        url,
+        auth=settings._off_request_auth,
+        files=form_data,
+        cookies=cookies,
+        timeout=timeout,
+    )
+
+    r.raise_for_status()
+    json_response = r.json()
+    if json_response["status"] != "ok":
+        logger.warning("error during image deletion: %s", json_response.get("error"))
+
+    return r
 
 
 def select_rotate_image(
