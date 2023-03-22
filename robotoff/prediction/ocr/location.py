@@ -175,7 +175,13 @@ class AddressExtractor:
         Returns:
             str: The text extracted and prepared.
         """
-        return ocr_result.get_text()
+        text = ocr_result.get_full_text()
+        if text is None:
+            # Using `OCRResult.text_annotations` directly instead of
+            # `OCRResult.get_text_annotations()` because the latter contains
+            # the text duplicated
+            text = ocr_result.text_annotations[0].text
+        return text
 
     @staticmethod
     def normalize_text(text: str) -> str:

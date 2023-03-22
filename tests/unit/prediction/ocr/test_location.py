@@ -102,6 +102,26 @@ def test_address_extractor_init(mocker, cities):
     ]
 
 
+def test_address_extractor_get_text(mocker):
+    # OCRResult instance with a full_text_annotation
+    m_ocr_result = mocker.Mock(
+        get_full_text=mocker.Mock(return_value="full text l'île-àÉ$"),
+        text_annotations=[mocker.Mock(text="TEXT É'-č"), "yolo"],
+    )
+
+    assert AddressExtractor.get_text(m_ocr_result) == "full text l'île-àÉ$"
+    m_ocr_result.get_full_text.assert_called_once_with()
+
+    # OCRResult instance without a full_text_annotation
+    m_ocr_result = mocker.Mock(
+        get_full_text=mocker.Mock(return_value=None),
+        text_annotations=[mocker.Mock(text="TEXT É'-č"), "yolo"],
+    )
+
+    assert AddressExtractor.get_text(m_ocr_result) == "TEXT É'-č"
+    m_ocr_result.get_full_text.assert_called_once_with()
+
+
 @pytest.mark.parametrize(
     "text,output",
     [("full text l'île-àÉ$", "full text l ile ae$"), ("TEXT É'-č", "text e  c")],
