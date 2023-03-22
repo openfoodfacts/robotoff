@@ -293,7 +293,9 @@ class OCRFullTextAnnotation:
         # This way, the word offsets (word.start_idx, word.end_idx) match the
         # FullTextAnnotation text, and we can very easily determine the position
         # of the matched words
-        self.continuous_text: str = self.text.replace("\n", " ")
+        self.continuous_text: str = "|".join(
+            t.replace("|", " ").replace("\n", " ") for t in text_list
+        )
         # Here we use a accent stripping function that don't delete or
         # introduce any character, so that word offsets are preserved
         self.unnaccented_text = strip_accents_v2(self.continuous_text, keep_length=True)
@@ -360,10 +362,12 @@ class TextAnnotationPage:
         text_list: list[str] = []
         for block_data in data["blocks"]:
             block = Block(block_data, initial_offset)
+            # We add a '|' between each block, so that it's not possible to
+            # match over several blocks, so we add + 1 to offset
             initial_offset += len(block.text) + 1
             text_list.append(block.text)
             self.blocks.append(block)
-        self.text = "".join(text_list)
+        self.text = "|".join(text_list)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
