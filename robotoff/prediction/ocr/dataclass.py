@@ -22,9 +22,16 @@ class OCRParsingException(Exception):
 
 
 class OCRField(enum.Enum):
+    """OCR field to use to perform string search.
+
+    full_text: non-contiguous text, a line-break between blocks prevent
+        matches spanning several blocks.
+    full_text_contiguous: contiguous text, matches spanning several blocks
+        are possible
+    """
+
     full_text = 1
     full_text_contiguous = 2
-    text_annotations = 3
 
 
 class OCRRegex:
@@ -127,44 +134,31 @@ class OCRResult:
             )
 
     def get_full_text(self) -> str:
-        if self.full_text_annotation is not None:
-            return self.full_text_annotation.api_text
-
-        return ""
+        return (
+            self.full_text_annotation.text
+            if self.full_text_annotation is not None
+            else ""
+        )
 
     def get_full_text_contiguous(self) -> str:
-        if self.full_text_annotation is not None:
-            return self.full_text_annotation.api_text
-
-        return ""
+        return (
+            self.full_text_annotation.continuous_text
+            if self.full_text_annotation is not None
+            else ""
+        )
 
     def get_text_annotations(self) -> str:
         return self.text_annotations_str
 
     def _get_text(self, field: OCRField) -> str:
         if field == OCRField.full_text:
-            text = self.get_full_text()
-
-            if text is None:
-                # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations()
-            else:
-                return text
+            return self.get_full_text()
 
         elif field == OCRField.full_text_contiguous:
-            text = self.get_full_text_contiguous()
-
-            if text is None:
-                # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations()
-            else:
-                return text
-
-        elif field == OCRField.text_annotations:
-            return self.get_text_annotations()
+            return self.get_full_text_contiguous()
 
         else:
-            raise ValueError("invalid field: {}".format(field))
+            raise ValueError(f"invalid field: {field}")
 
     def get_text(self, ocr_regex: OCRRegex) -> str:
         """Return the OCR text.
@@ -289,7 +283,7 @@ class OCRFullTextAnnotation:
             self.pages.append(page)
         # Join page texts with a `|` character, to avoid matches to span over
         # multiple pages
-        self.text = "|".join(text_list)
+        self.text: str = "|".join(text_list)
         # Replace line break with space characters to allow matches spanning
         # multiple lines
         # We used to replace consecutive spaces (2+) with a single space so that
@@ -299,7 +293,7 @@ class OCRFullTextAnnotation:
         # This way, the word offsets (word.start_idx, word.end_idx) match the
         # FullTextAnnotation text, and we can very easily determine the position
         # of the matched words
-        self.continuous_text = self.text.replace("\n", " ")
+        self.continuous_text: str = self.text.replace("\n", " ")
         # Here we use a accent stripping function that don't delete or
         # introduce any character, so that word offsets are preserved
         self.unnaccented_text = strip_accents_v2(self.continuous_text, keep_length=True)
