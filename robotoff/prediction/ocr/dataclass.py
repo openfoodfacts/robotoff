@@ -307,12 +307,10 @@ class TextAnnotationPage:
         text_list: list[str] = []
         for block_data in data["blocks"]:
             block = Block(block_data, initial_offset)
-            # We add a '|' between each block, so that it's not possible to
-            # match over several blocks, so we add + 1 to offset
             initial_offset += len(block.text) + 1
             text_list.append(block.text)
             self.blocks.append(block)
-        self.text = "|".join(text_list)
+        self.text = "".join(text_list)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
