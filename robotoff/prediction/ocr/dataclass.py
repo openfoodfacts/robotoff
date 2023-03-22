@@ -8,7 +8,7 @@ from typing import Callable, Optional, Union
 
 from robotoff.types import JSONType
 from robotoff.utils import get_logger
-from robotoff.utils.text import strip_accents
+from robotoff.utils.text import strip_accents_v2
 
 # Some classes documentation were adapted from Google documentation on
 # https://cloud.google.com/vision/docs/reference/rpc/google.cloud.vision.v1#google.cloud.vision.v1.Symbol
@@ -122,6 +122,11 @@ class OCRResult:
         return self.text_annotations_str
 
     def get_text(self) -> str:
+        """Return the OCR text.
+
+        If full text annotations are not available, an empty string is
+        returned.
+        """
         return (
             "" if self.full_text_annotation is None else self.full_text_annotation.text
         )
@@ -238,7 +243,7 @@ class OCRFullTextAnnotation:
         self.continuous_text = self.text.replace("\n", " ")
         # Here we use a accent stripping function that don't delete or
         # introduce any character, so that word offsets are preserved
-        self.unnaccented_text = strip_accents(self.continuous_text, keep_length=True)
+        self.unnaccented_text = strip_accents_v2(self.continuous_text, keep_length=True)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
