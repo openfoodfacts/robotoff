@@ -6,7 +6,7 @@ import spacy
 
 from robotoff.utils import get_logger
 
-from .fold_to_ascii import fold, fold_without_replacement
+from .fold_to_ascii import fold, fold_without_insertion_deletion
 
 logger = get_logger(__name__)
 
@@ -14,7 +14,7 @@ CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 
 
 def strip_accents_v1(s: str) -> str:
-    """Transform accentuated unicode symbols into ascii or nothing
+    """Transform accentuated unicode symbols into ascii or nothing.
 
     Warning: this solution is only suited for languages that have a direct
     transliteration to ASCII symbols.
@@ -33,14 +33,17 @@ def strip_accents_v1(s: str) -> str:
     return nkfd_form.encode("ASCII", "ignore").decode("ASCII")
 
 
-def strip_accents(s: str, keep_length: bool = True):
+def strip_accents_v2(s: str, keep_length: bool = False) -> str:
     """Strip accents and normalize string.
 
-    :param keep_length: if True (default), no character is deleted without a
-        subtitution of length 1: the length of the string is kept unchanged.
+    :param s: the string to normalize
+    :param keep_length: if True, no character is replaced without a
+        subtitution of length 1: the length of the string is therefore kept
+        unchanged. Default to False.
+    :return: the normalized string
     """
     if keep_length:
-        return fold_without_replacement(s)
+        return fold_without_insertion_deletion(s)
     else:
         return fold(s)
 
@@ -77,7 +80,7 @@ def get_tag(text: str) -> str:
     - replacement of punctuation by either a comma ("-") or nothing, depending
     on the punctuation
     """
-    text = strip_accents(text)
+    text = strip_accents_v2(text)
     text = (
         text.lower()
         .replace(" & ", "-")

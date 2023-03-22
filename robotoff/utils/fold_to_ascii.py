@@ -1382,23 +1382,28 @@ codepoint_to_replacement = [
 translate_table = codepoint_to_self + codepoint_to_replacement
 
 
-class TranslateTableWithoutReplacement:
-    translate_table = dict(
+class TranslateTableWithoutInsertionDeletion:
+    """Class to be used as a translate table (see `str.translate` function)
+    without any insertion or deletion: only characters with a replacement of
+    length 1 are kept from the original `translate_table` mapping."""
+
+    _translate_table = dict(
         (ordinal, replacement)
         for (ordinal, replacement) in translate_table
         if len(replacement) == 1
     )
 
     def __getitem__(self, value):
-        if (replacement_value := self.translate_table.get(value)) is None:
+        if (replacement_value := self._translate_table.get(value)) is None:
+            # Return original character if it is not in translate table
             return value
         return replacement_value
 
 
-translate_table_without_replacement = TranslateTableWithoutReplacement()
+translate_table_without_insertion_deletion = TranslateTableWithoutInsertionDeletion()
 
 
-def fold_without_replacement(string: str):
+def fold_without_insertion_deletion(string: str):
     """Replace.
 
     Unmapped characters should be replaced with empty string by default, or other
@@ -1417,7 +1422,7 @@ def fold_without_replacement(string: str):
     except UnicodeEncodeError:
         pass
 
-    return string.translate(translate_table_without_replacement)
+    return string.translate(translate_table_without_insertion_deletion)
 
 
 def fold(string: str, replacement: str = "") -> str:
