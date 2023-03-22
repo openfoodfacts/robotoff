@@ -4,7 +4,7 @@ from typing import Union
 from robotoff.prediction.types import Prediction
 from robotoff.types import JSONType, PredictionType
 
-from .dataclass import OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 EXTRACTOR_VERSION = "2"
 
@@ -137,12 +137,16 @@ def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]
 NUTRIENT_VALUES_REGEX = {
     nutrient: OCRRegex(
         generate_nutrient_regex(NUTRIENT_MENTION[nutrient], units),
+        field=OCRField.full_text_contiguous,
     )
     for nutrient, units in NUTRIENT_UNITS.items()
 }
 
 NUTRIENT_MENTIONS_REGEX: dict[str, OCRRegex] = {
-    nutrient: OCRRegex(generate_nutrient_mention_regex(NUTRIENT_MENTION[nutrient]))
+    nutrient: OCRRegex(
+        generate_nutrient_mention_regex(NUTRIENT_MENTION[nutrient]),
+        field=OCRField.full_text_contiguous,
+    )
     for nutrient in NUTRIENT_MENTION
 }
 
@@ -151,7 +155,7 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
-        text = get_text(content)
+        text = get_text(content, ocr_regex)
 
         if not text:
             continue
@@ -184,7 +188,7 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
-        text = get_text(content)
+        text = get_text(content, ocr_regex)
 
         if not text:
             continue

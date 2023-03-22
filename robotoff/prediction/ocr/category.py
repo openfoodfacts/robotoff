@@ -7,7 +7,7 @@ from robotoff.taxonomy import get_taxonomy
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 
-from .dataclass import OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 
 logger = get_logger(__name__)
 
@@ -38,6 +38,7 @@ AOC_REGEX = {
                 r"(appellation)\s*(?P<category>.+)\s*(contr[ôo]l[ée]e|prot[ée]g[ée]e)",
                 re.I,
             ),
+            field=OCRField.full_text_contiguous,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
@@ -45,26 +46,31 @@ AOC_REGEX = {
                 r"(?P<category>.+)\s*(appellation d'origine contr[ôo]l[ée]e|appellation d'origine prot[ée]g[ée]e)",
                 re.I,
             ),
+            field=OCRField.full_text_contiguous,
             processing_func=category_taxonomisation,
         ),
     ],
     "es:": [
         OCRRegex(
             re.compile(r"(?P<category>.+)(\s*denominacion de origen protegida)", re.I),
+            field=OCRField.full_text_contiguous,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
             re.compile(r"(denominacion de origen protegida\s*)(?P<category>.+)", re.I),
+            field=OCRField.full_text_contiguous,
             processing_func=category_taxonomisation,
         ),
     ],
     "en:": [
         OCRRegex(
             re.compile(r"(?P<category>.+)\s*(aop|dop|pdo)", re.I),
+            field=OCRField.full_text_contiguous,
             processing_func=category_taxonomisation,
         ),
         OCRRegex(
             re.compile(r"(aop|dop|pdo)\s*(?P<category>.+)", re.I),
+            field=OCRField.full_text_contiguous,
             processing_func=category_taxonomisation,
         ),
     ],
@@ -82,7 +88,7 @@ def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
 
     for lang, regex_list in AOC_REGEX.items():
         for ocr_regex in regex_list:
-            text = get_text(content)
+            text = get_text(content, ocr_regex)
 
             if not text:
                 continue
