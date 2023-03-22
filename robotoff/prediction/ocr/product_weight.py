@@ -128,6 +128,7 @@ def process_product_weight(
         value = match.group(1)
         unit = match.group(2)
 
+    unit = unit.lower()
     if unit in ("dle", "cle", "mge", "mle", "ge", "kge", "le"):
         # When the e letter often comes after the weight unit, the
         # space is often not detected
