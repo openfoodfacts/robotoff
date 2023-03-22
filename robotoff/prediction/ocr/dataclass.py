@@ -21,25 +21,17 @@ class OCRParsingException(Exception):
     pass
 
 
-class OCRField(enum.Enum):
-    full_text = 1
-    full_text_contiguous = 2
-    text_annotations = 3
-
-
 class OCRRegex:
-    __slots__ = ("regex", "field", "processing_func", "priority", "notify")
+    __slots__ = ("regex", "processing_func", "priority", "notify")
 
     def __init__(
         self,
         regex: re.Pattern,
-        field: OCRField,
         processing_func: Optional[Callable] = None,
         priority: Optional[int] = None,
         notify: bool = False,
     ):
         self.regex: re.Pattern = regex
-        self.field: OCRField = field
         self.processing_func: Optional[Callable] = processing_func
         self.priority = priority
         self.notify = notify
@@ -126,48 +118,13 @@ class OCRResult:
                 data["safeSearchAnnotation"]
             )
 
-    def get_full_text(self) -> str:
-        if self.full_text_annotation is not None:
-            return self.full_text_annotation.api_text
-
-        return ""
-
-    def get_full_text_contiguous(self) -> str:
-        if self.full_text_annotation is not None:
-            return self.full_text_annotation.api_text
-
-        return ""
-
     def get_text_annotations(self) -> str:
         return self.text_annotations_str
 
-    def _get_text(self, field: OCRField) -> str:
-        if field == OCRField.full_text:
-            text = self.get_full_text()
-
-            if text is None:
-                # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations()
-            else:
-                return text
-
-        elif field == OCRField.full_text_contiguous:
-            text = self.get_full_text_contiguous()
-
-            if text is None:
-                # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations()
-            else:
-                return text
-
-        elif field == OCRField.text_annotations:
-            return self.get_text_annotations()
-
-        else:
-            raise ValueError("invalid field: {}".format(field))
-
-    def get_text(self, ocr_regex: OCRRegex) -> str:
-        return self._get_text(ocr_regex.field)
+    def get_text(self) -> str:
+        return (
+            "" if self.full_text_annotation is None else self.full_text_annotation.text
+        )
 
     def get_logo_annotations(self) -> list["LogoAnnotation"]:
         return self.logo_annotations
@@ -228,24 +185,8 @@ class OCRResult:
         return None
 
 
-def get_text(
-    content: Union[OCRResult, str], ocr_regex: Optional[OCRRegex] = None
-) -> str:
-    if isinstance(content, str):
-        return content
-
-    elif isinstance(content, OCRResult):
-        if ocr_regex:
-            return content.get_text(ocr_regex)
-        else:
-            text = content.get_full_text_contiguous()
-
-            if not text:
-                text = content.get_text_annotations()
-
-            return text
-
-    raise TypeError("invalid type: {}".format(type(content)))
+def get_text(content: Union[OCRResult, str]) -> str:
+    return content if isinstance(content, str) else content.get_text()
 
 
 class OCRFullTextAnnotation:
@@ -284,7 +225,7 @@ class OCRFullTextAnnotation:
             self.pages.append(page)
         # Join page texts with a `|` character, to avoid matches to span over
         # multiple pages
-        self.text = "|".join(text_list)
+        self.text: str = "|".join(text_list)
         # Replace line break with space characters to allow matches spanning
         # multiple lines
         # We used to replace consecutive spaces (2+) with a single space so that

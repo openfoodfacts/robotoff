@@ -9,7 +9,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRRegex, OCRResult, get_text
 from .utils import generate_keyword_processor
 
 
@@ -79,14 +79,12 @@ PACKAGER_CODE = {
     "fr_emb": [
         OCRRegex(
             re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])", re.I),
-            field=OCRField.text_annotations,
             processing_func=process_fr_emb_match,
         ),
     ],
     "fsc": [
         OCRRegex(
             re.compile(r"fsc.? ?(c\d{6})", re.I),
-            field=OCRField.text_annotations,
             processing_func=process_fsc_match,
         ),
     ],
@@ -96,7 +94,6 @@ PACKAGER_CODE = {
                 r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])",
                 re.I,
             ),
-            field=OCRField.full_text_contiguous,
             processing_func=process_fr_packaging_match,
         ),
     ],
@@ -106,21 +103,14 @@ PACKAGER_CODE = {
                 r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])",
                 re.I,
             ),
-            field=OCRField.full_text_contiguous,
             processing_func=process_de_packaging_match,
         ),
     ],
     "rspo": [
-        OCRRegex(
-            re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)"),
-            field=OCRField.full_text_contiguous,
-        ),
+        OCRRegex(re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)")),
     ],
     "fr_gluten": [
-        OCRRegex(
-            re.compile(r"FR-\d{3}-\d{3}"),
-            field=OCRField.full_text_contiguous,
-        ),
+        OCRRegex(re.compile(r"FR-\d{3}-\d{3}")),
     ],
     # Temporarily disable USDA extraction until the overmatching bug is fixed
     # "USDA": [
@@ -145,7 +135,7 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Predict
 
     for regex_code, regex_list in PACKAGER_CODE.items():
         for ocr_regex in regex_list:
-            text = get_text(ocr_result, ocr_regex)
+            text = get_text(ocr_result)
 
             if not text:
                 continue

@@ -8,7 +8,7 @@ from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRRegex, OCRResult, get_text
 
 logger = get_logger(__name__)
 
@@ -204,7 +204,6 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
             r"(?<![a-z])(poids|poids net [aà] l'emballage|poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])",
             re.I,
         ),
-        field=OCRField.full_text_contiguous,
         processing_func=functools.partial(
             process_product_weight, prompt=True, automatic_processing=True
         ),
@@ -215,7 +214,6 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
             r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)\s(net)(?![a-z])",
             re.I,
         ),
-        field=OCRField.full_text_contiguous,
         processing_func=functools.partial(
             process_product_weight,
             prompt=True,
@@ -229,7 +227,6 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
             r"(?<![a-z])(\d+)\s?x\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])",
             re.I,
         ),
-        field=OCRField.full_text_contiguous,
         processing_func=process_multi_packaging,
         priority=2,
     ),
@@ -237,7 +234,6 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
         re.compile(
             r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])", re.I
         ),
-        field=OCRField.full_text_contiguous,
         processing_func=functools.partial(
             process_product_weight, prompt=False, automatic_processing=False
         ),
@@ -250,7 +246,7 @@ def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():
-        text = get_text(content, ocr_regex)
+        text = get_text(content)
 
         if not text:
             continue

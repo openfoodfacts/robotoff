@@ -6,7 +6,7 @@ from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRRegex, OCRResult, get_text
 
 
 def get_store_tag(store: str) -> str:
@@ -43,15 +43,13 @@ STORE_REGEX_STR = "|".join(
     r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in SORTED_STORES
 )
 NOTIFY_STORES: set[str] = set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
-STORE_REGEX = OCRRegex(
-    re.compile(STORE_REGEX_STR, re.I), field=OCRField.full_text_contiguous
-)
+STORE_REGEX = OCRRegex(re.compile(STORE_REGEX_STR, re.I))
 
 
 def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
 
-    text = get_text(content, STORE_REGEX)
+    text = get_text(content)
 
     if not text:
         return []
