@@ -7,7 +7,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRRegex, OCRResult, get_text
 from .utils import generate_keyword_processor
 
 
@@ -23,7 +23,6 @@ TRACES_REGEX = OCRRegex(
         r"(?:possibilit[ée] de traces|conditionné dans un atelier qui manipule|peut contenir(?: des traces)?|traces? [ée]ventuelles? d[e']|traces? d[e']|may contain)",
         re.I,
     ),
-    field=OCRField.full_text_contiguous,
 )
 
 TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
@@ -34,7 +33,7 @@ TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
 def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = []
 
-    text = get_text(content, TRACES_REGEX)
+    text = get_text(content)
 
     if not text:
         return []

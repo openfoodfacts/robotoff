@@ -6,7 +6,7 @@ from typing import Optional, Union
 from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRRegex, OCRResult, get_text
 
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
@@ -30,14 +30,12 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
 EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
     "full_digits_short": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)"),
-        field=OCRField.full_text,
         processing_func=functools.partial(
             process_full_digits_expiration_date, short=True
         ),
     ),
     "full_digits_long": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)"),
-        field=OCRField.full_text,
         processing_func=functools.partial(
             process_full_digits_expiration_date, short=False
         ),
@@ -51,7 +49,7 @@ def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
     results: list[Prediction] = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
-        text = get_text(content, ocr_regex)
+        text = get_text(content)
 
         if not text:
             continue

@@ -210,7 +210,7 @@ def fetch_ocr_texts(product: JSONType) -> list[str]:
         ocr_url = generate_json_ocr_url(barcode, image_id)
         ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
         if ocr_result:
-            ocr_texts.append(ocr_result.get_full_text())
+            ocr_texts.append(ocr_result.get_text())
 
     return ocr_texts
 
