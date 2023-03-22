@@ -264,24 +264,39 @@ class OCRFullTextAnnotation:
     )
 
     def __init__(self, data: JSONType):
-        self.api_text = data["text"]
-        self.pages = []
+        # Full text as returned by Google Cloud Vision API
+        # We don't use it anymore, we now compute the text directly from
+        # page -> block -> paragraph -> word -> symbol, as it allows us to
+        # know the location of every matched string
+        self.api_text: str = data["text"]
+        self.pages: list[TextAnnotationPage] = []
+        # `initial_offset` is used to keep track of how many string characters
+        # were in the previous page, this is necessary to know where the words
+        # are located on the image during matching
         initial_offset = 0
         text_list: list[str] = []
         for page_data in data["pages"]:
             page = TextAnnotationPage(page_data, initial_offset=initial_offset)
+            # we add + 1 to offset as we introduce a `|` character to split
+            # pages
             initial_offset += len(page.text) + 1
             text_list.append(page.text)
             self.pages.append(page)
+        # Join page texts with a `|` character, to avoid matches to span over
+        # multiple pages
         self.text = "|".join(text_list)
-        # Replace line break with space characters to match over several lines
-        # We use to replace consecutive spaces (2+) with a single space so that
+        # Replace line break with space characters to allow matches spanning
+        # multiple lines
+        # We used to replace consecutive spaces (2+) with a single space so that
         # spurious spaces don't prevent a match, but this is unnecessary: on
-        # X millions OCRs, only Y had double spaces, and it was m
+        # several millions OCRs, only a few had double spaces, and it was images
+        # containing mixed arabic/latin language texts.
         # This way, the word offsets (word.start_idx, word.end_idx) match the
-        # FullTextAnnotation text, and we can very easily determine the
-        # position of the matched words
+        # FullTextAnnotation text, and we can very easily determine the position
+        # of the matched words
         self.continuous_text = self.text.replace("\n", " ")
+        # Here we use a accent stripping function that don't delete or
+        # introduce any character, so that word offsets are preserved
         self.unnaccented_text = strip_accents(self.continuous_text, keep_length=True)
 
     def get_languages(self) -> dict[str, int]:
@@ -333,6 +348,13 @@ class TextAnnotationPage:
     )
 
     def __init__(self, data: JSONType, initial_offset: int = 0):
+        """Initialize a TextAnnotationPage.
+
+        :param data: the page JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous pages, it's used for matching. Defaults
+            to 0.
+        """
         self.width = data["width"]
         self.height = data["height"]
         self.blocks: list[Block] = []
@@ -394,18 +416,27 @@ class Block:
     )
 
     def __init__(self, data: JSONType, initial_offset: int = 0):
+        """Initialize a Block.
+
+        :param data: the block JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous blocks, it's used for matching.
+            Defaults to 0.
+        """
         self.type = data["blockType"]
         self.paragraphs: list[Paragraph] = []
         text_list = []
         add_space_prefix = False
         for paragraph_data in data["paragraphs"]:
             paragraph = Paragraph(paragraph_data, initial_offset)
-            # We add a space between each paragraph
+            # We split paragraphs with a space character, so add +1 to offset
             initial_offset += len(paragraph.text) + 1
             self.paragraphs.append(paragraph)
             if add_space_prefix:
                 text_list.append(" ")
             text_list.append(paragraph.text)
+            # We add a space to the next paragraph if the current paragraph is
+            # not empty and if it doesn't already end with a space or line break
             add_space_prefix = bool(paragraph.text) and paragraph.text[-1] not in (
                 " ",
                 "\n",
@@ -477,6 +508,13 @@ class Paragraph:
     )
 
     def __init__(self, data: JSONType, initial_offset: int = 0):
+        """Initialize a Paragraph.
+
+        :param data: the paragraph JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous paragraphs, it's used for matching.
+            Defaults to 0.
+        """
         self.words: list[Word] = []
 
         offset = initial_offset
@@ -533,6 +571,8 @@ class Paragraph:
         process.
 
         :param pattern: the string pattern to look for
+        :return: a list of word lists, each item in the upper list is a
+            different match
         """
         pattern_words = pattern.split()
         matches = []
@@ -543,7 +583,7 @@ class Paragraph:
             matched_words = []
             while stack:
                 pattern_word = stack.pop(0)
-                # if there is no match or if there is no word left while the
+                # if words don't match or if there is no word left while the
                 # pattern stack is not empty, there is no match: break to
                 # continue to next word
                 if not current_word.match(
@@ -575,6 +615,13 @@ class Word:
     )
 
     def __init__(self, data: JSONType, offset: int = 0):
+        """Initialize a Word.
+
+        :param data: the word JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous words, it's used for matching.
+            Defaults to 0.
+        """
         self.bounding_poly = BoundingPoly(data["boundingBox"])
         self.symbols: list[Symbol] = [Symbol(s) for s in data["symbols"]]
 
@@ -588,10 +635,16 @@ class Word:
 
         # Attribute to store text generated from symbols
         self.text = self._get_text()
+        # start word index on the full OCR text
         self.start_idx = offset
+        # end word index on the full OCR text
         self.end_idx = offset + len(self.text)
 
     def _get_text(self) -> str:
+        """Generate the word text from the list of symbols of the word.
+
+        :return: the word text
+        """
         text_list = []
         for symbol in self.symbols:
             if symbol.symbol_break and symbol.symbol_break.is_prefix:
@@ -638,15 +691,17 @@ class Word:
         """Return True if the pattern is equal to the word string after
         preprocessing, False otherwise.
 
-        A first preprocessing step is performed on the word and the
-        pattern: punctuation marks, spaces and line breaks are stripped.
+        A first preprocessing step is performed before applying
+        `preprocess_func` on the word and the pattern: punctuation marks,
+        spaces and line breaks are stripped.
 
-        :param pattern: a string to match
+        :param pattern: the string to match
         :param preprocess_func: a preprocessing function to apply to pattern
-            and word string, defaults to identity
+            and word string, defaults to identity function
         :param strip_characters: word characters to strip before matching.
             By default, the following character list is used: "\\n .,!?"
             Pass an empty string to remove any character stripping.
+        :return: True if there is a match, False otherwise
         """
         preprocess_func = preprocess_func or (lambda x: x)
 

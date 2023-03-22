@@ -105,6 +105,8 @@ def test_match(
 
 
 def test_word_offset(example_ocr_result: OCRResult):
+    """Check that word offsets computed by Robotoff match words in
+    'full text annotations' text."""
     assert example_ocr_result.full_text_annotation is not None
     text = example_ocr_result.full_text_annotation.text
     for page in example_ocr_result.full_text_annotation.pages:
