@@ -79,14 +79,14 @@ PACKAGER_CODE = {
     "fr_emb": [
         OCRRegex(
             re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])", re.I),
-            field=OCRField.text_annotations,
+            field=OCRField.full_text,
             processing_func=process_fr_emb_match,
         ),
     ],
     "fsc": [
         OCRRegex(
             re.compile(r"fsc.? ?(c\d{6})", re.I),
-            field=OCRField.text_annotations,
+            field=OCRField.full_text,
             processing_func=process_fsc_match,
         ),
     ],

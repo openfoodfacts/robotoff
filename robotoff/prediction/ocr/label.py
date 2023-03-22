@@ -54,13 +54,13 @@ LABELS_REGEX = {
             re.compile(
                 r"(?<![a-zA-Z])([A-Z]{2})[\-\s.](BIO|ÖKO|OKO|EKO|ØKO|ORG|Bio)[\-\s.](\d{2,3})"
             ),
-            field=OCRField.text_annotations,
+            field=OCRField.full_text,
             processing_func=process_eu_bio_label_code,
         ),
         # Spain specific regex
         OCRRegex(
             re.compile(r"(?<![a-zA-Z])ES[\-\s.]ECO[\-\s.](\d{3})[\-\s.]([A-Z]{2,3})"),
-            field=OCRField.text_annotations,
+            field=OCRField.full_text,
             processing_func=process_es_bio_label_code,
         ),
     ],
