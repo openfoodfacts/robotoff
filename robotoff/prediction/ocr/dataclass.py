@@ -208,23 +208,46 @@ class OCRResult:
 
         return None
 
-    def match(
-        self,
-        pattern: str,
-        preprocess_func: Optional[Callable[[str], str]] = None,
-        strip_characters: Optional[str] = None,
-    ) -> Optional[list[list["Word"]]]:
-        """Find the words in the image that match the pattern words in the
-        same order.
+    def get_match_bounding_box(
+        self, start_idx: int, end_idx: int, raises: bool = True
+    ) -> Optional[tuple[int, int, int, int]]:
+        """Return a bounding box that include all words that span from
+        `start_idx` to `end_idx`.
 
-        Return None if full text annotations are not available.
-        See `Paragraph.match` for more details.
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :param raises: if True, a RuntimeError is raised if `end_idx` was not
+            reached, defaults to True
+        :return: a bounding box with absolute coordinates as a
+            (y_min, x_min, y_max, x_max) tuple, or None if full text
+            annotation is not available
         """
-        if self.full_text_annotation:
-            return self.full_text_annotation.match(
-                pattern, preprocess_func, strip_characters
-            )
+        words = self.get_words_from_indices(start_idx, end_idx, raises)
+
+        if words is not None:
+            return compute_intersection_bounding_box(words)
+
         return None
+
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int, raises: bool = True
+    ) -> Optional[list["Word"]]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        OCR text.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :param raises: if True, a RuntimeError is raised if `end_idx` was not
+            reached, defaults to True
+        :return: the list of Word(s) found (it can be empty), or None if full
+            text annotation is not available
+        """
+        if not self.full_text_annotation:
+            return None
+
+        return self.full_text_annotation.get_words_from_indices(
+            start_idx, end_idx, raises
+        )
 
 
 def get_text(
@@ -298,6 +321,8 @@ class OCRFullTextAnnotation:
         )
         # Here we use a accent stripping function that don't delete or
         # introduce any character, so that word offsets are preserved
+        # unnaccented text is not used yet, but can be later used when we wish
+        # to match text without considering accents
         self.unnaccented_text = strip_accents_v2(self.continuous_text, keep_length=True)
 
     def get_languages(self) -> dict[str, int]:
@@ -319,23 +344,32 @@ class OCRFullTextAnnotation:
         count = Counter(word_orientations)
         return OrientationResult(count)
 
-    def match(
-        self,
-        pattern: str,
-        preprocess_func: Optional[Callable[[str], str]] = None,
-        strip_characters: Optional[str] = None,
-    ) -> list[list["Word"]]:
-        """Find the words in the image that match the pattern words in the
-        same order.
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int, raises: bool = True
+    ) -> list["Word"]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        FullTextAnnotation.
 
-        See `Paragraph.match` for more details.
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :param raises: if True, a RuntimeError is raised if `end_idx` was not
+            reached
+        :return: the list of Word(s) found (it can be empty)
         """
-        return list(
-            itertools.chain.from_iterable(
-                page.match(pattern, preprocess_func, strip_characters)
-                for page in self.pages
+        selected = []
+        for page in self.pages:
+            words, partial_match = page.get_words_from_indices(start_idx, end_idx)
+            selected += words
+            if not partial_match:
+                break
+
+        if partial_match and raises:
+            raise RuntimeError(
+                "partial match detected: reached end of text before reaching end offset %d",
+                end_idx,
             )
-        )
+
+        return selected
 
 
 class TextAnnotationPage:
@@ -387,23 +421,25 @@ class TextAnnotationPage:
 
         return word_orientations
 
-    def match(
-        self,
-        pattern: str,
-        preprocess_func: Optional[Callable[[str], str]] = None,
-        strip_characters: Optional[str] = None,
-    ) -> list[list["Word"]]:
-        """Find the words in the page that match the pattern words in the
-        same order.
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int
+    ) -> tuple[list["Word"], bool]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        Page.
 
-        See `Paragraph.match` for more details.
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :return: a (words, remaining) tuple: `words` is the list of Word(s)
+            found (it can be empty), `remaining` is a boolean indicating if
+            we reached the end of the page with reaching `end_idx`
         """
-        return list(
-            itertools.chain.from_iterable(
-                block.match(pattern, preprocess_func, strip_characters)
-                for block in self.blocks
-            )
-        )
+        selected = []
+        for block in self.blocks:
+            words, remaining = block.get_words_from_indices(start_idx, end_idx)
+            selected += words
+            if not remaining:
+                break
+        return selected, remaining
 
 
 class Block:
@@ -479,23 +515,25 @@ class Block:
 
         return word_orientations
 
-    def match(
-        self,
-        pattern: str,
-        preprocess_func: Optional[Callable[[str], str]] = None,
-        strip_characters: Optional[str] = None,
-    ) -> list[list["Word"]]:
-        """Find the words in the block that match the pattern words in the
-        same order.
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int
+    ) -> tuple[list["Word"], bool]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        Block.
 
-        See `Paragraph.match` for more details.
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :return: a (words, remaining) tuple: `words` is the list of Word(s)
+            found (it can be empty), `remaining` is a boolean indicating if
+            we reached the end of the block with reaching `end_idx`
         """
-        return list(
-            itertools.chain.from_iterable(
-                paragraph.match(pattern, preprocess_func, strip_characters)
-                for paragraph in self.paragraphs
-            )
-        )
+        selected = []
+        for paragraph in self.paragraphs:
+            words, remaining = paragraph.get_words_from_indices(start_idx, end_idx)
+            selected += words
+            if not remaining:
+                break
+        return selected, remaining
 
 
 class Paragraph:
@@ -555,52 +593,28 @@ class Paragraph:
         """Return the text of the paragraph, by concatenating the words."""
         return "".join(w.text for w in self.words)
 
-    def match(
-        self,
-        pattern: str,
-        preprocess_func: Optional[Callable[[str], str]] = None,
-        strip_characters: Optional[str] = None,
-    ) -> list[list["Word"]]:
-        """Find the words in the paragraph that match the pattern words in
-        the same order.
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int
+    ) -> tuple[list["Word"], bool]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        Paragraph.
 
-        The pattern is first splitted with a whitespace word delimiter, then
-        we iterate over both the words and the pattern words to find matches.
-
-        See `Word.match` for a description of `preprocess_func` and
-        `strip_characters` parameters or for more details about the matching
-        process.
-
-        :param pattern: the string pattern to look for
-        :return: a list of word lists, each item in the upper list is a
-            different match
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :return: a (words, remaining) tuple: `words` is the list of Word(s)
+            found (it can be empty), `remaining` is a boolean indicating if
+            we reached the end of the paragraph with reaching `end_idx`
         """
-        pattern_words = pattern.split()
-        matches = []
-        # Iterate over the words
-        for word_idx in range(len(self.words)):
-            current_word = self.words[word_idx]
-            stack = list(pattern_words)
-            matched_words = []
-            while stack:
-                pattern_word = stack.pop(0)
-                # if words don't match or if there is no word left while the
-                # pattern stack is not empty, there is no match: break to
-                # continue to next word
-                if not current_word.match(
-                    pattern_word, preprocess_func, strip_characters
-                ) or word_idx + 1 >= len(self.words):
-                    break
-                matched_words.append(current_word)
-                # there is a partial match, continue to next word to see if
-                # there is a full match
-                word_idx += 1
-                current_word = self.words[word_idx]
-            else:
-                # No break occured, so it's a full match
-                matches.append(matched_words)
+        selected = []
+        remaining = True
+        for word in self.words:
+            if word.start_idx >= start_idx and word.start_idx < end_idx:
+                selected.append(word)
+            if word.end_idx >= end_idx:
+                remaining = False
+                break
 
-        return matches
+        return selected, remaining
 
 
 class Word:
@@ -681,36 +695,6 @@ class Word:
             word_alpha,
             word_width,
             word_symbol_width,
-        )
-
-    def match(
-        self,
-        pattern: str,
-        preprocess_func: Optional[Callable[[str], str]] = None,
-        strip_characters: Optional[str] = None,
-    ) -> bool:
-        """Return True if the pattern is equal to the word string after
-        preprocessing, False otherwise.
-
-        A first preprocessing step is performed before applying
-        `preprocess_func` on the word and the pattern: punctuation marks,
-        spaces and line breaks are stripped.
-
-        :param pattern: the string to match
-        :param preprocess_func: a preprocessing function to apply to pattern
-            and word string, defaults to identity function
-        :param strip_characters: word characters to strip before matching.
-            By default, the following character list is used: "\\n .,!?"
-            Pass an empty string to remove any character stripping.
-        :return: True if there is a match, False otherwise
-        """
-        preprocess_func = preprocess_func or (lambda x: x)
-
-        if strip_characters is None:
-            strip_characters = "\n .,!?"
-
-        return preprocess_func(self.text.strip(strip_characters)) == preprocess_func(
-            pattern.strip(strip_characters)
         )
 
     def __repr__(self) -> str:
@@ -879,6 +863,32 @@ class BoundingPoly:
                 self.vertices,
             )
             return ImageOrientation.unknown
+
+
+def compute_intersection_bounding_box(words: list[Word]) -> tuple[int, int, int, int]:
+    """Generate a bounding box that include all words.
+
+    :param words: a list of words
+    :raises ValueError: raises a ValueError if `words` is empty
+    :return: a bounding box with absolute coordinates as a
+        (y_min, x_min, y_max, x_max) tuple
+    """
+    if len(words) == 0:
+        raise ValueError("`words` must have at least one element")
+
+    x_min, y_min, x_max, y_max = None, None, None, None
+    for word in words:
+        for x, y in word.bounding_poly.vertices:
+            if x_min is None or x < x_min:
+                x_min = x
+            if x_max is None or x > x_max:
+                x_max = x
+            if y_min is None or y < y_min:
+                y_min = y
+            if y_max is None or y > y_max:
+                y_max = y
+
+    return (y_min, x_min, y_max, x_max)  # type: ignore
 
 
 class OCRTextAnnotation:
