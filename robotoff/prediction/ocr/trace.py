@@ -7,7 +7,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 
@@ -50,11 +50,19 @@ def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
             captured, span_info=True
         ):
             match_str = captured[span_start:span_end]
+            data = {"text": match_str, "prompt": prompt, "notify": False}
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                data["bounding_box_absolute"] = bounding_box
+
             predictions.append(
                 Prediction(
                     type=PredictionType.trace,
                     value_tag=trace_tag,
-                    data={"text": match_str, "prompt": prompt, "notify": False},
+                    data=data,
                 )
             )
 

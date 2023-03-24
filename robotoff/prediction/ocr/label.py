@@ -9,7 +9,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 logger = get_logger(__name__)
@@ -205,20 +205,30 @@ def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
     return generate_keyword_processor(labels)
 
 
-def extract_label_flashtext(processor: KeywordProcessor, text: str) -> list[Prediction]:
+def extract_label_flashtext(
+    processor: KeywordProcessor, content: Union[OCRResult, str]
+) -> list[Prediction]:
     predictions = []
 
+    text = get_text(content)
     for (label_tag, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
+        data = {"text": match_str, "notify": False}
+
+        if (
+            bounding_box := get_match_bounding_box(content, span_start, span_end)
+        ) is not None:
+            data["bounding_box_absolute"] = bounding_box
+
         predictions.append(
             Prediction(
                 type=PredictionType.label,
                 value_tag=label_tag,
                 automatic_processing=False,
                 predictor="flashtext",
-                data={"text": match_str, "notify": False},
+                data=data,
             )
         )
 
@@ -251,19 +261,25 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                 else:
                     label_value = label_tag
 
+                data = {"text": match.group(), "notify": ocr_regex.notify}
+                if (
+                    bounding_box := get_match_bounding_box(
+                        content, match.start(), match.end()
+                    )
+                ) is not None:
+                    data["bounding_box_absolute"] = bounding_box
+
                 predictions.append(
                     Prediction(
                         type=PredictionType.label,
                         value_tag=label_value,
                         predictor="regex",
-                        data={"text": match.group(), "notify": ocr_regex.notify},
+                        data=data,
                     )
                 )
 
     processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
-
-    text = get_text(content)
-    predictions += extract_label_flashtext(processor, text)
+    predictions += extract_label_flashtext(processor, content)
 
     if isinstance(content, OCRResult):
         for logo_annotation in content.logo_annotations:

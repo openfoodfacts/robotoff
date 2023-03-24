@@ -7,7 +7,7 @@ from robotoff.taxonomy import get_taxonomy
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 logger = get_logger(__name__)
 
@@ -94,19 +94,26 @@ def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
                 continue
 
             for match in ocr_regex.regex.finditer(text):
-
                 if ocr_regex.processing_func:
                     category_value = ocr_regex.processing_func(lang, match)
 
                 if category_value is None:
                     continue
 
+                data = {"text": match.group(), "notify": ocr_regex.notify}
+                if (
+                    bounding_box := get_match_bounding_box(
+                        content, match.start(), match.end()
+                    )
+                ) is not None:
+                    data["bounding_box_absolute"] = bounding_box
+
                 predictions.append(
                     Prediction(
                         type=PredictionType.category,
                         value_tag=category_value,
                         predictor="regex",
-                        data={"text": match.group(), "notify": ocr_regex.notify},
+                        data=data,
                         automatic_processing=False,
                     )
                 )

@@ -225,7 +225,15 @@ class OCRResult:
         words = self.get_words_from_indices(start_idx, end_idx, raises)
 
         if words is not None:
-            return compute_intersection_bounding_box(words)
+            if words:
+                return compute_intersection_bounding_box(words)
+            else:
+                logger.warning(
+                    "no words found in %s, (start: %d, end: %d)",
+                    self.get_full_text_contiguous(),
+                    start_idx,
+                    end_idx,
+                )
 
         return None
 
@@ -268,6 +276,18 @@ def get_text(
             return text
 
     raise TypeError("invalid type: {}".format(type(content)))
+
+
+def get_match_bounding_box(
+    content: Union[OCRResult, str], start_idx: int, end_idx: int
+):
+    """Return a bounding box that include all words that span from
+    `start_idx` to `end_idx` if `content` is an OCRResult and None otherwise.
+    """
+    if isinstance(content, str):
+        return None
+
+    return content.get_match_bounding_box(start_idx, end_idx)
 
 
 class OCRFullTextAnnotation:
