@@ -10,7 +10,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.text import get_tag
 
-from .dataclass import OCRResult, get_text
+from .dataclass import OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 logger = get_logger(__name__)
@@ -57,16 +57,23 @@ BRAND_PROCESSOR = generate_brand_keyword_processor(
 
 def extract_brands(
     processor: KeywordProcessor,
-    text: str,
+    content: Union[OCRResult, str],
     data_source_name: str,
     automatic_processing: bool,
 ) -> list[Prediction]:
     predictions = []
 
+    text = get_text(content)
     for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
+        data = {"text": match_str, "notify": False}
+        if (
+            bounding_box := get_match_bounding_box(content, span_start, span_end)
+        ) is not None:
+            data["bounding_box_absolute"] = bounding_box
+
         predictions.append(
             Prediction(
                 type=PredictionType.brand,
@@ -74,7 +81,7 @@ def extract_brands(
                 value_tag=brand_tag,
                 automatic_processing=automatic_processing,
                 predictor=data_source_name,
-                data={"text": match_str, "notify": False},
+                data=data,
             )
         )
 
@@ -104,15 +111,13 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction
 
 def find_brands(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions: list[Prediction] = []
-    text = get_text(content)
 
-    if text:
-        predictions += extract_brands(
-            BRAND_PROCESSOR, text, "curated-list", automatic_processing=True
-        )
-        predictions += extract_brands(
-            TAXONOMY_BRAND_PROCESSOR, text, "taxonomy", automatic_processing=False
-        )
+    predictions += extract_brands(
+        BRAND_PROCESSOR, content, "curated-list", automatic_processing=True
+    )
+    predictions += extract_brands(
+        TAXONOMY_BRAND_PROCESSOR, content, "taxonomy", automatic_processing=False
+    )
 
     if isinstance(content, OCRResult):
         predictions += extract_brands_google_cloud_vision(content)

@@ -4,7 +4,7 @@ from typing import Union
 from robotoff.prediction.types import Prediction
 from robotoff.types import JSONType, PredictionType
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 EXTRACTOR_VERSION = "2"
 
@@ -202,13 +202,19 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
                 languages_raw = list(group_dict.keys())[0]
                 languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")
 
-            nutrients[regex_code].append(
-                {
-                    "raw": match.group(0),
-                    "span": list(match.span()),
-                    "languages": languages,
-                }
-            )
+            nutrient_data = {
+                "raw": match.group(0),
+                "span": list(match.span()),
+                "languages": languages,
+            }
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                nutrient_data["bounding_box_absolute"] = bounding_box
+
+            nutrients[regex_code].append(nutrient_data)
 
     if not nutrients:
         return []

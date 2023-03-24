@@ -8,7 +8,7 @@ from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 from robotoff.utils import get_logger
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 logger = get_logger(__name__)
 
@@ -260,21 +260,28 @@ def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
             if ocr_regex.processing_func is None:
                 continue
 
-            result = ocr_regex.processing_func(match)
+            data = ocr_regex.processing_func(match)
 
-            if result is None:
+            if data is None:
                 continue
 
-            result["matcher_type"] = type_
-            result["priority"] = ocr_regex.priority
-            result["notify"] = ocr_regex.notify
-            value = result.pop("text")
+            data["matcher_type"] = type_
+            data["priority"] = ocr_regex.priority
+            data["notify"] = ocr_regex.notify
+            value = data.pop("text")
+
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                data["bounding_box_absolute"] = bounding_box
             results.append(
                 Prediction(
                     value=value,
                     type=PredictionType.product_weight,
-                    automatic_processing=result["automatic_processing"],
-                    data=result,
+                    automatic_processing=data["automatic_processing"],
+                    data=data,
                 )
             )
 

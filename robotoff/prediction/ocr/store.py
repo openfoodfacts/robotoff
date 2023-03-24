@@ -6,7 +6,7 @@ from robotoff.prediction.types import Prediction
 from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 
 def get_store_tag(store: str) -> str:
@@ -62,12 +62,20 @@ def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
         for idx, match_str in enumerate(groups):
             if match_str is not None:
                 store, _ = SORTED_STORES[idx]
+                data = {"text": match_str, "notify": store in NOTIFY_STORES}
+                if (
+                    bounding_box := get_match_bounding_box(
+                        content, match.start(), match.end()
+                    )
+                ) is not None:
+                    data["bounding_box_absolute"] = bounding_box
+
                 results.append(
                     Prediction(
                         type=PredictionType.store,
                         value=store,
                         value_tag=get_store_tag(store),
-                        data={"text": match_str, "notify": store in NOTIFY_STORES},
+                        data=data,
                         predictor="regex",
                     )
                 )

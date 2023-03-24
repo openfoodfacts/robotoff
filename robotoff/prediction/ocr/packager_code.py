@@ -9,7 +9,7 @@ from robotoff.types import PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 
@@ -140,12 +140,12 @@ PACKAGER_CODE = {
 }
 
 
-def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
+def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction]:
     results: list[Prediction] = []
 
     for regex_code, regex_list in PACKAGER_CODE.items():
         for ocr_regex in regex_list:
-            text = get_text(ocr_result, ocr_regex)
+            text = get_text(content, ocr_regex)
 
             if not text:
                 continue
@@ -157,14 +157,22 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Predict
                     value = ocr_regex.processing_func(match)
 
                 if value is not None:
+                    data = {
+                        "raw": match.group(0),
+                        "type": regex_code,
+                        "notify": ocr_regex.notify,
+                    }
+                    if (
+                        bounding_box := get_match_bounding_box(
+                            content, match.start(), match.end()
+                        )
+                    ) is not None:
+                        data["bounding_box_absolute"] = bounding_box
+
                     results.append(
                         Prediction(
                             value=value,
-                            data={
-                                "raw": match.group(0),
-                                "type": regex_code,
-                                "notify": ocr_regex.notify,
-                            },
+                            data=data,
                             type=PredictionType.packager_code,
                             automatic_processing=True,
                         )
@@ -178,19 +186,28 @@ def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
 
 
-def extract_fishing_code(processor: KeywordProcessor, text: str) -> list[Prediction]:
+def extract_fishing_code(
+    processor: KeywordProcessor, content: Union[OCRResult, str]
+) -> list[Prediction]:
     predictions = []
+    text = get_text(content)
 
     for (key, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
+        data = {"type": "fishing", "raw": match_str, "notify": False}
+        if (
+            bounding_box := get_match_bounding_box(content, span_start, span_end)
+        ) is not None:
+            data["bounding_box_absolute"] = bounding_box
+
         predictions.append(
             Prediction(
                 type=PredictionType.packager_code,
                 value=key,
                 predictor="flashtext",
-                data={"type": "fishing", "raw": match_str, "notify": False},
+                data=data,
                 automatic_processing=True,
             )
         )
@@ -203,9 +220,8 @@ FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packager_codes(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
-    predictions = find_packager_codes_regex(ocr_result)
+def find_packager_codes(content: Union[OCRResult, str]) -> list[Prediction]:
+    predictions = find_packager_codes_regex(content)
     processor = FISHING_KEYWORD_PROCESSOR_STORE.get()
-    text = get_text(ocr_result)
-    predictions += extract_fishing_code(processor, text)
+    predictions += extract_fishing_code(processor, content)
     return predictions
