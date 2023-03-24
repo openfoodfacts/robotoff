@@ -628,7 +628,7 @@ class Paragraph:
         selected = []
         remaining = True
         for word in self.words:
-            if word.start_idx >= start_idx and word.start_idx < end_idx:
+            if word.end_idx >= start_idx and word.start_idx < end_idx:
                 selected.append(word)
             if word.end_idx >= end_idx:
                 remaining = False
