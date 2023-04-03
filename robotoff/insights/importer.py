@@ -116,6 +116,56 @@ def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
     return image_id.isdigit() and image_id in images
 
 
+def convert_bounding_box_absolute_to_relative(
+    bounding_box_absolute: tuple[int, int, int, int],
+    images: dict[str, Any],
+    source_image: Optional[str],
+) -> Optional[tuple[float, float, float, float]]:
+    """Convert absolute bounding box coordinates to relative ones.
+
+    When detecting patterns using regex or flashtext, we don't know the size of
+    the image, so we cannot compute the relative coordinates of the text
+    bounding box. We perform the conversion during insight import instead.
+
+    Relative coordinates are used as they are more convenient than absolute ones
+    (we can use them on a resized version of the original image).
+
+    :param bounding_box_absolute: absolute coordinates of the bounding box
+    :param images: The image dict as stored in MongoDB.
+    :param source_image: The insight source image, should be the path of the
+    image path or None.
+    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
+        or None if a conversion error occured
+    """
+    if source_image is None:
+        logger.warning(
+            "could not convert absolute coordinate bounding box: "
+            "bounding box was provided (%s) but source image is null",
+            bounding_box_absolute,
+        )
+        return None
+
+    image_id = Path(source_image).stem
+
+    if image_id not in images:
+        logger.info(
+            "could not convert absolute coordinate bounding box: "
+            "image %s not found in product images",
+            image_id,
+        )
+        return None
+
+    size = images[image_id]["sizes"]["full"]
+    height = size["h"]
+    width = size["w"]
+    return (
+        bounding_box_absolute[0] / height,
+        bounding_box_absolute[1] / width,
+        bounding_box_absolute[2] / height,
+        bounding_box_absolute[3] / width,
+    )
+
+
 def get_existing_insight(
     insight_type: InsightType, barcode: str, server_domain: str
 ) -> list[ProductInsight]:
@@ -338,6 +388,19 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     "Insight with automatic_processing=None: %s", candidate.__data__
                 )
                 candidate.automatic_processing = False
+
+            # flashtext/regex insights return bounding boxes in absolute coordinates,
+            # while we use relative coordinates elsewhere. Perform the conversion here.
+            if (
+                bounding_box_absolute := candidate.data.pop(
+                    "bounding_box_absolute", None
+                )
+            ) is not None:
+                candidate.data[
+                    "bounding_box"
+                ] = convert_bounding_box_absolute_to_relative(
+                    bounding_box_absolute, product.images, candidate.source_image
+                )
 
             if candidate.data.get("is_annotation"):
                 username = candidate.data.get("username")
