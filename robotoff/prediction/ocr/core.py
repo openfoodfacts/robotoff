@@ -61,6 +61,12 @@ def get_ocr_result(
         logger.warning(error_message + ": %s", ocr_url, exc_info=e)
         return None
 
+    if not r.ok:
+        logger.warning(
+            "Non-200 status code (%s) when fetching OCR URL: %s", r.status_code, ocr_url
+        )
+        return None
+
     try:
         ocr_data: dict = r.json()
     except json.JSONDecodeError as e:
