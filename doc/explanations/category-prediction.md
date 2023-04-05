@@ -8,7 +8,7 @@ Two complementary approaches currently exist in production to predict categories
 
 ## Matcher
 
-A simple "matcher" algorithm is used to predict categories from product names. This used to be done using Elasticsearch but it's directly included in Robotoff codebase. It currently works for the following languages: `fr`, `en`, `de`, `es`, `it`, `nl`.
+A simple "matcher" algorithm is used to predict categories from product names. This used to be done using Elasticsearch but it's directly included in Robotoff codebase [^matcher]. It currently works for the following languages: `fr`, `en`, `de`, `es`, `it`, `nl`.
 The product name and all category names in target languages are preprocessed with the following pipeline:
 
 - lowercasing
@@ -22,7 +22,7 @@ Many false positive came from the fact some category names were also ingredients
 
 ## ML prediction
 
-A neural network model is used to predict categories. Details about the model training, results and model assets are available on the [model robotoff-models release page](https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0). 
+A neural network model is used to predict categories [^neural]. Details about the model training, results and model assets are available on the [model robotoff-models release page](https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0). 
 
 This model takes as inputs (all inputs are optional):
 
@@ -53,3 +53,6 @@ Here is a summary on the milestones in category detection:
 - 2022-10 | Remove Elasticsearch-based category predictor, switch to custom model in Robotoff codebase
 
 - 2023-03 | Deployment of the [v3 model](https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0)
+
+[^matcher]: see `robotoff.prediction.category.matcher`
+[^neural]: see `robotoff.prediction.category.neural`
