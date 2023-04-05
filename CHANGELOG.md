@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/openfoodfacts/robotoff/compare/v1.24.0...v1.24.1) (2023-04-05)
+
+
+### Bug Fixes
+
+* fix incorrect offset in get_words_from_indices ([547a867](https://github.com/openfoodfacts/robotoff/commit/547a867c530d811ecb22d5fb99183f32f158a2fe))
+
 ## [1.24.0](https://github.com/openfoodfacts/robotoff/compare/v1.23.1...v1.24.0) (2023-04-05)
 
 
