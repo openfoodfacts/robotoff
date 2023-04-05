@@ -588,7 +588,7 @@ def delete_image_pipeline(
 def unselect_image(
     product_id: ProductIdentifier,
     image_field: str,
-    auth: OFFAuthentication,
+    auth: Optional[OFFAuthentication],
     timeout: Optional[int] = 15,
 ) -> requests.Response:
     """Unselect an image.
@@ -607,13 +607,16 @@ def unselect_image(
         "id": image_field,
     }
 
-    if auth.session_cookie:
-        cookies = {
-            "session": auth.session_cookie,
-        }
-    elif auth.username and auth.password:
-        params["user_id"] = auth.username
-        params["password"] = auth.password
+    if auth is not None:
+        if auth.session_cookie:
+            cookies = {
+                "session": auth.session_cookie,
+            }
+        elif auth.username and auth.password:
+            params["user_id"] = auth.username
+            params["password"] = auth.password
+    else:
+        params.update(off_credentials())
 
     r = http_session.post(
         url,

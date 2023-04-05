@@ -5,6 +5,7 @@ ARG PYTHON_VERSION=3.9
 FROM python:$PYTHON_VERSION-slim as python-base
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends -y gettext curl build-essential && \
+    apt-get install ffmpeg libsm6 libxext6  -y && \
     apt-get autoremove --purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -13,7 +14,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
-    PYSETUP_PATH="/opt/pysetup" \ 
+    PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv" \
     POETRY_HOME="/opt/poetry" \
     POETRY_VERSION=1.4.2 \

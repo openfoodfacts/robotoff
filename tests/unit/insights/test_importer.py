@@ -15,6 +15,7 @@ from robotoff.insights.importer import (
     PackagingImporter,
     ProductWeightImporter,
     StoreInsightImporter,
+    UPCImageImporter,
     import_insights_for_products,
     is_recent_image,
     is_selected_image,
@@ -1260,6 +1261,26 @@ class TestPackagingImporter:
         assert PackagingImporter.sort_predictions(predictions) == [
             predictions[i] for i in sort_indices
         ]
+
+
+class TestUPCImageImporter:
+    def test_get_type(self):
+        assert UPCImageImporter.get_type() == InsightType.is_upc_image
+
+    def test_get_required_prediction_types(self):
+        assert UPCImageImporter.get_required_prediction_types() == {
+            PredictionType.is_upc_image
+        }
+
+    def test_is_conflicting_insight(self):
+        assert UPCImageImporter.is_conflicting_insight(
+            ProductInsight(source_image="source1"),
+            ProductInsight(source_image="source1"),
+        )
+        assert not UPCImageImporter.is_conflicting_insight(
+            ProductInsight(source_image="source1"),
+            ProductInsight(source_image="source2"),
+        )
 
 
 class TestNutritionImageImporter:

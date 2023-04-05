@@ -21,6 +21,7 @@ from robotoff.off import (
     add_store,
     save_ingredients,
     select_rotate_image,
+    unselect_image,
     update_emb_codes,
     update_expiration_date,
     update_quantity,
@@ -465,6 +466,58 @@ class StoreAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+class UPCImageAnnotator(InsightAnnotator):
+    """Annotator for UPC images.
+    Unselect the selected images (front, nutrition, ingredients,...) for the
+    product that match a UPC_Image. A UPC_Image is defined as an image that has
+    a UPC (=barcode) with a high percentage area in the image and thus it is a
+    poor selected photo.
+    """
+
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["images"])
+
+        image_id = get_image_id(insight.source_image or "")
+
+        if product is None:
+            logger.info(
+                "Product %s not found, cannot unselect image %s", product_id, image_id
+            )
+            return MISSING_PRODUCT_RESULT
+
+        images = product["images"]
+        if image_id is None or image_id not in images:
+            logger.info(
+                "Image %s not found for product %s, cannot unselect",
+                image_id,
+                product_id,
+            )
+            return FAILED_UPDATE_RESULT
+        to_unselect = []
+
+        for image_field, image_data in (
+            (key, data) for key, data in images.items() if not key.isdigit()
+        ):
+            if image_data["imgid"] == image_id:
+                to_unselect.append(image_field)
+
+        for image_field in to_unselect:
+            logger.info(
+                "Sending unselect request for image %s of %s", image_field, product_id
+            )
+            unselect_image(product_id, image_field, auth)
+
+        return UPDATED_ANNOTATION_RESULT
+
+
 class PackagingAnnotator(InsightAnnotator):
     @classmethod
     def process_annotation(
@@ -633,6 +686,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.packaging.name: PackagingAnnotator,
     InsightType.nutrition_image.name: NutritionImageAnnotator,
     InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator,
+    InsightType.is_upc_image.name: UPCImageAnnotator,
 }
 
 
