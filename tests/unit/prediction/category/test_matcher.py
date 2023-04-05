@@ -1,9 +1,8 @@
 import pytest
 
 from robotoff.prediction.category.matcher import match, predict, process
-from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import get_taxonomy
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 
 
 @pytest.mark.parametrize(

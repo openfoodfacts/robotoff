@@ -21,10 +21,14 @@ from robotoff.insights.importer import (
     select_deepest_taxonomized_candidates,
 )
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction
 from robotoff.products import Product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import InsightType, PredictionType, ProductInsightImportResult
+from robotoff.types import (
+    InsightType,
+    Prediction,
+    PredictionType,
+    ProductInsightImportResult,
+)
 
 DEFAULT_BARCODE = "3760094310634"
 DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"

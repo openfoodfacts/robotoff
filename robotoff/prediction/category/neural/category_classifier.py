@@ -1,9 +1,13 @@
 from typing import Any, Optional
 
-from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import get_triton_inference_stub
-from robotoff.types import JSONType, NeuralCategoryClassifierModel, PredictionType
+from robotoff.types import (
+    JSONType,
+    NeuralCategoryClassifierModel,
+    Prediction,
+    PredictionType,
+)
 from robotoff.utils import get_logger
 
 from . import keras_category_classifier_2_0, keras_category_classifier_3_0

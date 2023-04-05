@@ -15,7 +15,6 @@ from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.off import get_server_type
 from robotoff.prediction.ocr.packaging import SHAPE_ONLY_EXCLUDE_SET
-from robotoff.prediction.types import Prediction
 from robotoff.products import (
     DBProductStore,
     Product,
@@ -35,6 +34,7 @@ from robotoff.types import (
     InsightType,
     NeuralCategoryClassifierModel,
     PackagingElementProperty,
+    Prediction,
     PredictionImportResult,
     PredictionType,
     ProductInsightImportResult,

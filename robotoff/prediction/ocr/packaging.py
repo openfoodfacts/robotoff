@@ -9,9 +9,8 @@ from robotoff.prediction.ocr.grammar import (
     generate_terminal_symbols_file,
     normalize_string,
 )
-from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.taxonomy import TaxonomyType
-from robotoff.types import PackagingElementProperty
+from robotoff.types import PackagingElementProperty, Prediction, PredictionType
 from robotoff.utils import get_logger, load_json
 from robotoff.utils.text import strip_consecutive_spaces
 

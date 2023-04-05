@@ -1,7 +1,7 @@
 import pytest
 
 from robotoff.prediction.ocr.packaging import find_packaging, match_packaging
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType
 
 
 @pytest.mark.parametrize(

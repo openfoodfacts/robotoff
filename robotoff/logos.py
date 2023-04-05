@@ -19,12 +19,12 @@ from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbeddi
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
 from robotoff.off import OFFAuthentication
-from robotoff.prediction.types import Prediction
 from robotoff.slack import NotifierFactory
 from robotoff.types import (
     ElasticSearchIndex,
     InsightImportResult,
     JSONType,
+    Prediction,
     PredictionType,
 )
 from robotoff.utils import get_logger

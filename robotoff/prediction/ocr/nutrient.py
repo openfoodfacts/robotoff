@@ -1,8 +1,7 @@
 import re
 from typing import Union
 
-from robotoff.prediction.types import Prediction
-from robotoff.types import JSONType, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 

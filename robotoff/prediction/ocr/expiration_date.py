@@ -3,8 +3,7 @@ import functools
 import re
 from typing import Optional, Union
 
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 

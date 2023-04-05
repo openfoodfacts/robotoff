@@ -13,8 +13,7 @@ import tqdm
 from robotoff.off import get_barcode_from_path
 from robotoff.prediction.ocr import OCRResult, extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
 
 logger = get_logger(__name__)

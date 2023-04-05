@@ -9,8 +9,7 @@ from requests.exceptions import JSONDecodeError
 from robotoff import settings
 from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation, ProductInsight, crop_image_url
-from robotoff.prediction.types import Prediction
-from robotoff.types import InsightType, JSONType
+from robotoff.types import InsightType, JSONType, Prediction
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)

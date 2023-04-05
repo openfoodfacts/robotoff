@@ -3,8 +3,7 @@ from typing import Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 
 from .dataclass import OCRResult, SafeSearchAnnotationLikelihood, get_text

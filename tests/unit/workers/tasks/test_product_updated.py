@@ -1,6 +1,5 @@
 from robotoff import settings
-from robotoff.prediction.types import Prediction
-from robotoff.types import InsightImportResult, PredictionType
+from robotoff.types import InsightImportResult, Prediction, PredictionType
 from robotoff.workers.tasks.product_updated import add_category_insight
 
 # TODO: refactor function under test to make it easier to test

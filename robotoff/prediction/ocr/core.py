@@ -4,8 +4,7 @@ from typing import Callable, Iterable, Optional, TextIO, Union
 
 import requests
 
-from robotoff.prediction.types import Prediction
-from robotoff.types import JSONType, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 
 from .brand import find_brands
