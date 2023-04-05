@@ -242,3 +242,6 @@ class PackagingElementProperty(enum.Enum):
     shape = "shape"
     material = "material"
     recycling = "recycling"
+
+
+LogoLabelType = tuple[str, Optional[str]]

@@ -14,7 +14,6 @@ from robotoff import settings
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights
-from robotoff.logo_label_type import LogoLabelType
 from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbedding
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
@@ -24,6 +23,7 @@ from robotoff.types import (
     ElasticSearchIndex,
     InsightImportResult,
     JSONType,
+    LogoLabelType,
     Prediction,
     PredictionType,
 )
