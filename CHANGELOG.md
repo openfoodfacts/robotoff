@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.24.0](https://github.com/openfoodfacts/robotoff/compare/v1.23.1...v1.24.0) (2023-04-05)
+
+
+### Features
+
+* add function to get match bounding box ([5d7eafa](https://github.com/openfoodfacts/robotoff/commit/5d7eafa5b4c21efb9d5ca35bc53d63f3305c7c98))
+* allow to match text on OCRResult ([73ae0e6](https://github.com/openfoodfacts/robotoff/commit/73ae0e6639649d248c4055a8867367633cb017e5))
+* save bounding box information in OCR/flashtext predictions ([9d4d432](https://github.com/openfoodfacts/robotoff/commit/9d4d432025bd28a6ed863c8e44b2f0b18c1a4916))
+
+
+### Bug Fixes
+
+* add functions to delete/unselect an image ([ade0294](https://github.com/openfoodfacts/robotoff/commit/ade02946a8874a455a018d73e12139c5b63a9603))
+* allow partial match in get_words_from_indices ([34cbd24](https://github.com/openfoodfacts/robotoff/commit/34cbd2434a4f872092fe7694828fb3206cc18bc0))
+* allow to match across blocks ([c073129](https://github.com/openfoodfacts/robotoff/commit/c073129d375ffe6f684a0e4c14c1ce4c12ccd242))
+* bug fix in product weight insight generation ([031e117](https://github.com/openfoodfacts/robotoff/commit/031e117c65e14b209556630d32ee2926b97c6f27))
+* cache result word string in Word ([30bc347](https://github.com/openfoodfacts/robotoff/commit/30bc347e6e6863c60a974b2f967cb69add41e5da))
+* convert absolute coordinates to relative ones ([e86e671](https://github.com/openfoodfacts/robotoff/commit/e86e67102b907d3c2eec64ba3a4cf0c38450a1a3))
+* fix offset bug ([a6e1e51](https://github.com/openfoodfacts/robotoff/commit/a6e1e51d6aac060d8d36388d7cfaf4a419c5306f))
+* make error message easier to understand during HTTP 404 during OCR fetch ([b352387](https://github.com/openfoodfacts/robotoff/commit/b3523876e81fb0cbf33639294a0d0ea077b54cda))
+* remove text_annotations OCRField and use new text field ([f0637a4](https://github.com/openfoodfacts/robotoff/commit/f0637a4bdc1862e1ff12e8a860b7ec73fe614322))
+* save mapping between position of words and full annotation text ([674ad77](https://github.com/openfoodfacts/robotoff/commit/674ad77edf895c79c8f65d952de66a4d5f311a39))
+* use new computed text field in regex matching ([b29e1db](https://github.com/openfoodfacts/robotoff/commit/b29e1db0eb87a7cd243b9e0a4b122ff176bbc7ec))
+* use re.I flag instead of lowercasing string ([0ecef5e](https://github.com/openfoodfacts/robotoff/commit/0ecef5e98a0d0e39b100671083548c674f53807b))
+* use strip_accents_v1 when necessary ([f2ee677](https://github.com/openfoodfacts/robotoff/commit/f2ee677a6df3dfdce439a3c44b2790fb9cb8d95e))
+
+
+### Documentation
+
+* improve OCR class documentation ([b461669](https://github.com/openfoodfacts/robotoff/commit/b461669b83e9c32032c8e3a62f30ddb4a34654c5))
+* improve OCR documentation ([0a76f83](https://github.com/openfoodfacts/robotoff/commit/0a76f83680c9009a75f8ce4fe8ae52c6e4f74b14))
+
 ## [1.23.1](https://github.com/openfoodfacts/robotoff/compare/v1.23.0...v1.23.1) (2023-03-16)
 
 
