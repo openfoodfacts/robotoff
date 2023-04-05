@@ -1068,6 +1068,72 @@ class StoreInsightImporter(InsightImporter):
             yield insight
 
 
+class UPCImageImporter(InsightImporter):
+    """
+    Insight importer for UPC images
+    """
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.is_upc_image
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.is_upc_image}
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # We should have at most 1 insight per image
+        return candidate.source_image == reference.source_image
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        for p in predictions:
+            image_id = get_image_id(p.source_image or "")
+            if image_id is None:
+                logger.warning(
+                    "invalid image ID in UPCImageImporter: %s (source image: %s)",
+                    image_id,
+                    p.source_image,
+                )
+                continue
+
+            # If product check is disabled, we always create an insight
+            create_insight = True
+            if product:
+                # Product check is enabled here, so we check that the image is
+                # referenced in the product metadata
+                if image_id not in product.images:
+                    logger.debug(
+                        "Image %s not found for product, failed generating insight",
+                        image_id,
+                    )
+                    continue
+                create_insight = False
+                for selected_image_image_id in (
+                    image_data["imgid"]
+                    for key, image_data in product.images.items()
+                    # only look for non-raw images here (=selected images)
+                    if not key.isdigit()
+                ):
+                    # We check that at least one selected image has the image
+                    # ID as reference before creating the insight
+                    if selected_image_image_id == image_id:
+                        create_insight = True
+                        break
+
+            if create_insight:
+                insight = ProductInsight(**p.to_dict())
+                yield insight
+
+
 class NutritionImageImporter(InsightImporter):
     """Importer for nutrition image insight.
 
@@ -1661,6 +1727,7 @@ IMPORTERS: list[Type] = [
     BrandInsightImporter,
     StoreInsightImporter,
     PackagingImporter,
+    UPCImageImporter,
     NutritionImageImporter,
 ]
 

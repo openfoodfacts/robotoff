@@ -52,6 +52,7 @@ class PredictionType(str, enum.Enum):
     image_lang = "image_lang"
     nutrition_image = "nutrition_image"
     nutrition_table_structure = "nutrition_table_structure"
+    is_upc_image = "is_upc_image"
 
 
 @enum.unique
@@ -143,6 +144,9 @@ class InsightType(str, enum.Enum):
     # The 'nutritional_table_structure' insight detects the nutritional table structure from the image.
     # NOTE: this insight has not been generated since 2020.
     nutrition_table_structure = "nutrition_table_structure"
+
+    # The 'is_upc_image' insight predicts whether or not the image is largely dominated by a UPC (barcode)
+    is_upc_image = "is_upc_image"
 
 
 class ServerType(str, enum.Enum):

@@ -1,7 +1,9 @@
+import datetime
 from pathlib import Path
 from typing import Optional
 
 import elasticsearch
+import numpy
 from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
@@ -31,6 +33,7 @@ from robotoff.models import (
     with_db,
 )
 from robotoff.off import generate_image_url, get_source_from_url
+from robotoff.prediction.upc_image import UPCImageType, find_image_is_upc
 from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.triton import generate_clip_embedding
@@ -111,6 +114,16 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
     )
     enqueue_job(
         run_nutrition_table_object_detection,
+        get_high_queue(product_id),
+        job_kwargs={"result_ttl": 0},
+        product_id=product_id,
+        image_url=image_url,
+    )
+
+    # Run UPC detection to detect if the image is dominated by a UPC (and thus
+    # should not be a product selected image)
+    enqueue_job(
+        run_upc_detection,
         get_high_queue(product_id),
         job_kwargs={"result_ttl": 0},
         product_id=product_id,
@@ -210,6 +223,80 @@ NUTRISCORE_LABELS = {
     "nutriscore-d": "en:nutriscore-grade-d",
     "nutriscore-e": "en:nutriscore-grade-e",
 }
+
+
+def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
+    """Detect the presence of a UPC in an image and find if it takes up too
+    much area.
+
+    :param product_id: identifier of the product
+    :param image_url: URL of the image to use
+    """
+    source_image = get_source_from_url(image_url)
+
+    with db:
+        image_model = ImageModel.get_or_none(
+            source_image=source_image, server_type=product_id.server_type.name
+        )
+
+        if not image_model:
+            logger.info("Missing image in DB for image %s", source_image)
+            return
+
+        if (
+            image_prediction := ImagePrediction.get_or_none(
+                image=image_model, model_name="upc-opencv"
+            )
+        ) is not None:
+            # Image prediction already exists, uses it instead of
+            # recomputing whether the image is on the image or not
+            area = image_prediction.data["area"]
+            # Convert string back to UPCImageType
+            prediction_class = UPCImageType[image_prediction.data["class"]]
+            polygon = image_prediction.data["polygon"]
+        else:
+            # run upc detection
+            if (
+                image := get_image_from_url(
+                    image_url, error_raise=False, session=http_session
+                )
+            ) is None:
+                logger.info("Error while downloading image %s", image_url)
+                return
+
+            area, prediction_class, polygon = find_image_is_upc(numpy.array(image))
+            ImagePrediction.create(
+                image=image_model,
+                type="upc_image",
+                model_name="upc-opencv",
+                model_version="upc-opencv-1.0",
+                data={
+                    "polygon": polygon,
+                    "area": area,
+                    "class": prediction_class.value,
+                },
+                max_confidence=None,
+                timestamp=datetime.datetime.utcnow(),
+            )
+
+        # no prediction neccessary if the image is not a UPC Image
+        if not prediction_class.value == "UPC_IMAGE":
+            return
+
+        prediction = Prediction(
+            type=PredictionType.is_upc_image,
+            value=None,
+            source_image=source_image,
+            server_type=product_id.server_type,
+            barcode=product_id.barcode,
+            automatic_processing=False,
+            data={"area": area, "polygon": polygon},
+            confidence=None,  # potentially add confidence down the road
+        )
+        import_result = import_insights(
+            [prediction], server_type=product_id.server_type
+        )
+        logger.info(import_result)
 
 
 def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: str):
