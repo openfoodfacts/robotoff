@@ -1,3 +1,4 @@
+import functools
 import re
 from typing import Union
 
@@ -22,6 +23,7 @@ def store_sort_key(item):
     return -len(store), store
 
 
+@functools.cache
 def get_sorted_stores() -> list[tuple[str, str]]:
     sorted_stores: dict[str, str] = {}
 
@@ -37,31 +39,39 @@ def get_sorted_stores() -> list[tuple[str, str]]:
     return sorted(sorted_stores.items(), key=store_sort_key)
 
 
-SORTED_STORES = get_sorted_stores()
-STORE_REGEX_STR = "|".join(
-    r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in SORTED_STORES
-)
-NOTIFY_STORES: set[str] = set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
-STORE_REGEX = OCRRegex(
-    re.compile(STORE_REGEX_STR, re.I), field=OCRField.full_text_contiguous
-)
+@functools.cache
+def get_store_ocr_regex() -> OCRRegex:
+    sorted_stores = get_sorted_stores()
+    store_regex_str = "|".join(
+        r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in sorted_stores
+    )
+    return OCRRegex(
+        re.compile(store_regex_str, re.I), field=OCRField.full_text_contiguous
+    )
+
+
+@functools.cache
+def get_notify_stores() -> set[str]:
+    return set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
 
 
 def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
-
-    text = get_text(content, STORE_REGEX)
+    store_ocr_regex = get_store_ocr_regex()
+    sorted_stores = get_sorted_stores()
+    notify_stores = get_notify_stores()
+    text = get_text(content, store_ocr_regex)
 
     if not text:
         return []
 
-    for match in STORE_REGEX.regex.finditer(text):
+    for match in store_ocr_regex.regex.finditer(text):
         groups = match.groups()
 
         for idx, match_str in enumerate(groups):
             if match_str is not None:
-                store, _ = SORTED_STORES[idx]
-                data = {"text": match_str, "notify": store in NOTIFY_STORES}
+                store, _ = sorted_stores[idx]
+                data = {"text": match_str, "notify": store in notify_stores}
                 if (
                     bounding_box := get_match_bounding_box(
                         content, match.start(), match.end()

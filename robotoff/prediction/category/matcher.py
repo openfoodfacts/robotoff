@@ -1,10 +1,10 @@
 import datetime
+import functools
 import itertools
 import operator
 import re
 from typing import Iterable, Optional
 
-import cachetools
 from flashtext import KeywordProcessor
 
 from robotoff import settings
@@ -230,7 +230,7 @@ def get_match_maps(taxonomy_type: str) -> MatchMapType:
     )
 
 
-@cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=3600))
+@functools.cache
 def get_processors() -> dict[str, KeywordProcessor]:
     """Return a dict mapping lang to flashtext KeywordProcessor used to
     perform category matching.
@@ -273,7 +273,7 @@ def generate_intersect_categories_ingredients() -> dict[str, set[str]]:
     return matches
 
 
-@cachetools.cached(cache=cachetools.Cache(maxsize=1))
+@functools.cache
 def get_intersect_categories_ingredients():
     """Return intersection between category and ingredient maps saved on-disk
     for supported language.

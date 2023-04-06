@@ -30,6 +30,7 @@ def generate_brand_keyword_processor(
     return generate_keyword_processor(brands, keep_func=keep_func)
 
 
+@functools.cache
 def get_logo_annotation_brands() -> dict[str, str]:
     brands: dict[str, str] = {}
 
@@ -45,13 +46,18 @@ def get_logo_annotation_brands() -> dict[str, str]:
     return brands
 
 
-LOGO_ANNOTATION_BRANDS: dict[str, str] = get_logo_annotation_brands()
-TAXONOMY_BRAND_PROCESSOR = generate_brand_keyword_processor(
-    text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
-)
-BRAND_PROCESSOR = generate_brand_keyword_processor(
-    text_file_iter(settings.OCR_BRANDS_PATH),
-)
+@functools.cache
+def get_taxonomy_brand_processor():
+    return generate_brand_keyword_processor(
+        text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
+    )
+
+
+@functools.cache
+def get_brand_processor():
+    return generate_brand_keyword_processor(
+        text_file_iter(settings.OCR_BRANDS_PATH),
+    )
 
 
 def extract_brands(
@@ -89,9 +95,10 @@ def extract_brands(
 
 def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction]:
     predictions = []
+    logo_annotation_brands = get_logo_annotation_brands()
     for logo_annotation in ocr_result.logo_annotations:
-        if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
-            brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
+        if logo_annotation.description in logo_annotation_brands:
+            brand = logo_annotation_brands[logo_annotation.description]
 
             predictions.append(
                 Prediction(
@@ -112,10 +119,10 @@ def find_brands(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions: list[Prediction] = []
 
     predictions += extract_brands(
-        BRAND_PROCESSOR, content, "curated-list", automatic_processing=True
+        get_brand_processor(), content, "curated-list", automatic_processing=True
     )
     predictions += extract_brands(
-        TAXONOMY_BRAND_PROCESSOR, content, "taxonomy", automatic_processing=False
+        get_taxonomy_brand_processor(), content, "taxonomy", automatic_processing=False
     )
 
     if isinstance(content, OCRResult):

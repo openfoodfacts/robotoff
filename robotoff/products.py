@@ -1,6 +1,7 @@
 import abc
 import datetime
 import enum
+import functools
 import gzip
 import json
 import os
@@ -9,7 +10,6 @@ import shutil
 import tempfile
 from typing import Iterable, Iterator, Optional, Union
 
-import cachetools
 import requests
 from pymongo import MongoClient
 
@@ -501,7 +501,7 @@ class DBProductStore(ProductStore):
         yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_min_product_store() -> ProductStore:
     logger.info("Loading product store in memory...")
     ps = MemoryProductStore.load_min()

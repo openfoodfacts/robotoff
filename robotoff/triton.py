@@ -1,6 +1,6 @@
+import functools
 import struct
 
-import cachetools
 import grpc
 import numpy as np
 from more_itertools import chunked
@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 CLIP_MAX_BATCH_SIZE = 32
 
 
-@cachetools.cached(cachetools.Cache(maxsize=1))
+@functools.cache
 def get_triton_inference_stub() -> service_pb2_grpc.GRPCInferenceServiceStub:
     channel = grpc.insecure_channel(settings.TRITON_URI)
     return service_pb2_grpc.GRPCInferenceServiceStub(channel)

@@ -1,6 +1,6 @@
+import functools
 from typing import Optional, Union
 
-import cachetools
 from lark import Discard, Lark, Transformer
 
 from robotoff import settings
@@ -60,7 +60,7 @@ def generate_packaging_lark_file(lang: str):
     )
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=5))
+@functools.cache
 def load_grammar(lang: str, start: str = "value", **kwargs) -> Lark:
     return Lark.open(
         str(settings.GRAMMARS_DIR / f"packaging_{lang}.lark"),
@@ -153,7 +153,7 @@ class PackagingFRTransformer(Transformer):
         return value_tags[0]
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=10))
+@functools.cache
 def load_taxonomy_map(lang: str) -> dict[str, dict[str, list[str]]]:
     return {
         TaxonomyType.packaging_shape.name: load_json(  # type: ignore

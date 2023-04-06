@@ -1,7 +1,6 @@
+import functools
 import operator
 from typing import Optional
-
-import cachetools
 
 from robotoff import settings
 from robotoff.products import ProductDataset
@@ -18,7 +17,7 @@ from robotoff.utils import (
 logger = get_logger(__name__)
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_brand_prefix() -> set[tuple[str, str]]:
     """Get a set of brand prefix tuples found in Open Food Facts databases.
 
@@ -29,7 +28,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
     return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_brand_blacklist() -> set[str]:
     logger.info("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))

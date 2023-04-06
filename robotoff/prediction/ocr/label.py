@@ -1,3 +1,4 @@
+import functools
 import re
 from typing import Iterable, Optional, Union
 
@@ -6,7 +7,6 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
-from robotoff.utils.cache import CachedStore
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
@@ -182,6 +182,7 @@ LABELS_REGEX = {
 }
 
 
+@functools.cache
 def get_logo_annotation_labels() -> dict[str, str]:
     labels: dict[str, str] = {}
 
@@ -197,6 +198,7 @@ def get_logo_annotation_labels() -> dict[str, str]:
     return labels
 
 
+@functools.cache
 def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
     if labels is None:
         labels = text_file_iter(settings.OCR_LABEL_FLASHTEXT_DATA_PATH)
@@ -234,14 +236,9 @@ def extract_label_flashtext(
     return predictions
 
 
-LOGO_ANNOTATION_LABELS: dict[str, str] = get_logo_annotation_labels()
-LABEL_KEYWORD_PROCESSOR_STORE = CachedStore(
-    fetch_func=generate_label_keyword_processor, expiration_interval=None
-)
-
-
 def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = []
+    logo_annotation_labels = get_logo_annotation_labels()
 
     for label_tag, regex_list in LABELS_REGEX.items():
         for ocr_regex in regex_list:
@@ -277,13 +274,13 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                     )
                 )
 
-    processor = LABEL_KEYWORD_PROCESSOR_STORE.get()
+    processor = generate_label_keyword_processor()
     predictions += extract_label_flashtext(processor, content)
 
     if isinstance(content, OCRResult):
         for logo_annotation in content.logo_annotations:
-            if logo_annotation.description in LOGO_ANNOTATION_LABELS:
-                label_tag = LOGO_ANNOTATION_LABELS[logo_annotation.description]
+            if logo_annotation.description in logo_annotation_labels:
+                label_tag = logo_annotation_labels[logo_annotation.description]
 
                 predictions.append(
                     Prediction(
