@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.24.2](https://github.com/openfoodfacts/robotoff/compare/v1.24.1...v1.24.2) (2023-04-06)
+
+
+### Bug Fixes
+
+* fix error in product weight insight ([6866739](https://github.com/openfoodfacts/robotoff/commit/6866739989b28d5c3f459f4f07a833aae26a8718))
+* load lazily all resources in Robotoff ([4dfa93f](https://github.com/openfoodfacts/robotoff/commit/4dfa93f9822ae1246e0192fd00f32f7b548c1f84))
+* move LogoLabelType to robotoff.types ([0cc7efe](https://github.com/openfoodfacts/robotoff/commit/0cc7efe512a3a5f1ae439b1dcc436d45b66a69d1))
+
+
+### Documentation
+
+* add documentation about how to add a predictor ([d467a4c](https://github.com/openfoodfacts/robotoff/commit/d467a4c982cb33ac83bf38676d3aa31d9c285e45))
+* add documentation about interaction with Product Opener ([05c0781](https://github.com/openfoodfacts/robotoff/commit/05c078169fa4ee746552312e732d07d23ba4659c))
+* add references to codebase in category-prediction.md ([56ccfba](https://github.com/openfoodfacts/robotoff/commit/56ccfba254e6b48af5310e007788f964b30f0e95))
+
 ## [1.24.1](https://github.com/openfoodfacts/robotoff/compare/v1.24.0...v1.24.1) (2023-04-05)
 
 
