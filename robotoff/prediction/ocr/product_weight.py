@@ -168,7 +168,7 @@ def process_multi_packaging(match) -> Optional[dict]:
 
     count = match.group(1)
     value = match.group(2)
-    unit = match.group(3)
+    unit = match.group(3).lower()
 
     if unit in ("dle", "cle", "mge", "mle", "ge", "kge", "le"):
         # When the e letter often comes after the weight unit, the
