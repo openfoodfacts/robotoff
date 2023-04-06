@@ -53,14 +53,14 @@ def strip_consecutive_spaces(text: str) -> str:
     return CONSECUTIVE_SPACES_REGEX.sub(" ", text)
 
 
-@functools.lru_cache()
+@functools.cache
 def get_blank_nlp(lang: str) -> spacy.Language:
     """Return a blank (without model) spaCy language pipeline."""
     logger.info("Loading NLP for %s...", lang)
     return spacy.blank(lang)
 
 
-@functools.lru_cache()
+@functools.cache
 def get_lemmatizing_nlp(lang: str) -> spacy.Language:
     """Return a spaCy language pipeline with a lookup lemmatizer."""
     logger.info("Loading NLP with lemmatizer for %s...", lang)
