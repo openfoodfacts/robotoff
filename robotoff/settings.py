@@ -327,4 +327,4 @@ INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
 # - when importing a new image through a webhook call (in robotoff.workers.tasks.import_image)
 # This is useful when testing locally, as we don't need the product to be in MongoDB to import
 # an image and generate insights.
-DISABLE_PRODUCT_CHECK = bool(os.environ.get("DISABLE_PRODUCT_CHECK", 0))
+DISABLE_PRODUCT_CHECK = bool(int(os.environ.get("DISABLE_PRODUCT_CHECK", 0)))
