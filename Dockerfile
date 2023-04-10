@@ -16,7 +16,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYSETUP_PATH="/opt/pysetup" \ 
     VENV_PATH="/opt/pysetup/.venv" \
     POETRY_HOME="/opt/poetry" \
-    POETRY_VERSION=1.1.8 \
+    POETRY_VERSION=1.4.2 \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
@@ -27,7 +27,7 @@ FROM python-base as builder-base
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
-RUN poetry install --no-dev
+RUN poetry install --without dev
 
 # This is our final image
 # ------------------------
