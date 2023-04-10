@@ -79,7 +79,7 @@ transformers = "~4.25.1"
 lark = "~1.1.4"
 
 [tool.poetry.dependencies.sentry-sdk]
-version = "~1.11.0"
+version = ">=1.11,<1.15"
 extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]
