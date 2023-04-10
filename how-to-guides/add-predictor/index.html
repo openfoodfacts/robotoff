@@ -365,6 +365,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#test-your-predictor" class="md-nav__link">
+    Test your predictor
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -783,6 +790,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#test-your-predictor" class="md-nav__link">
+    Test your predictor
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -819,6 +833,14 @@
 <h2 id="trigger-actions-after-insight-annotation">Trigger actions after insight annotation</h2>
 <p>To perform some actions when the insight has been annotated and marked as correct (<code>annotation=1</code>), you should add a new class subclassing <code>InsightAnnotator</code> in <code>robotoff.insights.annotate</code> and add it to the <code>ANNOTATOR_MAPPING</code> dictionary.</p>
 <p>If you need a call to Product Opener API that is not implemented yet, add it to <code>robotoff.off</code>.</p>
+<h2 id="test-your-predictor">Test your predictor</h2>
+<p>To test your predictor, you can simulate an image import using <a href="https://openfoodfacts.github.io/robotoff/references/api/#tag/Images/paths/~1images~1import/post">POST /api/v1/images/import</a> endpoint. You can check that:</p>
+<ul>
+<li>the predictor is indeed called</li>
+<li>it generates predictions/insights and save them in DB when expected</li>
+<li>no errors occurred (in the logs)</li>
+</ul>
+<p>If you add an OCR-only predictor, you should also add unit tests in <code>tests/unit</code>. We don't yet have the possibility to perform integration tests on ML models served by Triton though.</p>
 <p>That's it, congratulations 🎉!</p>
 <div class="footnote">
 <hr />
