@@ -113,10 +113,10 @@ class ProductInsight(BaseModel):
 
     # Stores the list of counties that are associated with the product.
     # E.g. possible values are "en:united-states" or "en:france".
-    countries = BinaryJSONField(null=True, index=True)
+    countries = BinaryJSONField(null=True, index=True, default=list)
 
     # Stores the list of brands that are associated with the product.
-    brands = BinaryJSONField(null=True, index=True)
+    brands = BinaryJSONField(null=True, index=True, default=list)
 
     # Specifies the timestamp on an automatic_processing insight after which the insight should be applied.
     process_after = peewee.DateTimeField(null=True)

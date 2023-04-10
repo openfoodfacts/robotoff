@@ -152,7 +152,8 @@ TAXONOMY_URLS = {
 
 _off_password = os.environ.get("OFF_PASSWORD", "")
 _off_user = os.environ.get("OFF_USER", "")
-_off_request_auth = ("off", "off") if _instance_tld() == "net" else None
+_off_net_auth = ("off", "off")
+_off_request_auth = _off_net_auth if _instance_tld() == "net" else None
 
 
 CATEGORY_MATCHER_DIR = DATA_DIR / "category/matcher"
@@ -320,3 +321,10 @@ TEST_DATA_DIR = TEST_DIR / "unit/data"
 INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
     os.environ.get("INSIGHT_AUTOMATIC_PROCESSING_WAIT", 10)
 )
+
+# Disable all product and image existence and validity check:
+# - during insight generation/import (in robotoff.insights.importer)
+# - when importing a new image through a webhook call (in robotoff.workers.tasks.import_image)
+# This is useful when testing locally, as we don't need the product to be in MongoDB to import
+# an image and generate insights.
+DISABLE_PRODUCT_CHECK = bool(os.environ.get("DISABLE_PRODUCT_CHECK", 0))

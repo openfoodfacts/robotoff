@@ -2,7 +2,7 @@ import tqdm
 
 from robotoff import settings
 from robotoff.models import ImageModel, db
-from robotoff.off import generate_image_url
+from robotoff.off import generate_image_path
 from robotoff.products import Product, ProductDataset
 from robotoff.utils import get_logger
 from robotoff.workers.tasks.import_image import save_image
@@ -33,12 +33,12 @@ with db:
             if (str(product.barcode), str(image_id)) in seen_set:
                 continue
 
-            image_url = generate_image_url(product.barcode, str(image_id))
+            source_image = generate_image_path(product.barcode, str(image_id))
 
             try:
                 save_image(
                     product.barcode,
-                    image_url,
+                    source_image,
                     product.images,
                     settings.BaseURLProvider.server_domain(),
                 )

@@ -370,7 +370,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         product = product_store[barcode]
         references = get_existing_insight(cls.get_type(), barcode, server_domain)
 
-        if product is None:
+        # If `DISABLE_PRODUCT_CHECK` is False (default, production settings), we
+        # stop the import process and delete all associated insights
+        if product is None and not settings.DISABLE_PRODUCT_CHECK:
             logger.info(
                 f"Product {barcode} not found in DB, deleting existing insights"
             )
@@ -380,7 +382,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         candidates = [
             candidate
             for candidate in cls.generate_candidates(product, predictions)
-            if is_valid_insight_image(product.images, candidate.source_image)
+            # Don't check the image validity if product check was disabled (product=None)
+            if product is None
+            or is_valid_insight_image(product.images, candidate.source_image)
         ]
         for candidate in candidates:
             if candidate.automatic_processing is None:
@@ -391,11 +395,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
             # flashtext/regex insights return bounding boxes in absolute coordinates,
             # while we use relative coordinates elsewhere. Perform the conversion here.
+            # Skip this step if product validity check is disabled (product=None),
+            # as we don't have image information
             if (
                 bounding_box_absolute := candidate.data.pop(
                     "bounding_box_absolute", None
                 )
-            ) is not None:
+            ) is not None and product:
                 candidate.data[
                     "bounding_box"
                 ] = convert_bounding_box_absolute_to_relative(
@@ -456,7 +462,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         """From a list of Predictions associated with a product, yield
@@ -466,7 +472,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         available by calling `InsightImporter.get_required_prediction_types`.
         This method must be implemented in subclasses.
 
-        :param product: The Product associated with the Predictions
+        :param product: The Product associated with the Predictions, if null
+            no validity check of the insight with respect to the product
+            should be performed
         :param predictions: The list of predictions for the product of type
         :yield: candidate ProductInsight
         """
@@ -613,7 +621,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def add_fields(
         cls,
         insight: ProductInsight,
-        product: Product,
+        product: Optional[Product],
         timestamp: datetime.datetime,
         server_domain: str,
         server_type: str,
@@ -625,10 +633,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
         insight.server_type = server_type
         insight.id = str(uuid.uuid4())
         insight.timestamp = timestamp
-        insight.countries = product.countries_tags
-        insight.brands = product.brands_tags
         insight.n_votes = 0
-        insight.unique_scans_n = product.unique_scans_n
+
+        if product:
+            insight.countries = product.countries_tags
+            insight.brands = product.brands_tags
+            insight.unique_scans_n = product.unique_scans_n
 
         if insight.automatic_processing:
             insight.process_after = timestamp + datetime.timedelta(
@@ -639,7 +649,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     @classmethod
     def add_optional_fields(  # noqa: B027
-        cls, insight: ProductInsight, product: Product
+        cls, insight: ProductInsight, product: Optional[Product]
     ):
         """Overwrite this method in children classes to add optional fields.
 
@@ -668,9 +678,12 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(
-        product: Product,
+        product: Optional[Product],
         emb_code: str,
     ) -> bool:
+        if product is None:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
         existing_codes = [normalize_emb_code(c) for c in product.emb_codes_tags]
         normalized_code = normalize_emb_code(emb_code)
 
@@ -679,7 +692,7 @@ class PackagerCodeInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         yield from (
@@ -707,7 +720,10 @@ class LabelInsightImporter(InsightImporter):
         )
 
     @staticmethod
-    def is_prediction_valid(product: Product, tag: str) -> bool:
+    def is_prediction_valid(product: Optional[Product], tag: str) -> bool:
+        if product is None:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
         return not (
             tag in product.labels_tags
             or LabelInsightImporter.is_parent_label(tag, set(product.labels_tags))
@@ -724,7 +740,7 @@ class LabelInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         candidates = [
@@ -781,7 +797,7 @@ class CategoryImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         candidates = [
@@ -806,9 +822,12 @@ class CategoryImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(
-        product: Product,
+        product: Optional[Product],
         category: str,
     ) -> bool:
+        if product is None:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
         # check whether this is new information or if the predicted category
         # is not a parent of a current/already predicted category
         return not (
@@ -819,7 +838,7 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+    def add_optional_fields(cls, insight: ProductInsight, product: Optional[Product]):
         taxonomy = get_taxonomy(InsightType.category.name)
         campaigns = []
         if (
@@ -841,7 +860,7 @@ class CategoryImporter(InsightImporter):
             # (experimental phase)
             campaigns.append("v3-categorizer-automatic-processing")
 
-        if not product.categories_tags:
+        if product and not product.categories_tags:
             # Add a campaign to track products with no categories filled in
             campaigns.append("missing-category")
 
@@ -877,10 +896,10 @@ class ProductWeightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
-        if product.quantity is not None or not predictions:
+        if (product and product.quantity is not None) or not predictions:
             # Don't generate candidates if the product weight is already
             # specified or if there are no predictions
             return
@@ -922,7 +941,7 @@ class ExpirationDateImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         if (product and product.expiration_date) or not predictions:
@@ -984,10 +1003,10 @@ class BrandInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
-        if product.brands_tags:
+        if product and product.brands_tags:
             # For now, don't create an insight if a brand has already been provided
             return
 
@@ -1022,7 +1041,7 @@ class StoreInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         for prediction in predictions:
@@ -1129,7 +1148,7 @@ class PackagingImporter(InsightImporter):
         return candidate_shape_is_parent_of_ref
 
     @staticmethod
-    def keep_prediction(prediction: Prediction, product: Product) -> bool:
+    def keep_prediction(prediction: Prediction, product: Optional[Product]) -> bool:
         """element may contain the following properties:
         - shape
         - recycling
@@ -1164,6 +1183,11 @@ class PackagingImporter(InsightImporter):
                 TaxonomyType.packaging_recycling.name,
             )
         }
+
+        if not product:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
+
         return not any(
             PackagingImporter.discard_packaging_element(
                 candidate_element, existing_element, taxonomies
@@ -1191,7 +1215,7 @@ class PackagingImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         # 1 prediction = 1 packaging element
@@ -1402,7 +1426,11 @@ def import_predictions(
     predictions = [
         p
         for p in predictions
-        if is_valid_product_prediction(p, product_store[p.barcode])  # type: ignore
+        if (
+            # If product validity check is disable, all predictions are valid
+            settings.DISABLE_PRODUCT_CHECK
+            or is_valid_product_prediction(p, product_store[p.barcode])  # type: ignore
+        )
     ]
 
     predictions_import_results = []

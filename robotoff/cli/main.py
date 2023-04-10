@@ -661,5 +661,49 @@ def export_logos(
         dump_jsonl(output, query.dicts().iterator())
 
 
+@app.command()
+def import_image_webhook(
+    image_url: str = typer.Argument(
+        ...,
+        help="URL of the image to import to the output file, can either have .jsonl or .jsonl.gz as "
+        "extension",
+    ),
+) -> None:
+    """Import an image in Robotoff by calling POST /api/v1/images/import.
+
+    The OCR URL will be generated automatically from the image URL. This is a
+    helper CLI command created for debugging/local developpement only.
+    """
+    import os
+
+    from robotoff.off import get_barcode_from_url
+    from robotoff.settings import BaseURLProvider
+    from robotoff.utils import get_logger, http_session
+
+    logger = get_logger()
+    ocr_url = image_url.replace(".jpg", ".json")
+    barcode = get_barcode_from_url(image_url)
+
+    # Use `api` alias instead of localhost if we're running in a docker container
+    domain = (
+        "http://localhost:5500"
+        if bool(os.environ.get("IN_DOCKER_CONTAINER", False))
+        else "http://api:5500"
+    )
+    r = http_session.post(
+        f"{domain}/api/v1/images/import",
+        data={
+            "barcode": barcode,
+            "image_url": image_url,
+            "ocr_url": ocr_url,
+            "server_domain": BaseURLProvider.server_domain(),
+        },
+    )
+    if not r.ok:
+        logger.info("HTTP error (%s) during image import: %s", r.status_code, r.text)
+    else:
+        logger.info("Robotoff response: %s", r.json())
+
+
 def main() -> None:
     app()

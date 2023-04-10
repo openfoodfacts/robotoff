@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Optional
 
 import elasticsearch
 from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
+from robotoff import settings
 from robotoff.elasticsearch.client import get_es_client
 from robotoff.images import save_image
 from robotoff.insights.extraction import (
@@ -28,11 +30,11 @@ from robotoff.models import (
     db,
     with_db,
 )
-from robotoff.off import get_source_from_url
+from robotoff.off import generate_image_url, get_source_from_url
 from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.triton import generate_clip_embedding
-from robotoff.types import ObjectDetectionModel, PredictionType
+from robotoff.types import JSONType, ObjectDetectionModel, PredictionType
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.workers.queues import enqueue_job, high_queue
 
@@ -57,14 +59,17 @@ def run_import_image_job(
     )
     source_image = get_source_from_url(image_url)
     product = get_product_store()[barcode]
-    if product is None:
+    if product is None and not settings.DISABLE_PRODUCT_CHECK:
         logger.info(
             "Product %s does not exist during image import (%s)", barcode, source_image
         )
         return
 
+    product_images: Optional[JSONType] = getattr(product, "images", None)
     with db:
-        image_model = save_image(barcode, source_image, product.images, server_domain)
+        image_model = save_image(
+            barcode, source_image, image_url, product_images, server_domain
+        )
 
         if image_model is None:
             # The image is invalid, no need to perform image extraction jobs
@@ -74,7 +79,7 @@ def run_import_image_job(
             return
 
         image_id = Path(source_image).stem
-        if image_id not in product.images:
+        if product_images is not None and image_id not in product_images:
             # It happens when the image has been deleted after Robotoff import
             logger.info("Unknown image for product %s: %s", barcode, source_image)
             image_model.deleted = True
@@ -158,14 +163,22 @@ def save_image_job(batch: list[tuple[str, str]], server_domain: str):
     :param batch: a batch of (barcode, source_image) tuples
     :param server_domain: the server domain to use
     """
+    product_store = get_product_store()
     with db.connection_context():
         for barcode, source_image in batch:
-            product = get_product_store()[barcode]
-            if product is None:
+            product = product_store[barcode]
+            if product is None and not settings.DISABLE_PRODUCT_CHECK:
                 continue
 
             with db.atomic():
-                save_image(barcode, source_image, product.images, server_domain)
+                image_url = generate_image_url(barcode, Path(source_image).stem)
+                save_image(
+                    barcode,
+                    source_image,
+                    image_url,
+                    getattr(product, "images", None),
+                    server_domain,
+                )
 
 
 def run_nutrition_table_object_detection(
