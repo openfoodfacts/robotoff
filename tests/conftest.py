@@ -7,6 +7,11 @@ from robotoff.redis import Lock
 from robotoff.taxonomy import Taxonomy
 
 
+@pytest.fixture(autouse=True)
+def set_global_settings(mocker):
+    mocker.patch("robotoff.settings.DISABLE_PRODUCT_CHECK", False)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def disable_redis_lock():
     previous_value = Lock._enabled
