@@ -6,7 +6,6 @@ from typing import Iterable, Literal, NamedTuple, Optional, Union
 import peewee
 from peewee import JOIN, SQL, fn
 
-from robotoff import settings
 from robotoff.app import events
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
@@ -26,6 +25,7 @@ from robotoff.models import (
 )
 from robotoff.off import OFFAuthentication
 from robotoff.taxonomy import match_taxonomized_value
+from robotoff.types import ServerType
 from robotoff.utils import get_logger
 from robotoff.utils.text import get_tag
 
@@ -67,6 +67,7 @@ def _add_vote_exclusions(
 
 def get_insights(
     barcode: Optional[str] = None,
+    server_type: ServerType = ServerType.off,
     keep_types: Optional[list[str]] = None,
     country: Optional[str] = None,
     brands: Optional[list[str]] = None,
@@ -74,7 +75,6 @@ def get_insights(
     annotation: Optional[int] = None,
     order_by: Optional[Literal["random", "popularity", "n_votes", "confidence"]] = None,
     value_tag: Optional[str] = None,
-    server_domain: Optional[str] = None,
     reserved_barcode: Optional[bool] = None,
     as_dict: bool = False,
     limit: Optional[int] = 25,
@@ -92,6 +92,8 @@ def get_insights(
     parameter.
 
     :param barcode: only keep insights with this barcode, defaults to None
+    :param server_type: the server type of the insights, defaults to
+        ServerType.off
     :param keep_types: only keep insights that have any of the these types,
         defaults to None
     :param country: only keep insights with this country, defaults to None
@@ -106,8 +108,6 @@ def get_insights(
         decreasing confidence score (confidence) or don't order results
         (None), defaults to None
     :param value_tag: only keep insights with this value_tag, defaults to None
-    :param server_domain: Only keep insights with this server domain, defaults
-        to `BaseUrlProvider.server_domain()`
     :param reserved_barcode: only keep insights with reserved barcodes (True)
         or without reserved barcode (False), defaults to None
     :param as_dict: if True, return results as dict instead of ProductInsight
@@ -132,10 +132,7 @@ def get_insights(
         - a iterable of objects or dict (if `as_dict=True`) containing product
           count for each `value_tag`, if `group_by_value_tag=True`
     """
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
-    where_clauses = [ProductInsight.server_domain == server_domain]
+    where_clauses = [ProductInsight.server_type == server_type.name]
 
     if annotated is not None:
         where_clauses.append(ProductInsight.annotation.is_null(not annotated))
@@ -217,17 +214,14 @@ def get_insights(
 
 
 def get_images(
+    server_type: ServerType,
     with_predictions: Optional[bool] = False,
     barcode: Optional[str] = None,
-    server_domain: Optional[str] = None,
     offset: Optional[int] = None,
     count: bool = False,
     limit: Optional[int] = 25,
 ) -> Iterable[ImageModel]:
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
-    where_clauses = [ImageModel.server_domain == server_domain]
+    where_clauses = [ImageModel.server_type == server_type.name]
 
     if barcode:
         where_clauses.append(ImageModel.barcode == barcode)
@@ -250,18 +244,15 @@ def get_images(
 
 
 def get_predictions(
+    server_type: ServerType,
     barcode: Optional[str] = None,
     keep_types: Optional[list[str]] = None,
     value_tag: Optional[str] = None,
-    server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
 ) -> Iterable[Prediction]:
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
-    where_clauses = [Prediction.server_domain == server_domain]
+    where_clauses = [Prediction.server_type == server_type.name]
 
     if barcode:
         where_clauses.append(Prediction.barcode == barcode)
@@ -286,10 +277,10 @@ def get_predictions(
 
 
 def get_image_predictions(
+    server_type: ServerType,
     with_logo: Optional[bool] = False,
     barcode: Optional[str] = None,
     type: Optional[str] = None,
-    server_domain: Optional[str] = None,
     offset: Optional[int] = None,
     count: bool = False,
     limit: Optional[int] = 25,
@@ -297,11 +288,8 @@ def get_image_predictions(
 
     query = ImagePrediction.select()
 
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
     query = query.switch(ImagePrediction).join(ImageModel)
-    where_clauses = [ImagePrediction.image.server_domain == server_domain]
+    where_clauses = [ImagePrediction.image.server_type == server_type.name]
 
     if barcode:
         where_clauses.append(ImagePrediction.image.barcode == barcode)
@@ -437,29 +425,27 @@ def save_annotation(
     result = annotate(insight, annotation, update, data=data, auth=auth)
     username = auth.get_username() if auth else "unknown annotator"
     events.event_processor.send_async(
-        "question_answered", username, device_id, insight.barcode
+        "question_answered",
+        username,
+        device_id,
+        insight.barcode,
+        insight.server_type,
     )
     return result
 
 
 def get_logo_annotation(
+    server_type: ServerType,
     barcode: Optional[str] = None,
     keep_types: Optional[list[str]] = None,
     value_tag: Optional[str] = None,
-    server_domain: Optional[str] = None,
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
 ) -> Iterable[LogoAnnotation]:
-
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
     query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 
-    where_clauses = [
-        LogoAnnotation.image_prediction.image.server_domain == server_domain
-    ]
+    where_clauses = [ImageModel.server_type == server_type.name]
 
     if barcode:
         where_clauses.append(LogoAnnotation.barcode == barcode)

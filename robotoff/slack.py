@@ -7,8 +7,14 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
-from robotoff.models import LogoAnnotation, ProductInsight, crop_image_url
-from robotoff.types import InsightType, JSONType, LogoLabelType, Prediction
+from robotoff.models import ImageModel, LogoAnnotation, ProductInsight, crop_image_url
+from robotoff.types import (
+    InsightType,
+    JSONType,
+    LogoLabelType,
+    Prediction,
+    ProductIdentifier,
+)
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -28,7 +34,10 @@ class NotifierInterface:
     # for a notifier might choose to only implements a few
 
     def notify_image_flag(
-        self, predictions: list[Prediction], source_image: str, barcode: str
+        self,
+        predictions: list[Prediction],
+        source_image: str,
+        product_id: ProductIdentifier,
     ):
         pass
 
@@ -129,9 +138,12 @@ class MultiNotifier(NotifierInterface):
             fn(*args, **kwargs)
 
     def notify_image_flag(
-        self, predictions: list[Prediction], source_image: str, barcode: str
+        self,
+        predictions: list[Prediction],
+        source_image: str,
+        product_id: ProductIdentifier,
     ):
-        self._dispatch("notify_image_flag", predictions, source_image, barcode)
+        self._dispatch("notify_image_flag", predictions, source_image, product_id)
 
     def notify_automatic_processing(self, insight: ProductInsight):
         self._dispatch("notify_automatic_processing", insight)
@@ -152,20 +164,29 @@ class ImageModerationNotifier(NotifierInterface):
         self.service_url = service_url.rstrip("/")
 
     def notify_image_flag(
-        self, predictions: list[Prediction], source_image: str, barcode: str
+        self,
+        predictions: list[Prediction],
+        source_image: str,
+        product_id: ProductIdentifier,
     ):
         """Send image to the moderation server so that a human can moderate it"""
         if not predictions:
             return
-        image_url = settings.BaseURLProvider.image_url(source_image)
+        image_url = settings.BaseURLProvider.image_url(
+            product_id.server_type, source_image
+        )
         image_id = int(source_image.rsplit("/", 1)[-1].split(".", 1)[0])
         params = {"imgid": image_id, "url": image_url}
         try:
-            http_session.put(f"{self.service_url}/{barcode}", data=params)
+            http_session.put(f"{self.service_url}/{product_id.barcode}", data=params)
         except Exception:
             logger.exception(
                 "Error while notifying image to moderation service",
-                extra={"params": params, "url": image_url, "barcode": barcode},
+                extra={
+                    "params": params,
+                    "url": image_url,
+                    "barcode": product_id.barcode,
+                },
             )
 
 
@@ -189,7 +210,10 @@ class SlackNotifier(NotifierInterface):
         self.slack_token = slack_token
 
     def notify_image_flag(
-        self, predictions: list[Prediction], source_image: str, barcode: str
+        self,
+        predictions: list[Prediction],
+        source_image: str,
+        product_id: ProductIdentifier,
     ):
         """Sends alerts to Slack channels for flagged images."""
         if not predictions:
@@ -212,8 +236,10 @@ class SlackNotifier(NotifierInterface):
                 match_text = flagged.data["text"]
                 text += f"type: {flag_type}\nlabel: *{label}*, match: {match_text}\n"
 
-        edit_url = f"{settings.BaseURLProvider.world()}/cgi/product.pl?type=edit&code={barcode}"
-        image_url = settings.BaseURLProvider.image_url(source_image)
+        edit_url = f"{settings.BaseURLProvider.world(product_id.server_type)}/cgi/product.pl?type=edit&code={product_id.barcode}"
+        image_url = settings.BaseURLProvider.image_url(
+            product_id.server_type, source_image
+        )
 
         full_text = f"{text}\n <{image_url}|Image> -- <{edit_url}|*Edit*>"
         message = _slack_message_block(full_text, with_image=image_url)
@@ -221,15 +247,19 @@ class SlackNotifier(NotifierInterface):
         self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
     def notify_automatic_processing(self, insight: ProductInsight):
-        product_url = f"{settings.BaseURLProvider.world()}/product/{insight.barcode}"
+        product_url = f"{settings.BaseURLProvider.world(insight.server_type)}/product/{insight.barcode}"
 
         if insight.source_image:
             if insight.data and "bounding_box" in insight.data:
                 image_url = crop_image_url(
-                    insight.source_image, insight.data.get("bounding_box")
+                    insight.server_type,
+                    insight.source_image,
+                    insight.data.get("bounding_box"),
                 )
             else:
-                image_url = settings.BaseURLProvider.image_url(insight.source_image)
+                image_url = settings.BaseURLProvider.image_url(
+                    insight.server_type, insight.source_image
+                )
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
             metadata_text = f"(<{product_url}|product>)"
@@ -269,12 +299,13 @@ class SlackNotifier(NotifierInterface):
                 )
             )
         )
-        barcode = logo.barcode
-        base_off_url = settings.BaseURLProvider.world()
+        image_model: ImageModel = logo.image_prediction.image
+        product_id = image_model.get_product_id()
+        base_off_url = settings.BaseURLProvider.world(product_id.server_type)
         text = (
             f"Prediction for <{crop_url}|image> "
             f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "
-            f"<{base_off_url}/product/{barcode}|product>):\n{prob_text}"
+            f"<{base_off_url}/product/{product_id.barcode}|product>):\n{prob_text}"
         )
         self._post_message(_slack_message_block(text), self.ROBOTOFF_ALERT_CHANNEL)
 

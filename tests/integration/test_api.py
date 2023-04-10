@@ -5,11 +5,11 @@ from datetime import datetime
 import pytest
 from falcon import testing
 
-from robotoff import settings
 from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
+from robotoff.types import ProductIdentifier, ServerType
 
 from .models_utils import (
     AnnotationVoteFactory,
@@ -23,6 +23,8 @@ from .models_utils import (
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
 DEFAULT_BARCODE = "1"
+DEFAULT_SERVER_TYPE = ServerType.off
+DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 
 
 @pytest.fixture(autouse=True)
@@ -71,6 +73,7 @@ def test_random_question(client, mocker):
                 "question": "Does the product belong to this category?",
                 "insight_id": insight_id,
                 "insight_type": "category",
+                "server_type": "off",
                 "source_image_url": "https://images.openfoodfacts.net/images/products/1/ingredients_fr.51.400.jpg",
             }
         ],
@@ -108,6 +111,7 @@ def test_popular_question(client, mocker):
                 "question": "Does the product belong to this category?",
                 "insight_id": insight_id,
                 "insight_type": "category",
+                "server_type": "off",
             }
         ],
         "status": "found",
@@ -196,6 +200,7 @@ def test_barcode_question(client, mocker):
                 "question": "Does the product belong to this category?",
                 "insight_id": insight_id,
                 "insight_type": "category",
+                "server_type": "off",
             }
         ],
         "status": "found",
@@ -557,10 +562,9 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
     assert insight.get("completed_at") <= datetime.utcnow()
     # update was done
     add_category.assert_called_once_with(
-        "1",  # barcode
+        DEFAULT_PRODUCT_ID,
         "en:seeds",  # category_tag
         insight_id=uuid.UUID(insight_id),
-        server_domain=settings.BaseURLProvider.server_domain(),
         auth=OFFAuthentication(username="a", password="b"),
     )
 
@@ -633,6 +637,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
         "user_id": "a",
         "device_id": "test-device",
         "barcode": "1",
+        "server_type": "off",
     }
     httpserver.expect_oneshot_request(
         "/", method="POST", json=expected_event
@@ -644,6 +649,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
                 "insight_id": insight_id,
                 "annotation": 0,
                 "device_id": "test-device",
+                "server_type": "off",
             },
             headers={
                 "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")

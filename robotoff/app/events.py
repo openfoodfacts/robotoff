@@ -50,12 +50,14 @@ def send_event(
     user_id: str,
     device_id: str,
     barcode: Optional[str] = None,
+    server_type: Optional[str] = None,
 ):
     event = {
         "event_type": event_type,
         "user_id": user_id,
         "device_id": device_id,
         "barcode": barcode,
+        "server_type": server_type,
     }
     logger.debug("Event: %s", event)
     response = requests.post(api_url, json=event)

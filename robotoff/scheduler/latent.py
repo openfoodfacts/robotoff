@@ -1,3 +1,5 @@
+from pymongo.collection import Collection
+
 from robotoff.models import Prediction, with_db
 from robotoff.products import (
     DBProductStore,
@@ -5,7 +7,7 @@ from robotoff.products import (
     is_nutrition_image,
     is_valid_image,
 )
-from robotoff.types import PredictionType
+from robotoff.types import PredictionType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -22,8 +24,10 @@ def generate_quality_facets():
 
 @with_db
 def generate_fiber_quality_facet() -> None:
-    product_store: DBProductStore = get_product_store()
-    collection = product_store.collection
+    # Use ServerType.off as fiber quality facet is only for OFF
+    server_type = ServerType.off
+    product_store: DBProductStore = get_product_store(server_type)
+    collection: Collection = product_store.collection
     added = 0
     seen_set: set[str] = set()
 
@@ -33,6 +37,7 @@ def generate_fiber_quality_facet() -> None:
             Prediction.type == PredictionType.nutrient_mention.name,
             Prediction.data["mentions"].contains("fiber"),
             Prediction.source_image.is_null(False),
+            Prediction.server_type == server_type.name,
         )
         .iterator()
     ):
@@ -41,8 +46,9 @@ def generate_fiber_quality_facet() -> None:
         if barcode in seen_set:
             continue
 
+        product_id = ProductIdentifier(barcode, server_type)
         product = product_store.get_product(
-            barcode, ["nutriments", "data_quality_tags", "images"]
+            product_id, ["nutriments", "data_quality_tags", "images"]
         )
 
         if product is None:

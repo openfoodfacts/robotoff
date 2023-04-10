@@ -1,5 +1,6 @@
 from robotoff import settings
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation
+from robotoff.types import ServerType
 
 
 def test_crop_image_url(monkeypatch):
@@ -15,6 +16,7 @@ def test_crop_image_url(monkeypatch):
                 source_image="/123/1.jpg",
                 width=20,
                 height=20,
+                server_type=ServerType.off.name,
             ),
         ),
         bounding_box=(1, 1, 2, 2),
@@ -24,5 +26,5 @@ def test_crop_image_url(monkeypatch):
 
     assert logo_annotation.get_crop_image_url() == (
         f"{settings.BaseURLProvider.robotoff()}/api/v1/images/crop"
-        + f"?image_url={settings.BaseURLProvider.image_url('/123/1.jpg')}&y_min=1&x_min=1&y_max=2&x_max=2"
+        + f"?image_url={settings.BaseURLProvider.image_url(ServerType.off, '/123/1.jpg')}&y_min=1&x_min=1&y_max=2&x_max=2"
     )

@@ -8,7 +8,7 @@ from robotoff.spellcheck.items import SpellcheckItem
 from robotoff.spellcheck.patterns import PatternsSpellchecker
 from robotoff.spellcheck.percentages import PercentagesSpellchecker
 from robotoff.spellcheck.vocabulary import VocabularySpellchecker
-from robotoff.types import JSONType, Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType, ServerType
 
 SPELLCHECKERS = {
     "elasticsearch": ElasticSearchSpellchecker,
@@ -81,6 +81,7 @@ class Spellchecker:
                         type=PredictionType.ingredient_spellcheck,
                         data=insight,
                         barcode=product["code"],
+                        server_type=ServerType.off,
                     )
 
                     insights_count += 1

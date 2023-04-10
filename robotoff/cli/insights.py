@@ -13,7 +13,7 @@ import tqdm
 from robotoff.off import get_barcode_from_path
 from robotoff.prediction.ocr import OCRResult, extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
 
 logger = get_logger(__name__)
@@ -22,10 +22,11 @@ logger = get_logger(__name__)
 def run_from_ocr_archive(
     input_path: Path,
     prediction_type: PredictionType,
+    server_type: ServerType,
     output: Optional[Path] = None,
 ):
     predictions = tqdm.tqdm(
-        generate_from_ocr_archive(input_path, prediction_type), desc="OCR"
+        generate_from_ocr_archive(input_path, prediction_type, server_type), desc="OCR"
     )
     output_f: _io._TextIOBase
     need_decoding = False
@@ -47,8 +48,7 @@ def run_from_ocr_archive(
 
 
 def generate_from_ocr_archive(
-    input_path: Path,
-    prediction_type: PredictionType,
+    input_path: Path, prediction_type: PredictionType, server_type: ServerType
 ) -> Iterable[Prediction]:
     json_iter = (
         gzip_jsonl_iter(input_path)
@@ -74,7 +74,10 @@ def generate_from_ocr_archive(
             continue
 
         yield from extract_predictions(
-            ocr_result, prediction_type, barcode=barcode, source_image=source_image
+            ocr_result,
+            prediction_type,
+            product_id=ProductIdentifier(barcode=barcode, server_type=server_type),
+            source_image=source_image,
         )
 
 

@@ -10,7 +10,7 @@ from flashtext import KeywordProcessor
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType, ServerType
 from robotoff.utils import dump_json, get_logger, load_json
 from robotoff.utils.text import (
     get_lemmatizing_nlp,
@@ -440,6 +440,7 @@ def predict_from_dataset(
     for product in product_stream.iter():
         for prediction in predict(product):
             prediction.barcode = product["code"]
+            prediction.server_type = ServerType.off
             yield prediction
 
 

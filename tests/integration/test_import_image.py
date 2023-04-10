@@ -2,9 +2,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from robotoff import settings
 from robotoff.models import LogoEmbedding
-from robotoff.types import InsightImportResult
+from robotoff.types import InsightImportResult, ServerType
 from robotoff.workers.tasks.import_image import (
     process_created_logos,
     save_logo_embeddings,
@@ -16,6 +15,8 @@ from .models_utils import (
     LogoEmbeddingFactory,
     clean_db,
 )
+
+DEFAULT_SERVER_TYPE = ServerType.off
 
 
 @pytest.fixture(autouse=True)
@@ -88,9 +89,7 @@ def test_process_created_logos(peewee_db, mocker):
             for i in range(5)
         ]
         logo_embeddings = [LogoEmbeddingFactory(logo=logo) for logo in logos]
-        process_created_logos(
-            image_prediction.id, server_domain=settings.BaseURLProvider.server_domain()
-        )
+        process_created_logos(image_prediction.id, DEFAULT_SERVER_TYPE)
         add_logos_to_ann_mock.assert_called()
         embedding_args = add_logos_to_ann_mock.mock_calls[0].args[1]
         assert sorted(embedding_args, key=lambda x: x.logo_id) == logo_embeddings

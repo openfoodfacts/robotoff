@@ -30,6 +30,7 @@ from robotoff.products import (
     get_min_product_store,
     has_dataset_changed,
 )
+from robotoff.types import ServerType
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
@@ -43,6 +44,7 @@ logger = get_logger(__name__)
 def process_insights():
     with db.connection_context():
         processed = 0
+        insight: ProductInsight
         for insight in (
             ProductInsight.select()
             .where(
@@ -54,7 +56,7 @@ def process_insights():
         ):
             try:
                 logger.info(
-                    "Annotating insight %s (product: %s)", insight.id, insight.barcode
+                    "Annotating insight %s (%s)", insight.id, insight.get_product_id()
                 )
                 annotation_result = annotate(insight, 1, update=True)
                 processed += 1
@@ -69,9 +71,9 @@ def process_insights():
                 # continue to the next one
                 # Note: annotator already rolled-back the transaction
                 logger.exception(
-                    f"exception {e} while handling annotation of insight %s (product) %s",
+                    f"exception {e} while handling annotation of insight %s (%s)",
                     insight.id,
-                    insight.barcode,
+                    insight.get_product_id(),
                 )
     logger.info("%d insights processed", processed)
 
@@ -81,6 +83,8 @@ def refresh_insights(with_deletion: bool = False):
     deleted = 0
     updated = 0
     product_store = get_min_product_store()
+    # Only OFF is currently supported
+    server_type = ServerType.off
 
     datetime_threshold = datetime.datetime.utcnow().replace(
         hour=0, minute=0, second=0, microsecond=0
@@ -95,21 +99,23 @@ def refresh_insights(with_deletion: bool = False):
         )
         return
 
+    insight: ProductInsight
     for insight in (
         ProductInsight.select()
         .where(
             ProductInsight.annotation.is_null(),
             ProductInsight.timestamp <= datetime_threshold,
-            ProductInsight.server_domain == settings.BaseURLProvider.server_domain(),
+            ProductInsight.server_type == server_type.name,
         )
         .iterator()
     ):
+        product_id = insight.get_product_id()
         product: Product = product_store[insight.barcode]
 
         if product is None:
             if with_deletion:
                 # Product has been deleted from OFF
-                logger.info("Product with barcode {} deleted".format(insight.barcode))
+                logger.info("%s deleted", product_id)
                 deleted += 1
                 insight.delete_instance()
         else:
@@ -126,27 +132,30 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
     to_update = False
     if insight.brands != product.brands_tags:
         logger.info(
-            "Updating brand {} -> {} ({})".format(
-                insight.brands, product.brands_tags, product.barcode
-            )
+            "Updating brand %s -> %s (%s)",
+            insight.brands,
+            product.brands_tags,
+            insight.get_product_id(),
         )
         to_update = True
         insight.brands = product.brands_tags
 
     if insight.countries != product.countries_tags:
         logger.info(
-            "Updating countries {} -> {} ({})".format(
-                insight.countries, product.countries_tags, product.barcode
-            )
+            "Updating countries %s -> %s (%s)",
+            insight.countries,
+            product.countries_tags,
+            insight.get_product_id(),
         )
         to_update = True
         insight.countries = product.countries_tags
 
     if insight.unique_scans_n != product.unique_scans_n:
         logger.info(
-            "Updating unique scan count {} -> {} ({})".format(
-                insight.unique_scans_n, product.unique_scans_n, product.barcode
-            )
+            "Updating unique scan count %s -> %s (%s)",
+            insight.unique_scans_n,
+            product.unique_scans_n,
+            insight.get_product_id(),
         )
         to_update = True
         insight.unique_scans_n = product.unique_scans_n
@@ -160,6 +169,7 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
 @with_db
 def mark_insights():
     marked = 0
+    insight: ProductInsight
     for insight in (
         ProductInsight.select()
         .where(
@@ -170,8 +180,9 @@ def mark_insights():
         .iterator()
     ):
         logger.info(
-            "Marking insight {} as processable automatically "
-            "(product: {})".format(insight.id, insight.barcode)
+            "Marking insight %s as processable automatically (%s)",
+            insight.id,
+            insight.get_product_id(),
         )
         insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(
             minutes=10
@@ -218,7 +229,8 @@ def generate_insights():
     with db:
         import_result = import_insights(
             product_predictions_iter,
-            server_domain=settings.BaseURLProvider.server_domain(),
+            # Currently the JSONL dataset is OFF-only
+            server_type=ServerType.off,
         )
     logger.info(import_result)
 

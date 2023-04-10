@@ -15,7 +15,7 @@ from robotoff.triton import (
     generate_clip_embedding_request,
     serialize_byte_tensor,
 )
-from robotoff.types import JSONType, NeuralCategoryClassifierModel
+from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
 from robotoff.utils import get_image_from_url, get_logger, http_session, load_json
 
 from .preprocessing import (
@@ -38,7 +38,7 @@ CATEGORY_EXCLUDE_SET = {
 
 
 def fetch_cached_image_embeddings(
-    barcode: str, image_ids: list[str]
+    product_id: ProductIdentifier, image_ids: list[str]
 ) -> dict[str, np.ndarray]:
     """Fetch image embeddings cached in DB for a product and specific image
     IDs.
@@ -46,7 +46,7 @@ def fetch_cached_image_embeddings(
     Only the embeddings existing in DB are returned, image IDs that were not
     found are ignored.
 
-    :param barcode: the product barcode
+    :param product_id: identifier of the product
     :param image_ids: a list of image IDs to fetch
     :return: a dict mapping image IDs to CLIP image embedding
     """
@@ -55,7 +55,8 @@ def fetch_cached_image_embeddings(
         ImageEmbedding.select(ImageModel.image_id, ImageEmbedding.embedding)
         .join(ImageModel)
         .where(
-            ImageModel.barcode == barcode,
+            ImageModel.barcode == product_id.barcode,
+            ImageModel.server_type == product_id.server_type.name,
             ImageModel.image_id.in_(image_ids),
         )
         .tuples()
@@ -66,10 +67,12 @@ def fetch_cached_image_embeddings(
     return cached_embeddings
 
 
-def save_image_embeddings(barcode: str, embeddings: dict[str, np.ndarray]):
+def save_image_embeddings(
+    product_id: ProductIdentifier, embeddings: dict[str, np.ndarray]
+):
     """Save computed image embeddings in ImageEmbedding table.
 
-    :param barcode: barcode of the product
+    :param product_id: identifier of the product
     :param embeddings: a dict mapping image ID to image embedding
     """
     image_id_to_model_id = {
@@ -78,7 +81,8 @@ def save_image_embeddings(barcode: str, embeddings: dict[str, np.ndarray]):
             ImageModel.id, ImageModel.image_id
         )
         .where(
-            ImageModel.barcode == barcode,
+            ImageModel.barcode == product_id.barcode,
+            ImageModel.server_type == product_id.server_type.name,
             ImageModel.image_id.in_(list(embeddings.keys())),
         )
         .tuples()
@@ -100,7 +104,9 @@ def save_image_embeddings(barcode: str, embeddings: dict[str, np.ndarray]):
 
 
 @with_db
-def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
+def generate_image_embeddings(
+    product: JSONType, product_id: ProductIdentifier, stub
+) -> Optional[np.ndarray]:
     """Generate image embeddings using CLIP model for the `MAX_IMAGE_EMBEDDING`
     most recent images.
 
@@ -123,8 +129,7 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
     # Convert image IDs back to string
     image_ids = [str(image_id) for image_id in image_ids_int]
     if image_ids:
-        barcode = product["code"]
-        embeddings_by_id = fetch_cached_image_embeddings(barcode, image_ids)
+        embeddings_by_id = fetch_cached_image_embeddings(product_id, image_ids)
         logger.debug("%d embeddings fetched from DB", len(embeddings_by_id))
         missing_embedding_ids = set(image_ids) - set(embeddings_by_id)
 
@@ -137,7 +142,7 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
                     # Images are resized to 224x224, so there is no need to
                     # fetch the full-sized image, the 400px resized
                     # version is enough
-                    generate_image_url(barcode, f"{image_id}.400"),
+                    generate_image_url(product_id, f"{image_id}.400"),
                     error_raise=False,
                     session=http_session,
                 )
@@ -162,10 +167,10 @@ def generate_image_embeddings(product: JSONType, stub) -> Optional[np.ndarray]:
                     non_null_image_by_ids, stub
                 )
                 # Make sure all image IDs are in image table
-                refresh_images_in_db(barcode, product.get("images", {}))
+                refresh_images_in_db(product_id, product.get("images", {}))
                 # Save embeddings in embeddings.image_embeddings table for future
                 # use
-                save_image_embeddings(barcode, computed_embeddings_by_id)
+                save_image_embeddings(product_id, computed_embeddings_by_id)
                 # Merge cached and newly-computed image embeddings
                 embeddings_by_id |= computed_embeddings_by_id
 
@@ -197,7 +202,7 @@ def _generate_image_embeddings(
     }
 
 
-def fetch_ocr_texts(product: JSONType) -> list[str]:
+def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[str]:
     """Fetch all image OCRs from Product Opener and return a list of the
     detected texts, one string per image."""
     barcode = product.get("code")
@@ -207,7 +212,7 @@ def fetch_ocr_texts(product: JSONType) -> list[str]:
     ocr_texts = []
     image_ids = (id_ for id_ in product.get("images", {}).keys() if id_.isdigit())
     for image_id in image_ids:
-        ocr_url = generate_json_ocr_url(barcode, image_id)
+        ocr_url = generate_json_ocr_url(product_id, image_id)
         ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
         if ocr_result:
             ocr_texts.append(ocr_result.get_full_text_contiguous())

@@ -7,6 +7,7 @@ from robotoff.app.core import (
     get_logo_annotation,
     get_predictions,
 )
+from robotoff.types import ServerType
 
 from .models_utils import (
     ImageModelFactory,
@@ -16,6 +17,8 @@ from .models_utils import (
     ProductInsightFactory,
     clean_db,
 )
+
+DEFAULT_SERVER_TYPE = ServerType.off
 
 
 @pytest.fixture(autouse=True)
@@ -43,12 +46,14 @@ def test_get_image_predictions():
     image_prediction4 = ImagePredictionFactory(image__barcode="123", type="category")
 
     # test with "barcode" filter
-    data = list(get_image_predictions(barcode="123"))
+    data = list(get_image_predictions(DEFAULT_SERVER_TYPE, barcode="123"))
     assert len(data) == 2
     assert prediction_ids(data) == {image_prediction3.id, image_prediction4.id}
 
     # test filter with "barcode" and "with_logo=True"
-    data = list(get_image_predictions(barcode="123", with_logo=True))
+    data = list(
+        get_image_predictions(DEFAULT_SERVER_TYPE, barcode="123", with_logo=True)
+    )
     assert len(data) == 3
     assert prediction_ids(data) == {
         image_prediction1.id,
@@ -57,16 +62,20 @@ def test_get_image_predictions():
     }
 
     # test filter with "with_logo=True"
-    data = list(get_image_predictions(with_logo=True))
+    data = list(get_image_predictions(DEFAULT_SERVER_TYPE, with_logo=True))
     assert len(data) == 4  # we have them all
 
     # test filter with "type=label" and "with_logo=True"
-    data = list(get_image_predictions(type="label", with_logo=True))
+    data = list(
+        get_image_predictions(DEFAULT_SERVER_TYPE, type="label", with_logo=True)
+    )
     assert len(data) == 2
     assert prediction_ids(data) == {image_prediction2.id, image_prediction3.id}
 
     # test filter with "type=label" and "with_logo=False"
-    data = list(get_image_predictions(type="label", with_logo=False))
+    data = list(
+        get_image_predictions(DEFAULT_SERVER_TYPE, type="label", with_logo=False)
+    )
     assert len(data) == 1
     assert prediction_ids(data) == {image_prediction3.id}
 
@@ -85,7 +94,7 @@ def test_get_predictions():
         barcode="456", keep_types="label", value_tag="en:eu-organic"
     )
 
-    actual_prediction1 = get_predictions(barcode="123")
+    actual_prediction1 = get_predictions(DEFAULT_SERVER_TYPE, barcode="123")
     actual_items1 = [item.to_dict() for item in actual_prediction1]
     actual_items1.sort(key=lambda d: d["id"])
     assert len(actual_items1) == 3
@@ -99,12 +108,12 @@ def test_get_predictions():
     assert actual_items1[2]["id"] == prediction3.id
 
     # test that as we have no "brand" prediction, returned list is empty
-    actual_prediction2 = get_predictions(keep_types=["brand"])
+    actual_prediction2 = get_predictions(DEFAULT_SERVER_TYPE, keep_types=["brand"])
     assert list(actual_prediction2) == []
 
     # test that predictions are filtered based on "value_tag=en:eu-organic",
     # returns only "en:eu-organic" predictions
-    actual_prediction3 = get_predictions(value_tag="en:eu-organic")
+    actual_prediction3 = get_predictions(DEFAULT_SERVER_TYPE, value_tag="en:eu-organic")
     actual_items3 = [item.to_dict() for item in actual_prediction3]
     actual_items3.sort(key=lambda d: d["id"])
     assert len(actual_items3) == 2
@@ -116,14 +125,19 @@ def test_get_predictions():
 
     # test that we can filter "barcode", "value_tag", "keep_types" prediction
     actual_prediction4 = get_predictions(
-        barcode="123", value_tag="en:eu-organic", keep_types=["category"]
+        DEFAULT_SERVER_TYPE,
+        barcode="123",
+        value_tag="en:eu-organic",
+        keep_types=["category"],
     )
     actual_items4 = [item.to_dict() for item in actual_prediction4]
     assert actual_items4[0]["id"] == prediction3.id
     assert len(actual_items4) == 1
 
     # test to filter results with "label" and "category" prediction
-    actual_prediction5 = get_predictions(keep_types=["label", "category"])
+    actual_prediction5 = get_predictions(
+        DEFAULT_SERVER_TYPE, keep_types=["label", "category"]
+    )
     actual_items5 = [item.to_dict() for item in actual_prediction5]
     assert len(actual_items5) == 4
 
@@ -137,7 +151,7 @@ def test_get_images():
 
     # test with "barcode" filter
 
-    image_model_data = get_images(barcode="123")
+    image_model_data = get_images(barcode="123", server_type=DEFAULT_SERVER_TYPE)
     image_model_items = [item.to_dict() for item in image_model_data]
 
     assert len(image_model_items) == 1
@@ -145,7 +159,9 @@ def test_get_images():
     assert image_model_items[0]["barcode"] == "123"
 
     # test filter with "barcode" and "with_predictions=True"
-    image_model_data = get_images(barcode="123", with_predictions=True)
+    image_model_data = get_images(
+        barcode="123", with_predictions=True, server_type=DEFAULT_SERVER_TYPE
+    )
     image_model_items = [item.to_dict() for item in image_model_data]
     image_model_items.sort(key=lambda d: d["id"])
     assert len(image_model_items) == 2
@@ -153,7 +169,9 @@ def test_get_images():
     assert image_model_items[1]["id"] == image_model3.id
 
     # test filter with "with_predictions=True"
-    image_model_data = get_images(with_predictions=True)
+    image_model_data = get_images(
+        with_predictions=True, server_type=DEFAULT_SERVER_TYPE
+    )
     image_model_items = [item.to_dict() for item in image_model_data]
     image_model_items.sort(key=lambda d: d["id"])
     assert len(image_model_items) == 3
@@ -162,7 +180,9 @@ def test_get_images():
     assert image_model_items[2]["id"] == image_model3.id
 
     # test filter with "barcode" and "with_predictions=True"
-    image_model_data = get_images(barcode="456", with_predictions=True)
+    image_model_data = get_images(
+        barcode="456", with_predictions=True, server_type=DEFAULT_SERVER_TYPE
+    )
     image_model_items = [item.to_dict() for item in image_model_data]
     assert len(image_model_items) == 1
     assert image_model_items[0]["id"] == image_model2.id
@@ -238,19 +258,19 @@ def test_get_logo_annotation():
 
     # tests for "barcode"
 
-    annotation_data = get_logo_annotation(barcode="123")
+    annotation_data = get_logo_annotation(DEFAULT_SERVER_TYPE, barcode="123")
     annotation_data_items = [item.to_dict() for item in annotation_data]
     assert annotation_data_items[0]["id"] == annotation_123.id
     assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "123"
     assert annotation_data_items[0]["annotation_type"] == "brand"
 
-    annotation_data = get_logo_annotation(barcode="789")
+    annotation_data = get_logo_annotation(DEFAULT_SERVER_TYPE, barcode="789")
     annotation_data_items = [item.to_dict() for item in annotation_data]
     assert annotation_data_items[0]["id"] == annotation_789.id
     assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "789"
     assert annotation_data_items[0]["annotation_type"] == "dairies"
 
-    annotation_data = get_logo_annotation(barcode="396")
+    annotation_data = get_logo_annotation(DEFAULT_SERVER_TYPE, barcode="396")
     annotation_data_items = [item.to_dict() for item in annotation_data]
     assert annotation_data_items[0]["id"] == annotation_396.id
     assert annotation_data_items[0]["image_prediction"]["image"]["barcode"] == "396"
@@ -258,7 +278,7 @@ def test_get_logo_annotation():
 
     # test for "keep_types"
 
-    annotation_data = get_logo_annotation(keep_types=["dairies"])
+    annotation_data = get_logo_annotation(DEFAULT_SERVER_TYPE, keep_types=["dairies"])
     annotation_data_items = [item.to_dict() for item in annotation_data]
     annotation_data_items.sort(key=lambda d: d["id"])
     assert annotation_data_items[0]["annotation_type"] == "dairies"
@@ -267,7 +287,7 @@ def test_get_logo_annotation():
 
     # tests for "value_tag"
 
-    annotation_data = get_logo_annotation(value_tag="cheese")
+    annotation_data = get_logo_annotation(DEFAULT_SERVER_TYPE, value_tag="cheese")
     annotation_data_items = [item.to_dict() for item in annotation_data]
     assert annotation_data_items[0]["id"] == annotation_295.id
     assert annotation_data_items[0]["annotation_value_tag"] == "cheese"

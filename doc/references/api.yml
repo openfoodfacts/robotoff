@@ -5,8 +5,6 @@ info:
     Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.
 
     All endpoints must be prefixed with `/api/v1`. The full URL is `https://robotoff.openfoodfacts.org/api/v1/{endpoint}`.
-
-    Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all environments (production, development, pro). The `server_domain` field should be used to specify the product/environment: `api.openfoodfacts.org` for OFF-prod, `api.openfoodfacts.net` for OFF-dev, `api.openbeautyfacts.org` for OBF-prod,...
   contact: {}
   version: "1.0"
 servers:
@@ -30,7 +28,7 @@ paths:
             default: 1
             minimum: 1
         - $ref: "#/components/parameters/barcode_path"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/lang"
       responses:
         "200":
@@ -57,7 +55,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/brands"
@@ -110,7 +108,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/brands"
@@ -151,7 +149,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/brands"
@@ -180,7 +178,7 @@ paths:
             type: number
             default: 25
             minimum: 1
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/page"
@@ -226,7 +224,7 @@ paths:
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/value_tag"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/predictor"
       responses:
@@ -249,6 +247,7 @@ paths:
       summary: Get all insights for a specific product
       parameters:
         - $ref: "#/components/parameters/barcode_path"
+        - $ref: "#/components/parameters/server_type"
       responses:
         "200":
           description: ""
@@ -330,6 +329,7 @@ paths:
       tags:
         - Insights
       parameters:
+          - $ref: "#/components/parameters/server_type"
           - $ref: "#/components/parameters/value_tag"
           - $ref: "#/components/parameters/insight_types"
           - name: barcode
@@ -450,12 +450,7 @@ paths:
                   format: uri
                   description: URL of the OCR JSON file associated with the image
                 server_domain:
-                  type: string
-                  description: |
-                    The server domain associated with the image/product.
-                    If the server domain does not match with the server configuration,
-                    the import task will be rejected by Robotoff.
-                  example: "api.openfoodfacts.org"
+                  $ref: "#/components/schemas/ServerDomainParameter"
               required:
                 - "barcode"
                 - "image_url"
@@ -472,12 +467,16 @@ paths:
                   status:
                     type: string
                     description: |
-                      status of the import operation, either `scheduled` if it was
-                      successfully scheduled or rejected if the `server_domain` did
-                      not match Robotoff configured server domain.
+                      status of the import operation, always `scheduled`
                     enum:
-                      - "rejected"
                       - "scheduled"
+        "400":
+          description: "HTTP Bad Request error, if the `server_domain` parameter is invalid"
+          content:
+            application/json:
+              schema:
+                type: object
+
 
   /images/logos:
     get:
@@ -517,6 +516,7 @@ paths:
         Search for logos detected using the universal-logo-detector model that 
         meet some criteria (annotation status, annotated, type,...)
       parameters:
+        - $ref: "#/components/parameters/server_type"
         - name: count
           description: Number of results to return
           in: query
@@ -561,11 +561,6 @@ paths:
           schema:
             type: boolean
             default: false
-        - name: server_domain
-          in: query
-          description: The server domain
-          schema:
-            type: string
         - name: annotated
           description: The annotation status of the logo.
             If not provided, both annotated and non-annotated logos are returned
@@ -660,6 +655,17 @@ paths:
                       description: The barcode of the product to categorize
                       minLength: 1
                       example: 0748162621021
+                    server_type:
+                      type: string
+                      description: |
+                        The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+                        Only 'off' is currently supported for category prediction
+                      default: 'off'
+                      enum:
+                        - 'off'
+                        - 'obf'
+                        - 'opff'
+                        - 'opf'
                     deepest_only:
                       type: boolean
                       description: |
@@ -875,6 +881,20 @@ components:
         id: 3cd5aecd-edcc-4237-87d0-6595fc4e53c9
         type: label
         barcode: 9782012805866
+    ServerDomainParameter:
+      description: |
+        The server domain associated with the image/product.
+
+        If the `server_domain` top level domain does not match the server configuration,
+        an HTTP 400 error will be raised
+      type: string
+      example: "api.openfoodfacts.org"
+      enum:
+        - "api.openfoodfacts.org"
+        - "api.openbeautyfacts.org"
+        - "api.openproductfacts.org"
+        - "api.openpetfoodfacts.org"
+        - "api.pro.openfoodfacts.org"
   parameters:
     lang:
       name: lang
@@ -891,13 +911,18 @@ components:
         type: integer
         default: 25
         minimum: 1
-    server_domain:
-      name: server_domain
+    server_type:
+      name: server_type
       in: query
-      description: The server domain
+      description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),... 
       schema:
         type: string
-        default: api.openfoodfacts.org
+        default: 'off'
+        enum:
+          - 'off'
+          - 'obf'
+          - 'opff'
+          - 'opf'
     insight_types:
       name: insight_types
       in: query
