@@ -33,7 +33,13 @@ If you need a call to Product Opener API that is not implemented yet, add it to 
 
 ## Test your predictor
 
-To test your predictor, you can simulate an image import using [POST /api/v1/images/import](https://openfoodfacts.github.io/robotoff/references/api/#tag/Images/paths/~1images~1import/post) endpoint. You can check that:
+To test your predictor, you can simulate an image import using [POST /api/v1/images/import](https://openfoodfacts.github.io/robotoff/references/api/#tag/Images/paths/~1images~1import/post) endpoint. There is a CLI command that does this for you:
+
+```bash
+make robotoff-cli args='import-image-webhook https://images.openfoodfacts.org/images/products/377/001/626/6048/1.jpg'
+```
+
+You can check that:
 
 - the predictor is indeed called
 - it generates predictions/insights and save them in DB when expected
