@@ -84,7 +84,7 @@ en:made-in-germany
 en:made-in-switzerland
 en:made-in-the-eu
 en:australian-made
-en:gluten-free
+en:no-gluten
 en:french-beef
 en:french-pork
 en:no-preservatives
