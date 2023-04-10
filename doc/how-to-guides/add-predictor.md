@@ -31,6 +31,16 @@ To perform some actions when the insight has been annotated and marked as correc
 
 If you need a call to Product Opener API that is not implemented yet, add it to `robotoff.off`.
 
+## Test your predictor
+
+To test your predictor, you can simulate an image import using [POST /api/v1/images/import](https://openfoodfacts.github.io/robotoff/references/api/#tag/Images/paths/~1images~1import/post) endpoint. You can check that:
+
+- the predictor is indeed called
+- it generates predictions/insights and save them in DB when expected
+- no errors occurred (in the logs)
+
+If you add an OCR-only predictor, you should also add unit tests in `tests/unit`. We don't yet have the possibility to perform integration tests on ML models served by Triton though.
+
 That's it, congratulations 🎉!
 
 [^triton]: see `generate_clip_embedding`in robotoff.triton for an example
