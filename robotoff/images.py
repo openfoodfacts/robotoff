@@ -3,23 +3,30 @@ from pathlib import Path
 from typing import Optional
 
 from robotoff.models import ImageModel
-from robotoff.off import generate_image_path, get_server_type
+from robotoff.off import generate_image_path, generate_image_url, get_server_type
 from robotoff.settings import BaseURLProvider
 from robotoff.types import JSONType
-from robotoff.utils import get_logger
+from robotoff.utils import get_image_from_url, get_logger, http_session
 
 logger = get_logger(__name__)
 
 
 def save_image(
-    barcode: str, source_image: str, images: JSONType, server_domain: str
+    barcode: str,
+    source_image: str,
+    image_url: str,
+    images: Optional[JSONType],
+    server_domain: str,
 ) -> Optional[ImageModel]:
     """Save imported image details in DB.
 
     :param barcode: barcode of the product
     :param source_image: source image, in the format '/325/543/254/5234/1.jpg'
+    :param image_url: URL of the image, only used to get image size if images
+        is None
     :param images: image dict mapping image ID to image metadata, as returned
-        by Product Opener API
+        by Product Opener API, is None if product validity check is disabled
+        (`DISABLE_PRODUCT_CHECK=True`)
     :param server_domain: the server domain to use, default to
         BaseURLProvider.server_domain()
     :return: this function return either:
@@ -40,33 +47,44 @@ def save_image(
         logger.info("Non raw image was sent: %s", source_image)
         return None
 
-    if image_id not in images:
-        logger.info("Unknown image for product %s: %s", barcode, source_image)
-        return None
+    if images is not None:
+        if image_id not in images:
+            logger.info("Unknown image for product %s: %s", barcode, source_image)
+            return None
 
-    image = images[image_id]
-    sizes = image.get("sizes", {}).get("full")
+        image = images[image_id]
+        sizes = image.get("sizes", {}).get("full")
 
-    if not sizes:
-        logger.info("Image with missing size information: %s", image)
-        # width and height are non-null fields, so provide default values
-        return None
+        if not sizes:
+            logger.info("Image with missing size information: %s", image)
+            # width and height are non-null fields, so provide default values
+            return None
 
-    width = sizes["w"]
-    height = sizes["h"]
+        width = sizes["w"]
+        height = sizes["h"]
+        uploaded_t = image.get("uploaded_t")
+        if not uploaded_t:
+            logger.info("Missing uploaded_t information: %s", list(image))
 
-    uploaded_t = image.get("uploaded_t")
-    if not uploaded_t:
-        logger.info("Missing uploaded_t information: %s", list(image))
+        elif isinstance(uploaded_t, str) and not uploaded_t.isdigit():
+            logger.info("Non digit uploaded_t value: %s", uploaded_t)
+            uploaded_t = None
+        else:
+            uploaded_t = int(uploaded_t)
 
-    elif isinstance(uploaded_t, str) and not uploaded_t.isdigit():
-        logger.info("Non digit uploaded_t value: %s", uploaded_t)
-        uploaded_t = None
+        if uploaded_t is not None:
+            uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
     else:
-        uploaded_t = int(uploaded_t)
+        uploaded_at = None
+        logger.info("DB Product check disabled, downloading image to get image size")
+        image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
-    if uploaded_t is not None:
-        uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
+        if image is None:
+            logger.info("Could not import image %s in DB", image_url)
+            return None
+
+        width = image.width
+        height = image.height
 
     image_model = ImageModel.create(
         barcode=barcode,
@@ -107,5 +125,6 @@ def refresh_images_in_db(
 
     for missing_image_id in missing_image_ids:
         source_image = generate_image_path(barcode, missing_image_id)
+        image_url = generate_image_url(barcode, missing_image_id)
         logger.debug("Creating missing image %s in DB", source_image)
-        save_image(barcode, source_image, images, server_domain)
+        save_image(barcode, source_image, image_url, images, server_domain)
