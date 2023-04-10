@@ -1,6 +1,7 @@
 from robotoff.insights.importer import refresh_insights
 from robotoff.models import Prediction, ProductInsight, with_db
 from robotoff.products import fetch_dataset, has_dataset_changed
+from robotoff.types import ProductIdentifier
 from robotoff.utils import get_logger
 
 from .import_image import run_import_image_job  # noqa: F401
@@ -18,27 +19,27 @@ def download_product_dataset_job():
 
 
 @with_db
-def delete_product_insights_job(barcode: str, server_domain: str):
+def delete_product_insights_job(product_id: ProductIdentifier):
     """This job is triggered by Product Opener via /api/v1/webhook/product
     when the given product has been removed from the database - in this case
     we must delete all of the associated predictions and insights that have
     not been annotated.
     """
-    logger.info("Product %s deleted, deleting associated insights...", barcode)
+    logger.info("%s deleted, deleting associated insights...", product_id)
     deleted_predictions = (
         Prediction.delete()
         .where(
-            Prediction.barcode == barcode,
-            Prediction.server_domain == server_domain,
+            Prediction.barcode == product_id.barcode,
+            Prediction.server_type == product_id.server_type.name,
         )
         .execute()
     )
     deleted_insights = (
         ProductInsight.delete()
         .where(
-            ProductInsight.barcode == barcode,
+            ProductInsight.barcode == product_id.barcode,
+            ProductInsight.server_type == product_id.server_type.name,
             ProductInsight.annotation.is_null(),
-            ProductInsight.server_domain == server_domain,
         )
         .execute()
     )
@@ -50,11 +51,9 @@ def delete_product_insights_job(barcode: str, server_domain: str):
 
 
 @with_db
-def refresh_insights_job(barcodes: list[str], server_domain: str):
-    logger.info(
-        f"Refreshing insights for {len(barcodes)} products, server_domain: {server_domain}"
-    )
-    for barcode in barcodes:
-        import_results = refresh_insights(barcode, server_domain)
+def refresh_insights_job(product_ids: list[ProductIdentifier]):
+    logger.info(f"Refreshing insights for {len(product_ids)} products")
+    for product_id in product_ids:
+        import_results = refresh_insights(product_id)
         for import_result in import_results:
             logger.info(import_result)

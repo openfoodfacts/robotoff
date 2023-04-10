@@ -5,6 +5,7 @@ from typing import Optional
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import ServerType
 from robotoff.utils import (
     dump_json,
     dump_text,
@@ -98,12 +99,13 @@ def keep_brand_from_taxonomy(
 
 def generate_brand_list(
     threshold: int,
+    server_type: ServerType,
     min_length: Optional[int] = None,
     blacklisted_brands: Optional[set[str]] = None,
 ) -> list[tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
-    url = settings.BaseURLProvider.world() + "/brands.json"
+    url = settings.BaseURLProvider.world(server_type) + "/brands.json"
     brand_count_list = http_session.get(url).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}
@@ -130,7 +132,11 @@ def dump_taxonomy_brands(
     min_length: Optional[int] = None,
     blacklisted_brands: Optional[set[str]] = None,
 ):
-    filtered_brands = generate_brand_list(threshold, min_length, blacklisted_brands)
+    # Only support OFF for now
+    server_type = ServerType.off
+    filtered_brands = generate_brand_list(
+        threshold, server_type, min_length, blacklisted_brands
+    )
     line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 

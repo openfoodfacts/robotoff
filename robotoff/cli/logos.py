@@ -7,6 +7,7 @@ from more_itertools import chunked
 from robotoff.logos import filter_logos
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import generate_image_path
+from robotoff.types import ServerType
 from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
@@ -15,11 +16,12 @@ logger = get_logger(__name__)
 TYPE = "object_detection"
 
 
-def get_seen_set() -> set[tuple[str, str]]:
+def get_seen_set(server_type: ServerType) -> set[tuple[str, str]]:
     seen_set: set[tuple[str, str]] = set()
     for item in (
         ImagePrediction.select(ImagePrediction.model_name, ImageModel.source_image)
         .join(ImageModel)
+        .where(ImageModel.server_type == server_type.name)
         .tuples()
         .iterator()
     ):
@@ -28,10 +30,14 @@ def get_seen_set() -> set[tuple[str, str]]:
 
 
 def import_logos(
-    data_path: pathlib.Path, model_name: str, model_version: str, batch_size: int
+    data_path: pathlib.Path,
+    model_name: str,
+    model_version: str,
+    batch_size: int,
+    server_type: ServerType,
 ) -> int:
     logger.info("Loading seen set...")
-    seen_set = get_seen_set()
+    seen_set = get_seen_set(server_type)
     logger.info("Seen set loaded")
     inserted = 0
 
@@ -48,7 +54,9 @@ def import_logos(
                 if key in seen_set:
                     continue
 
-                image_instance = ImageModel.get_or_none(source_image=source_image)
+                image_instance = ImageModel.get_or_none(
+                    source_image=source_image, server_type=server_type.name
+                )
 
                 if image_instance is None:
                     logger.info("Unknown image in DB: %s", source_image)

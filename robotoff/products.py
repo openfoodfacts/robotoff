@@ -14,11 +14,22 @@ import requests
 from pymongo import MongoClient
 
 from robotoff import settings
-from robotoff.mongo import MONGO_CLIENT_CACHE
-from robotoff.types import JSONType
+from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
 
 logger = get_logger(__name__)
+
+MONGO_SELECTION_TIMEOUT_MS = 10_0000
+
+
+@functools.cache
+def get_mongo_client(server_type: ServerType) -> Optional[MongoClient]:
+    if server_type != ServerType.off:
+        return None
+
+    return MongoClient(
+        settings.MONGO_URI, serverSelectionTimeoutMS=MONGO_SELECTION_TIMEOUT_MS
+    )
 
 
 def get_image_id(image_path: str) -> Optional[str]:
@@ -473,21 +484,31 @@ class MemoryProductStore(ProductStore):
 
 
 class DBProductStore(ProductStore):
-    def __init__(self, client: MongoClient):
+    def __init__(self, server_type: ServerType, client: Optional[MongoClient]):
         self.client = client
-        self.db = self.client.off
-        self.collection = self.db.products
+        self.server_type = server_type
+
+        if self.client is None:
+            self.db = None
+            self.collection = None
+        else:
+            self.db = self.client[server_type.name]
+            self.collection = self.db.products
 
     def __len__(self):
+        if self.collection is None:
+            return 0
         return len(self.collection.estimated_document_count())
 
     def get_product(
-        self, barcode: str, projection: Optional[list[str]] = None
+        self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
     ) -> Optional[JSONType]:
-        return self.collection.find_one({"code": barcode}, projection)
+        if self.collection is None:
+            return None
+        return self.collection.find_one({"code": product_id.barcode}, projection)
 
-    def __getitem__(self, barcode: str) -> Optional[Product]:
-        product = self.get_product(barcode)
+    def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
+        product = self.get_product(product_id)
 
         if product:
             return Product(product)
@@ -495,10 +516,12 @@ class DBProductStore(ProductStore):
         return None
 
     def __iter__(self):
-        yield from self.iter()
+        if self.collection is not None:
+            yield from self.iter()
 
     def iter_product(self, projection: Optional[list[str]] = None):
-        yield from (Product(p) for p in self.collection.find(projection=projection))
+        if self.collection is not None:
+            yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
 @functools.cache
@@ -509,20 +532,19 @@ def get_min_product_store() -> ProductStore:
     return ps
 
 
-def get_product_store() -> DBProductStore:
-    mongo_client = MONGO_CLIENT_CACHE.get()
-    return DBProductStore(client=mongo_client)
+def get_product_store(server_type: ServerType) -> DBProductStore:
+    mongo_client = get_mongo_client(server_type)
+    return DBProductStore(server_type, client=mongo_client)
 
 
 def get_product(
-    barcode: str, projection: Optional[list[str]] = None
+    product_id: ProductIdentifier, projection: Optional[list[str]] = None
 ) -> Optional[JSONType]:
     """Get product from MongoDB.
 
-    :param barcode: barcode of the product to fetch
+    :param product_id: identifier of the product to fetch
     :param projection: list of fields to retrieve, if not provided all fields
     are queried
     :return: the product as a dict or None if it was not found
     """
-    mongo_client = MONGO_CLIENT_CACHE.get()
-    return mongo_client.off.products.find_one({"code": barcode}, projection)
+    return get_product_store(product_id.server_type).get_product(product_id, projection)

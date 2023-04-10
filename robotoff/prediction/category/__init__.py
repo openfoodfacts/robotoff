@@ -2,7 +2,7 @@ import itertools
 from typing import Optional
 
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import JSONType, NeuralCategoryClassifierModel
+from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
 
 from .matcher import predict_by_lang
 from .neural.category_classifier import CategoryClassifier
@@ -10,6 +10,7 @@ from .neural.category_classifier import CategoryClassifier
 
 def predict_category(
     product: dict,
+    product_id: ProductIdentifier,
     neural_predictor: bool,
     matcher_predictor: bool,
     deepest_only: bool,
@@ -45,7 +46,7 @@ def predict_category(
     taxonomy = get_taxonomy(TaxonomyType.category.name)
     if neural_predictor:
         predictions, debug = CategoryClassifier(taxonomy).predict(
-            product, deepest_only, threshold, neural_model_name
+            product, product_id, deepest_only, threshold, neural_model_name
         )
         response["neural"] = {
             "predictions": [

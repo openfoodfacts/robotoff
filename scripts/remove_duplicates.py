@@ -1,6 +1,10 @@
 from peewee import fn
 
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
+from robotoff.types import ServerType
+
+SERVER_TYPE = ServerType.off
+
 
 with db.connection_context():
     with db.atomic():
@@ -10,6 +14,7 @@ with db.connection_context():
                 ImageModel.source_image,
                 fn.COUNT(ImageModel.id).alias("count"),
             )
+            .where(ImageModel.server_type == SERVER_TYPE.name)
             .group_by(ImageModel.source_image)
             .having(fn.COUNT(ImageModel.id) > 1)
             .dicts()
@@ -25,7 +30,10 @@ with db.connection_context():
                 set(
                     item[0]
                     for item in ImageModel.select(ImageModel.id)
-                    .where(ImageModel.source_image == source_image)
+                    .where(
+                        ImageModel.source_image == source_image,
+                        ImageModel.server_type == SERVER_TYPE.name,
+                    )
                     .tuples()
                 )
             )

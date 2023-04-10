@@ -3,39 +3,37 @@ from pathlib import Path
 from typing import Optional
 
 from robotoff.models import ImageModel
-from robotoff.off import generate_image_path, generate_image_url, get_server_type
-from robotoff.settings import BaseURLProvider
-from robotoff.types import JSONType
+from robotoff.off import generate_image_path, generate_image_url
+from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_image_from_url, get_logger, http_session
 
 logger = get_logger(__name__)
 
 
 def save_image(
-    barcode: str,
+    product_id: ProductIdentifier,
     source_image: str,
     image_url: str,
     images: Optional[JSONType],
-    server_domain: str,
 ) -> Optional[ImageModel]:
     """Save imported image details in DB.
 
-    :param barcode: barcode of the product
+    :param product_id: identifier of the product
     :param source_image: source image, in the format '/325/543/254/5234/1.jpg'
     :param image_url: URL of the image, only used to get image size if images
         is None
     :param images: image dict mapping image ID to image metadata, as returned
         by Product Opener API, is None if product validity check is disabled
         (`DISABLE_PRODUCT_CHECK=True`)
-    :param server_domain: the server domain to use, default to
-        BaseURLProvider.server_domain()
     :return: this function return either:
         - the ImageModel of the image if it already exist in DB
         - None if the image is non raw (non-digit image ID), if it's not
           referenced in `images` or if there are no size information
         - the created ImageModel otherwise
     """
-    if existing_image_model := ImageModel.get_or_none(source_image=source_image):
+    if existing_image_model := ImageModel.get_or_none(
+        source_image=source_image, server_type=product_id.server_type.name
+    ):
         logger.info(
             f"Image {source_image} already exist in DB, returning existing image"
         )
@@ -49,7 +47,7 @@ def save_image(
 
     if images is not None:
         if image_id not in images:
-            logger.info("Unknown image for product %s: %s", barcode, source_image)
+            logger.info("Unknown image for %s: %s", product_id, source_image)
             return None
 
         image = images[image_id]
@@ -87,44 +85,42 @@ def save_image(
         height = image.height
 
     image_model = ImageModel.create(
-        barcode=barcode,
+        barcode=product_id.barcode,
         image_id=image_id,
         width=width,
         height=height,
         source_image=source_image,
         uploaded_at=uploaded_at,
-        server_domain=server_domain,
-        server_type=get_server_type(server_domain).name,
+        server_type=product_id.server_type.name,
     )
     if image_model is not None:
         logger.info("New image %s created in DB", image_model.id)
     return image_model
 
 
-def refresh_images_in_db(
-    barcode: str, images: JSONType, server_domain: Optional[str] = None
-):
+def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
     """Make sure all raw images present in `images` exist in DB in image table.
 
-    :param barcode: barcode of the product
+    :param product_id: identifier of the product
     :param images: image dict mapping image ID to image metadata, as returned
         by Product Opener API
-    :param server_domain: the server domain to use, default to
-        BaseURLProvider.server_domain()
     """
-    server_domain = server_domain or BaseURLProvider.server_domain()
     image_ids = [image_id for image_id in images.keys() if image_id.isdigit()]
     existing_image_ids = set(
         image_id
         for (image_id,) in ImageModel.select(ImageModel.image_id)
-        .where(ImageModel.barcode == barcode, ImageModel.image_id.in_(image_ids))
+        .where(
+            ImageModel.barcode == product_id.barcode,
+            ImageModel.server_type == product_id.server_type.name,
+            ImageModel.image_id.in_(image_ids),
+        )
         .tuples()
         .iterator()
     )
     missing_image_ids = set(image_ids) - existing_image_ids
 
     for missing_image_id in missing_image_ids:
-        source_image = generate_image_path(barcode, missing_image_id)
-        image_url = generate_image_url(barcode, missing_image_id)
+        source_image = generate_image_path(product_id.barcode, missing_image_id)
+        image_url = generate_image_url(product_id, missing_image_id)
         logger.debug("Creating missing image %s in DB", source_image)
-        save_image(barcode, source_image, image_url, images, server_domain)
+        save_image(product_id, source_image, image_url, images)

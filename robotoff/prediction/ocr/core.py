@@ -4,7 +4,7 @@ from typing import Callable, Iterable, Optional, TextIO, Union
 
 import requests
 
-from robotoff.types import JSONType, Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType, ProductIdentifier
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 
 from .brand import find_brands
@@ -89,22 +89,27 @@ def get_ocr_result(
 def extract_predictions(
     content: Union[OCRResult, str],
     prediction_type: PredictionType,
-    barcode: Optional[str] = None,
+    product_id: Optional[ProductIdentifier] = None,
     source_image: Optional[str] = None,
 ) -> list[Prediction]:
     """Extract predictions from OCR using for provided prediction type.
 
     :param content: OCR output to extract predictions from.
-    :param barcode: Barcode to add to each prediction, defaults to None.
+    :param prediction_type: type of the prediction to extract.
+    :param product_id: identifier of the product (barcode + server type) to
+        add to each prediction, defaults to None.
     :param source_image: `source_image`to add to each prediction, defaults to
-    None.
+        None.
     :return: The generated predictions.
     """
     if prediction_type in PREDICTION_TYPE_TO_FUNC:
         predictions = PREDICTION_TYPE_TO_FUNC[prediction_type](content)
         for prediction in predictions:
-            prediction.barcode = barcode
             prediction.source_image = source_image
+            if product_id is not None:
+                prediction.barcode = product_id.barcode
+                prediction.server_type = product_id.server_type
+
         return predictions
     else:
         raise ValueError(f"unknown prediction type: {prediction_type}")

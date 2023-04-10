@@ -7,6 +7,7 @@ from robotoff.types import (
     NeuralCategoryClassifierModel,
     Prediction,
     PredictionType,
+    ProductIdentifier,
 )
 from robotoff.utils import get_logger
 
@@ -16,7 +17,11 @@ logger = get_logger(__name__)
 
 
 def create_prediction(
-    category: str, confidence: float, model_version: str, **kwargs
+    category: str,
+    confidence: float,
+    model_version: str,
+    product_id: ProductIdentifier,
+    **kwargs
 ) -> Prediction:
     """Create a Prediction.
 
@@ -35,6 +40,8 @@ def create_prediction(
         automatic_processing=False,
         predictor="neural",
         confidence=confidence,
+        barcode=product_id.barcode,
+        server_type=product_id.server_type,
     )
 
 
@@ -53,6 +60,7 @@ class CategoryClassifier:
     def predict(
         self,
         product: dict,
+        product_id: ProductIdentifier,
         deepest_only: bool = False,
         threshold: Optional[float] = None,
         model_name: Optional[NeuralCategoryClassifierModel] = None,
@@ -115,7 +123,7 @@ class CategoryClassifier:
                 # Otherwise we fetch OCR texts from Product Opener
                 # Only fetch OCR texts if it's required by the model
                 ocr_texts = (
-                    keras_category_classifier_3_0.fetch_ocr_texts(product)
+                    keras_category_classifier_3_0.fetch_ocr_texts(product, product_id)
                     if keras_category_classifier_3_0.model_input_flags[model_name].get(
                         "add_ingredients_ocr_tags", True
                     )
@@ -126,7 +134,7 @@ class CategoryClassifier:
             triton_stub = get_triton_inference_stub()
             image_embeddings = (
                 keras_category_classifier_3_0.generate_image_embeddings(
-                    product, triton_stub
+                    product, product_id, triton_stub
                 )
                 if keras_category_classifier_3_0.model_input_flags[model_name].get(
                     "add_image_embeddings", True
@@ -173,6 +181,7 @@ class CategoryClassifier:
                     category_id,
                     score,
                     model_name.value,
+                    product_id=product_id,
                     above_threshold=above_threshold,
                     # We need to set a higher priority (=lower digit) if
                     # above_threshold is True, as otherwise a deepest

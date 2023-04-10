@@ -1,7 +1,7 @@
 import pytest
 
 from robotoff.logos import compute_iou, generate_prediction
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType, ServerType
 
 
 @pytest.mark.parametrize(
@@ -61,7 +61,12 @@ def test_generate_prediction(
 ):
     assert (
         generate_prediction(
-            logo_type, logo_value, data, confidence, automatic_processing
+            logo_type,
+            logo_value,
+            data,
+            confidence,
+            ServerType.off,
+            automatic_processing,
         )
         == prediction
     )

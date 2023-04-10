@@ -3,8 +3,10 @@ import pytest
 
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.triton import serialize_byte_tensor
+from robotoff.types import ProductIdentifier, ServerType
 
 MODEL_VERSION = "category-classifier"
+DEFAULT_PRODUCT_ID = ProductIdentifier("123", ServerType.off)
 
 
 class GRPCResponse:
@@ -45,7 +47,7 @@ def test_predict_ingredients_only(mocker, data, category_taxonomy):
         return_value=MockStub(GRPCResponse(["en:meats"], [0.99])),
     )
     classifier = CategoryClassifier(category_taxonomy)
-    predictions, debug = classifier.predict(data)
+    predictions, debug = classifier.predict(data, DEFAULT_PRODUCT_ID)
     assert debug == {
         "inputs": {
             "ingredients_tags": [""],
@@ -102,6 +104,7 @@ def test_predict(
     )
     predictions, _ = classifier.predict(
         {"ingredients_tags": ["ingredient1"], "product_name": "Test Product"},
+        DEFAULT_PRODUCT_ID,
         deepest_only,
     )
 

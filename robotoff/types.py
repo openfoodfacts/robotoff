@@ -151,6 +151,35 @@ class InsightType(str, enum.Enum):
     nutrition_table_structure = "nutrition_table_structure"
 
 
+class ServerType(enum.Enum):
+    off = "openfoodfacts"
+    obf = "openbeautyfacts"
+    opff = "openpetfoodfacts"
+    opf = "openproductfacts"
+    off_pro = "openfoodfacts"
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    @classmethod
+    def get_from_server_domain(cls, server_domain: str) -> "ServerType":
+        subdomain, base_domain, tld = server_domain.rsplit(".", maxsplit=2)
+
+        if subdomain == "api.pro":
+            if base_domain == "openfoodfacts":
+                return cls.off_pro
+            raise ValueError("pro platform is only available for Open Food Facts")
+
+        for server_type in cls:
+            if base_domain == server_type.value:
+                return server_type
+
+        raise ValueError(f"no ServerType matched for server_domain {server_domain}")
+
+
 @dataclasses.dataclass
 class Prediction:
     type: PredictionType
@@ -162,9 +191,9 @@ class Prediction:
     barcode: Optional[str] = None
     timestamp: Optional[datetime.datetime] = None
     source_image: Optional[str] = None
-    server_domain: Optional[str] = None
     id: Optional[int] = None
     confidence: Optional[float] = None
+    server_type: ServerType = ServerType.off
 
     def to_dict(self) -> dict[str, Any]:
         return dataclasses.asdict(self, dict_factory=dict_factory)
@@ -173,10 +202,29 @@ class Prediction:
 def dict_factory(*args, **kwargs):
     d = dict(*args, **kwargs)
     for key, value in d.items():
-        if isinstance(value, PredictionType):
+        if isinstance(value, (PredictionType, ServerType)):
             d[key] = value.name
 
     return d
+
+
+@dataclasses.dataclass
+class ProductIdentifier:
+    """Dataclass to uniquely identify a product across all Open*Facts
+    projects, with:
+
+    - the product barcode
+    - the project specified by the ServerType
+    """
+
+    barcode: str
+    server_type: ServerType
+
+    def __repr__(self) -> str:
+        return "<Product %s | %s>" % (self.barcode, self.server_type.name)
+
+    def __hash__(self) -> int:
+        return hash((self.barcode, self.server_type))
 
 
 @enum.unique
@@ -190,7 +238,7 @@ class ProductInsightImportResult:
     insight_created_ids: list[uuid.UUID]
     insight_updated_ids: list[uuid.UUID]
     insight_deleted_ids: list[uuid.UUID]
-    barcode: str
+    product_id: ProductIdentifier
     type: InsightType
 
 
@@ -198,6 +246,7 @@ class ProductInsightImportResult:
 class PredictionImportResult:
     created: int
     barcode: str
+    server_type: ServerType
 
 
 @dataclasses.dataclass

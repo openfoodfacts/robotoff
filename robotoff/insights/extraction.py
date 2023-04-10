@@ -11,7 +11,12 @@ from robotoff.prediction.object_detection import (
     ObjectDetectionModelRegistry,
 )
 from robotoff.prediction.ocr.core import get_ocr_result
-from robotoff.types import ObjectDetectionModel, Prediction, PredictionType
+from robotoff.types import (
+    ObjectDetectionModel,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+)
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -92,12 +97,12 @@ def run_object_detection_model(
 
 
 def get_predictions_from_product_name(
-    barcode: str, product_name: str
+    product_id: ProductIdentifier, product_name: str
 ) -> list[Prediction]:
     predictions_all = []
     for prediction_type in PRODUCT_NAME_PREDICTION_TYPES:
         predictions = ocr.extract_predictions(
-            product_name, prediction_type, barcode=barcode
+            product_name, prediction_type, product_id=product_id
         )
         for prediction in predictions:
             prediction.data["source"] = "product_name"
@@ -110,7 +115,9 @@ def get_predictions_from_product_name(
 
 
 def extract_ocr_predictions(
-    barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
+    product_id: ProductIdentifier,
+    ocr_url: str,
+    prediction_types: Iterable[PredictionType],
 ) -> list[Prediction]:
     logger.info("Generating OCR predictions from OCR %s", ocr_url)
 
@@ -123,7 +130,10 @@ def extract_ocr_predictions(
 
     for prediction_type in prediction_types:
         predictions_all += ocr.extract_predictions(
-            ocr_result, prediction_type, barcode=barcode, source_image=source_image
+            ocr_result,
+            prediction_type,
+            product_id=product_id,
+            source_image=source_image,
         )
 
     return predictions_all

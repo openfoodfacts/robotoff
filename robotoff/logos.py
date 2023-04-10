@@ -26,6 +26,7 @@ from robotoff.types import (
     LogoLabelType,
     Prediction,
     PredictionType,
+    ServerType,
 )
 from robotoff.utils import get_logger
 from robotoff.utils.text import get_tag
@@ -301,8 +302,8 @@ def get_weights(dist: np.ndarray, weights: str = "uniform"):
 
 def import_logo_insights(
     logos: list[LogoAnnotation],
-    server_domain: str,
     thresholds: dict[LogoLabelType, float],
+    server_type: ServerType,
     default_threshold: float = 0.1,
     notify: bool = True,
 ) -> InsightImportResult:
@@ -342,8 +343,8 @@ def import_logo_insights(
         # Add a filter on barcode to speed-up filtering
         & (PredictionModel.barcode.in_([logo.barcode for logo in logos]))
     ).execute()
-    predictions = predict_logo_predictions(selected_logos, logo_probs)
-    import_result = import_insights(predictions, server_domain)
+    predictions = predict_logo_predictions(selected_logos, logo_probs, server_type)
+    import_result = import_insights(predictions, server_type)
 
     if notify:
         for logo, probs in zip(selected_logos, logo_probs):
@@ -353,7 +354,7 @@ def import_logo_insights(
 
 
 def generate_insights_from_annotated_logos_job(
-    logo_ids: list[int], server_domain: str, auth: OFFAuthentication
+    logo_ids: list[int], auth: OFFAuthentication, server_type: ServerType
 ):
     """Wrap generate_insights_from_annotated_logos function into a python-rq
     compatible job."""
@@ -361,11 +362,11 @@ def generate_insights_from_annotated_logos_job(
         logos = list(LogoAnnotation.select().where(LogoAnnotation.id.in_(logo_ids)))
 
         if logos:
-            generate_insights_from_annotated_logos(logos, server_domain, auth)
+            generate_insights_from_annotated_logos(logos, auth, server_type)
 
 
 def generate_insights_from_annotated_logos(
-    logos: list[LogoAnnotation], server_domain: str, auth: OFFAuthentication
+    logos: list[LogoAnnotation], auth: OFFAuthentication, server_type: ServerType
 ) -> int:
     """Generate and apply insights from annotated logos."""
     predictions = []
@@ -381,6 +382,7 @@ def generate_insights_from_annotated_logos(
                 "is_annotation": True,  # it's worth restating it
             },
             confidence=1.0,
+            server_type=server_type,
         )
 
         if prediction is None:
@@ -390,7 +392,7 @@ def generate_insights_from_annotated_logos(
         prediction.source_image = logo.source_image
         predictions.append(prediction)
 
-    import_result = import_insights(predictions, server_domain)
+    import_result = import_insights(predictions, server_type)
     if import_result.created_predictions_count():
         logger.info(import_result)
 
@@ -399,10 +401,12 @@ def generate_insights_from_annotated_logos(
         insight_import_result.insight_created_ids
         for insight_import_result in import_result.product_insight_import_results
     ):
-        insight = ProductInsight.get_or_none(id=created_id)
+        insight: Optional[ProductInsight] = ProductInsight.get_or_none(id=created_id)
         if insight:
             logger.info(
-                "Annotating insight %s (product: %s)", insight.id, insight.barcode
+                "Annotating insight %s (%s)",
+                insight.id,
+                insight.get_product_id(),
             )
             annotation_result = annotate(insight, 1, auth=auth)
             annotated += int(annotation_result == UPDATED_ANNOTATION_RESULT)
@@ -411,7 +415,9 @@ def generate_insights_from_annotated_logos(
 
 
 def predict_logo_predictions(
-    logos: list[LogoAnnotation], logo_probs: list[dict[LogoLabelType, float]]
+    logos: list[LogoAnnotation],
+    logo_probs: list[dict[LogoLabelType, float]],
+    server_type: ServerType,
 ) -> list[Prediction]:
     predictions = []
 
@@ -436,6 +442,7 @@ def predict_logo_predictions(
                 "logo_id": logo.id,
                 "bounding_box": logo.bounding_box,
             },
+            server_type=server_type,
         )
 
         if prediction is not None:
@@ -451,6 +458,7 @@ def generate_prediction(
     logo_value: Optional[str],
     data: dict,
     confidence: float,
+    server_type: ServerType,
     automatic_processing: Optional[bool] = False,
 ) -> Optional[Prediction]:
     """Generate a Prediction from a logo.
@@ -485,10 +493,13 @@ def generate_prediction(
         predictor="universal-logo-detector",
         data=data,
         confidence=confidence,
+        server_type=server_type,
     )
 
 
-def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
+def refresh_nearest_neighbors(
+    server_type: ServerType, day_offset: int = 7, batch_size: int = 500
+):
     """Refresh each logo nearest neighbors if the last refresh is more than
     `day_offset` days old."""
     sql_query = """
@@ -527,10 +538,7 @@ def refresh_nearest_neighbors(day_offset: int = 7, batch_size: int = 500):
             else:
                 logos = [embedding.logo for embedding in logo_embeddings]
                 import_logo_insights(
-                    logos,
-                    thresholds=thresholds,
-                    server_domain=settings.BaseURLProvider.server_domain(),
-                    notify=False,
+                    logos, thresholds=thresholds, server_type=server_type, notify=False
                 )
 
     logger.info("refresh of logo nearest neighbors finished")
