@@ -38,7 +38,7 @@ services:
     deploy:
       mode: replicated
       # Only 1 replica is easier to deal with for local dev
-      replicas: 1
+      replicas: 0
   worker_low:
     <<: *robotoff-dev
     deploy:
