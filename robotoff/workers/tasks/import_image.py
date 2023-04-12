@@ -61,7 +61,7 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
     logger.info("Running `import_image` for %s, image %s", product_id, image_url)
     source_image = get_source_from_url(image_url)
     product = get_product_store(product_id.server_type)[product_id]
-    if product is None and not settings.DISABLE_PRODUCT_CHECK:
+    if product is None and settings.ENABLE_PRODUCT_CHECK:
         logger.info(
             "%s does not exist during image import (%s)",
             product_id,
@@ -165,7 +165,7 @@ def save_image_job(batch: list[tuple[ProductIdentifier, str]], server_type: Serv
     with db.connection_context():
         for product_id, source_image in batch:
             product = product_store[product_id]
-            if product is None and not settings.DISABLE_PRODUCT_CHECK:
+            if product is None and settings.ENABLE_PRODUCT_CHECK:
                 continue
 
             with db.atomic():

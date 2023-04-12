@@ -368,9 +368,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         product = product_store[product_id]
         references = get_existing_insight(cls.get_type(), product_id)
 
-        # If `DISABLE_PRODUCT_CHECK` is False (default, production settings), we
+        # If `ENABLE_PRODUCT_CHECK` is True (default, production settings), we
         # stop the import process and delete all associated insights
-        if product is None and not settings.DISABLE_PRODUCT_CHECK:
+        if product is None and settings.ENABLE_PRODUCT_CHECK:
             logger.info("%s not found in DB, deleting existing insights", product_id)
             return [], [], references
 
@@ -1416,7 +1416,7 @@ def import_predictions(
         for p in predictions
         if (
             # If product validity check is disable, all predictions are valid
-            settings.DISABLE_PRODUCT_CHECK
+            not settings.ENABLE_PRODUCT_CHECK
             or is_valid_product_prediction(p, product_store[ProductIdentifier(p.barcode, server_type)])  # type: ignore
         )
     ]
