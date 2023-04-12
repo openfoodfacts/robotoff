@@ -24,7 +24,7 @@ def save_image(
         is None
     :param images: image dict mapping image ID to image metadata, as returned
         by Product Opener API, is None if product validity check is disabled
-        (`DISABLE_PRODUCT_CHECK=True`)
+        (`ENABLE_PRODUCT_CHECK=False`)
     :return: this function return either:
         - the ImageModel of the image if it already exist in DB
         - None if the image is non raw (non-digit image ID), if it's not
@@ -74,6 +74,10 @@ def save_image(
             uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
     else:
         uploaded_at = None
+        # DB product check is disabled which means we shouldn't rely on having
+        # a MongoDB instance running. As image size information is stored in
+        # MongoDB (in the `images` field), we download the image to know the image
+        # size
         logger.info("DB Product check disabled, downloading image to get image size")
         image = get_image_from_url(image_url, error_raise=False, session=http_session)
 

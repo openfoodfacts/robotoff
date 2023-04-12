@@ -9,7 +9,7 @@ from robotoff.taxonomy import Taxonomy
 
 @pytest.fixture(autouse=True)
 def set_global_settings(mocker):
-    mocker.patch("robotoff.settings.DISABLE_PRODUCT_CHECK", False)
+    mocker.patch("robotoff.settings.ENABLE_PRODUCT_CHECK", True)
 
 
 @pytest.fixture(scope="session", autouse=True)
