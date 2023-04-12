@@ -116,6 +116,7 @@ def generate_image_embeddings(
     cached and newly-computed embeddings are concatenated and returned.
 
     :param product: product data
+    :param product_id: identifier of the product
     :param stub: the triton inference stub to use
     :return: None if no image was available or a numpy array of shape
         (num_images, IMAGE_EMBEDDING_DIM)

@@ -32,6 +32,7 @@ def predict_category(
         least `product_name` and `ingredients_tags` fields for neural
         predictor and `product_name_{lang}` and `languages_codes` for matching
         predictor
+    :param product_id: identifier of the product
     :param neural_predictor: if True, add predictions of the neural predictor
     :param matcher_predictor: if True, add predictions of the matcher
         predictor
