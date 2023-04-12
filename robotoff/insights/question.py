@@ -28,7 +28,7 @@ def generate_selected_images(
     Opener API.
 
     :param images: the `images` data of the product
-    :param product_id: the server type (project) of the product
+    :param product_id: identifier of the product
     :return: the `selected_images` data
     """
     selected_images: dict[str, dict[str, dict[str, str]]] = {
@@ -240,7 +240,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
         Opener API.
 
         :param images: the `images` data of the product
-        :param product_id: the server type (project) of the product
+        :param product_id: identifier of the product
         :return: the `selected_images` data
         """
         selected_images: dict[str, dict[str, dict[str, str]]] = {

@@ -32,6 +32,7 @@ def create_prediction(
     :param model_version: version of the model, see
         NeuralCategoryClassifierModel values for possible values.
         ex: `keras-image-embeddings-3.0`
+    :param product_id: identifier of the product
     """
     return Prediction(
         type=PredictionType.category,
@@ -70,6 +71,7 @@ class CategoryClassifier:
 
         :param product: the product to predict the categories from, should
             have at least `product_name` and `ingredients_tags` fields
+        :param product_id: identifier of the product
         :param deepest_only: controls whether the returned list should only
             contain the deepmost categories for a predicted taxonomy chain.
 
