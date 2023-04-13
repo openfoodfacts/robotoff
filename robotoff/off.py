@@ -2,7 +2,7 @@
 """
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -681,6 +681,39 @@ def select_rotate_image(
     )
 
     r.raise_for_status()
+    return r
+
+
+def send_image(
+    product_id: ProductIdentifier,
+    image_field: str,
+    image_fp,
+    auth: Optional[OFFAuthentication] = None,
+):
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
+    url = f"{base_url}/cgi/product_image_upload.pl"
+
+    form_data: dict[str, tuple[Optional[str], Any]] = {}
+
+    if auth is not None and auth.username and auth.password:
+        user_id = auth.username
+        password = auth.password
+    else:
+        credentials = off_credentials()
+        user_id = credentials["user_id"]
+        password = credentials["password"]
+
+    form_data["user_id"] = (None, user_id)
+    form_data["password"] = (None, password)
+    form_data["code"] = (None, product_id.barcode)
+    form_data["imagefield"] = (None, image_field)
+    form_data[f"imgupload_{image_field}"] = ("image.jpg", image_fp)
+
+    r = http_session.post(
+        url,
+        auth=settings._off_request_auth,
+        files=form_data,
+    )
     return r
 
 
