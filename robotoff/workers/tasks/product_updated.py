@@ -64,8 +64,7 @@ def add_category_insight(product_id: ProductIdentifier, product: JSONType):
     """Predict categories for product and import predicted category insight.
 
     :param product_id: identifier of the product
-    :param product: product as retrieved from application
-    :return: True if at least one category insight was imported
+    :param product: product as retrieved from MongoDB
     """
     logger.info("Predicting product categories...")
     # predict category using matching algorithm on product name
@@ -97,6 +96,12 @@ def add_category_insight(product_id: ProductIdentifier, product: JSONType):
 def updated_product_predict_insights(
     product_id: ProductIdentifier, product: JSONType
 ) -> None:
+    """Predict and import category insights and insights-derived from product
+    name.
+
+    :param product_id: identifier of the product
+    :param product: product as retrieved from MongoDB
+    """
     add_category_insight(product_id, product)
     product_name = product.get("product_name")
 

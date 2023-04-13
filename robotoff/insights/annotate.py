@@ -1,3 +1,15 @@
+"""
+This file allows to annotate products.
+
+To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
+
+    from robotoff.insights.annotate import annotate
+    annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[dict] = None, auth: Optional[OFFAuthentication] = None)
+
+
+If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
+"""
+
 import abc
 import datetime
 from dataclasses import dataclass
@@ -25,17 +37,6 @@ from robotoff.off import (
 from robotoff.products import get_image_id, get_product
 from robotoff.types import InsightType
 from robotoff.utils import get_logger
-
-"""
-This file allows to annotate products.
-
-To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
-    from robotoff.insights.annotate import annotate
-    annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[dict] = None, auth: Optional[OFFAuthentication] = None)
-
-If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
-"""
-
 
 logger = get_logger(__name__)
 

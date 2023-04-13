@@ -190,7 +190,7 @@ def is_reserved_barcode(barcode: str) -> bool:
 def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight]:
     """Sort candidates by priority, using as keys:
 
-    - priority, specified by data["priority"], candidate with lowest priority
+    - priority, specified by `data["priority"]`, candidate with lowest priority
       values (high priority) come first
     - source image upload datetime (most recent first): images IDs are
       auto-incremented integers, so the most recent images have the highest IDs.
@@ -455,10 +455,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
         product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
-        """From a list of Predictions associated with a product, yield
-        candidate ProductInsights for import.
+        """From a list of `Prediction`s associated with a product, yield
+        candidate `ProductInsight`s for import.
 
-        The types of all Predictions must be a subset of the required types
+        The types of all `Prediction`s must be a subset of the required types
         available by calling `InsightImporter.get_required_prediction_types`.
         This method must be implemented in subclasses.
 
@@ -479,11 +479,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
         list[ProductInsight],
     ]:
         """Return a tuple containing:
-        - a list of ProductInsight to create
-        - a list of ProductInsight to update, as (insight, reference_insight)
+
+        - a list of `ProductInsight` to create
+        - a list of `ProductInsight` to update, as (`insight`, `reference_insight`)
           tuples, where `insight` is the candidate and `reference_insight` is
           the insight already in DB
-        - a list of ProductInsight to delete
+        - a list of `ProductInsight` to delete
 
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
@@ -560,7 +561,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     ) -> list[ProductInsight]:
         """Sort candidates by priority, using as keys:
 
-        - priority, specified by data["priority"], candidate with lowest priority
+        - priority, specified by `data["priority"]`, candidate with lowest priority
         values (high priority) come first
         - source image upload datetime (most recent first): images IDs are
         auto-incremented integers, so the most recent images have the highest IDs.
@@ -597,12 +598,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def is_conflicting_insight(
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
-        """Return True if a candidate ProductInsight conflicts with an
+        """Return `True` if a candidate `ProductInsight` conflicts with an
         existing or another candidate insight, in which case the candidate
         insight won't be imported.
 
-        :param candidate: The candidate ProductInsight to import
-        :param reference: A ProductInsight, either another candidate or an
+        :param candidate: The candidate `ProductInsight` to import
+        :param reference: A `ProductInsight`, either another candidate or an
         insight that exists in DB
         """
         pass
@@ -614,7 +615,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
         product: Optional[Product],
         timestamp: datetime.datetime,
     ):
-        """Add mandatory insight fields."""
+        """Add mandatory insight fields (`id`, `timestamp`,
+        `automatic_processing`,...).
+
+        :param insight: the insight to update
+        :param product: the `Product` associated with the insight
+        :param timestamp: insight creation datetime
+        """
         barcode = insight.barcode
         insight.reserved_barcode = is_reserved_barcode(barcode)
         insight.id = str(uuid.uuid4())

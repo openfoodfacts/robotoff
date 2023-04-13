@@ -280,7 +280,6 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
 
     :param product_id: identifier of the product
     :param image_url: URL of the image to use
-    :param server_domain: The server domain associated with the image
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
