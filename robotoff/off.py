@@ -506,8 +506,6 @@ def delete_image_pipeline(
     :param product_id: identifier of the product
     :param image_id: ID of the image to delete (number)
     :param auth: user authentication data
-    :param server_domain: the server domain to use, default to
-        BaseURLProvider.server_domain()
     """
     product = get_product(product_id, ["images"])
 
@@ -552,8 +550,6 @@ def unselect_image(
     :param product_id: identifier of the product
     :param image_field: field name of the image to unselect, ex: front_fr
     :param auth: user authentication data
-    :param server_domain: the server domain to use, default to
-        BaseURLProvider.server_domain()
     :param timeout: request timeout value in seconds, defaults to 15s
     :return: the request Response
     """
