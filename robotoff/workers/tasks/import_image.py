@@ -385,13 +385,13 @@ def process_created_logos(image_prediction_id: int, server_type: ServerType):
 
     es_client = get_es_client()
     try:
-        add_logos_to_ann(es_client, logo_embeddings)
+        add_logos_to_ann(es_client, logo_embeddings, server_type)
     except BulkIndexError as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
 
     try:
-        save_nearest_neighbors(es_client, logo_embeddings)
+        save_nearest_neighbors(es_client, logo_embeddings, server_type)
     except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during ANN batch query", exc_info=e)
         return

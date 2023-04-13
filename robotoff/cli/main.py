@@ -485,9 +485,12 @@ def init_elasticsearch(load_data: bool = True) -> None:
 
 @app.command()
 def add_logo_to_ann(
+    server_type: ServerType = typer.Option(
+        ServerType.off, help="Server type of the logos"
+    ),
     sleep_time: float = typer.Option(
         0.0, help="Time to sleep between each query (in s)"
-    )
+    ),
 ) -> None:
     """Index all missing logos in Elasticsearch ANN index."""
     import logging
@@ -522,7 +525,7 @@ def add_logo_to_ann(
         )
         for logo_embedding_batch in chunked(logo_embedding_iter, 500):
             try:
-                add_logos_to_ann(es_client, logo_embedding_batch)
+                add_logos_to_ann(es_client, logo_embedding_batch, server_type)
                 added += len(logo_embedding_batch)
             except BulkIndexError as e:
                 logger.info("Request error during logo addition to ANN", exc_info=e)

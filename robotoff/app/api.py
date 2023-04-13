@@ -972,6 +972,7 @@ class ANNResource:
         - a specific logo otherwise
         """
         count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
+        server_type = get_server_type_from_req(req)
 
         if logo_id is None:
             logo_embeddings = list(
@@ -993,7 +994,9 @@ class ANNResource:
 
         raw_results = [
             item
-            for item in knn_search(es_client, logo_embedding.embedding, count)
+            for item in knn_search(
+                es_client, logo_embedding.embedding, count, server_type=server_type
+            )
             if item[0] != logo_id
         ][:count]
         results = [{"logo_id": item[0], "distance": item[1]} for item in raw_results]

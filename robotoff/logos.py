@@ -123,9 +123,18 @@ def get_stored_logo_ids(es_client: elasticsearch.Elasticsearch) -> set[int]:
 
 
 def add_logos_to_ann(
-    es_client: elasticsearch.Elasticsearch, logo_embeddings: list[LogoEmbedding]
+    es_client: elasticsearch.Elasticsearch,
+    logo_embeddings: list[LogoEmbedding],
+    server_type: ServerType,
 ) -> None:
-    """Index logo embeddings in Elasticsearch ANN index."""
+    """Index logo embeddings in Elasticsearch ANN index.
+
+    :param es_client: Elasticsearch client
+    :param logo_embeddings: a list of `LogoEmbedding`s model instances, the
+        fields `logo_id` and `embedding` should be available
+    :param server_type: the server type (project) associated with the logo
+        embeddings
+    """
     embeddings = [
         np.frombuffer(logo_embedding.embedding, dtype=np.float32)
         for logo_embedding in logo_embeddings
@@ -135,6 +144,7 @@ def add_logos_to_ann(
             "_index": ElasticSearchIndex.logo.name,
             "_id": logo_embedding.logo_id,
             "embedding": embedding / np.linalg.norm(embedding),
+            "server_type": server_type.name,
         }
         for logo_embedding, embedding in zip(logo_embeddings, embeddings)
     )
@@ -142,13 +152,18 @@ def add_logos_to_ann(
 
 
 def save_nearest_neighbors(
-    es_client: elasticsearch.Elasticsearch, logo_embeddings: list[LogoEmbedding]
+    es_client: elasticsearch.Elasticsearch,
+    logo_embeddings: list[LogoEmbedding],
+    server_type: ServerType,
 ) -> None:
     """Save nearest neighbors of a batch of logo embedding."""
     updated = []
     for logo_embedding in logo_embeddings:
         results = knn_search(
-            es_client, logo_embedding.embedding, settings.K_NEAREST_NEIGHBORS
+            es_client,
+            logo_embedding.embedding,
+            settings.K_NEAREST_NEIGHBORS,
+            server_type,
         )
         results = [item for item in results if item[0] != logo_embedding.logo_id][
             : settings.K_NEAREST_NEIGHBORS
@@ -171,8 +186,19 @@ def knn_search(
     client: elasticsearch.Elasticsearch,
     embedding_bytes: bytes,
     k: int = settings.K_NEAREST_NEIGHBORS,
+    server_type: Optional[ServerType] = None,
 ) -> list[tuple[int, float]]:
-    """Search for k approximate nearest neighbors of embedding_bytes in the elasticsearch logos index."""
+    """Search for k approximate nearest neighbors of `embedding_bytes` in the
+    Elasticsearch logos index.
+
+    :param client: Elasticsearch client
+    :param embedding_bytes: 1d array of the logo embedding serialized using
+        `numpy.tobytes()`
+    :param k: number of nearest neighbors to return, defaults to
+        `settings.K_NEAREST_NEIGHBORS`
+    :param server_type: the server type (project) associated with the logos
+        to be returned. If not provided, logos from all projects are returned.
+    """
     embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
     knn_body = {
         "field": "embedding",
@@ -180,6 +206,9 @@ def knn_search(
         "k": k + 1,
         "num_candidates": k + 1,
     }
+
+    if server_type is not None:
+        knn_body["filter"] = {"term": {"server_type": server_type.name}}
 
     results = client.search(
         index=ElasticSearchIndex.logo, knn=knn_body, source=False, size=k + 1
@@ -529,7 +558,7 @@ def refresh_nearest_neighbors(
                 .where(LogoEmbedding.logo_id.in_(logo_id_batch))
             )
             try:
-                save_nearest_neighbors(es_client, logo_embeddings)
+                save_nearest_neighbors(es_client, logo_embeddings, server_type)
             except (
                 elasticsearch.ConnectionError,
                 elasticsearch.ConnectionTimeout,
