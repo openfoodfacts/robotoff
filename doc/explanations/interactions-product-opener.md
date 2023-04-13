@@ -14,6 +14,7 @@ Product Opener calls `POST /api/v1/webhook/product` whenever a product is update
 
 - `barcode`: the barcode of product
 - `action`:  either `updated` or `deleted`
+- `server_domain`: the server domain (ex: `api.openfoodfacts.org`)
 
 After receiving a `product_update` webhook call, Robotoff does the following [^product_update]:
 
@@ -28,6 +29,7 @@ Product Opener calls `POST /api/v1/images/import` whenever an new image is uploa
 - `barcode`: the barcode of product
 - `image_url`:  the URL of the image
 - `ocr_url`:  the URL of the OCR result (JSON file)
+- `server_domain`: the server domain (ex: `api.openfoodfacts.org`)
 
 After receiving a `import_image` webhook call, Robotoff does the following [^image_import]:
 

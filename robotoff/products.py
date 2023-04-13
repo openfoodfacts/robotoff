@@ -23,10 +23,7 @@ MONGO_SELECTION_TIMEOUT_MS = 10_0000
 
 
 @functools.cache
-def get_mongo_client(server_type: ServerType) -> Optional[MongoClient]:
-    if server_type != ServerType.off:
-        return None
-
+def get_mongo_client() -> Optional[MongoClient]:
     return MongoClient(
         settings.MONGO_URI, serverSelectionTimeoutMS=MONGO_SELECTION_TIMEOUT_MS
     )
@@ -484,27 +481,19 @@ class MemoryProductStore(ProductStore):
 
 
 class DBProductStore(ProductStore):
-    def __init__(self, server_type: ServerType, client: Optional[MongoClient]):
+    def __init__(self, server_type: ServerType, client: MongoClient):
         self.client = client
         self.server_type = server_type
-
-        if self.client is None:
-            self.db = None
-            self.collection = None
-        else:
-            self.db = self.client[server_type.name]
-            self.collection = self.db.products
+        db_name = server_type.value
+        self.db = self.client[db_name]
+        self.collection = self.db.products
 
     def __len__(self):
-        if self.collection is None:
-            return 0
         return len(self.collection.estimated_document_count())
 
     def get_product(
         self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
     ) -> Optional[JSONType]:
-        if self.collection is None:
-            return None
         return self.collection.find_one({"code": product_id.barcode}, projection)
 
     def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
@@ -533,8 +522,7 @@ def get_min_product_store() -> ProductStore:
 
 
 def get_product_store(server_type: ServerType) -> DBProductStore:
-    mongo_client = get_mongo_client(server_type)
-    return DBProductStore(server_type, client=mongo_client)
+    return DBProductStore(server_type, client=get_mongo_client())
 
 
 def get_product(

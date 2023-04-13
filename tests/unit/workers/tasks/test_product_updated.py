@@ -11,6 +11,10 @@ from robotoff.workers.tasks.product_updated import add_category_insight
 # without extensive mocking and monkey-patching.
 
 
+DEFAULT_BARCODE = "123"
+DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, ServerType.off)
+
+
 def test_add_category_insight_no_insights(mocker):
     mocker.patch(
         "robotoff.workers.tasks.product_updated.predict_category_matcher",
@@ -23,24 +27,22 @@ def test_add_category_insight_no_insights(mocker):
     import_insights_mock = mocker.patch(
         "robotoff.workers.tasks.product_updated.import_insights"
     )
-    imported = add_category_insight("123", {"code": "123"})
+    imported = add_category_insight(DEFAULT_PRODUCT_ID, {"code": DEFAULT_BARCODE})
 
     assert not import_insights_mock.called
     assert not imported
 
 
 def test_add_category_insight_with_ml_insights(mocker):
-    barcode = "123"
-    product_id = ProductIdentifier(barcode, ServerType.off)
     expected_prediction = Prediction(
-        barcode=product_id.barcode,
+        barcode=DEFAULT_PRODUCT_ID.barcode,
         type=PredictionType.category,
         value_tag="en:chicken",
         data={"lang": "xx"},
         automatic_processing=True,
         predictor="neural",
         confidence=0.9,
-        server_type=product_id.server_type,
+        server_type=DEFAULT_PRODUCT_ID.server_type,
     )
     mocker.patch(
         "robotoff.workers.tasks.product_updated.predict_category_matcher",
@@ -54,19 +56,19 @@ def test_add_category_insight_with_ml_insights(mocker):
         "robotoff.workers.tasks.product_updated.import_insights",
         return_value=InsightImportResult(),
     )
-    add_category_insight(product_id, {"code": "123"})
+    add_category_insight(DEFAULT_PRODUCT_ID, {"code": DEFAULT_BARCODE})
 
     import_insights_mock.assert_called_once_with(
         [
             Prediction(
-                barcode=product_id.barcode,
+                barcode=DEFAULT_PRODUCT_ID.barcode,
                 type=PredictionType.category,
                 value_tag="en:chicken",
                 data={"lang": "xx"},
                 automatic_processing=True,
                 predictor="neural",
                 confidence=0.9,
-                server_type=product_id.server_type,
+                server_type=DEFAULT_PRODUCT_ID.server_type,
             ),
         ],
         ServerType.off,

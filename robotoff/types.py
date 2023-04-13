@@ -152,11 +152,20 @@ class InsightType(str, enum.Enum):
 
 
 class ServerType(enum.Enum):
-    off = "openfoodfacts"
-    obf = "openbeautyfacts"
-    opff = "openpetfoodfacts"
-    opf = "openproductfacts"
-    off_pro = "openfoodfacts"
+    """ServerType is used to refer to a specific Open*Facts project:
+
+    - Open Food Facts
+    - Open Beauty Facts
+    - Open Pet Food Facts
+    - Open Product Facts
+    - Open Food Facts (Pro plateform)
+    """
+
+    off = "off"
+    obf = "obf"
+    opff = "opff"
+    opf = "opf"
+    off_pro = "off-pro"
 
     def __str__(self) -> str:
         return self.name
@@ -164,8 +173,24 @@ class ServerType(enum.Enum):
     def __repr__(self) -> str:
         return self.name
 
+    def get_base_domain(self) -> str:
+        """Get the base domain (domain without TLD and without world/api
+        subdomain) associated with the `ServerType`."""
+        if self == self.off:
+            return "openfoodfacts"
+        elif self == self.obf:
+            return "openbeautyfacts"
+        elif self == self.opff:
+            return "openpetfoodfacts"
+        elif self == self.opf:
+            return "openproductfacts"
+        else:
+            # Open Food Facts Pro
+            return "pro.openfoodfacts"
+
     @classmethod
     def get_from_server_domain(cls, server_domain: str) -> "ServerType":
+        """Get the `ServerType` associated with a `server_domain`."""
         subdomain, base_domain, tld = server_domain.rsplit(".", maxsplit=2)
 
         if subdomain == "api.pro":
@@ -174,10 +199,15 @@ class ServerType(enum.Enum):
             raise ValueError("pro platform is only available for Open Food Facts")
 
         for server_type in cls:
-            if base_domain == server_type.value:
+            if base_domain == server_type.get_base_domain():
                 return server_type
 
         raise ValueError(f"no ServerType matched for server_domain {server_domain}")
+
+    def is_food(self) -> bool:
+        """Return True if the server type is `off` or `off-pro`, False
+        otherwise."""
+        return self in (self.off, self.off_pro)
 
 
 @dataclasses.dataclass
