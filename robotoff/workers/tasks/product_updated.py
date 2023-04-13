@@ -8,7 +8,7 @@ from robotoff.prediction.category.neural.category_classifier import CategoryClas
 from robotoff.products import get_product
 from robotoff.redis import Lock, LockedResourceException
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import JSONType, ProductIdentifier, ServerType
+from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -25,11 +25,6 @@ def update_insights_job(product_id: ProductIdentifier):
     2. Regenerate all insights from the product associated predictions.
     """
     logger.info("Running `update_insights` for %s", product_id)
-
-    if product_id.server_type != ServerType.off:
-        # We don't have yet MongoDB connection between Robotoff and MongoDB of
-        # projects other than Open Food Facts, so abort the update job here
-        return
 
     try:
         with Lock(
@@ -66,6 +61,13 @@ def add_category_insight(product_id: ProductIdentifier, product: JSONType):
     :param product_id: identifier of the product
     :param product: product as retrieved from MongoDB
     """
+    if not product_id.server_type.is_food():
+        # Category prediction is only available for Food products
+        logger.info(
+            "`server_type=%s`, skipping category prediction", product_id.server_type
+        )
+        return
+
     logger.info("Predicting product categories...")
     # predict category using matching algorithm on product name
     product_predictions = predict_category_matcher(product)
@@ -108,7 +110,9 @@ def updated_product_predict_insights(
     if not product_name:
         return
 
-    logger.info("Generating predictions from product name...")
-    predictions_all = get_predictions_from_product_name(product_id, product_name)
-    import_result = import_insights(predictions_all, product_id.server_type)
-    logger.info(import_result)
+    if product_id.server_type.is_food():
+        # Only available for food products for now
+        logger.info("Generating predictions from product name...")
+        predictions_all = get_predictions_from_product_name(product_id, product_name)
+        import_result = import_insights(predictions_all, product_id.server_type)
+        logger.info(import_result)

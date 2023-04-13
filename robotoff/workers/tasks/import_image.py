@@ -88,14 +88,17 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
             ImageModel.bulk_update([image_model], fields=["deleted"])
             return
 
-    enqueue_job(
-        import_insights_from_image,
-        high_queue,
-        job_kwargs={"result_ttl": 0},
-        product_id=product_id,
-        image_url=image_url,
-        ocr_url=ocr_url,
-    )
+    if product_id.server_type.is_food():
+        # Currently we don't support insight generation for projects other
+        # than OFF (OBF, OPF,...)
+        enqueue_job(
+            import_insights_from_image,
+            high_queue,
+            job_kwargs={"result_ttl": 0},
+            product_id=product_id,
+            image_url=image_url,
+            ocr_url=ocr_url,
+        )
     # The two following tasks take longer than the previous one, so it
     # shouldn't be an issue to launch tasks concurrently (and we still have
     # the insight import lock to avoid concurrent insight import in DB for the
@@ -395,7 +398,9 @@ def process_created_logos(image_prediction_id: int, server_type: ServerType):
         logger.info("Request error during ANN batch query", exc_info=e)
         return
 
-    logos = [embedding.logo for embedding in logo_embeddings]
-
-    thresholds = get_logo_confidence_thresholds()
-    import_logo_insights(logos, thresholds=thresholds, server_type=server_type)
+    if server_type.is_food():
+        # We don't support annotation on projects other than off/off_pro
+        # currently
+        logos = [embedding.logo for embedding in logo_embeddings]
+        thresholds = get_logo_confidence_thresholds()
+        import_logo_insights(logos, thresholds=thresholds, server_type=server_type)

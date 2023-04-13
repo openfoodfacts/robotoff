@@ -71,21 +71,25 @@ class BaseURLProvider(object):
     @staticmethod
     def server_domain(server_type: ServerType) -> str:
         """Return the server domain: `api.*.*`"""
-        return f"api.{server_type.value}.{_get_tld()}"
+        return f"api.{server_type.get_base_domain()}.{_get_tld()}"
 
     @staticmethod
     def world(server_type: ServerType):
-        return BaseURLProvider._get_url(prefix="world", base_domain=server_type.value)
+        return BaseURLProvider._get_url(
+            prefix="world", base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
     def robotoff() -> str:
         return BaseURLProvider._get_url(
-            prefix="robotoff", base_domain=ServerType.off.value
+            prefix="robotoff", base_domain=ServerType.off.get_base_domain()
         )
 
     @staticmethod
     def api(server_type: ServerType) -> str:
-        return BaseURLProvider._get_url(prefix="api", base_domain=server_type.value)
+        return BaseURLProvider._get_url(
+            prefix="api", base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
     def static(server_type: ServerType) -> str:
@@ -100,26 +104,30 @@ class BaseURLProvider(object):
                 prefix=None, scheme=scheme, base_domain=base_domain
             )
 
-        return BaseURLProvider._get_url(prefix="static", base_domain=server_type.value)
+        return BaseURLProvider._get_url(
+            prefix="static", base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
     def image_url(server_type: ServerType, image_path: str) -> str:
         prefix = BaseURLProvider._get_url(
-            prefix="images", base_domain=server_type.value
+            prefix="images", base_domain=server_type.get_base_domain()
         )
         return prefix + f"/images/products{image_path}"
 
     @staticmethod
     def country(server_type: ServerType, country_code: str) -> str:
         return BaseURLProvider._get_url(
-            prefix=country_code, base_domain=server_type.value
+            prefix=country_code, base_domain=server_type.get_base_domain()
         )
 
     @staticmethod
     def event_api() -> str:
         return os.environ.get(
             "EVENTS_API_URL",
-            BaseURLProvider._get_url(prefix="events", base_domain=ServerType.off.value),
+            BaseURLProvider._get_url(
+                prefix="events", base_domain=ServerType.off.get_base_domain()
+            ),
         )
 
 
