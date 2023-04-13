@@ -213,9 +213,7 @@ NUTRISCORE_LABELS = {
 }
 
 
-def run_nutriscore_object_detection(
-    product_id: ProductIdentifier, image_url: str, server_domain: str
-):
+def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: str):
     logger.info(
         "Running nutriscore object detection for %s, image %s", product_id, image_url
     )
