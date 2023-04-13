@@ -91,7 +91,10 @@ def test_process_created_logos(peewee_db, mocker):
         logo_embeddings = [LogoEmbeddingFactory(logo=logo) for logo in logos]
         process_created_logos(image_prediction.id, DEFAULT_SERVER_TYPE)
         add_logos_to_ann_mock.assert_called()
-        embedding_args = add_logos_to_ann_mock.mock_calls[0].args[1]
+        mock_call = add_logos_to_ann_mock.mock_calls[0]
+        embedding_args = mock_call.args[1]
+        server_type = mock_call.args[2]
+        assert server_type == DEFAULT_SERVER_TYPE
         assert sorted(embedding_args, key=lambda x: x.logo_id) == logo_embeddings
         save_nearest_neighbors_mock.assert_called()
         get_logo_confidence_thresholds_mock.assert_called()
