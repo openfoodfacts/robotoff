@@ -1,5 +1,4 @@
 import datetime
-import functools
 import os
 import uuid
 from typing import Iterable
@@ -9,6 +8,7 @@ from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.blocking import BlockingScheduler
+from playhouse.postgres_ext import ServerSide
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
@@ -21,7 +21,7 @@ from robotoff.metrics import (
     save_facet_metrics,
     save_insight_metrics,
 )
-from robotoff.models import ProductInsight, db, with_db
+from robotoff.models import Prediction, ProductInsight, db, with_db
 from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     Product,
@@ -30,7 +30,7 @@ from robotoff.products import (
     get_min_product_store,
     has_dataset_changed,
 )
-from robotoff.types import ServerType
+from robotoff.types import ProductIdentifier, ServerType
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
@@ -79,10 +79,10 @@ def process_insights():
 
 
 @with_db
-def refresh_insights(with_deletion: bool = False):
-    deleted = 0
-    updated = 0
-    product_store = get_min_product_store()
+def refresh_insights(with_deletion: bool = True):
+    product_store = get_min_product_store(
+        ["code", "brands_tags", "countries_tags", "unique_scans_n"]
+    )
     # Only OFF is currently supported
     server_type = ServerType.off
 
@@ -100,14 +100,14 @@ def refresh_insights(with_deletion: bool = False):
         return
 
     insight: ProductInsight
-    for insight in (
-        ProductInsight.select()
-        .where(
+    deleted = 0
+    updated = 0
+    for insight in ServerSide(
+        ProductInsight.select().where(
             ProductInsight.annotation.is_null(),
             ProductInsight.timestamp <= datetime_threshold,
             ProductInsight.server_type == server_type.name,
         )
-        .iterator()
     ):
         product_id = insight.get_product_id()
         product: Product = product_store[insight.barcode]
@@ -115,7 +115,7 @@ def refresh_insights(with_deletion: bool = False):
         if product is None:
             if with_deletion:
                 # Product has been deleted from OFF
-                logger.info("%s deleted", product_id)
+                logger.info("%s deleted, deleting insight %s", product_id, insight)
                 deleted += 1
                 insight.delete_instance()
         else:
@@ -124,12 +124,30 @@ def refresh_insights(with_deletion: bool = False):
             if insight_updated:
                 updated += 1
 
-    logger.info("{} insights deleted".format(deleted))
-    logger.info("{} insights updated".format(updated))
+    prediction: Prediction
+    deleted = 0
+    for prediction in ServerSide(
+        Prediction.select().where(
+            Prediction.timestamp <= datetime_threshold,
+            Prediction.server_type == server_type.name,
+        )
+    ):
+        product = product_store[ProductIdentifier(prediction.barcode, server_type)]
+
+        if product is None:
+            if with_deletion:
+                # Product has been deleted from OFF
+                logger.info(
+                    "%s deleted, deleting prediction %s", product_id, prediction
+                )
+                deleted += 1
+                prediction.delete_instance()
+
+    logger.info("%s prediction deleted", deleted)
 
 
 def update_insight_attributes(product: Product, insight: ProductInsight) -> bool:
-    to_update = False
+    updated_fields = []
     if insight.brands != product.brands_tags:
         logger.info(
             "Updating brand %s -> %s (%s)",
@@ -137,7 +155,7 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
             product.brands_tags,
             insight.get_product_id(),
         )
-        to_update = True
+        updated_fields.append("brands")
         insight.brands = product.brands_tags
 
     if insight.countries != product.countries_tags:
@@ -147,7 +165,7 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
             product.countries_tags,
             insight.get_product_id(),
         )
-        to_update = True
+        updated_fields.append("countries")
         insight.countries = product.countries_tags
 
     if insight.unique_scans_n != product.unique_scans_n:
@@ -157,17 +175,18 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
             product.unique_scans_n,
             insight.get_product_id(),
         )
-        to_update = True
+        updated_fields.append("unique_scans_n")
         insight.unique_scans_n = product.unique_scans_n
 
-    if to_update:
-        insight.save()
+    if updated_fields:
+        # Only update selected field with bulk_update and a list of fields to update
+        ProductInsight.bulk_update([insight], fields=updated_fields)
 
-    return to_update
+    return bool(updated_fields)
 
 
 @with_db
-def mark_insights():
+def mark_insights() -> int:
     marked = 0
     insight: ProductInsight
     for insight in (
@@ -285,7 +304,7 @@ def run():
     #   are no longer applicable.
     # - Updating insight attributes.
     scheduler.add_job(
-        functools.partial(refresh_insights, with_deletion=True),
+        refresh_insights,
         "cron",
         day="*",
         hour="4",
