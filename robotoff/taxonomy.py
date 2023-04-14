@@ -123,7 +123,7 @@ class TaxonomyNode:
 
 
 class Taxonomy:
-    def __init__(self):
+    def __init__(self) -> None:
         self.nodes: dict[str, TaxonomyNode] = {}
 
     def add(self, key: str, node: TaxonomyNode) -> None:

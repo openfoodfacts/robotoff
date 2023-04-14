@@ -41,7 +41,7 @@ logger = get_logger(__name__)
 
 
 # Note: we do not use with_db, for atomicity is handled in annotator
-def process_insights():
+def process_insights() -> None:
     with db.connection_context():
         processed = 0
         insight: ProductInsight
@@ -79,7 +79,7 @@ def process_insights():
 
 
 @with_db
-def refresh_insights(with_deletion: bool = True):
+def refresh_insights(with_deletion: bool = True) -> None:
     product_store = get_min_product_store(
         ["code", "brands_tags", "countries_tags", "unique_scans_n"]
     )
@@ -234,7 +234,7 @@ def _update_data():
         logger.exception("Exception during ES indices creation", exc_info=e)
 
 
-def generate_insights():
+def generate_insights() -> None:
     """Generate and import category insights from the latest dataset dump, for
     products added at day-1."""
     logger.info("Generating new category insights")

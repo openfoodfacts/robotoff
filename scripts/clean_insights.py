@@ -26,7 +26,7 @@ def check_field(insight: ProductInsight, field_name: str):
     return False
 
 
-def run():
+def run() -> None:
     count = 0
     errors = 0
     insight: ProductInsight
