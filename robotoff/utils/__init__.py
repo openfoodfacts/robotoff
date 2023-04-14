@@ -5,6 +5,7 @@ import pathlib
 import sys
 from io import BytesIO
 from typing import Any, Callable, Iterable, Optional, Union
+from urllib.parse import urlparse
 
 import orjson
 import PIL
@@ -178,11 +179,16 @@ def get_image_from_url(
     :raises ImageLoadingException: _description_
     :return: the Pillow Image or None.
     """
+    auth = (
+        settings._off_net_auth
+        if urlparse(image_url).netloc.endswith("openfoodfacts.net")
+        else None
+    )
     try:
         if session:
-            r = session.get(image_url)
+            r = session.get(image_url, auth=auth)
         else:
-            r = requests.get(image_url)
+            r = requests.get(image_url, auth=auth)
     except (RequestConnectionError, SSLError, Timeout) as e:
         error_message = "Cannot download image %s"
         if error_raise:

@@ -25,7 +25,7 @@ jobs:
         echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
-        echo "ROBOTOFF_DOMAIN=openfoodfacts.net" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
     - name: Set various variable for production deployment
@@ -35,7 +35,7 @@ jobs:
         echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
-        echo "ROBOTOFF_DOMAIN=openfoodfacts.org" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://213.36.253.195:27017" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
     - name: Wait for container build workflow
@@ -79,6 +79,13 @@ jobs:
           # Checkout current commit SHA
           git checkout -qf ${{ github.sha }}
 
+          # Setup git lfs on the repository, in case it's not setup yet
+          git lfs install
+
+          # Fetch and checkout LFS files
+          git lfs fetch
+          git lfs checkout
+
     - name: Set environment variables
       uses: appleboy/ssh-action@master
       with:
@@ -104,7 +111,7 @@ jobs:
 
           # Set app variables
           echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
-          echo "ROBOTOFF_DOMAIN=${{ env.ROBOTOFF_DOMAIN }}" >> .env
+          echo "ROBOTOFF_TLD=${{ env.ROBOTOFF_TLD }}" >> .env
           echo "REDIS_HOST=redis.robotoff_default" >> .env
           echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
           echo "POSTGRES_DB=postgres" >> .env
@@ -125,7 +132,7 @@ jobs:
           echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
-          echo "EVENTS_API_URL=https://event.${{ env.ROBOTOFF_DOMAIN }}" >> .env
+          echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
           # TODO: remove this url when we have a proper server running for this purpose
           echo "IMAGE_MODERATION_SERVICE_URL=https://amathjourney.com/api/off-annotation/flag-image"
 

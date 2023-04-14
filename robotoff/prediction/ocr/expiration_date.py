@@ -3,10 +3,9 @@ import functools
 import re
 from typing import Optional, Union
 
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
@@ -31,7 +30,6 @@ EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
     "full_digits_short": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)"),
         field=OCRField.full_text,
-        lowercase=False,
         processing_func=functools.partial(
             process_full_digits_expiration_date, short=True
         ),
@@ -39,7 +37,6 @@ EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
     "full_digits_long": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)"),
         field=OCRField.full_text,
-        lowercase=False,
         processing_func=functools.partial(
             process_full_digits_expiration_date, short=False
         ),
@@ -75,11 +72,18 @@ def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
             # Format dates according to ISO 8601
             value = date.strftime("%Y-%m-%d")
 
+            data = {"raw": raw, "type": type_, "notify": ocr_regex.notify}
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                data["bounding_box_absolute"] = bounding_box
             results.append(
                 Prediction(
                     value=value,
                     type=PredictionType.expiration_date,
-                    data={"raw": raw, "type": type_, "notify": ocr_regex.notify},
+                    data=data,
                     automatic_processing=True,
                 )
             )

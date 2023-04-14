@@ -1,5 +1,141 @@
 # Changelog
 
+## [1.24.2](https://github.com/openfoodfacts/robotoff/compare/v1.24.1...v1.24.2) (2023-04-06)
+
+
+### Bug Fixes
+
+* fix error in product weight insight ([6866739](https://github.com/openfoodfacts/robotoff/commit/6866739989b28d5c3f459f4f07a833aae26a8718))
+* load lazily all resources in Robotoff ([4dfa93f](https://github.com/openfoodfacts/robotoff/commit/4dfa93f9822ae1246e0192fd00f32f7b548c1f84))
+* move LogoLabelType to robotoff.types ([0cc7efe](https://github.com/openfoodfacts/robotoff/commit/0cc7efe512a3a5f1ae439b1dcc436d45b66a69d1))
+
+
+### Documentation
+
+* add documentation about how to add a predictor ([d467a4c](https://github.com/openfoodfacts/robotoff/commit/d467a4c982cb33ac83bf38676d3aa31d9c285e45))
+* add documentation about interaction with Product Opener ([05c0781](https://github.com/openfoodfacts/robotoff/commit/05c078169fa4ee746552312e732d07d23ba4659c))
+* add references to codebase in category-prediction.md ([56ccfba](https://github.com/openfoodfacts/robotoff/commit/56ccfba254e6b48af5310e007788f964b30f0e95))
+
+## [1.24.1](https://github.com/openfoodfacts/robotoff/compare/v1.24.0...v1.24.1) (2023-04-05)
+
+
+### Bug Fixes
+
+* fix incorrect offset in get_words_from_indices ([547a867](https://github.com/openfoodfacts/robotoff/commit/547a867c530d811ecb22d5fb99183f32f158a2fe))
+
+## [1.24.0](https://github.com/openfoodfacts/robotoff/compare/v1.23.1...v1.24.0) (2023-04-05)
+
+
+### Features
+
+* add function to get match bounding box ([5d7eafa](https://github.com/openfoodfacts/robotoff/commit/5d7eafa5b4c21efb9d5ca35bc53d63f3305c7c98))
+* allow to match text on OCRResult ([73ae0e6](https://github.com/openfoodfacts/robotoff/commit/73ae0e6639649d248c4055a8867367633cb017e5))
+* save bounding box information in OCR/flashtext predictions ([9d4d432](https://github.com/openfoodfacts/robotoff/commit/9d4d432025bd28a6ed863c8e44b2f0b18c1a4916))
+
+
+### Bug Fixes
+
+* add functions to delete/unselect an image ([ade0294](https://github.com/openfoodfacts/robotoff/commit/ade02946a8874a455a018d73e12139c5b63a9603))
+* allow partial match in get_words_from_indices ([34cbd24](https://github.com/openfoodfacts/robotoff/commit/34cbd2434a4f872092fe7694828fb3206cc18bc0))
+* allow to match across blocks ([c073129](https://github.com/openfoodfacts/robotoff/commit/c073129d375ffe6f684a0e4c14c1ce4c12ccd242))
+* bug fix in product weight insight generation ([031e117](https://github.com/openfoodfacts/robotoff/commit/031e117c65e14b209556630d32ee2926b97c6f27))
+* cache result word string in Word ([30bc347](https://github.com/openfoodfacts/robotoff/commit/30bc347e6e6863c60a974b2f967cb69add41e5da))
+* convert absolute coordinates to relative ones ([e86e671](https://github.com/openfoodfacts/robotoff/commit/e86e67102b907d3c2eec64ba3a4cf0c38450a1a3))
+* fix offset bug ([a6e1e51](https://github.com/openfoodfacts/robotoff/commit/a6e1e51d6aac060d8d36388d7cfaf4a419c5306f))
+* make error message easier to understand during HTTP 404 during OCR fetch ([b352387](https://github.com/openfoodfacts/robotoff/commit/b3523876e81fb0cbf33639294a0d0ea077b54cda))
+* remove text_annotations OCRField and use new text field ([f0637a4](https://github.com/openfoodfacts/robotoff/commit/f0637a4bdc1862e1ff12e8a860b7ec73fe614322))
+* save mapping between position of words and full annotation text ([674ad77](https://github.com/openfoodfacts/robotoff/commit/674ad77edf895c79c8f65d952de66a4d5f311a39))
+* use new computed text field in regex matching ([b29e1db](https://github.com/openfoodfacts/robotoff/commit/b29e1db0eb87a7cd243b9e0a4b122ff176bbc7ec))
+* use re.I flag instead of lowercasing string ([0ecef5e](https://github.com/openfoodfacts/robotoff/commit/0ecef5e98a0d0e39b100671083548c674f53807b))
+* use strip_accents_v1 when necessary ([f2ee677](https://github.com/openfoodfacts/robotoff/commit/f2ee677a6df3dfdce439a3c44b2790fb9cb8d95e))
+
+
+### Documentation
+
+* improve OCR class documentation ([b461669](https://github.com/openfoodfacts/robotoff/commit/b461669b83e9c32032c8e3a62f30ddb4a34654c5))
+* improve OCR documentation ([0a76f83](https://github.com/openfoodfacts/robotoff/commit/0a76f83680c9009a75f8ce4fe8ae52c6e4f74b14))
+
+## [1.23.1](https://github.com/openfoodfacts/robotoff/compare/v1.23.0...v1.23.1) (2023-03-16)
+
+
+### Bug Fixes
+
+* always select deepest categorized nodes in category importer ([aba33f8](https://github.com/openfoodfacts/robotoff/commit/aba33f8b591fe8d7224f3b5af835755f793a3135))
+* improve healthcheck status check messages ([e24e136](https://github.com/openfoodfacts/robotoff/commit/e24e1361bf79ee2b424a844cc6d4a8c857c01efa))
+
+## [1.23.0](https://github.com/openfoodfacts/robotoff/compare/v1.22.1...v1.23.0) (2023-03-15)
+
+
+### Features
+
+* add missing_category campaign to track products without categories ([b103e66](https://github.com/openfoodfacts/robotoff/commit/b103e664bd5ae468d2cdda046bb2f8e0e0d037d9))
+* cache image embeddings in DB (ImageEmbedding table) ([ba25c75](https://github.com/openfoodfacts/robotoff/commit/ba25c7568be028140d32bfe8bce0782fa33c0fae))
+* store neighbor categories for v3 categorizer models ([8d1d727](https://github.com/openfoodfacts/robotoff/commit/8d1d727bd90030486f8c4f313465716c98b9e56f))
+* use keras new v3 model as default to predict categories ([c0f55cf](https://github.com/openfoodfacts/robotoff/commit/c0f55cff47ef204a784d361a0c16184f8d9c9a6e))
+* use keras v3 model as default ([a2d23a3](https://github.com/openfoodfacts/robotoff/commit/a2d23a32d549270a1bc01ab39be09d44402438c3))
+* use keras_image_embeddings_3_0 by default in categorize CLI ([737716e](https://github.com/openfoodfacts/robotoff/commit/737716ef57e08b13fadc1e539baaf519cb06ba4e))
+
+
+### Bug Fixes
+
+* allow to specify LOG_LEVEL in .env file ([50a3aa4](https://github.com/openfoodfacts/robotoff/commit/50a3aa4269cc1b027a8b5d65e85e422875b8651c))
+* deprecate campaign parameter in /questions* ([82c26fe](https://github.com/openfoodfacts/robotoff/commit/82c26fe834960f2c21448b501166f35bf5263cde))
+* exclude some categories from predictions ([503fa8d](https://github.com/openfoodfacts/robotoff/commit/503fa8d13a0961fad8d5baca5b58b5171c8994b9))
+* fix bug in save_image_embeddings ([a600502](https://github.com/openfoodfacts/robotoff/commit/a60050279088e00f3e628a0306672d63f157d684))
+* fix bug that occurs when image are missing in images table ([1968f56](https://github.com/openfoodfacts/robotoff/commit/1968f561b22c5d97367c67d318f4cd839430481f))
+* fix edge-case bug when no image is available ([fac1ab1](https://github.com/openfoodfacts/robotoff/commit/fac1ab1c7a51c4fc0d18a1d9a719c61dcfd74cf5))
+* fix newly introduced bug in category importer ([a1bb507](https://github.com/openfoodfacts/robotoff/commit/a1bb50731a08e6e7f709689d7660e73dcd4b4904))
+* fix serialization bug in predict ([1a69ab2](https://github.com/openfoodfacts/robotoff/commit/1a69ab2ef3e7ad15e78f7c0dee10ef62631b12e5))
+* fix SonarCloud-detected bug in BaseURLProvider ([290a3fb](https://github.com/openfoodfacts/robotoff/commit/290a3fbc06a0ffc612a1c782c154282036e4b68f))
+* fix unit tests ([61c6177](https://github.com/openfoodfacts/robotoff/commit/61c6177f1650b48dcf304a4377cb608c4f677b77))
+* fix unit tests ([0a3702f](https://github.com/openfoodfacts/robotoff/commit/0a3702f57ef7dfc4e0e406dd5e4376956445bc72))
+* ignore predicted category if it no longer exist in taxonomy ([c3c4fbe](https://github.com/openfoodfacts/robotoff/commit/c3c4fbe09c1311cd977d2b5b160eaf292a5fda20))
+* move save_image function to new robotoff.images module ([6efdaf2](https://github.com/openfoodfacts/robotoff/commit/6efdaf24104a881f9369ed1b7f0c8bec045c6f83))
+* pass stub as argument in predict for easier testing ([807c157](https://github.com/openfoodfacts/robotoff/commit/807c157bce8d9769f3f210e2ec5a811db6b53338))
+* relax checks in save_images function ([bcf998f](https://github.com/openfoodfacts/robotoff/commit/bcf998f8fd7b7c8a0533527a4c2b4f3eb7ed53d4))
+* remove legacy unit tests ([6f3e5e2](https://github.com/openfoodfacts/robotoff/commit/6f3e5e22af8a8cbed8098fb9c13e97042a00a9d0))
+
+
+### Documentation
+
+* add comment in build_triton_request function ([cf1e8db](https://github.com/openfoodfacts/robotoff/commit/cf1e8db1bf73af8c9e71d6b5d306387ca26fa569))
+* add documentation about category prediction ([0a21476](https://github.com/openfoodfacts/robotoff/commit/0a2147679390207fdb85084f1aa3872c4284f54e))
+
+## [1.22.1](https://github.com/openfoodfacts/robotoff/compare/v1.22.0...v1.22.1) (2023-03-13)
+
+
+### Bug Fixes
+
+* don't generate image embedding/fetch OCR texts if not required ([93fc96d](https://github.com/openfoodfacts/robotoff/commit/93fc96d235aaee4ad94f05737022809f94b96456))
+
+## [1.22.0](https://github.com/openfoodfacts/robotoff/compare/v1.21.0...v1.22.0) (2023-03-12)
+
+
+### Features
+
+* add model with image embeddings as input ([d79bbc2](https://github.com/openfoodfacts/robotoff/commit/d79bbc22bb9b41952b6994256334ee6e15ef68f5))
+
+
+### Bug Fixes
+
+* add authentication for .net Product Opener when fetching products ([18cbb20](https://github.com/openfoodfacts/robotoff/commit/18cbb20c8778c46e38e7a78ac4ffa2392ac44baf))
+* add object detection label assets to repository ([c925558](https://github.com/openfoodfacts/robotoff/commit/c925558f2607c769dab848ca425db11e30fb0bd0))
+* add support for git LFS ([d6db888](https://github.com/openfoodfacts/robotoff/commit/d6db888100f1ade06572fe679b545741296a445e))
+* disable cat matcher (en) for partial matches ([649c016](https://github.com/openfoodfacts/robotoff/commit/649c01690b8ba52d6ff7d741b39700edff251687))
+* don't keep numpy ndarray in debug.inputs dict ([64e7124](https://github.com/openfoodfacts/robotoff/commit/64e71244931f750980686b2af973cb954496b08a))
+* fix integration test ([b2b4f5a](https://github.com/openfoodfacts/robotoff/commit/b2b4f5ace82c1097081e630effae1d0acbe8987b))
+* increase CLIP max_batch_size to 32 ([a39d61a](https://github.com/openfoodfacts/robotoff/commit/a39d61a77f2e751b2933cf9a84917dc0c3ae24ca))
+* refactor category predictor data structure ([812a406](https://github.com/openfoodfacts/robotoff/commit/812a4061a00dfbd302d998ae7ac2eea346783bac))
+* update code after code review [#1061](https://github.com/openfoodfacts/robotoff/issues/1061) ([deb20d8](https://github.com/openfoodfacts/robotoff/commit/deb20d863cf5fbf063f365123273bb96ba9b0024))
+* update PUT /images/logos/LOGO_ID route to accept null value field ([2e488ab](https://github.com/openfoodfacts/robotoff/commit/2e488ab81636258b5a6a5d4b841c2c6ecaffe9be))
+
+
+### Documentation
+
+* add docstring ([b4ace04](https://github.com/openfoodfacts/robotoff/commit/b4ace04f86c886e867be5d21ab2f89f15d53677d))
+* add documentation about install of git lfs ([1cd9866](https://github.com/openfoodfacts/robotoff/commit/1cd98662d6a5641b10af87b93b135fa190c1da1d))
+* add documentation in metrics.py ([0ce2b0e](https://github.com/openfoodfacts/robotoff/commit/0ce2b0ece71cd7ca89b0105f3be25abf501cb611))
+
 ## [1.21.0](https://github.com/openfoodfacts/robotoff/compare/v1.20.2...v1.21.0) (2023-02-28)
 
 

@@ -4,11 +4,10 @@ from typing import Optional, Union
 
 import pint
 
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 logger = get_logger(__name__)
 
@@ -128,6 +127,7 @@ def process_product_weight(
         value = match.group(1)
         unit = match.group(2)
 
+    unit = unit.lower()
     if unit in ("dle", "cle", "mge", "mle", "ge", "kge", "le"):
         # When the e letter often comes after the weight unit, the
         # space is often not detected
@@ -168,7 +168,7 @@ def process_multi_packaging(match) -> Optional[dict]:
 
     count = match.group(1)
     value = match.group(2)
-    unit = match.group(3)
+    unit = match.group(3).lower()
 
     if unit in ("dle", "cle", "mge", "mle", "ge", "kge", "le"):
         # When the e letter often comes after the weight unit, the
@@ -201,10 +201,10 @@ def process_multi_packaging(match) -> Optional[dict]:
 PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
     "with_mention": OCRRegex(
         re.compile(
-            r"(?<![a-z])(poids|poids net [aà] l'emballage|poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"
+            r"(?<![a-z])(poids|poids net [aà] l'emballage|poids net|poids net égoutté|masse nette|volume net total|net weight|net wt\.?|peso neto|peso liquido|netto[ -]?gewicht)\s?:?\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])",
+            re.I,
         ),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
         processing_func=functools.partial(
             process_product_weight, prompt=True, automatic_processing=True
         ),
@@ -212,10 +212,10 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
     ),
     "with_ending_mention": OCRRegex(
         re.compile(
-            r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)\s(net)(?![a-z])"
+            r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)\s(net)(?![a-z])",
+            re.I,
         ),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
         processing_func=functools.partial(
             process_product_weight,
             prompt=True,
@@ -226,19 +226,18 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
     ),
     "multi_packaging": OCRRegex(
         re.compile(
-            r"(?<![a-z])(\d+)\s?x\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])"
+            r"(?<![a-z])(\d+)\s?x\s?([0-9]+[,.]?[0-9]*)\s?(fl oz|dle?|cle?|mge?|mle?|lbs|oz|ge?|kge?|le?)(?![a-z])",
+            re.I,
         ),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
         processing_func=process_multi_packaging,
         priority=2,
     ),
     "no_mention": OCRRegex(
         re.compile(
-            r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])"
+            r"(?<![a-z])([0-9]+[,.]?[0-9]*)\s?(dle|cle|mge|mle|ge|kge)(?![a-z])", re.I
         ),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
         processing_func=functools.partial(
             process_product_weight, prompt=False, automatic_processing=False
         ),
@@ -260,21 +259,28 @@ def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
             if ocr_regex.processing_func is None:
                 continue
 
-            result = ocr_regex.processing_func(match)
+            data = ocr_regex.processing_func(match)
 
-            if result is None:
+            if data is None:
                 continue
 
-            result["matcher_type"] = type_
-            result["priority"] = ocr_regex.priority
-            result["notify"] = ocr_regex.notify
-            value = result.pop("text")
+            data["matcher_type"] = type_
+            data["priority"] = ocr_regex.priority
+            data["notify"] = ocr_regex.notify
+            value = data.pop("text")
+
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                data["bounding_box_absolute"] = bounding_box
             results.append(
                 Prediction(
                     value=value,
                     type=PredictionType.product_weight,
-                    automatic_processing=result["automatic_processing"],
-                    data=result,
+                    automatic_processing=data["automatic_processing"],
+                    data=data,
                 )
             )
 

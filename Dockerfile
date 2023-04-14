@@ -16,9 +16,11 @@ ENV PYTHONUNBUFFERED=1 \
     PYSETUP_PATH="/opt/pysetup" \ 
     VENV_PATH="/opt/pysetup/.venv" \
     POETRY_HOME="/opt/poetry" \
-    POETRY_VERSION=1.1.8 \
+    POETRY_VERSION=1.4.2 \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1
+    POETRY_NO_INTERACTION=1 \
+    # Used by Robotoff to know if we're running inside docker
+    IN_DOCKER_CONTAINER=1
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 # building packages
@@ -27,7 +29,7 @@ FROM python-base as builder-base
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
-RUN poetry install --no-dev
+RUN poetry install --without dev
 
 # This is our final image
 # ------------------------
@@ -48,7 +50,6 @@ RUN cd /opt/robotoff/i18n && \
     bash compile.sh && \
     chown off:off -R /opt/robotoff/
 COPY --chown=off:off robotoff /opt/robotoff/robotoff/
-COPY --chown=off:off data /opt/robotoff/data
 COPY --chown=off:off gunicorn.py /opt/robotoff/
 
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh

@@ -1,12 +1,14 @@
 """Interacting with OFF server to eg. update products or get infos
 """
-import enum
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional
 from urllib.parse import urlparse
 
+import requests
+
 from robotoff import settings
+from robotoff.types import ProductIdentifier, ServerType
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -63,21 +65,6 @@ class OFFAuthentication:
         return None
 
 
-class ServerType(enum.Enum):
-    off = 1
-    obf = 2
-    opff = 3
-    opf = 4
-
-
-API_URLS: dict[ServerType, str] = {
-    ServerType.off: settings.BaseURLProvider.world(),
-    ServerType.obf: "https://world.openbeautyfacts.org",
-    ServerType.opf: "https://world.openproductfacts.org",
-    ServerType.opff: "https://world.openpetfoodfacts.org",
-}
-
-
 BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
 
 
@@ -110,47 +97,16 @@ def get_barcode_from_path(path: str) -> Optional[str]:
     return barcode or None
 
 
-def get_product_image_select_url(server: Union[ServerType, str]) -> str:
-    return "{}/cgi/product_image_crop.pl".format(get_base_url(server))
+def get_product_image_select_url(server_type: ServerType) -> str:
+    base_url = settings.BaseURLProvider.api(server_type)
+    return f"{base_url}/cgi/product_image_crop.pl"
 
 
-def get_api_product_url(server: Union[ServerType, str]) -> str:
+def get_api_product_url(server_type: ServerType) -> str:
     # V2 of API is required to have proper ingredient nesting
     # for product categorization
-    return "{}/api/v2/product".format(get_base_url(server))
-
-
-def get_base_url(server: Union[ServerType, str]) -> str:
-    if isinstance(server, str):
-        server = server.replace("api", "world")
-        # get scheme, https on prod, but http in dev
-        scheme = settings._get_default_scheme()
-        return f"{scheme}://{server}"
-    else:
-        if server not in API_URLS:
-            raise ValueError("unsupported server type: {}".format(server))
-
-        return API_URLS[server]
-
-
-def get_server_type(server_domain: str) -> ServerType:
-    """Return the server type (off, obf, opff, opf) associated with the server
-    domain, or None if the server_domain was not recognized."""
-    server_split = server_domain.split(".")
-
-    if len(server_split) == 3:
-        subdomain, domain, tld = server_split
-
-        if domain == "openfoodfacts":
-            return ServerType.off
-        elif domain == "openbeautyfacts":
-            return ServerType.obf
-        elif domain == "openpetfoodfacts":
-            return ServerType.opff
-        elif domain == "openproductsfacts":
-            return ServerType.opf
-
-    raise ValueError("unknown server domain: {}".format(server_domain))
+    base_url = settings.BaseURLProvider.api(server_type)
+    return f"{base_url}/api/v2/product"
 
 
 def split_barcode(barcode: str) -> list[str]:
@@ -175,19 +131,21 @@ def generate_json_path(barcode: str, image_id: str) -> str:
     return "/{}/{}.json".format("/".join(splitted_barcode), image_id)
 
 
-def generate_json_ocr_url(barcode: str, image_id: str) -> str:
+def generate_json_ocr_url(product_id: ProductIdentifier, image_id: str) -> str:
     return (
-        settings.BaseURLProvider.static()
-        + f"/images/products{generate_json_path(barcode, image_id)}"
+        settings.BaseURLProvider.static(product_id.server_type)
+        + f"/images/products{generate_json_path(product_id.barcode, image_id)}"
     )
 
 
-def generate_image_url(barcode: str, image_id: str) -> str:
-    return settings.BaseURLProvider.image_url(generate_image_path(barcode, image_id))
+def generate_image_url(product_id: ProductIdentifier, image_id: str) -> str:
+    return settings.BaseURLProvider.image_url(
+        product_id.server_type, generate_image_path(product_id.barcode, image_id)
+    )
 
 
-def is_valid_image(barcode: str, image_id: str) -> bool:
-    product = get_product(barcode, fields=["images"])
+def is_valid_image(product_id: ProductIdentifier, image_id: str) -> bool:
+    product = get_product(product_id, fields=["images"])
 
     if product is None:
         return False
@@ -202,17 +160,15 @@ def off_credentials() -> dict[str, str]:
 
 
 def get_product(
-    barcode: str,
+    product_id: ProductIdentifier,
     fields: Optional[list[str]] = None,
-    server: Optional[Union[ServerType, str]] = None,
     timeout: Optional[int] = 10,
 ) -> Optional[dict]:
     fields = fields or []
 
-    if server is None:
-        server = ServerType.off
-
-    url = get_api_product_url(server) + "/{}.json".format(barcode)
+    url = get_api_product_url(product_id.server_type) + "/{}.json".format(
+        product_id.barcode
+    )
 
     if fields:
         # requests escape comma in URLs, as expected, but openfoodfacts server
@@ -220,7 +176,7 @@ def get_product(
         # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
         url += "?fields={}".format(",".join(fields))
 
-    r = http_session.get(url, timeout=timeout)
+    r = http_session.get(url, timeout=timeout, auth=settings._off_request_auth)
 
     if r.status_code != 200:
         return None
@@ -234,7 +190,10 @@ def get_product(
 
 
 def add_category(
-    barcode: str, category: str, insight_id: Optional[str] = None, **kwargs
+    product_id: ProductIdentifier,
+    category: str,
+    insight_id: Optional[str] = None,
+    **kwargs,
 ):
     comment = "[robotoff] Adding category '{}'".format(category)
 
@@ -242,15 +201,18 @@ def add_category(
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "add_categories": category,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
 def update_quantity(
-    barcode: str, quantity: str, insight_id: Optional[str] = None, **kwargs
+    product_id: ProductIdentifier,
+    quantity: str,
+    insight_id: Optional[str] = None,
+    **kwargs,
 ):
     comment = "[robotoff] Updating quantity to '{}'".format(quantity)
 
@@ -258,15 +220,18 @@ def update_quantity(
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "quantity": quantity,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
 def update_emb_codes(
-    barcode: str, emb_codes: list[str], insight_id: Optional[str] = None, **kwargs
+    product_id: ProductIdentifier,
+    emb_codes: list[str],
+    insight_id: Optional[str] = None,
+    **kwargs,
 ):
     emb_codes_str = ",".join(emb_codes)
 
@@ -276,15 +241,18 @@ def update_emb_codes(
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "emb_codes": emb_codes_str,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
 def update_expiration_date(
-    barcode: str, expiration_date: str, insight_id: Optional[str] = None, **kwargs
+    product_id: ProductIdentifier,
+    expiration_date: str,
+    insight_id: Optional[str] = None,
+    **kwargs,
 ):
     comment = "[robotoff] Adding expiration date '{}'".format(expiration_date)
 
@@ -292,15 +260,18 @@ def update_expiration_date(
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "expiration_date": expiration_date,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
 def add_label_tag(
-    barcode: str, label_tag: str, insight_id: Optional[str] = None, **kwargs
+    product_id: ProductIdentifier,
+    label_tag: str,
+    insight_id: Optional[str] = None,
+    **kwargs,
 ):
     comment = "[robotoff] Adding label tag '{}'".format(label_tag)
 
@@ -308,43 +279,56 @@ def add_label_tag(
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "add_labels": label_tag,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
-def add_brand(barcode: str, brand: str, insight_id: Optional[str] = None, **kwargs):
+def add_brand(
+    product_id: ProductIdentifier,
+    brand: str,
+    insight_id: Optional[str] = None,
+    **kwargs,
+):
     comment = "[robotoff] Adding brand '{}'".format(brand)
 
     if insight_id:
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "add_brands": brand,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
-def add_store(barcode: str, store: str, insight_id: Optional[str] = None, **kwargs):
+def add_store(
+    product_id: ProductIdentifier,
+    store: str,
+    insight_id: Optional[str] = None,
+    **kwargs,
+):
     comment = "[robotoff] Adding store '{}'".format(store)
 
     if insight_id:
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "add_stores": store,
         "comment": comment,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
 def add_packaging(
-    barcode: str, packaging: dict, insight_id: Optional[str] = None, **kwargs
+    product_id: ProductIdentifier,
+    packaging: dict,
+    insight_id: Optional[str] = None,
+    **kwargs,
 ):
     shape_value_tag = packaging["shape"]["value_tag"]
     comment = f"[robotoff] Updating/adding packaging elements '{shape_value_tag}'"
@@ -365,11 +349,13 @@ def add_packaging(
         "fields": "none",
         "comment": comment,
     }
-    update_product_v3(barcode, body, **kwargs)
+    update_product_v3(
+        product_id.barcode, body, server_type=product_id.server_type, **kwargs
+    )
 
 
 def save_ingredients(
-    barcode: str,
+    product_id: ProductIdentifier,
     ingredient_text: str,
     insight_id: Optional[str] = None,
     lang: Optional[str] = None,
@@ -387,23 +373,21 @@ def save_ingredients(
         comment += ", ID: {}".format(insight_id)
 
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "comment": comment,
         ingredient_key: ingredient_text,
     }
-    update_product(params, **kwargs)
+    update_product(params, server_type=product_id.server_type, **kwargs)
 
 
 def update_product(
     params: dict,
-    server_domain: Optional[str] = None,
+    server_type: ServerType,
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,
 ):
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
-    url = f"{get_base_url(server_domain)}/cgi/product_jqm2.pl"
+    base_url = settings.BaseURLProvider.api(server_type)
+    url = f"{base_url}/cgi/product_jqm2.pl"
 
     comment = params.get("comment")
     cookies = None
@@ -446,14 +430,12 @@ def update_product(
 def update_product_v3(
     barcode: str,
     body: dict,
-    server_domain: Optional[str] = None,
+    server_type: ServerType,
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,
 ):
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
-    url = f"{get_base_url(server_domain)}/api/v3/product/{barcode}"
+    base_url = settings.BaseURLProvider.api(server_type)
+    url = f"{base_url}/api/v3/product/{barcode}"
 
     comment = body.get("comment")
     cookies = None
@@ -491,14 +473,20 @@ def update_product_v3(
         raise ValueError("Errors during product update: %s", str(json["errors"]))
 
 
-def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
-    if get_product(barcode, server=to) is not None:
+def move_to(
+    product_id: ProductIdentifier, to: ServerType, timeout: Optional[int] = 10
+) -> bool:
+    if (
+        get_product(ProductIdentifier(barcode=product_id.barcode, server_type=to))
+        is not None
+    ):
         return False
 
-    url = "{}/cgi/product_jqm.pl".format(settings.BaseURLProvider.world())
+    base_url = settings.BaseURLProvider.api(product_id.server_type)
+    url = f"{base_url}/cgi/product_jqm.pl"
     params = {
         "type": "edit",
-        "code": barcode,
+        "code": product_id.barcode,
         "new_code": str(to),
         **off_credentials(),
     }
@@ -507,22 +495,155 @@ def move_to(barcode: str, to: ServerType, timeout: Optional[int] = 10) -> bool:
     return data["status"] == 1
 
 
+def delete_image_pipeline(
+    product_id: ProductIdentifier,
+    image_id: str,
+    auth: OFFAuthentication,
+) -> None:
+    """Delete an image and unselect all selected images that have this image
+    as image ID.
+
+    :param product_id: identifier of the product
+    :param image_id: ID of the image to delete (number)
+    :param auth: user authentication data
+    """
+    product = get_product(product_id, ["images"])
+
+    if product is None:
+        logger.info("%s not found, cannot delete image %s", product_id, image_id)
+        return None
+
+    to_delete = False
+    to_unselect = []
+
+    images = product["images"]
+    if image_id in images:
+        to_delete = True
+
+    for image_field, image_data in (
+        (key, data) for key, data in images.items() if not key.isdigit()
+    ):
+        if image_data["imgid"] == image_id:
+            to_unselect.append(image_field)
+
+    if to_delete:
+        logger.info("Sending deletion request for image %s of %s", image_id, product_id)
+        delete_image(product_id, image_id, auth)
+
+    for image_field in to_unselect:
+        logger.info(
+            "Sending unselect request for image %s of %s", image_field, product_id
+        )
+        unselect_image(product_id, image_field, auth)
+
+    logger.info("Image deletion pipeline completed")
+
+
+def unselect_image(
+    product_id: ProductIdentifier,
+    image_field: str,
+    auth: OFFAuthentication,
+    timeout: Optional[int] = 15,
+) -> requests.Response:
+    """Unselect an image.
+
+    :param product_id: identifier of the product
+    :param image_field: field name of the image to unselect, ex: front_fr
+    :param auth: user authentication data
+    :param timeout: request timeout value in seconds, defaults to 15s
+    :return: the request Response
+    """
+    base_url = settings.BaseURLProvider.api(product_id.server_type)
+    url = f"{base_url}/cgi/product_image_unselect.pl"
+    cookies = None
+    params = {
+        "code": product_id.barcode,
+        "id": image_field,
+    }
+
+    if auth.session_cookie:
+        cookies = {
+            "session": auth.session_cookie,
+        }
+    elif auth.username and auth.password:
+        params["user_id"] = auth.username
+        params["password"] = auth.password
+
+    r = http_session.post(
+        url,
+        data=params,
+        auth=settings._off_request_auth,
+        cookies=cookies,
+        timeout=timeout,
+    )
+
+    r.raise_for_status()
+    return r
+
+
+def delete_image(
+    product_id: ProductIdentifier,
+    image_id: str,
+    auth: OFFAuthentication,
+    timeout: Optional[int] = 15,
+) -> requests.Response:
+    """Delete an image on Product Opener.
+
+    :param product_id: identifier of the product
+    :param image_id: ID of the image to delete (number)
+    :param auth: user authentication data
+    :param timeout: request timeout (in seconds), defaults to 15
+    :return: the requests Response
+    """
+
+    base_url = settings.BaseURLProvider.api(product_id.server_type)
+    url = f"{base_url}/cgi/product_image_move.pl"
+    cookies = None
+    params = {
+        "type": "edit",
+        "code": product_id.barcode,
+        "imgids": image_id,
+        "action": "process",
+        "move_to_override": "trash",
+    }
+    form_data = {key: (None, value) for key, value in params.items()}
+
+    if auth.session_cookie:
+        cookies = {
+            "session": auth.session_cookie,
+        }
+    elif auth.username and auth.password:
+        params["user_id"] = auth.username
+        params["password"] = auth.password
+
+    r = http_session.post(
+        url,
+        auth=settings._off_request_auth,
+        files=form_data,
+        cookies=cookies,
+        timeout=timeout,
+    )
+
+    r.raise_for_status()
+    json_response = r.json()
+    if json_response["status"] != "ok":
+        logger.warning("error during image deletion: %s", json_response.get("error"))
+
+    return r
+
+
 def select_rotate_image(
-    barcode: str,
+    product_id: ProductIdentifier,
     image_id: str,
     image_key: Optional[str] = None,
     rotate: Optional[int] = None,
-    server_domain: Optional[str] = None,
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,
 ):
-    if server_domain is None:
-        server_domain = settings.BaseURLProvider.server_domain()
-
-    url = get_product_image_select_url(server_domain)
+    url = get_product_image_select_url(product_id.server_type)
     cookies = None
     params = {
-        "code": barcode,
+        "code": product_id.barcode,
         "imgid": image_id,
     }
 
@@ -560,6 +681,39 @@ def select_rotate_image(
     )
 
     r.raise_for_status()
+    return r
+
+
+def send_image(
+    product_id: ProductIdentifier,
+    image_field: str,
+    image_fp,
+    auth: Optional[OFFAuthentication] = None,
+):
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
+    url = f"{base_url}/cgi/product_image_upload.pl"
+
+    form_data: dict[str, tuple[Optional[str], Any]] = {}
+
+    if auth is not None and auth.username and auth.password:
+        user_id = auth.username
+        password = auth.password
+    else:
+        credentials = off_credentials()
+        user_id = credentials["user_id"]
+        password = credentials["password"]
+
+    form_data["user_id"] = (None, user_id)
+    form_data["password"] = (None, password)
+    form_data["code"] = (None, product_id.barcode)
+    form_data["imagefield"] = (None, image_field)
+    form_data[f"imgupload_{image_field}"] = ("image.jpg", image_fp)
+
+    r = http_session.post(
+        url,
+        auth=settings._off_request_auth,
+        files=form_data,
+    )
     return r
 
 

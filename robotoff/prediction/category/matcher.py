@@ -1,27 +1,30 @@
 import datetime
+import functools
 import itertools
 import operator
 import re
 from typing import Iterable, Optional
 
-import cachetools
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType, ServerType
 from robotoff.utils import dump_json, get_logger, load_json
 from robotoff.utils.text import (
     get_lemmatizing_nlp,
-    strip_accents_ascii,
+    strip_accents_v1,
     strip_consecutive_spaces,
 )
 
 logger = get_logger(__name__)
 
 SUPPORTED_LANG = {"fr", "en", "de", "es", "it", "nl"}
+# There are too many false positive in these languages with partial matches,
+# so we require a full match
+# ex in english: "strawberry yogurt" matches category "strawberry"
+FULL_MATCH_REQUIRED_LANG = {"en"}
 
 WEIGHT_REGEX = re.compile(
     r"[0-9]+[,.]?[0-9]*\s?(fl oz|dl|cl|mg|ml|lbs|oz|g|kg|l)(?![a-z])"
@@ -165,7 +168,7 @@ def process(text: str, lang: str) -> str:
             continue
         lemmas.append(token.lemma_)
 
-    return strip_accents_ascii(" ".join(lemmas))
+    return strip_accents_v1(" ".join(lemmas))
 
 
 def generate_match_maps(taxonomy_type: str) -> MatchMapType:
@@ -227,7 +230,7 @@ def get_match_maps(taxonomy_type: str) -> MatchMapType:
     )
 
 
-@cachetools.cached(cache=cachetools.TTLCache(maxsize=1, ttl=3600))
+@functools.cache
 def get_processors() -> dict[str, KeywordProcessor]:
     """Return a dict mapping lang to flashtext KeywordProcessor used to
     perform category matching.
@@ -270,7 +273,7 @@ def generate_intersect_categories_ingredients() -> dict[str, set[str]]:
     return matches
 
 
-@cachetools.cached(cache=cachetools.Cache(maxsize=1))
+@functools.cache
 def get_intersect_categories_ingredients():
     """Return intersection between category and ingredient maps saved on-disk
     for supported language.
@@ -343,35 +346,37 @@ def predict_by_lang(product: dict) -> dict[str, list[Prediction]]:
         if not product_name:
             continue
 
-        matches = match(product_name, lang)
+        for (
+            value_tag,
+            category_name,
+            pattern,
+            processed_product_name,
+            (start_idx, end_idx),
+        ) in match(product_name, lang):
+            is_full_match = end_idx - start_idx == len(processed_product_name)
 
-        predictions[lang] = [
-            Prediction(
-                type=PredictionType.category,
-                value_tag=value_tag,
-                data={
-                    "lang": lang,
-                    "product_name": product_name,
-                    "category_name": category_name,
-                    "pattern": pattern,
-                    "processed_product_name": processed_product_name,
-                    "start_idx": start_idx,
-                    "end_idx": end_idx,
-                    "is_full_match": (
-                        end_idx - start_idx == len(processed_product_name)
-                    ),
-                },
-                automatic_processing=False,
-                predictor="matcher",
+            if not is_full_match and lang in FULL_MATCH_REQUIRED_LANG:
+                continue
+
+            predictions.setdefault(lang, [])
+            predictions[lang].append(
+                Prediction(
+                    type=PredictionType.category,
+                    value_tag=value_tag,
+                    data={
+                        "lang": lang,
+                        "product_name": product_name,
+                        "category_name": category_name,
+                        "pattern": pattern,
+                        "processed_product_name": processed_product_name,
+                        "start_idx": start_idx,
+                        "end_idx": end_idx,
+                        "is_full_match": is_full_match,
+                    },
+                    automatic_processing=False,
+                    predictor="matcher",
+                )
             )
-            for (
-                value_tag,
-                category_name,
-                pattern,
-                processed_product_name,
-                (start_idx, end_idx),
-            ) in matches
-        ]
     return predictions
 
 
@@ -435,6 +440,7 @@ def predict_from_dataset(
     for product in product_stream.iter():
         for prediction in predict(product):
             prediction.barcode = product["code"]
+            prediction.server_type = ServerType.off
             yield prediction
 
 

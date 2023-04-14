@@ -3,7 +3,7 @@ from typing import Optional
 
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import dump_json, get_logger
-from robotoff.utils.text import strip_accents_ascii_v2
+from robotoff.utils.text import strip_accents_v2
 
 logger = get_logger(__name__)
 
@@ -14,7 +14,7 @@ def normalize_string(text: str, lowercase: bool, strip_accent: bool) -> str:
     if lowercase:
         text = text.lower()
     if strip_accent:
-        text = strip_accents_ascii_v2(text)
+        text = strip_accents_v2(text)
     return text
 
 

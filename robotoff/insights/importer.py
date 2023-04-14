@@ -13,9 +13,7 @@ from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_ra
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
-from robotoff.off import get_server_type
 from robotoff.prediction.ocr.packaging import SHAPE_ONLY_EXCLUDE_SET
-from robotoff.prediction.types import Prediction
 from robotoff.products import (
     DBProductStore,
     Product,
@@ -33,10 +31,14 @@ from robotoff.taxonomy import (
 from robotoff.types import (
     InsightImportResult,
     InsightType,
+    NeuralCategoryClassifierModel,
     PackagingElementProperty,
+    Prediction,
     PredictionImportResult,
     PredictionType,
+    ProductIdentifier,
     ProductInsightImportResult,
+    ServerType,
 )
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import CachedStore
@@ -115,15 +117,65 @@ def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
     return image_id.isdigit() and image_id in images
 
 
+def convert_bounding_box_absolute_to_relative(
+    bounding_box_absolute: tuple[int, int, int, int],
+    images: dict[str, Any],
+    source_image: Optional[str],
+) -> Optional[tuple[float, float, float, float]]:
+    """Convert absolute bounding box coordinates to relative ones.
+
+    When detecting patterns using regex or flashtext, we don't know the size of
+    the image, so we cannot compute the relative coordinates of the text
+    bounding box. We perform the conversion during insight import instead.
+
+    Relative coordinates are used as they are more convenient than absolute ones
+    (we can use them on a resized version of the original image).
+
+    :param bounding_box_absolute: absolute coordinates of the bounding box
+    :param images: The image dict as stored in MongoDB.
+    :param source_image: The insight source image, should be the path of the
+    image path or None.
+    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
+        or None if a conversion error occured
+    """
+    if source_image is None:
+        logger.warning(
+            "could not convert absolute coordinate bounding box: "
+            "bounding box was provided (%s) but source image is null",
+            bounding_box_absolute,
+        )
+        return None
+
+    image_id = Path(source_image).stem
+
+    if image_id not in images:
+        logger.info(
+            "could not convert absolute coordinate bounding box: "
+            "image %s not found in product images",
+            image_id,
+        )
+        return None
+
+    size = images[image_id]["sizes"]["full"]
+    height = size["h"]
+    width = size["w"]
+    return (
+        bounding_box_absolute[0] / height,
+        bounding_box_absolute[1] / width,
+        bounding_box_absolute[2] / height,
+        bounding_box_absolute[3] / width,
+    )
+
+
 def get_existing_insight(
-    insight_type: InsightType, barcode: str, server_domain: str
+    insight_type: InsightType, product_id: ProductIdentifier
 ) -> list[ProductInsight]:
     """Get all insights for specific product and `insight_type`."""
     return list(
         ProductInsight.select().where(
             ProductInsight.type == insight_type.name,
-            ProductInsight.barcode == barcode,
-            ProductInsight.server_domain == server_domain,
+            ProductInsight.barcode == product_id.barcode,
+            ProductInsight.server_type == product_id.server_type.name,
         )
     )
 
@@ -138,7 +190,7 @@ def is_reserved_barcode(barcode: str) -> bool:
 def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight]:
     """Sort candidates by priority, using as keys:
 
-    - priority, specified by data["priority"], candidate with lowest priority
+    - priority, specified by `data["priority"]`, candidate with lowest priority
       values (high priority) come first
     - source image upload datetime (most recent first): images IDs are
       auto-incremented integers, so the most recent images have the highest IDs.
@@ -224,9 +276,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def import_insights(
         cls,
-        barcode: str,
+        product_id: ProductIdentifier,
         predictions: list[Prediction],
-        server_domain: str,
         product_store: DBProductStore,
     ) -> ProductInsightImportResult:
         """Import insights, this is the main method.
@@ -252,7 +303,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
         inserts = 0
         to_create, to_update, to_delete = cls.generate_insights(
-            barcode, predictions, server_domain, product_store
+            product_id, predictions, product_store
         )
         to_delete_ids = [insight.id for insight in to_delete]
         if to_delete_ids:
@@ -274,7 +325,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for field_name in (
                 key
                 for key in insight.__data__.keys()
-                if key not in ("id", "barcode", "type", "server_domain", "server_type")
+                if key not in ("id", "barcode", "type", "server_type")
             ):
                 if getattr(insight, field_name) != getattr(
                     reference_insight, field_name
@@ -291,16 +342,15 @@ class InsightImporter(metaclass=abc.ABCMeta):
             insight_created_ids=created_ids,
             insight_deleted_ids=to_delete_ids,
             insight_updated_ids=updated_ids,
-            barcode=barcode,
+            product_id=product_id,
             type=cls.get_type(),
         )
 
     @classmethod
     def generate_insights(
         cls,
-        barcode: str,
+        product_id: ProductIdentifier,
         predictions: list[Prediction],
-        server_domain: str,
         product_store: DBProductStore,
     ) -> tuple[
         list[ProductInsight],
@@ -314,22 +364,23 @@ class InsightImporter(metaclass=abc.ABCMeta):
         (and implemented in sub-classes).
         """
         timestamp = datetime.datetime.utcnow()
-        server_type = get_server_type(server_domain).name
 
-        product = product_store[barcode]
-        references = get_existing_insight(cls.get_type(), barcode, server_domain)
+        product = product_store[product_id]
+        references = get_existing_insight(cls.get_type(), product_id)
 
-        if product is None:
-            logger.info(
-                f"Product {barcode} not found in DB, deleting existing insights"
-            )
+        # If `ENABLE_PRODUCT_CHECK` is True (default, production settings), we
+        # stop the import process and delete all associated insights
+        if product is None and settings.ENABLE_PRODUCT_CHECK:
+            logger.info("%s not found in DB, deleting existing insights", product_id)
             return [], [], references
 
         predictions = cls.sort_predictions(predictions)
         candidates = [
             candidate
             for candidate in cls.generate_candidates(product, predictions)
-            if is_valid_insight_image(product.images, candidate.source_image)
+            # Don't check the image validity if product check was disabled (product=None)
+            if product is None
+            or is_valid_insight_image(product.images, candidate.source_image)
         ]
         for candidate in candidates:
             if candidate.automatic_processing is None:
@@ -337,6 +388,21 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     "Insight with automatic_processing=None: %s", candidate.__data__
                 )
                 candidate.automatic_processing = False
+
+            # flashtext/regex insights return bounding boxes in absolute coordinates,
+            # while we use relative coordinates elsewhere. Perform the conversion here.
+            # Skip this step if product validity check is disabled (product=None),
+            # as we don't have image information
+            if (
+                bounding_box_absolute := candidate.data.pop(
+                    "bounding_box_absolute", None
+                )
+            ) is not None and product:
+                candidate.data[
+                    "bounding_box"
+                ] = convert_bounding_box_absolute_to_relative(
+                    bounding_box_absolute, product.images, candidate.source_image
+                )
 
             if candidate.data.get("is_annotation"):
                 username = candidate.data.get("username")
@@ -349,16 +415,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
         to_create, to_update, to_delete = cls.get_insight_update(candidates, references)
 
         for insight in to_create:
-            cls.add_fields(insight, product, timestamp, server_domain, server_type)
+            cls.add_fields(insight, product, timestamp)
 
-        for insight, reference_insight in to_update:
-            cls.add_fields(
-                insight,
-                product,
-                timestamp,
-                reference_insight.server_domain,
-                reference_insight.server_type,
-            )
+        for insight, _ in to_update:
+            cls.add_fields(insight, product, timestamp)
 
         return (to_create, to_update, to_delete)
 
@@ -392,17 +452,19 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
-        """From a list of Predictions associated with a product, yield
-        candidate ProductInsights for import.
+        """From a list of `Prediction`s associated with a product, yield
+        candidate `ProductInsight`s for import.
 
-        The types of all Predictions must be a subset of the required types
+        The types of all `Prediction`s must be a subset of the required types
         available by calling `InsightImporter.get_required_prediction_types`.
         This method must be implemented in subclasses.
 
-        :param product: The Product associated with the Predictions
+        :param product: The Product associated with the Predictions, if null
+            no validity check of the insight with respect to the product
+            should be performed
         :param predictions: The list of predictions for the product of type
         :yield: candidate ProductInsight
         """
@@ -417,11 +479,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
         list[ProductInsight],
     ]:
         """Return a tuple containing:
-        - a list of ProductInsight to create
-        - a list of ProductInsight to update, as (insight, reference_insight)
+
+        - a list of `ProductInsight` to create
+        - a list of `ProductInsight` to update, as (`insight`, `reference_insight`)
           tuples, where `insight` is the candidate and `reference_insight` is
           the insight already in DB
-        - a list of ProductInsight to delete
+        - a list of `ProductInsight` to delete
 
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
@@ -498,7 +561,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     ) -> list[ProductInsight]:
         """Sort candidates by priority, using as keys:
 
-        - priority, specified by data["priority"], candidate with lowest priority
+        - priority, specified by `data["priority"]`, candidate with lowest priority
         values (high priority) come first
         - source image upload datetime (most recent first): images IDs are
         auto-incremented integers, so the most recent images have the highest IDs.
@@ -535,12 +598,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def is_conflicting_insight(
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
-        """Return True if a candidate ProductInsight conflicts with an
+        """Return `True` if a candidate `ProductInsight` conflicts with an
         existing or another candidate insight, in which case the candidate
         insight won't be imported.
 
-        :param candidate: The candidate ProductInsight to import
-        :param reference: A ProductInsight, either another candidate or an
+        :param candidate: The candidate `ProductInsight` to import
+        :param reference: A `ProductInsight`, either another candidate or an
         insight that exists in DB
         """
         pass
@@ -549,22 +612,26 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def add_fields(
         cls,
         insight: ProductInsight,
-        product: Product,
+        product: Optional[Product],
         timestamp: datetime.datetime,
-        server_domain: str,
-        server_type: str,
     ):
-        """Add mandatory insight fields."""
+        """Add mandatory insight fields (`id`, `timestamp`,
+        `automatic_processing`,...).
+
+        :param insight: the insight to update
+        :param product: the `Product` associated with the insight
+        :param timestamp: insight creation datetime
+        """
         barcode = insight.barcode
         insight.reserved_barcode = is_reserved_barcode(barcode)
-        insight.server_domain = server_domain
-        insight.server_type = server_type
         insight.id = str(uuid.uuid4())
         insight.timestamp = timestamp
-        insight.countries = product.countries_tags
-        insight.brands = product.brands_tags
         insight.n_votes = 0
-        insight.unique_scans_n = product.unique_scans_n
+
+        if product:
+            insight.countries = product.countries_tags
+            insight.brands = product.brands_tags
+            insight.unique_scans_n = product.unique_scans_n
 
         if insight.automatic_processing:
             insight.process_after = timestamp + datetime.timedelta(
@@ -575,7 +642,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     @classmethod
     def add_optional_fields(  # noqa: B027
-        cls, insight: ProductInsight, product: Product
+        cls, insight: ProductInsight, product: Optional[Product]
     ):
         """Overwrite this method in children classes to add optional fields.
 
@@ -604,9 +671,12 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(
-        product: Product,
+        product: Optional[Product],
         emb_code: str,
     ) -> bool:
+        if product is None:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
         existing_codes = [normalize_emb_code(c) for c in product.emb_codes_tags]
         normalized_code = normalize_emb_code(emb_code)
 
@@ -615,7 +685,7 @@ class PackagerCodeInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         yield from (
@@ -643,7 +713,10 @@ class LabelInsightImporter(InsightImporter):
         )
 
     @staticmethod
-    def is_prediction_valid(product: Product, tag: str) -> bool:
+    def is_prediction_valid(product: Optional[Product], tag: str) -> bool:
+        if product is None:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
         return not (
             tag in product.labels_tags
             or LabelInsightImporter.is_parent_label(tag, set(product.labels_tags))
@@ -660,7 +733,7 @@ class LabelInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         candidates = [
@@ -707,7 +780,7 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def is_parent_category(cls, category: str, to_check_categories: set[str]):
+    def is_parent_category(cls, category: str, to_check_categories: set[str]) -> bool:
         # Check that the predicted category is not a parent of a
         # current/already predicted category
         return get_taxonomy(InsightType.category.name).is_parent_of_any(
@@ -717,7 +790,7 @@ class CategoryImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         candidates = [
@@ -726,16 +799,28 @@ class CategoryImporter(InsightImporter):
             if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
         ]
         taxonomy = get_taxonomy(InsightType.category.name)
+
+        # Make sure we yield candidates with `above_threshold=True` even if
+        # there are candidates that are deepest in the category taxonomy
         yield from (
             ProductInsight(**candidate.to_dict())
             for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
+            if candidate.data.get("above_threshold") is True
+        )
+        yield from (
+            ProductInsight(**candidate.to_dict())
+            for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
+            if candidate.data.get("above_threshold", False) is False
         )
 
     @staticmethod
     def is_prediction_valid(
-        product: Product,
+        product: Optional[Product],
         category: str,
     ) -> bool:
+        if product is None:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
         # check whether this is new information or if the predicted category
         # is not a parent of a current/already predicted category
         return not (
@@ -746,15 +831,33 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def add_optional_fields(cls, insight: ProductInsight, product: Product):
+    def add_optional_fields(cls, insight: ProductInsight, product: Optional[Product]):
         taxonomy = get_taxonomy(InsightType.category.name)
+        campaigns = []
         if (
             insight.value_tag in taxonomy
             and "agribalyse_food_code" in taxonomy[insight.value_tag].additional_data
         ):
             # This category is linked to an agribalyse category, add it as a
             # campaign tag
-            insight.campaign = ["agribalyse-category"]
+            campaigns.append("agribalyse-category")
+
+        if (
+            insight.predictor == "neural"
+            and insight.data.get("model_version")
+            == NeuralCategoryClassifierModel.keras_image_embeddings_3_0.value
+            and insight.data.get("above_threshold", False)
+        ):
+            # Add `v3-categorizer-automatic-processing` campaign to category
+            # insights that will be applied automatically soon
+            # (experimental phase)
+            campaigns.append("v3-categorizer-automatic-processing")
+
+        if product and not product.categories_tags:
+            # Add a campaign to track products with no categories filled in
+            campaigns.append("missing-category")
+
+        insight.campaign = campaigns
 
 
 class ProductWeightImporter(InsightImporter):
@@ -786,10 +889,10 @@ class ProductWeightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
-        if product.quantity is not None or not predictions:
+        if (product and product.quantity is not None) or not predictions:
             # Don't generate candidates if the product weight is already
             # specified or if there are no predictions
             return
@@ -831,7 +934,7 @@ class ExpirationDateImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         if (product and product.expiration_date) or not predictions:
@@ -893,10 +996,10 @@ class BrandInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
-        if product.brands_tags:
+        if product and product.brands_tags:
             # For now, don't create an insight if a brand has already been provided
             return
 
@@ -931,7 +1034,7 @@ class StoreInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         for prediction in predictions:
@@ -1038,7 +1141,7 @@ class PackagingImporter(InsightImporter):
         return candidate_shape_is_parent_of_ref
 
     @staticmethod
-    def keep_prediction(prediction: Prediction, product: Product) -> bool:
+    def keep_prediction(prediction: Prediction, product: Optional[Product]) -> bool:
         """element may contain the following properties:
         - shape
         - recycling
@@ -1073,6 +1176,11 @@ class PackagingImporter(InsightImporter):
                 TaxonomyType.packaging_recycling.name,
             )
         }
+
+        if not product:
+            # Predictions are always valid when product check is disabled (product=None)
+            return True
+
         return not any(
             PackagingImporter.discard_packaging_element(
                 candidate_element, existing_element, taxonomies
@@ -1100,7 +1208,7 @@ class PackagingImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Product,
+        product: Optional[Product],
         predictions: list[Prediction],
     ) -> Iterator[ProductInsight]:
         # 1 prediction = 1 packaging element
@@ -1140,49 +1248,45 @@ def is_valid_product_prediction(
     return True
 
 
-def create_prediction_model(
-    prediction: Prediction,
-    server_domain: str,
-    timestamp: datetime.datetime,
-):
+def create_prediction_model(prediction: Prediction, timestamp: datetime.datetime):
     prediction_dict = prediction.to_dict()
     prediction_dict.pop("id")
-    return {
-        **prediction_dict,
-        "timestamp": timestamp,
-        "server_domain": server_domain,
-    }
+    return {**prediction_dict, "timestamp": timestamp}
 
 
 def import_product_predictions(
     barcode: str,
+    server_type: ServerType,
     product_predictions_iter: Iterable[Prediction],
-    server_domain: str,
 ):
     """Import predictions for a specific product.
 
-    If a prediction already exists in DB (same (barcode, type, server_domain,
+    If a prediction already exists in DB (same (barcode, type,
     source_image, value, value_tag, predictor, automatic_processing)), it
     won't be imported.
 
     :param barcode: Barcode of the product. All `product_predictions` must
-    have the same barcode.
+        have the same barcode.
+    :param server_type: the server type (project) of the product, all
+        `product_predictions` must have the same `server_type`.
     :param product_predictions_iter: Iterable of Predictions.
-    :param server_domain: The server domain associated with the predictions.
     :return: The number of items imported in DB.
     """
     timestamp = datetime.datetime.utcnow()
     existing_predictions = set(
         PredictionModel.select(
             PredictionModel.type,
-            PredictionModel.server_domain,
+            PredictionModel.server_type,
             PredictionModel.source_image,
             PredictionModel.value_tag,
             PredictionModel.value,
             PredictionModel.predictor,
             PredictionModel.automatic_processing,
         )
-        .where(PredictionModel.barcode == barcode)
+        .where(
+            PredictionModel.barcode == barcode,
+            PredictionModel.server_type == server_type.name,
+        )
         .tuples()
     )
 
@@ -1190,11 +1294,11 @@ def import_product_predictions(
     # when we could decide to replace old predictions of the same key.
     # It's not yet implemented.
     to_import = (
-        create_prediction_model(prediction, server_domain, timestamp)
+        create_prediction_model(prediction, timestamp)
         for prediction in product_predictions_iter
         if (
             prediction.type,
-            server_domain,
+            prediction.server_type.name,
             prediction.source_image,
             prediction.value_tag,
             prediction.value,
@@ -1220,22 +1324,25 @@ IMPORTERS: list[Type] = [
 
 def import_insights(
     predictions: Iterable[Prediction],
-    server_domain: str,
+    server_type: ServerType,
     product_store: Optional[DBProductStore] = None,
 ) -> InsightImportResult:
     """Import predictions and generate (and import) insights from these
     predictions.
 
     :param predictions: an iterable of Predictions to import
+    :param server_type: the server type (project) of the product
+    :param product_store: a ProductStore to use, by defaults
+        DBProductStore (MongoDB-based product store) is used.
     """
     if product_store is None:
-        product_store = get_product_store()
+        product_store = get_product_store(server_type)
 
     updated_prediction_types_by_barcode, prediction_import_results = import_predictions(
-        predictions, product_store, server_domain
+        predictions, product_store, server_type
     )
     product_insight_import_results = import_insights_for_products(
-        updated_prediction_types_by_barcode, server_domain, product_store
+        updated_prediction_types_by_barcode, product_store, server_type
     )
     return InsightImportResult(
         product_insight_import_results=product_insight_import_results,
@@ -1245,15 +1352,15 @@ def import_insights(
 
 def import_insights_for_products(
     prediction_types_by_barcode: dict[str, set[PredictionType]],
-    server_domain: str,
     product_store: DBProductStore,
+    server_type: ServerType,
 ) -> list[ProductInsightImportResult]:
     """Re-compute insights for products with new predictions.
 
     :param prediction_types_by_barcode: a dict that associates each barcode
-    with a set of prediction type that were updated
-    :param server_domain: The server domain associated with the predictions
+        with a set of prediction type that were updated
     :param product_store: The product store to use
+    :param server_type: the server type (project) of the product
 
     :return: Number of imported insights
     """
@@ -1269,7 +1376,7 @@ def import_insights_for_products(
             predictions = [
                 Prediction(**p)
                 for p in get_product_predictions(
-                    selected_barcodes, list(required_prediction_types)
+                    selected_barcodes, server_type, list(required_prediction_types)
                 )
             ]
 
@@ -1277,19 +1384,23 @@ def import_insights_for_products(
                 sorted(predictions, key=operator.attrgetter("barcode")),
                 operator.attrgetter("barcode"),
             ):
+                product_id = ProductIdentifier(barcode, server_type)
                 try:
-                    with Lock(name=f"robotoff:import:{barcode}", expire=60, timeout=10):
+                    with Lock(
+                        name=f"robotoff:import:{product_id.server_type.name}:{product_id.barcode}",
+                        expire=60,
+                        timeout=10,
+                    ):
                         result = importer.import_insights(
-                            barcode,
+                            product_id,
                             list(product_predictions),
-                            server_domain,
                             product_store,
                         )
                         import_results.append(result)
                 except LockedResourceException:
                     logger.info(
-                        "Couldn't acquire insight import lock, skipping insight import for product %s",
-                        barcode,
+                        "Couldn't acquire insight import lock, skipping insight import for %s",
+                        product_id,
                     )
                     continue
     return import_results
@@ -1298,20 +1409,23 @@ def import_insights_for_products(
 def import_predictions(
     predictions: Iterable[Prediction],
     product_store: DBProductStore,
-    server_domain: str,
+    server_type: ServerType,
 ) -> tuple[dict[str, set[PredictionType]], list[PredictionImportResult]]:
     """Check validity and import provided Prediction.
 
     :param predictions: the Predictions to import
     :param product_store: The product store to use
-    :param server_domain: The server domain associated with the predictions
     :return: dict associating each barcode with prediction types that where
     updated in order to re-compute associated insights
     """
     predictions = [
         p
         for p in predictions
-        if is_valid_product_prediction(p, product_store[p.barcode])  # type: ignore
+        if (
+            # If product validity check is disable, all predictions are valid
+            not settings.ENABLE_PRODUCT_CHECK
+            or is_valid_product_prediction(p, product_store[ProductIdentifier(p.barcode, server_type)])  # type: ignore
+        )
     ]
 
     predictions_import_results = []
@@ -1322,10 +1436,12 @@ def import_predictions(
     ):
         product_predictions_group = list(product_predictions_iter)
         predictions_imported = import_product_predictions(
-            barcode, product_predictions_group, server_domain
+            barcode, server_type, product_predictions_group
         )
         predictions_import_results.append(
-            PredictionImportResult(created=predictions_imported, barcode=barcode)
+            PredictionImportResult(
+                created=predictions_imported, barcode=barcode, server_type=server_type
+            )
         )
         updated_prediction_types_by_barcode[barcode] = set(
             prediction.type for prediction in product_predictions_group
@@ -1334,8 +1450,7 @@ def import_predictions(
 
 
 def refresh_insights(
-    barcode: str,
-    server_domain: str,
+    product_id: ProductIdentifier,
     product_store: Optional[DBProductStore] = None,
 ) -> list[InsightImportResult]:
     """Refresh all insights for specific product.
@@ -1348,15 +1463,17 @@ def refresh_insights(
     predictions. It's useful to refresh insights after an Product Opener
     update (some insights may be invalid).
 
-    :param barcode: Barcode of the product.
-    :param server_domain: The server domain associated with the predictions.
+    :param product_id: identifier of the product
     :param product_store: The product store to use, defaults to None
     :return: The number of imported insights.
     """
     if product_store is None:
-        product_store = get_product_store()
+        product_store = get_product_store(product_id.server_type)
 
-    predictions = [Prediction(**p) for p in get_product_predictions([barcode])]
+    predictions = [
+        Prediction(**p)
+        for p in get_product_predictions([product_id.barcode], product_id.server_type)
+    ]
     prediction_types = set(p.type for p in predictions)
 
     import_results = []
@@ -1364,9 +1481,8 @@ def refresh_insights(
         required_prediction_types = importer.get_required_prediction_types()
         if prediction_types >= required_prediction_types:
             import_result = importer.import_insights(
-                barcode,
+                product_id,
                 [p for p in predictions if p.type in required_prediction_types],
-                server_domain,
                 product_store,
             )
             import_results.append(import_result)
@@ -1374,9 +1490,14 @@ def refresh_insights(
 
 
 def get_product_predictions(
-    barcodes: list[str], prediction_types: Optional[list[str]] = None
+    barcodes: list[str],
+    server_type: ServerType,
+    prediction_types: Optional[list[str]] = None,
 ) -> Iterator[dict]:
-    where_clauses = [PredictionModel.barcode.in_(barcodes)]
+    where_clauses = [
+        PredictionModel.barcode.in_(barcodes),
+        PredictionModel.server_type == server_type.name,
+    ]
 
     if prediction_types is not None:
         where_clauses.append(PredictionModel.type.in_(prediction_types))

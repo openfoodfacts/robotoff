@@ -13,14 +13,14 @@ from robotoff.insights.question import (
 from robotoff.models import ProductInsight
 from robotoff.off import split_barcode
 from robotoff.settings import TEST_DATA_DIR
-from robotoff.types import InsightType
+from robotoff.types import InsightType, ProductIdentifier, ServerType
 from robotoff.utils.i18n import TranslationStore
 
 
 def _reset_envvar(monkeypatch):
     monkeypatch.setenv("ROBOTOFF_INSTANCE", "dev")
     monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)
-    monkeypatch.delenv("ROBOTOFF_DOMAIN", raising=False)
+    monkeypatch.delenv("ROBOTOFF_TLD", raising=False)
 
 
 @pytest.mark.parametrize(
@@ -42,7 +42,8 @@ def test_generate_selected_images(monkeypatch):
         IMAGE_DATA = json.load(f)
 
     selected_images = generate_selected_images(
-        IMAGE_DATA["product"]["images"], IMAGE_DATA["code"]
+        IMAGE_DATA["product"]["images"],
+        ProductIdentifier(IMAGE_DATA["code"], ServerType.off),
     )
 
     assert selected_images["front"] == {
@@ -102,6 +103,7 @@ def generate_insight(
     value: Optional[str] = None,
     value_tag: Optional[str] = None,
     add_source_image: bool = False,
+    server_type: ServerType = ServerType.off,
 ) -> ProductInsight:
     barcode = "1111111111"
     return ProductInsight(
@@ -112,6 +114,7 @@ def generate_insight(
         source_image=f"/{'/'.join(split_barcode(barcode))}/1.jpg"
         if add_source_image
         else None,
+        server_type=server_type.name,
     )
 
 
@@ -174,6 +177,7 @@ def test_category_question_formatter(
         "question": expected_question_str,
         "insight_id": str(insight.id),
         "insight_type": InsightType.category.name,
+        "server_type": ServerType.off.name,
         "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
     }
 
@@ -227,6 +231,7 @@ def test_label_question_formatter(
         "question": expected_question_str,
         "insight_id": str(insight.id),
         "insight_type": InsightType.label.name,
+        "server_type": ServerType.off.name,
         "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/1.400.jpg",
     }
 

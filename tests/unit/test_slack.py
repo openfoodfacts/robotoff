@@ -6,8 +6,11 @@ import pytest
 
 from robotoff import settings, slack
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
+
+DEFAULT_BARCODE = "123"
+DEFAULT_SERVER_TYPE = ServerType.off
+DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 
 
 class MockSlackResponse:
@@ -68,7 +71,7 @@ def test_notify_image_flag_no_prediction(mocker):
     notifier.notify_image_flag(
         [],
         "/source_image",
-        "123",
+        DEFAULT_PRODUCT_ID,
     )
     # wont publish anything
     assert not mock.called
@@ -97,22 +100,26 @@ def test_notify_image_flag_public(mocker, monkeypatch):
             )
         ],
         "/source_image/2.jpg",
-        "123",
+        DEFAULT_PRODUCT_ID,
     )
 
     mock_slack.assert_called_once_with(
         slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.BaseURLProvider.image_url('/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world()}/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/cgi/product.pl?type=edit&code=123|*Edit*>",
             slack_notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
-            settings.BaseURLProvider.image_url("/source_image/2.jpg"),
+            settings.BaseURLProvider.image_url(
+                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
+            ),
         ),
     )
     mock_image_moderation.assert_called_once_with(
         "http://images.org/123",
         data={
             "imgid": 2,
-            "url": settings.BaseURLProvider.image_url("/source_image/2.jpg"),
+            "url": settings.BaseURLProvider.image_url(
+                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
+            ),
         },
     )
 
@@ -140,22 +147,26 @@ def test_notify_image_flag_private(mocker, monkeypatch):
             )
         ],
         "/source_image/2.jpg",
-        "123",
+        DEFAULT_PRODUCT_ID,
     )
 
     mock_slack.assert_called_once_with(
         slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.BaseURLProvider.image_url('/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world()}/cgi/product.pl?type=edit&code=123|*Edit*>",
+            f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/cgi/product.pl?type=edit&code=123|*Edit*>",
             slack_notifier.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL,
-            settings.BaseURLProvider.image_url("/source_image/2.jpg"),
+            settings.BaseURLProvider.image_url(
+                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
+            ),
         ),
     )
     mock_image_moderation.assert_called_once_with(
         "http://images.org/123",
         data={
             "imgid": 2,
-            "url": settings.BaseURLProvider.image_url("/source_image/2.jpg"),
+            "url": settings.BaseURLProvider.image_url(
+                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
+            ),
         },
     )
 
@@ -168,21 +179,22 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
 
     notifier = slack.SlackNotifier("")
 
-    print(settings.BaseURLProvider.image_url("/image/1"))
+    print(settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, "/image/1"))
     notifier.notify_automatic_processing(
         ProductInsight(
-            barcode="123",
+            barcode=DEFAULT_BARCODE,
             source_image="/image/1",
             type="weight",
             value="200g",
             data={"raw": "en:200g"},
+            server_type=DEFAULT_SERVER_TYPE,
         )
     )
 
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `200g` weight was automatically added to product 123 (<{settings.BaseURLProvider.world()}/product/123|product>, <{settings.BaseURLProvider.image_url('/image/1')}|source image>)",
+            f"The `200g` weight was automatically added to product 123 (<{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/product/123|product>, <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/image/1')}|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
@@ -198,14 +210,18 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
 
     notifier.notify_automatic_processing(
         ProductInsight(
-            barcode="123", source_image="/image/1", type="label", value_tag="en:vegan"
+            barcode=DEFAULT_BARCODE,
+            source_image="/image/1",
+            type="label",
+            value_tag="en:vegan",
+            server_type=DEFAULT_SERVER_TYPE,
         )
     )
 
     mock.assert_called_once_with(
         notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
-            f"The `en:vegan` label was automatically added to product 123 (<{settings.BaseURLProvider.world()}/product/123|product>, <{settings.BaseURLProvider.image_url('/image/1')}|source image>)",
+            f"The `en:vegan` label was automatically added to product 123 (<{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/product/123|product>, <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/image/1')}|source image>)",
             notifier.ROBOTOFF_ALERT_CHANNEL,
         ),
     )
@@ -219,11 +235,15 @@ def test_noop_slack_notifier_logging(caplog):
         LogoAnnotation(
             image_prediction=ImagePrediction(
                 image=ImageModel(
-                    barcode="123", source_image="/123/1.jpg", width=10, height=10
+                    barcode=DEFAULT_BARCODE,
+                    source_image="/123/1.jpg",
+                    width=10,
+                    height=10,
+                    server_type=DEFAULT_SERVER_TYPE.name,
                 ),
             ),
             bounding_box=(1, 1, 2, 2),
-            barcode="123",
+            barcode=DEFAULT_BARCODE,
             source_image="/123/1.jpg",
         ),
         {},

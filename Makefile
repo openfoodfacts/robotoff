@@ -91,7 +91,7 @@ log:
 # Management #
 #------------#
 
-dl-models: dl-model-labels dl-model-archives dl-model-categorizer
+dl-models: dl-model-archives dl-model-categorizer
 
 dl-model-archives:
 	@echo "🥫 Downloading model archive files …"
@@ -104,16 +104,6 @@ dl-model-archives:
 	done; \
 	mkdir -p clip clip/1; \
 	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx;
-
-dl-model-labels:
-	@echo "🥫 Downloading model label files …"
-	cd models; \
-	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
-	do \
-		dir=`echo $${asset_name} | sed 's/tf-//g'`; \
-		mkdir -p $${dir} $${dir}/1; \
-		wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/labels.txt > $${dir}/labels.txt; \
-	done
 
 dl-model-categorizer:
 	@echo "🥫 Downloading categorizer model …"

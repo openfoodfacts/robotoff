@@ -1,11 +1,11 @@
+import functools
 import operator
 from typing import Optional
-
-import cachetools
 
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import ServerType
 from robotoff.utils import (
     dump_json,
     dump_text,
@@ -18,7 +18,7 @@ from robotoff.utils import (
 logger = get_logger(__name__)
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_brand_prefix() -> set[tuple[str, str]]:
     """Get a set of brand prefix tuples found in Open Food Facts databases.
 
@@ -29,7 +29,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
     return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_brand_blacklist() -> set[str]:
     logger.info("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
@@ -99,12 +99,13 @@ def keep_brand_from_taxonomy(
 
 def generate_brand_list(
     threshold: int,
+    server_type: ServerType,
     min_length: Optional[int] = None,
     blacklisted_brands: Optional[set[str]] = None,
 ) -> list[tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
-    url = settings.BaseURLProvider.world() + "/brands.json"
+    url = settings.BaseURLProvider.world(server_type) + "/brands.json"
     brand_count_list = http_session.get(url).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}
@@ -131,7 +132,11 @@ def dump_taxonomy_brands(
     min_length: Optional[int] = None,
     blacklisted_brands: Optional[set[str]] = None,
 ):
-    filtered_brands = generate_brand_list(threshold, min_length, blacklisted_brands)
+    # Only support OFF for now
+    server_type = ServerType.off
+    filtered_brands = generate_brand_list(
+        threshold, server_type, min_length, blacklisted_brands
+    )
     line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 

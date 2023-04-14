@@ -1,37 +1,49 @@
-from typing import Optional
+from typing import Any, Optional
 
-from robotoff.prediction.types import Prediction
 from robotoff.taxonomy import Taxonomy
-from robotoff.types import JSONType, NeuralCategoryClassifierModel, PredictionType
+from robotoff.triton import get_triton_inference_stub
+from robotoff.types import (
+    JSONType,
+    NeuralCategoryClassifierModel,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+)
+from robotoff.utils import get_logger
 
 from . import keras_category_classifier_2_0, keras_category_classifier_3_0
 
+logger = get_logger(__name__)
 
-class CategoryPrediction:
-    """CategoryPrediction stores information about a category classification prediction."""
 
-    def __init__(self, category: str, confidence: float, model_version: str):
-        self.category = category
-        self.confidence = confidence
-        self.model_version = model_version
+def create_prediction(
+    category: str,
+    confidence: float,
+    model_version: str,
+    product_id: ProductIdentifier,
+    **kwargs
+) -> Prediction:
+    """Create a Prediction.
 
-    def to_prediction(self) -> Prediction:
-        """Converts this category prediction to a Prediction."""
-        return Prediction(
-            type=PredictionType.category,
-            value_tag=self.category,
-            data={"model_version": self.model_version},
-            automatic_processing=False,
-            predictor="neural",
-            confidence=self.confidence,
-        )
+    kwargs are added to the prediction data field.
 
-    def __eq__(self, other):
-        """A CategoryPrediction is equal to another prediction when their attributes match."""
-        if not isinstance(other, CategoryPrediction):
-            return NotImplemented
-
-        return self.category == other.category and self.confidence == other.confidence
+    :param category: canonical ID of the category, ex: en:cheeses
+    :param confidence: confidence score of the model, between 0.0 and 1.0
+    :param model_version: version of the model, see
+        NeuralCategoryClassifierModel values for possible values.
+        ex: `keras-image-embeddings-3.0`
+    :param product_id: identifier of the product
+    """
+    return Prediction(
+        type=PredictionType.category,
+        value_tag=category,
+        data={"model_version": model_version, **kwargs},
+        automatic_processing=False,
+        predictor="neural",
+        confidence=confidence,
+        barcode=product_id.barcode,
+        server_type=product_id.server_type,
+    )
 
 
 class CategoryClassifier:
@@ -49,6 +61,7 @@ class CategoryClassifier:
     def predict(
         self,
         product: dict,
+        product_id: ProductIdentifier,
         deepest_only: bool = False,
         threshold: Optional[float] = None,
         model_name: Optional[NeuralCategoryClassifierModel] = None,
@@ -58,6 +71,7 @@ class CategoryClassifier:
 
         :param product: the product to predict the categories from, should
             have at least `product_name` and `ingredients_tags` fields
+        :param product_id: identifier of the product
         :param deepest_only: controls whether the returned list should only
             contain the deepmost categories for a predicted taxonomy chain.
 
@@ -67,18 +81,31 @@ class CategoryClassifier:
         :param threshold: the score above which we consider the category to be
             detected (default: 0.5)
         :param neural_model_name: the name of the neural model to use to perform
-            prediction. `keras_2_0` is used by default.
+            prediction. `keras_image_embeddings_3_0` is used by default.
         """
+        logger.debug("predicting category with model %s", model_name)
+
         if threshold is None:
             threshold = 0.5
 
         if model_name is None:
-            model_name = NeuralCategoryClassifierModel.keras_2_0
+            model_name = NeuralCategoryClassifierModel.keras_image_embeddings_3_0
 
         if model_name == NeuralCategoryClassifierModel.keras_2_0:
-            raw_predictions, debug = keras_category_classifier_2_0.predict(
+            raw_v2_predictions, debug = keras_category_classifier_2_0.predict(
                 product, threshold
             )
+            # v3 models have an additional field for neighbor predictions, change
+            # the `raw_predictions` format to be compatible with v3 models
+            raw_predictions: list[
+                tuple[
+                    str,
+                    float,
+                    Optional[keras_category_classifier_3_0.NeighborPredictionType],
+                ]
+            ] = [
+                (category_id, score, None) for category_id, score in raw_v2_predictions
+            ]
         else:
             if "ingredients_tags" in product and "ingredients" not in product:
                 # v3 models use the `ingredients` field instead of `ingredients_tags`,
@@ -96,26 +123,85 @@ class CategoryClassifier:
                 ocr_texts = product.pop("ocr")
             else:
                 # Otherwise we fetch OCR texts from Product Opener
-                ocr_texts = keras_category_classifier_3_0.fetch_ocr_texts(product)
+                # Only fetch OCR texts if it's required by the model
+                ocr_texts = (
+                    keras_category_classifier_3_0.fetch_ocr_texts(product, product_id)
+                    if keras_category_classifier_3_0.model_input_flags[model_name].get(
+                        "add_ingredients_ocr_tags", True
+                    )
+                    else []
+                )
+
+            # Only generate image embeddings if it's required by the model
+            triton_stub = get_triton_inference_stub()
+            image_embeddings = (
+                keras_category_classifier_3_0.generate_image_embeddings(
+                    product, product_id, triton_stub
+                )
+                if keras_category_classifier_3_0.model_input_flags[model_name].get(
+                    "add_image_embeddings", True
+                )
+                else None
+            )
             raw_predictions, debug = keras_category_classifier_3_0.predict(
-                product, ocr_texts, model_name, threshold=threshold
+                product,
+                ocr_texts,
+                model_name,
+                stub=triton_stub,
+                threshold=threshold,
+                image_embeddings=image_embeddings,
+                category_taxonomy=self.taxonomy,
             )
 
-        category_predictions = [
-            CategoryPrediction(*item, model_name.value) for item in raw_predictions
-        ]
+        # Threshold for automatic detection, only available for
+        # `keras_image_embeddings_3_0` model.
+        # Currently we don't apply yet the category automatically, we only add
+        # a flag to add a specific annotation campaign during the insight
+        # import
+        thresholds = (
+            (keras_category_classifier_3_0.get_automatic_processing_thresholds())
+            if model_name.keras_image_embeddings_3_0
+            else {}
+        )
+
+        predictions = []
+
+        for category_id, score, neighbor_predictions in raw_predictions:
+            if category_id not in self.taxonomy:
+                # If the category no longer exist in the taxonomy, ignore it
+                continue
+            # If the category is not in `thresholds` or if the score is
+            # below the threshold, set the above_threshold flag to False
+            above_threshold = score >= thresholds.get(category_id, 1.1)
+            kwargs: dict[str, Any] = (
+                {}
+                if neighbor_predictions is None
+                else {"neighbor_predictions": neighbor_predictions}
+            )
+            predictions.append(
+                create_prediction(
+                    category_id,
+                    score,
+                    model_name.value,
+                    product_id=product_id,
+                    above_threshold=above_threshold,
+                    # We need to set a higher priority (=lower digit) if
+                    # above_threshold is True, as otherwise a deepest
+                    # predicted category with `above_threshold=False` will
+                    # take precedence, and we wouldn't generate any insight
+                    # for the prediction with `above_threshold=True`
+                    priority=0 if above_threshold else 1,
+                    **kwargs,
+                )
+            )
 
         if deepest_only:
-            predicted_dict = {p.category: p for p in category_predictions}
-            taxonomy_nodes = [self.taxonomy[p.category] for p in category_predictions]
+            predicted_dict = {p.value_tag: p for p in predictions}
+            taxonomy_nodes = [self.taxonomy[p.value_tag] for p in predictions]  # type: ignore
 
-            category_predictions = [
+            predictions = [
                 predicted_dict[x.id]
                 for x in self.taxonomy.find_deepest_nodes(taxonomy_nodes)
             ]
 
-        predictions = [
-            category_prediction.to_prediction()
-            for category_prediction in category_predictions
-        ]
         return predictions, debug

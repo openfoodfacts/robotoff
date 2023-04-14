@@ -15,33 +15,19 @@ jobs:
       matrix:
         env:
           - ${{ startsWith(github.ref, 'refs/tags/model-deploy-org') && 'robotoff-ml-org' || 'robotoff-ml-net' }}
-          # Syncing to robotoff-net/org is required as post-processing for most models is done
-          # on the caller side, i.e. the caller needs access to the label_map.pbtxt file.
-          - ${{ startsWith(github.ref, 'refs/tags/model-deploy-org') && 'robotoff-org' || 'robotoff-net' }}
     steps:
       - name: Set common variables
         run: |
+          echo "PROJECT_DIR=robotoff-ml" >> $GITHUB_ENV
           echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
           echo "SSH_USERNAME=off" >> $GITHUB_ENV
       - name: Set various variables for 'robotoff-ml-net' environment
         if: matrix.env == 'robotoff-ml-net'
         run: |
-          echo "PROJECT_DIR=robotoff-ml" >> $GITHUB_ENV
           echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
       - name: Set various variables for 'robotoff-ml-org' environment
         if: matrix.env == 'robotoff-ml-org'
         run: |
-          echo "PROJECT_DIR=robotoff-ml" >> $GITHUB_ENV
-          echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
-      - name: Set various variables for 'robotoff-net' environment
-        if: matrix.env == 'robotoff-net'
-        run: |
-          echo "PROJECT_DIR=robotoff-net" >> $GITHUB_ENV
-          echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
-      - name: Set various variables for 'robotoff-org' environment
-        if: matrix.env == 'robotoff-org'
-        run: |
-          echo "PROJECT_DIR=robotoff-org" >> $GITHUB_ENV
           echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
       - uses: actions/checkout@v3
       - name: Download
@@ -55,8 +41,5 @@ jobs:
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ env.PROJECT_DIR }}
-            make dl-model-labels
-            if [ ${{ env.PROJECT_DIR }} = 'robotoff-ml' ]; then
-              make dl-model-archives
-              make dl-model-categorizer
-            fi
+            make dl-model-archives
+            make dl-model-categorizer

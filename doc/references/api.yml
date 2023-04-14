@@ -5,8 +5,6 @@ info:
     Robotoff provides a simple API allowing consumers to fetch predictions and annotate them.
 
     All endpoints must be prefixed with `/api/v1`. The full URL is `https://robotoff.openfoodfacts.org/api/v1/{endpoint}`.
-
-    Robotoff can interact with all Openfoodfacts products: Openfoodfacts, Openbeautyfacts, etc. and all environments (production, development, pro). The `server_domain` field should be used to specify the product/environment: `api.openfoodfacts.org` for OFF-prod, `api.openfoodfacts.net` for OFF-dev, `api.openbeautyfacts.org` for OBF-prod,...
   contact: {}
   version: "1.0"
 servers:
@@ -30,7 +28,7 @@ paths:
             default: 1
             minimum: 1
         - $ref: "#/components/parameters/barcode_path"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/lang"
       responses:
         "200":
@@ -57,14 +55,14 @@ paths:
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/brands"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
         - name: order_by
           in: query
@@ -100,7 +98,6 @@ paths:
                   count:
                     type: integer
                     description: The total number of results with the provided filters
-
   /questions/random:
     get:
       tags:
@@ -110,14 +107,14 @@ paths:
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/brands"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
@@ -139,7 +136,6 @@ paths:
                   count:
                     type: integer
                     description: The total number of results with the provided filters
-
   /questions/popular:
     get:
       tags:
@@ -151,14 +147,14 @@ paths:
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/brands"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
@@ -180,12 +176,12 @@ paths:
             type: number
             default: 25
             minimum: 1
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaign"
+        - $ref: "#/components/parameters/campaigns"
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
@@ -217,6 +213,43 @@ paths:
                   - questions
                   - status
 
+  /predictions:
+    get:
+      tags:
+        - Predictions
+      summary: Get predictions
+      parameters:
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_query_filter"
+        - name: types
+          in: query
+          description: Comma-separated list, filter by prediction types
+          schema:
+            type: string
+            example: brand,label
+      responses:
+        "200":
+          description: The queried predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_predictions"
+                      - "found"
+                  predictions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
+
   /insights/random:
     get:
       tags:
@@ -226,7 +259,7 @@ paths:
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/country"
         - $ref: "#/components/parameters/value_tag"
-        - $ref: "#/components/parameters/server_domain"
+        - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/predictor"
       responses:
@@ -241,7 +274,6 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/InsightSearchResult"
-
   /insights/{barcode}:
     get:
       tags:
@@ -249,6 +281,7 @@ paths:
       summary: Get all insights for a specific product
       parameters:
         - $ref: "#/components/parameters/barcode_path"
+        - $ref: "#/components/parameters/server_type"
       responses:
         "200":
           description: ""
@@ -330,14 +363,10 @@ paths:
       tags:
         - Insights
       parameters:
+          - $ref: "#/components/parameters/server_type"
           - $ref: "#/components/parameters/value_tag"
           - $ref: "#/components/parameters/insight_types"
-          - name: barcode
-            description: Filter by product barcode
-            in: query
-            schema:
-              type: string
-              example: 0748162621021
+          - $ref: "#/components/parameters/barcode_query_filter"
           - name: annotated
             description: The annotation status of the insight.
               If not provided, both annotated and non-annotated insights are returned
@@ -418,6 +447,131 @@ paths:
               schema:
                 type: string
                 format: binary
+  /images/import:
+    post:
+      summary: Import an new image in Robotoff
+      description: |
+        This endpoint is used by Product Opener to notify Robotoff that a new
+        image has been uploaded in Open Food Facts database. The import
+        operation is not performed directly by Robotoff API but added to a task
+        queue that is consumed by Robotoff workers asynchronously.
+
+        Providing URLs of both the image and the OCR JSON (generated by Google
+        Cloud Vision service) is required.
+      tags:
+        - Images
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                barcode:
+                  type: string
+                  description: Barcode of the product
+                image_url:
+                  type: string
+                  format: uri
+                  description: URL of the image to be imported
+                ocr_url:
+                  type: string
+                  format: uri
+                  description: URL of the OCR JSON file associated with the image
+                server_domain:
+                  $ref: "#/components/schemas/ServerDomainParameter"
+              required:
+                - "barcode"
+                - "image_url"
+                - "ocr_url"
+                - "server_domain"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: |
+                      status of the import operation, always `scheduled`
+                    enum:
+                      - "scheduled"
+        "400":
+          description: "HTTP Bad Request error, if the `server_domain` parameter is invalid"
+          content:
+            application/json:
+              schema:
+                type: object
+
+
+  /image_predictions:
+    get:
+      tags:
+        - Image Predictions
+      summary: Get image predictions
+      parameters:
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_query_filter"
+        - name: with_logo
+          description: if True, only return image predictions that have associated logos (only valid for universal-logo-detector image predictions)
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: model_name
+          description: filter by name of the image predictor model
+          in: query
+          schema:
+            type: string
+            enum:
+              - universal-logo-detector
+              - nutrition-table
+              - nutriscore
+        - name: type
+          description: filter by type of the image predictor model, currently only 'object_detection'
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'object_detection'
+        - name: model_version
+          description: filter by model version value
+          in: query
+          schema:
+            type: string
+        - name: min_confidence
+          description: filter by minimum confidence score value
+          in: query
+          schema:
+            type: number
+            minimum: 0.0
+            maximum: 1.0
+
+      responses:
+        "200":
+          description: The queried image predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_image_predictions"
+                      - "found"
+                  image_predictions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
 
   /images/logos:
     get:
@@ -457,6 +611,8 @@ paths:
         Search for logos detected using the universal-logo-detector model that 
         meet some criteria (annotation status, annotated, type,...)
       parameters:
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_query_filter"
         - name: count
           description: Number of results to return
           in: query
@@ -471,11 +627,6 @@ paths:
           schema:
             type: string
           example: packager_code
-        - name: barcode
-          description: Filter by barcode
-          in: query
-          schema:
-            type: number
         - name: value
           description: Filter by annotated value
           in: query
@@ -501,11 +652,6 @@ paths:
           schema:
             type: boolean
             default: false
-        - name: server_domain
-          in: query
-          description: The server domain
-          schema:
-            type: string
         - name: annotated
           description: The annotation status of the logo.
             If not provided, both annotated and non-annotated logos are returned
@@ -558,6 +704,7 @@ paths:
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
         - $ref: "#/components/parameters/ann_search_count"
+        - $ref: "#/components/parameters/server_type"
       responses:
         "200":
           description: Response from ANN search
@@ -573,6 +720,7 @@ paths:
         description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
         parameters:
           - $ref: "#/components/parameters/ann_search_count"
+          - $ref: "#/components/parameters/server_type"
         responses:
           "200":
             description: Response from ANN search
@@ -600,6 +748,17 @@ paths:
                       description: The barcode of the product to categorize
                       minLength: 1
                       example: 0748162621021
+                    server_type:
+                      type: string
+                      description: |
+                        The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+                        Only 'off' is currently supported for category prediction
+                      default: 'off'
+                      enum:
+                        - 'off'
+                        - 'obf'
+                        - 'opff'
+                        - 'opf'
                     deepest_only:
                       type: boolean
                       description: |
@@ -815,6 +974,20 @@ components:
         id: 3cd5aecd-edcc-4237-87d0-6595fc4e53c9
         type: label
         barcode: 9782012805866
+    ServerDomainParameter:
+      description: |
+        The server domain associated with the image/product.
+
+        If the `server_domain` top level domain does not match the server configuration,
+        an HTTP 400 error will be raised
+      type: string
+      example: "api.openfoodfacts.org"
+      enum:
+        - "api.openfoodfacts.org"
+        - "api.openbeautyfacts.org"
+        - "api.openproductfacts.org"
+        - "api.openpetfoodfacts.org"
+        - "api.pro.openfoodfacts.org"
   parameters:
     lang:
       name: lang
@@ -826,18 +999,31 @@ components:
     count:
       name: count
       in: query
-      description: The number of questions to return
+      description: The number of items to return
       schema:
         type: integer
         default: 25
         minimum: 1
-    server_domain:
-      name: server_domain
+    barcode_query_filter:
+      name: barcode
       in: query
-      description: The server domain
+      description: Filter by barcode value
       schema:
         type: string
-        default: api.openfoodfacts.org
+        example: "5410041040807"
+    server_type:
+      name: server_type
+      in: query
+      description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),... 
+      schema:
+        type: string
+        default: 'off'
+        enum:
+          - 'off'
+          - 'obf'
+          - 'opff'
+          - 'opf'
+          - 'off_pro'
     insight_types:
       name: insight_types
       in: query
@@ -886,11 +1072,11 @@ components:
       schema:
         type: boolean
         default: false
-    campaign:
-      name: campaign
+    campaigns:
+      name: campaigns
       in: query
-      description: Filter by annotation campaign
-        An annotation campaign allows to only retrieve questions about selected products, based on arbitrary criteria
+      description: Filter by annotation campaigns (the insight must have all the campaigns)
+        An annotation campaigns allows to only retrieve questions about selected products, based on arbitrary criteria
       schema:
         type: string
         example: agribalyse-category

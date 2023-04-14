@@ -7,6 +7,8 @@ import sentry_sdk
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+from robotoff.types import ServerType
+
 
 # Robotoff instance gives the environment, either `prod` or `dev`
 # (`dev` by default).
@@ -32,10 +34,10 @@ def _get_default_scheme() -> str:
     return os.environ.get("ROBOTOFF_SCHEME", "https")
 
 
-def _get_default_domain():
-    # `ROBOTOFF_DOMAIN` can be used to overwrite the Product Opener domain used.
-    # If empty, the domain will be inferred from `ROBOTOFF_INSTANCE`
-    return os.environ.get("ROBOTOFF_DOMAIN", "openfoodfacts.%s" % _instance_tld())
+def _get_tld():
+    # `ROBOTOFF_TLD` can be used to overwrite the Product Opener top level domain used.
+    # If empty, the tld will be inferred from `ROBOTOFF_INSTANCE`
+    return os.environ.get("ROBOTOFF_TLD", _instance_tld())
 
 
 class BaseURLProvider(object):
@@ -46,78 +48,86 @@ class BaseURLProvider(object):
 
     @staticmethod
     def _get_url(
+        base_domain: str,
         prefix: Optional[str] = "world",
-        domain: Optional[str] = None,
+        tld: Optional[str] = None,
         scheme: Optional[str] = None,
     ):
+        tld = _get_tld() if tld is None else tld
         data = {
-            "domain": _get_default_domain(),
+            "domain": f"{base_domain}.{tld}",
             "scheme": _get_default_scheme(),
         }
         if prefix:
             data["prefix"] = prefix
         if scheme:
             data["scheme"] = scheme
-        if domain:
-            data["domain"] = domain
 
-        if data["prefix"]:
+        if "prefix" in data:
             return "%(scheme)s://%(prefix)s.%(domain)s" % data
 
         return "%(scheme)s://%(domain)s" % data
 
     @staticmethod
-    def server_domain():
-        """Return the server domain: `api.openfoodfacts.*`"""
-        return "api." + _get_default_domain()
+    def server_domain(server_type: ServerType) -> str:
+        """Return the server domain: `api.*.*`"""
+        return f"api.{server_type.get_base_domain()}.{_get_tld()}"
 
     @staticmethod
-    def world():
-        return BaseURLProvider._get_url(prefix="world")
+    def world(server_type: ServerType):
+        return BaseURLProvider._get_url(
+            prefix="world", base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
     def robotoff() -> str:
-        return BaseURLProvider._get_url(prefix="robotoff")
+        return BaseURLProvider._get_url(
+            prefix="robotoff", base_domain=ServerType.off.get_base_domain()
+        )
 
     @staticmethod
-    def api() -> str:
-        return BaseURLProvider._get_url(prefix="api")
+    def api(server_type: ServerType) -> str:
+        return BaseURLProvider._get_url(
+            prefix="api", base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
-    def static() -> str:
+    def static(server_type: ServerType) -> str:
         # locally we may want to change it, give environment a chance
-        static_domain = os.environ.get("STATIC_OFF_DOMAIN", "")
-        if static_domain:
-            if "://" in static_domain:
-                scheme, static_domain = static_domain.split("://", 1)
+        base_domain = os.environ.get("STATIC_DOMAIN", "")
+        if base_domain:
+            if "://" in base_domain:
+                scheme, base_domain = base_domain.split("://", 1)
             else:
                 scheme = _get_default_scheme()
             return BaseURLProvider._get_url(
-                prefix=None, scheme=scheme, domain=static_domain
+                prefix=None, scheme=scheme, base_domain=base_domain
             )
 
-        return BaseURLProvider._get_url(prefix="static")
+        return BaseURLProvider._get_url(
+            prefix="static", base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
-    def image_url(image_path: str) -> str:
-        # If STATIC_OFF_DOMAIN is defined, used the custom static domain
-        # configured
-        # Otherwise use images.openfoodfacts.{net,org} as proxy server
-        prefix = (
-            BaseURLProvider.static()
-            if os.environ.get("STATIC_OFF_DOMAIN")
-            else BaseURLProvider._get_url(prefix="images")
+    def image_url(server_type: ServerType, image_path: str) -> str:
+        prefix = BaseURLProvider._get_url(
+            prefix="images", base_domain=server_type.get_base_domain()
         )
         return prefix + f"/images/products{image_path}"
 
     @staticmethod
-    def country(country_code: str) -> str:
-        return BaseURLProvider._get_url(prefix=country_code)
+    def country(server_type: ServerType, country_code: str) -> str:
+        return BaseURLProvider._get_url(
+            prefix=country_code, base_domain=server_type.get_base_domain()
+        )
 
     @staticmethod
     def event_api() -> str:
         return os.environ.get(
-            "EVENTS_API_URL", BaseURLProvider._get_url(prefix="events")
+            "EVENTS_API_URL",
+            BaseURLProvider._get_url(
+                prefix="events", base_domain=ServerType.off.get_base_domain()
+            ),
         )
 
 
@@ -135,27 +145,34 @@ DATASET_CHECK_MIN_PRODUCT_COUNT = 1000000
 
 # Products JSONL
 
-JSONL_DATASET_URL = BaseURLProvider.static() + "/data/openfoodfacts-products.jsonl.gz"
+JSONL_DATASET_URL = (
+    BaseURLProvider.static(ServerType.off) + "/data/openfoodfacts-products.jsonl.gz"
+)
 
 TAXONOMY_URLS = {
-    "category": BaseURLProvider.static() + "/data/taxonomies/categories.full.json",
-    "ingredient": BaseURLProvider.static() + "/data/taxonomies/ingredients.full.json",
-    "label": BaseURLProvider.static() + "/data/taxonomies/labels.full.json",
-    "brand": BaseURLProvider.static() + "/data/taxonomies/brands.full.json",
-    "packaging_shape": BaseURLProvider.static()
+    "category": BaseURLProvider.static(ServerType.off)
+    + "/data/taxonomies/categories.full.json",
+    "ingredient": BaseURLProvider.static(ServerType.off)
+    + "/data/taxonomies/ingredients.full.json",
+    "label": BaseURLProvider.static(ServerType.off)
+    + "/data/taxonomies/labels.full.json",
+    "brand": BaseURLProvider.static(ServerType.off)
+    + "/data/taxonomies/brands.full.json",
+    "packaging_shape": BaseURLProvider.static(ServerType.off)
     + "/data/taxonomies/packaging_shapes.full.json",
-    "packaging_material": BaseURLProvider.static()
+    "packaging_material": BaseURLProvider.static(ServerType.off)
     + "/data/taxonomies/packaging_materials.full.json",
-    "packaging_recycling": BaseURLProvider.static()
+    "packaging_recycling": BaseURLProvider.static(ServerType.off)
     + "/data/taxonomies/packaging_recycling.full.json",
 }
 
 _off_password = os.environ.get("OFF_PASSWORD", "")
 _off_user = os.environ.get("OFF_USER", "")
-_off_request_auth = ("off", "off") if _instance_tld() == "net" else None
+_off_net_auth = ("off", "off")
+_off_request_auth = _off_net_auth if _instance_tld() == "net" else None
 
 
-CATEGORY_MATCHER_DIR = DATA_DIR / "category_matcher"
+CATEGORY_MATCHER_DIR = DATA_DIR / "category/matcher"
 CATEGORY_MATCHER_MATCH_MAPS = {
     "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
     "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
@@ -320,3 +337,10 @@ TEST_DATA_DIR = TEST_DIR / "unit/data"
 INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
     os.environ.get("INSIGHT_AUTOMATIC_PROCESSING_WAIT", 10)
 )
+
+# Disable all product and image existence and validity check:
+# - during insight generation/import (in robotoff.insights.importer)
+# - when importing a new image through a webhook call (in robotoff.workers.tasks.import_image)
+# This is useful when testing locally, as we don't need the product to be in MongoDB to import
+# an image and generate insights.
+ENABLE_PRODUCT_CHECK = bool(int(os.environ.get("ENABLE_PRODUCT_CHECK", 1)))

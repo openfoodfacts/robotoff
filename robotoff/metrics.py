@@ -11,6 +11,7 @@ from requests.exceptions import JSONDecodeError, SSLError, Timeout
 
 from robotoff import settings
 from robotoff.models import ProductInsight, with_db
+from robotoff.types import ServerType
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -97,19 +98,28 @@ def ensure_influx_database():
             logger.exception("Error on ensure_influx_database")
 
 
-def get_product_count(country_tag: str) -> int:
+def get_product_count(server_type: ServerType, country_tag: str) -> int:
+    """Return the number of products in Product Opener for a specific country.
+
+    :param country_tag: ISO 2-letter country code
+    :return: the number of products currently in Product Opener
+    """
     r = http_session.get(
-        settings.BaseURLProvider.country(country_tag) + "/3.json?fields=null",
+        settings.BaseURLProvider.country(server_type, country_tag)
+        + "/3.json?fields=null",
         auth=settings._off_request_auth,
     ).json()
     return int(r["count"])
 
 
 def save_facet_metrics():
+    # Only support for off for now
+    server_type = ServerType.off
     inserts = []
     target_datetime = datetime.datetime.now()
     product_counts = {
-        country_tag: get_product_count(country_tag) for country_tag in COUNTRY_TAGS
+        country_tag: get_product_count(server_type, country_tag)
+        for country_tag in COUNTRY_TAGS
     }
 
     for country_tag in COUNTRY_TAGS:
@@ -117,10 +127,11 @@ def save_facet_metrics():
 
         for url_path in URL_PATHS:
             inserts += generate_metrics_from_path(
-                country_tag, url_path, target_datetime, count
+                server_type, country_tag, url_path, target_datetime, count
             )
 
         inserts += generate_metrics_from_path(
+            server_type,
             country_tag,
             "/entry-date/{}/contributors?json=1".format(
                 # get contribution metrics for the previous day
@@ -130,7 +141,9 @@ def save_facet_metrics():
             facet="contributors",
         )
 
-    inserts += generate_metrics_from_path("world", "/countries?json=1", target_datetime)
+    inserts += generate_metrics_from_path(
+        server_type, "world", "/countries?json=1", target_datetime
+    )
     client = get_influx_client()
     if client is not None:
         write_client = client.write_api(write_options=SYNCHRONOUS)
@@ -142,6 +155,7 @@ def get_facet_name(url: str) -> str:
 
 
 def generate_metrics_from_path(
+    server_type: ServerType,
     country_tag: str,
     path: str,
     target_datetime: datetime.datetime,
@@ -149,7 +163,7 @@ def generate_metrics_from_path(
     facet: Optional[str] = None,
 ) -> list[dict]:
     inserts: list[dict] = []
-    url = settings.BaseURLProvider.country(country_tag + "-en") + path
+    url = settings.BaseURLProvider.country(server_type, country_tag + "-en") + path
 
     if facet is None:
         facet = get_facet_name(url)
@@ -211,6 +225,7 @@ def save_insight_metrics():
     - automatic_processing
     - predictor
     - reserved_barcode
+    - server_type
     """
     target_datetime = datetime.datetime.now()
 
@@ -228,6 +243,7 @@ def generate_insight_metrics(target_datetime: datetime.datetime) -> list[dict]:
         ProductInsight.automatic_processing,
         ProductInsight.predictor,
         ProductInsight.reserved_barcode,
+        ProductInsight.server_type,
     ]
     inserts = []
     query_results = (

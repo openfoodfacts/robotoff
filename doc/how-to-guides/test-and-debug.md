@@ -66,11 +66,8 @@ Write test cases every time you write a new feature, to test a feature or to und
 
 There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
 
-There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. For local testing we do not yet provide a standarized approach to add a MongoDB Docker in the same network and configure Robotoff to use it.
-
-In such cases you will have to mock the function which calls MongoDB. Feel free to reuse the existing test cases.
-
-To identify parts of the code where Robotoff connects to MongoDB or to Open Food Facts server (the part you should mock), keep an eye for variables like `server_url`, `server_domain` or `settings.OFF_SERVER_DOMAIN`.
+There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. To disable this
+feature (this is disabled by default on local environments), set `ENABLE_PRODUCT_CHECK=0` in your `.env`.
 
 # Debugging guide
 

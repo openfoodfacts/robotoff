@@ -5,12 +5,11 @@ from flashtext import KeywordProcessor
 
 from robotoff import settings
 from robotoff.brands import get_brand_blacklist, keep_brand_from_taxonomy
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.text import get_tag
 
-from .dataclass import OCRResult, get_text
+from .dataclass import OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 logger = get_logger(__name__)
@@ -31,6 +30,7 @@ def generate_brand_keyword_processor(
     return generate_keyword_processor(brands, keep_func=keep_func)
 
 
+@functools.cache
 def get_logo_annotation_brands() -> dict[str, str]:
     brands: dict[str, str] = {}
 
@@ -46,27 +46,39 @@ def get_logo_annotation_brands() -> dict[str, str]:
     return brands
 
 
-LOGO_ANNOTATION_BRANDS: dict[str, str] = get_logo_annotation_brands()
-TAXONOMY_BRAND_PROCESSOR = generate_brand_keyword_processor(
-    text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
-)
-BRAND_PROCESSOR = generate_brand_keyword_processor(
-    text_file_iter(settings.OCR_BRANDS_PATH),
-)
+@functools.cache
+def get_taxonomy_brand_processor():
+    return generate_brand_keyword_processor(
+        text_file_iter(settings.OCR_TAXONOMY_BRANDS_PATH)
+    )
+
+
+@functools.cache
+def get_brand_processor():
+    return generate_brand_keyword_processor(
+        text_file_iter(settings.OCR_BRANDS_PATH),
+    )
 
 
 def extract_brands(
     processor: KeywordProcessor,
-    text: str,
+    content: Union[OCRResult, str],
     data_source_name: str,
     automatic_processing: bool,
 ) -> list[Prediction]:
     predictions = []
 
+    text = get_text(content)
     for (brand_tag, brand), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
+        data = {"text": match_str, "notify": False}
+        if (
+            bounding_box := get_match_bounding_box(content, span_start, span_end)
+        ) is not None:
+            data["bounding_box_absolute"] = bounding_box
+
         predictions.append(
             Prediction(
                 type=PredictionType.brand,
@@ -74,7 +86,7 @@ def extract_brands(
                 value_tag=brand_tag,
                 automatic_processing=automatic_processing,
                 predictor=data_source_name,
-                data={"text": match_str, "notify": False},
+                data=data,
             )
         )
 
@@ -83,9 +95,10 @@ def extract_brands(
 
 def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction]:
     predictions = []
+    logo_annotation_brands = get_logo_annotation_brands()
     for logo_annotation in ocr_result.logo_annotations:
-        if logo_annotation.description in LOGO_ANNOTATION_BRANDS:
-            brand = LOGO_ANNOTATION_BRANDS[logo_annotation.description]
+        if logo_annotation.description in logo_annotation_brands:
+            brand = logo_annotation_brands[logo_annotation.description]
 
             predictions.append(
                 Prediction(
@@ -104,15 +117,13 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction
 
 def find_brands(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions: list[Prediction] = []
-    text = get_text(content)
 
-    if text:
-        predictions += extract_brands(
-            BRAND_PROCESSOR, text, "curated-list", automatic_processing=True
-        )
-        predictions += extract_brands(
-            TAXONOMY_BRAND_PROCESSOR, text, "taxonomy", automatic_processing=False
-        )
+    predictions += extract_brands(
+        get_brand_processor(), content, "curated-list", automatic_processing=True
+    )
+    predictions += extract_brands(
+        get_taxonomy_brand_processor(), content, "taxonomy", automatic_processing=False
+    )
 
     if isinstance(content, OCRResult):
         predictions += extract_brands_google_cloud_vision(content)

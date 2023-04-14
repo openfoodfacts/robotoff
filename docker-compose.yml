@@ -5,16 +5,18 @@ x-robotoff-base:
   restart: $RESTART_POLICY
   image: ghcr.io/openfoodfacts/robotoff:${TAG}
   volumes:
+    - ./data:/opt/robotoff/data
     - ./datasets:/opt/robotoff/datasets
     - ./tf_models:/opt/robotoff/tf_models
     - ./models:/opt/robotoff/models
 
 x-robotoff-base-env:
   &robotoff-base-env
+  LOG_LEVEL:
   ROBOTOFF_INSTANCE:
-  ROBOTOFF_DOMAIN:
+  ROBOTOFF_TLD:
   ROBOTOFF_SCHEME:
-  STATIC_OFF_DOMAIN:
+  STATIC_DOMAIN:
   GUNICORN_NUM_WORKERS:
   ROBOTOFF_UPDATED_PRODUCT_WAIT:
   REDIS_HOST:
@@ -36,6 +38,8 @@ x-robotoff-base-env:
   ELASTIC_USER:
   TF_SERVING_HOST:
   TRITON_HOST:
+  ENABLE_PRODUCT_CHECK:
+  IN_DOCKER_CONTAINER:
 
 
 services:

@@ -1,7 +1,8 @@
 import dataclasses
+import datetime
 import enum
 import uuid
-from typing import Any
+from typing import Any, Optional
 
 #: A precise expectation of what mappings looks like in json.
 #: (dict where keys are always of type `str`).
@@ -22,7 +23,8 @@ class ObjectDetectionModel(enum.Enum):
 @enum.unique
 class NeuralCategoryClassifierModel(enum.Enum):
     keras_2_0 = "keras-2.0"
-    keras_sota_3_0 = "keras-sota-3-0"
+    keras_image_embeddings_3_0 = "keras-image-embeddings-3.0"
+    keras_300_epochs_3_0 = "keras-300-epochs-3-0"
     keras_ingredient_ocr_3_0 = "keras-ingredient-ocr-3.0"
     keras_baseline_3_0 = "keras-baseline-3.0"
     keras_original_3_0 = "keras-original-3.0"
@@ -149,6 +151,112 @@ class InsightType(str, enum.Enum):
     nutrition_table_structure = "nutrition_table_structure"
 
 
+class ServerType(enum.Enum):
+    """ServerType is used to refer to a specific Open*Facts project:
+
+    - Open Food Facts
+    - Open Beauty Facts
+    - Open Pet Food Facts
+    - Open Product Facts
+    - Open Food Facts (Pro plateform)
+    """
+
+    off = "off"
+    obf = "obf"
+    opff = "opff"
+    opf = "opf"
+    off_pro = "off-pro"
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def get_base_domain(self) -> str:
+        """Get the base domain (domain without TLD and without world/api
+        subdomain) associated with the `ServerType`."""
+        if self == self.off:
+            return "openfoodfacts"
+        elif self == self.obf:
+            return "openbeautyfacts"
+        elif self == self.opff:
+            return "openpetfoodfacts"
+        elif self == self.opf:
+            return "openproductfacts"
+        else:
+            # Open Food Facts Pro
+            return "pro.openfoodfacts"
+
+    @classmethod
+    def get_from_server_domain(cls, server_domain: str) -> "ServerType":
+        """Get the `ServerType` associated with a `server_domain`."""
+        subdomain, base_domain, tld = server_domain.rsplit(".", maxsplit=2)
+
+        if subdomain == "api.pro":
+            if base_domain == "openfoodfacts":
+                return cls.off_pro
+            raise ValueError("pro platform is only available for Open Food Facts")
+
+        for server_type in cls:
+            if base_domain == server_type.get_base_domain():
+                return server_type
+
+        raise ValueError(f"no ServerType matched for server_domain {server_domain}")
+
+    def is_food(self) -> bool:
+        """Return True if the server type is `off` or `off-pro`, False
+        otherwise."""
+        return self in (self.off, self.off_pro)
+
+
+@dataclasses.dataclass
+class Prediction:
+    type: PredictionType
+    data: dict[str, Any] = dataclasses.field(default_factory=dict)
+    value_tag: Optional[str] = None
+    value: Optional[str] = None
+    automatic_processing: Optional[bool] = None
+    predictor: Optional[str] = None
+    barcode: Optional[str] = None
+    timestamp: Optional[datetime.datetime] = None
+    source_image: Optional[str] = None
+    id: Optional[int] = None
+    confidence: Optional[float] = None
+    server_type: ServerType = ServerType.off
+
+    def to_dict(self) -> dict[str, Any]:
+        return dataclasses.asdict(self, dict_factory=dict_factory)
+
+
+def dict_factory(*args, **kwargs):
+    d = dict(*args, **kwargs)
+    for key, value in d.items():
+        if isinstance(value, (PredictionType, ServerType)):
+            d[key] = value.name
+
+    return d
+
+
+@dataclasses.dataclass
+class ProductIdentifier:
+    """Dataclass to uniquely identify a product across all Open*Facts
+    projects, with:
+
+    - the product barcode
+    - the project specified by the ServerType
+    """
+
+    barcode: str
+    server_type: ServerType
+
+    def __repr__(self) -> str:
+        return "<Product %s | %s>" % (self.barcode, self.server_type.name)
+
+    def __hash__(self) -> int:
+        return hash((self.barcode, self.server_type))
+
+
 @enum.unique
 class ElasticSearchIndex(str, enum.Enum):
     product = "product"
@@ -160,7 +268,7 @@ class ProductInsightImportResult:
     insight_created_ids: list[uuid.UUID]
     insight_updated_ids: list[uuid.UUID]
     insight_deleted_ids: list[uuid.UUID]
-    barcode: str
+    product_id: ProductIdentifier
     type: InsightType
 
 
@@ -168,6 +276,7 @@ class ProductInsightImportResult:
 class PredictionImportResult:
     created: int
     barcode: str
+    server_type: ServerType
 
 
 @dataclasses.dataclass
@@ -212,3 +321,6 @@ class PackagingElementProperty(enum.Enum):
     shape = "shape"
     material = "material"
     recycling = "recycling"
+
+
+LogoLabelType = tuple[str, Optional[str]]

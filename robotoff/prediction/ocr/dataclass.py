@@ -1,4 +1,5 @@
 import enum
+import itertools
 import math
 import operator
 import re
@@ -7,8 +8,11 @@ from typing import Callable, Optional, Union
 
 from robotoff.types import JSONType
 from robotoff.utils import get_logger
+from robotoff.utils.text import strip_accents_v2
 
-MULTIPLE_SPACES_REGEX = re.compile(r" {2,}")
+# Some classes documentation were adapted from Google documentation on
+# https://cloud.google.com/vision/docs/reference/rpc/google.cloud.vision.v1#google.cloud.vision.v1.Symbol
+
 
 logger = get_logger(__name__)
 
@@ -18,26 +22,31 @@ class OCRParsingException(Exception):
 
 
 class OCRField(enum.Enum):
+    """OCR field to use to perform string search.
+
+    full_text: non-contiguous text, a line-break between blocks prevent
+        matches spanning several blocks.
+    full_text_contiguous: contiguous text, matches spanning several blocks
+        are possible
+    """
+
     full_text = 1
     full_text_contiguous = 2
-    text_annotations = 3
 
 
 class OCRRegex:
-    __slots__ = ("regex", "field", "lowercase", "processing_func", "priority", "notify")
+    __slots__ = ("regex", "field", "processing_func", "priority", "notify")
 
     def __init__(
         self,
         regex: re.Pattern,
         field: OCRField,
-        lowercase: bool = False,
         processing_func: Optional[Callable] = None,
         priority: Optional[int] = None,
         notify: bool = False,
     ):
         self.regex: re.Pattern = regex
         self.field: OCRField = field
-        self.lowercase: bool = lowercase
         self.processing_func: Optional[Callable] = processing_func
         self.priority = priority
         self.notify = notify
@@ -84,14 +93,13 @@ class OCRResult:
     __slots__ = (
         "text_annotations",
         "text_annotations_str",
-        "text_annotations_str_lower",
         "full_text_annotation",
         "logo_annotations",
         "safe_search_annotation",
         "label_annotations",
     )
 
-    def __init__(self, data: JSONType, lazy: bool = True):
+    def __init__(self, data: JSONType):
         self.text_annotations: list[OCRTextAnnotation] = []
         self.full_text_annotation: Optional[OCRFullTextAnnotation] = None
         self.logo_annotations: list[LogoAnnotation] = []
@@ -103,18 +111,14 @@ class OCRResult:
             self.text_annotations.append(text_annotation)
 
         self.text_annotations_str: str = ""
-        self.text_annotations_str_lower: str = ""
 
         if self.text_annotations:
             self.text_annotations_str = self.text_annotations[0].text
-            self.text_annotations_str_lower = self.text_annotations_str.lower()
 
         full_text_annotation_data = data.get("fullTextAnnotation")
 
         if full_text_annotation_data:
-            self.full_text_annotation = OCRFullTextAnnotation(
-                full_text_annotation_data, lazy=lazy
-            )
+            self.full_text_annotation = OCRFullTextAnnotation(full_text_annotation_data)
 
         for logo_annotation_data in data.get("logoAnnotations", []):
             logo_annotation = LogoAnnotation(logo_annotation_data)
@@ -129,57 +133,40 @@ class OCRResult:
                 data["safeSearchAnnotation"]
             )
 
-    def get_full_text(self, lowercase: bool = False) -> str:
-        if self.full_text_annotation is not None:
-            if lowercase:
-                return self.full_text_annotation.text_lower
+    def get_full_text(self) -> str:
+        return (
+            self.full_text_annotation.text
+            if self.full_text_annotation is not None
+            else ""
+        )
 
-            return self.full_text_annotation.text
+    def get_full_text_contiguous(self) -> str:
+        return (
+            self.full_text_annotation.continuous_text
+            if self.full_text_annotation is not None
+            else ""
+        )
 
-        return ""
+    def get_text_annotations(self) -> str:
+        return self.text_annotations_str
 
-    def get_full_text_contiguous(self, lowercase: bool = False) -> str:
-        if self.full_text_annotation is not None:
-            if lowercase:
-                return self.full_text_annotation.contiguous_text_lower
-
-            return self.full_text_annotation.contiguous_text
-
-        return ""
-
-    def get_text_annotations(self, lowercase: bool = False) -> str:
-        if lowercase:
-            return self.text_annotations_str_lower
-        else:
-            return self.text_annotations_str
-
-    def _get_text(self, field: OCRField, lowercase: bool) -> str:
+    def _get_text(self, field: OCRField) -> str:
         if field == OCRField.full_text:
-            text = self.get_full_text(lowercase)
-
-            if text is None:
-                # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations(lowercase)
-            else:
-                return text
+            return self.get_full_text()
 
         elif field == OCRField.full_text_contiguous:
-            text = self.get_full_text_contiguous(lowercase)
-
-            if text is None:
-                # If there is no full text, get text annotations as fallback
-                return self.get_text_annotations(lowercase)
-            else:
-                return text
-
-        elif field == OCRField.text_annotations:
-            return self.get_text_annotations(lowercase)
+            return self.get_full_text_contiguous()
 
         else:
-            raise ValueError("invalid field: {}".format(field))
+            raise ValueError(f"invalid field: {field}")
 
     def get_text(self, ocr_regex: OCRRegex) -> str:
-        return self._get_text(ocr_regex.field, ocr_regex.lowercase)
+        """Return the OCR text.
+
+        If full text annotations are not available, an empty string is
+        returned.
+        """
+        return self._get_text(ocr_regex.field)
 
     def get_logo_annotations(self) -> list["LogoAnnotation"]:
         return self.logo_annotations
@@ -221,53 +208,142 @@ class OCRResult:
 
         return None
 
+    def get_match_bounding_box(
+        self, start_idx: int, end_idx: int, raises: bool = True
+    ) -> Optional[tuple[int, int, int, int]]:
+        """Return a bounding box that include all words that span from
+        `start_idx` to `end_idx`.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :param raises: if True, a RuntimeError is raised if `end_idx` was not
+            reached, defaults to True
+        :return: a bounding box with absolute coordinates as a
+            (y_min, x_min, y_max, x_max) tuple, or None if full text
+            annotation is not available
+        """
+        words = self.get_words_from_indices(start_idx, end_idx, raises)
+
+        if words is not None:
+            if words:
+                return compute_intersection_bounding_box(words)
+            else:
+                logger.warning(
+                    "no words found in %s, (start: %d, end: %d)",
+                    self.get_full_text_contiguous(),
+                    start_idx,
+                    end_idx,
+                )
+
+        return None
+
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int, raises: bool = True
+    ) -> Optional[list["Word"]]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        OCR text.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :param raises: if True, a RuntimeError is raised if `end_idx` was not
+            reached, defaults to True
+        :return: the list of Word(s) found (it can be empty), or None if full
+            text annotation is not available
+        """
+        if not self.full_text_annotation:
+            return None
+
+        return self.full_text_annotation.get_words_from_indices(
+            start_idx, end_idx, raises
+        )
+
 
 def get_text(
-    content: Union[OCRResult, str],
-    ocr_regex: Optional[OCRRegex] = None,
-    lowercase: bool = True,
+    content: Union[OCRResult, str], ocr_regex: Optional[OCRRegex] = None
 ) -> str:
     if isinstance(content, str):
-        if ocr_regex and ocr_regex.lowercase:
-            return content.lower()
-
-        return content.lower() if lowercase else content
+        return content
 
     elif isinstance(content, OCRResult):
         if ocr_regex:
             return content.get_text(ocr_regex)
         else:
-            text = content.get_full_text_contiguous(lowercase=lowercase)
+            text = content.get_full_text_contiguous()
 
             if not text:
-                text = content.get_text_annotations(lowercase=lowercase)
+                text = content.get_text_annotations()
 
             return text
 
     raise TypeError("invalid type: {}".format(type(content)))
 
 
+def get_match_bounding_box(
+    content: Union[OCRResult, str], start_idx: int, end_idx: int
+):
+    """Return a bounding box that include all words that span from
+    `start_idx` to `end_idx` if `content` is an OCRResult and None otherwise.
+    """
+    if isinstance(content, str):
+        return None
+
+    return content.get_match_bounding_box(start_idx, end_idx)
+
+
 class OCRFullTextAnnotation:
+    """TextAnnotation contains a structured representation of OCR extracted
+    text. The hierarchy of an OCR extracted text structure is like this:
+    TextAnnotation -> Page -> Block -> Paragraph -> Word -> Symbol Each
+    structural component, starting from Page, may further have their own
+    properties. Properties describe detected languages, breaks etc.."""
+
     __slots__ = (
+        "api_text",
         "text",
-        "text_lower",
-        "_pages",
-        "_pages_data",
-        "contiguous_text",
-        "contiguous_text_lower",
+        "continuous_text",
+        "unnaccented_text",
+        "pages",
     )
 
-    def __init__(self, data: JSONType, lazy: bool = True):
-        self.text = MULTIPLE_SPACES_REGEX.sub(" ", data["text"])
-        self.text_lower = self.text.lower()
-        self.contiguous_text = self.text.replace("\n", " ")
-        self.contiguous_text = MULTIPLE_SPACES_REGEX.sub(" ", self.contiguous_text)
-        self.contiguous_text_lower = self.contiguous_text.lower()
-        self._pages_data = data["pages"]
-        self._pages: list[TextAnnotationPage] = []
-
-        if not lazy:
-            self.load_pages()
+    def __init__(self, data: JSONType):
+        # Full text as returned by Google Cloud Vision API
+        # We don't use it anymore, we now compute the text directly from
+        # page -> block -> paragraph -> word -> symbol, as it allows us to
+        # know the location of every matched string
+        self.api_text: str = data["text"]
+        self.pages: list[TextAnnotationPage] = []
+        # `initial_offset` is used to keep track of how many string characters
+        # were in the previous page, this is necessary to know where the words
+        # are located on the image during matching
+        initial_offset = 0
+        text_list: list[str] = []
+        for page_data in data["pages"]:
+            page = TextAnnotationPage(page_data, initial_offset=initial_offset)
+            # we add + 1 to offset as we introduce a `|` character to split
+            # pages
+            initial_offset += len(page.text) + 1
+            text_list.append(page.text)
+            self.pages.append(page)
+        # Join page texts with a `|` character, to avoid matches to span over
+        # multiple pages
+        self.text: str = "|".join(text_list)
+        # Replace line break with space characters to allow matches spanning
+        # multiple lines
+        # We used to replace consecutive spaces (2+) with a single space so that
+        # spurious spaces don't prevent a match, but this is unnecessary: on
+        # several millions OCRs, only a few had double spaces, and it was images
+        # containing mixed arabic/latin language texts.
+        # This way, the word offsets (word.start_idx, word.end_idx) match the
+        # FullTextAnnotation text, and we can very easily determine the position
+        # of the matched words
+        self.continuous_text: str = "|".join(
+            t.replace("|", " ").replace("\n", " ") for t in text_list
+        )
+        # Here we use a accent stripping function that don't delete or
+        # introduce any character, so that word offsets are preserved
+        # unnaccented text is not used yet, but can be later used when we wish
+        # to match text without considering accents
+        self.unnaccented_text = strip_accents_v2(self.continuous_text, keep_length=True)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
@@ -279,17 +355,6 @@ class OCRFullTextAnnotation:
 
         return dict(counts)
 
-    @property
-    def pages(self) -> list["TextAnnotationPage"]:
-        if self._pages_data is not None:
-            self.load_pages()
-
-        return self._pages
-
-    def load_pages(self):
-        self._pages = [TextAnnotationPage(page) for page in self._pages_data]
-        self._pages_data = None
-
     def detect_orientation(self) -> OrientationResult:
         word_orientations: list[ImageOrientation] = []
 
@@ -299,12 +364,64 @@ class OCRFullTextAnnotation:
         count = Counter(word_orientations)
         return OrientationResult(count)
 
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int, raises: bool = True
+    ) -> list["Word"]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        FullTextAnnotation.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :param raises: if True, a RuntimeError is raised if `end_idx` was not
+            reached
+        :return: the list of Word(s) found (it can be empty)
+        """
+        selected = []
+        for page in self.pages:
+            words, partial_match = page.get_words_from_indices(start_idx, end_idx)
+            selected += words
+            if not partial_match:
+                break
+
+        if partial_match and raises:
+            raise RuntimeError(
+                "partial match detected: reached end of text before reaching end offset %d",
+                end_idx,
+            )
+
+        return selected
+
 
 class TextAnnotationPage:
-    def __init__(self, data: JSONType):
+    """Detected page from OCR."""
+
+    __slots__ = (
+        "width",
+        "height",
+        "blocks",
+        "text",
+    )
+
+    def __init__(self, data: JSONType, initial_offset: int = 0):
+        """Initialize a TextAnnotationPage.
+
+        :param data: the page JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous pages, it's used for matching. Defaults
+            to 0.
+        """
         self.width = data["width"]
         self.height = data["height"]
-        self.blocks: list[Block] = [Block(d) for d in data["blocks"]]
+        self.blocks: list[Block] = []
+        text_list: list[str] = []
+        for block_data in data["blocks"]:
+            block = Block(block_data, initial_offset)
+            # We add a '|' between each block, so that it's not possible to
+            # match over several blocks, so we add + 1 to offset
+            initial_offset += len(block.text) + 1
+            text_list.append(block.text)
+            self.blocks.append(block)
+        self.text = "|".join(text_list)
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
@@ -324,17 +441,75 @@ class TextAnnotationPage:
 
         return word_orientations
 
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int
+    ) -> tuple[list["Word"], bool]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        Page.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :return: a (words, remaining) tuple: `words` is the list of Word(s)
+            found (it can be empty), `remaining` is a boolean indicating if
+            we reached the end of the page with reaching `end_idx`
+        """
+        selected = []
+        for block in self.blocks:
+            words, remaining = block.get_words_from_indices(start_idx, end_idx)
+            selected += words
+            if not remaining:
+                break
+        return selected, remaining
+
 
 class Block:
-    def __init__(self, data: JSONType):
+    """Logical element on the page."""
+
+    __slots__ = (
+        "type",
+        "paragraphs",
+        "text",
+        "bounding_poly",
+    )
+
+    def __init__(self, data: JSONType, initial_offset: int = 0):
+        """Initialize a Block.
+
+        :param data: the block JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous blocks, it's used for matching.
+            Defaults to 0.
+        """
         self.type = data["blockType"]
-        self.paragraphs: list[Paragraph] = [
-            Paragraph(paragraph) for paragraph in data["paragraphs"]
-        ]
+        self.paragraphs: list[Paragraph] = []
+        text_list = []
+        add_space_prefix = False
+        for paragraph_data in data["paragraphs"]:
+            paragraph = Paragraph(paragraph_data, initial_offset)
+            # We split paragraphs with a space character, so add +1 to offset
+            initial_offset += len(paragraph.text) + 1
+            self.paragraphs.append(paragraph)
+            if add_space_prefix:
+                text_list.append(" ")
+            text_list.append(paragraph.text)
+            # We add a space to the next paragraph if the current paragraph is
+            # not empty and if it doesn't already end with a space or line break
+            add_space_prefix = bool(paragraph.text) and paragraph.text[-1] not in (
+                " ",
+                "\n",
+            )
+        self.text: str = "".join(text_list)
 
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
+
+    def get_words(self):
+        return list(
+            itertools.chain.from_iterable(
+                paragraph.words for paragraph in self.paragraphs
+            )
+        )
 
     def get_languages(self) -> dict[str, int]:
         counts: dict[str, int] = defaultdict(int)
@@ -360,11 +535,54 @@ class Block:
 
         return word_orientations
 
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int
+    ) -> tuple[list["Word"], bool]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        Block.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :return: a (words, remaining) tuple: `words` is the list of Word(s)
+            found (it can be empty), `remaining` is a boolean indicating if
+            we reached the end of the block with reaching `end_idx`
+        """
+        selected = []
+        for paragraph in self.paragraphs:
+            words, remaining = paragraph.get_words_from_indices(start_idx, end_idx)
+            selected += words
+            if not remaining:
+                break
+        return selected, remaining
+
 
 class Paragraph:
-    def __init__(self, data: JSONType):
-        self.words: list[Word] = [Word(word) for word in data["words"]]
+    """Structural unit of text representing a number of words in certain
+    order."""
 
+    __slots__ = (
+        "words",
+        "text",
+        "bounding_poly",
+    )
+
+    def __init__(self, data: JSONType, initial_offset: int = 0):
+        """Initialize a Paragraph.
+
+        :param data: the paragraph JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous paragraphs, it's used for matching.
+            Defaults to 0.
+        """
+        self.words: list[Word] = []
+
+        offset = initial_offset
+        for word_data in data["words"]:
+            word = Word(word_data, offset)
+            self.words.append(word)
+            offset += len(word.text)
+
+        self.text: str = "".join(w.text for w in self.words)
         self.bounding_poly = None
         if "boundingBox" in data:
             self.bounding_poly = BoundingPoly(data["boundingBox"])
@@ -393,13 +611,52 @@ class Paragraph:
 
     def get_text(self) -> str:
         """Return the text of the paragraph, by concatenating the words."""
-        return "".join(w.get_text() for w in self.words)
+        return "".join(w.text for w in self.words)
+
+    def get_words_from_indices(
+        self, start_idx: int, end_idx: int
+    ) -> tuple[list["Word"], bool]:
+        """Return Word(s) that span from `start_idx` to `end_idx` in the
+        Paragraph.
+
+        :param start_idx: character start offset of the words to find
+        :param end_idx: character end offset of the words to find
+        :return: a (words, remaining) tuple: `words` is the list of Word(s)
+            found (it can be empty), `remaining` is a boolean indicating if
+            we reached the end of the paragraph with reaching `end_idx`
+        """
+        selected = []
+        remaining = True
+        for word in self.words:
+            if word.end_idx > start_idx and word.start_idx < end_idx:
+                selected.append(word)
+            if word.end_idx >= end_idx:
+                remaining = False
+                break
+
+        return selected, remaining
 
 
 class Word:
-    __slots__ = ("bounding_poly", "symbols", "languages")
+    """A word representation."""
 
-    def __init__(self, data: JSONType):
+    __slots__ = (
+        "bounding_poly",
+        "symbols",
+        "languages",
+        "text",
+        "start_idx",
+        "end_idx",
+    )
+
+    def __init__(self, data: JSONType, offset: int = 0):
+        """Initialize a Word.
+
+        :param data: the word JSON data from the OCR result
+        :param initial_offset: the total number of string characters that
+            were contained in previous words, it's used for matching.
+            Defaults to 0.
+        """
         self.bounding_poly = BoundingPoly(data["boundingBox"])
         self.symbols: list[Symbol] = [Symbol(s) for s in data["symbols"]]
 
@@ -411,20 +668,25 @@ class Word:
                 DetectedLanguage(lang) for lang in data["property"]["detectedLanguages"]
             ]
 
-    def get_text(self) -> str:
+        # Attribute to store text generated from symbols
+        self.text = self._get_text()
+        # start word index on the full OCR text
+        self.start_idx = offset
+        # end word index on the full OCR text
+        self.end_idx = offset + len(self.text)
+
+    def _get_text(self) -> str:
+        """Generate the word text from the list of symbols of the word.
+
+        :return: the word text
+        """
         text_list = []
         for symbol in self.symbols:
-            symbol_str = ""
-
             if symbol.symbol_break and symbol.symbol_break.is_prefix:
-                symbol_str = symbol.symbol_break.get_value()
-
-            symbol_str += symbol.text
-
+                text_list.append(symbol.symbol_break.get_value())
+            text_list.append(symbol.text)
             if symbol.symbol_break and not symbol.symbol_break.is_prefix:
-                symbol_str += symbol.symbol_break.get_value()
-
-            text_list.append(symbol_str)
+                text_list.append(symbol.symbol_break.get_value())
 
         return "".join(text_list)
 
@@ -455,8 +717,13 @@ class Word:
             word_symbol_width,
         )
 
+    def __repr__(self) -> str:
+        return f"<Word: {self.text.__repr__()}>"
+
 
 class Symbol:
+    """A single symbol representation."""
+
     __slots__ = ("bounding_poly", "text", "confidence", "symbol_break")
 
     def __init__(self, data: JSONType):
@@ -480,10 +747,22 @@ class Symbol:
 
 
 class DetectedBreak:
+    """Detected start or end of a structural component."""
+
     __slots__ = ("type", "is_prefix")
 
     def __init__(self, data: JSONType):
+        # Detected break type.
+        # Enum to denote the type of break found. New line, space etc.
+        # UNKNOWN: Unknown break label type.
+        # SPACE: Regular space.
+        # SURE_SPACE: Sure space (very wide).
+        # EOL_SURE_SPACE: Line-wrapping break.
+        # HYPHEN: End-line hyphen that is not present in text; does not co-occur
+        # with SPACE, LEADER_SPACE, or LINE_BREAK.
+        # LINE_BREAK: Line break that ends a paragraph.
         self.type = data["type"]
+        # True if break prepends the element.
         self.is_prefix = data.get("isPrefix", False)
 
     def __repr__(self):
@@ -604,6 +883,32 @@ class BoundingPoly:
                 self.vertices,
             )
             return ImageOrientation.unknown
+
+
+def compute_intersection_bounding_box(words: list[Word]) -> tuple[int, int, int, int]:
+    """Generate a bounding box that include all words.
+
+    :param words: a list of words
+    :raises ValueError: raises a ValueError if `words` is empty
+    :return: a bounding box with absolute coordinates as a
+        (y_min, x_min, y_max, x_max) tuple
+    """
+    if len(words) == 0:
+        raise ValueError("`words` must have at least one element")
+
+    x_min, y_min, x_max, y_max = None, None, None, None
+    for word in words:
+        for x, y in word.bounding_poly.vertices:
+            if x_min is None or x < x_min:
+                x_min = x
+            if x_max is None or x > x_max:
+                x_max = x
+            if y_min is None or y < y_min:
+                y_min = y
+            if y_max is None or y > y_max:
+                y_max = y
+
+    return (y_min, x_min, y_max, x_max)  # type: ignore
 
 
 class OCRTextAnnotation:

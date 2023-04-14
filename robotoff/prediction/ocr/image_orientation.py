@@ -1,7 +1,6 @@
 from typing import Union
 
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 
 from .dataclass import ImageOrientation, OCRResult
 

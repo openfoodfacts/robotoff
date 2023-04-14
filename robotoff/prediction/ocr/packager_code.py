@@ -4,12 +4,11 @@ from typing import Optional, Union
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 
@@ -78,37 +77,35 @@ USDA_CODE_KEYWORD_PROCESSOR_STORE = CachedStore(
 PACKAGER_CODE = {
     "fr_emb": [
         OCRRegex(
-            re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])"),
-            field=OCRField.text_annotations,
-            lowercase=True,
+            re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])", re.I),
+            field=OCRField.full_text,
             processing_func=process_fr_emb_match,
         ),
     ],
     "fsc": [
         OCRRegex(
-            re.compile(r"fsc.? ?(c\d{6})"),
-            field=OCRField.text_annotations,
-            lowercase=True,
+            re.compile(r"fsc.? ?(c\d{6})", re.I),
+            field=OCRField.full_text,
             processing_func=process_fsc_match,
         ),
     ],
     "eu_fr": [
         OCRRegex(
             re.compile(
-                r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])"
+                r"fr (\d{2,3}|2[ab])[\-\s.](\d{3})[\-\s.](\d{3}) (ce|ec)(?![a-z0-9])",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=process_fr_packaging_match,
         ),
     ],
     "eu_de": [
         OCRRegex(
             re.compile(
-                r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])"
+                r"de (bb|be|bw|by|hb|he|hh|mv|ni|nw|rp|sh|sl|sn|st|th)[\-\s.](\d{1,5})[\-\s.] ?(eg|ec)(?![a-z0-9])",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
-            lowercase=True,
             processing_func=process_de_packaging_match,
         ),
     ],
@@ -116,14 +113,12 @@ PACKAGER_CODE = {
         OCRRegex(
             re.compile(r"(?<!\w)RSPO-\d{7}(?!\d)"),
             field=OCRField.full_text_contiguous,
-            lowercase=False,
         ),
     ],
     "fr_gluten": [
         OCRRegex(
             re.compile(r"FR-\d{3}-\d{3}"),
             field=OCRField.full_text_contiguous,
-            lowercase=False,
         ),
     ],
     # Temporarily disable USDA extraction until the overmatching bug is fixed
@@ -132,26 +127,24 @@ PACKAGER_CODE = {
     #     OCRRegex(
     #         re.compile(r"EST\.*\s*\d{1,5}[A-Z]{0,3}\.*"),
     #         field=OCRField.full_text_contiguous,
-    #         lowercase=False,
     #         processing_func=process_USDA_match_to_flashtext,
     #     ),
     #     # To match the USDA like "V34626"
     #     OCRRegex(
     #         re.compile(r"[A-Z]\d{1,5}[A-Z]?"),
     #         field=OCRField.full_text_contiguous,
-    #         lowercase=False,
     #         processing_func=process_USDA_match_to_flashtext,
     #     ),
     # ],
 }
 
 
-def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
+def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction]:
     results: list[Prediction] = []
 
     for regex_code, regex_list in PACKAGER_CODE.items():
         for ocr_regex in regex_list:
-            text = get_text(ocr_result, ocr_regex, ocr_regex.lowercase)
+            text = get_text(content, ocr_regex)
 
             if not text:
                 continue
@@ -163,14 +156,22 @@ def find_packager_codes_regex(ocr_result: Union[OCRResult, str]) -> list[Predict
                     value = ocr_regex.processing_func(match)
 
                 if value is not None:
+                    data = {
+                        "raw": match.group(0),
+                        "type": regex_code,
+                        "notify": ocr_regex.notify,
+                    }
+                    if (
+                        bounding_box := get_match_bounding_box(
+                            content, match.start(), match.end()
+                        )
+                    ) is not None:
+                        data["bounding_box_absolute"] = bounding_box
+
                     results.append(
                         Prediction(
                             value=value,
-                            data={
-                                "raw": match.group(0),
-                                "type": regex_code,
-                                "notify": ocr_regex.notify,
-                            },
+                            data=data,
                             type=PredictionType.packager_code,
                             automatic_processing=True,
                         )
@@ -184,19 +185,28 @@ def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
 
 
-def extract_fishing_code(processor: KeywordProcessor, text: str) -> list[Prediction]:
+def extract_fishing_code(
+    processor: KeywordProcessor, content: Union[OCRResult, str]
+) -> list[Prediction]:
     predictions = []
+    text = get_text(content)
 
     for (key, _), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
+        data = {"type": "fishing", "raw": match_str, "notify": False}
+        if (
+            bounding_box := get_match_bounding_box(content, span_start, span_end)
+        ) is not None:
+            data["bounding_box_absolute"] = bounding_box
+
         predictions.append(
             Prediction(
                 type=PredictionType.packager_code,
                 value=key,
                 predictor="flashtext",
-                data={"type": "fishing", "raw": match_str, "notify": False},
+                data=data,
                 automatic_processing=True,
             )
         )
@@ -209,9 +219,8 @@ FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
 )
 
 
-def find_packager_codes(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
-    predictions = find_packager_codes_regex(ocr_result)
+def find_packager_codes(content: Union[OCRResult, str]) -> list[Prediction]:
+    predictions = find_packager_codes_regex(content)
     processor = FISHING_KEYWORD_PROCESSOR_STORE.get()
-    text = get_text(ocr_result)
-    predictions += extract_fishing_code(processor, text)
+    predictions += extract_fishing_code(processor, content)
     return predictions

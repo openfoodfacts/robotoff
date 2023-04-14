@@ -1,4 +1,4 @@
-from robotoff.types import JSONType, NeuralCategoryClassifierModel
+from robotoff.types import JSONType, NeuralCategoryClassifierModel, ServerType
 
 IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -10,7 +10,6 @@ IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "server_domain": {"type": "string"},
                     "barcode": {"type": "string"},
                     "image_id": {"type": "string"},
                     "model_name": {"type": "string"},
@@ -160,6 +159,11 @@ ANNOTATE_LOGO_SCHEMA: JSONType = {
                 },
                 "required": ["value", "type", "logo_id"],
             },
+        },
+        "server_type": {
+            "type": "string",
+            "enum": [server_type.name for server_type in ServerType],
+            "default": ServerType.off,
         },
     },
     "required": ["annotations"],

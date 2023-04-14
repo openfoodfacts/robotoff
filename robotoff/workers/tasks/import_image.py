@@ -1,4 +1,3 @@
-import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -6,7 +5,9 @@ import elasticsearch
 from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
+from robotoff import settings
 from robotoff.elasticsearch.client import get_es_client
+from robotoff.images import save_image
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -29,20 +30,24 @@ from robotoff.models import (
     db,
     with_db,
 )
-from robotoff.off import get_server_type, get_source_from_url
-from robotoff.products import Product, get_product_store
+from robotoff.off import generate_image_url, get_source_from_url
+from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.triton import generate_clip_embedding
-from robotoff.types import ObjectDetectionModel, PredictionType
+from robotoff.types import (
+    JSONType,
+    ObjectDetectionModel,
+    PredictionType,
+    ProductIdentifier,
+    ServerType,
+)
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.workers.queues import enqueue_job, high_queue
 
 logger = get_logger(__name__)
 
 
-def run_import_image_job(
-    barcode: str, image_url: str, ocr_url: str, server_domain: str
-):
+def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url: str):
     """This job is triggered every time there is a new OCR image available for
     processing by Robotoff, via /api/v1/images/import.
 
@@ -53,19 +58,20 @@ def run_import_image_job(
     3. Triggers the 'object_detection' task
     4. Stores the imported image metadata in the Robotoff DB.
     """
-    logger.info(
-        f"Running `import_image` for product {barcode} ({server_domain}), image {image_url}"
-    )
+    logger.info("Running `import_image` for %s, image %s", product_id, image_url)
     source_image = get_source_from_url(image_url)
-    product = get_product_store()[barcode]
-    if product is None:
+    product = get_product_store(product_id.server_type)[product_id]
+    if product is None and settings.ENABLE_PRODUCT_CHECK:
         logger.info(
-            "Product %s does not exist during image import (%s)", barcode, source_image
+            "%s does not exist during image import (%s)",
+            product_id,
+            source_image,
         )
         return
 
+    product_images: Optional[JSONType] = getattr(product, "images", None)
     with db:
-        image_model = save_image(barcode, source_image, product, server_domain)
+        image_model = save_image(product_id, source_image, image_url, product_images)
 
         if image_model is None:
             # The image is invalid, no need to perform image extraction jobs
@@ -75,22 +81,24 @@ def run_import_image_job(
             return
 
         image_id = Path(source_image).stem
-        if image_id not in product.images:
+        if product_images is not None and image_id not in product_images:
             # It happens when the image has been deleted after Robotoff import
-            logger.info("Unknown image for product %s: %s", barcode, source_image)
+            logger.info("Unknown image for %s: %s", product_id, source_image)
             image_model.deleted = True
             ImageModel.bulk_update([image_model], fields=["deleted"])
             return
 
-    enqueue_job(
-        import_insights_from_image,
-        high_queue,
-        job_kwargs={"result_ttl": 0},
-        barcode=barcode,
-        image_url=image_url,
-        ocr_url=ocr_url,
-        server_domain=server_domain,
-    )
+    if product_id.server_type.is_food():
+        # Currently we don't support insight generation for projects other
+        # than OFF (OBF, OPF,...)
+        enqueue_job(
+            import_insights_from_image,
+            high_queue,
+            job_kwargs={"result_ttl": 0},
+            product_id=product_id,
+            image_url=image_url,
+            ocr_url=ocr_url,
+        )
     # The two following tasks take longer than the previous one, so it
     # shouldn't be an issue to launch tasks concurrently (and we still have
     # the insight import lock to avoid concurrent insight import in DB for the
@@ -99,9 +107,8 @@ def run_import_image_job(
         run_logo_object_detection,
         high_queue,
         job_kwargs={"result_ttl": 0},
-        barcode=barcode,
+        product_id=product_id,
         image_url=image_url,
-        server_domain=server_domain,
     )
     # Nutrition table detection is not used at the moment, and every new image
     # is costly in CPU (as we perform object detection)
@@ -110,14 +117,13 @@ def run_import_image_job(
     #     run_nutrition_table_object_detection,
     #     high_queue,
     #     job_kwargs={"result_ttl": 0},
-    #     barcode=barcode,
+    #     product_id=product_id,
     #     image_url=image_url,
-    #     server_domain=server_domain,
     # )
 
 
 def import_insights_from_image(
-    barcode: str, image_url: str, ocr_url: str, server_domain: str
+    product_id: ProductIdentifier, image_url: str, ocr_url: str
 ):
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
@@ -127,7 +133,7 @@ def import_insights_from_image(
 
     source_image = get_source_from_url(image_url)
     predictions = extract_ocr_predictions(
-        barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+        product_id, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
     )
     if any(
         prediction.value_tag == "en:nutriscore"
@@ -138,101 +144,48 @@ def import_insights_from_image(
             run_nutriscore_object_detection,
             high_queue,
             job_kwargs={"result_ttl": 0},
-            barcode=barcode,
+            product_id=product_id,
             image_url=image_url,
-            server_domain=server_domain,
         )
     NotifierFactory.get_notifier().notify_image_flag(
         [p for p in predictions if p.type == PredictionType.image_flag],
         source_image,
-        barcode,
+        product_id,
     )
 
     with db:
-        import_result = import_insights(predictions, server_domain)
+        import_result = import_insights(predictions, server_type=product_id.server_type)
         logger.info(import_result)
 
 
-def save_image_job(batch: list[tuple[str, str]], server_domain: str):
+def save_image_job(batch: list[tuple[ProductIdentifier, str]], server_type: ServerType):
     """Save a batch of images in DB.
 
-    :param batch: a batch of (barcode, source_image) tuples
-    :param server_domain: the server domain to use
+    :param batch: a batch of (product_id, source_image) tuples
+    :param server_type: the server type (project) of the products
     """
+    product_store = get_product_store(server_type)
     with db.connection_context():
-        for barcode, source_image in batch:
-            product = get_product_store()[barcode]
-            if product is None:
+        for product_id, source_image in batch:
+            product = product_store[product_id]
+            if product is None and settings.ENABLE_PRODUCT_CHECK:
                 continue
 
             with db.atomic():
-                save_image(barcode, source_image, product, server_domain)
+                image_url = generate_image_url(product_id, Path(source_image).stem)
+                save_image(
+                    product_id,
+                    source_image,
+                    image_url,
+                    getattr(product, "images", None),
+                )
 
 
-def save_image(
-    barcode: str, source_image: str, product: Product, server_domain: str
-) -> Optional[ImageModel]:
-    """Save imported image details in DB."""
-    if existing_image_model := ImageModel.get_or_none(source_image=source_image):
-        logger.info(
-            f"Image {source_image} already exist in DB, returning existing image"
-        )
-        return existing_image_model
-
-    image_id = Path(source_image).stem
-
-    if not image_id.isdigit():
-        logger.info("Non raw image was sent: %s", source_image)
-        return None
-
-    if image_id not in product.images:
-        logger.info("Unknown image for product %s: %s", barcode, source_image)
-        return None
-
-    image = product.images[image_id]
-    sizes = image.get("sizes", {}).get("full")
-
-    if not sizes:
-        logger.info("Image with missing size information: %s", image)
-        return None
-
-    width = sizes["w"]
-    height = sizes["h"]
-
-    if "uploaded_t" not in image:
-        logger.info("Missing uploaded_t field: %s", list(image))
-        return None
-
-    uploaded_t = image["uploaded_t"]
-    if isinstance(uploaded_t, str):
-        if not uploaded_t.isdigit():
-            logger.info("Non digit uploaded_t value: %s", uploaded_t)
-            return None
-
-        uploaded_t = int(uploaded_t)
-
-    uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
-    image_model = ImageModel.create(
-        barcode=barcode,
-        image_id=image_id,
-        width=width,
-        height=height,
-        source_image=source_image,
-        uploaded_at=uploaded_at,
-        server_domain=server_domain,
-        server_type=get_server_type(server_domain).name,
-    )
-    if image_model is not None:
-        logger.info("New image %s created in DB", image_model.id)
-    return image_model
-
-
-def run_nutrition_table_object_detection(
-    barcode: str, image_url: str, server_domain: str
-):
+def run_nutrition_table_object_detection(product_id: ProductIdentifier, image_url: str):
     logger.info(
-        f"Running nutrition table object detection for product {barcode} "
-        f"({server_domain}), image {image_url}"
+        "Running nutrition table object detection for %s, image %s",
+        product_id,
+        image_url,
     )
 
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
@@ -244,7 +197,9 @@ def run_nutrition_table_object_detection(
     source_image = get_source_from_url(image_url)
 
     with db:
-        if image_model := ImageModel.get_or_none(source_image=source_image):
+        if image_model := ImageModel.get_or_none(
+            source_image=source_image, server_type=product_id.server_type.name
+        ):
             run_object_detection_model(
                 ObjectDetectionModel.nutrition_table, image, image_model
             )
@@ -261,10 +216,9 @@ NUTRISCORE_LABELS = {
 }
 
 
-def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain: str):
+def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: str):
     logger.info(
-        f"Running nutriscore object detection for product {barcode} "
-        f"({server_domain}), image {image_url}"
+        "Running nutriscore object detection for %s, image %s", product_id, image_url
     )
 
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
@@ -276,7 +230,11 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
     source_image = get_source_from_url(image_url)
 
     with db:
-        if (image_model := ImageModel.get_or_none(source_image=source_image)) is None:
+        if (
+            image_model := ImageModel.get_or_none(
+                source_image=source_image, server_type=product_id.server_type.name
+            )
+        ) is None:
             logger.info("Missing image in DB for image %s", source_image)
             return
 
@@ -306,31 +264,27 @@ def run_nutriscore_object_detection(barcode: str, image_url: str, server_domain:
     with db:
         prediction = Prediction(
             type=PredictionType.label,
-            barcode=barcode,
+            barcode=product_id.barcode,
             source_image=source_image,
             value_tag=label_tag,
             automatic_processing=False,
-            server_domain=server_domain,
+            server_type=product_id.server_type,
             predictor="nutriscore",
             data={"bounding_box": result["bounding_box"]},
             confidence=score,
         )
-        import_result = import_insights([prediction], server_domain)
+        import_result = import_insights([prediction], product_id.server_type)
         logger.info(import_result)
 
 
-def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
+def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
     """Detect logos using the universal logo detector model and generate
     logo-related predictions.
 
-    :param barcode: Product barcode
+    :param product_id: identifier of the product
     :param image_url: URL of the image to use
-    :param server_domain: The server domain associated with the image
     """
-    logger.info(
-        f"Running logo object detection for product {barcode} "
-        f"({server_domain}), image {image_url}"
-    )
+    logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
     image = get_image_from_url(image_url, error_raise=False, session=http_session)
 
@@ -341,7 +295,11 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
     source_image = get_source_from_url(image_url)
 
     with db:
-        if (image_model := ImageModel.get_or_none(source_image=source_image)) is None:
+        if (
+            image_model := ImageModel.get_or_none(
+                source_image=source_image, server_type=product_id.server_type.name
+            )
+        ) is None:
             logger.info("Missing image in DB for image %s", source_image)
             return
 
@@ -388,7 +346,7 @@ def run_logo_object_detection(barcode: str, image_url: str, server_domain: str):
             high_queue,
             job_kwargs={"result_ttl": 0},
             image_prediction_id=image_prediction.id,
-            server_domain=server_domain,
+            server_type=product_id.server_type,
         )
 
 
@@ -416,7 +374,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
 
 
 @with_db
-def process_created_logos(image_prediction_id: int, server_domain: str):
+def process_created_logos(image_prediction_id: int, server_type: ServerType):
     logo_embeddings = list(
         LogoEmbedding.select()
         .join(LogoAnnotation)
@@ -429,18 +387,20 @@ def process_created_logos(image_prediction_id: int, server_domain: str):
 
     es_client = get_es_client()
     try:
-        add_logos_to_ann(es_client, logo_embeddings)
+        add_logos_to_ann(es_client, logo_embeddings, server_type)
     except BulkIndexError as e:
         logger.info("Request error during logo addition to ANN", exc_info=e)
         return
 
     try:
-        save_nearest_neighbors(es_client, logo_embeddings)
+        save_nearest_neighbors(es_client, logo_embeddings, server_type)
     except (elasticsearch.ConnectionError, elasticsearch.ConnectionTimeout) as e:
         logger.info("Request error during ANN batch query", exc_info=e)
         return
 
-    logos = [embedding.logo for embedding in logo_embeddings]
-
-    thresholds = get_logo_confidence_thresholds()
-    import_logo_insights(logos, thresholds=thresholds, server_domain=server_domain)
+    if server_type.is_food():
+        # We don't support annotation on projects other than off/off_pro
+        # currently
+        logos = [embedding.logo for embedding in logo_embeddings]
+        thresholds = get_logo_confidence_thresholds()
+        import_logo_insights(logos, thresholds=thresholds, server_type=server_type)

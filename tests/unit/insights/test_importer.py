@@ -21,13 +21,20 @@ from robotoff.insights.importer import (
     select_deepest_taxonomized_candidates,
 )
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction
 from robotoff.products import Product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import InsightType, PredictionType, ProductInsightImportResult
+from robotoff.types import (
+    InsightType,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+    ProductInsightImportResult,
+    ServerType,
+)
 
 DEFAULT_BARCODE = "3760094310634"
-DEFAULT_SERVER_DOMAIN = "api.openfoodfacts.org"
+DEFAULT_SERVER_TYPE = ServerType.off
+DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 # 2022-02-08 16:07
 DEFAULT_UPLOADED_T = "1644332825"
 
@@ -449,7 +456,6 @@ class TestInsightImporter:
         assert CategoryImporter.generate_insights(
             DEFAULT_BARCODE,
             [],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         ) == ([], [], [])
         get_existing_insight_mock.assert_called_once()
@@ -467,7 +473,6 @@ class TestInsightImporter:
         assert CategoryImporter.generate_insights(
             DEFAULT_BARCODE,
             [],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         ) == ([], [], [existing_insight])
         get_existing_insight_mock.assert_called_once()
@@ -485,7 +490,6 @@ class TestInsightImporter:
                     data={},
                 )
             ],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         ) == ([], [], [])
         get_existing_insight_mock.assert_called_once()
@@ -505,7 +509,6 @@ class TestInsightImporter:
                     data={},
                 )
             ],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         )
         assert generated == ([], [], [reference])
@@ -549,7 +552,6 @@ class TestInsightImporter:
         generated = FakeImporter.generate_insights(
             DEFAULT_BARCODE,
             [prediction],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(
                 data={
                     DEFAULT_BARCODE: Product(
@@ -579,7 +581,6 @@ class TestInsightImporter:
         assert created_insight.value_tag == "tag2"
         assert created_insight.data == {"k": "v"}
         assert created_insight.barcode == DEFAULT_BARCODE
-        assert created_insight.server_domain == DEFAULT_SERVER_DOMAIN
         assert created_insight.server_type == "off"
         assert created_insight.process_after is not None
         uuid.UUID(created_insight.id)
@@ -611,7 +612,6 @@ class TestInsightImporter:
         generated = FakeImporter.generate_insights(
             DEFAULT_BARCODE,
             [prediction],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(
                 data={DEFAULT_BARCODE: Product({"code": DEFAULT_BARCODE})}
             ),
@@ -633,7 +633,6 @@ class TestInsightImporter:
             FakeImporter.import_insights(
                 DEFAULT_BARCODE,
                 [Prediction(type=PredictionType.label)],
-                DEFAULT_SERVER_DOMAIN,
                 product_store=FakeProductStore(),
             )
 
@@ -644,9 +643,7 @@ class TestInsightImporter:
                 return {PredictionType.label}
 
             @classmethod
-            def generate_insights(
-                cls, barcode, predictions, server_domains, product_store
-            ):
+            def generate_insights(cls, barcode, predictions, product_store):
                 return (
                     [
                         ProductInsight(
@@ -672,7 +669,6 @@ class TestInsightImporter:
         import_result = FakeImporter.import_insights(
             DEFAULT_BARCODE,
             [Prediction(type=PredictionType.label)],
-            DEFAULT_SERVER_DOMAIN,
             product_store=FakeProductStore(),
         )
         assert len(import_result.insight_created_ids) == 1
@@ -929,11 +925,11 @@ class TestCategoryImporter:
         ],
     )
     def test_generate_candidates(
-        self, predictions, product, expected_value_tags, mocker
+        self, predictions, product, expected_value_tags, mocker, category_taxonomy
     ):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
+            return_value=category_taxonomy,
         )
         candidates = list(CategoryImporter.generate_candidates(product, predictions))
         assert all(isinstance(c, ProductInsight) for c in candidates)
@@ -943,20 +939,31 @@ class TestCategoryImporter:
             assert candidate.value_tag == expected_value_tag
 
     @pytest.mark.parametrize(
-        "value_tag,expected_campaign",
+        "value_tag,categories_tags,expected_campaign",
         [
-            ("en:frozen-french-fries-to-deep-fry", ["agribalyse-category"]),
-            ("en:breads", []),
+            (
+                "en:frozen-french-fries-to-deep-fry",
+                [],
+                ["agribalyse-category", "missing-category"],
+            ),
+            ("en:breads", ["en:breads"], []),
         ],
     )
-    def test_add_campaign(self, value_tag: str, expected_campaign: list[str], mocker):
+    def test_add_campaign(
+        self,
+        value_tag: str,
+        categories_tags: list[str],
+        expected_campaign: list[str],
+        mocker,
+    ):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
             return_value=get_taxonomy("category", offline=True),
         )
         insight = ProductInsight(value_tag=value_tag)
         CategoryImporter.add_optional_fields(
-            insight, Product({"code": DEFAULT_BARCODE})
+            insight,
+            Product({"code": DEFAULT_BARCODE, "categories_tags": categories_tags}),
         )
         assert insight.campaign == expected_campaign
 
@@ -1251,8 +1258,8 @@ class TestImportInsightsForProducts:
         product_store = FakeProductStore()
         import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
-            DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
+            server_type=DEFAULT_SERVER_TYPE,
         )
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_not_called()
@@ -1262,11 +1269,13 @@ class TestImportInsightsForProducts:
             "barcode": DEFAULT_BARCODE,
             "type": PredictionType.category.name,
             "data": {},
+            "server_type": DEFAULT_SERVER_TYPE,
         }
         prediction = Prediction(
             barcode=DEFAULT_BARCODE,
             type=PredictionType.category,
             data={},
+            server_type=DEFAULT_SERVER_TYPE,
         )
         get_product_predictions_mock = mocker.patch(
             "robotoff.insights.importer.get_product_predictions",
@@ -1277,19 +1286,19 @@ class TestImportInsightsForProducts:
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
             return_value=ProductInsightImportResult(
-                [], [], [], DEFAULT_BARCODE, InsightType.category
+                [], [], [], DEFAULT_PRODUCT_ID, InsightType.category
             ),
         )
         product_store = FakeProductStore()
         import_result = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
-            DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
+            server_type=DEFAULT_SERVER_TYPE,
         )
         assert len(import_result) == 1
         get_product_predictions_mock.assert_called_once()
         import_insights_mock.assert_called_once_with(
-            DEFAULT_BARCODE, [prediction], DEFAULT_SERVER_DOMAIN, product_store
+            DEFAULT_PRODUCT_ID, [prediction], product_store
         )
 
     def test_import_insights_type_mismatch(self, mocker):
@@ -1307,14 +1316,14 @@ class TestImportInsightsForProducts:
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
             return_value=ProductInsightImportResult(
-                [], [], [], DEFAULT_BARCODE, InsightType.image_orientation
+                [], [], [], DEFAULT_PRODUCT_ID, InsightType.image_orientation
             ),
         )
         product_store = FakeProductStore()
         import_results = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.image_orientation}},
-            DEFAULT_SERVER_DOMAIN,
             product_store=product_store,
+            server_type=DEFAULT_SERVER_TYPE,
         )
         assert len(import_results) == 0
         assert not get_product_predictions_mock.called

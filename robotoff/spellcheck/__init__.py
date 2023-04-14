@@ -1,7 +1,6 @@
 from typing import Iterable, Optional, Union
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction
 from robotoff.products import ProductDataset
 from robotoff.spellcheck.base_spellchecker import BaseSpellchecker
 from robotoff.spellcheck.elasticsearch import ElasticSearchSpellchecker
@@ -9,7 +8,7 @@ from robotoff.spellcheck.items import SpellcheckItem
 from robotoff.spellcheck.patterns import PatternsSpellchecker
 from robotoff.spellcheck.percentages import PercentagesSpellchecker
 from robotoff.spellcheck.vocabulary import VocabularySpellchecker
-from robotoff.types import JSONType, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType, ServerType
 
 SPELLCHECKERS = {
     "elasticsearch": ElasticSearchSpellchecker,
@@ -82,6 +81,7 @@ class Spellchecker:
                         type=PredictionType.ingredient_spellcheck,
                         data=insight,
                         barcode=product["code"],
+                        server_type=ServerType.off,
                     )
 
                     insights_count += 1

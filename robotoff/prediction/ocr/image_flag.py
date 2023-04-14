@@ -1,10 +1,10 @@
+import functools
 from typing import Optional, Union
 
 from flashtext import KeywordProcessor
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction
-from robotoff.types import PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 
 from .dataclass import OCRResult, SafeSearchAnnotationLikelihood, get_text
@@ -48,6 +48,7 @@ LABELS_TO_FLAG = {
 }
 
 
+@functools.cache
 def generate_image_flag_keyword_processor() -> KeywordProcessor:
     processor = KeywordProcessor()
 
@@ -59,9 +60,6 @@ def generate_image_flag_keyword_processor() -> KeywordProcessor:
             processor.add_keyword(name, clean_name=(name, key))
 
     return processor
-
-
-PROCESSOR = generate_image_flag_keyword_processor()
 
 
 def extract_image_flag_flashtext(
@@ -83,7 +81,8 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions: list[Prediction] = []
 
     text = get_text(content)
-    prediction = extract_image_flag_flashtext(PROCESSOR, text)
+    processor = generate_image_flag_keyword_processor()
+    prediction = extract_image_flag_flashtext(processor, text)
 
     if prediction is not None:
         predictions.append(prediction)

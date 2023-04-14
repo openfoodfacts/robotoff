@@ -4,11 +4,10 @@ from typing import Optional
 
 from robotoff import settings
 from robotoff.models import ProductInsight
-from robotoff.mongo import MONGO_CLIENT_CACHE
 from robotoff.off import generate_image_url
 from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
-from robotoff.types import InsightType, JSONType
+from robotoff.types import InsightType, JSONType, ProductIdentifier
 from robotoff.utils import get_logger, load_json
 from robotoff.utils.i18n import TranslationStore
 
@@ -23,13 +22,13 @@ LABEL_IMAGES: dict[str, str] = load_json(settings.LABEL_LOGOS_PATH)  # type: ign
 
 
 def generate_selected_images(
-    images: JSONType, barcode: str
+    images: JSONType, product_id: ProductIdentifier
 ) -> dict[str, dict[str, dict[str, str]]]:
     """Generate the same `selected_images` field as returned by Product
     Opener API.
 
     :param images: the `images` data of the product
-    :param barcode: the product barcode
+    :param product_id: identifier of the product
     :return: the `selected_images` data
     """
     selected_images: dict[str, dict[str, dict[str, str]]] = {
@@ -60,7 +59,7 @@ def generate_selected_images(
             ):
                 if image_size in available_image_sizes:
                     image_url = generate_image_url(
-                        barcode, f"{key}.{revision_id}.{image_size}"
+                        product_id, f"{key}.{revision_id}.{image_size}"
                     )
                     selected_images[image_type].setdefault(field_name, {})
                     selected_images[image_type][field_name][language] = image_url
@@ -69,7 +68,7 @@ def generate_selected_images(
 
 
 def get_source_image_url(
-    barcode: str, field_types: Optional[list[str]] = None
+    product_id: ProductIdentifier, field_types: Optional[list[str]] = None
 ) -> Optional[str]:
     """Generate the URL of a generic image to display for an insight.
 
@@ -77,7 +76,7 @@ def get_source_image_url(
     language of the following types ("front", "ingredients", "nutrition"),
     and use this image to generate the image URL.
 
-    :param barcode: the barcode of the product
+    :param product_id: identifier of the product
     :param field_types: the image field types to check. If not provided,
       we use ["front", "ingredients", "nutrition"]
     :return: The image URL or None if no suitable image has been found
@@ -85,12 +84,12 @@ def get_source_image_url(
     if field_types is None:
         field_types = ["front", "ingredients", "nutrition"]
 
-    product: Optional[JSONType] = get_product(barcode, ["images"])
+    product: Optional[JSONType] = get_product(product_id, ["images"])
 
     if product is None or "images" not in product:
         return None
 
-    selected_images = generate_selected_images(product["images"], barcode)
+    selected_images = generate_selected_images(product["images"], product_id)
 
     for key in field_types:
         if key in selected_images:
@@ -143,6 +142,7 @@ class AddBinaryQuestion(Question):
         self.insight_id: str = str(insight.id)
         self.insight_type: str = str(insight.type)
         self.barcode: str = insight.barcode
+        self.server_type: str = insight.server_type
         self.ref_image_url: Optional[str] = ref_image_url
         self.source_image_url: Optional[str] = source_image_url
         self.value_tag: Optional[str] = value_tag
@@ -153,6 +153,7 @@ class AddBinaryQuestion(Question):
     def serialize(self) -> JSONType:
         serial = {
             "barcode": self.barcode,
+            "server_type": self.server_type,
             "type": self.get_type(),
             "value": self.value,
             "question": self.question,
@@ -177,6 +178,7 @@ class IngredientSpellcheckQuestion(Question):
         self.insight_id: str = str(insight.id)
         self.insight_type: str = str(insight.type)
         self.barcode: str = insight.barcode
+        self.server_type: str = insight.server_type
         self.corrected: str = insight.data["corrected"]
         self.text: str = insight.data["text"]
         self.corrections: list[JSONType] = insight.data["corrections"]
@@ -189,6 +191,7 @@ class IngredientSpellcheckQuestion(Question):
     def serialize(self) -> JSONType:
         serial = {
             "barcode": self.barcode,
+            "server_type": self.server_type,
             "type": self.get_type(),
             "insight_id": self.insight_id,
             "insight_type": self.insight_type,
@@ -220,7 +223,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
         taxonomy: Taxonomy = get_taxonomy(TaxonomyType.category.name)
         localized_value: str = taxonomy.get_localized_name(insight.value_tag, lang)
         localized_question = self.translation_store.gettext(lang, self.question)
-        source_image_url = get_source_image_url(insight.barcode)
+        source_image_url = get_source_image_url(insight.get_product_id())
         return AddBinaryQuestion(
             question=localized_question,
             value=localized_value,
@@ -231,13 +234,13 @@ class CategoryQuestionFormatter(QuestionFormatter):
 
     @staticmethod
     def generate_selected_images(
-        images: JSONType, barcode: str
+        images: JSONType, product_id: ProductIdentifier
     ) -> dict[str, dict[str, dict[str, str]]]:
         """Generate the same `selected_images` field as returned by Product
         Opener API.
 
         :param images: the `images` data of the product
-        :param barcode: the product barcode
+        :param product_id: identifier of the product
         :return: the `selected_images` data
         """
         selected_images: dict[str, dict[str, dict[str, str]]] = {
@@ -268,7 +271,7 @@ class CategoryQuestionFormatter(QuestionFormatter):
                 ):
                     if image_size in available_image_sizes:
                         image_url = generate_image_url(
-                            barcode, f"{key}.{revision_id}.{image_size}"
+                            product_id, f"{key}.{revision_id}.{image_size}"
                         )
                         selected_images[image_type].setdefault(field_name, {})
                         selected_images[image_type][field_name][language] = image_url
@@ -283,9 +286,10 @@ class ProductWeightQuestionFormatter(QuestionFormatter):
         localized_question = self.translation_store.gettext(lang, self.question)
 
         source_image_url = None
+        server_type = insight.get_product_id().server_type
         if insight.source_image:
             source_image_url = settings.BaseURLProvider.image_url(
-                get_display_image(insight.source_image)
+                server_type, get_display_image(insight.source_image)
             )
 
         return AddBinaryQuestion(
@@ -308,9 +312,10 @@ class LabelQuestionFormatter(QuestionFormatter):
         localized_question = self.translation_store.gettext(lang, self.question)
 
         source_image_url = None
+        server_type = insight.get_product_id().server_type
         if insight.source_image:
             source_image_url = settings.BaseURLProvider.image_url(
-                get_display_image(insight.source_image)
+                server_type, get_display_image(insight.source_image)
             )
 
         return AddBinaryQuestion(
@@ -349,9 +354,10 @@ class PackagingQuestionFormatter(QuestionFormatter):
         localized_question = self.translation_store.gettext(lang, self.question)
 
         source_image_url = None
+        server_type = insight.get_product_id().server_type
         if insight.source_image:
             source_image_url = settings.BaseURLProvider.image_url(
-                get_display_image(insight.source_image)
+                server_type, get_display_image(insight.source_image)
             )
 
         return AddBinaryQuestion(
@@ -372,12 +378,13 @@ class BrandQuestionFormatter(QuestionFormatter):
         if insight.predictor in ("curated-list", "taxonomy", "whitelisted-brands"):
             # Use front image as default for flashtext-brand insights
             source_image_url = get_source_image_url(
-                insight.barcode, field_types=["front"]
+                insight.get_product_id(), field_types=["front"]
             )
 
         if source_image_url is None and insight.source_image:
+            server_type = insight.get_product_id().server_type
             source_image_url = settings.BaseURLProvider.image_url(
-                get_display_image(insight.source_image)
+                server_type, get_display_image(insight.source_image)
             )
 
         return AddBinaryQuestion(
@@ -391,15 +398,15 @@ class BrandQuestionFormatter(QuestionFormatter):
 
 class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
     def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        ref_image_url = self.get_ingredient_image_url(insight.barcode, lang)
+        ref_image_url = self.get_ingredient_image_url(insight.get_product_id(), lang)
         return IngredientSpellcheckQuestion(
             insight=insight, ref_image_url=ref_image_url
         )
 
-    def get_ingredient_image_url(self, barcode: str, lang: str) -> Optional[str]:
-        mongo_client = MONGO_CLIENT_CACHE.get()
-        collection = mongo_client.off.products
-        product = collection.find_one({"code": barcode}, ["images"])
+    def get_ingredient_image_url(
+        self, product_id: ProductIdentifier, lang: str
+    ) -> Optional[str]:
+        product = get_product(product_id, ["images"])
 
         if product is None:
             return None
@@ -410,7 +417,7 @@ class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
         if field_name in images:
             image = images[field_name]
             image_id = "ingredients_{}.{}.full".format(lang, image["rev"])
-            return generate_image_url(barcode, image_id)
+            return generate_image_url(product_id, image_id)
 
         return None
 
@@ -422,9 +429,10 @@ class NutritionImageQuestionFormatter(QuestionFormatter):
         localized_question = self.translation_store.gettext(lang, self.question)
 
         source_image_url = None
+        product_id = insight.get_product_id()
         if insight.source_image:
             source_image_url = settings.BaseURLProvider.image_url(
-                get_display_image(insight.source_image)
+                product_id.server_type, get_display_image(insight.source_image)
             )
 
         return AddBinaryQuestion(

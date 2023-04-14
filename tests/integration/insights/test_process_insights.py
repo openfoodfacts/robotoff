@@ -2,11 +2,13 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from robotoff import settings
 from robotoff.models import ProductInsight
 from robotoff.scheduler import process_insights
+from robotoff.types import ServerType
 
 from ..models_utils import ProductInsightFactory, clean_db
+
+DEFAULT_SERVER_TYPE = ServerType.off
 
 
 @pytest.fixture(autouse=True)
@@ -34,6 +36,7 @@ def _create_insight(**kwargs):
             "automatic_processing": True,
             "process_after": datetime.utcnow() - timedelta(minutes=12),
             "n_votes": 3,
+            "server_type": DEFAULT_SERVER_TYPE.name,
         },
         **kwargs,
     )
@@ -69,8 +72,8 @@ def test_process_insight_category(mocker, peewee_db):
             "add_categories": "en:Salmons",
             "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
         },
+        server_type=DEFAULT_SERVER_TYPE,
         auth=None,
-        server_domain=settings.BaseURLProvider.server_domain(),
     )
 
 
@@ -149,8 +152,8 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
             "add_categories": "en:Salmons",
             "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
         },
+        server_type=DEFAULT_SERVER_TYPE,
         auth=None,
-        server_domain=settings.BaseURLProvider.server_domain(),
     )
 
     with peewee_db:
@@ -166,8 +169,8 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
             "add_categories": "en:Tuna",
             "comment": f"[robotoff] Adding category 'en:Tuna', ID: {id2}",
         },
+        server_type=DEFAULT_SERVER_TYPE,
         auth=None,
-        server_domain=settings.BaseURLProvider.server_domain(),
     )
     # we add only two calls
     assert mock.call_count == 2
@@ -205,8 +208,8 @@ def test_process_insight_same_product(mocker, peewee_db):
             "add_categories": "en:Big fish",
             "comment": f"[robotoff] Adding category 'en:Big fish', ID: {id2}",
         },
+        server_type=DEFAULT_SERVER_TYPE,
         auth=None,
-        server_domain=settings.BaseURLProvider.server_domain(),
     )
     mock.assert_any_call(
         {
@@ -214,6 +217,6 @@ def test_process_insight_same_product(mocker, peewee_db):
             "add_categories": "en:Smoked Salmon",
             "comment": f"[robotoff] Adding category 'en:Smoked Salmon', ID: {id3}",
         },
+        server_type=DEFAULT_SERVER_TYPE,
         auth=None,
-        server_domain=settings.BaseURLProvider.server_domain(),
     )
