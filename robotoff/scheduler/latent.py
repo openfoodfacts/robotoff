@@ -79,7 +79,7 @@ def generate_fiber_quality_facet() -> None:
         if not facets:
             continue
 
-        logger.info("Adding facets to %s: %s", (barcode, facets))
+        logger.info("Adding facets to %s: %s", barcode, facets)
         seen_set.add(barcode)
         added += 1
         collection.update_one(
