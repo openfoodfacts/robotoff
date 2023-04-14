@@ -35,3 +35,7 @@ msgstr "이 무게가 제품에 표시된 무게와 일치합니까?"
 msgid "Is this image a nutrition image for this language?"
 msgstr "이 이미지가 이 언어의 영양 이미지입니까?"
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product have this packaging element?"
+msgstr ""
+
