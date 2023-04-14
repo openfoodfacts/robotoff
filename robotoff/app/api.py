@@ -582,45 +582,43 @@ class ImagePredictionImporterResource:
         logger.info("{} image predictions inserted".format(inserted))
 
 
-class ImagePredictionFetchResource:
+class ImagePredictionResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int("count", min_value=1, default=25)
+        page: int = req.get_param_as_int("page", min_value=1, default=1)
+        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
         model_name: Optional[str] = req.get_param("model_name")
         type_: Optional[str] = req.get_param("type")
         model_version: Optional[str] = req.get_param("model_version")
         barcode: Optional[str] = req.get_param("barcode")
         min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
-        random: bool = req.get_param_as_bool("random", default=True)
         server_type = get_server_type_from_req(req)
 
-        where_clauses = [ImageModel.server_type == server_type.name]
+        get_image_predictions_ = functools.partial(
+            get_image_predictions,
+            with_logo=with_logo,
+            barcode=barcode,
+            type=type_,
+            server_type=server_type,
+            model_name=model_name,
+            model_version=model_version,
+            min_confidence=min_confidence,
+        )
 
-        if model_name is not None:
-            where_clauses.append(ImagePrediction.model_name == model_name)
+        offset: int = (page - 1) * count
+        image_predictions = [
+            i.to_dict() for i in get_image_predictions_(limit=count, offset=offset)
+        ]
+        response: JSONType = {"count": get_image_predictions_(count=True)}
 
-        if model_version is not None:
-            where_clauses.append(ImagePrediction.model_version == model_version)
+        if not image_predictions:
+            response["image_predictions"] = []
+            response["status"] = "no_image_predictions"
+        else:
+            response["image_predictions"] = image_predictions
+            response["status"] = "found"
 
-        if type_ is not None:
-            where_clauses.append(ImagePrediction.type == type_)
-
-        if min_confidence is not None:
-            where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
-
-        if barcode is not None:
-            where_clauses.append(ImageModel.barcode == barcode)
-
-        query = ImagePrediction.select().join(ImageModel)
-
-        if where_clauses:
-            query = query.where(*where_clauses)
-
-        if random:
-            query = query.order_by(peewee.fn.Random())
-
-        query = query.limit(count)
-        items = [item.to_dict() for item in query.iterator()]
-        resp.media = {"predictions": items}
+        resp.media = response
 
 
 class ImagePredictorResource:
@@ -1343,40 +1341,31 @@ class ImageCollection:
 
 class PredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        response: JSONType = {}
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         barcode: Optional[str] = req.get_param("barcode")
         value_tag: str = req.get_param("value_tag")
-        keep_types: Optional[list[str]] = req.get_param_as_list(
-            "insight_types", required=False
-        )
-        brands = req.get_param_as_list("brands") or None
+        keep_types: Optional[list[str]] = req.get_param_as_list("types", required=False)
         server_type = get_server_type_from_req(req)
 
         if keep_types:
             # Limit the number of types to prevent slow SQL queries
             keep_types = keep_types[:10]
 
-        if brands is not None:
-            # Limit the number of brands to prevent slow SQL queries
-            brands = brands[:10]
-
-        query_parameters = {
-            "keep_types": keep_types,
-            "value_tag": value_tag,
-            "barcode": barcode,
-            "server_type": server_type,
-        }
-
-        get_predictions_ = functools.partial(get_predictions, **query_parameters)
+        get_predictions_ = functools.partial(
+            get_predictions,
+            keep_types=keep_types,
+            value_tag=value_tag,
+            barcode=barcode,
+            server_type=server_type,
+        )
 
         offset: int = (page - 1) * count
         predictions = [
             i.to_dict() for i in get_predictions_(limit=count, offset=offset)
         ]
 
-        response["count"] = get_predictions_(count=True)
+        response: JSONType = {"count": get_predictions_(count=True)}
 
         if not predictions:
             response["predictions"] = []
@@ -1458,16 +1447,16 @@ class ImagePredictionCollection:
         )
 
         offset: int = (page - 1) * count
-        images = [
+        image_predictions = [
             i.to_dict() for i in get_image_predictions_(limit=count, offset=offset)
         ]
         response["count"] = get_image_predictions_(count=True)
 
-        if not images:
+        if not image_predictions:
             response["image_predictions"] = []
             response["status"] = "no_image_predictions"
         else:
-            response["image_predictions"] = images
+            response["image_predictions"] = image_predictions
             response["status"] = "found"
 
         resp.media = response
@@ -1546,10 +1535,11 @@ api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
+api.add_route("/api/v1/images", ImageCollection())
 api.add_route("/api/v1/images/import", ImageImporterResource())
 api.add_route("/api/v1/images/crop", ImageCropResource())
-api.add_route("/api/v1/images/predictions/import", ImagePredictionImporterResource())
-api.add_route("/api/v1/images/predictions", ImagePredictionFetchResource())
+api.add_route("/api/v1/image_predictions", ImagePredictionResource())
+api.add_route("/api/v1/image_predictions/import", ImagePredictionImporterResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
 api.add_route("/api/v1/images/logos", ImageLogoResource())
 api.add_route("/api/v1/images/logos/search", ImageLogoSearchResource())
@@ -1570,6 +1560,4 @@ api.add_route("/api/v1/status", StatusResource())
 api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
-api.add_route("/api/v1/images/prediction/collection", ImagePredictionCollection())
-api.add_route("/api/v1/images", ImageCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())

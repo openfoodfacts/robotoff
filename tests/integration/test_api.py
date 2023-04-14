@@ -847,7 +847,7 @@ def test_get_unanswered_questions_pagination(client, peewee_db):
 
 
 def test_image_prediction_collection_empty(client):
-    result = client.simulate_get("/api/v1/images/prediction/collection/")
+    result = client.simulate_get("/api/v1/image_predictions")
     assert result.status_code == 200
 
 
@@ -872,7 +872,7 @@ def test_image_prediction_collection(client, peewee_db):
 
     # test with "barcode=123" and "with_logo=True"
     result = client.simulate_get(
-        "/api/v1/images/prediction/collection",
+        "/api/v1/image_predictions",
         params={
             "barcode": "123",
             "with_logo": 1,
@@ -887,7 +887,7 @@ def test_image_prediction_collection(client, peewee_db):
 
     # test with "type=label" and "with_logo=True"
     result = client.simulate_get(
-        "/api/v1/images/prediction/collection",
+        "/api/v1/image_predictions",
         params={
             "type": "label",
             "with_logo": 1,
@@ -903,7 +903,7 @@ def test_image_prediction_collection(client, peewee_db):
 
     # test with "barcode=456" and "with_logo=True"
     result = client.simulate_get(
-        "/api/v1/images/prediction/collection",
+        "/api/v1/image_predictions",
         params={
             "barcode": "456",
             "with_logo": 1,
@@ -917,7 +917,7 @@ def test_image_prediction_collection(client, peewee_db):
 
     # test with "type=label" and "with_logo=False"
     result = client.simulate_get(
-        "/api/v1/images/prediction/collection",
+        "/api/v1/image_predictions",
         params={
             "type": "label",
         },
