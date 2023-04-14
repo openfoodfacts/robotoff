@@ -613,6 +613,7 @@ paths:
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
         - $ref: "#/components/parameters/ann_search_count"
+        - $ref: "#/components/parameters/server_type"
       responses:
         "200":
           description: Response from ANN search
@@ -628,6 +629,7 @@ paths:
         description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
         parameters:
           - $ref: "#/components/parameters/ann_search_count"
+          - $ref: "#/components/parameters/server_type"
         responses:
           "200":
             description: Response from ANN search
@@ -923,6 +925,7 @@ components:
           - 'obf'
           - 'opff'
           - 'opf'
+          - 'off_pro'
     insight_types:
       name: insight_types
       in: query
