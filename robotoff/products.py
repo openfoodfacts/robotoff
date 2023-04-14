@@ -5,9 +5,9 @@ import functools
 import gzip
 import json
 import os
-import pathlib
 import shutil
 import tempfile
+from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
 import requests
@@ -36,7 +36,7 @@ def get_image_id(image_path: str) -> Optional[str]:
     :return: the image ID ("2" in the previous example) or None if the image
     is not "raw" (not digit-numbered)
     """
-    image_id = pathlib.Path(image_path).stem
+    image_id = Path(image_path).stem
 
     if image_id.isdigit():
         return image_id
@@ -45,7 +45,7 @@ def get_image_id(image_path: str) -> Optional[str]:
 
 
 def is_valid_image(images: JSONType, image_path: str) -> bool:
-    image_id = pathlib.Path(image_path).stem
+    image_id = Path(image_path).stem
     if not image_id.isdigit():
         return False
 
@@ -77,7 +77,7 @@ def is_special_image(
     if not is_valid_image(images, image_path):
         return False
 
-    image_id = pathlib.Path(image_path).stem
+    image_id = Path(image_path).stem
 
     for image_key, image_data in images.items():
         if (
@@ -93,7 +93,7 @@ def is_special_image(
     return False
 
 
-def minify_product_dataset(dataset_path: pathlib.Path, output_path: pathlib.Path):
+def minify_product_dataset(dataset_path: Path, output_path: Path):
     if dataset_path.suffix == ".gz":
         jsonl_iter_func = gzip_jsonl_iter
     else:
@@ -128,7 +128,7 @@ def save_product_dataset_etag(etag: str):
 
 def fetch_dataset(minify: bool = True) -> bool:
     with tempfile.TemporaryDirectory() as tmp_dir:
-        output_dir = pathlib.Path(tmp_dir)
+        output_dir = Path(tmp_dir)
         output_path = output_dir / "products.jsonl.gz"
         etag = download_dataset(output_path)
 
@@ -180,7 +180,7 @@ def download_dataset(output_path: os.PathLike) -> str:
     return current_etag
 
 
-def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
+def is_valid_dataset(dataset_path: Path) -> bool:
     """Check the dataset integrity: readable end to end and with a minimum number of products.
     This is used to spot corrupted archive files."""
     dataset = ProductDataset(dataset_path)
@@ -347,9 +347,14 @@ class ProductStream:
     def iter(self) -> Iterable[JSONType]:
         return iter(self)
 
-    def iter_product(self) -> Iterable["Product"]:
+    def iter_product(
+        self, projection: Optional[list[str]] = None
+    ) -> Iterable["Product"]:
         for item in self:
-            yield Product(item)
+            projected_item = (
+                {k: item[k] for k in projection if k in item} if projection else item
+            )
+            yield Product(projected_item)
 
     def collect(self) -> list[JSONType]:
         return list(self)
@@ -364,12 +369,10 @@ class ProductDataset:
         self.jsonl_path = jsonl_path
 
     def stream(self) -> ProductStream:
-        json_path_str = str(self.jsonl_path)
-
-        if json_path_str.endswith(".gz"):
-            iterator = gzip_jsonl_iter(json_path_str)
+        if str(self.jsonl_path).endswith(".gz"):
+            iterator = gzip_jsonl_iter(self.jsonl_path)
         else:
-            iterator = jsonl_iter(json_path_str)
+            iterator = jsonl_iter(self.jsonl_path)
 
         return ProductStream(iterator)
 
@@ -452,22 +455,26 @@ class MemoryProductStore(ProductStore):
         return len(self.store)
 
     @classmethod
-    def load_from_path(cls, path: str):
+    def load_from_path(cls, path: Path, projection: Optional[list[str]] = None):
         logger.info("Loading product store")
+
+        if projection is not None and "code" not in projection:
+            raise ValueError("at least `code` must be in projection")
+
         ds = ProductDataset(path)
         stream = ds.stream()
 
         store: dict[str, Product] = {}
 
-        for product in stream.iter_product():
+        for product in stream.iter_product(projection):
             if product.barcode:
                 store[product.barcode] = product
 
         return cls(store)
 
     @classmethod
-    def load_min(cls):
-        return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH)
+    def load_min(cls, projection: Optional[list[str]] = None):
+        return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH, projection)
 
     @classmethod
     def load_full(cls):
@@ -513,10 +520,9 @@ class DBProductStore(ProductStore):
             yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
-@functools.cache
-def get_min_product_store() -> ProductStore:
+def get_min_product_store(projection: Optional[list[str]] = None) -> ProductStore:
     logger.info("Loading product store in memory...")
-    ps = MemoryProductStore.load_min()
+    ps = MemoryProductStore.load_min(projection)
     logger.info("product store loaded (%s items)", len(ps))
     return ps
 
