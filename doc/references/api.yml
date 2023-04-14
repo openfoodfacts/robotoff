@@ -98,7 +98,6 @@ paths:
                   count:
                     type: integer
                     description: The total number of results with the provided filters
-
   /questions/random:
     get:
       tags:
@@ -137,7 +136,6 @@ paths:
                   count:
                     type: integer
                     description: The total number of results with the provided filters
-
   /questions/popular:
     get:
       tags:
@@ -215,6 +213,43 @@ paths:
                   - questions
                   - status
 
+  /predictions:
+    get:
+      tags:
+        - Predictions
+      summary: Get predictions
+      parameters:
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_query_filter"
+        - name: types
+          in: query
+          description: Comma-separated list, filter by prediction types
+          schema:
+            type: string
+            example: brand,label
+      responses:
+        "200":
+          description: The queried predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_predictions"
+                      - "found"
+                  predictions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
+
   /insights/random:
     get:
       tags:
@@ -239,7 +274,6 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/InsightSearchResult"
-
   /insights/{barcode}:
     get:
       tags:
@@ -332,12 +366,7 @@ paths:
           - $ref: "#/components/parameters/server_type"
           - $ref: "#/components/parameters/value_tag"
           - $ref: "#/components/parameters/insight_types"
-          - name: barcode
-            description: Filter by product barcode
-            in: query
-            schema:
-              type: string
-              example: 0748162621021
+          - $ref: "#/components/parameters/barcode_query_filter"
           - name: annotated
             description: The annotation status of the insight.
               If not provided, both annotated and non-annotated insights are returned
@@ -478,6 +507,72 @@ paths:
                 type: object
 
 
+  /image_predictions:
+    get:
+      tags:
+        - Image Predictions
+      summary: Get image predictions
+      parameters:
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_query_filter"
+        - name: with_logo
+          description: if True, only return image predictions that have associated logos (only valid for universal-logo-detector image predictions)
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: model_name
+          description: filter by name of the image predictor model
+          in: query
+          schema:
+            type: string
+            enum:
+              - universal-logo-detector
+              - nutrition-table
+              - nutriscore
+        - name: type
+          description: filter by type of the image predictor model, currently only 'object_detection'
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'object_detection'
+        - name: model_version
+          description: filter by model version value
+          in: query
+          schema:
+            type: string
+        - name: min_confidence
+          description: filter by minimum confidence score value
+          in: query
+          schema:
+            type: number
+            minimum: 0.0
+            maximum: 1.0
+
+      responses:
+        "200":
+          description: The queried image predictions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_image_predictions"
+                      - "found"
+                  image_predictions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
+
   /images/logos:
     get:
       tags:
@@ -517,6 +612,7 @@ paths:
         meet some criteria (annotation status, annotated, type,...)
       parameters:
         - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_query_filter"
         - name: count
           description: Number of results to return
           in: query
@@ -531,11 +627,6 @@ paths:
           schema:
             type: string
           example: packager_code
-        - name: barcode
-          description: Filter by barcode
-          in: query
-          schema:
-            type: number
         - name: value
           description: Filter by annotated value
           in: query
@@ -908,11 +999,18 @@ components:
     count:
       name: count
       in: query
-      description: The number of questions to return
+      description: The number of items to return
       schema:
         type: integer
         default: 25
         minimum: 1
+    barcode_query_filter:
+      name: barcode
+      in: query
+      description: Filter by barcode value
+      schema:
+        type: string
+        example: "5410041040807"
     server_type:
       name: server_type
       in: query

@@ -219,7 +219,7 @@ def get_images(
     barcode: Optional[str] = None,
     offset: Optional[int] = None,
     count: bool = False,
-    limit: Optional[int] = 25,
+    limit: Optional[int] = None,
 ) -> Iterable[ImageModel]:
     where_clauses = [ImageModel.server_type == server_type.name]
 
@@ -237,6 +237,12 @@ def get_images(
     if where_clauses:
         query = query.where(*where_clauses)
 
+    if limit is not None:
+        query = query.limit(limit)
+
+    if offset is not None:
+        query = query.offset(offset)
+
     if count:
         return query.count()
     else:
@@ -248,7 +254,7 @@ def get_predictions(
     barcode: Optional[str] = None,
     keep_types: Optional[list[str]] = None,
     value_tag: Optional[str] = None,
-    limit: Optional[int] = 25,
+    limit: Optional[int] = None,
     offset: Optional[int] = None,
     count: bool = False,
 ) -> Iterable[Prediction]:
@@ -268,7 +274,11 @@ def get_predictions(
     if where_clauses:
         query = query.where(*where_clauses)
 
-    query = query.order_by(Prediction.id.desc())
+    if limit is not None:
+        query = query.limit(limit)
+
+    if offset is not None:
+        query = query.offset(offset)
 
     if count:
         return query.count()
@@ -281,9 +291,12 @@ def get_image_predictions(
     with_logo: Optional[bool] = False,
     barcode: Optional[str] = None,
     type: Optional[str] = None,
+    model_name: Optional[str] = None,
+    model_version: Optional[str] = None,
+    min_confidence: Optional[float] = None,
     offset: Optional[int] = None,
     count: bool = False,
-    limit: Optional[int] = 25,
+    limit: Optional[int] = None,
 ) -> Iterable[ImagePrediction]:
 
     query = ImagePrediction.select()
@@ -291,11 +304,20 @@ def get_image_predictions(
     query = query.switch(ImagePrediction).join(ImageModel)
     where_clauses = [ImagePrediction.image.server_type == server_type.name]
 
-    if barcode:
+    if barcode is not None:
         where_clauses.append(ImagePrediction.image.barcode == barcode)
 
-    if type:
+    if type is not None:
         where_clauses.append(ImagePrediction.type == type)
+
+    if model_name is not None:
+        where_clauses.append(ImagePrediction.model_name == model_name)
+
+    if model_version is not None:
+        where_clauses.append(ImagePrediction.model_version == model_version)
+
+    if min_confidence is not None:
+        where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
 
     if not with_logo:
         # return only images without logo
@@ -310,7 +332,11 @@ def get_image_predictions(
     if where_clauses:
         query = query.where(*where_clauses)
 
-    query = query.order_by(LogoAnnotation.image_prediction.id.desc())
+    if limit is not None:
+        query = query.limit(limit)
+
+    if offset is not None:
+        query = query.offset(offset)
 
     if count:
         return query.count()
