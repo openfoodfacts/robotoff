@@ -149,7 +149,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
 def update_insight_attributes(product: Product, insight: ProductInsight) -> bool:
     updated_fields = []
     if insight.brands != product.brands_tags:
-        logger.info(
+        logger.debug(
             "Updating brand %s -> %s (%s)",
             insight.brands,
             product.brands_tags,
@@ -159,7 +159,7 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
         insight.brands = product.brands_tags
 
     if insight.countries != product.countries_tags:
-        logger.info(
+        logger.debug(
             "Updating countries %s -> %s (%s)",
             insight.countries,
             product.countries_tags,
@@ -169,7 +169,7 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
         insight.countries = product.countries_tags
 
     if insight.unique_scans_n != product.unique_scans_n:
-        logger.info(
+        logger.debug(
             "Updating unique scan count %s -> %s (%s)",
             insight.unique_scans_n,
             product.unique_scans_n,
