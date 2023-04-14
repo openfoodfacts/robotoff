@@ -4,7 +4,7 @@ from robotoff import settings
 from robotoff.utils import text_file_iter
 
 
-def test_check_ocr_stores():
+def test_check_ocr_stores() -> None:
     stores: set[str] = set()
     items: set[str] = set()
 

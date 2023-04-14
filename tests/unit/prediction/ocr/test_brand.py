@@ -9,7 +9,7 @@ from robotoff.utils import text_file_iter
 
 
 def test_check_logo_annotation_brands():
-    items: set[str] = set()
+    items = set()
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
         assert "||" in item

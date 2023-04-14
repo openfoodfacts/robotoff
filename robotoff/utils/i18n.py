@@ -5,7 +5,7 @@ from robotoff import settings
 
 
 class TranslationStore:
-    def __init__(self):
+    def __init__(self) -> None:
         self.translations: dict[str, gettext.NullTranslations] = {}
 
     def load(self):
