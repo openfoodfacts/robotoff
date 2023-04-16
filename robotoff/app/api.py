@@ -77,7 +77,12 @@ from robotoff.types import (
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
-from robotoff.workers.queues import enqueue_in_job, enqueue_job, high_queue, low_queue
+from robotoff.workers.queues import (
+    enqueue_in_job,
+    enqueue_job,
+    get_high_queue,
+    low_queue,
+)
 from robotoff.workers.tasks import (
     delete_product_insights_job,
     download_product_dataset_job,
@@ -524,12 +529,12 @@ class ImageImporterResource:
         )
         check_server_domain(server_domain)
         server_type = ServerType.get_from_server_domain(server_domain)
-
+        product_id = ProductIdentifier(barcode, server_type)
         enqueue_job(
             run_import_image_job,
-            high_queue,
+            get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
-            product_id=ProductIdentifier(barcode, server_type),
+            product_id=product_id,
             image_url=image_url,
             ocr_url=ocr_url,
         )
@@ -916,7 +921,9 @@ class ImageLogoAnnotateResource:
             logo_ids = [logo.id for logo in annotated_logos]
             enqueue_job(
                 generate_insights_from_annotated_logos_job,
-                high_queue,
+                # we have logo IDs of different products, so we don't send the
+                # job to a product-specific queue
+                get_high_queue(),
                 {"result_ttl": 0, "timeout": "5m"},
                 logo_ids=logo_ids,
                 server_type=server_type,
@@ -1052,7 +1059,7 @@ class WebhookProductResource:
         if action == "updated" and server_type == ServerType.off:
             enqueue_in_job(
                 update_insights_job,
-                high_queue,
+                get_high_queue(product_id),
                 settings.UPDATED_PRODUCT_WAIT,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
@@ -1060,7 +1067,7 @@ class WebhookProductResource:
         elif action == "deleted":
             enqueue_job(
                 delete_product_insights_job,
-                high_queue,
+                get_high_queue(product_id),
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
             )

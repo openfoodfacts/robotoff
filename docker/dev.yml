@@ -33,18 +33,15 @@ x-robotoff-dev: &robotoff-dev
 services:
   api:
     <<: *robotoff-dev
-  worker_high:
+  worker_high_1:
     <<: *robotoff-dev
-    deploy:
-      mode: replicated
-      # Only 1 replica is easier to deal with for local dev
-      replicas: 0
-  worker_low:
+  worker_high_2:
     <<: *robotoff-dev
-    deploy:
-      mode: replicated
-      # Only 1 replica is easier to deal with for local dev
-      replicas: 1
+  worker_low_1:
+    <<: *robotoff-dev
+  worker_low_2:
+    <<: *robotoff-dev
+
   scheduler:
     <<: *robotoff-dev
 

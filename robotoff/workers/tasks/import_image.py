@@ -42,7 +42,7 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_image_from_url, get_logger, http_session
-from robotoff.workers.queues import enqueue_job, high_queue
+from robotoff.workers.queues import enqueue_job, get_high_queue
 
 logger = get_logger(__name__)
 
@@ -93,19 +93,18 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
         # than OFF (OBF, OPF,...)
         enqueue_job(
             import_insights_from_image,
-            high_queue,
+            get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             image_url=image_url,
             ocr_url=ocr_url,
         )
-    # The two following tasks take longer than the previous one, so it
-    # shouldn't be an issue to launch tasks concurrently (and we still have
-    # the insight import lock to avoid concurrent insight import in DB for the
-    # same product)
+    # We make sure there are no concurrent insight processing by sending
+    # the job to the same queue. The queue is selected based on the product
+    # barcode. See `get_high_queue` documentation for more details.
     enqueue_job(
         run_logo_object_detection,
-        high_queue,
+        get_high_queue(product_id),
         job_kwargs={"result_ttl": 0},
         product_id=product_id,
         image_url=image_url,
@@ -115,7 +114,7 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
     # Disable it until we either need it or get a GPU server
     # enqueue_job(
     #     run_nutrition_table_object_detection,
-    #     high_queue,
+    #     get_high_queue(product_id),
     #     job_kwargs={"result_ttl": 0},
     #     product_id=product_id,
     #     image_url=image_url,
@@ -142,7 +141,7 @@ def import_insights_from_image(
     ):
         enqueue_job(
             run_nutriscore_object_detection,
-            high_queue,
+            get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             image_url=image_url,
@@ -343,7 +342,7 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
             save_logo_embeddings(logos, image)
         enqueue_job(
             process_created_logos,
-            high_queue,
+            get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             image_prediction_id=image_prediction.id,
             server_type=product_id.server_type,
