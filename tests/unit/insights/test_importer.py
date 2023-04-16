@@ -92,27 +92,27 @@ def test_is_selected_image(images, image_id, expected):
 
 
 @pytest.mark.parametrize(
-    "images,image_id,expected",
+    "image_ids,image_id,expected",
     [
         (
-            {"1": {}, "2": {}},
-            "1",
+            ["1", "2"],
+            "/151/525/1.jpg",
             True,
         ),
         (
-            {"2": {}},
-            "1",
+            ["2"],
+            "/151/525/1.jpg",
             False,
         ),
         (
-            {"1": {}, "front_fr": {}},
-            "front_fr",
+            ["1", "front_fr"],
+            "/151/525/front_fr.jpg",
             False,
         ),
     ],
 )
-def test_is_valid_insight_image(images, image_id, expected):
-    assert is_valid_insight_image(images, image_id) is expected
+def test_is_valid_insight_image(image_ids, image_id, expected):
+    assert is_valid_insight_image(image_ids, image_id) is expected
 
 
 @pytest.mark.parametrize(
