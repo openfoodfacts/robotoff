@@ -6,6 +6,7 @@ from typing import Any, Optional
 from urllib.parse import urlparse
 
 import requests
+from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
 from robotoff.types import ProductIdentifier, ServerType
@@ -419,7 +420,13 @@ def update_product(
     )
 
     r.raise_for_status()
-    json = r.json()
+    try:
+        json = r.json()
+    except JSONDecodeError as e:
+        logger.info(
+            "Error during OFF update request JSON decoding, text response: '%s'", r.text
+        )
+        raise e
 
     status = json.get("status_verbose")
 
@@ -467,7 +474,13 @@ def update_product_v3(
     )
 
     r.raise_for_status()
-    json = r.json()
+    try:
+        json = r.json()
+    except JSONDecodeError as e:
+        logger.info(
+            "Error during OFF update request JSON decoding, text response: '%s'", r.text
+        )
+        raise e
 
     if json.get("errors"):
         raise ValueError("Errors during product update: %s", str(json["errors"]))
