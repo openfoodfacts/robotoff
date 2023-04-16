@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.1](https://github.com/openfoodfacts/robotoff/compare/v1.25.0...v1.25.1) (2023-04-16)
+
+
+### Bug Fixes
+
+* display Product Opener response during OFF product update if an ([91d05d4](https://github.com/openfoodfacts/robotoff/commit/91d05d4a83075741d8b580c1c18a00817b9143c5))
+
 ## [1.25.0](https://github.com/openfoodfacts/robotoff/compare/v1.24.2...v1.25.0) (2023-04-16)
 
 
