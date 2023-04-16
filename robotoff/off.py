@@ -387,7 +387,7 @@ def update_product(
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,
 ):
-    base_url = settings.BaseURLProvider.api(server_type)
+    base_url = settings.BaseURLProvider.world(server_type)
     url = f"{base_url}/cgi/product_jqm2.pl"
 
     comment = params.get("comment")
@@ -411,9 +411,9 @@ def update_product(
         raise ValueError(
             "a password or a session cookie is required to update a product"
         )
-    r = http_session.get(
+    r = http_session.post(
         url,
-        params=params,
+        data=params,
         auth=settings._off_request_auth,
         cookies=cookies,
         timeout=timeout,
