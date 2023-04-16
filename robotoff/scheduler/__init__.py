@@ -15,7 +15,7 @@ from robotoff import settings, slack
 from robotoff.elasticsearch import get_es_client
 from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
-from robotoff.insights.importer import import_insights
+from robotoff.insights.importer import import_insights, is_valid_insight_image
 from robotoff.metrics import (
     ensure_influx_database,
     save_facet_metrics,
@@ -30,7 +30,7 @@ from robotoff.products import (
     get_min_product_store,
     has_dataset_changed,
 )
-from robotoff.types import ProductIdentifier, ServerType
+from robotoff.types import ServerType
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
@@ -78,10 +78,26 @@ def process_insights() -> None:
     logger.info("%d insights processed", processed)
 
 
-@with_db
 def refresh_insights(with_deletion: bool = True) -> None:
+    """Refresh predictions and insights using data from the OFF JSONL dump:
+
+    - check if the product still exists in the dump, otherwise delete the
+      prediction/insight if `with_deletion=True`
+    - if the prediction/insight has a non-null `source_image`, check that
+      the `source_image` is valid (digit ID and exists in the dump),
+      otherwise delete the prediction/insight
+    - refresh `brands`, `countries` and `unique_scans_n` attributes for
+      insights
+
+    We only check insights and predictions that are older than the dump last
+    modification timestamp to avoid deleting items that were updated or created after
+    the dump generation.
+
+    :param with_deletion: if True perform delete operation on
+        insights/predictions, defaults to True
+    """
     product_store = get_min_product_store(
-        ["code", "brands_tags", "countries_tags", "unique_scans_n"]
+        ["code", "brands_tags", "countries_tags", "unique_scans_n", "image_ids"]
     )
     # Only OFF is currently supported
     server_type = ServerType.off
@@ -99,51 +115,94 @@ def refresh_insights(with_deletion: bool = True) -> None:
         )
         return
 
-    insight: ProductInsight
-    deleted = 0
-    updated = 0
-    for insight in ServerSide(
-        ProductInsight.select().where(
-            ProductInsight.annotation.is_null(),
-            ProductInsight.timestamp <= datetime_threshold,
-            ProductInsight.server_type == server_type.name,
-        )
-    ):
-        product_id = insight.get_product_id()
-        product: Product = product_store[insight.barcode]
+    # Managing the connection here allows us to have one transaction for
+    # insight and prediction separately (encapsulated in ServerSide call)
+    with db.connection_context():
+        prediction: Prediction
+        prediction_deleted = 0
 
-        if product is None:
-            if with_deletion:
-                # Product has been deleted from OFF
-                logger.info("%s deleted, deleting insight %s", product_id, insight)
-                deleted += 1
-                insight.delete_instance()
-        else:
-            insight_updated = update_insight_attributes(product, insight)
+        # Check predictions first, as insights are computed from predictions
+        for prediction in ServerSide(
+            Prediction.select(
+                Prediction.id,
+                Prediction.barcode,
+                Prediction.server_type,
+                Prediction.source_image,
+            ).where(
+                Prediction.timestamp <= datetime_threshold,
+                Prediction.server_type == server_type.name,
+            )
+        ):
+            product_id = prediction.get_product_id()
+            product = product_store[prediction.barcode]
 
-            if insight_updated:
-                updated += 1
+            if product is None:
+                if with_deletion:
+                    # Product has been deleted from OFF
+                    logger.info(
+                        "%s deleted, deleting prediction %s", product_id, prediction
+                    )
+                    prediction_deleted += 1
+                    prediction.delete_instance()
+            elif not is_valid_insight_image(product.image_ids, prediction.source_image):
+                if with_deletion:
+                    # prediction source image is not referenced in DB
+                    logger.info(
+                        "Image %s not found or invalid (%s), deleting prediction %s",
+                        prediction.source_image,
+                        product_id,
+                        prediction,
+                    )
+                    prediction_deleted += 1
+                    prediction.delete_instance()
 
-    prediction: Prediction
-    deleted = 0
-    for prediction in ServerSide(
-        Prediction.select().where(
-            Prediction.timestamp <= datetime_threshold,
-            Prediction.server_type == server_type.name,
-        )
-    ):
-        product = product_store[ProductIdentifier(prediction.barcode, server_type)]
+        insight: ProductInsight
+        insight_deleted = 0
+        insight_updated = 0
+        for insight in ServerSide(
+            ProductInsight.select(
+                ProductInsight.id,
+                ProductInsight.barcode,
+                ProductInsight.server_type,
+                ProductInsight.source_image,
+                ProductInsight.brands,
+                ProductInsight.countries,
+                ProductInsight.unique_scans_n,
+            ).where(
+                ProductInsight.annotation.is_null(),
+                ProductInsight.timestamp <= datetime_threshold,
+                ProductInsight.server_type == server_type.name,
+            )
+        ):
+            product_id = insight.get_product_id()
+            product = product_store[insight.barcode]
 
-        if product is None:
-            if with_deletion:
-                # Product has been deleted from OFF
-                logger.info(
-                    "%s deleted, deleting prediction %s", product_id, prediction
-                )
-                deleted += 1
-                prediction.delete_instance()
+            if product is None:
+                if with_deletion:
+                    # Product has been deleted from OFF
+                    logger.info("%s deleted, deleting insight %s", product_id, insight)
+                    insight_deleted += 1
+                    insight.delete_instance()
+            elif not is_valid_insight_image(product.image_ids, insight.source_image):
+                if with_deletion:
+                    # insight source image is not referenced in DB
+                    logger.info(
+                        "Image %s not found or invalid (%s), deleting insight %s",
+                        insight.source_image,
+                        product_id,
+                        insight,
+                    )
+                    insight_deleted += 1
+                    insight.delete_instance()
+            else:
+                was_updated = update_insight_attributes(product, insight)
 
-    logger.info("%s prediction deleted", deleted)
+                if was_updated:
+                    insight_updated += 1
+
+    logger.info("%s prediction deleted", prediction_deleted)
+    logger.info("%s insight deleted", insight_deleted)
+    logger.info("%s insight updated", insight_updated)
 
 
 def update_insight_attributes(product: Product, insight: ProductInsight) -> bool:

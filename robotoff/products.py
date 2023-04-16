@@ -351,9 +351,17 @@ class ProductStream:
         self, projection: Optional[list[str]] = None
     ) -> Iterable["Product"]:
         for item in self:
-            projected_item = (
-                {k: item[k] for k in projection if k in item} if projection else item
-            )
+            projected_item = item
+            if projection:
+                projected_item = {k: item[k] for k in projection if k in item}
+                if projection is not None and "image_ids" in projection:
+                    # image_ids field is infered from `images` field, and
+                    # `images` is not necessarily in projection, so compute it here
+                    projected_item["image_ids"] = list(
+                        key
+                        for key in (item.get("images") or {}).keys()
+                        if key.isdigit()
+                    )
             yield Product(projected_item)
 
     def collect(self) -> list[JSONType]:
@@ -403,6 +411,7 @@ class Product:
         "stores_tags",
         "unique_scans_n",
         "images",
+        "image_ids",
         "packagings",
     )
 
@@ -419,6 +428,12 @@ class Product:
         self.packagings: list = product.get("packagings") or []
         self.unique_scans_n: int = product.get("unique_scans_n") or 0
         self.images: JSONType = product.get("images") or {}
+        # list of raw image IDs
+        self.image_ids: list[str] = (
+            product["image_ids"]
+            if "image_ids" in product
+            else list(key for key in self.images.keys() if key.isdigit())
+        )
 
     @staticmethod
     def get_fields():

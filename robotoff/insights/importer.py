@@ -100,13 +100,13 @@ def is_recent_image(
     return True
 
 
-def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
+def is_valid_insight_image(image_ids: list[str], source_image: Optional[str]):
     """Return True if the source image is valid for insight generation,
-    i.e. the image ID is a digit and is referenced in `images`.
+    i.e. the image ID is a digit and is referenced in `images_ids`.
 
     If `source_image` is None, we always consider the insight as valid.
 
-    :param images: The image dict as stored in MongoDB.
+    :param image_ids: The list of existing image IDs for the product.
     :param source_image: The insight source image, should be the path of the
     image path or None.
     """
@@ -114,7 +114,7 @@ def is_valid_insight_image(images: dict[str, Any], source_image: Optional[str]):
         return True
 
     image_id = Path(source_image).stem
-    return image_id.isdigit() and image_id in images
+    return image_id.isdigit() and image_id in image_ids
 
 
 def convert_bounding_box_absolute_to_relative(
@@ -380,7 +380,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             for candidate in cls.generate_candidates(product, predictions)
             # Don't check the image validity if product check was disabled (product=None)
             if product is None
-            or is_valid_insight_image(product.images, candidate.source_image)
+            or is_valid_insight_image(product.image_ids, candidate.source_image)
         ]
         for candidate in candidates:
             if candidate.automatic_processing is None:
