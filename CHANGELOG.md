@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.25.3](https://github.com/openfoodfacts/robotoff/compare/v1.25.2...v1.25.3) (2023-04-16)
+
+
+### Bug Fixes
+
+* improve scheduled job refresh_insight ([79f68a9](https://github.com/openfoodfacts/robotoff/commit/79f68a9144e865ce881301df4c82479a09e219e1))
+* remove unused server_domain method ([2b43ff6](https://github.com/openfoodfacts/robotoff/commit/2b43ff657d1dbadf56c0d2b4b27487ea740fab10))
+* use world subdomain instead of api everywhere ([09cb67e](https://github.com/openfoodfacts/robotoff/commit/09cb67e121fbd193e479201baad2a2e4fefb6649))
+
 ## [1.25.2](https://github.com/openfoodfacts/robotoff/compare/v1.25.1...v1.25.2) (2023-04-16)
 
 
