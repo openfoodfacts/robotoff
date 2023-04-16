@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.2](https://github.com/openfoodfacts/robotoff/compare/v1.25.1...v1.25.2) (2023-04-16)
+
+
+### Bug Fixes
+
+* fix call to `update_product` ([16c6453](https://github.com/openfoodfacts/robotoff/commit/16c645329ee3343b1ecb96fa2721ebb086f807eb))
+
 ## [1.25.1](https://github.com/openfoodfacts/robotoff/compare/v1.25.0...v1.25.1) (2023-04-16)
 
 
