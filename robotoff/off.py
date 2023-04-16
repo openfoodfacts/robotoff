@@ -98,18 +98,6 @@ def get_barcode_from_path(path: str) -> Optional[str]:
     return barcode or None
 
 
-def get_product_image_select_url(server_type: ServerType) -> str:
-    base_url = settings.BaseURLProvider.api(server_type)
-    return f"{base_url}/cgi/product_image_crop.pl"
-
-
-def get_api_product_url(server_type: ServerType) -> str:
-    # V2 of API is required to have proper ingredient nesting
-    # for product categorization
-    base_url = settings.BaseURLProvider.api(server_type)
-    return f"{base_url}/api/v2/product"
-
-
 def split_barcode(barcode: str) -> list[str]:
     if not barcode.isdigit():
         raise ValueError("unknown barcode format: {}".format(barcode))
@@ -167,9 +155,10 @@ def get_product(
 ) -> Optional[dict]:
     fields = fields or []
 
-    url = get_api_product_url(product_id.server_type) + "/{}.json".format(
-        product_id.barcode
-    )
+    # V2 of API is required to have proper ingredient nesting
+    # for product categorization
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
+    url = f"{base_url}/api/v2/product/{product_id.barcode}"
 
     if fields:
         # requests escape comma in URLs, as expected, but openfoodfacts server
@@ -441,7 +430,7 @@ def update_product_v3(
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,
 ):
-    base_url = settings.BaseURLProvider.api(server_type)
+    base_url = settings.BaseURLProvider.world(server_type)
     url = f"{base_url}/api/v3/product/{barcode}"
 
     comment = body.get("comment")
@@ -495,7 +484,7 @@ def move_to(
     ):
         return False
 
-    base_url = settings.BaseURLProvider.api(product_id.server_type)
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
     url = f"{base_url}/cgi/product_jqm.pl"
     params = {
         "type": "edit",
@@ -566,7 +555,7 @@ def unselect_image(
     :param timeout: request timeout value in seconds, defaults to 15s
     :return: the request Response
     """
-    base_url = settings.BaseURLProvider.api(product_id.server_type)
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
     url = f"{base_url}/cgi/product_image_unselect.pl"
     cookies = None
     params = {
@@ -609,7 +598,7 @@ def delete_image(
     :return: the requests Response
     """
 
-    base_url = settings.BaseURLProvider.api(product_id.server_type)
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
     url = f"{base_url}/cgi/product_image_move.pl"
     cookies = None
     params = {
@@ -653,7 +642,8 @@ def select_rotate_image(
     auth: Optional[OFFAuthentication] = None,
     timeout: Optional[int] = 15,
 ):
-    url = get_product_image_select_url(product_id.server_type)
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
+    url = f"{base_url}/cgi/product_image_crop.pl"
     cookies = None
     params = {
         "code": product_id.barcode,

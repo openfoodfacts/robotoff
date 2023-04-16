@@ -86,12 +86,6 @@ class BaseURLProvider(object):
         )
 
     @staticmethod
-    def api(server_type: ServerType) -> str:
-        return BaseURLProvider._get_url(
-            prefix="api", base_domain=server_type.get_base_domain()
-        )
-
-    @staticmethod
     def static(server_type: ServerType) -> str:
         # locally we may want to change it, give environment a chance
         base_domain = os.environ.get("STATIC_DOMAIN", "")
