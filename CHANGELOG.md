@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.25.0](https://github.com/openfoodfacts/robotoff/compare/v1.24.2...v1.25.0) (2023-04-16)
+
+
+### Features
+
+* add a function to send image to OFF ([f6ac894](https://github.com/openfoodfacts/robotoff/commit/f6ac89414024c1f7a66801cf045aef29f3ee54a9))
+* implement real multi-platform support (OFF, OBF,...) ([9464f46](https://github.com/openfoodfacts/robotoff/commit/9464f46df11542d42a0987666506a90fc9f367d3))
+* support multiple MongoDB DB (multi-project) ([2c36b6f](https://github.com/openfoodfacts/robotoff/commit/2c36b6f7c815fd3d1ef4fc46c7862954f7c34e1b))
+
+
+### Bug Fixes
+
+* add `server_type` field to logo indexed in ES ([506ab02](https://github.com/openfoodfacts/robotoff/commit/506ab0294852ca3ca9e036001c0a1759d9081d4a))
+* add DISABLE_PRODUCT_CHECK settings ([a201fae](https://github.com/openfoodfacts/robotoff/commit/a201faeaaa03ca5abb90b6ec357c9bba8edc0568))
+* fix in insert_images.py script ([8dd914f](https://github.com/openfoodfacts/robotoff/commit/8dd914f49288bc5a79e7578f3b97726676f4f45a))
+* fix issue in settings (DISABLE_PRODUCT_CHECK value) ([232e5c6](https://github.com/openfoodfacts/robotoff/commit/232e5c6e91a3b130336980afb2651faa586e8c62))
+* fix refresh-insight scheduled job ([d363cf8](https://github.com/openfoodfacts/robotoff/commit/d363cf861bfce7e96de0fd72678c571c97603800))
+* fix value for ENABLE_PRODUCT_CHECK in local env ([20a58d5](https://github.com/openfoodfacts/robotoff/commit/20a58d5768e9873f62e9eec38d113c61844ce141))
+* fix wrong call to run_nutriscore_object_detection ([a211249](https://github.com/openfoodfacts/robotoff/commit/a2112495e7c695b23a2e59cc74d1df8337761381))
+* fix wrongly formatted logging message ([3ef4a0d](https://github.com/openfoodfacts/robotoff/commit/3ef4a0ddce197cc8b7bba5a1d47ea7a015c4b531))
+* rename DISABLE_PRODUCT_CHECK into ENABLE_PRODUCT_CHECK ([8c07478](https://github.com/openfoodfacts/robotoff/commit/8c0747845cc79669aa7b9e99d1128a31c4c33c79))
+* rename en:gluten-free into en:no-gluten ([e1f6417](https://github.com/openfoodfacts/robotoff/commit/e1f6417c216fb76b15c7a1b6a0566d4214920e9c))
+* replace call to lru_cache() by call to cache() ([191faab](https://github.com/openfoodfacts/robotoff/commit/191faab0c2d538f1d7f2e9243e9e2d7c842b8c34))
+* suppress mypy warnings ([49a29b9](https://github.com/openfoodfacts/robotoff/commit/49a29b9ad80384a398fd39b97510086d25285260))
+* switch log level to DEBUG ([d3ebd85](https://github.com/openfoodfacts/robotoff/commit/d3ebd85607fc9ec9db11a52189f8410acfa09b6a))
+
+
+### Documentation
+
+* add missing docstring parameter descriptions ([32cc8f8](https://github.com/openfoodfacts/robotoff/commit/32cc8f8546bc63d0633eeed2bbdb90ab1d2c4361))
+* improve docstrings ([d4bb80b](https://github.com/openfoodfacts/robotoff/commit/d4bb80ba2a2d0d55ea6f91254bf3e77baa7d1d1c))
+* improve documentation in add-predictor.md ([195f1fd](https://github.com/openfoodfacts/robotoff/commit/195f1fdd02ef38743f413f85879a5b2125b75445))
+* improve documentation in add-predictor.md ([90bfda2](https://github.com/openfoodfacts/robotoff/commit/90bfda2382b0fe70f820e7adc4d7bf20dbe67933))
+* improve Robotoff API documentation ([d930592](https://github.com/openfoodfacts/robotoff/commit/d9305928b118a0463d053c2472697e1c8b2aef7f))
+
 ## [1.24.2](https://github.com/openfoodfacts/robotoff/compare/v1.24.1...v1.24.2) (2023-04-06)
 
 
