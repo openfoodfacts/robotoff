@@ -1054,9 +1054,7 @@ class WebhookProductResource:
         server_type = ServerType.get_from_server_domain(server_domain)
         product_id = ProductIdentifier(barcode, server_type)
 
-        # Only add the update insight job to the queue for Open Food Facts,
-        # as we don't have MongoDB connection for other projects yet
-        if action == "updated" and server_type == ServerType.off:
+        if action == "updated":
             enqueue_in_job(
                 update_insights_job,
                 get_high_queue(product_id),
