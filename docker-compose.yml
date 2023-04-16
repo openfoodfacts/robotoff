@@ -1,14 +1,17 @@
 version: "3.9"
 
+x-robotoff-base-volumes:
+  &robotoff-base-volumes
+  - ./data:/opt/robotoff/data
+  - ./datasets:/opt/robotoff/datasets
+  - ./tf_models:/opt/robotoff/tf_models
+  - ./models:/opt/robotoff/models
+
 x-robotoff-base:
   &robotoff-base
   restart: $RESTART_POLICY
   image: ghcr.io/openfoodfacts/robotoff:${TAG}
-  volumes:
-    - ./data:/opt/robotoff/data
-    - ./datasets:/opt/robotoff/datasets
-    - ./tf_models:/opt/robotoff/tf_models
-    - ./models:/opt/robotoff/models
+  volumes: *robotoff-base-volumes
 
 x-robotoff-base-env:
   &robotoff-base-env
@@ -40,8 +43,17 @@ x-robotoff-base-env:
   TRITON_HOST:
   ENABLE_PRODUCT_CHECK:
   IN_DOCKER_CONTAINER:
+  NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
 
-
+x-robotoff-worker-base:
+  &robotoff-worker
+  restart: $RESTART_POLICY
+  image: ghcr.io/openfoodfacts/robotoff:${TAG}
+  volumes: *robotoff-base-volumes
+  environment: *robotoff-base-env
+  depends_on:
+    - postgres
+  mem_limit: 8g
 services:
   api:
     <<: *robotoff-base
@@ -52,27 +64,27 @@ services:
     depends_on:
       - postgres
 
-  worker_high:
-    <<: *robotoff-base
-    deploy:
-      mode: replicated
-      replicas: 2
-    command: python -m robotoff run-worker robotoff-high
-    environment: *robotoff-base-env
-    depends_on:
-      - postgres
-    mem_limit: 8g
+  worker_high_1:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_1
+    # Each worker (whether it's a high or low priority worker) listens to a
+    # single high priority queue
+    command: python -m robotoff run-worker robotoff-high-1
 
-  worker_low:
-    <<: *robotoff-base
-    deploy:
-      mode: replicated
-      replicas: 2
-    command: python -m robotoff run-worker robotoff-high robotoff-low
-    environment: *robotoff-base-env
-    depends_on:
-      - postgres
-    mem_limit: 8g
+  worker_high_2:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_2
+    command: python -m robotoff run-worker robotoff-high-2
+
+  worker_low_1:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_1
+    command: python -m robotoff run-worker robotoff-high-3 robotoff-low
+
+  worker_low_2:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_2
+    command: python -m robotoff run-worker robotoff-high-4 robotoff-low
 
   scheduler:
     <<: *robotoff-base

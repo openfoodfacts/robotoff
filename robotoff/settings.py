@@ -333,3 +333,8 @@ INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
 # This is useful when testing locally, as we don't need the product to be in MongoDB to import
 # an image and generate insights.
 ENABLE_PRODUCT_CHECK = bool(int(os.environ.get("ENABLE_PRODUCT_CHECK", 1)))
+
+
+# Number of rq workers running, this is used to know the number of high priority queues that
+# exist
+NUM_RQ_WORKERS = int(os.environ.get("NUM_RQ_WORKERS", 4))

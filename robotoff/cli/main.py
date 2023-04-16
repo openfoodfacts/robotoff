@@ -14,7 +14,6 @@ from robotoff.types import (
     PredictionType,
     ProductIdentifier,
     ServerType,
-    WorkerQueue,
 )
 
 app = typer.Typer()
@@ -33,9 +32,7 @@ def run_scheduler():
 
 @app.command()
 def run_worker(
-    queues: list[WorkerQueue] = typer.Argument(
-        ..., help="Names of the queues to listen to"
-    ),
+    queues: list[str] = typer.Argument(..., help="Names of the queues to listen to"),
     burst: bool = typer.Option(
         False, help="Run in burst mode (quit after all work is done)"
     ),
@@ -43,7 +40,7 @@ def run_worker(
     """Launch a worker."""
     from robotoff.workers.main import run
 
-    run(queues=[x.value for x in queues], burst=burst)
+    run(queues=queues, burst=burst)
 
 
 @app.command()

@@ -11,8 +11,17 @@ Robotoff is made of several services:
 
 Communication between API and workers happens through Redis DB using [rq](https://python-rq.org). [^worker_job]
 
+Jobs are sent through rq messaging queues. We currently have two types of queues:
+- High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode [^product_specific_queue]. This way, we greatly reduce the risk of concurrent processing for the same product (DB deadlocks or integrity errors).
+- Low priority queue `robotoff-low`, which is used for all lower-priority jobs.
+
+We also have two kind of workers, low and high priority workers: `worker_low` and `worker_high` respectively. All types of workers handle high-priority jobs first. Each worker listens to a single high priority queue. Only low priority workers can handle low-priority jobs. This way, we ensure low priority jobs don't use excessive system resources, due to the limited number of workers that can handle such jobs.
+
 [^scheduler]: See `scheduler.run`
+
 [^worker_job]: See `robotoff.workers.queues` and `robotoff.workers.tasks`
+
+[^product_specific_queue]: See `get_high_queue` function in `robotoff.workers.queues`
 
 Robotoff allows to predict many information (also called _insights_), mostly from the product images or OCR.
 
