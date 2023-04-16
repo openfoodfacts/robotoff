@@ -69,11 +69,6 @@ class BaseURLProvider(object):
         return "%(scheme)s://%(domain)s" % data
 
     @staticmethod
-    def server_domain(server_type: ServerType) -> str:
-        """Return the server domain: `api.*.*`"""
-        return f"api.{server_type.get_base_domain()}.{_get_tld()}"
-
-    @staticmethod
     def world(server_type: ServerType):
         return BaseURLProvider._get_url(
             prefix="world", base_domain=server_type.get_base_domain()
