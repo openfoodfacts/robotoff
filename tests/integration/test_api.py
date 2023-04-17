@@ -566,6 +566,7 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
         "en:seeds",  # category_tag
         insight_id=uuid.UUID(insight_id),
         auth=OFFAuthentication(username="a", password="b"),
+        is_vote=False,
     )
 
 

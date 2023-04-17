@@ -179,153 +179,204 @@ def get_product(
     return data["product"]
 
 
+def generate_edit_comment(
+    action: str,
+    is_vote: bool,
+    is_automatic: bool,
+    insight_id: Optional[str] = None,
+) -> str:
+    """Generate the edit comment to be sent to Product Opener.
+
+    :param action: A description of the edit
+    :param is_vote: whether the edit was triggered from an insight vote
+    :param is_automatic: whether the edit was performed automatically (without
+        human) supervision
+    :param insight_id: the ID of the insight, if any, defaults to None
+    :return: the edit comment
+    """
+    comment = f"[robotoff] {action}"
+
+    if insight_id:
+        comment += f", ID: {insight_id}"
+
+    if is_vote:
+        comment += " (applied after 3 anonymous votes)"
+    elif is_automatic:
+        comment += " (automated edit)"
+
+    return comment
+
+
 def add_category(
     product_id: ProductIdentifier,
     category: str,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
-    comment = "[robotoff] Adding category '{}'".format(category)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Adding category '{category}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "add_categories": category,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def update_quantity(
     product_id: ProductIdentifier,
     quantity: str,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
-    comment = "[robotoff] Updating quantity to '{}'".format(quantity)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Updating quantity to '{quantity}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "quantity": quantity,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def update_emb_codes(
     product_id: ProductIdentifier,
     emb_codes: list[str],
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
     emb_codes_str = ",".join(emb_codes)
-
-    comment = "[robotoff] Adding packager codes '{}'".format(emb_codes_str)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Adding packager codes '{emb_codes_str}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "emb_codes": emb_codes_str,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def update_expiration_date(
     product_id: ProductIdentifier,
     expiration_date: str,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
-    comment = "[robotoff] Adding expiration date '{}'".format(expiration_date)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Adding expiration date '{expiration_date}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "expiration_date": expiration_date,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def add_label_tag(
     product_id: ProductIdentifier,
     label_tag: str,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
-    comment = "[robotoff] Adding label tag '{}'".format(label_tag)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Adding label tag '{label_tag}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "add_labels": label_tag,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def add_brand(
     product_id: ProductIdentifier,
     brand: str,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
-    comment = "[robotoff] Adding brand '{}'".format(brand)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Adding brand '{brand}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "add_brands": brand,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def add_store(
     product_id: ProductIdentifier,
     store: str,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
-    comment = "[robotoff] Adding store '{}'".format(store)
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        f"Adding store '{store}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "add_stores": store,
         "comment": comment,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def add_packaging(
     product_id: ProductIdentifier,
     packaging: dict,
     insight_id: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
     shape_value_tag = packaging["shape"]["value_tag"]
-    comment = f"[robotoff] Updating/adding packaging elements '{shape_value_tag}'"
-
-    if insight_id:
-        comment += f", ID: {insight_id}"
-
+    comment = generate_edit_comment(
+        f"Updating/adding packaging elements '{shape_value_tag}'",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     body = {
         "product": {
             "packagings_add": [
@@ -340,7 +391,11 @@ def add_packaging(
         "comment": comment,
     }
     update_product_v3(
-        product_id.barcode, body, server_type=product_id.server_type, **kwargs
+        product_id.barcode,
+        body,
+        server_type=product_id.server_type,
+        auth=auth,
+        **kwargs,
     )
 
 
@@ -349,25 +404,23 @@ def save_ingredients(
     ingredient_text: str,
     insight_id: Optional[str] = None,
     lang: Optional[str] = None,
-    comment: Optional[str] = None,
+    auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     **kwargs,
 ):
     ingredient_key = "ingredients_text" if lang is None else f"ingredients_text_{lang}"
-
-    if comment:
-        comment = "[robotoff] Ingredient spellcheck correction ({})".format(comment)
-    else:
-        comment = "[robotoff] Ingredient spellcheck correction"
-
-    if insight_id:
-        comment += ", ID: {}".format(insight_id)
-
+    comment = generate_edit_comment(
+        "Ingredient spellcheck correction",
+        is_vote=is_vote,
+        is_automatic=auth is None,
+        insight_id=insight_id,
+    )
     params = {
         "code": product_id.barcode,
         "comment": comment,
         ingredient_key: ingredient_text,
     }
-    update_product(params, server_type=product_id.server_type, **kwargs)
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
 def update_product(
@@ -379,9 +432,7 @@ def update_product(
     base_url = settings.BaseURLProvider.world(server_type)
     url = f"{base_url}/cgi/product_jqm2.pl"
 
-    comment = params.get("comment")
     cookies = None
-
     if auth is not None:
         if auth.session_cookie:
             cookies = {
@@ -392,9 +443,6 @@ def update_product(
             params["password"] = auth.password
     else:
         params.update(off_credentials())
-
-        if comment:
-            params["comment"] = comment + " (automated edit)"
 
     if cookies is None and not params.get("password"):
         raise ValueError(
@@ -433,7 +481,6 @@ def update_product_v3(
     base_url = settings.BaseURLProvider.world(server_type)
     url = f"{base_url}/api/v3/product/{barcode}"
 
-    comment = body.get("comment")
     cookies = None
 
     if auth is not None:
@@ -446,9 +493,6 @@ def update_product_v3(
             body["password"] = auth.password
     else:
         body.update(off_credentials())
-
-        if comment:
-            body["comment"] = comment + " (automated edit)"
 
     if cookies is None and not body.get("password"):
         raise ValueError(
@@ -640,6 +684,7 @@ def select_rotate_image(
     image_key: Optional[str] = None,
     rotate: Optional[int] = None,
     auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
     timeout: Optional[int] = 15,
 ):
     base_url = settings.BaseURLProvider.world(product_id.server_type)

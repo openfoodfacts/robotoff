@@ -35,7 +35,7 @@ from robotoff.off import (
     update_quantity,
 )
 from robotoff.products import get_image_id, get_product
-from robotoff.types import InsightType
+from robotoff.types import InsightAnnotation, InsightType
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -108,14 +108,30 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     def annotate(
         cls,
         insight: ProductInsight,
-        annotation: int,
+        annotation: InsightAnnotation,
         update: bool = True,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
+        """Annotate an insight: save the annotation in DB and send the update
+        to Product Opener if `update=True`.
+
+        :param insight: the insight to annotate
+        :param annotation: the annotation as an integer, either -1, 0 or 1
+        :param update: if True, a write query is sent to Product Opener with
+            the update, defaults to True
+        :param data: additional data sent by the client, defaults to None
+        :param auth: user authentication data, should be None if the
+            annotation was triggered by an anonymous vote (in which case
+            `is_vote=True`) or if the insight is applied automatically.
+        :param is_vote: True if the annotation was triggered by an anonymous
+            vote, defaults to False
+        :return: the result of the annotation process
+        """
         with db.atomic() as tx:
             try:
-                return cls._annotate(insight, annotation, update, data, auth)
+                return cls._annotate(insight, annotation, update, data, auth, is_vote)
             except HTTPError as e:
                 if e.response.status_code >= 500:
                     logger.info(
@@ -136,10 +152,11 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     def _annotate(
         cls,
         insight: ProductInsight,
-        annotation: int,
+        annotation: InsightAnnotation,
         update: bool = True,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         if cls.is_data_required() and data is None:
             return DATA_REQUIRED_RESULT
@@ -156,7 +173,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             # Save insight before processing the annotation
             insight.save()
             annotation_result = cls.process_annotation(
-                insight, data=data, auth=auth
+                insight, data=data, auth=auth, is_vote=is_vote
             )  # calls the process_annotation function of the class corresponding to the current insight type
         else:
             annotation_result = SAVED_ANNOTATION_RESULT
@@ -180,6 +197,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         pass
 
@@ -195,6 +213,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         emb_code: str = insight.value
 
@@ -219,6 +238,7 @@ class PackagerCodeAnnotator(InsightAnnotator):
             emb_codes,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -241,6 +261,7 @@ class LabelAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["labels_tags"])
@@ -258,6 +279,7 @@ class LabelAnnotator(InsightAnnotator):
             insight.value_tag,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -269,6 +291,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         lang = insight.data["lang"]
@@ -299,6 +322,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
             lang=lang,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -310,6 +334,7 @@ class CategoryAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["categories_tags"])
@@ -328,6 +353,7 @@ class CategoryAnnotator(InsightAnnotator):
             category_tag,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -339,6 +365,7 @@ class ProductWeightAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["quantity"])
@@ -356,6 +383,7 @@ class ProductWeightAnnotator(InsightAnnotator):
             insight.value,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -367,6 +395,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["expiration_date"])
@@ -384,6 +413,7 @@ class ExpirationDateAnnotator(InsightAnnotator):
             insight.value,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -395,6 +425,7 @@ class BrandAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["brands_tags"])
@@ -407,6 +438,7 @@ class BrandAnnotator(InsightAnnotator):
             insight.value,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
 
         return UPDATED_ANNOTATION_RESULT
@@ -419,6 +451,7 @@ class StoreAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["stores_tags"])
@@ -436,6 +469,7 @@ class StoreAnnotator(InsightAnnotator):
             insight.value,
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -447,6 +481,7 @@ class PackagingAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["code"])
@@ -459,6 +494,7 @@ class PackagingAnnotator(InsightAnnotator):
             insight.data["element"],
             insight_id=insight.id,
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -470,6 +506,7 @@ class NutritionImageAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
         product = get_product(product_id, ["code"])
@@ -492,6 +529,7 @@ class NutritionImageAnnotator(InsightAnnotator):
             image_key=image_key,
             rotate=insight.data.get("rotation"),
             auth=auth,
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -503,6 +541,7 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
         insight: ProductInsight,
         data: Optional[dict] = None,
         auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
     ) -> AnnotationResult:
         insight.data["annotation"] = data
         insight.save()
@@ -529,10 +568,11 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
 
 def annotate(
     insight: ProductInsight,
-    annotation: int,
+    annotation: InsightAnnotation,
     update: bool = True,
     data: Optional[dict] = None,
     auth: Optional[OFFAuthentication] = None,
+    is_vote: bool = False,
 ) -> AnnotationResult:
     return ANNOTATOR_MAPPING[insight.type].annotate(
         insight=insight,
@@ -540,6 +580,7 @@ def annotate(
         update=update,
         data=data,
         auth=auth,
+        is_vote=is_vote,
     )
 
 
