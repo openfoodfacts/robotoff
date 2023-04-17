@@ -2,7 +2,7 @@ import dataclasses
 import datetime
 import enum
 import uuid
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 #: A precise expectation of what mappings looks like in json.
 #: (dict where keys are always of type `str`).
@@ -324,3 +324,5 @@ class PackagingElementProperty(enum.Enum):
 
 
 LogoLabelType = tuple[str, Optional[str]]
+
+InsightAnnotation = Literal[-1, 0, 1]

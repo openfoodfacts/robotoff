@@ -70,7 +70,7 @@ def test_process_insight_category(mocker, peewee_db):
         {
             "code": code1,
             "add_categories": "en:Salmons",
-            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
+            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1} (automated edit)",
         },
         server_type=DEFAULT_SERVER_TYPE,
         auth=None,
@@ -150,7 +150,7 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
         {
             "code": code1,
             "add_categories": "en:Salmons",
-            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1}",
+            "comment": f"[robotoff] Adding category 'en:Salmons', ID: {id1} (automated edit)",
         },
         server_type=DEFAULT_SERVER_TYPE,
         auth=None,
@@ -167,7 +167,7 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
         {
             "code": code2,
             "add_categories": "en:Tuna",
-            "comment": f"[robotoff] Adding category 'en:Tuna', ID: {id2}",
+            "comment": f"[robotoff] Adding category 'en:Tuna', ID: {id2} (automated edit)",
         },
         server_type=DEFAULT_SERVER_TYPE,
         auth=None,
@@ -206,7 +206,7 @@ def test_process_insight_same_product(mocker, peewee_db):
         {
             "code": code2,
             "add_categories": "en:Big fish",
-            "comment": f"[robotoff] Adding category 'en:Big fish', ID: {id2}",
+            "comment": f"[robotoff] Adding category 'en:Big fish', ID: {id2} (automated edit)",
         },
         server_type=DEFAULT_SERVER_TYPE,
         auth=None,
@@ -215,7 +215,7 @@ def test_process_insight_same_product(mocker, peewee_db):
         {
             "code": code3,
             "add_categories": "en:Smoked Salmon",
-            "comment": f"[robotoff] Adding category 'en:Smoked Salmon', ID: {id3}",
+            "comment": f"[robotoff] Adding category 'en:Smoked Salmon', ID: {id3} (automated edit)",
         },
         server_type=DEFAULT_SERVER_TYPE,
         auth=None,

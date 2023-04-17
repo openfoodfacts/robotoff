@@ -25,7 +25,7 @@ from robotoff.models import (
 )
 from robotoff.off import OFFAuthentication
 from robotoff.taxonomy import match_taxonomized_value
-from robotoff.types import ServerType
+from robotoff.types import InsightAnnotation, ServerType
 from robotoff.utils import get_logger
 from robotoff.utils.text import get_tag
 
@@ -346,7 +346,7 @@ def get_image_predictions(
 
 def save_annotation(
     insight_id: str,
-    annotation: int,
+    annotation: InsightAnnotation,
     device_id: str,
     update: bool = True,
     data: Optional[dict] = None,
@@ -374,7 +374,8 @@ def save_annotation(
     :param update: If True, perform the update on Product Opener if annotation=1,
       otherwise only save the annotation (default: True)
     :param data: Optional additional data, required for some insight types
-    :param auth: User authentication data
+    :param auth: User authentication data, it is expected to be None if
+        `trusted_annotator=False` (=anonymous vote)
     :param trusted_annotator: Defines whether the given annotation comes from
     an authoritative source (e.g. a trusted user), ot whether the annotation
     should be subject to the voting system.
@@ -448,7 +449,9 @@ def save_annotation(
         if not verified:
             return SAVED_ANNOTATION_VOTE_RESULT
 
-    result = annotate(insight, annotation, update, data=data, auth=auth)
+    result = annotate(
+        insight, annotation, update, data=data, auth=auth, is_vote=not trusted_annotator
+    )
     username = auth.get_username() if auth else "unknown annotator"
     events.event_processor.send_async(
         "question_answered",

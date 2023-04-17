@@ -301,9 +301,10 @@ class AnnotateInsightResource:
 
         device_id = device_id_from_request(req)
         logger.info(
-            "New annotation received from "
-            f"{auth.get_username() if auth else 'unknown annotator'} "
-            f"(annotation: {annotation}, insight: {insight_id})"
+            "New annotation received from %s (annotation: %s, insight: %s)",
+            auth.get_username() if auth else "unknown annotator",
+            annotation,
+            insight_id,
         )
 
         annotation_result = save_annotation(
