@@ -115,7 +115,7 @@ dl-model-categorizer:
 	tar -xzvf saved_model.tar.gz --strip-component=1; \
 	rm saved_model.tar.gz
 
-lauch-burst-worker:
+launch-burst-worker:
 ifdef queues
 	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker ${queues} --burst
 # Only launch burst worker on low priority queue if queue is not specified
