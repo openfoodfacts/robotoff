@@ -26,7 +26,7 @@ from robotoff.off import (
     update_quantity,
 )
 from robotoff.products import get_image_id, get_product
-from robotoff.types import InsightAnnotation, InsightType
+from robotoff.types import InsightAnnotation, InsightType, JSONType
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -500,25 +500,44 @@ class NutritionImageAnnotator(InsightAnnotator):
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
-        product = get_product(product_id, ["code"])
+        product = get_product(product_id, ["code", "images"])
 
         if product is None:
             return MISSING_PRODUCT_RESULT
 
         image_id = get_image_id(insight.source_image or "")
+        images = product.get("images", {})
+        image_meta: Optional[JSONType] = images.get(image_id)
 
-        if not image_id:
+        if not image_id or not image_meta:
             return AnnotationResult(
                 status_code=AnnotationStatus.error_invalid_image.value,
                 status=AnnotationStatus.error_invalid_image.name,
                 description="the image is invalid",
             )
-        image_key = "nutrition_{}".format(insight.value_tag)
+
+        crop_bounding_box: Optional[tuple[int, int, int, int]] = None
+        if "bounding_box" in insight.data:
+            # convert crop bounding box from relative coordinates to absolute
+            # to absolute ones, in the format expected by Product Opener
+            y_min, x_min, y_max, x_max = insight.data["bounding_box"]
+            image_size = image_meta["sizes"]["full"]
+            width = image_size["w"]
+            height = image_size["h"]
+            crop_bounding_box = (
+                int(x_min / width),
+                int(y_min / height),
+                int(x_max / width),
+                int(y_max / height),
+            )
+
+        image_key = f"nutrition_{insight.value_tag}"
         select_rotate_image(
             product_id=product_id,
             image_id=image_id,
             image_key=image_key,
             rotate=insight.data.get("rotation"),
+            crop_bounding_box=crop_bounding_box,
             auth=auth,
             is_vote=is_vote,
         )

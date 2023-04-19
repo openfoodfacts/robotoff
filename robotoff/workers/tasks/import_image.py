@@ -109,9 +109,6 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
         product_id=product_id,
         image_url=image_url,
     )
-    # Nutrition table detection is not used at the moment, and every new image
-    # is costly in CPU (as we perform object detection)
-    # Disable it until we either need it or get a GPU server
     # enqueue_job(
     #     run_nutrition_table_object_detection,
     #     get_high_queue(product_id),

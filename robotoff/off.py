@@ -9,7 +9,7 @@ import requests
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
-from robotoff.types import ProductIdentifier, ServerType
+from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -683,23 +683,37 @@ def select_rotate_image(
     image_id: str,
     image_key: Optional[str] = None,
     rotate: Optional[int] = None,
+    crop_bounding_box: Optional[tuple[int, int, int, int]] = None,
     auth: Optional[OFFAuthentication] = None,
     is_vote: bool = False,
-    timeout: Optional[int] = 15,
+    insight_id: Optional[str] = None,
+    timeout: Optional[int] = 30,
 ):
     base_url = settings.BaseURLProvider.world(product_id.server_type)
     url = f"{base_url}/cgi/product_image_crop.pl"
     cookies = None
-    params = {
+    params: JSONType = {
         "code": product_id.barcode,
         "imgid": image_id,
+        "comment": generate_edit_comment(
+            f"Selecting image {image_id} as {image_key}",
+            is_vote=is_vote,
+            is_automatic=auth is None,
+            insight_id=insight_id,
+        ),
     }
 
-    if rotate is not None:
+    if rotate is not None and rotate != 0:
         if rotate not in (90, 180, 270):
-            raise ValueError("invalid value for rotation angle: {}".format(rotate))
-
+            raise ValueError(f"invalid value for rotation angle: {rotate}")
         params["angle"] = str(rotate)
+
+    if crop_bounding_box is not None:
+        x1, y1, x2, y2 = crop_bounding_box
+        params["x1"] = x1
+        params["y1"] = y1
+        params["x2"] = x2
+        params["y2"] = y2
 
     if image_key is not None:
         params["id"] = image_key

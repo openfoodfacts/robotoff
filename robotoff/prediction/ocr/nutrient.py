@@ -12,7 +12,8 @@ NutrientMentionType = tuple[str, list[str]]
 
 NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
     "energy": [
-        ("[ée]nergie", ["fr", "de"]),
+        ("énergie", ["fr"]),
+        ("energie", ["fr", "de", "nl"]),
         ("valeurs? [ée]nerg[ée]tiques?", ["fr"]),
         ("energy", ["en"]),
         ("calories", ["fr", "en"]),
@@ -78,7 +79,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
     ],
     "fiber": [
         ("fibres?", ["en", "fr", "it"]),
-        ("fibers?", ["en"]),
+        ("(?:dietary )?fibers?", ["en"]),
         ("fibres? alimentaires?", ["fr"]),
         ("(?:voedings)?vezels?", ["nl"]),
         ("ballaststoffe", ["de"]),
@@ -94,6 +95,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("average nutritional values?", ["en"]),
         ("valori nutrizionali medi", ["it"]),
         ("gemiddelde waarden per", ["nl"]),
+        ("nutritionele informatie", ["nl"]),
     ],
 }
 
@@ -148,6 +150,13 @@ NUTRIENT_MENTIONS_REGEX: dict[str, OCRRegex] = {
     )
     for nutrient in NUTRIENT_MENTION
 }
+NUTRIENT_MENTIONS_REGEX["nutrient_value"] = OCRRegex(
+    re.compile(
+        r"(?<!\w)([0-9]+[,.]?[0-9]*) ?(g|kj|kcal)(?!\w)",
+        re.I,
+    ),
+    field=OCRField.full_text_contiguous,
+)
 
 
 def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
@@ -186,26 +195,31 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
 def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
-    for regex_code, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
+    for nutrient_name, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
         text = get_text(content, ocr_regex)
 
         if not text:
             continue
 
         for match in ocr_regex.regex.finditer(text):
-            nutrients.setdefault(regex_code, [])
-            group_dict = {k: v for k, v in match.groupdict().items() if v is not None}
-
-            languages: list[str] = []
-            if group_dict:
-                languages_raw = list(group_dict.keys())[0]
-                languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")
-
+            nutrients.setdefault(nutrient_name, [])
             nutrient_data = {
                 "raw": match.group(0),
                 "span": list(match.span()),
-                "languages": languages,
             }
+
+            if nutrient_name != "nutrient_value":
+                # Language available for all nutrient fields except 'nutrient_value'
+                group_dict = {
+                    k: v for k, v in match.groupdict().items() if v is not None
+                }
+                languages: list[str] = []
+                if group_dict:
+                    languages_raw = list(group_dict.keys())[0]
+                    languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")
+
+                nutrient_data["languages"] = languages
+
             if (
                 bounding_box := get_match_bounding_box(
                     content, match.start(), match.end()
@@ -213,7 +227,7 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
             ) is not None:
                 nutrient_data["bounding_box_absolute"] = bounding_box
 
-            nutrients[regex_code].append(nutrient_data)
+            nutrients[nutrient_name].append(nutrient_data)
 
     if not nutrients:
         return []

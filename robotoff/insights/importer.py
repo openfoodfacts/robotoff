@@ -11,6 +11,7 @@ from playhouse.shortcuts import model_to_dict
 from robotoff import settings
 from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_range
 from robotoff.insights.normalize import normalize_emb_code
+from robotoff.models import ImageModel, ImagePrediction
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, batch_insert
 from robotoff.prediction.ocr.packaging import SHAPE_ONLY_EXCLUDE_SET
@@ -31,7 +32,9 @@ from robotoff.taxonomy import (
 from robotoff.types import (
     InsightImportResult,
     InsightType,
+    JSONType,
     NeuralCategoryClassifierModel,
+    ObjectDetectionModel,
     PackagingElementProperty,
     Prediction,
     PredictionImportResult,
@@ -261,17 +264,30 @@ class InsightImporter(metaclass=abc.ABCMeta):
         This method must be implemented in subclasses."""
         pass
 
-    @staticmethod
+    @classmethod
     @abc.abstractmethod
-    def get_required_prediction_types() -> set[PredictionType]:
-        """Return the prediction types that are necessary to generate the
-        insight type.
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        """Return the prediction types that are necessary to generate
+        insights.
 
         For most insight types a set of a single element will be returned, but
         more complex insight types require several prediction types.
         This method must be implemented in subclasses.
         """
         pass
+
+    @classmethod
+    def get_input_prediction_types(cls) -> set[PredictionType]:
+        """Return the prediction types that are used as input to generate
+        insights.
+
+        By default it is the same as `get_required_prediction_types`
+        but some insight types can use data from additional prediction types
+        without it being required.
+
+        This method can be subclassed is necessary.
+        """
+        return cls.get_required_prediction_types()
 
     @classmethod
     def import_insights(
@@ -284,9 +300,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
         :return: the number of insights that were imported.
         """
-        required_prediction_types = cls.get_required_prediction_types()
+        input_prediction_types = cls.get_input_prediction_types()
         for prediction in predictions:
-            if prediction.type not in required_prediction_types:
+            if prediction.type not in input_prediction_types:
                 raise ValueError(f"unexpected prediction type: '{prediction.type}'")
 
         if (
@@ -377,7 +393,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         predictions = cls.sort_predictions(predictions)
         candidates = [
             candidate
-            for candidate in cls.generate_candidates(product, predictions)
+            for candidate in cls.generate_candidates(product, predictions, product_id)
             # Don't check the image validity if product check was disabled (product=None)
             if product is None
             or is_valid_insight_image(product.image_ids, candidate.source_image)
@@ -454,6 +470,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         """From a list of `Prediction`s associated with a product, yield
         candidate `ProductInsight`s for import.
@@ -659,8 +676,8 @@ class PackagerCodeInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.packager_code
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.packager_code}
 
     @classmethod
@@ -687,6 +704,7 @@ class PackagerCodeInsightImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         yield from (
             ProductInsight(**prediction.to_dict())
@@ -700,8 +718,8 @@ class LabelInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.label
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.label}
 
     @classmethod
@@ -735,6 +753,7 @@ class LabelInsightImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         candidates = [
             prediction
@@ -767,8 +786,8 @@ class CategoryImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.category
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.category}
 
     @classmethod
@@ -792,6 +811,7 @@ class CategoryImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         candidates = [
             prediction
@@ -865,8 +885,8 @@ class ProductWeightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.product_weight
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.product_weight}
 
     @classmethod
@@ -891,6 +911,7 @@ class ProductWeightImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         if (product and product.quantity is not None) or not predictions:
             # Don't generate candidates if the product weight is already
@@ -921,8 +942,8 @@ class ExpirationDateImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.expiration_date
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.expiration_date}
 
     @classmethod
@@ -936,6 +957,7 @@ class ExpirationDateImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         if (product and product.expiration_date) or not predictions:
             return
@@ -955,8 +977,8 @@ class BrandInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.brand
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.brand}
 
     @classmethod
@@ -998,6 +1020,7 @@ class BrandInsightImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         if product and product.brands_tags:
             # For now, don't create an insight if a brand has already been provided
@@ -1021,8 +1044,8 @@ class StoreInsightImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.store
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.store}
 
     @classmethod
@@ -1036,11 +1059,259 @@ class StoreInsightImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         for prediction in predictions:
             insight = ProductInsight(**prediction.to_dict())
             insight.automatic_processing = True
             yield insight
+
+
+class NutritionImageImporter(InsightImporter):
+    """Importer for nutrition image insight.
+
+    This insight type predicts the nutrition image a product.
+    """
+
+    # Minimum number of nutrient mentions to have for an image to generate a
+    # `nutrition_image` prediction
+    MIN_NUM_NUTRIENT_MENTIONS = 4
+    # Minimum number of nutrient values (ex: "15.5g" or "1525 kJ") to have for
+    # an image to generate a `nutrition_image` prediction
+    MIN_NUM_NUTRIENT_VALUES = 3
+    # Minimum score for nutrition-table object detections to be considered
+    # valid
+    NUTRITION_TABLE_MODEL_MIN_SCORE = 0.5
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.nutrition_image
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.nutrient_mention, PredictionType.image_orientation}
+
+    @classmethod
+    def get_input_prediction_types(cls) -> set[PredictionType]:
+        return {
+            # `nutrient` is an optional prediction type
+            PredictionType.nutrient,
+            PredictionType.nutrient_mention,
+            PredictionType.image_orientation,
+        }
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # `value_tag` contains the main language of the product
+        return (
+            candidate.value_tag == reference.value_tag
+            and candidate.source_image == reference.source_image
+        )
+
+    @staticmethod
+    def sort_fn(prediction: Prediction) -> int:
+        """Sort function used to group by source image in
+        `generate_candidate`.
+
+        Most recent images come first.
+        """
+        return -int(get_image_id(prediction.source_image or "") or 0)
+
+    @classmethod
+    def get_nutrition_table_predictions(
+        cls, product_id: ProductIdentifier, min_score: float
+    ) -> dict[str, list[JSONType]]:
+        """Get all predictions made by the nutrition-table object detector
+        model for `product_id`.
+
+        Only objects of class `nutrition-table` and with `score >= min_score`
+        are returned.
+
+        :param product_id: identifier of the product
+        :param min_score: minimum score of the detected object to be included.
+        :return: a dict mapping `source_image` to a list of detected
+            `nutrition-table` objects.
+        """
+        image_predictions = {}
+        for data, source_image in (
+            ImagePrediction.select(ImagePrediction.data, ImageModel.source_image)
+            .join(ImageModel)
+            .where(
+                ImageModel.barcode == product_id.barcode,
+                ImageModel.server_type == product_id.server_type.name,
+                ImagePrediction.model_name
+                == ObjectDetectionModel.nutrition_table.value,
+                ImagePrediction.max_confidence >= min_score,
+            )
+            .tuples()
+            .iterator()
+        ):
+            image_predictions[source_image] = [
+                detected_object
+                for detected_object in data["objects"]
+                if detected_object["label"] == "nutrition-table"
+                and detected_object["score"] >= min_score
+            ]
+        return image_predictions
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        # No prediction should have null source image, but filter just in case
+        predictions = [p for p in predictions if p.source_image]
+        # group by source image, by selecting newest images first
+        predictions_by_source_image = [
+            list(group)
+            for _, group in itertools.groupby(
+                sorted(predictions, key=cls.sort_fn),
+                key=cls.sort_fn,
+            )
+        ]
+
+        # Get all lang for which we already have a nutrition image
+        existing_nutrition_image_langs = set(
+            # image_key has the format `nutrition_fr`, get the lang by
+            # splitting with '_' separator
+            image_key.rsplit("_", maxsplit=1)[-1]
+            for image_key in getattr(product, "images", {})
+            if image_key.startswith("nutrition_")
+        )
+        nutrition_table_predictions = cls.get_nutrition_table_predictions(
+            product_id, min_score=cls.NUTRITION_TABLE_MODEL_MIN_SCORE
+        )
+
+        required_prediction_types = cls.get_required_prediction_types()
+        for image_predictions in predictions_by_source_image:
+            # We're not sure that for every `source_image` we have predictions
+            # of all required types (we're only sure that we have predictions
+            # of required types among predictions of all images)
+            if set(p.type for p in image_predictions) < required_prediction_types:
+                continue
+            # `nutrient` prediction is optional, so the dict value associated
+            # with `nutrient` PredictionType may be null
+            image_prediction_by_type = {
+                type_: [p for p in image_predictions if p.type == type_][0]
+                if any(p for p in image_predictions if p.type == type_)
+                else None
+                for type_ in (
+                    PredictionType.nutrient_mention,
+                    PredictionType.nutrient,
+                    PredictionType.image_orientation,
+                )
+            }
+            # We ignore mypy warnings below because we necessarily have a
+            # source image or predictions of the requested types
+            source_image: str = image_predictions[0].source_image  # type: ignore
+            for candidate in cls.generate_candidates_for_image(
+                nutrient_mention_prediction=image_prediction_by_type[  # type: ignore
+                    PredictionType.nutrient_mention
+                ],
+                image_orientation_prediction=image_prediction_by_type[  # type: ignore
+                    PredictionType.image_orientation
+                ],
+                nutrient_prediction=image_prediction_by_type[PredictionType.nutrient],
+                nutrition_table_predictions=nutrition_table_predictions.get(
+                    source_image
+                ),
+            ):
+                lang = candidate.value_tag
+                # Product is None if `ENABLE_PRODUCT_CHECK=False`, in which case we
+                # always don't check that
+                if product is None or (
+                    # only select image for the product main language
+                    lang == product.lang
+                    # check that we don't already have a nutrition image for this lang
+                    and lang not in existing_nutrition_image_langs
+                ):
+                    yield candidate
+
+    @staticmethod
+    def generate_candidates_for_image(
+        nutrient_mention_prediction: Prediction,
+        image_orientation_prediction: Prediction,
+        nutrient_prediction: Optional[Prediction] = None,
+        nutrition_table_predictions: Optional[list[JSONType]] = None,
+    ) -> Iterator[ProductInsight]:
+        """Generate `nutrition_image` candidates for a single image.
+
+        :param nutrient_mention_prediction: the `Prediction` of type
+            `nutrient_mention` for the image
+        :param image_orientation_prediction: the `Prediction` of type
+            `image_orientation` for the image
+        :param nutrient_prediction: the `Prediction` of type
+            `nutrient_prediction` for the image, optional
+        :param nutrition_table_predictions: the list of detected
+            `nutrition-table` objects, optional
+        :yield: generated candidates
+        """
+        data: JSONType = {"priority": 1, "from_prediction_ids": {}}
+        if nutrient_prediction is None:
+            # If we don't detect nutrient mention + values, there are lower chances
+            # that the image is a nutrition table, so we give it lower priority
+            data["priority"] = 2
+        else:
+            # Save which nutrient prediction we used
+            data["from_prediction_ids"]["nutrient"] = nutrient_prediction.id
+
+        # Save which nutrient mention prediction we used
+        data["from_prediction_ids"]["nutrient_mention"] = nutrient_mention_prediction.id
+        mentioned_nutrients = nutrient_mention_prediction.data["mentions"]
+
+        mention_by_lang: dict[str, set[str]] = {}
+        for nutrient, nutrient_mention_items in mentioned_nutrients.items():
+            if nutrient != "nutrient_value":
+                for nutrient_mention in nutrient_mention_items:
+                    for lang in nutrient_mention["languages"]:
+                        mention_by_lang.setdefault(lang, set()).add(nutrient)
+
+        # Get the rotation angle to apply when selecting the image, if the
+        # original orientation is not correct
+        data["rotation"] = image_orientation_prediction.data["rotation"]
+
+        # Only add crop information if we detect a single `nutrition-table` object
+        if nutrition_table_predictions and len(nutrition_table_predictions) == 1:
+            nutrition_table_prediction = nutrition_table_predictions[0]
+            data["bounding_box"] = nutrition_table_prediction["bounding_box"]
+            data["crop_score"] = nutrition_table_prediction["score"]
+
+        nutrient_values = mentioned_nutrients.get("nutrient_value", [])
+        num_nutrient_values = len(nutrient_values)
+        has_energy_nutrient_value = any(
+            "kcal" in v["raw"].lower() or "kj" in v["raw"].lower()
+            for v in nutrient_values
+        )
+        lang_nutrients = [
+            (_lang, nutrients)
+            for _lang, nutrients in mention_by_lang.items()
+            # Over all possible nutrient mentions, we require to have at least
+            # 4 of them to consider the image can be a nutrition images
+            if len(nutrients) >= NutritionImageImporter.MIN_NUM_NUTRIENT_MENTIONS
+            # We require to have at least 3 nutrient values (such as "15.5g"
+            # or "1525 kJ") to consider the image can be a nutrition images
+            and num_nutrient_values >= NutritionImageImporter.MIN_NUM_NUTRIENT_VALUES
+            # We require to have energy values on the picture
+            and has_energy_nutrient_value
+        ]
+        for lang, detected_nutrients in lang_nutrients:
+            prediction = Prediction(
+                type=PredictionType.nutrition_image,
+                data={
+                    **data,
+                    "nutrients": list(detected_nutrients),
+                },
+                value_tag=lang,
+                automatic_processing=False,
+                barcode=nutrient_mention_prediction.barcode,
+                server_type=nutrient_mention_prediction.server_type,
+                source_image=nutrient_mention_prediction.source_image,
+            )
+            yield ProductInsight(**prediction.to_dict())
 
 
 class PackagingElementTaxonomyException(Exception):
@@ -1052,8 +1323,8 @@ class PackagingImporter(InsightImporter):
     def get_type() -> InsightType:
         return InsightType.packaging
 
-    @staticmethod
-    def get_required_prediction_types() -> set[PredictionType]:
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.packaging}
 
     @classmethod
@@ -1210,6 +1481,7 @@ class PackagingImporter(InsightImporter):
         cls,
         product: Optional[Product],
         predictions: list[Prediction],
+        product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         # 1 prediction = 1 packaging element
         for prediction in (
@@ -1319,6 +1591,7 @@ IMPORTERS: list[Type] = [
     BrandInsightImporter,
     StoreInsightImporter,
     PackagingImporter,
+    NutritionImageImporter,
 ]
 
 
@@ -1367,6 +1640,7 @@ def import_insights_for_products(
     import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
+        input_prediction_types = importer.get_input_prediction_types()
         selected_barcodes: list[str] = []
         for barcode, prediction_types in prediction_types_by_barcode.items():
             if prediction_types >= required_prediction_types:
@@ -1376,7 +1650,7 @@ def import_insights_for_products(
             predictions = [
                 Prediction(**p)
                 for p in get_product_predictions(
-                    selected_barcodes, server_type, list(required_prediction_types)
+                    selected_barcodes, server_type, list(input_prediction_types)
                 )
             ]
 
@@ -1479,10 +1753,11 @@ def refresh_insights(
     import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
+        input_prediction_types = importer.get_input_prediction_types()
         if prediction_types >= required_prediction_types:
             import_result = importer.import_insights(
                 product_id,
-                [p for p in predictions if p.type in required_prediction_types],
+                [p for p in predictions if p.type in input_prediction_types],
                 product_store,
             )
             import_results.append(import_result)

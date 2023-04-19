@@ -10,6 +10,7 @@ from robotoff.insights.importer import (
     ExpirationDateImporter,
     InsightImporter,
     LabelInsightImporter,
+    NutritionImageImporter,
     PackagerCodeInsightImporter,
     PackagingImporter,
     ProductWeightImporter,
@@ -33,6 +34,7 @@ from robotoff.types import (
 )
 
 DEFAULT_BARCODE = "3760094310634"
+DEFAULT_SOURCE_IMAGE = "/376/009/431/0634/1.jpg"
 DEFAULT_SERVER_TYPE = ServerType.off
 DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 # 2022-02-08 16:07
@@ -525,7 +527,7 @@ class TestInsightImporter:
 
         class FakeImporter(InsightImporter):
             @classmethod
-            def generate_candidates(cls, product, predictions):
+            def generate_candidates(cls, product, predictions, product_id=None):
                 yield from (
                     ProductInsight(**prediction.to_dict()) for prediction in predictions
                 )
@@ -590,7 +592,7 @@ class TestInsightImporter:
     def test_generate_insights_automatic_processing(self, mocker):
         class FakeImporter(InsightImporter):
             @classmethod
-            def generate_candidates(cls, product, predictions):
+            def generate_candidates(cls, product, predictions, product_id=None):
                 yield from (
                     ProductInsight(**prediction.to_dict()) for prediction in predictions
                 )
@@ -724,6 +726,7 @@ class TestPackagerCodeInsightImporter:
             PackagerCodeInsightImporter.generate_candidates(
                 Product({"emb_codes_tags": ["FR 50.200.000 CE"]}),
                 [prediction],
+                None,
             )
         )
         assert len(selected) == 1
@@ -738,7 +741,9 @@ class TestPackagerCodeInsightImporter:
         product = Product({"emb_codes_tags": ["ASC-C-00950"]})
 
         insight_data = list(
-            PackagerCodeInsightImporter().generate_candidates(product, [prediction])
+            PackagerCodeInsightImporter().generate_candidates(
+                product, [prediction], None
+            )
         )
 
         assert len(insight_data) == 1
@@ -840,7 +845,7 @@ class TestLabelInsightImporter:
             return_value=get_taxonomy("label", offline=True),
         )
         candidates = list(
-            LabelInsightImporter.generate_candidates(product, predictions)
+            LabelInsightImporter.generate_candidates(product, predictions, None)
         )
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected)
@@ -931,7 +936,9 @@ class TestCategoryImporter:
             "robotoff.insights.importer.get_taxonomy",
             return_value=category_taxonomy,
         )
-        candidates = list(CategoryImporter.generate_candidates(product, predictions))
+        candidates = list(
+            CategoryImporter.generate_candidates(product, predictions, None)
+        )
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected_value_tags)
 
@@ -1009,7 +1016,7 @@ class TestProductWeightImporter:
         assert (
             list(
                 ProductWeightImporter.generate_candidates(
-                    self.get_product(quantity="30 g"), predictions
+                    self.get_product(quantity="30 g"), predictions, None
                 )
             )
             == []
@@ -1020,7 +1027,9 @@ class TestProductWeightImporter:
         insight_data = {"matcher_type": "with_mention", "text": value}
         predictions = [self.generate_prediction(value, insight_data)]
         candidates = list(
-            ProductWeightImporter.generate_candidates(self.get_product(), predictions)
+            ProductWeightImporter.generate_candidates(
+                self.get_product(), predictions, None
+            )
         )
         assert len(candidates) == 1
         candidate = candidates[0]
@@ -1042,7 +1051,9 @@ class TestProductWeightImporter:
             self.generate_prediction(value_2, data_2),
         ]
         candidates = list(
-            ProductWeightImporter.generate_candidates(self.get_product(), predictions)
+            ProductWeightImporter.generate_candidates(
+                self.get_product(), predictions, None
+            )
         )
         assert len(candidates) == 1
         candidate = candidates[0]
@@ -1059,7 +1070,9 @@ class TestProductWeightImporter:
             self.generate_prediction(value_2, data_2),
         ]
         candidates = list(
-            ProductWeightImporter.generate_candidates(self.get_product(), predictions)
+            ProductWeightImporter.generate_candidates(
+                self.get_product(), predictions, None
+            )
         )
         assert len(candidates) == 1
         candidate = candidates[0]
@@ -1077,7 +1090,9 @@ class TestProductWeightImporter:
             self.generate_prediction(value_1, data_1),
         ]
         candidates = list(
-            ProductWeightImporter.generate_candidates(self.get_product(), predictions)
+            ProductWeightImporter.generate_candidates(
+                self.get_product(), predictions, None
+            )
         )
         assert len(candidates) == 1
         candidate = candidates[0]
@@ -1244,6 +1259,135 @@ class TestPackagingImporter:
         assert PackagingImporter.sort_predictions(predictions) == [
             predictions[i] for i in sort_indices
         ]
+
+
+class TestNutritionImageImporter:
+    def test_generate_candidates_for_image(self):
+        image_orientation_prediction = Prediction(
+            id=1,
+            type=PredictionType.image_orientation,
+            data={"rotation": 90},
+            barcode=DEFAULT_BARCODE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        nutrient_mention_prediction = Prediction(
+            id=2,
+            type=PredictionType.nutrient_mention,
+            data={},
+            barcode=DEFAULT_BARCODE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        nutrient_mention_prediction.data = {
+            "mentions": {"sugar": [{"raw": "sucre", "languages": ["fr"]}]}
+        }
+        # Only 1 mention is not enough to generate a candidate (at least 5 are required)
+        assert (
+            list(
+                NutritionImageImporter.generate_candidates_for_image(
+                    nutrient_mention_prediction, image_orientation_prediction
+                )
+            )
+            == []
+        )
+        base_mentions_without_nutrient_values = {
+            "sugar": [{"raw": "sucre", "languages": ["fr"]}],
+            "carbohydrate": [{"raw": "glucides", "languages": ["fr"]}],
+            "salt": [{"raw": "sel", "languages": ["fr"]}],
+            "protein": [{"raw": "sucre", "languages": ["fr"]}],
+            "saturated_fat": [{"raw": "graisses saturées", "languages": ["fr"]}],
+        }
+        nutrient_mention_prediction.data = {
+            "mentions": base_mentions_without_nutrient_values
+        }
+        # we don't have any nutrient_value, so we don't generate candidate
+        assert (
+            list(
+                NutritionImageImporter.generate_candidates_for_image(
+                    nutrient_mention_prediction, image_orientation_prediction
+                )
+            )
+            == []
+        )
+
+        # we don't have any enough nutrient_value (3 are required), so we don't generate candidate
+        nutrient_mention_prediction.data = {
+            "mentions": {
+                **base_mentions_without_nutrient_values,
+                "nutrient_value": [{"raw": "14 g"}, {"raw": "16 g"}],
+            }
+        }
+        assert (
+            list(
+                NutritionImageImporter.generate_candidates_for_image(
+                    nutrient_mention_prediction, image_orientation_prediction
+                )
+            )
+            == []
+        )
+
+        # we have enough nutrient values but we don't have any energy mention (kJ/kcal), so we don't generate candidate
+        nutrient_mention_prediction.data = {
+            "mentions": {
+                **base_mentions_without_nutrient_values,
+                "nutrient_value": [
+                    {"raw": "14 g"},
+                    {"raw": "16 g"},
+                    {"raw": "18 g"},
+                ],
+            }
+        }
+        assert (
+            list(
+                NutritionImageImporter.generate_candidates_for_image(
+                    nutrient_mention_prediction, image_orientation_prediction
+                )
+            )
+            == []
+        )
+
+        nutrient_mention_prediction.data = {
+            "mentions": {
+                **base_mentions_without_nutrient_values,
+                "nutrient_value": [
+                    {"raw": "14 g"},
+                    {"raw": "16 g"},
+                    {"raw": "162 kJ"},
+                ],
+            }
+        }
+        bounding_box = [0.1, 0.1, 0.2, 0.2]
+        crop_score = 0.9
+        nutrition_table_predictions = [
+            {"bounding_box": bounding_box, "score": crop_score}
+        ]
+        # we have 5 nutrient mentions, 3 nutrient values (including 1 energy value): we generate a candidate
+        insights = list(
+            NutritionImageImporter.generate_candidates_for_image(
+                nutrient_mention_prediction,
+                image_orientation_prediction,
+                nutrition_table_predictions=nutrition_table_predictions,
+            )
+        )
+        assert len(insights) == 1
+        insight = insights[0]
+        assert insight.barcode == DEFAULT_BARCODE
+        assert insight.server_type == DEFAULT_SERVER_TYPE.name
+        assert insight.value_tag == "fr"
+        assert insight.automatic_processing is False
+        assert insight.source_image == DEFAULT_SOURCE_IMAGE
+        assert insight.data.get("from_prediction_ids") == {"nutrient_mention": 2}
+        assert insight.data.get("rotation") == 90
+        assert set(insight.data.get("nutrients", [])) == {
+            "salt",
+            "sugar",
+            "carbohydrate",
+            "protein",
+            "saturated_fat",
+        }
+        assert insight.data["crop_score"] == crop_score
+        assert insight.data["bounding_box"] == bounding_box
 
 
 class TestImportInsightsForProducts:

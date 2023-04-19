@@ -137,8 +137,7 @@ class InsightType(str, enum.Enum):
     # The 'image_lang' insight detects which languages are mentioned on the product from the image OCR.
     image_lang = "image_lang"
 
-    # The 'nutrition_image' insight tags images that have nutrition information based on the 'nutrient_mention' insight and the 'image_orientation' insight.
-    # NOTE: this insight and the dependant insights has not been generated since 2020.
+    # The 'nutrition_image' insight predicts the nutrition image for the product main language.
     nutrition_image = "nutrition_image"
 
     # The 'nutritional_table_structure' insight detects the nutritional table structure from the image.
