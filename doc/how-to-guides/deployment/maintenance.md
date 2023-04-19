@@ -59,7 +59,7 @@ robotoff_worker_high_1     /bin/sh -c /docker-entrypo ...   Up
 To backup the PostgreSQL database, run the following command:
 
 ```bash
-docker exec -i robotoff_postgres_1 pg_dump -F c -U postgres postgres | gzip > robotoff_postgres$(date +%Y-%m-%d).dump
+docker exec -i robotoff_postgres_1 pg_dump --schema public -F c -U postgres postgres | gzip > robotoff_postgres_$(date +%Y-%m-%d).dump
 ```
 
 All Robotoff PostgreSQL dumps are stored on _openfoodfacts.org_ server, in `/srv2/off/html/data/dumps` folder. When backing up the database, please update the `robotoff_postgres_latest.dump` symlink so that http://openfoodfacts.org/data/dumps/robotoff_postgres_latest.dump always points to the latest dump.
