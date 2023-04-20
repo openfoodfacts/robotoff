@@ -1,4 +1,6 @@
+import hashlib
 import random
+import struct
 import threading
 import time
 from typing import Callable, Optional
@@ -19,7 +21,7 @@ high_queues = [
 low_queue = Queue("robotoff-low", connection=redis_conn)
 
 
-def get_high_queue(product_id: Optional[ProductIdentifier] = None):
+def get_high_queue(product_id: Optional[ProductIdentifier] = None) -> Queue:
     """Return the high-priority queue that is specific to a product.
 
     There are as many high priority queues as they are workers.
@@ -38,11 +40,13 @@ def get_high_queue(product_id: Optional[ProductIdentifier] = None):
     if product_id is None:
         return random.choice(high_queues)
 
-    # All product barcodes should be digits, but just make sure the function still
-    # works with non-digit barcodes
-    queue_idx = (int(product_id.barcode) if product_id.barcode.isdigit() else 0) % len(
-        high_queues
-    )
+    # We compute a md5 hash of the barcode and convert the 4 last bytes to an int (long)
+    # This way, we make sure the distribution of `barcode_hash` is uniform and that all
+    # queues are sampled evenly with `queue_idx = barcode_hash % len(high_queues)`
+    barcode_hash: int = struct.unpack(
+        "<l", hashlib.md5(product_id.barcode.encode("utf-8")).digest()[-4:]
+    )[0]
+    queue_idx = barcode_hash % len(high_queues)
     logger.debug("Selecting queue idx %s for product %s", queue_idx, product_id)
     return high_queues[queue_idx]
 
