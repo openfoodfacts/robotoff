@@ -67,8 +67,6 @@ services:
   worker_high_1:
     <<: *robotoff-worker
     container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_1
-    # Each worker (whether it's a high or low priority worker) listens to a
-    # single high priority queue
     command: python -m robotoff run-worker robotoff-high-1
 
   worker_high_2:
@@ -79,6 +77,8 @@ services:
   worker_low_1:
     <<: *robotoff-worker
     container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_1
+    # Each worker (whether it's a high or low priority worker) listens to a
+    # single high priority queue
     command: python -m robotoff run-worker robotoff-high-3 robotoff-low
 
   worker_low_2:
