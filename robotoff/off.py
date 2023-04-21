@@ -683,7 +683,7 @@ def select_rotate_image(
     image_id: str,
     image_key: Optional[str] = None,
     rotate: Optional[int] = None,
-    crop_bounding_box: Optional[tuple[int, int, int, int]] = None,
+    crop_bounding_box: Optional[tuple[float, float, float, float]] = None,
     auth: Optional[OFFAuthentication] = None,
     is_vote: bool = False,
     insight_id: Optional[str] = None,
@@ -701,6 +701,9 @@ def select_rotate_image(
             is_automatic=auth is None,
             insight_id=insight_id,
         ),
+        # We need to tell Product Opener that the bounding box coordinates are
+        # related to the full image
+        "coordinates_image_size": "full",
     }
 
     if rotate is not None and rotate != 0:
@@ -709,11 +712,11 @@ def select_rotate_image(
         params["angle"] = str(rotate)
 
     if crop_bounding_box is not None:
-        x1, y1, x2, y2 = crop_bounding_box
-        params["x1"] = x1
-        params["y1"] = y1
-        params["x2"] = x2
-        params["y2"] = y2
+        y_min, x_min, y_max, x_max = crop_bounding_box
+        params["x1"] = x_min
+        params["y1"] = y_min
+        params["x2"] = x_max
+        params["y2"] = y_max
 
     if image_key is not None:
         params["id"] = image_key
