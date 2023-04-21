@@ -2,10 +2,15 @@ from typing import Optional
 
 from redis import Redis
 from redis_lock import Lock as BaseLock
+from redis_lock import NotAcquired
 
 from robotoff import settings
+from robotoff.utils import get_logger
 
 redis_conn = Redis(host=settings.REDIS_HOST)
+
+
+logger = get_logger(__name__)
 
 
 class LockedResourceException(Exception):
@@ -39,4 +44,10 @@ class Lock(BaseLock):
 
     def __exit__(self, *args, **kwargs):
         if self._enabled:
-            self.release()
+            try:
+                self.release()
+            except NotAcquired:
+                logger.warning(
+                    "releasing lock failed, lock %s does not exist or expired",
+                    self._name,
+                )
