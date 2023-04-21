@@ -1182,9 +1182,15 @@ class NutritionImageImporter(InsightImporter):
             for image_key in getattr(product, "images", {})
             if image_key.startswith("nutrition_")
         )
+        logger.debug(
+            "product %s has nutrition images for langs %s",
+            product_id,
+            existing_nutrition_image_langs,
+        )
         nutrition_table_predictions = cls.get_nutrition_table_predictions(
             product_id, min_score=cls.NUTRITION_TABLE_MODEL_MIN_SCORE
         )
+        logger.debug("nutrition table predictions: %s", nutrition_table_predictions)
 
         required_prediction_types = cls.get_required_prediction_types()
         for image_predictions in predictions_by_source_image:
@@ -1208,6 +1214,7 @@ class NutritionImageImporter(InsightImporter):
             # We ignore mypy warnings below because we necessarily have a
             # source image or predictions of the requested types
             source_image: str = image_predictions[0].source_image  # type: ignore
+            logger.debug("Generating candidates for image: %s", source_image)
             for candidate in cls.generate_candidates_for_image(
                 nutrient_mention_prediction=image_prediction_by_type[  # type: ignore
                     PredictionType.nutrient_mention
@@ -1221,6 +1228,7 @@ class NutritionImageImporter(InsightImporter):
                 ),
             ):
                 lang = candidate.value_tag
+                logger.debug("One candidate generated for lang %s", lang)
                 # Product is None if `ENABLE_PRODUCT_CHECK=False`, in which case we
                 # always don't check that
                 if product is None or (
@@ -1229,6 +1237,10 @@ class NutritionImageImporter(InsightImporter):
                     # check that we don't already have a nutrition image for this lang
                     and lang not in existing_nutrition_image_langs
                 ):
+                    logger.debug(
+                        "Candidate passed checks (nutrition mentions are in product main "
+                        "language and no nutrition image is selected for main language)"
+                    )
                     yield candidate
 
     @staticmethod
