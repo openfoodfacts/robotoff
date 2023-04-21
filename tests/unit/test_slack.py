@@ -187,7 +187,7 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
             type="weight",
             value="200g",
             data={"raw": "en:200g"},
-            server_type=DEFAULT_SERVER_TYPE,
+            server_type=DEFAULT_SERVER_TYPE.name,
         )
     )
 
@@ -214,7 +214,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
             source_image="/image/1",
             type="label",
             value_tag="en:vegan",
-            server_type=DEFAULT_SERVER_TYPE,
+            server_type=DEFAULT_SERVER_TYPE.name,
         )
     )
 
