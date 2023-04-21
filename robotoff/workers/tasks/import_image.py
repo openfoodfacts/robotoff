@@ -109,13 +109,13 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
         product_id=product_id,
         image_url=image_url,
     )
-    # enqueue_job(
-    #     run_nutrition_table_object_detection,
-    #     get_high_queue(product_id),
-    #     job_kwargs={"result_ttl": 0},
-    #     product_id=product_id,
-    #     image_url=image_url,
-    # )
+    enqueue_job(
+        run_nutrition_table_object_detection,
+        get_high_queue(product_id),
+        job_kwargs={"result_ttl": 0},
+        product_id=product_id,
+        image_url=image_url,
+    )
 
 
 def import_insights_from_image(
