@@ -14,6 +14,7 @@ from robotoff.types import (
     LogoLabelType,
     Prediction,
     ProductIdentifier,
+    ServerType,
 )
 from robotoff.utils import get_logger, http_session
 
@@ -247,18 +248,21 @@ class SlackNotifier(NotifierInterface):
         self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
     def notify_automatic_processing(self, insight: ProductInsight):
-        product_url = f"{settings.BaseURLProvider.world(insight.server_type)}/product/{insight.barcode}"
+        server_type = ServerType[insight.server_type]
+        product_url = (
+            f"{settings.BaseURLProvider.world(server_type)}/product/{insight.barcode}"
+        )
 
         if insight.source_image:
             if insight.data and "bounding_box" in insight.data:
                 image_url = crop_image_url(
-                    insight.server_type,
+                    server_type,
                     insight.source_image,
                     insight.data.get("bounding_box"),
                 )
             else:
                 image_url = settings.BaseURLProvider.image_url(
-                    insight.server_type, insight.source_image
+                    server_type, insight.source_image
                 )
             metadata_text = f"(<{product_url}|product>, <{image_url}|source image>)"
         else:
