@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.25.4](https://github.com/openfoodfacts/robotoff/compare/v1.25.3...v1.25.4) (2023-04-21)
+
+
+### Bug Fixes
+
+* always use the same queue for jobs of the same product ([e9f066c](https://github.com/openfoodfacts/robotoff/commit/e9f066c6a0f154d076f8d4029855407f7d59c13c))
+* fix typo in Makefile ([6594035](https://github.com/openfoodfacts/robotoff/commit/6594035e663b445d51042e8e24e9e7d41ce85549))
+* improve Robotoff edit message ([4b5f230](https://github.com/openfoodfacts/robotoff/commit/4b5f2305803f8bd5a0bba86e9684526ee956d2de))
+* send webhook update jobs for all projects ([7949dec](https://github.com/openfoodfacts/robotoff/commit/7949dec1716ecf74101a27c2bc88cee6ea7a1bc5))
+* update DATASET_CHECK_MIN_PRODUCT_COUNT ([e5555cc](https://github.com/openfoodfacts/robotoff/commit/e5555cc26b17a3fdd5b6fed5b4fe7cd3dbd217a4))
+* use md5 hash function in `get_high_queue` ([29befd6](https://github.com/openfoodfacts/robotoff/commit/29befd6a3b05877e318e6cce4fe47ba1842f66b6))
+
+
+### Documentation
+
+* incorrect link in README.md predictions section ([bb63afc](https://github.com/openfoodfacts/robotoff/commit/bb63afcf6cdfd4e05dae60a2b466251620392859))
+* move a comment in docker-compose.yml ([b687265](https://github.com/openfoodfacts/robotoff/commit/b687265ad7bd26ba8ec2eeb25f26935c860af364))
+* update maintenance.md ([842eaf3](https://github.com/openfoodfacts/robotoff/commit/842eaf3492128eff8419ab41b0569ade931f966a))
+
 ## [1.25.3](https://github.com/openfoodfacts/robotoff/compare/v1.25.2...v1.25.3) (2023-04-16)
 
 
