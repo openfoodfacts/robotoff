@@ -490,6 +490,70 @@ class PackagingAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+def convert_crop_bounding_box(
+    bounding_box: tuple[float, float, float, float],
+    width: int,
+    height: int,
+    rotate: int = 0,
+) -> tuple[float, float, float, float]:
+    """Convert crop bounding box to the format expected by Product Opener:
+
+    - convert relative to absolute coordinates
+    - rotate the bounding box using the same angle as the selected image
+      rotation angle
+
+    :param bounding_box: relative bounding box coordinates (y_min, x_min, y_max, x_max)
+    :param width: original height of the image
+    :param height: original width of the image
+    :param rotate: rotation angle that we should apply to the bounding box,
+        defaults to 0 (no rotation)
+    :return: the converted bounding box coordinates
+    """
+    y_min, x_min, y_max, x_max = bounding_box
+    crop_bounding_box = (
+        y_min * height,
+        x_min * width,
+        y_max * height,
+        x_max * width,
+    )
+
+    if rotate == 90:
+        # y_min = old_x_min
+        # x_min = old_height - old_y_max
+        # y_max = old_x_max
+        # x_max = old_height - old_y_min
+        crop_bounding_box = (
+            crop_bounding_box[1],
+            height - crop_bounding_box[2],
+            crop_bounding_box[3],
+            height - crop_bounding_box[0],
+        )
+    if rotate == 180:
+        # y_min = old_height - old_y_max
+        # x_min = old_width - old_x_max
+        # y_max = old_height - old_y_min
+        # x_max = old_width - old_x_min
+        crop_bounding_box = (
+            height - crop_bounding_box[2],
+            width - crop_bounding_box[3],
+            height - crop_bounding_box[0],
+            width - crop_bounding_box[1],
+        )
+    if rotate == 270:
+        # y_min = old_width - old_x_max
+        # x_min = old_y_min
+        # y_max = old_width - old_x_min
+        # x_max = old_y_max
+        crop_bounding_box = (
+            width - crop_bounding_box[3],
+            crop_bounding_box[0],
+            width - crop_bounding_box[1],
+            crop_bounding_box[2],
+        )
+
+    return crop_bounding_box
+
+
 class NutritionImageAnnotator(InsightAnnotator):
     @classmethod
     def process_annotation(
@@ -516,19 +580,15 @@ class NutritionImageAnnotator(InsightAnnotator):
                 description="the image is invalid",
             )
 
-        crop_bounding_box: Optional[tuple[int, int, int, int]] = None
+        rotation = insight.data.get("rotation", 0)
+        crop_bounding_box: Optional[tuple[float, float, float, float]] = None
         if "bounding_box" in insight.data:
-            # convert crop bounding box from relative coordinates to absolute
-            # to absolute ones, in the format expected by Product Opener
-            y_min, x_min, y_max, x_max = insight.data["bounding_box"]
+            # convert crop bounding box to the format expected by Product Opener
             image_size = image_meta["sizes"]["full"]
             width = image_size["w"]
             height = image_size["h"]
-            crop_bounding_box = (
-                int(x_min / width),
-                int(y_min / height),
-                int(x_max / width),
-                int(y_max / height),
+            crop_bounding_box = convert_crop_bounding_box(
+                insight.data["bounding_box"], width, height, rotation
             )
 
         image_key = f"nutrition_{insight.value_tag}"
@@ -536,7 +596,7 @@ class NutritionImageAnnotator(InsightAnnotator):
             product_id=product_id,
             image_id=image_id,
             image_key=image_key,
-            rotate=insight.data.get("rotation"),
+            rotate=rotation,
             crop_bounding_box=crop_bounding_box,
             auth=auth,
             is_vote=is_vote,
