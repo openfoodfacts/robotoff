@@ -1,14 +1,5 @@
-"""
-This file allows to annotate products.
-
-To check whether the annotation already exists or not (and save it and send it to the Open Food Facts database), use the following commands:
-
-    from robotoff.insights.annotate import annotate
-    annotate(insight: ProductInsight, annotation: int, update: bool = True, data: Optional[dict] = None, auth: Optional[OFFAuthentication] = None)
-
-
-If you don't want to update the Open Food Facts database but only save the insight annotation (if the update is performed on the client side for example), you can call `annotate()` with `update=False`.
-"""
+"""This file allows to annotate insights, i.e. save the insight annotation
+(`InsightAnnotation`) and send the update to Product Opener."""
 
 import abc
 import datetime
