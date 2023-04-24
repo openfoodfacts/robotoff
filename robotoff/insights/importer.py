@@ -1388,7 +1388,7 @@ def import_insights_for_products(
                 try:
                     with Lock(
                         name=f"robotoff:import:{product_id.server_type.name}:{product_id.barcode}",
-                        expire=60,
+                        expire=300,
                         timeout=10,
                     ):
                         result = importer.import_insights(
