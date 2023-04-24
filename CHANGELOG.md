@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.26.0](https://github.com/openfoodfacts/robotoff/compare/v1.25.4...v1.26.0) (2023-04-24)
+
+
+### Features
+
+* add nutrition_image insight type ([27fd62c](https://github.com/openfoodfacts/robotoff/commit/27fd62c55712902c014f3f6ea8a640cd52798e6d))
+
+
+### Bug Fixes
+
+* add debug log message in importer.py ([6c5febc](https://github.com/openfoodfacts/robotoff/commit/6c5febc81f62ab816bda6cbcfe2251795f3734d2))
+* enable again nutrition table object detection ([b529769](https://github.com/openfoodfacts/robotoff/commit/b5297693feb37aae29045fa29741b73855e3d943))
+* fix error raised when releasing expired lock ([0859eef](https://github.com/openfoodfacts/robotoff/commit/0859eef7fffdb96d0356276d712e8fdea7b820b5))
+* fix Github action ([3847226](https://github.com/openfoodfacts/robotoff/commit/38472267510cff721a715281cfbe4429270b59cf))
+* fix issue in unit tests ([271b2bb](https://github.com/openfoodfacts/robotoff/commit/271b2bb2ea07d3627009b5cdf2513cc614a38736))
+* fix issue with crop in `select_rotate_image` ([b40984d](https://github.com/openfoodfacts/robotoff/commit/b40984dab3fef6f2d4f314542b22c44090dd589b))
+* fix livecheck script ([#1103](https://github.com/openfoodfacts/robotoff/issues/1103)) ([aa1ab8a](https://github.com/openfoodfacts/robotoff/commit/aa1ab8a09acb00c317012c10538570b24a4b3f38))
+* fix type error in slack.py ([d076be7](https://github.com/openfoodfacts/robotoff/commit/d076be71020b0f43980b73877dd4e8429fd9c9d3))
+* increase lock expire duration during insight import (to 5 min) ([fb8b787](https://github.com/openfoodfacts/robotoff/commit/fb8b787d4316995e6c73b527b66c8ba0b33261a6))
+* increase min score for nutrition image detector model ([fd29693](https://github.com/openfoodfacts/robotoff/commit/fd29693f326651f6ffd7ef015f8a55b8b1154d6e))
+* try to trigger Github actions on push on master ([08902b6](https://github.com/openfoodfacts/robotoff/commit/08902b695621b0a012eed8eb4e352822b1ce345f))
+* try to trigger Github actions on push on master (2) ([bda2abf](https://github.com/openfoodfacts/robotoff/commit/bda2abf861c75ab559a1272ad58b6253c6ca4638))
+
 ## [1.25.4](https://github.com/openfoodfacts/robotoff/compare/v1.25.3...v1.25.4) (2023-04-21)
 
 
