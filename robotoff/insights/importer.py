@@ -1081,7 +1081,7 @@ class NutritionImageImporter(InsightImporter):
     MIN_NUM_NUTRIENT_VALUES = 3
     # Minimum score for nutrition-table object detections to be considered
     # valid
-    NUTRITION_TABLE_MODEL_MIN_SCORE = 0.5
+    NUTRITION_TABLE_MODEL_MIN_SCORE = 0.9
 
     @staticmethod
     def get_type() -> InsightType:
@@ -1243,8 +1243,9 @@ class NutritionImageImporter(InsightImporter):
                     )
                     yield candidate
 
-    @staticmethod
+    @classmethod
     def generate_candidates_for_image(
+        cls,
         nutrient_mention_prediction: Prediction,
         image_orientation_prediction: Prediction,
         nutrient_prediction: Optional[Prediction] = None,

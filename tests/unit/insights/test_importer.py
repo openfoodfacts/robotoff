@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 import pytest
 
@@ -26,6 +26,7 @@ from robotoff.products import Product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import (
     InsightType,
+    JSONType,
     Prediction,
     PredictionType,
     ProductIdentifier,
@@ -1262,6 +1263,22 @@ class TestPackagingImporter:
 
 
 class TestNutritionImageImporter:
+    def test_get_type(self):
+        assert NutritionImageImporter.get_type() == InsightType.nutrition_image
+
+    def test_get_required_prediction_types(self):
+        assert NutritionImageImporter.get_required_prediction_types() == {
+            PredictionType.nutrient_mention,
+            PredictionType.image_orientation,
+        }
+
+    def test_get_input_prediction_types(self):
+        assert NutritionImageImporter.get_input_prediction_types() == {
+            PredictionType.nutrient,
+            PredictionType.nutrient_mention,
+            PredictionType.image_orientation,
+        }
+
     def test_generate_candidates_for_image(self):
         image_orientation_prediction = Prediction(
             id=1,
@@ -1388,6 +1405,75 @@ class TestNutritionImageImporter:
         }
         assert insight.data["crop_score"] == crop_score
         assert insight.data["bounding_box"] == bounding_box
+
+    def test_generate_candidates(self):
+        barcode = "000000000000"
+        source_image = "/000/000/000/0000/1.jpg"
+
+        nutrient_mention_prediction = Prediction(
+            type=PredictionType.nutrient_mention,
+            barcode=barcode,
+            source_image=source_image,
+        )
+        image_orientation_prediction = Prediction(
+            type=PredictionType.image_orientation,
+            barcode=barcode,
+            source_image=source_image,
+        )
+
+        class FakeNutritionImageImporter(NutritionImageImporter):
+            @classmethod
+            def get_nutrition_table_predictions(
+                cls, product_id: ProductIdentifier, min_score: float
+            ):
+                return {}
+
+            @classmethod
+            def generate_candidates_for_image(
+                cls,
+                nutrient_mention_prediction: Prediction,
+                image_orientation_prediction: Prediction,
+                nutrient_prediction: Optional[Prediction] = None,
+                nutrition_table_predictions: Optional[list[JSONType]] = None,
+            ) -> Iterator[ProductInsight]:
+                assert nutrient_mention_prediction.source_image == source_image
+                assert image_orientation_prediction.source_image == source_image
+                assert nutrient_prediction is None
+                assert nutrition_table_predictions is None
+                yield ProductInsight(
+                    type=InsightType.nutrition_image,
+                    value_tag="fr",
+                    source_image=source_image,
+                )
+
+        # We predict a nutrition image for language 'fr' and it's the main language of the product,
+        # so we expect a candidate to be generated
+        selected = list(
+            FakeNutritionImageImporter.generate_candidates(
+                Product({"lang": "fr"}),
+                [nutrient_mention_prediction, image_orientation_prediction],
+                None,
+            )
+        )
+        assert len(selected) == 1
+        insight = selected[0]
+        assert isinstance(insight, ProductInsight)
+        assert insight.value_tag == "fr"
+        assert insight.type == InsightType.nutrition_image
+        assert insight.source_image == source_image
+
+        # We predict a nutrition image for language 'fr' but the main language of the product
+        # is 'en', so we expect that no candidate is generated
+        assert (
+            list(
+                FakeNutritionImageImporter.generate_candidates(
+                    Product({"lang": "en"}),
+                    [nutrient_mention_prediction, image_orientation_prediction],
+                    None,
+                )
+            )
+            == []
+        )
 
 
 class TestImportInsightsForProducts:
