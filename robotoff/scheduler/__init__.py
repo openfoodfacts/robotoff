@@ -206,6 +206,18 @@ def refresh_insights(with_deletion: bool = True) -> None:
 
 
 def update_insight_attributes(product: Product, insight: ProductInsight) -> bool:
+    """Update the following insight attributes from `Product`:
+
+    - `brands`
+    - `countries`
+    - `unique_scans_n`
+
+    Then save updated insight in DB.
+
+    :param product: the insight associated `Product` with up-to-date information.
+    :param insight: the `ProductInsight`
+    :return: whether the insight was updated or not
+    """
     updated_fields = []
     if insight.brands != product.brands_tags:
         logger.debug(

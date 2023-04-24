@@ -2,8 +2,6 @@ name: Robotoff code quality checks and unit tests
 
 on:
   push:
-    tags-ignore:
-      - "**"
     paths:
       - "**/robotoff/**"
       - "pyproject.toml"
