@@ -8,13 +8,6 @@ on:
       - "poetry.lock"
       - "data/**"
       - "tests/**"
-  pull_request:
-    paths:
-      - "**/robotoff/**"
-      - "pyproject.toml"
-      - "poetry.lock"
-      - "data/**"
-      - "tests/**"
       - "**.pot"
       - "**.po"
 
