@@ -5,28 +5,40 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 import _io
-import click
 import dacite
 import orjson
 import tqdm
 
+from robotoff.insights.extraction import DEFAULT_OCR_PREDICTION_TYPES
 from robotoff.off import get_barcode_from_path
 from robotoff.prediction.ocr import OCRResult, extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
-from robotoff.utils import get_logger, gzip_jsonl_iter, jsonl_iter
+from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
 
 
 def run_from_ocr_archive(
     input_path: Path,
-    prediction_type: PredictionType,
+    prediction_types: Optional[list[PredictionType]],
     server_type: ServerType,
     output: Optional[Path] = None,
 ):
+    """Generate predictions from an OCR archive file and save these
+    predictions on-disk or send them to stdout.
+
+    :param input_path: path of the archive file (gzipped JSONL)
+    :param prediction_types: list of prediction types to extract, if None
+        default OCR predictions types will be extracted (see
+        robotoff.insights.extraction.DEFAULT_OCR_PREDICTION_TYPES).
+    :param server_type: server type associated with the OCR archive.
+    :param output: the file path where to save the predictions, or None if
+        the JSON should be sent to stdout, defaults to None.
+    """
     predictions = tqdm.tqdm(
-        generate_from_ocr_archive(input_path, prediction_type, server_type), desc="OCR"
+        generate_from_ocr_archive(input_path, prediction_types, server_type),
+        desc="prediction",
     )
     output_f: _io._TextIOBase
     need_decoding = False
@@ -48,24 +60,32 @@ def run_from_ocr_archive(
 
 
 def generate_from_ocr_archive(
-    input_path: Path, prediction_type: PredictionType, server_type: ServerType
+    input_path: Path,
+    prediction_types: Optional[list[PredictionType]],
+    server_type: ServerType,
 ) -> Iterable[Prediction]:
-    json_iter = (
-        gzip_jsonl_iter(input_path)
-        if input_path.suffix == ".gz"
-        else jsonl_iter(input_path)
-    )
-    for source_image, ocr_json in ocr_content_iter(json_iter):
+    """Generate predictions from an OCR archive file.
+
+    :param input_path: path of the archive file (gzipped JSONL)
+    :param prediction_types: list of prediction types to extract, if None
+        default OCR predictions types will be extracted (see
+        robotoff.insights.extraction.DEFAULT_OCR_PREDICTION_TYPES).
+    :param server_type: server type associated with the OCR archive.
+    :yield: the extracted `Prediction`s
+    """
+    if prediction_types is None:
+        prediction_types = DEFAULT_OCR_PREDICTION_TYPES
+
+    for source_image, ocr_json in ocr_content_iter(
+        tqdm.tqdm(jsonl_iter(input_path), desc="OCR")
+    ):
         if source_image is None:
             continue
 
         barcode: Optional[str] = get_barcode_from_path(source_image)
 
         if barcode is None:
-            click.echo(
-                f"cannot extract barcode from source {source_image}",
-                err=True,
-            )
+            logger.warning("cannot extract barcode from source", source_image)
             continue
 
         ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
@@ -73,12 +93,13 @@ def generate_from_ocr_archive(
         if ocr_result is None:
             continue
 
-        yield from extract_predictions(
-            ocr_result,
-            prediction_type,
-            product_id=ProductIdentifier(barcode=barcode, server_type=server_type),
-            source_image=source_image,
-        )
+        for prediction_type in prediction_types:
+            yield from extract_predictions(
+                ocr_result,
+                prediction_type,
+                product_id=ProductIdentifier(barcode=barcode, server_type=server_type),
+                source_image=source_image,
+            )
 
 
 def insights_iter(file_path: Path) -> Iterable[Prediction]:

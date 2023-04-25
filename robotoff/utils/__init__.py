@@ -16,6 +16,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import SSLError, Timeout
 
 from robotoff import settings
+from robotoff.types import JSONType
 
 
 def get_logger(name=None, level: Optional[int] = None):
@@ -59,7 +60,13 @@ def configure_root_logger(logger, level: int = 20):
 logger = get_logger(__name__)
 
 
-def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[dict]:
+def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[JSONType]:
+    """Iterate over elements of a JSONL file.
+
+    :param jsonl_path: the path of the JSONL file. Both plain (.jsonl) and
+        gzipped (jsonl.gz) files are supported.
+    :yield: dict contained in the JSONL file
+    """
     open_fn = get_open_fn(jsonl_path)
 
     with open_fn(str(jsonl_path), "rt", encoding="utf-8") as f:
