@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -89,11 +88,11 @@ def generate_ocr_predictions(
     input_path: Path = typer.Argument(
         ..., help="Path to a (gzipped-)OCR JSONL archive"
     ),
-    prediction_type: PredictionType = typer.Argument(
-        ..., help="Type of the predictions to generate (label, brand,...)"
+    prediction_type: list[PredictionType] = typer.Option(
+        None, help="Type of the predictions to generate (label, brand,...)"
     ),
     server_type: ServerType = typer.Option(
-        ServerType.off, help="Server type of the archive"
+        ServerType.off.name, help="Server type of the archive"
     ),
     output: Optional[Path] = typer.Option(
         None,
@@ -107,7 +106,9 @@ def generate_ocr_predictions(
     from robotoff.utils import get_logger
 
     get_logger()
-    insights.run_from_ocr_archive(input_path, prediction_type, server_type, output)
+    insights.run_from_ocr_archive(
+        input_path, prediction_type or None, server_type, output
+    )
 
 
 @app.command()
@@ -186,9 +187,9 @@ def categorize(
 
 @app.command()
 def import_insights(
-    prediction_type: Optional[PredictionType] = typer.Option(
+    prediction_type: list[PredictionType] = typer.Option(
         None,
-        help="Type of the prediction to generate, only needed when --generate-from is used",
+        help="Type of the prediction to generate, only used when --generate-from is used",
     ),
     batch_size: int = typer.Option(
         128, help="Number of insights that are imported in each atomic SQL transaction"
@@ -218,15 +219,13 @@ def import_insights(
     logger = get_logger()
 
     if generate_from is not None:
-        logger.info(f"Generating and importing insights from {generate_from}")
-        if prediction_type is None:
-            sys.exit("Required option: --prediction-type")
-
+        prediction_types = [] if prediction_type is None else prediction_type
+        logger.info("Generating and importing insights from %s", generate_from)
         predictions = generate_from_ocr_archive(
-            generate_from, prediction_type, server_type
+            generate_from, prediction_types, server_type
         )
     elif input_path is not None:
-        logger.info(f"Importing insights from {input_path}")
+        logger.info("Importing insights from %s", input_path)
         predictions = insights_iter(input_path)
     else:
         raise ValueError("--generate-from or --input-path must be provided")
