@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.26.1](https://github.com/openfoodfacts/robotoff/compare/v1.26.0...v1.26.1) (2023-04-26)
+
+
+### Bug Fixes
+
+* fix NutritionImageImporter.is_conflicting_insight ([581376e](https://github.com/openfoodfacts/robotoff/commit/581376efae28deb1150321d0c57365766c0a5272))
+
+
+### Documentation
+
+* fix typo in nutrition-table.md ([3357adc](https://github.com/openfoodfacts/robotoff/commit/3357adc8cb0a6f80aa5377464a54f9f871a094dc))
+
 ## [1.26.0](https://github.com/openfoodfacts/robotoff/compare/v1.25.4...v1.26.0) (2023-04-24)
 
 
