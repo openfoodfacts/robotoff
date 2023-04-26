@@ -280,14 +280,14 @@ def get_text(
 
 def get_match_bounding_box(
     content: Union[OCRResult, str], start_idx: int, end_idx: int
-):
+) -> Optional[tuple[int, int, int, int]]:
     """Return a bounding box that include all words that span from
     `start_idx` to `end_idx` if `content` is an OCRResult and None otherwise.
     """
     if isinstance(content, str):
         return None
 
-    return content.get_match_bounding_box(start_idx, end_idx)
+    return content.get_match_bounding_box(start_idx, end_idx, raises=False)
 
 
 class OCRFullTextAnnotation:
@@ -383,11 +383,16 @@ class OCRFullTextAnnotation:
             if not partial_match:
                 break
 
-        if partial_match and raises:
-            raise RuntimeError(
-                "partial match detected: reached end of text before reaching end offset %d",
-                end_idx,
+        if partial_match:
+            error_text = (
+                "partial match detected: reached end of text before reaching "
+                "end offset (text: %s, start_idx: %d, end_idx: %d)"
             )
+            error_args = (self.text, start_idx, end_idx)
+            if raises:
+                raise RuntimeError(error_text % error_args)
+            else:
+                logger.warning(error_text, *error_args)
 
         return selected
 
