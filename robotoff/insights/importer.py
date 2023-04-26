@@ -1105,10 +1105,7 @@ class NutritionImageImporter(InsightImporter):
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         # `value_tag` contains the main language of the product
-        return (
-            candidate.value_tag == reference.value_tag
-            and candidate.source_image == reference.source_image
-        )
+        return candidate.value_tag == reference.value_tag
 
     @staticmethod
     def sort_fn(prediction: Prediction) -> int:
