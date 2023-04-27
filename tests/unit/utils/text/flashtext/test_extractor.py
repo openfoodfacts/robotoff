@@ -59,6 +59,25 @@ class TestKeywordExtractor(unittest.TestCase):
                 ),
             )
 
+    def test_extract_keywords_case_insensitive_with_string_length_change(self):
+        sentence = "Word İngredients LTD İmages nutriments i̇ngredients PROTEİNS"
+        keyword_processor = KeywordProcessor(case_sensitive=False)
+        keyword_processor.add_keyword("İngredients", "ingredients")
+        keyword_processor.add_keyword("nutriments", "nutriments")
+        keyword_processor.add_keyword("PROTEİNS", "proteins")
+        extracted_keywords = keyword_processor.extract_keywords(
+            sentence, span_info=True
+        )
+        self.assertEqual(
+            extracted_keywords,
+            [
+                ("ingredients", 5, 16),
+                ("nutriments", 28, 38),
+                ("ingredients", 39, 51),
+                ("proteins", 52, 60),
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
