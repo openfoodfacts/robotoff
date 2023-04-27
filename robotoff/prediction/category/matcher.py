@@ -5,14 +5,13 @@ import operator
 import re
 from typing import Iterable, Optional
 
-from flashtext import KeywordProcessor
-
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import Prediction, PredictionType, ServerType
 from robotoff.utils import dump_json, get_logger, load_json
 from robotoff.utils.text import (
+    KeywordProcessor,
     get_lemmatizing_nlp,
     strip_accents_v1,
     strip_consecutive_spaces,

@@ -5,13 +5,11 @@ import re
 from pathlib import Path
 from typing import BinaryIO, Iterable, Optional, Union
 
-from flashtext import KeywordProcessor
-
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
-from robotoff.utils.text import strip_accents_v1
+from robotoff.utils.text import KeywordProcessor, strip_accents_v1
 
 from .dataclass import OCRResult
 
