@@ -1591,9 +1591,6 @@ def import_product_predictions(
             sorted(product_predictions, key=_import_product_predictions_sort_fn),
             _import_product_predictions_sort_fn,
         ):
-            logger.info(
-                f"{barcode=} {server_type.name=} {prediction_type.name=} {source_image=} {predictor_version=}"
-            )
             deleted += (
                 PredictionModel.delete()
                 .where(
