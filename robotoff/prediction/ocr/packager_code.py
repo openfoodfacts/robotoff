@@ -10,6 +10,10 @@ from robotoff.utils.text import KeywordProcessor
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 def process_fr_packaging_match(match) -> str:
     approval_numbers = match.group(1, 2, 3)
@@ -173,6 +177,7 @@ def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction
                             data=data,
                             type=PredictionType.packager_code,
                             automatic_processing=True,
+                            predictor_version=PREDICTOR_VERSION,
                         )
                     )
 
@@ -207,6 +212,7 @@ def extract_fishing_code(
                 predictor="flashtext",
                 data=data,
                 automatic_processing=True,
+                predictor_version=PREDICTOR_VERSION,
             )
         )
 

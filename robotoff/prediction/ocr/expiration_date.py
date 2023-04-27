@@ -7,6 +7,10 @@ from robotoff.types import Prediction, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
     day, month, year = match.group(1, 2, 3)
@@ -85,6 +89,8 @@ def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
                     type=PredictionType.expiration_date,
                     data=data,
                     automatic_processing=True,
+                    predictor="regex",
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

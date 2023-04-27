@@ -16,6 +16,10 @@ from robotoff.utils.text import strip_consecutive_spaces
 
 logger = get_logger(__name__)
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 # Set of shapes to exclude when the material or recycling instructions were
 # not detected along the shape
 # Avoid many false positive
@@ -222,6 +226,7 @@ def find_packaging(content: Union[OCRResult, str]) -> list[Prediction]:
                 data={"lang": lang, "element": item},
                 automatic_processing=False,
                 predictor="grammar",
+                predictor_version=PREDICTOR_VERSION,
             )
             predictions.append(prediction)
         return predictions

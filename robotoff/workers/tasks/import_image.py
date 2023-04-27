@@ -266,6 +266,7 @@ def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: st
             automatic_processing=False,
             server_type=product_id.server_type,
             predictor="nutriscore",
+            predictor_version=image_prediction.model_version,
             data={"bounding_box": result["bounding_box"]},
             confidence=score,
         )

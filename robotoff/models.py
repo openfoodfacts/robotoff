@@ -158,6 +158,10 @@ class ProductInsight(BaseModel):
     # Predictor stores what ML model/OCR processing generated this insight.
     predictor = peewee.CharField(max_length=100, null=True, index=True)
 
+    # Predictor version is used to know what the version of the predictor
+    # that generated the prediction. It can be either a digit or a model name
+    predictor_version = peewee.CharField(max_length=100, null=True, index=True)
+
     # annotation campaigns enable contributors to focus their efforts (on
     # Hunger Games) on a subset of products. Each product have 0+ campaign
     # tags
@@ -179,6 +183,7 @@ class Prediction(BaseModel):
     source_image = peewee.TextField(null=True, index=True)
     automatic_processing = peewee.BooleanField(null=True)
     predictor = peewee.CharField(max_length=100, null=True)
+    predictor_version = peewee.CharField(max_length=100, null=True)
     confidence = peewee.FloatField(null=True, index=False)
     server_type = peewee.CharField(
         null=False,

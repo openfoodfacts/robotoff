@@ -11,6 +11,11 @@ from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, ge
 logger = get_logger(__name__)
 
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
+
 def category_taxonomisation(lang, match) -> Optional[str]:
     """Function to match categories detected via AOP REGEX with categories
     taxonomy database. If no match is possible, we return None.
@@ -114,6 +119,7 @@ def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
                         predictor="regex",
                         data=data,
                         automatic_processing=False,
+                        predictor_version=PREDICTOR_VERSION,
                     )
                 )
     return predictions

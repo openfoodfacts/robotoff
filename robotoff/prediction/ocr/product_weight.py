@@ -11,6 +11,9 @@ from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, ge
 
 logger = get_logger(__name__)
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
 ureg = pint.UnitRegistry()
 
@@ -281,6 +284,8 @@ def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
                     type=PredictionType.product_weight,
                     automatic_processing=data["automatic_processing"],
                     data=data,
+                    predictor="regex",
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

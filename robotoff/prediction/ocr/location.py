@@ -13,6 +13,10 @@ from robotoff.utils.text import KeywordProcessor, strip_accents_v1
 
 from .dataclass import OCRResult
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 @dataclasses.dataclass(frozen=True)
 class City:
@@ -157,6 +161,7 @@ class AddressExtractor:
                         "postal_code": city.postal_code,
                         "text_extract": text_extract,
                     },
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

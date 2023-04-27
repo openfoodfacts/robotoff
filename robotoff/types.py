@@ -212,6 +212,7 @@ class Prediction:
     value: Optional[str] = None
     automatic_processing: Optional[bool] = None
     predictor: Optional[str] = None
+    predictor_version: Optional[str] = None
     barcode: Optional[str] = None
     timestamp: Optional[datetime.datetime] = None
     source_image: Optional[str] = None
@@ -269,6 +270,7 @@ class ProductInsightImportResult:
 @dataclasses.dataclass
 class PredictionImportResult:
     created: int
+    deleted: int
     barcode: str
     server_type: ServerType
 
@@ -284,6 +286,9 @@ class InsightImportResult:
 
     def created_predictions_count(self) -> int:
         return sum(x.created for x in self.prediction_import_results)
+
+    def deleted_predictions_count(self) -> int:
+        return sum(x.deleted for x in self.prediction_import_results)
 
     def created_insights_count(self) -> int:
         return sum(
@@ -306,7 +311,8 @@ class InsightImportResult:
             f"updated={self.updated_insights_count()}, "
             f"deleted={self.deleted_insights_count()}, "
             f"types: {list(set(result.type.value for result in self.product_insight_import_results))}, "
-            f"predictions: created={self.created_predictions_count()}>"
+            f"predictions: created={self.created_predictions_count()}, "
+            f"deleted={self.deleted_predictions_count()}>"
         )
 
 

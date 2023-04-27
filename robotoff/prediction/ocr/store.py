@@ -8,6 +8,10 @@ from robotoff.utils import text_file_iter
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 def get_store_tag(store: str) -> str:
     return store.lower().replace(" & ", "-").replace(" ", "-").replace("'", "-")
@@ -86,6 +90,7 @@ def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
                         value_tag=get_store_tag(store),
                         data=data,
                         predictor="regex",
+                        predictor_version=PREDICTOR_VERSION,
                     )
                 )
                 break

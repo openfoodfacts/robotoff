@@ -9,6 +9,10 @@ from robotoff.utils.cache import CachedStore
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 def generate_trace_keyword_processor(labels: Optional[list[str]] = None):
     if labels is None:
@@ -62,6 +66,8 @@ def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
                     type=PredictionType.trace,
                     value_tag=trace_tag,
                     data=data,
+                    predictor="regex",
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

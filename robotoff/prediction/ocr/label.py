@@ -12,6 +12,10 @@ from .utils import generate_keyword_processor
 
 logger = get_logger(__name__)
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 def process_eu_bio_label_code(match) -> Optional[str]:
     country = match.group(1).lower()
@@ -228,6 +232,7 @@ def extract_label_flashtext(
                 value_tag=label_tag,
                 automatic_processing=False,
                 predictor="flashtext",
+                predictor_version=PREDICTOR_VERSION,
                 data=data,
             )
         )
@@ -269,6 +274,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                         type=PredictionType.label,
                         value_tag=label_value,
                         predictor="regex",
+                        predictor_version=PREDICTOR_VERSION,
                         data=data,
                     )
                 )
@@ -287,6 +293,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                         value_tag=label_tag,
                         automatic_processing=False,
                         predictor="google-cloud-vision",
+                        predictor_version=PREDICTOR_VERSION,
                         confidence=logo_annotation.score,
                     )
                 )

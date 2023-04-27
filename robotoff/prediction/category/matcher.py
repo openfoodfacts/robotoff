@@ -19,6 +19,10 @@ from robotoff.utils.text import (
 
 logger = get_logger(__name__)
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 SUPPORTED_LANG = {"fr", "en", "de", "es", "it", "nl"}
 # There are too many false positive in these languages with partial matches,
 # so we require a full match
@@ -374,6 +378,7 @@ def predict_by_lang(product: dict) -> dict[str, list[Prediction]]:
                     },
                     automatic_processing=False,
                     predictor="matcher",
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
     return predictions
