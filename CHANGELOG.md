@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.27.0](https://github.com/openfoodfacts/robotoff/compare/v1.26.1...v1.27.0) (2023-04-27)
+
+
+### Features
+
+* introduce prediction deletion ([3dc0a44](https://github.com/openfoodfacts/robotoff/commit/3dc0a448d76005bdc4fe797f7a6b395501a45604))
+
+
+### Bug Fixes
+
+* add missing test JSON data ([d885729](https://github.com/openfoodfacts/robotoff/commit/d88572938a00760bfb4352ab1f9d42c772e2a150))
+* create robotoff.utils.text module ([5d2bc86](https://github.com/openfoodfacts/robotoff/commit/5d2bc865904f18662ab4d2352fb8a46a91689950))
+* don't raise error when getting bounding box by default ([9208b42](https://github.com/openfoodfacts/robotoff/commit/9208b42518b61fa4637ff2024ae956042329a232))
+* fix mypy typing issues ([107cc23](https://github.com/openfoodfacts/robotoff/commit/107cc23d9c6da57827dbf46777151b3798e0db8c))
+* fix span offset issue when case_sensitive=False ([15eb2f8](https://github.com/openfoodfacts/robotoff/commit/15eb2f8d0225ca5b64c11070f9a35ab5ee06a0ee))
+* integrate flashtext into robotoff codebase ([3ec9979](https://github.com/openfoodfacts/robotoff/commit/3ec99793a5b358da2415bdc2df7e2ba6920b3494))
+* remove debug log message ([bc80eee](https://github.com/openfoodfacts/robotoff/commit/bc80eeed0a86d3f67fd4f580f32dee89ab6739ec))
+
 ## [1.26.1](https://github.com/openfoodfacts/robotoff/compare/v1.26.0...v1.26.1) (2023-04-26)
 
 
