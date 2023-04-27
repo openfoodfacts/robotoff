@@ -59,8 +59,8 @@ def generate_USDA_code_keyword_processor() -> KeywordProcessor:
 def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[str]:
     """Given a string, returns the USDA code it contains or None"""
     USDA_code = None
-
-    for (USDA_code_keyword, _) in processor.extract_keywords(text):
+    matches: list[tuple[str, str]] = processor.extract_keywords(text)  # type: ignore
+    for (USDA_code_keyword, _) in matches:
         USDA_code = USDA_code_keyword
         # Once we found a match we can return the code
         # as there should not be more than one match

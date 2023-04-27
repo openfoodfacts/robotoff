@@ -10,7 +10,7 @@ import io
 import os
 import string
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 
 class KeywordProcessor:
@@ -128,7 +128,7 @@ class KeywordProcessor:
 
         return None
 
-    def __setitem__(self, keyword: str, clean_name: Optional[str] = None) -> bool:
+    def __setitem__(self, keyword: str, clean_name: Optional[Any] = None) -> bool:
         """To add keyword to the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -136,7 +136,7 @@ class KeywordProcessor:
             keyword : string
                 keyword that you want to identify
 
-            clean_name : string
+            clean_name : Any
                 clean term for that keyword that you would want to get back in return or replace
                 if not provided, keyword will be used as the clean name also.
 
@@ -144,7 +144,7 @@ class KeywordProcessor:
             >>> keyword_processor['Big Apple'] = 'New York'
         """
         status = False
-        if not clean_name and keyword:
+        if clean_name is None and keyword:
             clean_name = keyword
 
         if keyword and clean_name:
@@ -228,7 +228,7 @@ class KeywordProcessor:
         """
         self.non_word_boundaries.add(character)
 
-    def add_keyword(self, keyword: str, clean_name: Optional[str] = None) -> bool:
+    def add_keyword(self, keyword: str, clean_name: Optional[Any] = None) -> bool:
         """To add one or more keywords to the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -236,7 +236,7 @@ class KeywordProcessor:
             keyword : string
                 keyword that you want to identify
 
-            clean_name : string
+            clean_name : Any
                 clean term for that keyword that you would want to get back in return or replace
                 if not provided, keyword will be used as the clean name also.
 
@@ -463,7 +463,7 @@ class KeywordProcessor:
 
     def extract_keywords(
         self, sentence: str, span_info: bool = False, max_cost: int = 0
-    ) -> list[Union[str, tuple[str, int, int]]]:
+    ) -> list[Union[Any, tuple[Any, int, int]]]:
         """Searches in the string for all keywords present in corpus.
         Keywords present are added to a list `keywords_extracted` and returned.
 
@@ -487,7 +487,7 @@ class KeywordProcessor:
             >>> keywords_found
             >>> ['New York', 'Bay Area']
         """
-        keywords_extracted: list[Union[str, tuple[str, int, int]]] = []
+        keywords_extracted: list[Union[Any, tuple[Any, int, int]]] = []
         if not sentence:
             # if sentence is empty or none just return empty list
             return keywords_extracted
