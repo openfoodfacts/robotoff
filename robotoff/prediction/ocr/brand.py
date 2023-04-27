@@ -1,13 +1,11 @@
 import functools
 from typing import Iterable, Optional, Union
 
-from flashtext import KeywordProcessor
-
 from robotoff import settings
 from robotoff.brands import get_brand_blacklist, keep_brand_from_taxonomy
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
-from robotoff.utils.text import get_tag
+from robotoff.utils.text import KeywordProcessor, get_tag
 
 from .dataclass import OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor

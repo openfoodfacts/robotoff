@@ -1,5 +1,4 @@
 import pytest
-from flashtext import KeywordProcessor
 
 from robotoff import settings
 from robotoff.prediction.ocr.location import (
@@ -8,6 +7,7 @@ from robotoff.prediction.ocr.location import (
     find_locations,
     load_cities_fr,
 )
+from robotoff.utils.text import KeywordProcessor
 
 module = "robotoff.prediction.ocr.location"
 

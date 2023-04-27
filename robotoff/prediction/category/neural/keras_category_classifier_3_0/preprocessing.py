@@ -6,11 +6,11 @@ from collections import defaultdict
 from typing import Optional
 
 import numpy as np
-from flashtext import KeywordProcessor
 
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy, fetch_taxonomy
 from robotoff.types import JSONType
+from robotoff.utils.text import KeywordProcessor
 
 from .text_utils import fold, get_tag
 

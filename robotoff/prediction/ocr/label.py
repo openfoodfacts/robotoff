@@ -2,11 +2,10 @@ import functools
 import re
 from typing import Iterable, Optional, Union
 
-from flashtext import KeywordProcessor
-
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.text import KeywordProcessor
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor

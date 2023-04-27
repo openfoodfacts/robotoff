@@ -6,6 +6,7 @@ import spacy
 
 from robotoff.utils import get_logger
 
+from .flashtext import KeywordProcessor  # noqa: F401
 from .fold_to_ascii import fold, fold_without_insertion_deletion
 
 logger = get_logger(__name__)
