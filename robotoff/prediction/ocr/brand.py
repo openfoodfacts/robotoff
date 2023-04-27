@@ -13,6 +13,11 @@ from .utils import generate_keyword_processor
 logger = get_logger(__name__)
 
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
+
 def generate_brand_keyword_processor(
     brands: Iterable[str],
     blacklist: bool = True,
@@ -85,6 +90,7 @@ def extract_brands(
                 automatic_processing=automatic_processing,
                 predictor=data_source_name,
                 data=data,
+                predictor_version=PREDICTOR_VERSION,
             )
         )
 
@@ -107,6 +113,7 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction
                     predictor="google-cloud-vision",
                     data={"notify": False},
                     confidence=logo_annotation.score,
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

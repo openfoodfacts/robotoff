@@ -5,7 +5,9 @@ from robotoff.types import JSONType, Prediction, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
-EXTRACTOR_VERSION = "2"
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
 
 NutrientMentionType = tuple[str, list[str]]
@@ -187,7 +189,8 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
     return [
         Prediction(
             type=PredictionType.nutrient,
-            data={"nutrients": nutrients, "version": EXTRACTOR_VERSION},
+            data={"nutrients": nutrients},
+            predictor_version=PREDICTOR_VERSION,
         )
     ]
 
@@ -235,6 +238,7 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
     return [
         Prediction(
             type=PredictionType.nutrient_mention,
-            data={"mentions": nutrients, "version": EXTRACTOR_VERSION},
+            data={"mentions": nutrients},
+            predictor_version=PREDICTOR_VERSION,
         )
     ]

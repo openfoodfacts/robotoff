@@ -53,6 +53,8 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     annotation = None
     automatic_processing = False
     confidence: Optional[float] = None
+    predictor: Optional[str] = None
+    predictor_version: Optional[str] = None
 
 
 class PredictionFactory(PeeweeModelFactory):
@@ -65,8 +67,10 @@ class PredictionFactory(PeeweeModelFactory):
     timestamp = factory.LazyFunction(datetime.utcnow)
     value_tag = "en:seeds"
     automatic_processing = None
-    predictor = None
+    predictor: Optional[str] = None
+    predictor_version: Optional[str] = None
     confidence: Optional[float] = None
+    server_type: str = "off"
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):

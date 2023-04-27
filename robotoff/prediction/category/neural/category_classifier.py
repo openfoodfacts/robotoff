@@ -37,9 +37,10 @@ def create_prediction(
     return Prediction(
         type=PredictionType.category,
         value_tag=category,
-        data={"model_version": model_version, **kwargs},
+        data=kwargs,
         automatic_processing=False,
         predictor="neural",
+        predictor_version=model_version,
         confidence=confidence,
         barcode=product_id.barcode,
         server_type=product_id.server_type,

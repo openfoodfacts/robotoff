@@ -14,7 +14,12 @@ from robotoff import settings
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights
-from robotoff.models import LogoAnnotation, LogoConfidenceThreshold, LogoEmbedding
+from robotoff.models import (
+    ImagePrediction,
+    LogoAnnotation,
+    LogoConfidenceThreshold,
+    LogoEmbedding,
+)
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
 from robotoff.off import OFFAuthentication
@@ -388,7 +393,11 @@ def generate_insights_from_annotated_logos_job(
     """Wrap generate_insights_from_annotated_logos function into a python-rq
     compatible job."""
     with db:
-        logos = list(LogoAnnotation.select().where(LogoAnnotation.id.in_(logo_ids)))
+        logos = list(
+            LogoAnnotation.select(LogoAnnotation, ImagePrediction)
+            .where(LogoAnnotation.id.in_(logo_ids))
+            .join(ImagePrediction)
+        )
 
         if logos:
             generate_insights_from_annotated_logos(logos, auth, server_type)
@@ -412,6 +421,7 @@ def generate_insights_from_annotated_logos(
             },
             confidence=1.0,
             server_type=server_type,
+            model_version=logo.image_prediction.model_version,
         )
 
         if prediction is None:
@@ -472,6 +482,7 @@ def predict_logo_predictions(
                 "bounding_box": logo.bounding_box,
             },
             server_type=server_type,
+            model_version=logo.image_prediction.model_version,
         )
 
         if prediction is not None:
@@ -489,6 +500,7 @@ def generate_prediction(
     confidence: float,
     server_type: ServerType,
     automatic_processing: Optional[bool] = False,
+    model_version: Optional[str] = None,
 ) -> Optional[Prediction]:
     """Generate a Prediction from a logo.
 
@@ -520,6 +532,7 @@ def generate_prediction(
         value=value,
         automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
+        predictor_version=model_version,
         data=data,
         confidence=confidence,
         server_type=server_type,

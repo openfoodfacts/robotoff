@@ -4,6 +4,10 @@ from robotoff.types import Prediction, PredictionType
 
 from .dataclass import ImageOrientation, OCRResult
 
+# Increase version ID when introducing breaking change: changes for which we want
+# old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
+
 
 def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> int:
     if image_orientation == ImageOrientation.up:
@@ -33,4 +37,10 @@ def find_image_orientation(ocr_result: Union[OCRResult, str]) -> list[Prediction
     prediction["rotation"] = get_rotation_angle_from_orientation(
         orientation_result.orientation
     )
-    return [Prediction(type=PredictionType.image_orientation, data=prediction)]
+    return [
+        Prediction(
+            type=PredictionType.image_orientation,
+            data=prediction,
+            predictor_version=PREDICTOR_VERSION,
+        )
+    ]

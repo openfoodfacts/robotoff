@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Optional, Type, Union
 
+from peewee import SQL
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
@@ -1083,6 +1084,10 @@ class NutritionImageImporter(InsightImporter):
     # valid
     NUTRITION_TABLE_MODEL_MIN_SCORE = 0.9
 
+    # Increase version ID when introducing breaking change: changes for which
+    # we want old predictions to be removed in DB and replaced by newer ones
+    PREDICTOR_VERSION = "1"
+
     @staticmethod
     def get_type() -> InsightType:
         return InsightType.nutrition_image
@@ -1315,6 +1320,7 @@ class NutritionImageImporter(InsightImporter):
                     **data,
                     "nutrients": list(detected_nutrients),
                 },
+                predictor_version=cls.PREDICTOR_VERSION,
                 value_tag=lang,
                 automatic_processing=False,
                 barcode=nutrient_mention_prediction.barcode,
@@ -1536,11 +1542,23 @@ def create_prediction_model(prediction: Prediction, timestamp: datetime.datetime
     return {**prediction_dict, "timestamp": timestamp}
 
 
+def _import_product_predictions_sort_fn(
+    prediction: Prediction,
+) -> tuple[ServerType, PredictionType, Optional[str], Optional[str]]:
+    return (
+        prediction.server_type,
+        prediction.type,
+        prediction.source_image,
+        prediction.predictor_version,
+    )
+
+
 def import_product_predictions(
     barcode: str,
     server_type: ServerType,
-    product_predictions_iter: Iterable[Prediction],
-):
+    product_predictions: list[Prediction],
+    delete_previous_versions: bool = True,
+) -> tuple[int, int]:
     """Import predictions for a specific product.
 
     If a prediction already exists in DB (same (barcode, type,
@@ -1551,10 +1569,59 @@ def import_product_predictions(
         have the same barcode.
     :param server_type: the server type (project) of the product, all
         `product_predictions` must have the same `server_type`.
-    :param product_predictions_iter: Iterable of Predictions.
-    :return: The number of items imported in DB.
+    :param product_predictions: list of Predictions to import.
+    :param delete_previous_versions: if True, delete predictions associated
+        with the product that have different `predictor_version` than the one
+        specified in `product_predictions`. Note that the deletion only affects
+        the predictions of the same prediction type, server type, source image
+        and barcode.
+    :return: a (imported, deleted) tuple: the number of predictions imported
+        and deleted in DB.
     """
     timestamp = datetime.datetime.utcnow()
+
+    deleted = 0
+    if delete_previous_versions:
+        for (
+            server_type,
+            prediction_type,
+            source_image,
+            predictor_version,
+        ), _ in itertools.groupby(
+            sorted(product_predictions, key=_import_product_predictions_sort_fn),
+            _import_product_predictions_sort_fn,
+        ):
+            logger.info(
+                f"{barcode=} {server_type.name=} {prediction_type.name=} {source_image=} {predictor_version=}"
+            )
+            deleted += (
+                PredictionModel.delete()
+                .where(
+                    # Delete all predictions with the same barcode,
+                    # server_type, source_image and type but with a different
+                    # predictor_version
+                    # We need a custom SQL query with 'IS DISTINCT FROM'
+                    # as otherwise null values are considered specially when using
+                    # standard '!=' operator
+                    # See https://www.postgresql.org/docs/current/functions-comparison.html
+                    SQL(
+                        "prediction.barcode = %s AND "
+                        "prediction.server_type = %s AND "
+                        "prediction.type = %s AND "
+                        "prediction.source_image = %s AND "
+                        "prediction.predictor_version IS DISTINCT FROM %s",
+                        (
+                            barcode,
+                            server_type.name,
+                            prediction_type.name,
+                            source_image,
+                            predictor_version,
+                        ),
+                    ),
+                )
+                .execute()
+            )
+
     existing_predictions = set(
         PredictionModel.select(
             PredictionModel.type,
@@ -1571,13 +1638,9 @@ def import_product_predictions(
         )
         .tuples()
     )
-
-    # note: there are some cases
-    # when we could decide to replace old predictions of the same key.
-    # It's not yet implemented.
     to_import = (
         create_prediction_model(prediction, timestamp)
-        for prediction in product_predictions_iter
+        for prediction in product_predictions
         if (
             prediction.type,
             prediction.server_type.name,
@@ -1589,7 +1652,7 @@ def import_product_predictions(
         )
         not in existing_predictions
     )
-    return batch_insert(PredictionModel, to_import, 50)
+    return batch_insert(PredictionModel, to_import, 50), deleted
 
 
 IMPORTERS: list[Type] = [
@@ -1719,12 +1782,15 @@ def import_predictions(
         operator.attrgetter("barcode"),
     ):
         product_predictions_group = list(product_predictions_iter)
-        predictions_imported = import_product_predictions(
+        predictions_imported, predictions_deleted = import_product_predictions(
             barcode, server_type, product_predictions_group
         )
         predictions_import_results.append(
             PredictionImportResult(
-                created=predictions_imported, barcode=barcode, server_type=server_type
+                created=predictions_imported,
+                deleted=predictions_deleted,
+                barcode=barcode,
+                server_type=server_type,
             )
         )
         updated_prediction_types_by_barcode[barcode] = set(
