@@ -5,12 +5,15 @@ Flashtext library is not maintained anymore, and we needed some bugs to be fixed
 """
 
 
+import functools
 import io
 import os
 import string
+from pathlib import Path
+from typing import Optional, Union
 
 
-class KeywordProcessor(object):
+class KeywordProcessor:
     """KeywordProcessor
 
     Attributes:
@@ -42,7 +45,7 @@ class KeywordProcessor(object):
         * Idea came from this `Stack Overflow Question <https://stackoverflow.com/questions/44178449/regex-replace-is-taking-time-for-millions-of-documents-how-to-make-it-faster>`_.
     """
 
-    def __init__(self, case_sensitive=False):
+    def __init__(self, case_sensitive: bool = False):
         """
         Args:
             case_sensitive (boolean): Keyword search should be case sensitive set or not.
@@ -50,17 +53,12 @@ class KeywordProcessor(object):
         """
         self._keyword = "_keyword_"
         self._white_space_chars = set([".", "\t", "\n", "\a", " ", ","])
-        try:
-            # python 2.x
-            self.non_word_boundaries = set(string.digits + string.letters + "_")
-        except AttributeError:
-            # python 3.x
-            self.non_word_boundaries = set(string.digits + string.ascii_letters + "_")
-        self.keyword_trie_dict = dict()
+        self.non_word_boundaries = set(string.digits + string.ascii_letters + "_")
+        self.keyword_trie_dict = dict()  # type: ignore
         self.case_sensitive = case_sensitive
         self._terms_in_trie = 0
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of terms present in the keyword_trie_dict
 
         Returns:
@@ -70,7 +68,7 @@ class KeywordProcessor(object):
         """
         return self._terms_in_trie
 
-    def __contains__(self, word):
+    def __contains__(self, word: str) -> bool:
         """To check if word is present in the keyword_trie_dict
 
         Args:
@@ -99,7 +97,7 @@ class KeywordProcessor(object):
                 break
         return self._keyword in current_dict and len_covered == len(word)
 
-    def __getitem__(self, word):
+    def __getitem__(self, word: str) -> Optional[str]:
         """if word is present in keyword_trie_dict return the clean name for it.
 
         Args:
@@ -128,7 +126,9 @@ class KeywordProcessor(object):
         if self._keyword in current_dict and len_covered == len(word):
             return current_dict[self._keyword]
 
-    def __setitem__(self, keyword, clean_name=None):
+        return None
+
+    def __setitem__(self, keyword: str, clean_name: Optional[str] = None) -> bool:
         """To add keyword to the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -159,7 +159,7 @@ class KeywordProcessor(object):
             current_dict[self._keyword] = clean_name
         return status
 
-    def __delitem__(self, keyword):
+    def __delitem__(self, keyword: str) -> bool:
         """To remove keyword from the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -183,7 +183,7 @@ class KeywordProcessor(object):
                     current_dict = current_dict[letter]
                 else:
                     # if character is not found, break out of the loop
-                    current_dict = None
+                    current_dict = None  # type: ignore
                     break
             # remove the characters from trie dict if there are no other keywords with them
             if current_dict and self._keyword in current_dict:
@@ -208,7 +208,7 @@ class KeywordProcessor(object):
         """Disabled iteration as get_all_keywords() is the right way to iterate"""
         raise NotImplementedError("Please use get_all_keywords() instead")
 
-    def set_non_word_boundaries(self, non_word_boundaries):
+    def set_non_word_boundaries(self, non_word_boundaries: set[str]) -> None:
         """set of characters that will be considered as part of word.
 
         Args:
@@ -218,7 +218,7 @@ class KeywordProcessor(object):
         """
         self.non_word_boundaries = non_word_boundaries
 
-    def add_non_word_boundary(self, character):
+    def add_non_word_boundary(self, character: str) -> None:
         """add a character that will be considered as part of word.
 
         Args:
@@ -228,7 +228,7 @@ class KeywordProcessor(object):
         """
         self.non_word_boundaries.add(character)
 
-    def add_keyword(self, keyword, clean_name=None):
+    def add_keyword(self, keyword: str, clean_name: Optional[str] = None) -> bool:
         """To add one or more keywords to the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -253,7 +253,7 @@ class KeywordProcessor(object):
         """
         return self.__setitem__(keyword, clean_name)
 
-    def remove_keyword(self, keyword):
+    def remove_keyword(self, keyword: str) -> bool:
         """To remove one or more keywords from the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -276,7 +276,7 @@ class KeywordProcessor(object):
         """
         return self.__delitem__(keyword)
 
-    def get_keyword(self, word):
+    def get_keyword(self, word: str) -> Optional[str]:
         """if word is present in keyword_trie_dict return the clean name for it.
 
         Args:
@@ -294,7 +294,9 @@ class KeywordProcessor(object):
         """
         return self.__getitem__(word)
 
-    def add_keyword_from_file(self, keyword_file, encoding="utf-8"):
+    def add_keyword_from_file(
+        self, keyword_file: Union[Path, str], encoding: str = "utf-8"
+    ) -> None:
         """To add keywords from a file
 
         Args:
@@ -332,7 +334,7 @@ class KeywordProcessor(object):
                     keyword = line.strip()
                     self.add_keyword(keyword)
 
-    def add_keywords_from_dict(self, keyword_dict):
+    def add_keywords_from_dict(self, keyword_dict: dict[str, str]) -> None:
         """To add keywords from a dictionary
 
         Args:
@@ -358,7 +360,7 @@ class KeywordProcessor(object):
             for keyword in keywords:
                 self.add_keyword(keyword, clean_name)
 
-    def remove_keywords_from_dict(self, keyword_dict):
+    def remove_keywords_from_dict(self, keyword_dict: dict[str, str]):
         """To remove keywords from a dictionary
 
         Args:
@@ -384,7 +386,7 @@ class KeywordProcessor(object):
             for keyword in keywords:
                 self.remove_keyword(keyword)
 
-    def add_keywords_from_list(self, keyword_list):
+    def add_keywords_from_list(self, keyword_list: list[str]) -> None:
         """To add keywords from a list
 
         Args:
@@ -402,7 +404,7 @@ class KeywordProcessor(object):
         for keyword in keyword_list:
             self.add_keyword(keyword)
 
-    def remove_keywords_from_list(self, keyword_list):
+    def remove_keywords_from_list(self, keyword_list: list[str]) -> None:
         """To remove keywords present in list
 
         Args:
@@ -420,7 +422,9 @@ class KeywordProcessor(object):
         for keyword in keyword_list:
             self.remove_keyword(keyword)
 
-    def get_all_keywords(self, term_so_far="", current_dict=None):
+    def get_all_keywords(
+        self, term_so_far: str = "", current_dict: Optional[dict] = None
+    ) -> dict:
         """Recursively builds a dictionary of keywords present in the dictionary
         And the clean name mapped to those keywords.
 
@@ -457,7 +461,9 @@ class KeywordProcessor(object):
                     terms_present[key] = sub_values[key]
         return terms_present
 
-    def extract_keywords(self, sentence, span_info=False, max_cost=0):
+    def extract_keywords(
+        self, sentence: str, span_info: bool = False, max_cost: int = 0
+    ) -> list[Union[str, tuple[str, int, int]]]:
         """Searches in the string for all keywords present in corpus.
         Keywords present are added to a list `keywords_extracted` and returned.
 
@@ -481,10 +487,15 @@ class KeywordProcessor(object):
             >>> keywords_found
             >>> ['New York', 'Bay Area']
         """
-        keywords_extracted = []
+        keywords_extracted: list[Union[str, tuple[str, int, int]]] = []
         if not sentence:
             # if sentence is empty or none just return empty list
             return keywords_extracted
+
+        index_mapping = get_index_mapping(sentence, self.case_sensitive)
+        get_span_indices = functools.partial(
+            _get_span_indices, index_mapping=index_mapping
+        )
         if not self.case_sensitive:
             sentence = sentence.lower()
         current_dict = self.keyword_trie_dict
@@ -562,7 +573,10 @@ class KeywordProcessor(object):
                     current_dict = self.keyword_trie_dict
                     if longest_sequence_found:
                         keywords_extracted.append(
-                            (longest_sequence_found, sequence_start_pos, idx)
+                            (  # type: ignore
+                                longest_sequence_found,
+                                *get_span_indices(sequence_start_pos, idx),
+                            )
                         )
                         curr_cost = max_cost
                     reset_current_dict = True
@@ -600,7 +614,10 @@ class KeywordProcessor(object):
                 if self._keyword in current_dict:
                     sequence_found = current_dict[self._keyword]
                     keywords_extracted.append(
-                        (sequence_found, sequence_start_pos, sentence_len)
+                        (
+                            sequence_found,
+                            *get_span_indices(sequence_start_pos, sentence_len),
+                        )
                     )
             idx += 1
             if reset_current_dict:
@@ -610,7 +627,7 @@ class KeywordProcessor(object):
             return keywords_extracted
         return [value[0] for value in keywords_extracted]
 
-    def get_next_word(self, sentence):
+    def get_next_word(self, sentence: str) -> str:
         """
         Retrieve the next word in the sequence
         Iterate in the string until finding the first char not in non_word_boundaries
@@ -633,7 +650,9 @@ class KeywordProcessor(object):
             next_word += char
         return next_word
 
-    def levensthein(self, word, max_cost=2, start_node=None):
+    def levensthein(
+        self, word: str, max_cost: int = 2, start_node: Optional[dict] = None
+    ):
         """
         Retrieve the nodes where there is a fuzzy match,
         via levenshtein distance, and with respect to max_cost
@@ -688,3 +707,53 @@ class KeywordProcessor(object):
                 yield from self._levenshtein_rec(
                     new_char, new_node, word, new_rows, max_cost, depth=depth + 1
                 )
+
+
+def _get_span_indices(
+    start_idx: int, end_idx: int, index_mapping: Optional[list[int]] = None
+) -> tuple[int, int]:
+    """Return the span indices (start index, end_index) by taking into account
+    index shift due to lowercasing. See `get_index_mapping` for further
+    explanations.
+
+    :param start_idx: start index of the match
+    :param end_idx: end index of the match
+    :param index_mapping: optional index mapping, defaults to None
+    :return: a (start_idx, end_idx) tuple, possibly shifted if `index_mapping`
+        is not None
+    """
+    if index_mapping is None:
+        return start_idx, end_idx
+    return index_mapping[start_idx], index_mapping[end_idx - 1] + 1
+
+
+# LATIN CAPITAL LETTER I WITH DOT ABOVE is the only letter than changes length
+# when lowercased: see http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt
+LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE = "İ"
+
+
+def get_index_mapping(sentence: str, case_sensitive: bool) -> Optional[list[int]]:
+    """Get character index mapping (a list of indices of the same length as
+    the lowercased version of `sentence` or None).
+
+    When lowercasing a string, the string changes length if it contains LATIN
+    CAPITAL LETTER I WITH DOT ABOVE (`İ`): the length of the lowercased
+    version of this letter is 2 (instead of 1).
+    If `case_sensitive=True` or if there is no `İ` in the string, this function
+    returns None: we don't to account for character index shift during keyword
+    extraction.
+    Otherwise, we return a list of indices of the same length as the lowercased
+    version of `sentence`, that gives the character index in the original
+    sentence.
+
+    :param sentence: the original non-lowercased sentence
+    :param case_sensitive: whether the keyword extraction is case sensitive
+    """
+    if case_sensitive or LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE not in sentence:
+        return None
+    offsets = []
+    for idx, char in enumerate(sentence):
+        if char == LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE:
+            offsets.append(idx)
+        offsets.append(idx)
+    return offsets
