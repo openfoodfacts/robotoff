@@ -76,9 +76,10 @@ rq = "~1.11.1"
 python-redis-lock = "~4.0.0"
 transformers = "~4.25.1"
 lark = "~1.1.4"
+h5py = "~3.8.0"
 
 [tool.poetry.dependencies.sentry-sdk]
-version = "~1.11.0"
+version = "~1.14.0"
 extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]
