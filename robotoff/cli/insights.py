@@ -102,10 +102,16 @@ def generate_from_ocr_archive(
             )
 
 
-def insights_iter(file_path: Path) -> Iterable[Prediction]:
+def prediction_iter(file_path: Path) -> Iterable[Prediction]:
+    """Iterates over a JSONL file containing predictions and yield
+    `Prediction`s.
+
+    :param file_path: JSONL file path containing predictions
+    :yield: the `Prediction`s contained in the file
+    """
     for prediction in jsonl_iter(file_path):
         yield dacite.from_dict(
             data_class=Prediction,
             data=prediction,
-            config=dacite.Config(cast=[PredictionType]),
+            config=dacite.Config(cast=[PredictionType, ServerType]),
         )

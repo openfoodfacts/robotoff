@@ -92,7 +92,7 @@ def generate_ocr_predictions(
         None, help="Type of the predictions to generate (label, brand,...)"
     ),
     server_type: ServerType = typer.Option(
-        ServerType.off.name, help="Server type of the archive"
+        ServerType.off, help="Server type of the archive"
     ),
     output: Optional[Path] = typer.Option(
         None,
@@ -211,7 +211,7 @@ def import_insights(
     import tqdm
     from more_itertools import chunked
 
-    from robotoff.cli.insights import generate_from_ocr_archive, insights_iter
+    from robotoff.cli.insights import generate_from_ocr_archive, prediction_iter
     from robotoff.insights import importer
     from robotoff.models import db
     from robotoff.utils import get_logger
@@ -226,7 +226,7 @@ def import_insights(
         )
     elif input_path is not None:
         logger.info("Importing insights from %s", input_path)
-        predictions = insights_iter(input_path)
+        predictions = prediction_iter(input_path)
     else:
         raise ValueError("--generate-from or --input-path must be provided")
 
