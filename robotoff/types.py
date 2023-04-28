@@ -145,7 +145,7 @@ class InsightType(str, enum.Enum):
     nutrition_table_structure = "nutrition_table_structure"
 
 
-class ServerType(enum.Enum):
+class ServerType(str, enum.Enum):
     """ServerType is used to refer to a specific Open*Facts project:
 
     - Open Food Facts
