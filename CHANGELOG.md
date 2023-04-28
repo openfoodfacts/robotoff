@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/openfoodfacts/robotoff/compare/v1.27.1...v1.27.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* fix import_insights CLI command ([d151b3d](https://github.com/openfoodfacts/robotoff/commit/d151b3d2bd723c8a19a4edf4d84995c566598d9c))
+
 ## [1.27.1](https://github.com/openfoodfacts/robotoff/compare/v1.27.0...v1.27.1) (2023-04-28)
 
 
