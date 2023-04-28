@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/openfoodfacts/robotoff/compare/v1.27.0...v1.27.1) (2023-04-28)
+
+
+### Bug Fixes
+
+* make ServerType inherit from str ([4f4244c](https://github.com/openfoodfacts/robotoff/commit/4f4244c290122f7ada9f5f0f10371a26a82c6f16))
+
 ## [1.27.0](https://github.com/openfoodfacts/robotoff/compare/v1.26.1...v1.27.0) (2023-04-27)
 
 
