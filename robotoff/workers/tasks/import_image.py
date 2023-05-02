@@ -243,9 +243,11 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
             logger.info("Missing image in DB for image %s", source_image)
             return
 
+        MODEL_NAME = "upc-opencv"
+        MODEL_VERSION = "upc-opencv-1.0"
         if (
             image_prediction := ImagePrediction.get_or_none(
-                image=image_model, model_name="upc-opencv"
+                image=image_model, model_name=MODEL_NAME
             )
         ) is not None:
             # Image prediction already exists, uses it instead of
@@ -268,8 +270,8 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
             ImagePrediction.create(
                 image=image_model,
                 type="upc_image",
-                model_name="upc-opencv",
-                model_version="upc-opencv-1.0",
+                model_name=MODEL_NAME,
+                model_version=MODEL_VERSION,
                 data={
                     "polygon": polygon,
                     "area": area,
@@ -291,7 +293,9 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
             barcode=product_id.barcode,
             automatic_processing=False,
             data={"area": area, "polygon": polygon},
-            confidence=None,  # potentially add confidence down the road
+            confidence=None,
+            predictor=MODEL_NAME,
+            predictor_version=MODEL_VERSION,
         )
         import_result = import_insights(
             [prediction], server_type=product_id.server_type
