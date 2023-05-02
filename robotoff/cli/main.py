@@ -556,16 +556,30 @@ def refresh_logo_nearest_neighbors(
 
 
 @app.command()
-def import_embedding(
-    input_dir: Path = typer.Argument(
+def import_logo_embeddings(
+    input_path: Path = typer.Argument(
         ...,
         exists=True,
-        file_okay=False,
-        dir_okay=True,
-        help="Directory containing .npz files",
-    )
+        file_okay=True,
+        dir_okay=False,
+        help="HDF5 file containing logo embeddings. Two HDF5 datasets are expected: "
+        "one containing the embeddings and one containing the logo IDs.",
+    ),
+    embedding_dataset_name: str = typer.Option(
+        "embedding",
+        help="name of the HDF5 dataset corresponding to logo embedding in the HDF5 file",
+    ),
+    logo_id_dataset_name: str = typer.Option(
+        "logo_id",
+        help="name of the HDF5 dataset corresponding to logo ID in the HDF5 file",
+    ),
+    update_if_exists: bool = typer.Option(
+        False,
+        help="if the logo embedding already exists in database, update it if True, otherwise ignore it.",
+    ),
 ) -> None:
-    """Import logo embeddings in DB."""
+    """Import logo embeddings in DB from an HDF5 file."""
+    import h5py
     import numpy as np
     import tqdm
     from more_itertools import chunked
@@ -574,7 +588,13 @@ def import_embedding(
     from robotoff.utils import get_logger
 
     logger = get_logger()
-    logger.info(f"Importing logo embeddings from {input_dir}")
+    logger.info("Importing logo embeddings from %s", input_path)
+    logger.info(
+        "Options: update_if_exists=%s, embedding_dataset_name=%s, logo_id_dataset_name=%s",
+        update_if_exists,
+        embedding_dataset_name,
+        logo_id_dataset_name,
+    )
 
     with db:
         existing_logo_ids = set(
@@ -586,29 +606,52 @@ def import_embedding(
         )
 
     imported = 0
-    for npz_path in tqdm.tqdm(input_dir.glob("*.npz"), desc="archive"):
-        archive = np.load(npz_path)
-        logo_ids = archive["logo_id"]
-        embeddings = archive["embedding"]
-        assert embeddings.shape[0] == logo_ids.shape[0]
-        assert embeddings.shape[1] == 512
-        assert embeddings.dtype == np.float32
+    updated = 0
+    not_found = 0
+    with h5py.File(input_path, "r") as f:
+        embeddings = f[embedding_dataset_name]
+        logo_ids = f[logo_id_dataset_name]
+        non_zero_indexes = np.flatnonzero(logo_ids[:])
+        max_index = int(non_zero_indexes[-1])
+        logger.info("Number of embeddings in HDF5 file: %d", max_index)
 
+        pbar = tqdm.tqdm(range(max_index), desc="embedding")
         with db.connection_context():
-            for batch_indices in chunked(range(embeddings.shape[0]), 1000):
+            for batch_indices in chunked(pbar, 1000):
                 with db.atomic():
                     for i in batch_indices:
+                        embedding = embeddings[i]
                         logo_id = int(logo_ids[i])
-                        if (
-                            logo_id in existing_logo_ids
-                            and logo_id not in existing_embedding_logo_ids
-                        ):
-                            LogoEmbedding.create(
-                                logo_id=logo_id, embedding=embeddings[i].tobytes()
-                            )
-                            imported += 1
+                        assert embedding.shape[0] == 512
+                        assert embedding.dtype == np.float32
+                        assert not np.all(embedding == 0.0)
+                        logo_id = int(logo_ids[i])
+                        if logo_id in existing_logo_ids:
+                            if logo_id not in existing_embedding_logo_ids:
+                                LogoEmbedding.create(
+                                    logo_id=logo_id, embedding=embedding.tobytes()
+                                )
+                                existing_embedding_logo_ids.add(logo_id)
+                                imported += 1
+                            elif update_if_exists:
+                                updated += (
+                                    LogoEmbedding.update(
+                                        {"embedding": embedding.tobytes()}
+                                    )
+                                    .where(LogoEmbedding.logo_id == logo_id)
+                                    .execute()
+                                )
+                        else:
+                            not_found += 1
+                    pbar.postfix = f"imported: {imported}, updated: {updated}, not found: {not_found}"
+        pbar.close()
 
-    logger.info(f"{imported} embeddings imported")
+    logger.info(
+        "embeddings: %d imported, %d updated, %d not found",
+        imported,
+        updated,
+        not_found,
+    )
 
 
 @app.command()
