@@ -482,6 +482,11 @@ class CategoryPredictorResource:
         else:
             product = req.media["product"]
             product_id = ProductIdentifier("NULL", server_type)
+
+            if (ingredient_tags := product.pop("ingredients_tags", None)) is not None:
+                # Convert to a format recognized by `CategoryClassifier` class
+                product["ingredients"] = [{"id": id_} for id_ in ingredient_tags]
+
             if "matcher" in predictors:
                 if "lang" not in req.media:
                     raise falcon.HTTPBadRequest(
