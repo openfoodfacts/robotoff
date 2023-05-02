@@ -29,7 +29,7 @@ def predict_category(
     predicted categories.
 
     :param product: the product to predict the categories from, should have at
-        least `product_name` and `ingredients_tags` fields for neural
+        least `product_name` and `ingredients` fields for neural
         predictor and `product_name_{lang}` and `languages_codes` for matching
         predictor
     :param product_id: identifier of the product

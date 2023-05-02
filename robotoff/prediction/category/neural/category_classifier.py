@@ -11,7 +11,7 @@ from robotoff.types import (
 )
 from robotoff.utils import get_logger
 
-from . import keras_category_classifier_2_0, keras_category_classifier_3_0
+from . import keras_category_classifier_3_0
 
 logger = get_logger(__name__)
 
@@ -71,7 +71,7 @@ class CategoryClassifier:
         product and additional debug information.
 
         :param product: the product to predict the categories from, should
-            have at least `product_name` and `ingredients_tags` fields
+            have at least `product_name` and `ingredients` fields
         :param product_id: identifier of the product
         :param deepest_only: controls whether the returned list should only
             contain the deepmost categories for a predicted taxonomy chain.
@@ -92,46 +92,20 @@ class CategoryClassifier:
         if model_name is None:
             model_name = NeuralCategoryClassifierModel.keras_image_embeddings_3_0
 
-        if model_name == NeuralCategoryClassifierModel.keras_2_0:
-            raw_v2_predictions, debug = keras_category_classifier_2_0.predict(
-                product, threshold
-            )
-            # v3 models have an additional field for neighbor predictions, change
-            # the `raw_predictions` format to be compatible with v3 models
-            raw_predictions: list[
-                tuple[
-                    str,
-                    float,
-                    Optional[keras_category_classifier_3_0.NeighborPredictionType],
-                ]
-            ] = [
-                (category_id, score, None) for category_id, score in raw_v2_predictions
-            ]
+        if "ocr" in product:
+            # We check that the OCR text list was not provided manually in `product`
+            # dict
+            ocr_texts = product.pop("ocr")
         else:
-            if "ingredients_tags" in product and "ingredients" not in product:
-                # v3 models use the `ingredients` field instead of `ingredients_tags`,
-                # so that we only consider ingredients of depth 0.
-                # To keep a single interface between v2 and v3 models in Robotoff
-                # /predict/category route, we generate the `ingredients` field
-                # from `ingredients` tags if it is missing
-                product["ingredients"] = [
-                    {"id": id_} for id_ in product["ingredients_tags"]
-                ]
-
-            if "ocr" in product:
-                # We check that the OCR text list was not provided manually in `product`
-                # dict
-                ocr_texts = product.pop("ocr")
-            else:
-                # Otherwise we fetch OCR texts from Product Opener
-                # Only fetch OCR texts if it's required by the model
-                ocr_texts = (
-                    keras_category_classifier_3_0.fetch_ocr_texts(product, product_id)
-                    if keras_category_classifier_3_0.model_input_flags[model_name].get(
-                        "add_ingredients_ocr_tags", True
-                    )
-                    else []
+            # Otherwise we fetch OCR texts from Product Opener
+            # Only fetch OCR texts if it's required by the model
+            ocr_texts = (
+                keras_category_classifier_3_0.fetch_ocr_texts(product, product_id)
+                if keras_category_classifier_3_0.model_input_flags[model_name].get(
+                    "add_ingredients_ocr_tags", True
                 )
+                else []
+            )
 
             # Only generate image embeddings if it's required by the model
             triton_stub = get_triton_inference_stub()
