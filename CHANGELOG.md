@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.28.0](https://github.com/openfoodfacts/robotoff/compare/v1.27.2...v1.28.0) (2023-05-02)
+
+
+### Features
+
+* add UPC Image detector ([f592acd](https://github.com/openfoodfacts/robotoff/commit/f592acd1ce36327bc9b1e05d383d4887847907f8))
+
+
+### Bug Fixes
+
+* add question formatter for is_upc_image insights ([bb6a6da](https://github.com/openfoodfacts/robotoff/commit/bb6a6da1f2e48bbd77e82c44e4ed246a9b960011))
+* enforce max doc length of 79 with flake8 ([d7d58d6](https://github.com/openfoodfacts/robotoff/commit/d7d58d6c985aa60ef13dc76536a2a1bcffdaeb0d))
+* improve import-logo-embeddings CLI command ([34139d1](https://github.com/openfoodfacts/robotoff/commit/34139d15a4028cf10bc76b712027b3557be13afe))
+* remove keras category classifier 2.0 model ([4038a6e](https://github.com/openfoodfacts/robotoff/commit/4038a6e9f1dd9eb25c172d10a2476446fc1cbbd7))
+* remove legacy model download commands ([4a5ef8f](https://github.com/openfoodfacts/robotoff/commit/4a5ef8f7f40e4c19ca59669c5cb948c1c795e975))
+* remove Tensorflow Serving entirely ([f260887](https://github.com/openfoodfacts/robotoff/commit/f26088738e1f6dd0b4b06ca9328754c595f8800b))
+* set predictor_version and predictor for is_upc_image preds/insights ([a9eefc5](https://github.com/openfoodfacts/robotoff/commit/a9eefc532e2aa3814a92b975ca987463dffc5a16))
+
 ## [1.27.2](https://github.com/openfoodfacts/robotoff/compare/v1.27.1...v1.27.2) (2023-04-28)
 
 
