@@ -6,7 +6,6 @@ Robotoff is split in several services:
 - the _workers_, responsible for all long-lasting tasks (mainly insight extraction from images)
 - the public _api_ service
 - the _triton_ service which serve ML models
-- the _tf_serving_ service, which serve the categorizer model that hasn't been migrated yet to triton
 
 Two additional services are used:
 
