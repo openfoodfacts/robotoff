@@ -443,6 +443,27 @@ class NutritionImageQuestionFormatter(QuestionFormatter):
         )
 
 
+class UPCImageQuestionFormatter(QuestionFormatter):
+    question = "Is there a product barcode on this image?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        source_image_url = None
+        product_id = insight.get_product_id()
+        if insight.source_image:
+            source_image_url = settings.BaseURLProvider.image_url(
+                product_id.server_type, get_display_image(insight.source_image)
+            )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
 def get_display_image(source_image: str) -> str:
     image_path = pathlib.Path(source_image)
 
@@ -462,6 +483,7 @@ class QuestionFormatterFactory:
         InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
         InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
         InsightType.packaging.name: PackagingQuestionFormatter,
+        InsightType.is_upc_image.name: UPCImageQuestionFormatter,
     }
 
     @classmethod
