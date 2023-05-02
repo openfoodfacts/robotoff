@@ -1,7 +1,8 @@
 """Some factories for easy creation of models
 
 We use https://github.com/cam-stitt/factory_boy-peewee,
-although archived, this is lightweight, and should be easy to maintain or replace if needed
+although archived, this is lightweight, and should be easy to maintain or
+replace if needed
 """
 import uuid
 from datetime import datetime

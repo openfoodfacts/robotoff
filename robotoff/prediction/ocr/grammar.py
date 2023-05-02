@@ -156,7 +156,8 @@ def generate_terminal_symbols_text(
         name_to_id_mapping.setdefault(name, []).append(node_id)
         if first_node:
             # Add the first line of the terminal definition
-            # "{NAME}.{PRIORITY}: " if priority is provided, otherwise "{NAME}: "
+            # "{NAME}.{PRIORITY}: " if priority is provided, otherwise
+            # "{NAME}: "
             terminal_priority_str = (
                 terminal_priority if terminal_priority is not None else ""
             )

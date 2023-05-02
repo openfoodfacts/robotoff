@@ -81,8 +81,9 @@ class CategoryClassifier:
             setting deepest_only=True will return ['beans'].
         :param threshold: the score above which we consider the category to be
             detected (default: 0.5)
-        :param neural_model_name: the name of the neural model to use to perform
-            prediction. `keras_image_embeddings_3_0` is used by default.
+        :param neural_model_name: the name of the neural model to use to
+            perform prediction. `keras_image_embeddings_3_0` is used by
+            default.
         """
         logger.debug("predicting category with model %s", model_name)
 
@@ -93,8 +94,8 @@ class CategoryClassifier:
             model_name = NeuralCategoryClassifierModel.keras_image_embeddings_3_0
 
         if "ocr" in product:
-            # We check that the OCR text list was not provided manually in `product`
-            # dict
+            # We check that the OCR text list was not provided manually in
+            # `product` dict
             ocr_texts = product.pop("ocr")
         else:
             # Otherwise we fetch OCR texts from Product Opener

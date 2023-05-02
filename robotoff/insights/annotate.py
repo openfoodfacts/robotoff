@@ -555,7 +555,8 @@ def convert_crop_bounding_box(
     - rotate the bounding box using the same angle as the selected image
       rotation angle
 
-    :param bounding_box: relative bounding box coordinates (y_min, x_min, y_max, x_max)
+    :param bounding_box: relative bounding box coordinates (y_min, x_min,
+        y_max, x_max)
     :param width: original height of the image
     :param height: original width of the image
     :param rotate: rotation angle that we should apply to the bounding box,
@@ -636,7 +637,8 @@ class NutritionImageAnnotator(InsightAnnotator):
         rotation = insight.data.get("rotation", 0)
         crop_bounding_box: Optional[tuple[float, float, float, float]] = None
         if "bounding_box" in insight.data:
-            # convert crop bounding box to the format expected by Product Opener
+            # convert crop bounding box to the format expected by Product
+            # Opener
             image_size = image_meta["sizes"]["full"]
             width = image_size["w"]
             height = image_size["h"]

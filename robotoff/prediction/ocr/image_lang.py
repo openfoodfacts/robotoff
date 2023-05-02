@@ -4,8 +4,8 @@ from robotoff.types import Prediction, PredictionType
 
 from .dataclass import OCRResult
 
-# Increase version ID when introducing breaking change: changes for which we want
-# old predictions to be removed in DB and replaced by newer ones
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
 

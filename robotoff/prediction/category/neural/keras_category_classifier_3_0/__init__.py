@@ -169,8 +169,8 @@ def generate_image_embeddings(
                 )
                 # Make sure all image IDs are in image table
                 refresh_images_in_db(product_id, product.get("images", {}))
-                # Save embeddings in embeddings.image_embeddings table for future
-                # use
+                # Save embeddings in embeddings.image_embeddings table for
+                # future use
                 save_image_embeddings(product_id, computed_embeddings_by_id)
                 # Merge cached and newly-computed image embeddings
                 embeddings_by_id |= computed_embeddings_by_id
@@ -236,10 +236,10 @@ def get_automatic_processing_thresholds() -> dict[str, float]:
 
 
 # In NeighborPredictionType objects, we stores the score of parents, children
-# and sibling categories (relative to the predicted categories). Under each type
-# (siblings, children, parents), we store scores as a dict mapping the category
-# name to either the score (float) or None if the neighbor category is not part
-# of the predicted category list.
+# and sibling categories (relative to the predicted categories). Under each
+# type (siblings, children, parents), we store scores as a dict mapping the
+# category name to either the score (float) or None if the neighbor category is
+# not part of the predicted category list.
 NeighborPredictionType = Optional[
     dict[Literal["siblings", "children", "parents"], dict[str, Optional[float]]]
 ]
@@ -290,7 +290,8 @@ def predict(
         if category in CATEGORY_EXCLUDE_SET:
             continue
 
-        # We only consider predictions with a confidence score of `threshold` and above.
+        # We only consider predictions with a confidence score of `threshold`
+        # and above.
         if confidence >= threshold:
             neighbor_predictions: NeighborPredictionType
             if category_taxonomy is not None and category in category_taxonomy:
@@ -360,7 +361,8 @@ def generate_debug_dict(
     return debug
 
 
-# Parameters on how to prepare data for each model type, see `build_triton_request`
+# Parameters on how to prepare data for each model type, see
+# `build_triton_request`
 model_input_flags: dict[NeuralCategoryClassifierModel, dict] = {
     NeuralCategoryClassifierModel.keras_image_embeddings_3_0: {},
     NeuralCategoryClassifierModel.keras_300_epochs_3_0: {"add_image_embeddings": False},

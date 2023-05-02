@@ -26,9 +26,9 @@ class TestKPLen(unittest.TestCase):
 
     def test_remove_keywords_dictionary_len(self):
         """For each of the test case initialize a new KeywordProcessor.
-        Add the keywords the test case to KeywordProcessor.
-        Remove the keywords in remove_keyword_dict
-        Extract keywords and check if they match the expected result for the test case.
+        Add the keywords the test case to KeywordProcessor. Remove the keywords
+        in remove_keyword_dict Extract keywords and check if they match the
+        expected result for the test case.
         """
         for test_id, test_case in enumerate(self.test_cases):
             keyword_processor = KeywordProcessor()

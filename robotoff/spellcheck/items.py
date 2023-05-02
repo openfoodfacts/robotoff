@@ -10,7 +10,8 @@ from robotoff.utils.text import get_blank_nlp
 LANGUAGE_ALLOWED = "fr"
 LANGUAGE_IDENTIFIER: LanguageIdentifier = DEFAULT_LANGUAGE_IDENTIFIER.get()
 
-# Food additives (EXXX) may be mistaken from one another, because of their edit distance proximity
+# Food additives (EXXX) may be mistaken from one another, because of their edit
+# distance proximity
 BLACKLIST_RE = re.compile(r"(?:\d+(?:[,.]\d+)?\s*%)|(?:[0-9])(?![\w-])")
 PUNCTUATION_BLACKLIST_RE = re.compile(r"[_•:]")
 E_BLACKLIST_RE = re.compile(r"(?<!\w)(?:E ?\d{3,5}[a-z]*)")

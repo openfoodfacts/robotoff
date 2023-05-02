@@ -96,8 +96,8 @@ def filter_logos(
                     compute_iou(logo["bounding_box"], logos[j]["bounding_box"])
                     >= iou_threshold
                 ):
-                    # logos are sorted by descending confidence score, so we ignore
-                    # j logo (logo with lower confidence score)
+                    # logos are sorted by descending confidence score, so we
+                    # ignore j logo (logo with lower confidence score)
                     skip_indexes.add(j)
 
         if logo["score"] >= score_threshold:

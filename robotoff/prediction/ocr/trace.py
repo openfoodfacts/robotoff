@@ -9,8 +9,8 @@ from robotoff.utils.cache import CachedStore
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
-# Increase version ID when introducing breaking change: changes for which we want
-# old predictions to be removed in DB and replaced by newer ones
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
 

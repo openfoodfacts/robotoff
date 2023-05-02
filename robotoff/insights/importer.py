@@ -132,14 +132,14 @@ def convert_bounding_box_absolute_to_relative(
     the image, so we cannot compute the relative coordinates of the text
     bounding box. We perform the conversion during insight import instead.
 
-    Relative coordinates are used as they are more convenient than absolute ones
-    (we can use them on a resized version of the original image).
+    Relative coordinates are used as they are more convenient than absolute
+    ones (we can use them on a resized version of the original image).
 
     :param bounding_box_absolute: absolute coordinates of the bounding box
     :param images: The image dict as stored in MongoDB.
     :param source_image: The insight source image, should be the path of the
-    image path or None.
-    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
+    image path or None. :return: a (y_min, x_min, y_max, x_max) tuple of the
+    relative coordinates
         or None if a conversion error occured
     """
     if source_image is None:
@@ -197,15 +197,15 @@ def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight
     - priority, specified by `data["priority"]`, candidate with lowest priority
       values (high priority) come first
     - source image upload datetime (most recent first): images IDs are
-      auto-incremented integers, so the most recent images have the highest IDs.
-      Images with `source_image = None` have a lower priority that images with a
-      source image.
+      auto-incremented integers, so the most recent images have the highest
+      IDs. Images with `source_image = None` have a lower priority that images
+      with a source image.
     - automatic processing status: candidates that are automatically
       processable have higher priority
 
     This function should be used to make sure most important candidates are
-    looked into first in `get_insight_update`. Note that the sorting keys are
-    a superset of those used in `InsightImporter.sort_predictions`.
+    looked into first in `get_insight_update`. Note that the sorting keys are a
+    superset of those used in `InsightImporter.sort_predictions`.
 
     :param candidates: The candidates to sort
     :return: Sorted candidates
@@ -219,7 +219,8 @@ def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight
             else 0,
             # automatically processable insights come first
             -int(candidate.automatic_processing),
-            # hack to set a higher priority to prediction with a predictor value
+            # hack to set a higher priority to prediction with a predictor
+            # value
             candidate.predictor or "z",
         ),
     )
@@ -377,8 +378,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
         """Given a list of predictions, yield tuples of ProductInsight to
         create, update and delete.
 
-        It calls the `generate_candidates` method, specific to each insight type
-        (and implemented in sub-classes).
+        It calls the `generate_candidates` method, specific to each insight
+        type (and implemented in sub-classes).
         """
         timestamp = datetime.datetime.utcnow()
 
@@ -395,7 +396,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
         candidates = [
             candidate
             for candidate in cls.generate_candidates(product, predictions, product_id)
-            # Don't check the image validity if product check was disabled (product=None)
+            # Don't check the image validity if product check was disabled
+            # (product=None)
             if product is None
             or is_valid_insight_image(product.image_ids, candidate.source_image)
         ]
@@ -406,10 +408,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 )
                 candidate.automatic_processing = False
 
-            # flashtext/regex insights return bounding boxes in absolute coordinates,
-            # while we use relative coordinates elsewhere. Perform the conversion here.
-            # Skip this step if product validity check is disabled (product=None),
-            # as we don't have image information
+            # flashtext/regex insights return bounding boxes in absolute
+            # coordinates, while we use relative coordinates elsewhere. Perform
+            # the conversion here. Skip this step if product validity check is
+            # disabled (product=None), as we don't have image information
             if (
                 bounding_box_absolute := candidate.data.pop(
                     "bounding_box_absolute", None
@@ -426,8 +428,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 if username:
                     # logo annotation by a user
                     candidate.username = username
-                # Note: we could add vote annotation for anonymous user,
-                # but it should be done outside this loop. It's not yet implemented
+                # Note: we could add vote annotation for anonymous user, but it
+                # should be done outside this loop. It's not yet implemented
 
         to_create, to_update, to_delete = cls.get_insight_update(candidates, references)
 
@@ -442,13 +444,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def sort_predictions(cls, predictions: Iterable[Prediction]) -> list[Prediction]:
         """Sort predictions by priority, using as keys:
-        - priority, specified by data["priority"], prediction with lowest priority
-        values (high priority) come first
-        - source image upload datetime (most recent first): images IDs are
-        auto-incremented integers, so the most recent images have the highest IDs.
-        Images with `source_image = None` have a lower priority that images with a
-        source image.
-        - predictor, predictions with predictor value have higher priority
+        - priority, specified by data["priority"], prediction with lowest
+          priority
+        values (high priority) come first - source image upload datetime (most
+        recent first): images IDs are auto-incremented integers, so the most
+        recent images have the highest IDs. Images with `source_image = None`
+        have a lower priority that images with a source image. - predictor,
+        predictions with predictor value have higher priority
 
         :param predictions: The predictions to sort
         :return: Sorted predictions
@@ -460,7 +462,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 -int(get_image_id(prediction.source_image) or 0)
                 if prediction.source_image
                 else 0,
-                # hack to set a higher priority to prediction with a predictor value
+                # hack to set a higher priority to prediction with a predictor
+                # value
                 prediction.predictor or "z",
             ),
         )
@@ -499,9 +502,9 @@ class InsightImporter(metaclass=abc.ABCMeta):
         """Return a tuple containing:
 
         - a list of `ProductInsight` to create
-        - a list of `ProductInsight` to update, as (`insight`, `reference_insight`)
-          tuples, where `insight` is the candidate and `reference_insight` is
-          the insight already in DB
+        - a list of `ProductInsight` to update, as (`insight`,
+          `reference_insight`) tuples, where `insight` is the candidate and
+          `reference_insight` is the insight already in DB
         - a list of `ProductInsight` to delete
 
         :param candidates: candidate predictions
@@ -538,24 +541,25 @@ class InsightImporter(metaclass=abc.ABCMeta):
                         break
                 else:
                     mapping_ref_insight = None
-                    # In order for the voting system to work, we map insights to create
-                    # to existing insights with the same value/value_tag/source_image.
-                    # This way, we don't loose vote information.
+                    # In order for the voting system to work, we map insights
+                    # to create to existing insights with the same
+                    # value/value_tag/source_image. This way, we don't loose
+                    # vote information.
                     for reference_insight in reference_insights:
                         if (
                             reference_insight.annotation is None
                             and cls.is_conflicting_insight(candidate, reference_insight)
-                            # only map to existing insight if the source image is the same,
-                            # otherwise create a new insight
+                            # only map to existing insight if the source image
+                            # is the same, otherwise create a new insight
                             and candidate.source_image == reference_insight.source_image
                         ):
                             mapping_ref_insight = reference_insight
                             to_keep_ids.add(reference_insight.id)
                             break
 
-                    # If mapping_ref_insight is None, a new insight is created in DB,
-                    # Otherwise the reference insight is updated with candidate
-                    # information
+                    # If mapping_ref_insight is None, a new insight is created
+                    # in DB, Otherwise the reference insight is updated with
+                    # candidate information
                     to_create_or_update.append((candidate, mapping_ref_insight))
 
         to_delete = [
@@ -579,18 +583,18 @@ class InsightImporter(metaclass=abc.ABCMeta):
     ) -> list[ProductInsight]:
         """Sort candidates by priority, using as keys:
 
-        - priority, specified by `data["priority"]`, candidate with lowest priority
-        values (high priority) come first
-        - source image upload datetime (most recent first): images IDs are
-        auto-incremented integers, so the most recent images have the highest IDs.
-        Images with `source_image = None` have a lower priority that images with a
-        source image.
-        - automatic processing status: candidates that are automatically
-        processable have higher priority
+        - priority, specified by `data["priority"]`, candidate with lowest
+          priority
+        values (high priority) come first - source image upload datetime (most
+        recent first): images IDs are auto-incremented integers, so the most
+        recent images have the highest IDs. Images with `source_image = None`
+        have a lower priority that images with a source image. - automatic
+        processing status: candidates that are automatically processable have
+        higher priority
 
         This function should be used to make sure most important candidates are
-        looked into first in `get_insight_update`. Note that the sorting keys are
-        a superset of those used in `InsightImporter.sort_predictions`.
+        looked into first in `get_insight_update`. Note that the sorting keys
+        are a superset of those used in `InsightImporter.sort_predictions`.
 
         :param candidates: The candidates to sort
         :return: Sorted candidates
@@ -606,7 +610,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
                 ),
                 # automatically processable insights come first
                 -int(candidate.automatic_processing),
-                # hack to set a higher priority to prediction with a predictor value
+                # hack to set a higher priority to prediction with a predictor
+                # value
                 candidate.predictor or "z",
             ),
         )
@@ -693,7 +698,8 @@ class PackagerCodeInsightImporter(InsightImporter):
         emb_code: str,
     ) -> bool:
         if product is None:
-            # Predictions are always valid when product check is disabled (product=None)
+            # Predictions are always valid when product check is disabled
+            # (product=None)
             return True
         existing_codes = [normalize_emb_code(c) for c in product.emb_codes_tags]
         normalized_code = normalize_emb_code(emb_code)
@@ -734,7 +740,8 @@ class LabelInsightImporter(InsightImporter):
     @staticmethod
     def is_prediction_valid(product: Optional[Product], tag: str) -> bool:
         if product is None:
-            # Predictions are always valid when product check is disabled (product=None)
+            # Predictions are always valid when product check is disabled
+            # (product=None)
             return True
         return not (
             tag in product.labels_tags
@@ -840,7 +847,8 @@ class CategoryImporter(InsightImporter):
         category: str,
     ) -> bool:
         if product is None:
-            # Predictions are always valid when product check is disabled (product=None)
+            # Predictions are always valid when product check is disabled
+            # (product=None)
             return True
         # check whether this is new information or if the predicted category
         # is not a parent of a current/already predicted category
@@ -1008,8 +1016,8 @@ class BrandInsightImporter(InsightImporter):
             prediction.predictor == "universal-logo-detector"
             and "username" in prediction.data
         ):
-            # Check barcode range for all predictors except logos detected using
-            # universal-logo-detector model and annotated manually
+            # Check barcode range for all predictors except logos detected
+            # using universal-logo-detector model and annotated manually
             return True
 
         return BrandInsightImporter.is_in_barcode_range(
@@ -1024,7 +1032,8 @@ class BrandInsightImporter(InsightImporter):
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         if product and product.brands_tags:
-            # For now, don't create an insight if a brand has already been provided
+            # For now, don't create an insight if a brand has already been
+            # provided
             return
 
         for prediction in predictions:
@@ -1032,8 +1041,8 @@ class BrandInsightImporter(InsightImporter):
                 continue
             insight = ProductInsight(**prediction.to_dict())
             if insight.automatic_processing is None:
-                # Validation is needed if the weight was extracted from the product name
-                # (not as trustworthy as OCR)
+                # Validation is needed if the weight was extracted from the
+                # product name (not as trustworthy as OCR)
                 insight.automatic_processing = (
                     prediction.data.get("source") == "product_name"
                 )
@@ -1297,12 +1306,13 @@ class NutritionImageImporter(InsightImporter):
             ):
                 lang = candidate.value_tag
                 logger.debug("One candidate generated for lang %s", lang)
-                # Product is None if `ENABLE_PRODUCT_CHECK=False`, in which case we
-                # always don't check that
+                # Product is None if `ENABLE_PRODUCT_CHECK=False`, in which
+                # case we always don't check that
                 if product is None or (
                     # only select image for the product main language
                     lang == product.lang
-                    # check that we don't already have a nutrition image for this lang
+                    # check that we don't already have a nutrition image for
+                    # this lang
                     and lang not in existing_nutrition_image_langs
                 ):
                     logger.debug(
@@ -1333,8 +1343,9 @@ class NutritionImageImporter(InsightImporter):
         """
         data: JSONType = {"priority": 1, "from_prediction_ids": {}}
         if nutrient_prediction is None:
-            # If we don't detect nutrient mention + values, there are lower chances
-            # that the image is a nutrition table, so we give it lower priority
+            # If we don't detect nutrient mention + values, there are lower
+            # chances that the image is a nutrition table, so we give it lower
+            # priority
             data["priority"] = 2
         else:
             # Save which nutrient prediction we used
@@ -1355,7 +1366,8 @@ class NutritionImageImporter(InsightImporter):
         # original orientation is not correct
         data["rotation"] = image_orientation_prediction.data["rotation"]
 
-        # Only add crop information if we detect a single `nutrition-table` object
+        # Only add crop information if we detect a single `nutrition-table`
+        # object
         if nutrition_table_predictions and len(nutrition_table_predictions) == 1:
             nutrition_table_prediction = nutrition_table_predictions[0]
             data["bounding_box"] = nutrition_table_prediction["bounding_box"]
@@ -1531,7 +1543,8 @@ class PackagingImporter(InsightImporter):
         }
 
         if not product:
-            # Predictions are always valid when product check is disabled (product=None)
+            # Predictions are always valid when product check is disabled
+            # (product=None)
             return True
 
         return not any(
@@ -1662,11 +1675,10 @@ def import_product_predictions(
                 .where(
                     # Delete all predictions with the same barcode,
                     # server_type, source_image and type but with a different
-                    # predictor_version
-                    # We need a custom SQL query with 'IS DISTINCT FROM'
-                    # as otherwise null values are considered specially when using
-                    # standard '!=' operator
-                    # See https://www.postgresql.org/docs/current/functions-comparison.html
+                    # predictor_version We need a custom SQL query with 'IS
+                    # DISTINCT FROM' as otherwise null values are considered
+                    # specially when using standard '!=' operator. See
+                    # https://www.postgresql.org/docs/current/functions-comparison.html
                     SQL(
                         "prediction.barcode = %s AND "
                         "prediction.server_type = %s AND "

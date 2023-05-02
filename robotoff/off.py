@@ -786,9 +786,10 @@ def send_image(
 
 
 def normalize_tag(value, lowercase=True):
-    """given a value normalize it to a tag (as in taxonomies)
+    """Given a value normalize it to a tag (as in taxonomies).
 
-    This means removing accents, lowercasing, replacing spaces with dashes, etc..
+    This means removing accents, lowercasing, replacing spaces with dashes,
+    etc..
     """
     # removing accents
     value = re.sub(r"[¢£¤¥§©ª®°²³µ¶¹º¼½¾×‰€™]", "-", value)

@@ -76,8 +76,8 @@ def save_image(
         uploaded_at = None
         # DB product check is disabled which means we shouldn't rely on having
         # a MongoDB instance running. As image size information is stored in
-        # MongoDB (in the `images` field), we download the image to know the image
-        # size
+        # MongoDB (in the `images` field), we download the image to know the
+        # image size
         logger.info("DB Product check disabled, downloading image to get image size")
         image = get_image_from_url(image_url, error_raise=False, session=http_session)
 

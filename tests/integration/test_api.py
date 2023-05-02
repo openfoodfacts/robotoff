@@ -224,7 +224,8 @@ def test_annotate_insight_authenticated(client, peewee_db):
         "description": "the annotation was saved",
     }
 
-    # For authenticated users we expect the insight to be validated directly, tracking the username of the annotator.
+    # For authenticated users we expect the insight to be validated directly,
+    # tracking the username of the annotator.
     with peewee_db:
         votes = list(AnnotationVote.select())
         assert len(votes) == 0
@@ -294,7 +295,8 @@ def test_annotate_insight_not_enough_votes(client, peewee_db):
         "status_code": 9,
     }
 
-    # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
+    # For non-authenticated users we expect the insight to not be validated,
+    # with only a vote being cast.
     with peewee_db:
         votes = list(AnnotationVote.select().dicts())
     assert len(votes) == 1
@@ -365,12 +367,14 @@ def test_annotate_insight_majority_annotation(client, peewee_db):
             .dicts()
             .iterator()
         )
-    # The insight should be annoted with '1', with a None username since this was resolved with an
-    # anonymous vote. `n_votes = 4, as -1 votes are not considered
+    # The insight should be annoted with '1', with a None username since this
+    # was resolved with an anonymous vote. `n_votes = 4, as -1 votes are not
+    # considered
     assert insight.items() > {"annotation": 1, "username": None, "n_votes": 4}.items()
 
 
-# This test checks for handling of cases where we have 2 votes for 2 different annotations.
+# This test checks for handling of cases where we have 2 votes for 2 different
+# annotations.
 def test_annotate_insight_opposite_votes(client, peewee_db):
     # Add pre-existing insight votes.
     with peewee_db:
@@ -417,13 +421,13 @@ def test_annotate_insight_opposite_votes(client, peewee_db):
             .dicts()
             .iterator()
         )
-    # The insight should be annoted with '-1', with a None username since this was resolved with an
-    # anonymous vote.
+    # The insight should be annoted with '-1', with a None username since this
+    # was resolved with an anonymous vote.
     assert insight.items() > {"annotation": -1, "username": None, "n_votes": 4}.items()
 
 
-# This test checks for handling of cases where we have 3 votes for one annotation,
-# but the follow-up has 2 votes.
+# This test checks for handling of cases where we have 3 votes for one
+# annotation, but the follow-up has 2 votes.
 def test_annotate_insight_majority_vote_overridden(client, peewee_db):
     # Add pre-existing insight votes.
     with peewee_db:
@@ -475,13 +479,14 @@ def test_annotate_insight_majority_vote_overridden(client, peewee_db):
             .dicts()
             .iterator()
         )
-    # The insight should be annoted with '0', with a None username since this was resolved with an
-    # anonymous vote.
+    # The insight should be annoted with '0', with a None username since this
+    # was resolved with an anonymous vote.
     assert insight.items() > {"annotation": -1, "username": None, "n_votes": 5}.items()
 
 
 def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db):
-    """Test that annotating first as anonymous, then, just after, as authenticated validate the anotation"""
+    """Test that annotating first as anonymous, then, just after, as
+    authenticated validate the anotation"""
 
     # mock because as we validate the insight, we will ask mongo for product
     mocker.patch(
@@ -506,7 +511,8 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
         "description": "the annotation vote was saved",
     }
 
-    # For non-authenticated users we expect the insight to not be validated, with only a vote being cast.
+    # For non-authenticated users we expect the insight to not be validated,
+    # with only a vote being cast.
     with peewee_db:
         votes = list(AnnotationVote.select())
         assert len(votes) == 1
@@ -545,7 +551,8 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
         "status": "updated",
         "status_code": 2,
     }
-    # We have the previous vote, but the last request should validate the insight directly
+    # We have the previous vote, but the last request should validate the
+    # insight directly
     with peewee_db:
         votes = list(AnnotationVote.select())
         assert len(votes) == 1  # this is the previous vote

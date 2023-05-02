@@ -58,10 +58,6 @@ with db.connection_context():
                 )
                 .tuples()
             )
-            # print(f"image IDs to delete: {image_ids_to_delete}")
-            # print(f"image prediction IDs to delete: {image_prediction_ids_to_delete}")
-            # print(f"logo annotation IDs to delete: {logo_annotation_ids_to_delete}")
-
             if logo_annotation_ids_to_delete:
                 LogoAnnotation.delete().where(
                     LogoAnnotation.id.in_(logo_annotation_ids_to_delete)

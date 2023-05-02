@@ -10,14 +10,15 @@ logger = get_logger(__name__)
 
 
 class UPCImageType(Enum):
-    """This enum is used to determine the type of image regarding UPC information."""
+    """This enum is used to determine the type of image regarding UPC
+    information."""
 
     # The image is a UPC Image which means that a UPC has a greater area in the
     # image than the threshold and thus it is a poor selected photo
     UPC_IMAGE = "UPC_IMAGE"
 
-    # The image is not a UPC Image but a UPC is present in the image, however it
-    # is too small to be considered a UPC Image
+    # The image is not a UPC Image but a UPC is present in the image, however
+    # it is too small to be considered a UPC Image
     SMALL_UPC = "SMALL_UPC"
 
     # The image is not a UPC Image and no UPC is present in the image

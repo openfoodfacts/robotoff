@@ -12,8 +12,8 @@ from .utils import generate_keyword_processor
 
 logger = get_logger(__name__)
 
-# Increase version ID when introducing breaking change: changes for which we want
-# old predictions to be removed in DB and replaced by newer ones
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
 
@@ -123,7 +123,8 @@ LABELS_REGEX = {
         ),
     ],
     "en:eu-agriculture": [
-        # The negative lookafter/lookbehind forbid matching "agriculture ue/non ue"
+        # The negative lookafter/lookbehind forbid matching "agriculture ue/non
+        # ue"
         OCRRegex(
             re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture", re.I),
             field=OCRField.full_text_contiguous,

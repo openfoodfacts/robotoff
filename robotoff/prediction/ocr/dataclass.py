@@ -328,14 +328,13 @@ class OCRFullTextAnnotation:
         # multiple pages
         self.text: str = "|".join(text_list)
         # Replace line break with space characters to allow matches spanning
-        # multiple lines
-        # We used to replace consecutive spaces (2+) with a single space so that
-        # spurious spaces don't prevent a match, but this is unnecessary: on
-        # several millions OCRs, only a few had double spaces, and it was images
-        # containing mixed arabic/latin language texts.
-        # This way, the word offsets (word.start_idx, word.end_idx) match the
-        # FullTextAnnotation text, and we can very easily determine the position
-        # of the matched words
+        # multiple lines We used to replace consecutive spaces (2+) with a
+        # single space so that spurious spaces don't prevent a match, but this
+        # is unnecessary: on several millions OCRs, only a few had double
+        # spaces, and it was images containing mixed arabic/latin language
+        # texts. This way, the word offsets (word.start_idx, word.end_idx)
+        # match the FullTextAnnotation text, and we can very easily determine
+        # the position of the matched words
         self.continuous_text: str = "|".join(
             t.replace("|", " ").replace("\n", " ") for t in text_list
         )
@@ -498,7 +497,8 @@ class Block:
                 text_list.append(" ")
             text_list.append(paragraph.text)
             # We add a space to the next paragraph if the current paragraph is
-            # not empty and if it doesn't already end with a space or line break
+            # not empty and if it doesn't already end with a space or line
+            # break
             add_space_prefix = bool(paragraph.text) and paragraph.text[-1] not in (
                 " ",
                 "\n",
@@ -763,8 +763,8 @@ class DetectedBreak:
         # SPACE: Regular space.
         # SURE_SPACE: Sure space (very wide).
         # EOL_SURE_SPACE: Line-wrapping break.
-        # HYPHEN: End-line hyphen that is not present in text; does not co-occur
-        # with SPACE, LEADER_SPACE, or LINE_BREAK.
+        # HYPHEN: End-line hyphen that is not present in text; does not
+        # co-occur with SPACE, LEADER_SPACE, or LINE_BREAK.
         # LINE_BREAK: Line break that ends a paragraph.
         self.type = data["type"]
         # True if break prepends the element.
@@ -843,7 +843,8 @@ class BoundingPoly:
             |    |
             0----3
 
-        See https://cloud.google.com/vision/docs/reference/rest/v1/images/annotate#Block
+        See
+        https://cloud.google.com/vision/docs/reference/rest/v1/images/annotate#Block
         for more details.
 
         We first select the two higher vertices of the image (lower y-values),

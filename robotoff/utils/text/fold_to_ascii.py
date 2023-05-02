@@ -1404,13 +1404,11 @@ translate_table_without_insertion_deletion = TranslateTableWithoutInsertionDelet
 
 
 def fold_without_insertion_deletion(string: str):
-    """Replace.
+    """Replace non-ascii characters with their ascii equivalent.
 
-    Unmapped characters should be replaced with empty string by default, or other
-    replacement if provided.
-
-    All astral plane characters are always removed, even if a replacement is
-    provided.
+    If there is no ascii-equivalent character, keep the character. This way,
+    we don't perform any deletion or insertion: the folded string doesn't
+    change length.
     """
     if string is None:
         return ""
@@ -1428,8 +1426,8 @@ def fold_without_insertion_deletion(string: str):
 def fold(string: str, replacement: str = "") -> str:
     """Fold string to ASCII.
 
-    Unmapped characters should be replaced with empty string by default, or other
-    replacement if provided.
+    Unmapped characters should be replaced with empty string by default, or
+    other replacement if provided.
 
     All astral plane characters are always removed, even if a replacement is
     provided.

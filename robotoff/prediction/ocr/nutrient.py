@@ -5,8 +5,8 @@ from robotoff.types import JSONType, Prediction, PredictionType
 
 from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
-# Increase version ID when introducing breaking change: changes for which we want
-# old predictions to be removed in DB and replaced by newer ones
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
 
@@ -212,7 +212,8 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
             }
 
             if nutrient_name != "nutrient_value":
-                # Language available for all nutrient fields except 'nutrient_value'
+                # Language available for all nutrient fields except
+                # 'nutrient_value'
                 group_dict = {
                     k: v for k, v in match.groupdict().items() if v is not None
                 }

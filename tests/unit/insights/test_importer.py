@@ -1224,8 +1224,8 @@ class TestPackagingImporter:
             is expected
         )
         if reverse:
-            # assert we get the opposite result by switching candidate and reference
-            # for the test cases where we expect it to be valid
+            # assert we get the opposite result by switching candidate and
+            # reference for the test cases where we expect it to be valid
             assert (
                 PackagingImporter.discard_packaging_element(
                     ref_element, candidate_element, taxonomies
@@ -1320,7 +1320,8 @@ class TestNutritionImageImporter:
         nutrient_mention_prediction.data = {
             "mentions": {"sugar": [{"raw": "sucre", "languages": ["fr"]}]}
         }
-        # Only 1 mention is not enough to generate a candidate (at least 5 are required)
+        # Only 1 mention is not enough to generate a candidate (at least 5 are
+        # required)
         assert (
             list(
                 NutritionImageImporter.generate_candidates_for_image(
@@ -1349,7 +1350,8 @@ class TestNutritionImageImporter:
             == []
         )
 
-        # we don't have any enough nutrient_value (3 are required), so we don't generate candidate
+        # we don't have any enough nutrient_value (3 are required), so we don't
+        # generate candidate
         nutrient_mention_prediction.data = {
             "mentions": {
                 **base_mentions_without_nutrient_values,
@@ -1365,7 +1367,8 @@ class TestNutritionImageImporter:
             == []
         )
 
-        # we have enough nutrient values but we don't have any energy mention (kJ/kcal), so we don't generate candidate
+        # we have enough nutrient values but we don't have any energy mention
+        # (kJ/kcal), so we don't generate candidate
         nutrient_mention_prediction.data = {
             "mentions": {
                 **base_mentions_without_nutrient_values,
@@ -1400,7 +1403,8 @@ class TestNutritionImageImporter:
         nutrition_table_predictions = [
             {"bounding_box": bounding_box, "score": crop_score}
         ]
-        # we have 5 nutrient mentions, 3 nutrient values (including 1 energy value): we generate a candidate
+        # we have 5 nutrient mentions, 3 nutrient values (including 1 energy
+        # value): we generate a candidate
         insights = list(
             NutritionImageImporter.generate_candidates_for_image(
                 nutrient_mention_prediction,
@@ -1467,8 +1471,8 @@ class TestNutritionImageImporter:
                     source_image=source_image,
                 )
 
-        # We predict a nutrition image for language 'fr' and it's the main language of the product,
-        # so we expect a candidate to be generated
+        # We predict a nutrition image for language 'fr' and it's the main
+        # language of the product, so we expect a candidate to be generated
         selected = list(
             FakeNutritionImageImporter.generate_candidates(
                 Product({"lang": "fr"}),
@@ -1483,8 +1487,8 @@ class TestNutritionImageImporter:
         assert insight.type == InsightType.nutrition_image
         assert insight.source_image == source_image
 
-        # We predict a nutrition image for language 'fr' but the main language of the product
-        # is 'en', so we expect that no candidate is generated
+        # We predict a nutrition image for language 'fr' but the main language
+        # of the product is 'en', so we expect that no candidate is generated
         assert (
             list(
                 FakeNutritionImageImporter.generate_candidates(

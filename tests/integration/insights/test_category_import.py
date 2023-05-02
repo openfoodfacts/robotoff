@@ -132,7 +132,8 @@ class TestCategoryImporter:
     )
     def test_import_one_different_value_tag(self, predictions):
         """Test when a more precise category is available as prediction: the
-        prediction should be used as insight instead of the less precise one."""
+        prediction should be used as insight instead of the less precise
+        one."""
         import_result = self._run_import(predictions)
         assert import_result.created_insights_count() == 1
         assert import_result.updated_insights_count() == 0

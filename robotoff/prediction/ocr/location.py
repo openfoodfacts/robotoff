@@ -13,8 +13,8 @@ from robotoff.utils.text import KeywordProcessor, strip_accents_v1
 
 from .dataclass import OCRResult
 
-# Increase version ID when introducing breaking change: changes for which we want
-# old predictions to be removed in DB and replaced by newer ones
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
 
@@ -22,13 +22,13 @@ PREDICTOR_VERSION = "1"
 class City:
     """A city, storing its name, postal code and GPS coordinates."""
 
+    # The city name, lower case, no accents, with special characters replaced
+    # with spaces
     name: str
-    """The city name, lower case, no accents, with special characters replaced with
-    spaces."""
+    # The city's postal code. The format depends on the country
     postal_code: str
-    """The city's postal code. The format depends on the country."""
+    # The GPS coordinates of the city as a tuple of two floats, or None
     coordinates: Optional[tuple[float, float]]
-    """The GPS coordinates of the city as a tuple of two floats, or None."""
 
 
 def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
@@ -38,26 +38,29 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
     https://datanova.legroupe.laposte.fr/explore/dataset/laposte_hexasmal/. The
     source file must be a gzipped-JSON.
 
-    The returned set of cities can contain multiple items with the same name: multiple
-    cities can exist with the same name but a different postal code.
+    The returned set of cities can contain multiple items with the same name:
+    multiple cities can exist with the same name but a different postal code.
 
-    Also, the original dataset may contain multiple items with are not unique with
-    regard to the :class:`City` class' attributes: there are additional fields in the
-    original dataset which are ignored here. These duplicates are removed.
+    Also, the original dataset may contain multiple items with are not unique
+    with regard to the :class:`City` class' attributes: there are additional
+    fields in the original dataset which are ignored here. These duplicates are
+    removed.
 
     Args:
-        source (Path or BinaryIO or None, optional, default None): Path to the dataset
-            file or open binary stream. If None, the dataset file contained in the
-            repo will be used.
+        source (Path or BinaryIO or None, optional, default None): Path to the
+        dataset
+            file or open binary stream. If None, the dataset file contained in
+            the repo will be used.
 
     Returns:
         set of City: List of all French cities as `City` objects.
 
     Raises:
-        ValueError: if a postal code is not a valid French postal code (5 digits).
+        ValueError: if a postal code is not a valid French postal code (5
+        digits).
     """
-    # JSON file contains a lot of repeated data. An alternative could be to use the
-    # CSV file.
+    # JSON file contains a lot of repeated data. An alternative could be to use
+    # the CSV file.
     if source is None:
         source = settings.OCR_CITIES_FR_PATH
 
@@ -86,25 +89,30 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
 
 
 class AddressExtractor:
-    """Text processor to extract French addresses based on city name and postal code.
+    """Text processor to extract French addresses based on city name and postal
+    code.
 
     The main entry point is the `extract_addresses()` method. An `OCRResult` is
     searched for addresses in the following way:
 
-    * The text is prepared by taking it lower case, removing accents, and replacing
-      the characters ' and - with " " (space), as city names must follow this format.
+    * The text is prepared by taking it lower case, removing accents, and
+      replacing the characters ' and - with " " (space), as city names must
+      follow this format.
     * City names are searched for in the text.
-    * For each city name found, its corresponding postal code is searched for in the
-      surrounding text, at a maximum distance of `postal_code_search_distance`.
+    * For each city name found, its corresponding postal code is searched for
+      in the surrounding text, at a maximum distance of
+      `postal_code_search_distance`.
     * If the postal code is found, the match is added to the list of returned
-      addresses, along with an extract of the text surrounding the address,
-      at a maximum distance of `text_extract_distance`.
+      addresses, along with an extract of the text surrounding the address, at
+      a maximum distance of `text_extract_distance`.
 
     Args:
         cities (iterable of City): Set of cities to search for.
-        postal_code_search_distance (int, optional, default 10): Maximum distance
+        postal_code_search_distance (int, optional, default 10): Maximum
+        distance
             from a city name to search for a postal code.
-        text_extract_distance (int, optional, default 30): Amount of text surrounding a
+        text_extract_distance (int, optional, default 30): Amount of text
+        surrounding a
             detected address to extract for returning.
     """
 
@@ -129,9 +137,9 @@ class AddressExtractor:
             content (OCRResult or str): a string or the OCR result to process.
 
         Returns:
-            list of Prediction: List of addresses extracted from the text. Each entry
-            is a dictionary with the items: country_code (always "fr"), city_name,
-            postal_code and text_extract.
+            list of Prediction: List of addresses extracted from the text. Each
+            entry is a dictionary with the items: country_code (always "fr"),
+            city_name, postal_code and text_extract.
         """
         if isinstance(content, OCRResult):
             text = self.get_text(content)
@@ -198,9 +206,9 @@ class AddressExtractor:
             text (str): Text to search city names in.
 
         Returns:
-            list of (City, int, int): The list of `City`s which name was found in the
-            text, with the start and end indices of their names locations in the
-            text. Empty list if none found.
+            list of (City, int, int): The list of `City`s which name was found
+            in the text, with the start and end indices of their names
+            locations in the text. Empty list if none found.
         """
         return self.cities_processor.extract_keywords(text, span_info=True)
 
@@ -212,20 +220,20 @@ class AddressExtractor:
         The postal code is searched at a maximum distance of
         `postal_code_search_distance` from the city name.
 
-        Assumes digit-only postal code, allows non-digit directly next to it. For
-        example, for the city "paris" with postal code "75000", "75000 paris" and
-        "fr75000 paris" will match.
+        Assumes digit-only postal code, allows non-digit directly next to it.
+        For example, for the city "paris" with postal code "75000", "75000
+        paris" and "fr75000 paris" will match.
 
         Args:
-            text (str): The OCR result text.
-            city (City): The `City` for which to search the postal code.
-            city_start (int): Start index of the city name match in `text`.
-            city_end (int): End index of the city name match in `text`.
+            text (str): The OCR result text. city (City): The `City` for which
+            to search the postal code. city_start (int): Start index of the
+            city name match in `text`. city_end (int): End index of the city
+            name match in `text`.
 
         Returns:
-            (str, int, int) or None: If the `City`'s postal code was found close to
-            the city name match, it is returned along with its start and end indices
-            in the text. If it was not found, returns None.
+            (str, int, int) or None: If the `City`'s postal code was found
+            close to the city name match, it is returned along with its start
+            and end indices in the text. If it was not found, returns None.
         """
         if not city.postal_code.isdigit():
             logger = get_logger(

@@ -56,7 +56,8 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 
     On each image import, Robotoff performs the following tasks:
 
-    1. Generates various predictions based on the OCR-extracted text from the image.
+    1. Generates various predictions based on the OCR-extracted text from the
+       image.
     2. Extracts the nutriscore prediction based on the nutriscore ML model.
     3. Triggers the 'object_detection' task
     4. Stores the imported image metadata in the Robotoff DB.
@@ -418,8 +419,8 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
                 )
             logger.info("%s logos found for image %s", len(logos), source_image)
         else:
-            # Logos already exist for this image prediction, we just make sure embeddings
-            # are in DB as well
+            # Logos already exist for this image prediction, we just make sure
+            # embeddings are in DB as well
             logos = [
                 existing_logo
                 for existing_logo in existing_logos

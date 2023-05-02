@@ -146,13 +146,13 @@ class Taxonomy:
         return self.nodes.keys()
 
     def find_deepest_nodes(self, nodes: list[TaxonomyNode]) -> list[TaxonomyNode]:
-        """Given a list of nodes, returns the list of nodes where all the parents
-        within the list have been removed.
+        """Given a list of nodes, returns the list of nodes where all the
+        parents within the list have been removed.
 
         For example, for a taxonomy, 'fish' -> 'salmon' -> 'smoked-salmon':
 
-        ['fish', 'salmon'] -> ['salmon']
-        ['fish', 'smoked-salmon'] -> [smoked-salmon']
+        ['fish', 'salmon'] -> ['salmon'] ['fish', 'smoked-salmon'] ->
+        [smoked-salmon']
         """
         excluded: set[str] = set()
 

@@ -35,8 +35,8 @@ def _get_default_scheme() -> str:
 
 
 def _get_tld():
-    # `ROBOTOFF_TLD` can be used to overwrite the Product Opener top level domain used.
-    # If empty, the tld will be inferred from `ROBOTOFF_INSTANCE`
+    # `ROBOTOFF_TLD` can be used to overwrite the Product Opener top level
+    # domain used. If empty, the tld will be inferred from `ROBOTOFF_INSTANCE`
     return os.environ.get("ROBOTOFF_TLD", _instance_tld())
 
 
@@ -170,7 +170,8 @@ CATEGORY_MATCHER_INTERSECT = (
     CATEGORY_MATCHER_DIR / "category_ingredient_intersect.json.gz"
 )
 
-# Taxonomies are huge JSON files that describe many concepts in OFF, in many languages, with synonyms. Those are the full version of taxos.
+# Taxonomies are huge JSON files that describe many concepts in OFF, in many
+# languages, with synonyms. Those are the full version of taxos.
 
 TAXONOMY_DIR = DATA_DIR / "taxonomies"
 TAXONOMY_PATHS = {
@@ -208,7 +209,8 @@ REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 
-# Elastic Search is used for simple category prediction, spellchecking and logo classification.
+# Elastic Search is used for simple category prediction, spellchecking and logo
+# classification.
 
 ELASTIC_HOST = os.environ.get("ELASTIC_HOST", "localhost")
 ELASTIC_USER = os.environ.get("ELASTIC_USER", "elastic")
@@ -228,8 +230,8 @@ IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
 _slack_token = os.environ.get("SLACK_TOKEN", "")
 
 
-# Returns the slack token to use for posting alerts if the current instance is the 'prod' instance.
-# For all other instances, the empty string is returned.
+# Returns the slack token to use for posting alerts if the current instance is
+# the 'prod' instance. For all other instances, the empty string is returned.
 def slack_token() -> str:
     if _robotoff_instance() == "prod":
         if _slack_token != "":
@@ -301,8 +303,9 @@ MODELS_DIR = PROJECT_DIR / "models"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
 
-# We require a minimum of 15 occurences of the brands already on OFF to perform the extraction. This reduces false positive.
-# We require a minimum of 4 characters for the brand
+# We require a minimum of 15 occurences of the brands already on OFF to perform
+# the extraction. This reduces false positive. We require a minimum of 4
+# characters for the brand
 
 BRAND_MATCHING_MIN_LENGTH = 4
 BRAND_MATCHING_MIN_COUNT = 15
@@ -323,12 +326,13 @@ INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
 
 # Disable all product and image existence and validity check:
 # - during insight generation/import (in robotoff.insights.importer)
-# - when importing a new image through a webhook call (in robotoff.workers.tasks.import_image)
-# This is useful when testing locally, as we don't need the product to be in MongoDB to import
-# an image and generate insights.
+# - when importing a new image through a webhook call (in
+# robotoff.workers.tasks.import_image) This is useful when testing locally, as
+# we don't need the product to be in MongoDB to import an image and generate
+# insights.
 ENABLE_PRODUCT_CHECK = bool(int(os.environ.get("ENABLE_PRODUCT_CHECK", 1)))
 
 
-# Number of rq workers running, this is used to know the number of high priority queues that
-# exist
+# Number of rq workers running, this is used to know the number of high
+# priority queues that exist
 NUM_RQ_WORKERS = int(os.environ.get("NUM_RQ_WORKERS", 4))

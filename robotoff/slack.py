@@ -52,7 +52,8 @@ class NotifierInterface:
 
 
 class NotifierFactory:
-    """NotifierFactory is responsible for creating a notifier to post notifications to."""
+    """NotifierFactory is responsible for creating a notifier to post
+    notifications to."""
 
     @staticmethod
     def get_notifier() -> NotifierInterface:
@@ -73,7 +74,8 @@ class NotifierFactory:
 
 
 def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
-    """Determines whether the given flagged image should be considered as sensitive."""
+    """Determines whether the given flagged image should be considered as
+    sensitive."""
     is_human: bool = flagged_label in {
         "face",
         "head",
@@ -170,7 +172,8 @@ class ImageModerationNotifier(NotifierInterface):
         source_image: str,
         product_id: ProductIdentifier,
     ):
-        """Send image to the moderation server so that a human can moderate it"""
+        """Send image to the moderation server so that a human can moderate
+        it"""
         if not predictions:
             return
         image_url = settings.BaseURLProvider.image_url(
@@ -341,7 +344,8 @@ class SlackNotifier(NotifierInterface):
 
 
 class NoopSlackNotifier(SlackNotifier):
-    """NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions of Robotoff."""
+    """NoopSlackNotifier is a NOOP SlackNotifier used in dev/local executions
+    of Robotoff."""
 
     def __init__(self):
         super().__init__("")
@@ -352,7 +356,8 @@ class NoopSlackNotifier(SlackNotifier):
         channel: str,
         **kwargs,
     ):
-        """Overrides the actual posting to Slack with logging of the args that would've been posted."""
+        """Overrides the actual posting to Slack with logging of the args that
+        would've been posted."""
         logger.info(
             f"Alerting on slack channel '{channel}', with message:\n{blocks}\nand additional args:\n{kwargs}"
         )

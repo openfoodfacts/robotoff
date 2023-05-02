@@ -1,14 +1,17 @@
 """
-This script is used to generate the datasets for the 'neural' category ML model.
-For example: https://github.com/openfoodfacts/openfoodfacts-ai/releases/tag/dataset-category-2020-06-30
+This script is used to generate the datasets for the 'neural' category ML
+model. For example:
+https://github.com/openfoodfacts/openfoodfacts-ai/releases/tag/dataset-category-2020-06-30
 
-Usage:
-1. Use 'python -m robotoff download-dataset' to fetch the latest version of the PO data.
-2. Run 'python scripts/category_dataset.py' to construct the train/test/val datasets,
+Usage: 1. Use 'python -m robotoff download-dataset' to fetch the latest version
+of the PO data. 2. Run 'python scripts/category_dataset.py' to construct the
+train/test/val datasets,
    alongside the category/ingredient taxonomy dump.
 3. Gzip the train/test/val datasets.
-4. Upload all of the data (products.json.gz, generated and zipped files under 'datasets/category/') to
-   https://github.com/openfoodfacts/openfoodfacts-ai/releases/ with a description of what the data consists of.
+4. Upload all of the data (products.json.gz, generated and zipped files under
+   'datasets/category/') to
+   https://github.com/openfoodfacts/openfoodfacts-ai/releases/ with a
+   description of what the data consists of.
 """
 import json
 import os
@@ -136,7 +139,7 @@ def run(lang: Optional[str] = None):
 
 
 if __name__ == "__main__":
-    # By default generate the complete dataset - if specific language datasets are required,
-    # change the list to ('es', 'fr', 'en') etc.
+    # By default generate the complete dataset - if specific language datasets
+    # are required, change the list to ('es', 'fr', 'en') etc.
     for lang in (None,):
         run(lang=lang)

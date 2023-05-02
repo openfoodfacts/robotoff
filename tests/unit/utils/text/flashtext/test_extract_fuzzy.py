@@ -46,8 +46,9 @@ class TestExtractFuzzy(unittest.TestCase):
 
     def test_correct_keyword_on_addition(self):
         """
-        Test for simple additions using the levensthein function
-        We ensure we end up on the right node in the trie when starting from the current node
+        Test for simple additions using the levensthein function We ensure we
+        end up on the right node in the trie when starting from the current
+        node
         """
         keyword_proc = KeywordProcessor()
         for keyword in (("colour here", "couleur ici"), ("and heere", "et ici")):
@@ -75,8 +76,9 @@ class TestExtractFuzzy(unittest.TestCase):
 
     def test_correct_keyword_on_deletion(self):
         """
-        Test for simple deletions using the levensthein function
-        We ensure we end up on the right node in the trie when starting from the current node
+        Test for simple deletions using the levensthein function We ensure we
+        end up on the right node in the trie when starting from the current
+        node
         """
         keyword_proc = KeywordProcessor()
         keyword_proc.add_keyword("skype")
@@ -93,8 +95,9 @@ class TestExtractFuzzy(unittest.TestCase):
 
     def test_correct_keyword_on_substitution(self):
         """
-        Test for simple substitions using the levensthein function
-        We ensure we end up on the right node in the trie when starting from the current node
+        Test for simple substitions using the levensthein function We ensure we
+        end up on the right node in the trie when starting from the current
+        node
         """
         keyword_proc = KeywordProcessor()
         for keyword in (("skype", "messenger"),):
@@ -111,8 +114,8 @@ class TestExtractFuzzy(unittest.TestCase):
 
     def test_extract_cost_spread_over_multiple_words(self):
         """
-        Here we try to extract a keyword made of different words
-        the current cost should be decreased by one when encountering 'maade' (1 insertion)
+        Here we try to extract a keyword made of different words the current
+        cost should be decreased by one when encountering 'maade' (1 insertion)
         and again by one when encountering 'multple' (1 deletion)
         """
         keyword_proc = KeywordProcessor()
@@ -142,9 +145,10 @@ class TestExtractFuzzy(unittest.TestCase):
 
     def test_intermediate_match(self):
         """
-        In this test, we have an intermediate fuzzy match with a keyword (the shortest one)
-        We first check that we extract the longest keyword if the max_cost is big enough
-        Then we retry with a smaller max_cost, excluding the longest, and check that the shortest is extracted
+        In this test, we have an intermediate fuzzy match with a keyword (the
+        shortest one) We first check that we extract the longest keyword if the
+        max_cost is big enough Then we retry with a smaller max_cost, excluding
+        the longest, and check that the shortest is extracted
         """
         keyword_proc = KeywordProcessor()
         keyword_proc.add_keyword("keyword")
@@ -165,10 +169,11 @@ class TestExtractFuzzy(unittest.TestCase):
 
     def test_intermediate_match_then_no_match(self):
         """
-        In this test, we have an intermediate fuzzy match with a keyword (the shortest one)
-        We check that we get only the shortest keyword when going further into fuzzy match is too
-        expansive to get the longest keyword. We also extract a classic match later in the string,
-        to check that the inner data structures all have a correct state
+        In this test, we have an intermediate fuzzy match with a keyword (the
+        shortest one) We check that we get only the shortest keyword when going
+        further into fuzzy match is too expansive to get the longest keyword.
+        We also extract a classic match later in the string, to check that the
+        inner data structures all have a correct state
         """
         keyword_proc = KeywordProcessor()
         keyword_proc.add_keyword("keyword")

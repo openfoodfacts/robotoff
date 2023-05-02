@@ -153,10 +153,10 @@ def categorize(
 ) -> None:
     """Predict product categories based on the neural category classifier.
 
-    deepest_only: controls whether the returned predictions should only contain the deepmost
-    categories for a predicted taxonomy chain.
-    For example, if we predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product,
-    setting deepest_only=True will return 'beans'."""
+    deepest_only: controls whether the returned predictions should only contain
+    the deepmost categories for a predicted taxonomy chain. For example, if we
+    predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product, setting
+    deepest_only=True will return 'beans'."""
     from robotoff.off import get_product
     from robotoff.prediction.category.neural.category_classifier import (
         CategoryClassifier,
@@ -466,9 +466,8 @@ def run_object_detection_model(
 
 @app.command()
 def init_elasticsearch(load_data: bool = True) -> None:
-    """
-    This command is used for manual insertion of the Elasticsearch data and/or indexes
-    for products.
+    """This command is used for manual insertion of the Elasticsearch data
+    and/or indexes for products.
     """
     from robotoff.elasticsearch import get_es_client
     from robotoff.elasticsearch.export import ElasticsearchExporter
@@ -761,7 +760,8 @@ def import_image_webhook(
     ocr_url = image_url.replace(".jpg", ".json")
     barcode = get_barcode_from_url(image_url)
 
-    # Use `api` alias instead of localhost if we're running in a docker container
+    # Use `api` alias instead of localhost if we're running in a docker
+    # container
     domain = (
         "http://localhost:5500"
         if bool(os.environ.get("IN_DOCKER_CONTAINER", False))

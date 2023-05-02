@@ -103,7 +103,8 @@ TRANSLATION_STORE.load()
 def get_server_type_from_req(
     req: falcon.Request, default: ServerType = ServerType.off
 ) -> ServerType:
-    """Get `ServerType` value from POST x-www-form-urlencoded or GET requests."""
+    """Get `ServerType` value from POST x-www-form-urlencoded or GET
+    requests."""
     server_type_str = req.get_param("server_type")
 
     if server_type_str is None:
@@ -118,7 +119,8 @@ def get_server_type_from_req(
 def _get_skip_voted_on(
     auth: Optional[OFFAuthentication], device_id: str
 ) -> SkipVotedOn:
-    """Helper function for constructing SkipVotedOn objects based on request params."""
+    """Helper function for constructing SkipVotedOn objects based on request
+    params."""
     if not auth:
         return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
 
@@ -130,7 +132,8 @@ def _get_skip_voted_on(
 
 
 ###########
-# IMPORTANT: remember to update documentation at doc/references/api.yml if you change API
+# IMPORTANT: remember to update documentation at doc/references/api.yml if you
+# change API
 ###########
 
 
@@ -940,10 +943,12 @@ class ImageLogoAnnotateResource:
 
 class ImageLogoUpdateResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        """Bulk update logo annotations: change type and value of logos that have specific
-        types and values.
+        """Bulk update logo annotations: change type and value of logos that
+        have specific types and values.
 
-        Because this endpoint mass-update annotations, leave it out of API documentation."""
+        Because this endpoint mass-update annotations, leave it out of API
+        documentation.
+        """
         source_value = req.get_param("source_value", required=True)
         source_type = req.get_param("source_type", required=True)
         target_value = req.get_param("target_value", required=True)

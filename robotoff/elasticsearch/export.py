@@ -96,13 +96,15 @@ class ElasticsearchExporter:
             self.load_index(index)
 
     def export_index_data(self) -> None:
-        """Given the index to export data for, this function removes existing data and exports a newer version.
+        """Given the index to export data for, this function removes existing
+        data and exports a newer version.
 
         .. warning: right now, we delete then recreate the index.
            This means that as this method runs,
-           some request might be silently handled erroneously (with a partial index).
-           This is not a problem right now, as we don't have *real-time* requests,
-           but only async ones for categories.
+           some request might be silently handled erroneously (with a partial
+           index).
+           This is not a problem right now, as we don't have *real-time*
+           requests, but only async ones for categories.
         """
         logger.info("Deleting existing product data...")
         resp = self.es_client.delete_by_query(

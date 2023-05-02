@@ -38,8 +38,8 @@ class SkipVotedType(Enum):
 
 
 class SkipVotedOn(NamedTuple):
-    """A helper class to specify whether a voted-on insight should be dropped from
-    the get_insights results."""
+    """A helper class to specify whether a voted-on insight should be dropped
+    from the get_insights results."""
 
     by: SkipVotedType
     id: str
@@ -356,23 +356,22 @@ def save_annotation(
     """Saves annotation either by using a single response as ground truth or
     by using several responses.
 
-    If annotation == -1 (ignore), we consider the annotation as a vote, so
-    that we don't return the insight to the user again.
-    If there are >= 2 votes on one of the 2 other possible values (0/1),
-    including the vote in process, we set the annotation value of the largest
-    voting group. The only exception is when both groups >= 2 votes, in which
-    case we mark the insight as invalid (annotation=-1).
-    Note that `annotation=-1` has two different meanings here: if it's a vote,
-    we consider it as a "ignore", and if it's the insight annotation value we
-    consider the insight as invalid, so that it's not available for annotation
-    again.
+    If annotation == -1 (ignore), we consider the annotation as a vote, so that
+    we don't return the insight to the user again. If there are >= 2 votes on
+    one of the 2 other possible values (0/1), including the vote in process, we
+    set the annotation value of the largest voting group. The only exception is
+    when both groups >= 2 votes, in which case we mark the insight as invalid
+    (annotation=-1). Note that `annotation=-1` has two different meanings here:
+    if it's a vote, we consider it as a "ignore", and if it's the insight
+    annotation value we consider the insight as invalid, so that it's not
+    available for annotation again.
 
     :param insight_id: The ID of the insight
     :param annotation: The annotation, either -1, 0, or 1
     :param device_id: Unique identifier of the device, see
       `device_id_from_request`
-    :param update: If True, perform the update on Product Opener if annotation=1,
-      otherwise only save the annotation (default: True)
+    :param update: If True, perform the update on Product Opener if
+      annotation=1, otherwise only save the annotation (default: True)
     :param data: Optional additional data, required for some insight types
     :param auth: User authentication data, it is expected to be None if
         `trusted_annotator=False` (=anonymous vote)
@@ -427,22 +426,26 @@ def save_annotation(
                 raise e
 
         if existing_votes:
-            # If the top annotation has 3 or more votes, consider applying it to the insight.
+            # If the top annotation has 3 or more votes, consider applying it
+            # to the insight.
             if existing_votes[0].num_votes >= 3:
                 annotation = existing_votes[0].value
                 verified = True
 
             # But first check for the following cases:
-            #  1) The 1st place annotation has > 2 votes, and the 2nd place annotation has >= 2 votes.
+            #  1) The 1st place annotation has > 2 votes, and the 2nd place
+            #     annotation has >= 2 votes.
             #  2) 1st place and 2nd place have 2 votes each.
             #
-            # In both cases, we consider this an ambiguous result and mark it with 'I don't know'.
+            # In both cases, we consider this an ambiguous result and mark it
+            # with 'I don't know'.
             if (
                 existing_votes[0].num_votes >= 2
                 and len(existing_votes) > 1
                 and existing_votes[1].num_votes >= 2
             ):
-                # This code credits the last person to contribute a vote with a potentially not their annotation.
+                # This code credits the last person to contribute a vote with
+                # a potentially not their annotation.
                 annotation = -1
                 verified = True
 

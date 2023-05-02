@@ -57,15 +57,16 @@ def run_object_detection_model(
     `image_prediction` table.
 
     An item with the corresponding `source_image` in the `image` table is
-    expected to exist. Nothing is done if an image prediction already exists
-    in DB for this image and model.
+    expected to exist. Nothing is done if an image prediction already exists in
+    DB for this image and model.
 
     :param model_name: name of the object detection model to use
     :param image: the input Pillow image
     :param image_model: the image in DB
     :param source_image: the source image path (used to fetch the image from
       `image` table)
-    :param threshold: the minimum object score above which we keep the object data
+    :param threshold: the minimum object score above which we keep the object
+        data
 
     :return: return None if the image does not exist in DB, or the created
       `ImagePrediction` otherwise

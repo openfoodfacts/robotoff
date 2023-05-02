@@ -181,7 +181,9 @@ def download_dataset(output_path: os.PathLike) -> str:
 
 
 def is_valid_dataset(dataset_path: Path) -> bool:
-    """Check the dataset integrity: readable end to end and with a minimum number of products.
+    """Check the dataset integrity: readable end to end and with a minimum
+    number of products.
+
     This is used to spot corrupted archive files."""
     dataset = ProductDataset(dataset_path)
     try:
@@ -356,7 +358,8 @@ class ProductStream:
                 projected_item = {k: item[k] for k in projection if k in item}
                 if projection is not None and "image_ids" in projection:
                     # image_ids field is infered from `images` field, and
-                    # `images` is not necessarily in projection, so compute it here
+                    # `images` is not necessarily in projection, so compute it
+                    # here
                     projected_item["image_ids"] = list(
                         key
                         for key in (item.get("images") or {}).keys()

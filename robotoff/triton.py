@@ -112,7 +112,8 @@ def serialize_byte_tensor(input_tensor):
     Returns
     -------
     serialized_bytes_tensor : np.array
-        The 1-D numpy array of type uint8 containing the serialized bytes in 'C' order.
+        The 1-D numpy array of type uint8 containing the serialized bytes in
+        'C' order.
     Raises
     ------
     InferenceServerException
@@ -123,8 +124,9 @@ def serialize_byte_tensor(input_tensor):
         return ()
 
     # If the input is a tensor of string/bytes objects, then must flatten those
-    # into a 1-dimensional array containing the 4-byte byte size followed by the
-    # actual element bytes. All elements are concatenated together in "C" order.
+    # into a 1-dimensional array containing the 4-byte byte size followed by
+    # the actual element bytes. All elements are concatenated together in "C"
+    # order.
     if (input_tensor.dtype == np.object_) or (input_tensor.dtype.type == np.bytes_):
         flattened_ls = []
         for obj in np.nditer(input_tensor, flags=["refs_ok"], order="C"):

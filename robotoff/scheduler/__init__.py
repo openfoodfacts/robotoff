@@ -90,8 +90,8 @@ def refresh_insights(with_deletion: bool = True) -> None:
       insights
 
     We only check insights and predictions that are older than the dump last
-    modification timestamp to avoid deleting items that were updated or created after
-    the dump generation.
+    modification timestamp to avoid deleting items that were updated or created
+    after the dump generation.
 
     :param with_deletion: if True perform delete operation on
         insights/predictions, defaults to True
@@ -214,7 +214,8 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
 
     Then save updated insight in DB.
 
-    :param product: the insight associated `Product` with up-to-date information.
+    :param product: the insight associated `Product` with up-to-date
+        information.
     :param insight: the `ProductInsight`
     :return: whether the insight was updated or not
     """
@@ -250,7 +251,8 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
         insight.unique_scans_n = product.unique_scans_n
 
     if updated_fields:
-        # Only update selected field with bulk_update and a list of fields to update
+        # Only update selected field with bulk_update and a list of fields to
+        # update
         ProductInsight.bulk_update([insight], fields=updated_fields)
 
     return bool(updated_fields)
@@ -293,7 +295,8 @@ def _download_product_dataset():
 
 # this job does no use database
 def _update_data():
-    """Refreshes the PO product dump and updates the Elasticsearch index data."""
+    """Refreshes the PO product dump and updates the Elasticsearch index
+    data."""
     try:
         _download_product_dataset()
     except requests.exceptions.RequestException:
@@ -341,24 +344,28 @@ def exception_listener(event):
         capture_exception(event.exception)
 
 
-# The scheduler is responsible for scheduling periodic work that Robotoff needs to perform.
+# The scheduler is responsible for scheduling periodic work that Robotoff
+# needs to perform.
 def run():
     # ensure influxdb database exists
     ensure_influx_database()
 
-    # This call needs to happen on every start of the scheduler to ensure we're not in
-    # the state where Robotoff is unable to perform tasks because of missing data.
+    # This call needs to happen on every start of the scheduler to ensure
+    # we're not in the state where Robotoff is unable to perform tasks because
+    # of missing data.
     _update_data()
 
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
 
-    # This job takes all of the newly added automatically-processable insights and sets the process_after field on them,
-    # indicating when these insights should be auto-applied.
+    # This job takes all of the newly added automatically-processable insights
+    # and sets the process_after field on them, indicating when these insights
+    # should be auto-applied.
     scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
 
-    # This job applies all of the automatically-processable insights that have not been applied yet.
+    # This job applies all of the automatically-processable insights that have
+    # not been applied yet.
     scheduler.add_job(
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
@@ -370,7 +377,8 @@ def run():
     # This job refreshes data needed to generate insights.
     scheduler.add_job(_update_data, "cron", day="*", hour="3", max_instances=1)
 
-    # This job updates the product insights state with respect to the latest PO dump by:
+    # This job updates the product insights state with respect to the latest PO
+    # dump by:
     # - Deleting non-annotated insights for deleted products and insights that
     #   are no longer applicable.
     # - Updating insight attributes.
@@ -382,7 +390,8 @@ def run():
         max_instances=1,
     )
 
-    # This job generates category insights using ElasticSearch from the last Product Opener data dump.
+    # This job generates category insights using ElasticSearch from the last
+    # Product Opener data dump.
     scheduler.add_job(
         generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
     )

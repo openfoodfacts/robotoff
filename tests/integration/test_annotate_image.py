@@ -168,8 +168,9 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
 
 
 def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mocker):
-    """This test will check that, given an image with a logo above the confidence threshold,
-    that is then fed into the ANN logos and labels model, we annotate properly a product.
+    """This test will check that, given an image with a logo above the
+    confidence threshold, that is then fed into the ANN logos and labels model,
+    we annotate properly a product.
     """
     barcode = "0000000000001"
     source_image = "/000/000/000/0001/2.jpg"

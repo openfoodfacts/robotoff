@@ -130,11 +130,12 @@ def remove_untaxonomized_values(value_tags: list[str], taxonomy: Taxonomy) -> li
 def transform_ingredients_input(
     ingredients: list[dict], taxonomy: Taxonomy
 ) -> list[str]:
-    # Only keep nodes of depth=1 (i.e. don't keep sub-ingredients)
-    # While sub-ingredients may be interesting for classification, enough signal is already
-    # should already be present in the main ingredient, and it makes it more difficult to
-    # take ingredient order into account (as we don't know if sub-ingredient #2 of
-    # ingredient #1 is more present than sub-ingredient #1 of ingredient #2)
+    # Only keep nodes of depth=1 (i.e. don't keep sub-ingredients) While
+    # sub-ingredients may be interesting for classification, enough signal is
+    # already should already be present in the main ingredient, and it makes it
+    # more difficult to take ingredient order into account (as we don't know if
+    # sub-ingredient #2 of ingredient #1 is more present than sub-ingredient #1
+    # of ingredient #2)
     return remove_untaxonomized_values(
         [get_tag(ingredient["id"]) for ingredient in ingredients], taxonomy
     )
@@ -202,7 +203,8 @@ def extract_ocr_ingredients(
     return sorted(set(matches), key=matches.index)
 
 
-# List of ingredients that are in the taxonomy but are not real ingredients and should be ignored
+# List of ingredients that are in the taxonomy but are not real ingredients and
+# should be ignored
 INGREDIENT_ID_EXCLUDE_LIST = {
     "en:n",
     "en:no1",
@@ -299,7 +301,8 @@ def build_ingredient_processor(
                 # combinations contains every synonyms for each token
                 # itertools.product gives every combination thereof
                 for combination in itertools.product(*combinations):
-                    # generate full ingredient name using one of the combinations
+                    # generate full ingredient name using one of the
+                    # combinations
                     name = " ".join(combination)
                     # As name_map values are sets, we're sure there are no
                     # duplicates

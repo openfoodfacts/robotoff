@@ -1,7 +1,7 @@
 """Copied and adapted from https://github.com/vi3k6i5/flashtext (MIT-licensed).
 
-Flashtext library is not maintained anymore, and we needed some bugs to be fixed
-(especially https://github.com/vi3k6i5/flashtext/issues/119).
+Flashtext library is not maintained anymore, and we needed some bugs to be
+fixed (especially https://github.com/vi3k6i5/flashtext/issues/119).
 """
 
 
@@ -19,11 +19,14 @@ class KeywordProcessor:
     Attributes:
         _keyword (str): Used as key to store keywords in trie dictionary.
             Defaults to '_keyword_'
-        non_word_boundaries (set(str)): Characters that will determine if the word is continuing.
+        non_word_boundaries (set(str)): Characters that will determine if the
+        word is continuing.
             Defaults to set([A-Za-z0-9_])
-        keyword_trie_dict (dict): Trie dict built character by character, that is used for lookup
+        keyword_trie_dict (dict): Trie dict built character by character, that
+        is used for lookup
             Defaults to empty dictionary
-        case_sensitive (boolean): if the search algorithm should be case sensitive or not.
+        case_sensitive (boolean): if the search algorithm should be case
+        sensitive or not.
             Defaults to False
 
     Examples:
@@ -36,19 +39,23 @@ class KeywordProcessor:
         >>> clean_names = ['new york', 'new york', 'san francisco']
         >>> for keyword_name, clean_name in zip(keyword_names, clean_names):
         >>>     keyword_processor.add_keyword(keyword_name, clean_name)
-        >>> keywords_found = keyword_processor.extract_keywords('I love SF and NY. new-york is the best.')
+        >>> keywords_found = keyword_processor.extract_keywords(
+                'I love SF and NY. new-york is the best.')
         >>> keywords_found
         >>> ['san francisco', 'new york', 'new york']
 
     Note:
-        * loosely based on `Aho-Corasick algorithm <https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm>`_.
-        * Idea came from this `Stack Overflow Question <https://stackoverflow.com/questions/44178449/regex-replace-is-taking-time-for-millions-of-documents-how-to-make-it-faster>`_.
+        * loosely based on `Aho-Corasick algorithm
+          <https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm>`_.
+        * Idea came from this `Stack Overflow Question
+          <https://stackoverflow.com/questions/44178449/regex-replace-is-taking-time-for-millions-of-documents-how-to-make-it-faster>`_.
     """
 
     def __init__(self, case_sensitive: bool = False):
         """
         Args:
-            case_sensitive (boolean): Keyword search should be case sensitive set or not.
+            case_sensitive (boolean): Keyword search should be case sensitive
+            set or not.
                 Defaults to False
         """
         self._keyword = "_keyword_"
@@ -77,7 +84,8 @@ class KeywordProcessor:
 
         Returns:
             status : bool
-                If word is present as it is in keyword_trie_dict then we return True, else False
+                If word is present as it is in keyword_trie_dict then we return
+                True, else False
 
         Examples:
             >>> keyword_processor.add_keyword('Big Apple')
@@ -98,7 +106,8 @@ class KeywordProcessor:
         return self._keyword in current_dict and len_covered == len(word)
 
     def __getitem__(self, word: str) -> Optional[str]:
-        """if word is present in keyword_trie_dict return the clean name for it.
+        """If word is present in keyword_trie_dict return the clean name for
+        it.
 
         Args:
             word : string
@@ -106,7 +115,8 @@ class KeywordProcessor:
 
         Returns:
             keyword : string
-                If word is present as it is in keyword_trie_dict then we return keyword mapped to it.
+                If word is present as it is in keyword_trie_dict then we return
+                keyword mapped to it.
 
         Examples:
             >>> keyword_processor.add_keyword('Big Apple', 'New York')
@@ -137,8 +147,9 @@ class KeywordProcessor:
                 keyword that you want to identify
 
             clean_name : Any
-                clean term for that keyword that you would want to get back in return or replace
-                if not provided, keyword will be used as the clean name also.
+                clean term for that keyword that you would want to get back in
+                return or replace if not provided, keyword will be used as the
+                clean name also.
 
         Examples:
             >>> keyword_processor['Big Apple'] = 'New York'
@@ -185,7 +196,8 @@ class KeywordProcessor:
                     # if character is not found, break out of the loop
                     current_dict = None  # type: ignore
                     break
-            # remove the characters from trie dict if there are no other keywords with them
+            # remove the characters from trie dict if there are no other
+            # keywords with them
             if current_dict and self._keyword in current_dict:
                 # we found a complete match for input keyword.
                 character_trie_list.append((self._keyword, current_dict))
@@ -205,7 +217,8 @@ class KeywordProcessor:
         return status
 
     def __iter__(self):
-        """Disabled iteration as get_all_keywords() is the right way to iterate"""
+        """Disabled iteration as get_all_keywords() is the right way to
+        iterate."""
         raise NotImplementedError("Please use get_all_keywords() instead")
 
     def set_non_word_boundaries(self, non_word_boundaries: set[str]) -> None:
@@ -237,8 +250,9 @@ class KeywordProcessor:
                 keyword that you want to identify
 
             clean_name : Any
-                clean term for that keyword that you would want to get back in return or replace
-                if not provided, keyword will be used as the clean name also.
+                clean term for that keyword that you would want to get back in
+                return or replace if not provided, keyword will be used as the
+                clean name also.
 
         Returns:
             status : bool
@@ -277,7 +291,8 @@ class KeywordProcessor:
         return self.__delitem__(keyword)
 
     def get_keyword(self, word: str) -> Optional[str]:
-        """if word is present in keyword_trie_dict return the clean name for it.
+        """If word is present in keyword_trie_dict return the clean name for
+        it.
 
         Args:
             word : string
@@ -285,7 +300,8 @@ class KeywordProcessor:
 
         Returns:
             keyword : string
-                If word is present as it is in keyword_trie_dict then we return keyword mapped to it.
+                If word is present as it is in keyword_trie_dict then we return
+                keyword mapped to it.
 
         Examples:
             >>> keyword_processor.add_keyword('Big Apple', 'New York')
@@ -338,7 +354,8 @@ class KeywordProcessor:
         """To add keywords from a dictionary
 
         Args:
-            keyword_dict (dict): A dictionary with `str` key and (list `str`) as value
+            keyword_dict (dict): A dictionary with `str` key and (list `str`)
+            as value
 
         Examples:
             >>> keyword_dict = {
@@ -364,7 +381,8 @@ class KeywordProcessor:
         """To remove keywords from a dictionary
 
         Args:
-            keyword_dict (dict): A dictionary with `str` key and (list `str`) as value
+            keyword_dict (dict): A dictionary with `str` key and (list `str`)
+            as value
 
         Examples:
             >>> keyword_dict = {
@@ -411,7 +429,8 @@ class KeywordProcessor:
             keyword_list (list(str)): List of keywords to remove
 
         Examples:
-            >>> keyword_processor.remove_keywords_from_list(["java", "python"]})
+            >>> keyword_processor.remove_keywords_from_list(
+                ["java", "python"]})
         Raises:
             AttributeError: If `keyword_list` is not a list.
 
@@ -425,7 +444,8 @@ class KeywordProcessor:
     def get_all_keywords(
         self, term_so_far: str = "", current_dict: Optional[dict] = None
     ) -> dict:
-        """Recursively builds a dictionary of keywords present in the dictionary
+        """Recursively builds a dictionary of keywords present in the
+        dictionary.
         And the clean name mapped to those keywords.
 
         Args:
@@ -436,8 +456,9 @@ class KeywordProcessor:
 
         Returns:
             terms_present : dict
-                A map of key and value where each key is a term in the keyword_trie_dict.
-                And value mapped to it is the clean name mapped to it.
+                A map of key and value where each key is a term in the
+                keyword_trie_dict. And value mapped to it is the clean name
+                mapped to it.
 
         Examples:
             >>> keyword_processor = KeywordProcessor()
@@ -469,21 +490,25 @@ class KeywordProcessor:
 
         Args:
             sentence (str): Line of text where we will search for keywords
-            span_info (bool): True if you need to span the boundaries where the extraction has been performed
-            max_cost (int): maximum levensthein distance to accept when extracting keywords
+            span_info (bool): True if you need to span the boundaries where the
+            extraction has been performed max_cost (int): maximum levensthein
+            distance to accept when extracting keywords
 
         Returns:
-            keywords_extracted (list(str)): List of terms/keywords found in sentence that match our corpus
+            keywords_extracted (list(str)): List of terms/keywords found in
+            sentence that match our corpus
 
         Examples:
             >>> from robotoff.utils.text import KeywordProcessor
             >>> keyword_processor = KeywordProcessor()
             >>> keyword_processor.add_keyword('Big Apple', 'New York')
             >>> keyword_processor.add_keyword('Bay Area')
-            >>> keywords_found = keyword_processor.extract_keywords('I love Big Apple and Bay Area.')
+            >>> keywords_found = keyword_processor.extract_keywords(
+                'I love Big Apple and Bay Area.')
             >>> keywords_found
             >>> ['New York', 'Bay Area']
-            >>> keywords_found = keyword_processor.extract_keywords('I love Big Aple and Baay Area.', max_cost=1)
+            >>> keywords_found = keyword_processor.extract_keywords(
+                'I love Big Aple and Baay Area.', max_cost=1)
             >>> keywords_found
             >>> ['New York', 'Bay Area']
         """
@@ -628,9 +653,8 @@ class KeywordProcessor:
         return [value[0] for value in keywords_extracted]
 
     def get_next_word(self, sentence: str) -> str:
-        """
-        Retrieve the next word in the sequence
-        Iterate in the string until finding the first char not in non_word_boundaries
+        """Retrieve the next word in the sequence Iterate in the string until
+        finding the first char not in non_word_boundaries
 
         Args:
             sentence (str): Line of text where we will look for the next word
@@ -653,18 +677,18 @@ class KeywordProcessor:
     def levensthein(
         self, word: str, max_cost: int = 2, start_node: Optional[dict] = None
     ):
-        """
-        Retrieve the nodes where there is a fuzzy match,
+        """Retrieve the nodes where there is a fuzzy match,
         via levenshtein distance, and with respect to max_cost
 
         Args:
-            word (str): word to find a fuzzy match for
-            max_cost (int): maximum levenshtein distance when performing the fuzzy match
-            start_node (dict): Trie node from which the search is performed
+            word (str): word to find a fuzzy match for max_cost (int): maximum
+            levenshtein distance when performing the fuzzy match start_node
+            (dict): Trie node from which the search is performed
 
         Yields:
             node, cost, depth (tuple): A tuple containing the final node,
-                                      the cost (i.e the distance), and the depth in the trie
+                                      the cost (i.e the distance), and the
+                                      depth in the trie
 
         Examples:
             >>> from robotoff.utils.text import KeywordProcessor
@@ -676,7 +700,8 @@ class KeywordProcessor:
             >>> keyword_processor = KeywordProcessor(case_sensitive=True
             >>> keyword_processor.add_keyword('Marie Blanc', 'Mary')
             >>> next(keyword_processor.levensthein('Mari', max_cost=1))
-            >>> ({' ': {'B': {'l': {'a': {'n': {'c': {'_keyword_': 'Mary'}}}}}}}, 1, 5)
+            >>> ({' ': {'B': {'l': {'a': {
+                'n': {'c': {'_keyword_': 'Mary'}}}}}}}, 1, 5)
         """
         start_node = start_node or self.keyword_trie_dict
         rows = range(len(word) + 1)

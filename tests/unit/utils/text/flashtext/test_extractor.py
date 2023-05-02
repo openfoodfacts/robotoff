@@ -21,9 +21,8 @@ class TestKeywordExtractor(unittest.TestCase):
 
     def test_extract_keywords(self):
         """For each of the test case initialize a new KeywordProcessor.
-        Add the keywords the test case to KeywordProcessor.
-        Extract keywords and check if they match the expected result for the test case.
-
+        Add the keywords the test case to KeywordProcessor. Extract keywords
+        and check if they match the expected result for the test case.
         """
         for test_id, test_case in enumerate(self.test_cases):
             keyword_processor = KeywordProcessor()
@@ -41,9 +40,8 @@ class TestKeywordExtractor(unittest.TestCase):
 
     def test_extract_keywords_case_sensitive(self):
         """For each of the test case initialize a new KeywordProcessor.
-        Add the keywords the test case to KeywordProcessor.
-        Extract keywords and check if they match the expected result for the test case.
-
+        Add the keywords the test case to KeywordProcessor. Extract keywords
+        and check if they match the expected result for the test case.
         """
         for test_id, test_case in enumerate(self.test_cases):
             keyword_processor = KeywordProcessor(case_sensitive=True)
