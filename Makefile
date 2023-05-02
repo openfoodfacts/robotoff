@@ -91,10 +91,8 @@ log:
 # Management #
 #------------#
 
-dl-models: dl-model-archives dl-model-categorizer
-
-dl-model-archives:
-	@echo "🥫 Downloading model archive files …"
+dl-models:
+	@echo "🥫 Downloading model files …"
 	cd models; \
 	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
 		do \
@@ -104,16 +102,6 @@ dl-model-archives:
 	done; \
 	mkdir -p clip clip/1; \
 	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx;
-
-dl-model-categorizer:
-	@echo "🥫 Downloading categorizer model …"
-	cd tf_models; \
-	dir=category-classifier; \
-	mkdir -p $${dir} $${dir}/1; \
-	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-xx-2.0/serving_model.tar.gz > $${dir}/1/saved_model.tar.gz; \
-	cd $${dir}/1; \
-	tar -xzvf saved_model.tar.gz --strip-component=1; \
-	rm saved_model.tar.gz
 
 launch-burst-worker:
 ifdef queues

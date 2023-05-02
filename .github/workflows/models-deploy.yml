@@ -41,5 +41,4 @@ jobs:
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ env.PROJECT_DIR }}
-            make dl-model-archives
-            make dl-model-categorizer
+            make dl-models
