@@ -105,10 +105,10 @@ dl-models:
 
 launch-burst-worker:
 ifdef queues
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker ${queues} --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker ${queues} --burst
 # Only launch burst worker on low priority queue if queue is not specified
 else
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_low python -m robotoff run-worker robotoff-low --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker robotoff-low --burst
 endif
 
 #------------#
