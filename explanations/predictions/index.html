@@ -816,6 +816,7 @@
 <li><code>regex</code> for all predictions generated using simple regex</li>
 </ul>
 </li>
+<li><code>predictor_version</code>: this is a version ID that is used to know when to replace predictions in database by new ones during import, and when to keep them. It is either an incrementing integer (for regex-based predictions) or the version of the model that generated the predictions.</li>
 </ul>
 <p>From these predictions, we generate <em>insights</em>. Insights are refined predictions about the product that are directly actionable: if the insight is validated by a human, we can update the product accordingly.
 For example, we may have the following predictions on a (french) organic product:</p>
@@ -853,7 +854,15 @@ This is the different between <em>insights</em> and <em>predictions</em>: <em>pr
 <li><code>reserved_barcode</code>: if <code>True</code>, the product has a reserved barcode, it's probably a variable weight product. We don't show any question about reserved barcode products by default in all <code>/questions/*</code> API routes.</li>
 </ul>
 <h2 id="import-mechanism">Import mechanism</h2>
-<p>Once the predictions are generated, we use the <code>import_insights</code> function (in <code>robotoff.insights.importer</code>) to import the predictions and insights in database. Insights objects are created on-the-fly in <code>InsightImporter</code>s.</p>
+<p>Once the predictions are generated, we use the <code>import_insights</code> function (in <code>robotoff.insights.importer</code>) to import the predictions and insights in database.</p>
+<p>We start by importing predictions in database, in the <code>prediction</code> table:</p>
+<ol>
+<li>we check that predictions are valid, i.e. that the product still has the image associated with the prediction (in case <code>source_image</code> is not null) and that the product still exists in Product Opener database. This check is disabled if <code>ENABLE_PRODUCT_CHECK=0</code> (=default settings only for local environment).</li>
+<li>We then group predictions by product barcode, and delete all predictions that have the same <code>barcode</code>, <code>server_type</code>, <code>type</code>, <code>source_image</code> <strong>and</strong> that have a different <code>predictor_version</code>.</li>
+<li>We import predictions, only if no other predictions with the same <code>(type, server_type, source_image, value_tag, value, predictor and automatic_processing)</code> values exist.</li>
+</ol>
+<p><code>predictor_version</code> is therefore used to control when to keep the previous predictions and when to delete them.</p>
+<p>From predictions, we then generate and import insights. Insights objects are created on-the-fly in <code>InsightImporter</code>s.</p>
 <p>Every insight type has a single <code>InsightImporter</code> that is in charge of creating/updating/deleting insights from a list of predictions.</p>
 <p>The importer must have a <code>generate_candidates</code> method that returns a list of candidate insights — <code>ProductInsight</code>s should be created from predictions in this method. This is also where all the selection logic is (what prediction data to keep, what to ignore).</p>
 <p>From the list of candidate insight, we update the <code>product_insight</code> table, by deleting all insights and importing all candidates. The import mechanism is actually a bit smarter, we avoid unnecessary DB insertion/deletion by trying to match each candidate with a reference insight — an insight that is already in DB.</p>
