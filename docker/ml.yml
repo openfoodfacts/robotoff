@@ -17,4 +17,4 @@ services:
     volumes:
       - ${TRITON_MODELS_DIR:-../models}:/models
     entrypoint: "tritonserver --model-repository=/models"
-    mem_limit: 10g
+    mem_limit: 15g
