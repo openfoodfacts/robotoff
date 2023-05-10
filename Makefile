@@ -41,7 +41,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello build up create_external_networks
+dev: hello build init-elasticsearch up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -110,8 +110,9 @@ dl-models:
 	rm saved_model.tar.gz
 
 init-elasticsearch:
+	@echo "Initializing elasticsearch indices"
 	${DOCKER_COMPOSE} up -d elasticsearch 2>&1
-	@echo "Sleeping for 20s..."
+	@echo "Sleeping for 20s, waiting for elasticsearch to be ready..."
 	@sleep 20
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff init-elasticsearch --no-load-data
 
