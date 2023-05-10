@@ -19,7 +19,7 @@ from robotoff.types import JSONType
         ("waarvan verzadigde", {"saturated_fat": [{"languages": ["nl"]}]}),
         (
             "Sale - Salt 0,210 g",
-            {"salt": [{"languages": ["it"]}, {"languages": ["en"]}]},
+            {"salt": [{"languages": ["it"]}, {"languages": ["en", "da"]}]},
         ),
         ("acides gras saturés", {"saturated_fat": [{"languages": ["fr"]}]}),
         (
