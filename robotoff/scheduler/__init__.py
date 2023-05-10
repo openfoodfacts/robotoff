@@ -12,8 +12,6 @@ from playhouse.postgres_ext import ServerSide
 from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
-from robotoff.elasticsearch import get_es_client
-from robotoff.elasticsearch.export import ElasticsearchExporter
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights, is_valid_insight_image
 from robotoff.metrics import (
@@ -295,17 +293,11 @@ def _download_product_dataset():
 
 # this job does no use database
 def _update_data():
-    """Refreshes the PO product dump and updates the Elasticsearch index
-    data."""
+    """Refreshes the PO product dump data."""
     try:
         _download_product_dataset()
     except requests.exceptions.RequestException:
         logger.exception("Exception during product dataset refresh")
-
-    try:
-        ElasticsearchExporter(get_es_client()).load_all_indices()
-    except Exception as e:
-        logger.exception("Exception during ES indices creation", exc_info=e)
 
 
 def generate_insights() -> None:
