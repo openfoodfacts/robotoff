@@ -109,6 +109,12 @@ dl-models:
 	tar -xzvf saved_model.tar.gz --strip-component=1; \
 	rm saved_model.tar.gz
 
+init-elasticsearch:
+	${DOCKER_COMPOSE} up -d elasticsearch 2>&1
+	@echo "Sleeping for 20s..."
+	@sleep 20
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff init-elasticsearch --no-load-data
+
 launch-burst-worker:
 ifdef queues
 	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker ${queues} --burst
