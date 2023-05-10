@@ -102,6 +102,12 @@ dl-models:
 	done; \
 	mkdir -p clip clip/1; \
 	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx;
+	dir=category-classifier-keras-image-embeddings-3.0; \
+	mkdir -p $${dir} $${dir}/1; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-image-embeddings-3.0/saved_model.tar.gz > $${dir}/1/saved_model.tar.gz; \
+	cd $${dir}/1; \
+	tar -xzvf saved_model.tar.gz --strip-component=1; \
+	rm saved_model.tar.gz
 
 launch-burst-worker:
 ifdef queues
