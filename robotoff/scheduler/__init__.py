@@ -350,11 +350,6 @@ def run():
     # ensure influxdb database exists
     ensure_influx_database()
 
-    # This call needs to happen on every start of the scheduler to ensure
-    # we're not in the state where Robotoff is unable to perform tasks because
-    # of missing data.
-    _update_data()
-
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
