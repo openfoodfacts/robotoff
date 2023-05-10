@@ -328,13 +328,14 @@ class OCRFullTextAnnotation:
         # multiple pages
         self.text: str = "|".join(text_list)
         # Replace line break with space characters to allow matches spanning
-        # multiple lines We used to replace consecutive spaces (2+) with a
-        # single space so that spurious spaces don't prevent a match, but this
-        # is unnecessary: on several millions OCRs, only a few had double
-        # spaces, and it was images containing mixed arabic/latin language
-        # texts. This way, the word offsets (word.start_idx, word.end_idx)
-        # match the FullTextAnnotation text, and we can very easily determine
-        # the position of the matched words
+        # multiple lines.
+        # We used to replace consecutive spaces (2+) with a single space so
+        # that spurious spaces don't prevent a match, but this is unnecessary:
+        # on several millions OCRs, only a few had double spaces, and it was
+        # images containing mixed arabic/latin language texts. This way, the
+        # word offsets (word.start_idx, word.end_idx) match the
+        # FullTextAnnotation text, and we can very easily determine the
+        # position of the matched words
         self.continuous_text: str = "|".join(
             t.replace("|", " ").replace("\n", " ") for t in text_list
         )
