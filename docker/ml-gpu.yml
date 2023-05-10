@@ -1,0 +1,39 @@
+# This docker compose file is intented to be used to launch a Triton server
+# with GPU support.
+# To make it work, you must register nvidia runtime to Docker following these
+# instructions:
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/user-guide.html#adding-the-nvidia-runtime
+
+version: "3.9"
+
+services:
+  triton:
+    # restart: $RESTART_POLICY
+    # This is a custom built of Triton with:
+    # - GRPC/HTTP support
+    # - GPU support
+    # - Tensorflow and ONNX support
+    # This allows us to reduce the image size
+    # Build with `python3 compose.py --backend tensorflow --backend
+    # onnxruntime`
+    # Release (23.04 version):
+    # https://github.com/triton-inference-server/server/releases/tag/v2.33.0
+    image: ghcr.io/openfoodfacts/triton:23.04-gpu
+    ports:
+     - ${TRITON_EXPOSE_HTTP:-8000}:8000
+     - ${TRITON_EXPOSE_GRPC:-8001}:8001
+     - ${TRITON_EXPOSE_METRICS:-8002}:8002
+    volumes:
+      - ${TRITON_MODELS_DIR:-../models}:/models
+    # We need to add nvidia_entrypoint.sh for the GPU to be correctly detected
+    # by Triton
+    entrypoint: "/opt/nvidia/nvidia_entrypoint.sh tritonserver --model-repository=/models"
+    mem_limit: 15g
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
