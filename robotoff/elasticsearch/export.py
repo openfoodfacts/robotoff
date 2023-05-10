@@ -63,8 +63,8 @@ ES_INDEX_CONFIGS: dict[ElasticSearchIndex, dict] = {
                     "similarity": "dot_product",
                     "index_options": {"type": "hnsw", "m": 16, "ef_construction": 100},
                 },
+                "server_type": {"type": "keyword"},
             },
-            "server_type": {"type": "keyword"},
         },
     },
 }
