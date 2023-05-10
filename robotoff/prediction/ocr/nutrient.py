@@ -21,6 +21,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("calories", ["fr", "en"]),
         ("energia", ["es", "it", "pt"]),
         ("valor energ[ée]tico", ["es"]),
+        ("energi", ["da"]),
     ],
     "saturated_fat": [
         ("mati[èe]res? grasses? satur[ée]s?", ["fr"]),
@@ -33,6 +34,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("waarvan verzadigde", ["nl"]),
         ("gesättigte fettsäuren", ["de"]),
         ("[aá]cidos grasos saturados", ["es"]),
+        ("mættede fedtsyrer", ["da"]),
     ],
     "trans_fat": [("mati[èe]res? grasses? trans", ["fr"]), ("trans fat", ["en"])],
     "fat": [
@@ -45,6 +47,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("grasas", ["es"]),
         ("grassi", ["it"]),
         ("l[íi]pidos", ["es"]),
+        ("fedt", ["da"]),
     ],
     "sugar": [
         ("sucres?", ["fr"]),
@@ -53,6 +56,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("suikers?", ["nl"]),
         ("zucker", ["de"]),
         ("az[úu]cares", ["es"]),
+        ("sukkerarter", ["da"]),
     ],
     "carbohydrate": [
         ("total carbohydrate", ["en"]),
@@ -63,17 +67,18 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("koolhydraat", ["nl"]),
         ("kohlenhydrate", ["de"]),
         ("hidratos de carbono", ["es"]),
+        ("kulhydrat", ["da"]),
     ],
     "protein": [
         ("prot[ée]ines?", ["fr"]),
-        ("protein", ["en"]),
+        ("protein", ["en", "da"]),
         ("eiwitten", ["nl"]),
         ("eiweiß", ["de"]),
         ("prote[íi]nas", ["es"]),
     ],
     "salt": [
         ("sel", ["fr"]),
-        ("salt", ["en"]),
+        ("salt", ["en", "da"]),
         ("zout", ["nl"]),
         ("salz", ["de"]),
         ("sale", ["it"]),
@@ -86,6 +91,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("(?:voedings)?vezels?", ["nl"]),
         ("ballaststoffe", ["de"]),
         ("fibra(?: alimentaria)?", ["es"]),
+        ("kostfibre", ["da"]),
     ],
     "nutrition_values": [
         ("informations? nutritionnelles?(?: moyennes?)?", ["fr"]),
@@ -98,6 +104,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("valori nutrizionali medi", ["it"]),
         ("gemiddelde waarden per", ["nl"]),
         ("nutritionele informatie", ["nl"]),
+        ("(er)?næringsindhold", ["da"]),
     ],
 }
 
