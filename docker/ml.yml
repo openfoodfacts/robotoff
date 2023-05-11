@@ -9,12 +9,17 @@ services:
     # - Tensorflow 2 SavedModel and ONNX support
     # This allows us to reduce significantly the image size
     # See https://gist.github.com/raphael0202/091e521f2c79a8db8c6e9aceafb6e0b9 for build script
-    image: ghcr.io/openfoodfacts/triton:latest
+    image: ghcr.io/openfoodfacts/triton:cpu
     ports:
       - ${TRITON_EXPOSE_HTTP:-8000}:8000
       - ${TRITON_EXPOSE_GRPC:-8001}:8001
       - ${TRITON_EXPOSE_METRICS:-8002}:8002
     volumes:
       - ${TRITON_MODELS_DIR:-../models}:/models
-    entrypoint: "tritonserver --model-repository=/models"
+    # We use explicit model control mode to be able to load/unload model dynamically
+    # without having to restart Triton server
+    # See
+    # https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_management.md
+    # for more information
+    entrypoint: "tritonserver --model-repository=/models --model-control-mode=explicit --load-model=*"
     mem_limit: 15g
