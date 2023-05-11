@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.28.1](https://github.com/openfoodfacts/robotoff/compare/v1.28.0...v1.28.1) (2023-05-11)
+
+
+### Bug Fixes
+
+* add a Make command to init elasticsearch ([68e7edf](https://github.com/openfoodfacts/robotoff/commit/68e7edf0f686ca29fdf430ce12cc585f7dce93df))
+* add danish translation for nutrient detection ([ba02a63](https://github.com/openfoodfacts/robotoff/commit/ba02a638087519967687162f7bc57867e79496d5))
+* add log messages to init-elasticsearch CLI command ([e950cbd](https://github.com/openfoodfacts/robotoff/commit/e950cbd04e39f4970a850cb9a7c4b4e45b610ef1))
+* add ml-gpu.yml docker-compose file ([a005b0f](https://github.com/openfoodfacts/robotoff/commit/a005b0fbfce6c155e68586140c32ae46a88475d3))
+* don't update elasticsearch indices in _update_data scheduler job ([c12f803](https://github.com/openfoodfacts/robotoff/commit/c12f80326a289d2b68fe0e90af777736516aeb27))
+* don't update product dump at scheduler startup ([4bee57c](https://github.com/openfoodfacts/robotoff/commit/4bee57caf210873eb63cf541707bbb4554402165))
+* fix dl-models command ([ef26311](https://github.com/openfoodfacts/robotoff/commit/ef26311748926ef01f2880c52c071e2da50e6f79))
+* fix launch-burst-worker command ([4a49ac3](https://github.com/openfoodfacts/robotoff/commit/4a49ac3836b06c51cae37dda2ae1f14488d2a025))
+* fix logo elasticsearch index mapping ([8a5a119](https://github.com/openfoodfacts/robotoff/commit/8a5a119b0aec7f2fa9bc00618ebd38b755c67326))
+* fix make dl-models command ([d6a3b25](https://github.com/openfoodfacts/robotoff/commit/d6a3b25e4e0fa5fcfc39107c474f3ad4d29ee368))
+* fix unit tests ([90cce2a](https://github.com/openfoodfacts/robotoff/commit/90cce2a362e8df0c718ea0332871eb0cc0c10916))
+* init elasticsearch during make dev call ([0ac9051](https://github.com/openfoodfacts/robotoff/commit/0ac90510bafb019b38a4d370b17032901e0c7174))
+* remove tf_models/models.config file ([eb54e81](https://github.com/openfoodfacts/robotoff/commit/eb54e812f99b75733b0e7ec374d5bb0156126e73))
+* use explicit model control model on Triton ([fb46bf8](https://github.com/openfoodfacts/robotoff/commit/fb46bf8f5b311a6cf14504ba5040740d8610cc13))
+
+
+### Documentation
+
+* fix comment in prediction.ocr.dataclass ([4bdb768](https://github.com/openfoodfacts/robotoff/commit/4bdb768e9f3d5c79b6bc828acf4d2eb0e45bca8d))
+* improve documentation about prediction processing ([ab75c09](https://github.com/openfoodfacts/robotoff/commit/ab75c0988e2322d019d198d04b784d54417d467e))
+
 ## [1.28.0](https://github.com/openfoodfacts/robotoff/compare/v1.27.2...v1.28.0) (2023-05-02)
 
 
