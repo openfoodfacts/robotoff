@@ -807,7 +807,7 @@
 <li><code>type</code>: prediction type</li>
 <li><code>value</code>: the predicted untaxonomized value (ex: <code>carrefour</code> for <code>brand</code> prediction type), optional</li>
 <li><code>value_tag</code>: the predicted taxonomized value (ex: <code>en:organic</code> for <code>label</code> prediction type), optional</li>
-<li><code>source_image</code>: the path of the image the prediction was generated from (ex: <code>/847/000/700/5117/1.jpg</code>). May be null, it is mainly used for OCR and object detection-based predictions.</li>
+<li><code>source_image</code>: the path of the image the prediction was generated from (ex: <code>/847/000/700/5117/1.jpg</code>). May be null, it is mainly provided for OCR and object detection-based predictions.</li>
 <li><code>automatic_processing</code>: a boolean indicating whether we're confident enough in the prediction to apply it automatically in Open Food Facts without human supervision. This does not mean it will indeed be applied automatically, please refer to the import mechanism description below to know how automatic processing works.</li>
 <li><code>data</code>: a JSON structure containing prediction data. It either complements <code>value</code> and <code>value_tag</code> with additional data or contains the full prediction data.</li>
 <li><code>predictor</code>: name of the predictor that generated the prediction. Every insight type has its own <code>predictor</code>s, but most common ones are:<ul>
