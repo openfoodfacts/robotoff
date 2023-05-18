@@ -12,7 +12,7 @@ Predictions most interesting fields are the following:
 - `type`: prediction type
 - `value`: the predicted untaxonomized value (ex: `carrefour` for `brand` prediction type), optional
 - `value_tag`: the predicted taxonomized value (ex: `en:organic` for `label` prediction type), optional
-- `source_image`: the path of the image the prediction was generated from (ex: `/847/000/700/5117/1.jpg`). May be null, it is mainly used for OCR and object detection-based predictions.
+- `source_image`: the path of the image the prediction was generated from (ex: `/847/000/700/5117/1.jpg`). May be null, it is mainly provided for OCR and object detection-based predictions.
 - `automatic_processing`: a boolean indicating whether we're confident enough in the prediction to apply it automatically in Open Food Facts without human supervision. This does not mean it will indeed be applied automatically, please refer to the import mechanism description below to know how automatic processing works.
 - `data`: a JSON structure containing prediction data. It either complements `value` and `value_tag` with additional data or contains the full prediction data.
 - `predictor`: name of the predictor that generated the prediction. Every insight type has its own `predictor`s, but most common ones are:

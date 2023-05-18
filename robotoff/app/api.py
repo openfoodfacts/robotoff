@@ -385,10 +385,9 @@ class IngredientSpellcheckResource:
         }
 
 
-class NutrientPredictorResource:
+class NutritionPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
-        server_type = get_server_type_from_req(req)
 
         if not ocr_url.endswith(".json"):
             raise falcon.HTTPBadRequest("a JSON file is expected")
@@ -400,7 +399,11 @@ class NutrientPredictorResource:
 
         try:
             predictions = extract_ocr_predictions(
-                ProductIdentifier(barcode, server_type),
+                ProductIdentifier(
+                    barcode,
+                    # Nutritional values only makes sense for off
+                    ServerType.off,
+                ),
                 ocr_url,
                 [PredictionType.nutrient],
             )
@@ -420,22 +423,49 @@ class NutrientPredictorResource:
             }
             return
 
-        resp.media = {"nutrients": [p.to_dict() for p in predictions]}
+        # `predictions` is either empty or contains a single item
+        # (see `find_nutrient_values` in robotoff.prediction.ocr.nutrient)
+        if not predictions:
+            resp.media = {"nutrients": {}}
+        else:
+            prediction = predictions[0]
+            resp.media = {
+                "nutrients": prediction.data["nutrients"],
+                "predictor": prediction.predictor,
+                "predictor_version": prediction.predictor_version,
+            }
 
 
-class OCRInsightsPredictorResource:
+def transform_to_prediction_type(value: str) -> PredictionType:
+    """Function to transform string into `PredictionType`, compatible with
+    falcon `req.get_param` function.
+
+    Falcon expects a `ValueError` to be raised if the value is invalid.
+    """
+    try:
+        return PredictionType[value]
+    except KeyError:
+        raise ValueError()
+
+
+class OCRPredictionPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
         server_type = get_server_type_from_req(req)
         barcode = get_barcode_from_url(ocr_url)
+        prediction_types = req.get_param_as_list(
+            "prediction_types",
+            default=DEFAULT_OCR_PREDICTION_TYPES,
+            transform=transform_to_prediction_type,
+        )
         if barcode is None:
             raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
 
         try:
-            insights = extract_ocr_predictions(
+            predictions = extract_ocr_predictions(
                 ProductIdentifier(barcode, server_type),
                 ocr_url,
-                DEFAULT_OCR_PREDICTION_TYPES,
+                prediction_types,
             )
 
         except requests.exceptions.RequestException:
@@ -454,7 +484,7 @@ class OCRInsightsPredictorResource:
             return
 
         resp.media = {
-            "insights": insights,
+            "predictions": predictions,
         }
 
 
@@ -1546,8 +1576,8 @@ api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
 api.add_route("/api/v1/insights/dump", DumpResource())
 api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
-api.add_route("/api/v1/predict/nutrient", NutrientPredictorResource())
-api.add_route("/api/v1/predict/ocr_insights", OCRInsightsPredictorResource())
+api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
+api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())

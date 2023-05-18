@@ -914,9 +914,116 @@ paths:
                       required:
                         - value_tag
                         - debug
+  /predict/nutrition:
+    get:
+      tags:
+        - Predict
+      summary: Extract nutritional information from an OCR JSON
+      description: |
+        We currently only use the OCR text as input, and detect nutrient-value pairs if they are consecutive
+        to each other in the OCR text (ex: "protein: 10.5g, fat: 2.1g").
+      parameters:
+        - name: ocr_url
+          in: query
+          required: true
+          description: The URL of the OCR JSON to use for extraction
+          schema:
+            type: string
+            example: https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json
+            format: uri
+      responses:
+        "200":
+          description: the extracted nutritional information or an error message
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    title: Successful response
+                    description: the extracted nutritional information
+                    properties:
+                      nutrients:
+                        type: object
+                        description: |
+                          a dict mapping nutrient name (`energy`, `fat`,...) to a dict containing the following fields:
+                            - `raw`: string of the full detected pattern (ex: `Valeur énergétique: 245 kj`)
+                            - `nutrient`: nutrient mention (`energy`, `saturated_fat`,...)
+                            - `value`: nutrient value, should be an number (example: `245`)
+                            - `unit`: nutrient unit associated with the value (one of `kj`, `kcal`, `g`)
+                      predictor_version:
+                        type: string
+                        description: identifier of the version of the predictor used
+                        example: "1"
+                      predictor:
+                        type: string
+                        description: predictor used to generate this prediction
+                        example: "regex"
+                    required:
+                      - "nutrients"
+                  - $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: "An HTTP 400 is returned if the provided parameters are invalid"
+  /predict/ocr_prediction:
+    get:
+      tags:
+        - Predict
+      summary: Generate OCR predictions an OCR JSON
+      parameters:
+        - name: ocr_url
+          in: query
+          required: true
+          description: The URL of the OCR JSON to use for extraction
+          schema:
+            type: string
+            example: https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json
+            format: uri
+        - $ref: "#/components/parameters/server_type"
+        - name: prediction_types
+          in: query
+          required: false
+          description: |
+            a comma-separated list of prediction types to use for extraction. If not provided, we use the default:
+            set of OCR prediction types (see `DEFAULT_OCR_PREDICTION_TYPES` variable in Robotoff codebase)
+          schema:
+            type: string
+            example: "category,label"
+      responses:
+        "200":
+          description: the extracted predictions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    title: Successful response
+                    description: the extracted predictions
+                    properties:
+                      predictions:
+                        type: array
+                        description: a list of extracted predictions
+                        items:
+                          $ref: "#/components/schemas/Prediction"
+                    required:
+                      - "predictions"
+                  - $ref: "#/components/schemas/ErrorResponse"
+
+        "400":
+          description: "An HTTP 400 is returned if the provided parameters are invalid"
+ 
 
 components:
   schemas:
+    ErrorResponse:
+      type: object
+      title: Error response
+      description: this response is returned in case of error
+      properties:
+        error:
+          type: string
+          description: the identifier of the error
+        error_description:
+          type: string
+          description: a full description of the error that occured
     LogoANNSearchResponse:
       type: object
       properties:
@@ -988,6 +1095,92 @@ components:
         - "api.openproductfacts.org"
         - "api.openpetfoodfacts.org"
         - "api.pro.openfoodfacts.org"
+    Prediction:
+      type: object
+      description: a Robotoff Prediction
+      properties:
+        barcode:
+          type: string
+          description: barcode of the product
+          example: "5410041040807"
+        type:
+          type: string
+          description: the prediction type
+          example: category
+        timestamp:
+          type: string
+          format: "date-time"
+          description: datetime of creation of the prediction
+          example: "2023-05-13 02:10:09.107262"
+        data:
+          type: object
+          description: |
+            a JSON structure containing prediction data. It either complements `value` and `value_tag`
+            with additional data or contains the full prediction data.
+        value_tag:
+          type: string
+          description: |
+            the value tag of the prediction. The use of this field depends of the prediction type,
+            but it contains most of the time the canonical tag that should be sent to Product Opener.
+            For example, for a category prediction, `value_tag` can be `en:beverages`.
+          example: "en:beverages"
+        value:
+          type: string
+          description: |
+            the value of the prediction. It is used if no canonical tag can be used
+            for the prediction type. For example, we use it to store the detected product weight
+            value (example: `100 g`)
+          example: null
+        automatic_processing:
+          type: boolean
+          example: false
+          description: |
+            a boolean indicating whether we're confident enough in the prediction to apply it
+            automatically in Open Food Facts without human supervision. This does not mean it will
+            indeed be applied automatically, please refer to the import mechanism description in the
+            documentation to know how automatic processing works.
+        source_image:
+          type: string
+          description: |
+            the path of the image the prediction was generated from.
+            May be null, it is mainly provided for OCR and object detection-based predictions.
+          example: "541/004/104/0807/3.jpg"
+        id:
+          type: number
+          example: 1522429
+          description: unique ID of the prediction in the PostgreSQL DB
+        predictor_version:
+          type: string
+          description: |
+            this is a version ID that is used to know when to replace predictions in database
+            by new ones during import, and when to keep them. It is either an incrementing integer
+            (for regex-based predictions) or the version of the model that generated the predictions.
+          example: "keras-image-embeddings-3.0"
+        predictor:
+          type: string
+          example: neural
+          description: |
+            name of the predictor that generated the prediction. Every insight type has its own `predictor`s, but most common ones are:
+              - `universal-logo-detector` for predictions generated by the nearest-neighbors logo detector
+              - `flashtext` for all predictions generated using flashtext library
+              - `regex` for all predictions generated using simple regex
+        server_type:
+          type: string
+          example: "off"
+          description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+          enum:
+            - 'off'
+            - 'obf'
+            - 'opff'
+            - 'opf'
+            - 'off_pro'
+        confidence:
+          type: string
+          format: number
+          example: 0.95
+          description: |
+            confidence score of the prediction, it is only provided for ML-based predictions. It may be null.
+
   parameters:
     lang:
       name: lang

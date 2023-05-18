@@ -198,6 +198,7 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
             type=PredictionType.nutrient,
             data={"nutrients": nutrients},
             predictor_version=PREDICTOR_VERSION,
+            predictor="regex",
         )
     ]
 
