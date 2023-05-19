@@ -57,13 +57,13 @@ from robotoff.models import (
 from robotoff.off import (
     OFFAuthentication,
     generate_image_path,
+    generate_json_ocr_url,
     get_barcode_from_url,
-    get_product,
 )
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.dataclass import OCRParsingException
-from robotoff.products import get_product_dataset_etag
+from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
@@ -387,53 +387,128 @@ class IngredientSpellcheckResource:
 
 class NutritionPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        ocr_url = req.get_param("ocr_url", required=True)
+        barcode = req.get_param("barcode", required=True)
+        # we transform image IDs to int to be sure to have "raw" image IDs as
+        # input
+        image_ids = req.get_param_as_list("image_ids", required=False, transform=int)
 
-        if not ocr_url.endswith(".json"):
-            raise falcon.HTTPBadRequest("a JSON file is expected")
+        if image_ids is not None:
+            # convert image IDs back to string
+            image_ids = set(str(x) for x in image_ids)
 
-        barcode = get_barcode_from_url(ocr_url)
+        server_type = get_server_type_from_req(req)
 
-        if barcode is None:
-            raise falcon.HTTPBadRequest(f"invalid OCR URL: {ocr_url}")
+        if server_type not in (ServerType.off, ServerType.off_pro):
+            raise falcon.HTTPBadRequest(f"invalid server type: {server_type}")
 
-        try:
-            predictions = extract_ocr_predictions(
-                ProductIdentifier(
-                    barcode,
-                    # Nutritional values only makes sense for off
-                    ServerType.off,
-                ),
-                ocr_url,
-                [PredictionType.nutrient],
-            )
+        product_id = ProductIdentifier(barcode, server_type)
+        product = get_product(product_id, ["images"])
 
-        except requests.exceptions.RequestException:
-            resp.media = {
-                "error": "download_error",
-                "error_description": "an error occurred during OCR JSON download",
-            }
-            return
+        if product is None:
+            raise falcon.HTTPBadRequest(f"product not found: {barcode}")
 
-        except OCRParsingException as e:
-            logger.error(e)
-            resp.media = {
-                "error": "invalid_ocr",
-                "error_description": "an error occurred during OCR parsing",
-            }
-            return
-
-        # `predictions` is either empty or contains a single item
-        # (see `find_nutrient_values` in robotoff.prediction.ocr.nutrient)
-        if not predictions:
-            resp.media = {"nutrients": {}}
+        errors = []
+        existing_image_ids: set[str] = set(x for x in product["images"] if x.isdigit())
+        # We only keep image IDs that actually exist for this product
+        if image_ids:
+            target_image_ids = existing_image_ids & image_ids
+            if missing_image_ids := image_ids - existing_image_ids:
+                for missing_image_id in missing_image_ids:
+                    errors.append(
+                        {
+                            "error": "unknown_image",
+                            "error_description": f"the image {missing_image_id} for product "
+                            f"{product_id} does not exist",
+                        }
+                    )
         else:
-            prediction = predictions[0]
-            resp.media = {
-                "nutrients": prediction.data["nutrients"],
-                "predictor": prediction.predictor,
-                "predictor_version": prediction.predictor_version,
-            }
+            target_image_ids = existing_image_ids
+
+        # We only keep the 10 most recent images (a higher image ID means that
+        # the image is more recent)
+        target_image_ids = sorted(target_image_ids, key=lambda x: int(x), reverse=True)[
+            :10
+        ]
+        predictions: list[JSONType] = []
+
+        # Fetch existing predictions in DB to avoid recomputing them
+        existing_predictions = list(
+            Prediction.select(
+                Prediction.data["nutrients"].as_json().alias("nutrients"),
+                Prediction.source_image,
+                Prediction.predictor,
+                Prediction.predictor_version,
+            )
+            .where(
+                Prediction.barcode == barcode,
+                Prediction.server_type == server_type.name,
+                Prediction.type == PredictionType.nutrient.name,
+                Prediction.source_image.in_(
+                    [
+                        generate_image_path(barcode, image_id)
+                        for image_id in target_image_ids
+                    ]
+                ),
+            )
+            .dicts()
+        )
+        predictions += existing_predictions
+
+        # Remove predictions of image IDs that were fetched from DB
+        remaining_image_ids = set(target_image_ids) - set(
+            get_image_id(p["source_image"]) for p in existing_predictions
+        )
+        for image_id in remaining_image_ids:
+            # Perform detection on remaining images
+            ocr_url = generate_json_ocr_url(product_id, image_id)
+            try:
+                predictions += [
+                    {
+                        # Only keep relevant fields for nutrition information
+                        "nutrients": p.data["nutrients"],
+                        "source_image": p.source_image,
+                        "predictor": p.predictor,
+                        "predictor_version": p.predictor_version,
+                    }
+                    for p in extract_ocr_predictions(
+                        product_id,
+                        ocr_url,
+                        [PredictionType.nutrient],
+                    )
+                ]
+
+            except requests.exceptions.RequestException:
+                errors.append(
+                    {
+                        "error": "download_error",
+                        "error_description": f"an error occurred during OCR JSON download: {ocr_url}",
+                    }
+                )
+
+            except OCRParsingException as e:
+                logger.error(e)
+                errors.append(
+                    {
+                        "error": "invalid_ocr",
+                        "error_description": f"an error occurred during OCR parsing: {ocr_url}",
+                    }
+                )
+
+        # Sort predictions to have most recent images (higher image ID) first
+        predictions = sorted(
+            predictions,
+            key=lambda x: int(get_image_id(x["source_image"])),  # type: ignore
+            reverse=True,
+        )
+        response = {
+            "predictions": predictions,
+            "image_ids": target_image_ids,
+        }
+
+        if errors:
+            response["errors"] = errors
+
+        resp.media = response
 
 
 def transform_to_prediction_type(value: str) -> PredictionType:
