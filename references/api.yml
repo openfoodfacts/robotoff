@@ -918,34 +918,42 @@ paths:
     get:
       tags:
         - Predict
-      summary: Extract nutritional information from an OCR JSON
+      summary: Extract nutritional information from an image
       description: |
         We currently only use the OCR text as input, and detect nutrient-value pairs if they are consecutive
         to each other in the OCR text (ex: "protein: 10.5g, fat: 2.1g").
       parameters:
-        - name: ocr_url
+        - $ref: "#/components/parameters/barcode"
+        - $ref: "#/components/parameters/server_type"
+        - name: image_ids
           in: query
-          required: true
-          description: The URL of the OCR JSON to use for extraction
+          required: false
+          description: |
+            a comma-separated list of IDs of images to extract nutritional information from.
+            If not provided, the 10 most recent images will be used.
           schema:
             type: string
-            example: https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json
-            format: uri
+            example: "1,2,5"
       responses:
         "200":
-          description: the extracted nutritional information or an error message
+          description: the extracted nutritional information
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: object
-                    title: Successful response
-                    description: the extracted nutritional information
+                type: object
+                description: |
+                  the extracted nutritional information from provided (or 10 most recent by default) images.
+                  The predictions are ordered, predictions from most recent images come first.
+                properties:
+                  predictions:
+                    type: object
                     properties:
                       nutrients:
                         type: object
                         description: |
-                          a dict mapping nutrient name (`energy`, `fat`,...) to a dict containing the following fields:
+                          a dict mapping nutrient name (`energy`, `fat`,...) to a list of dict containing detected nutritional information.
+                          The list contains as many elements as the number of detected values for this nutrient. Each element of the list
+                          has the following fields:
                             - `raw`: string of the full detected pattern (ex: `Valeur énergétique: 245 kj`)
                             - `nutrient`: nutrient mention (`energy`, `saturated_fat`,...)
                             - `value`: nutrient value, should be an number (example: `245`)
@@ -958,9 +966,35 @@ paths:
                         type: string
                         description: predictor used to generate this prediction
                         example: "regex"
+                      source_image:
+                        type: string
+                        description: the path of the image the nutrient prediction was generated from
                     required:
                       - "nutrients"
-                  - $ref: "#/components/schemas/ErrorResponse"
+                      - "predictor"
+                      - "predictor_version"
+                      - "source_image"
+                  image_ids:
+                    type: array
+                    description: |
+                      list of the IDs of images that were used as input analyzed
+                    items:
+                      type: number
+                  errors:
+                    type: array
+                    description: a list of errors that occured during processing
+                    items:
+                      type: object
+                      properties:
+                        error:
+                          type: string
+                          description: the identifier of the error
+                        error_description:
+                          type: string
+                          description: a full description of the error that occured
+                required:
+                  - "predictions"
+                  - "image_ids"
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
   /predict/ocr_prediction:
@@ -1013,17 +1047,6 @@ paths:
 
 components:
   schemas:
-    ErrorResponse:
-      type: object
-      title: Error response
-      description: this response is returned in case of error
-      properties:
-        error:
-          type: string
-          description: the identifier of the error
-        error_description:
-          type: string
-          description: a full description of the error that occured
     LogoANNSearchResponse:
       type: object
       properties:
@@ -1207,6 +1230,7 @@ components:
     server_type:
       name: server_type
       in: query
+      required: false
       description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),... 
       schema:
         type: string
@@ -1293,6 +1317,14 @@ components:
     barcode_path:
       name: barcode
       in: path
+      required: true
+      description: The barcode of the product
+      schema:
+        type: integer
+        example: 5410041040807
+    barcode:
+      name: barcode
+      in: query
       required: true
       description: The barcode of the product
       schema:
