@@ -521,7 +521,10 @@ class DBProductStore(ProductStore):
     def get_product(
         self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
     ) -> Optional[JSONType]:
-        return self.collection.find_one({"code": product_id.barcode}, projection)
+        # We use `_id` instead of `code` field, as `_id` contains org ID +
+        # barcode for pro platform, which is also the case for
+        # `product_id.barcode`
+        return self.collection.find_one({"_id": product_id.barcode}, projection)
 
     def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
         product = self.get_product(product_id)

@@ -256,7 +256,9 @@ class ProductIdentifier:
     """Dataclass to uniquely identify a product across all Open*Facts
     projects, with:
 
-    - the product barcode
+    - the product barcode: for the pro platform, it must be in the format
+      `{ORG_ID}/{BARCODE}` (ex: `org-lea-nature/3307130803004`), otherwise it's
+      the barcode only
     - the project specified by the ServerType
     """
 

@@ -346,10 +346,11 @@ def import_images_in_db(
         barcode = product.barcode
         for image_id in (id_ for id_ in product.images.keys() if id_.isdigit()):
             if (barcode, image_id) not in existing_images:
+                product_id = ProductIdentifier(barcode, server_type)
                 to_add.append(
                     (
-                        ProductIdentifier(barcode, server_type),
-                        generate_image_path(barcode, image_id),
+                        product_id,
+                        generate_image_path(product_id, image_id),
                     )
                 )
 

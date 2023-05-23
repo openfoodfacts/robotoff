@@ -41,7 +41,8 @@ def get_high_queue(product_id: Optional[ProductIdentifier] = None) -> Queue:
         return random.choice(high_queues)
 
     # We compute a md5 hash of the barcode and convert the 4 last bytes to an
-    # int (long) This way, we make sure the distribution of `barcode_hash` is
+    # int (long)
+    # This way, we make sure the distribution of `barcode_hash` is
     # uniform and that all queues are sampled evenly with `queue_idx =
     # barcode_hash % len(high_queues)`
     barcode_hash: int = struct.unpack(

@@ -124,7 +124,7 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
     missing_image_ids = set(image_ids) - existing_image_ids
 
     for missing_image_id in missing_image_ids:
-        source_image = generate_image_path(product_id.barcode, missing_image_id)
+        source_image = generate_image_path(product_id, missing_image_id)
         image_url = generate_image_url(product_id, missing_image_id)
         logger.debug("Creating missing image %s in DB", source_image)
         save_image(product_id, source_image, image_url, images)

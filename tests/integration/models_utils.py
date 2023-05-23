@@ -24,6 +24,7 @@ from robotoff.models import (
     ProductInsight,
 )
 from robotoff.off import generate_image_path
+from robotoff.types import ProductIdentifier, ServerType
 
 
 class UuidSequencer:
@@ -94,7 +95,9 @@ class ImageModelFactory(PeeweeModelFactory):
     uploaded_at = factory.LazyFunction(datetime.utcnow)
     image_id = factory.Sequence(lambda n: f"{n:02}")
     source_image = factory.LazyAttribute(
-        lambda o: generate_image_path(o.barcode, o.image_id)
+        lambda o: generate_image_path(
+            ProductIdentifier(o.barcode, ServerType[o.server_type]), o.image_id
+        )
     )
     width = 400
     height = 400
