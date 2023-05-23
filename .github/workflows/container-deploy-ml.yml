@@ -19,7 +19,7 @@ jobs:
     - name: Set common variables
       run: |
         echo "PROJECT_DIR=robotoff-ml" >> $GITHUB_ENV
-        echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
     - name: Set various variables for staging deployment
       if: matrix.env == 'robotoff-ml-net'

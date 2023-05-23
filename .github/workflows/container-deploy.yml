@@ -18,12 +18,14 @@ jobs:
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
     steps:
+    - name: Set common variables
+      run: |
+        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
     - name: Set various variable for staging deployment
       if: matrix.env == 'robotoff-net'
       run: |
         echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
-        echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
-        echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
@@ -32,8 +34,6 @@ jobs:
       if: matrix.env == 'robotoff-org'
       run: |
         echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
-        echo "SSH_PROXY_HOST=ovh2.openfoodfacts.org" >> $GITHUB_ENV
-        echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://213.36.253.195:27017" >> $GITHUB_ENV
