@@ -7,7 +7,7 @@ from more_itertools import chunked
 from robotoff.logos import filter_logos
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import generate_image_path
-from robotoff.types import ServerType
+from robotoff.types import ProductIdentifier, ServerType
 from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
@@ -46,8 +46,9 @@ def import_logos(
             timestamp = datetime.datetime.utcnow()
             for item in batch:
                 barcode = item["barcode"]
+                product_id = ProductIdentifier(barcode, server_type)
                 source_image = generate_image_path(
-                    barcode=barcode, image_id=item["image_id"]
+                    product_id=product_id, image_id=item["image_id"]
                 )
                 key = (model_name, source_image)
 

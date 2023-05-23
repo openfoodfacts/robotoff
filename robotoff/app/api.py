@@ -105,7 +105,10 @@ def get_server_type_from_req(
 ) -> ServerType:
     """Get `ServerType` value from POST x-www-form-urlencoded or GET
     requests."""
-    server_type_str = req.get_param("server_type")
+    if req.media and "server_type" in req.media:
+        server_type_str = req.media["server_type"]
+    else:
+        server_type_str = req.get_param("server_type")
 
     if server_type_str is None:
         return default
@@ -445,7 +448,7 @@ class NutritionPredictorResource:
                 Prediction.type == PredictionType.nutrient.name,
                 Prediction.source_image.in_(
                     [
-                        generate_image_path(barcode, image_id)
+                        generate_image_path(product_id, image_id)
                         for image_id in target_image_ids
                     ]
                 ),
@@ -682,13 +685,13 @@ class ImageCropResource:
 class ImagePredictionImporterResource:
     @jsonschema.validate(schema.IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
+        server_type = get_server_type_from_req(req)
         timestamp = datetime.datetime.utcnow()
         inserts = []
 
         for prediction in req.media["predictions"]:
-            source_image = generate_image_path(
-                prediction["barcode"], prediction.pop("image_id")
-            )
+            product_id = ProductIdentifier(prediction["barcode"], server_type)
+            source_image = generate_image_path(product_id, prediction.pop("image_id"))
             inserts.append(
                 {
                     "timestamp": timestamp,
@@ -698,7 +701,7 @@ class ImagePredictionImporterResource:
             )
 
         inserted = batch_insert(ImagePrediction, inserts)
-        logger.info("{} image predictions inserted".format(inserted))
+        logger.info("%s image predictions inserted", inserted)
 
 
 class ImagePredictionResource:

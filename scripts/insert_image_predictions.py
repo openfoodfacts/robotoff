@@ -6,7 +6,7 @@ import tqdm
 from robotoff import settings
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import generate_image_path
-from robotoff.types import ServerType
+from robotoff.types import ProductIdentifier, ServerType
 from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger()
@@ -46,7 +46,9 @@ def insert_batch(
 
     for item in tqdm.tqdm(jsonl_iter(data_path)):
         barcode = item["barcode"]
-        source_image = generate_image_path(barcode=barcode, image_id=item["image_id"])
+        source_image = generate_image_path(
+            ProductIdentifier(barcode, server_type), image_id=item["image_id"]
+        )
         key = (model_name, source_image)
 
         if key in seen_set:

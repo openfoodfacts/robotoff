@@ -15,6 +15,7 @@ IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
                     "model_name": {"type": "string"},
                     "model_version": {"type": "string"},
                     "data": {"type": "object"},
+                    "server_type": {"type": "string"},
                 },
                 "required": [
                     "barcode",

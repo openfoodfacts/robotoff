@@ -79,7 +79,7 @@ class ProductInsight(BaseModel):
     id = peewee.UUIDField(primary_key=True, default=uuid.uuid4)
 
     # Barcode represents the barcode of the product for which the insight was
-    # generated.
+    # generated. It is prefixed by `{ORG_ID}/` for the pro platform.
     barcode = peewee.CharField(max_length=100, null=False, index=True)
 
     # Type represents the insight type - must match one of the types in

@@ -37,7 +37,7 @@ with db:
             if (str(product.barcode), str(image_id)) in seen_set:
                 continue
 
-            source_image = generate_image_path(product.barcode, str(image_id))
+            source_image = generate_image_path(product_id, str(image_id))
             image_url = generate_image_url(product_id, str(image_id))
 
             try:
