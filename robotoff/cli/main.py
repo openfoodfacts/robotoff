@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 from pathlib import Path
 from typing import Optional
@@ -48,6 +49,9 @@ def regenerate_ocr_insights(
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
     ),
+    ocr_prediction_types: Optional[list[PredictionType]] = typer.Option(
+        None, help="Types of OCR prediction to use"
+    ),
 ) -> None:
     """Regenerate OCR predictions/insights for a specific product and import
     them."""
@@ -60,6 +64,9 @@ def regenerate_ocr_insights(
     from robotoff.off import generate_json_ocr_url
     from robotoff.products import get_product
     from robotoff.utils import get_logger
+
+    if ocr_prediction_types is None:
+        ocr_prediction_types = DEFAULT_OCR_PREDICTION_TYPES
 
     logger = get_logger()
 
@@ -75,7 +82,7 @@ def regenerate_ocr_insights(
 
         ocr_url = generate_json_ocr_url(product_id, image_id)
         predictions += extract_ocr_predictions(
-            product_id, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
+            product_id, ocr_url, ocr_prediction_types
         )
 
     with db:
@@ -792,6 +799,81 @@ def import_image_webhook(
         logger.info("HTTP error (%s) during image import: %s", r.status_code, r.text)
     else:
         logger.info("Robotoff response: %s", r.json())
+
+
+@app.command()
+def pprint_ocr_result(
+    uri: str = typer.Argument(..., help="URI of the image or OCR"),
+) -> None:
+    """Pretty print OCR result."""
+    import sys
+
+    import orjson
+
+    from robotoff.prediction.ocr.core import get_ocr_result
+    from robotoff.prediction.ocr.dataclass import OCRResult
+    from robotoff.utils import get_logger, http_session
+
+    logger = get_logger()
+
+    if uri.endswith(".jpg"):
+        uri = uri.replace(".jpg", ".json")
+
+    logger.info("displaying OCR result %s", uri)
+
+    if uri.startswith("http"):
+        ocr_result = get_ocr_result(uri, http_session)
+    else:
+        with open(uri, "rb") as f:
+            data = orjson.loads(f.read())
+            ocr_result = OCRResult.from_json(data)
+
+    if ocr_result is None:
+        logger.info("error while downloading %s", uri)
+        sys.exit(0)
+
+    if ocr_result.full_text_annotation is None:
+        logger.info("no full text annotation available")
+        sys.exit(0)
+    ocr_result.pprint()
+
+
+@app.command()
+def generate_ocr_result(
+    image_url: str = typer.Argument(..., help="URL of the image"),
+    output_dir: Path = typer.Argument(
+        ...,
+        file_okay=False,
+        dir_okay=True,
+        help="Directory where the OCR JSON should be saved",
+    ),
+) -> None:
+    import orjson
+
+    from robotoff.cli.ocr import run_ocr_on_image
+    from robotoff.off import get_source_from_url
+    from robotoff.utils import get_logger, http_session
+
+    logger = get_logger()
+    API_KEY = os.environ["GOOGLE_CLOUD_VISION_API_KEY"]
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    source_image_path = Path(get_source_from_url(image_url))
+    output_file = output_dir / (
+        str(source_image_path.parent).replace("/", "_")[1:]
+        + f"_{source_image_path.stem}.json"
+    )
+    logger.info("Downloading image %s", image_url)
+    r = http_session.get(image_url)
+    r.raise_for_status()
+
+    logger.info("Generating OCR result")
+    response = run_ocr_on_image(r.content, API_KEY)
+
+    with open(output_file, "wb") as f:
+        f.write(orjson.dumps(response))
+
+    pprint_ocr_result(str(output_file))
 
 
 def main() -> None:

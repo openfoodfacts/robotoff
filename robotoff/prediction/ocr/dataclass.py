@@ -223,6 +223,7 @@ class OCRResult:
             annotation is not available
         """
         words = self.get_words_from_indices(start_idx, end_idx, raises)
+        logger.debug("get_match_bounding_box: words: %s", words)
 
         if words is not None:
             if words:
@@ -256,6 +257,13 @@ class OCRResult:
         return self.full_text_annotation.get_words_from_indices(
             start_idx, end_idx, raises
         )
+
+    def pprint(self):
+        """Pretty print the full text annotation, if it is not null."""
+        if self.full_text_annotation:
+            print(self._generate_pretty_print_string())
+        else:
+            print("No full text annotation available")
 
 
 def get_text(
@@ -395,6 +403,27 @@ class OCRFullTextAnnotation:
                 logger.warning(error_text, *error_args)
 
         return selected
+
+    def pprint(self):
+        """Pretty print the full text annotation."""
+        print(self._generate_pretty_print_string())
+
+    def _generate_pretty_print_string(self) -> str:
+        """Generate a pretty print version of the full text annotation, ready
+        to print.
+
+        :return: the generated string
+        """
+        strings = []
+        for page_id, page in enumerate(self.pages):
+            strings.append(f"> page #{page_id}")
+            for block_id, block in enumerate(page.blocks):
+                strings.append(f">> block #{block_id}")
+                for paragraph_id, paragraph in enumerate(block.paragraphs):
+                    strings.append(f">>> paragraph #{paragraph_id}")
+                    text = paragraph.text
+                    strings.append(f"    {repr(text)}")
+        return "\n".join(strings)
 
 
 class TextAnnotationPage:
@@ -566,11 +595,7 @@ class Paragraph:
     """Structural unit of text representing a number of words in certain
     order."""
 
-    __slots__ = (
-        "words",
-        "text",
-        "bounding_poly",
-    )
+    __slots__ = ("words", "text", "bounding_poly")
 
     def __init__(self, data: JSONType, initial_offset: int = 0):
         """Initialize a Paragraph.
