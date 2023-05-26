@@ -520,11 +520,13 @@ class Block:
         add_space_prefix = False
         for paragraph_data in data["paragraphs"]:
             paragraph = Paragraph(paragraph_data, initial_offset)
-            # We split paragraphs with a space character, so add +1 to offset
-            initial_offset += len(paragraph.text) + 1
+            initial_offset += len(paragraph.text)
             self.paragraphs.append(paragraph)
             if add_space_prefix:
+                # We split paragraphs with a space character if needed
                 text_list.append(" ")
+                #  add +1 to offset (as we inserted a space character)
+                initial_offset += 1
             text_list.append(paragraph.text)
             # We add a space to the next paragraph if the current paragraph is
             # not empty and if it doesn't already end with a space or line
