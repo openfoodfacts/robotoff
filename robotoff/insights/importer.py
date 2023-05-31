@@ -164,10 +164,10 @@ def convert_bounding_box_absolute_to_relative(
     height = size["h"]
     width = size["w"]
     return (
-        bounding_box_absolute[0] / height,
-        bounding_box_absolute[1] / width,
-        bounding_box_absolute[2] / height,
-        bounding_box_absolute[3] / width,
+        max(0.0, bounding_box_absolute[0] / height),
+        max(0.0, bounding_box_absolute[1] / width),
+        min(1.0, bounding_box_absolute[2] / height),
+        min(1.0, bounding_box_absolute[3] / width),
     )
 
 
@@ -412,15 +412,13 @@ class InsightImporter(metaclass=abc.ABCMeta):
             # coordinates, while we use relative coordinates elsewhere. Perform
             # the conversion here. Skip this step if product validity check is
             # disabled (product=None), as we don't have image information
-            if (
-                bounding_box_absolute := candidate.data.pop(
-                    "bounding_box_absolute", None
-                )
-            ) is not None and product:
+            if ("bounding_box_absolute" in candidate.data) and product:
                 candidate.data[
                     "bounding_box"
                 ] = convert_bounding_box_absolute_to_relative(
-                    bounding_box_absolute, product.images, candidate.source_image
+                    candidate.data.pop("bounding_box_absolute"),
+                    product.images,
+                    candidate.source_image,
                 )
 
             if candidate.data.get("is_annotation"):
@@ -1159,6 +1157,11 @@ class NutritionImageImporter(InsightImporter):
     # valid
     NUTRITION_TABLE_MODEL_MIN_SCORE = 0.9
 
+    # Number of pixels we add to enlarge the nutrition image crop.
+    # Most of the time the crop around the nutrition table is too tight, so
+    # we enlarge it a bit
+    CROP_MARGIN_PIXELS = 10
+
     # Increase version ID when introducing breaking change: changes for which
     # we want old predictions to be removed in DB and replaced by newer ones
     PREDICTOR_VERSION = "1"
@@ -1338,7 +1341,7 @@ class NutritionImageImporter(InsightImporter):
         :param image_orientation_prediction: the `Prediction` of type
             `image_orientation` for the image
         :param nutrient_prediction: the `Prediction` of type
-            `nutrient_prediction` for the image, optional
+            `nutrient` for the image, optional
         :param nutrition_table_predictions: the list of detected
             `nutrition-table` objects, optional
         :yield: generated candidates
@@ -1368,13 +1371,13 @@ class NutritionImageImporter(InsightImporter):
         # original orientation is not correct
         data["rotation"] = image_orientation_prediction.data["rotation"]
 
-        # Only add crop information if we detect a single `nutrition-table`
-        # object
-        if nutrition_table_predictions and len(nutrition_table_predictions) == 1:
-            nutrition_table_prediction = nutrition_table_predictions[0]
-            data["bounding_box"] = nutrition_table_prediction["bounding_box"]
-            data["crop_score"] = nutrition_table_prediction["score"]
-
+        # Add cropping bounding box to `data`
+        data.update(
+            cls.compute_crop_bounding_box(
+                nutrient_mention_prediction,
+                nutrition_table_predictions,
+            )
+        )
         nutrient_values = mentioned_nutrients.get("nutrient_value", [])
         num_nutrient_values = len(nutrient_values)
         has_energy_nutrient_value = any(
@@ -1408,6 +1411,65 @@ class NutritionImageImporter(InsightImporter):
                 source_image=nutrient_mention_prediction.source_image,
             )
             yield ProductInsight(**prediction.to_dict())
+
+    @classmethod
+    def compute_crop_bounding_box(
+        cls,
+        nutrient_mention_prediction: Prediction,
+        nutrition_table_predictions: Optional[list[JSONType]] = None,
+    ):
+        """Predict a bounding box that includes the nutritional information.
+
+        If `nutrition_table_predictions` is provided (not `None`), we use the
+        information from the nutrition object detection model to generate a
+        predicted bounding box. Otherwise we return a bounding box that
+        includes all detected nutrient mentions and values.
+
+        After detection, we enlarge the crop bounding box by
+        `CROP_MARGIN_PIXELS` pixels.
+
+        :param nutrient_mention_prediction: the `Prediction` of type
+            `nutrient_mention` for the image
+        :param nutrition_table_predictions: the list of detected
+            `nutrition-table` objects, optional
+        :return: a dict containing crop information, it should be merged with
+            `Prediction.data` dict
+        """
+        results = {}
+        # Only add crop information if we detect a single `nutrition-table`
+        # object
+        if nutrition_table_predictions and len(nutrition_table_predictions) == 1:
+            nutrition_table_prediction = nutrition_table_predictions[0]
+            results["bounding_box"] = nutrition_table_prediction["bounding_box"]
+            results["crop_score"] = nutrition_table_prediction["score"]
+        else:
+            all_bounding_boxes = []
+            for nutrient_mentions in nutrient_mention_prediction.data[
+                "mentions"
+            ].values():
+                for nutrient_mention in nutrient_mentions:
+                    if "bounding_box_absolute" in nutrient_mention:
+                        all_bounding_boxes.append(
+                            nutrient_mention["bounding_box_absolute"]
+                        )
+
+            if all_bounding_boxes:
+                results["bounding_box_absolute"] = (
+                    min(
+                        i[0] - cls.CROP_MARGIN_PIXELS for i in all_bounding_boxes
+                    ),  # y_min
+                    min(
+                        i[1] - cls.CROP_MARGIN_PIXELS for i in all_bounding_boxes
+                    ),  # x_min
+                    max(
+                        i[2] + cls.CROP_MARGIN_PIXELS for i in all_bounding_boxes
+                    ),  # y_max
+                    max(
+                        i[3] + cls.CROP_MARGIN_PIXELS for i in all_bounding_boxes
+                    ),  # x_max
+                )
+
+        return results
 
 
 class PackagingElementTaxonomyException(Exception):
