@@ -138,8 +138,8 @@ def convert_bounding_box_absolute_to_relative(
     :param bounding_box_absolute: absolute coordinates of the bounding box
     :param images: The image dict as stored in MongoDB.
     :param source_image: The insight source image, should be the path of the
-    image path or None. :return: a (y_min, x_min, y_max, x_max) tuple of the
-    relative coordinates
+    image path or None.
+    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
         or None if a conversion error occured
     """
     if source_image is None:
@@ -1274,7 +1274,9 @@ class NutritionImageImporter(InsightImporter):
             # We're not sure that for every `source_image` we have predictions
             # of all required types (we're only sure that we have predictions
             # of required types among predictions of all images)
-            if set(p.type for p in image_predictions) < required_prediction_types:
+            if not (
+                set(p.type for p in image_predictions) >= required_prediction_types
+            ):
                 continue
             # `nutrient` prediction is optional, so the dict value associated
             # with `nutrient` PredictionType may be null
