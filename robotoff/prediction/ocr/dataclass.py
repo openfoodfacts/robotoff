@@ -227,7 +227,7 @@ class OCRResult:
 
         if words is not None:
             if words:
-                return compute_intersection_bounding_box(words)
+                return compute_words_union_bounding_box(words)
             else:
                 logger.warning(
                     "no words found in %s, (start: %d, end: %d)",
@@ -919,7 +919,7 @@ class BoundingPoly:
             return ImageOrientation.unknown
 
 
-def compute_intersection_bounding_box(words: list[Word]) -> tuple[int, int, int, int]:
+def compute_words_union_bounding_box(words: list[Word]) -> tuple[int, int, int, int]:
     """Generate a bounding box that include all words.
 
     :param words: a list of words
