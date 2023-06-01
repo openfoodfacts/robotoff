@@ -324,13 +324,14 @@ INSIGHT_AUTOMATIC_PROCESSING_WAIT = int(
     os.environ.get("INSIGHT_AUTOMATIC_PROCESSING_WAIT", 10)
 )
 
-# Disable all product and image existence and validity check:
+# Disable MongoDB access, and all checks on product and image
+# existence/validity:
 # - during insight generation/import (in robotoff.insights.importer)
 # - when importing a new image through a webhook call (in
 # robotoff.workers.tasks.import_image) This is useful when testing locally, as
 # we don't need the product to be in MongoDB to import an image and generate
 # insights.
-ENABLE_PRODUCT_CHECK = bool(int(os.environ.get("ENABLE_PRODUCT_CHECK", 1)))
+ENABLE_MONGODB_ACCESS = bool(int(os.environ.get("ENABLE_MONGODB_ACCESS", 1)))
 
 
 # Number of rq workers running, this is used to know the number of high

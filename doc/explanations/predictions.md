@@ -57,7 +57,7 @@ Once the predictions are generated, we use the `import_insights` function (in `r
 
 We start by importing predictions in database, in the `prediction` table:
 
-1. we check that predictions are valid, i.e. that the product still has the image associated with the prediction (in case `source_image` is not null) and that the product still exists in Product Opener database. This check is disabled if `ENABLE_PRODUCT_CHECK=0` (=default settings only for local environment).
+1. we check that predictions are valid, i.e. that the product still has the image associated with the prediction (in case `source_image` is not null) and that the product still exists in Product Opener database. This check is disabled if `ENABLE_MONGODB_ACCESS=0` (=default settings only for local environment).
 2. We then group predictions by product barcode, and delete all predictions that have the same `barcode`, `server_type`, `type`, `source_image` **and** that have a different `predictor_version`.
 3. We import predictions, only if no other predictions with the same `(type, server_type, source_image, value_tag, value, predictor and automatic_processing)` values exist.
 

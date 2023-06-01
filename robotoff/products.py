@@ -521,6 +521,10 @@ class DBProductStore(ProductStore):
     def get_product(
         self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
     ) -> Optional[JSONType]:
+        if not settings.ENABLE_MONGODB_ACCESS:
+            # if `ENABLE_MONGODB_ACCESS=False`, we don't disable MongoDB
+            # access and return None
+            return None
         # We use `_id` instead of `code` field, as `_id` contains org ID +
         # barcode for pro platform, which is also the case for
         # `product_id.barcode`
@@ -533,10 +537,6 @@ class DBProductStore(ProductStore):
             return Product(product)
 
         return None
-
-    def __iter__(self):
-        if self.collection is not None:
-            yield from self.iter()
 
     def iter_product(self, projection: Optional[list[str]] = None):
         if self.collection is not None:

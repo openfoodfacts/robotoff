@@ -67,7 +67,7 @@ Write test cases every time you write a new feature, to test a feature or to und
 There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
 
 There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. To disable this
-feature (this is disabled by default on local environments), set `ENABLE_PRODUCT_CHECK=0` in your `.env`.
+feature (this is disabled by default on local environments), set `ENABLE_MONGODB_ACCESS=0` in your `.env`.
 
 # Debugging guide
 

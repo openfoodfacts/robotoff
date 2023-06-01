@@ -23,8 +23,8 @@ def save_image(
     :param image_url: URL of the image, only used to get image size if images
         is None
     :param images: image dict mapping image ID to image metadata, as returned
-        by Product Opener API, is None if product validity check is disabled
-        (`ENABLE_PRODUCT_CHECK=False`)
+        by Product Opener API, is None if MongoDB access is disabled
+        (`ENABLE_MONGODB_ACCESS=False`)
     :return: this function return either:
         - the ImageModel of the image if it already exist in DB
         - None if the image is non raw (non-digit image ID), if it's not
