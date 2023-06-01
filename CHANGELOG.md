@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.29.0](https://github.com/openfoodfacts/robotoff/compare/v1.28.1...v1.29.0) (2023-06-01)
+
+
+### Features
+
+* Improve /predict/{nutrient|ocr_prediction} routes ([f06a45a](https://github.com/openfoodfacts/robotoff/commit/f06a45a8cc185fc0a19e23c8e12ce38560aa36bf))
+* improve nutrition image bounding box detection ([737b630](https://github.com/openfoodfacts/robotoff/commit/737b630bc973e01d14e58cf60cdcf1c2b3526867))
+
+
+### Bug Fixes
+
+* add CLI command to pretty print OCR result ([26f44a4](https://github.com/openfoodfacts/robotoff/commit/26f44a4d7a8380e88662f9623714694bc7a94438))
+* display diffs in /webhook/products route ([07255c6](https://github.com/openfoodfacts/robotoff/commit/07255c60b937766ee9124e714638c2124a1f5045))
+* fix ENABLE_PRODUCT_CHECK flag ([dd1d09f](https://github.com/openfoodfacts/robotoff/commit/dd1d09f626f96108681331946ae7f8ae1e8d761c))
+* fix NutritionImageImporter.generate_candidate ([74e346c](https://github.com/openfoodfacts/robotoff/commit/74e346cb17d1dc5e024f2370ed638e5566aa5b68))
+* fix wrong paragraph offset for OCR ([abb54a6](https://github.com/openfoodfacts/robotoff/commit/abb54a6c05b5e230320f5bac398a87e4ffbe43e3))
+* improve /predict/nutrition route ([95d953b](https://github.com/openfoodfacts/robotoff/commit/95d953bc78780101314a21b0a058c72d43148dce))
+* only display most important services in make log command ([60b2843](https://github.com/openfoodfacts/robotoff/commit/60b2843042fdf680b1dbf5632f9b2d770b0f0a8d))
+* rename compute_intersection_bounding_box function ([d8d732c](https://github.com/openfoodfacts/robotoff/commit/d8d732cd7ad07fd8390ea92c944b4f60864d1789))
+* support pro platform for MongoDB queries and image/OCR URLs ([a3ac603](https://github.com/openfoodfacts/robotoff/commit/a3ac60370d9294b8e63d8fcf9011ecb869852037))
+* update SSH_PROXY_HOST for deployment ([a8b8292](https://github.com/openfoodfacts/robotoff/commit/a8b82928f7410653d693ba1c6b5a5fb698dc1fea))
+
 ## [1.28.1](https://github.com/openfoodfacts/robotoff/compare/v1.28.0...v1.28.1) (2023-05-11)
 
 
