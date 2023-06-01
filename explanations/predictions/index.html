@@ -857,7 +857,7 @@ This is the different between <em>insights</em> and <em>predictions</em>: <em>pr
 <p>Once the predictions are generated, we use the <code>import_insights</code> function (in <code>robotoff.insights.importer</code>) to import the predictions and insights in database.</p>
 <p>We start by importing predictions in database, in the <code>prediction</code> table:</p>
 <ol>
-<li>we check that predictions are valid, i.e. that the product still has the image associated with the prediction (in case <code>source_image</code> is not null) and that the product still exists in Product Opener database. This check is disabled if <code>ENABLE_PRODUCT_CHECK=0</code> (=default settings only for local environment).</li>
+<li>we check that predictions are valid, i.e. that the product still has the image associated with the prediction (in case <code>source_image</code> is not null) and that the product still exists in Product Opener database. This check is disabled if <code>ENABLE_MONGODB_ACCESS=0</code> (=default settings only for local environment).</li>
 <li>We then group predictions by product barcode, and delete all predictions that have the same <code>barcode</code>, <code>server_type</code>, <code>type</code>, <code>source_image</code> <strong>and</strong> that have a different <code>predictor_version</code>.</li>
 <li>We import predictions, only if no other predictions with the same <code>(type, server_type, source_image, value_tag, value, predictor and automatic_processing)</code> values exist.</li>
 </ol>
