@@ -18,6 +18,10 @@ DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
 DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker-compose --env-file=${ENV_FILE}
 ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
 
+# mount information for robotoff backup ZFS dataset
+NFS_VOLUMES_ADDRESS_OVH3 ?= 10.0.0.3
+NFS_VOLUMES_BACKUP_BASE_PATH ?= /rpool/backups/robotoff
+
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
 .PHONY: *
@@ -194,17 +198,31 @@ pytest: guard-args
 #------------#
 # Production #
 #------------#
+
+# Create all external volumes needed for production. Using external volumes is useful to prevent data loss (as they are not deleted when performing docker down -v)
 create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
 	docker volume create api-dataset
 	docker volume create postgres-data
 	docker volume create es-data
+# This is an NFS mount from robotoff backup ZFS dataset.
+# Two important notes:
+# - we use `nolock` as there shouldn't be any concurrent writes on the same file, and `soft` to prevent the docker container from freezing if the NFS
+#   connection is lost
+# - we cannot mount directly `${NFS_VOLUMES_BACKUP_BASE_PATH}`, we have to mount a subfolder (`backups`) to prevent permission issues
+	docker volume create --driver local --opt type=nfs --opt o=addr=${NFS_VOLUMES_ADDRESS_OVH3},nolock,soft,rw --opt device=:${NFS_VOLUMES_BACKUP_BASE_PATH}/backups ${COMPOSE_PROJECT_NAME}_backup
+
 
 create_external_networks:
 	@echo "🥫 Creating external networks if needed … (dev only)"
 	( docker network create ${PO_LOCAL_NET} || true )
 # for tests
 	( docker network create po_test || true )
+
+# Backup PostgreSQL database in robotoff_backup volume
+backup_postgres:
+	@echo "🥫 Performing PostgreSQL backup"
+	${DOCKER_COMPOSE} exec -t postgres bash /opt/backup_postgres.sh
 
 #---------#
 # Cleanup #
