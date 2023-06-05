@@ -33,7 +33,7 @@ msgstr "Ce poids correspond-il au poids affiché sur le produit ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr "Cette image est-elle une image nutritionnelle pour cette langue?"
+msgstr "Cette image montre t'elle les informations nutritionnelle pour cette langue?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
