@@ -173,40 +173,6 @@ class AddBinaryQuestion(Question):
         return serial
 
 
-class IngredientSpellcheckQuestion(Question):
-    def __init__(self, insight: ProductInsight, ref_image_url: Optional[str]):
-        self.insight_id: str = str(insight.id)
-        self.insight_type: str = str(insight.type)
-        self.barcode: str = insight.barcode
-        self.server_type: str = insight.server_type
-        self.corrected: str = insight.data["corrected"]
-        self.text: str = insight.data["text"]
-        self.corrections: list[JSONType] = insight.data["corrections"]
-        self.lang: str = insight.data["lang"]
-        self.ref_image_url: Optional[str] = ref_image_url
-
-    def get_type(self):
-        return "ingredient-spellcheck"
-
-    def serialize(self) -> JSONType:
-        serial = {
-            "barcode": self.barcode,
-            "server_type": self.server_type,
-            "type": self.get_type(),
-            "insight_id": self.insight_id,
-            "insight_type": self.insight_type,
-            "text": self.text,
-            "corrected": self.corrected,
-            "corrections": self.corrections,
-            "lang": self.lang,
-        }
-
-        if self.ref_image_url:
-            serial["ref_image_url"] = self.ref_image_url
-
-        return serial
-
-
 class QuestionFormatter(metaclass=abc.ABCMeta):
     def __init__(self, translation_store: TranslationStore):
         self.translation_store: TranslationStore = translation_store
@@ -396,32 +362,6 @@ class BrandQuestionFormatter(QuestionFormatter):
         )
 
 
-class IngredientSpellcheckQuestionFormatter(QuestionFormatter):
-    def format_question(self, insight: ProductInsight, lang: str) -> Question:
-        ref_image_url = self.get_ingredient_image_url(insight.get_product_id(), lang)
-        return IngredientSpellcheckQuestion(
-            insight=insight, ref_image_url=ref_image_url
-        )
-
-    def get_ingredient_image_url(
-        self, product_id: ProductIdentifier, lang: str
-    ) -> Optional[str]:
-        product = get_product(product_id, ["images"])
-
-        if product is None:
-            return None
-
-        images = product.get("images", {})
-        field_name = "ingredients_{}".format(lang)
-
-        if field_name in images:
-            image = images[field_name]
-            image_id = "ingredients_{}.{}.full".format(lang, image["rev"])
-            return generate_image_url(product_id, image_id)
-
-        return None
-
-
 class NutritionImageQuestionFormatter(QuestionFormatter):
     question = "Is this image a nutrition image for this language?"
 
@@ -480,7 +420,6 @@ class QuestionFormatterFactory:
         InsightType.label.name: LabelQuestionFormatter,
         InsightType.product_weight.name: ProductWeightQuestionFormatter,
         InsightType.brand.name: BrandQuestionFormatter,
-        InsightType.ingredient_spellcheck.name: IngredientSpellcheckQuestionFormatter,
         InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
         InsightType.packaging.name: PackagingQuestionFormatter,
         InsightType.is_upc_image.name: UPCImageQuestionFormatter,

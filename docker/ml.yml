@@ -30,5 +30,5 @@ services:
     ports:
       - ${FASTTEXT_EXPOSE:-8020}:8000
     volumes:
-      - ${FASTTEXT_MODEL_DIR:-./}:/models
+      - ${FASTTEXT_MODEL_DIR:-./models}:/models
     entrypoint: "fasttext-serving --model=/models/lid.176.bin --port 8000 --address 0.0.0.0"

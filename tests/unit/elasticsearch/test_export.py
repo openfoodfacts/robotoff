@@ -1,5 +1,4 @@
-from robotoff.elasticsearch import get_es_client
-from robotoff.elasticsearch.export import ElasticsearchExporter
+from robotoff.elasticsearch import ElasticsearchExporter, get_es_client
 from robotoff.types import ElasticSearchIndex
 
 
@@ -8,7 +7,7 @@ def test_load_index_already_exists(mocker):
     create_call = mocker.patch("elasticsearch.client.IndicesClient.create")
 
     exporter = ElasticsearchExporter(get_es_client())
-    exporter.load_index(ElasticSearchIndex.product)
+    exporter.load_index(ElasticSearchIndex.logo)
     create_call.assert_not_called()
 
 
@@ -17,5 +16,5 @@ def test_load_index(mocker):
     create_call = mocker.patch("elasticsearch.client.IndicesClient.create")
 
     exporter = ElasticsearchExporter(get_es_client())
-    exporter.load_index(ElasticSearchIndex.product)
+    exporter.load_index(ElasticSearchIndex.logo)
     create_call.assert_called_once()

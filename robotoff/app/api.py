@@ -64,10 +64,8 @@ from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.dataclass import OCRParsingException
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
-from robotoff.spellcheck import SPELLCHECKERS, Spellchecker
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
-    ElasticSearchIndex,
     JSONType,
     NeuralCategoryClassifierModel,
     PredictionType,
@@ -332,59 +330,6 @@ class AnnotateInsightResource:
             "status_code": annotation_result.status_code,
             "status": annotation_result.status,
             "description": annotation_result.description,
-        }
-
-
-class IngredientSpellcheckResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
-        self.spellcheck(req, resp)
-
-    def on_post(self, req: falcon.Request, resp: falcon.Response):
-        self.spellcheck(req, resp)
-
-    def spellcheck(self, req: falcon.Request, resp: falcon.Response):
-        text = req.get_param("text")
-        server_type = get_server_type_from_req(req)
-        if text is None:
-            barcode = req.get_param("barcode")
-            if barcode is None:
-                raise falcon.HTTPBadRequest("text or barcode is required.")
-
-            product = get_product(ProductIdentifier(barcode, server_type)) or {}
-            text = product.get("ingredients_text_fr")
-            if text is None:
-                resp.media = {"status": "not_found"}
-                return
-
-        index_name = req.get_param("index", default=ElasticSearchIndex.product.name)
-        confidence = req.get_param_as_float("confidence", default=0.5)
-        pipeline = req.get_param_as_list("pipeline") or None
-        safe = req.get_param_as_bool("safe", blank_as_true=False)
-
-        if safe is not None and pipeline:
-            raise falcon.HTTPBadRequest(
-                "pipeline and safe parameters cannot be used together"
-            )
-
-        if pipeline:
-            for item in pipeline:
-                if item not in SPELLCHECKERS:
-                    raise falcon.HTTPBadRequest(f"unknown pipeline item: {item}")
-        elif safe:
-            pipeline = ["patterns", "percentages", "vocabulary"]
-
-        spellchecker = Spellchecker.load(
-            client=es_client,
-            pipeline=pipeline,
-            index_name=index_name,
-            confidence=confidence,
-        )
-        correction_item = spellchecker.correct(text)
-
-        resp.media = {
-            "text": text,
-            "corrected": correction_item.latest_correction,
-            "corrections": correction_item.corrections,
         }
 
 
@@ -1656,7 +1601,6 @@ api.add_route("/api/v1/insights", InsightCollection())
 api.add_route("/api/v1/insights/random", RandomInsightResource())
 api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
 api.add_route("/api/v1/insights/dump", DumpResource())
-api.add_route("/api/v1/predict/ingredients/spellcheck", IngredientSpellcheckResource())
 api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
 api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
