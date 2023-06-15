@@ -203,7 +203,7 @@ class ObjectDetectionModelRegistry:
             return
         for model in ObjectDetectionModel:
             model_name = model.value
-            file_path = settings.MODELS_DIR / model_name
+            file_path = settings.TRITON_MODELS_DIR / model_name
             if file_path.is_dir():
                 logger.info("Model %s found", model_name)
                 cls.models[model_name] = cls.load(model_name, file_path)

@@ -24,7 +24,7 @@ services:
      - ${TRITON_EXPOSE_GRPC:-8001}:8001
      - ${TRITON_EXPOSE_METRICS:-8002}:8002
     volumes:
-      - ${TRITON_MODELS_DIR:-../models}:/models
+      - ${TRITON_MODELS_DIR:-../models/triton}:/models
     # We need to add nvidia_entrypoint.sh for the GPU to be correctly detected
     # by Triton
     # We use explicit model control mode to be able to load/unload model dynamically

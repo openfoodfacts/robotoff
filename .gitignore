@@ -13,6 +13,7 @@ datasets
 .ipynb_checkpoints
 .mypy_cache
 .pytest_cache
+models/lid.176.bin
 models/**/model.savedmodel
 models/**/model.onnx
 local_models

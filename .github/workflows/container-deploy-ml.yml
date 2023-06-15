@@ -72,8 +72,7 @@ jobs:
           echo "COMPOSE_PATH_SEPARATOR=;" >> .env
           echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
           echo "COMPOSE_FILE=docker/ml.yml" >> .env
-          echo "TF_MODELS_DIR=../tf_models" >> .env
-          echo "TRITON_MODELS_DIR=../models" >> .env
+          echo "TRITON_MODELS_DIR=../models/triton" >> .env
           echo "RESTART_POLICY=always" >> .env
           echo "TRITON_EXPOSE_HTTP=8003" >> .env
 
