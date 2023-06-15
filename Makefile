@@ -97,7 +97,10 @@ log:
 
 dl-models:
 	@echo "🥫 Downloading model files …"
+	mkdir -p models/triton; \
 	cd models; \
+	wget -cO - https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin > lid.176.bin; \
+	cd triton; \
 	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
 		do \
 			dir=`echo $${asset_name} | sed 's/tf-//g'`; \

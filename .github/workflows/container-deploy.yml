@@ -125,6 +125,7 @@ jobs:
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
           echo "TRITON_HOST=triton" >> .env
+          echo "FASTTEXT_HOST=fasttext" >> .env
           echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
           echo "INFLUXDB_PORT=8087" >> .env
           echo "INFLUXDB_BUCKET=off_metrics" >> .env

@@ -15,7 +15,7 @@ services:
       - ${TRITON_EXPOSE_GRPC:-8001}:8001
       - ${TRITON_EXPOSE_METRICS:-8002}:8002
     volumes:
-      - ${TRITON_MODELS_DIR:-../models}:/models
+      - ${TRITON_MODELS_DIR:-../models/triton}:/models
     # We use explicit model control mode to be able to load/unload model dynamically
     # without having to restart Triton server
     # See
@@ -23,3 +23,12 @@ services:
     # for more information
     entrypoint: "tritonserver --model-repository=/models --model-control-mode=explicit --load-model=*"
     mem_limit: 15g
+
+  fasttext:
+    restart: $RESTART_POLICY
+    image: messense/fasttext-serving
+    ports:
+      - ${FASTTEXT_EXPOSE:-8020}:8000
+    volumes:
+      - ${FASTTEXT_MODEL_DIR:-./}:/models
+    entrypoint: "fasttext-serving --model=/models/lid.176.bin --port 8000 --address 0.0.0.0"
