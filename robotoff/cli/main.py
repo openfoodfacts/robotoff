@@ -6,7 +6,7 @@ from typing import Optional
 
 import typer
 
-from robotoff.elasticsearch.client import get_es_client
+from robotoff.elasticsearch import get_es_client
 from robotoff.off import get_barcode_from_url
 from robotoff.types import (
     NeuralCategoryClassifierModel,
@@ -473,16 +473,9 @@ def run_object_detection_model(
 
 
 @app.command()
-def init_elasticsearch(
-    load_data: bool = typer.Option(
-        True, help="if True, load elasticsearch product data in `product` index"
-    )
-) -> None:
-    """This command is used for manual insertion of the Elasticsearch data
-    and/or indexes for products.
-    """
-    from robotoff.elasticsearch import get_es_client
-    from robotoff.elasticsearch.export import ElasticsearchExporter
+def init_elasticsearch() -> None:
+    """This command is used for index creation."""
+    from robotoff.elasticsearch import ElasticsearchExporter, get_es_client
     from robotoff.utils import get_logger
 
     logger = get_logger()
@@ -491,9 +484,6 @@ def init_elasticsearch(
     logger.info("Creating indices...")
     es_exporter = ElasticsearchExporter(get_es_client())
     es_exporter.load_all_indices()
-    if load_data:
-        logger.info("Loading data...")
-        es_exporter.export_index_data()
     logger.info("Elasticsearch initialization finished")
 
 

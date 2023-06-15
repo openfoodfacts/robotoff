@@ -8,7 +8,7 @@ from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
 from robotoff import settings
-from robotoff.elasticsearch.client import get_es_client
+from robotoff.elasticsearch import get_es_client
 from robotoff.images import save_image
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,

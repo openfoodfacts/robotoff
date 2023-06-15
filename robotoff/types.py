@@ -60,8 +60,8 @@ class InsightType(str, enum.Enum):
     """InsightType defines the type of the insight."""
 
     # The 'ingredient spellcheck' insight corrects the spelling in the given
-    # ingredients list. NOTE: this insight currently relies on manual imports -
-    # it's possible these insights have not been generated recently.
+    # ingredients list. NOTE: this insight is deprecated until a new spellcheck
+    # method is developed
     ingredient_spellcheck = "ingredient_spellcheck"
 
     # The 'packager code' insight extracts the packager code using regex from
@@ -274,7 +274,6 @@ class ProductIdentifier:
 
 @enum.unique
 class ElasticSearchIndex(str, enum.Enum):
-    product = "product"
     logo = "logo"
 
 
