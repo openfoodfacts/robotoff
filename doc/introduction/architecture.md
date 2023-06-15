@@ -77,7 +77,6 @@ Robotoff also depends on the following services:
 
 - a single node Elasticsearch instance, used to:
   - infer the product category from the product name, using an improved string matching algorithm. [^predict_category] (used in conjunction with ML detection)
-  - perform spellcheck on ingredient lists [^spellcheck_ingredients]
   - index all logos to run ANN search for automatic logo classification [^logos]
 - a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) [^robotoff_ml].
 - a Tensorflow Serving instance, used to serve the category detection model. We're going to get rid of Tensorflow Serving once a new categorizer is trained. [^robotoff_ml]
@@ -88,5 +87,3 @@ Robotoff also depends on the following services:
 [^predict_category]: see `robotoff.prediction.category.matcher`
 
 [^robotoff_ml]: see `docker/ml.yml`
-
-[^spellcheck_ingredients]: see `robotoff.spellcheck.elasticsearch.es_handler.ElasticsearchHandler`

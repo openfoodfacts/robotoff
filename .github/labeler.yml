@@ -63,19 +63,11 @@ elasticsearch:
 - tests/unit/elasticsearch/**/*
 - robotoff/elasticsearch/product/**/*
 - robotoff/elasticsearch/category/**/*
-- robotoff/spellcheck/elasticsearch/**/*
 - tests/unit/elasticsearch/category/**/*
 - tests/unit/elasticsearch/**/*
 - robotoff/elasticsearch/category/**/*
 - tests/unit/elasticsearch/category/**/*
 - robotoff/elasticsearch/product/**/*
-
-spellcheck:
-- robotoff/spellcheck/**/*
-- robotoff/spellcheck/vocabulary/**/*
-- robotoff/spellcheck/patterns/**/*
-- robotoff/spellcheck/percentages/**/*
-- robotoff/spellcheck/elasticsearch/**/*
 
 object detection:
 - robotoff/prediction/object_detection/utils/**/*

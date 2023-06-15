@@ -21,7 +21,6 @@ These insights include a growing set of facts, including:
 - some of its labels
 - abusive pictures (selfies)
 - rotated pictures
-- ingredient spellchecking
 
 Robotoff provides an API to:
 

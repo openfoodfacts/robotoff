@@ -183,14 +183,6 @@ TAXONOMY_PATHS = {
     "packaging_shape": TAXONOMY_DIR / "packaging_shapes.full.json.gz",
     "packaging_recycling": TAXONOMY_DIR / "packaging_recycling.full.json.gz",
 }
-INGREDIENTS_FR_PATH = TAXONOMY_DIR / "ingredients_fr.txt"
-INGREDIENT_TOKENS_PATH = TAXONOMY_DIR / "ingredients_tokens.txt"
-FR_TOKENS_PATH = TAXONOMY_DIR / "fr_tokens_lower.gz"
-
-# Spellchecking parameters. Wauplin and Raphael are the experts.
-
-SPELLCHECK_DIR = DATA_DIR / "spellcheck"
-SPELLCHECK_PATTERNS_PATHS = {"fr": SPELLCHECK_DIR / "patterns_fr.txt"}
 
 # Credentials for the Robotoff insights database
 
@@ -209,8 +201,7 @@ REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
 
-# Elastic Search is used for simple category prediction, spellchecking and logo
-# classification.
+# Elastic Search is used for logo classification.
 
 ELASTIC_HOST = os.environ.get("ELASTIC_HOST", "localhost")
 ELASTIC_USER = os.environ.get("ELASTIC_USER", "elastic")

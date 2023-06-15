@@ -19,7 +19,6 @@ from robotoff.off import (
     add_label_tag,
     add_packaging,
     add_store,
-    save_ingredients,
     select_rotate_image,
     unselect_image,
     update_emb_codes,
@@ -269,49 +268,6 @@ class LabelAnnotator(InsightAnnotator):
         add_label_tag(
             product_id,
             insight.value_tag,
-            insight_id=insight.id,
-            auth=auth,
-            is_vote=is_vote,
-        )
-        return UPDATED_ANNOTATION_RESULT
-
-
-class IngredientSpellcheckAnnotator(InsightAnnotator):
-    @classmethod
-    def process_annotation(
-        cls,
-        insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
-        is_vote: bool = False,
-    ) -> AnnotationResult:
-        product_id = insight.get_product_id()
-        lang = insight.data["lang"]
-        field_name = "ingredients_text_{}".format(lang)
-        product = get_product(product_id, [field_name])
-
-        if product is None:
-            return MISSING_PRODUCT_RESULT
-
-        original_ingredients = insight.data["text"]
-        corrected = insight.data["corrected"]
-        expected_ingredients = product.get(field_name)
-
-        if expected_ingredients != original_ingredients:
-            logger.warning(
-                "ingredients have changed since spellcheck insight " "creation (%s)",
-                product_id,
-            )
-            return AnnotationResult(
-                status_code=AnnotationStatus.error_updated_product.value,
-                status=AnnotationStatus.error_updated_product.name,
-                description="the ingredient list has been updated since spellcheck",
-            )
-
-        save_ingredients(
-            product_id,
-            corrected,
-            lang=lang,
             insight_id=insight.id,
             auth=auth,
             is_vote=is_vote,
@@ -677,7 +633,6 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
 
 
 ANNOTATOR_MAPPING: dict[str, Type] = {
-    InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     InsightType.packager_code.name: PackagerCodeAnnotator,
     InsightType.label.name: LabelAnnotator,
     InsightType.category.name: CategoryAnnotator,
