@@ -16,6 +16,9 @@ logger = get_logger(__name__)
 # Maximum batch size for CLIP model set in CLIP config.pbtxt
 CLIP_MAX_BATCH_SIZE = 32
 
+# Useful Triton API endpoints:
+# Get model config: /v2/models/{MODEL_NAME}/config
+
 
 @functools.cache
 def get_triton_inference_stub() -> service_pb2_grpc.GRPCInferenceServiceStub:

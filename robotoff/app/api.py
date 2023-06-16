@@ -1,4 +1,5 @@
 import csv
+import dataclasses
 import datetime
 import functools
 import hashlib
@@ -60,6 +61,7 @@ from robotoff.off import (
     generate_json_ocr_url,
     get_barcode_from_url,
 )
+from robotoff.prediction import ingredient_list
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.prediction.ocr.dataclass import OCRParsingException
@@ -561,6 +563,32 @@ class CategoryPredictorResource:
             threshold=req.media.get("threshold"),
             neural_model_name=neural_model_name,
         )
+
+
+class IngredientListPredictorResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Predict ingredient list using ingredient NER model from an OCR
+        URL.
+
+        This endpoint is *experimental* and shouldn't be used in production
+        settings.
+        """
+        server_type = get_server_type_from_req(req)
+
+        if server_type != ServerType.off:
+            raise falcon.HTTPBadRequest(
+                f"ingredient list predictor is only available for 'off' server type (here: '{server_type.name}')"
+            )
+
+        ocr_url = req.get_param("ocr_url", required=True)
+        aggregation_strategy = req.get_param("aggregation_strategy", default="FIRST")
+        output = ingredient_list.predict_from_ocr(
+            ocr_url,
+            aggregation_strategy=ingredient_list.AggregationStrategy[
+                aggregation_strategy
+            ],
+        )
+        resp.media = dataclasses.asdict(output)
 
 
 class UpdateDatasetResource:
@@ -1604,6 +1632,7 @@ api.add_route("/api/v1/insights/dump", DumpResource())
 api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
 api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
+api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images", ImageCollection())
