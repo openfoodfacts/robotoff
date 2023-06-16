@@ -41,6 +41,7 @@ x-robotoff-base-env:
   ELASTIC_USER:
   TRITON_HOST:
   FASTTEXT_HOST:
+  FASTTEXT_PORT:
   ENABLE_MONGODB_ACCESS:
   IN_DOCKER_CONTAINER:
   NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings

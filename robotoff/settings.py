@@ -290,8 +290,8 @@ TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
 TRITON_MODELS_DIR = PROJECT_DIR / "models/triton"
 OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
-_fasttext_host = os.environ.get("FASTTEXT_HOST", "localhost")
-_fasttext_port = os.environ.get("FASTTEXT_PORT", "8020")
+_fasttext_host = os.environ.get("FASTTEXT_HOST", "fasttext")
+_fasttext_port = os.environ.get("FASTTEXT_PORT", "8000")
 FASTTEXT_SERVER_URI = f"http://{_fasttext_host}:{_fasttext_port}"
 
 # We require a minimum of 15 occurences of the brands already on OFF to perform
