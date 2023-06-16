@@ -64,7 +64,10 @@ from robotoff.off import (
 from robotoff.prediction import ingredient_list
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
-from robotoff.prediction.ocr.dataclass import OCRParsingException
+from robotoff.prediction.ocr.dataclass import (
+    OCRParsingException,
+    OCRResultGenerationException,
+)
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
@@ -582,12 +585,20 @@ class IngredientListPredictorResource:
 
         ocr_url = req.get_param("ocr_url", required=True)
         aggregation_strategy = req.get_param("aggregation_strategy", default="FIRST")
-        output = ingredient_list.predict_from_ocr(
-            ocr_url,
-            aggregation_strategy=ingredient_list.AggregationStrategy[
-                aggregation_strategy
-            ],
-        )
+        try:
+            output = ingredient_list.predict_from_ocr(
+                ocr_url,
+                aggregation_strategy=ingredient_list.AggregationStrategy[
+                    aggregation_strategy
+                ],
+            )
+        except OCRResultGenerationException as e:
+            error_message, _ = e.args
+            resp.media = {
+                "error": "ocr_input_error",
+                "description": error_message,
+            }
+            return
         resp.media = dataclasses.asdict(output)
 
 
