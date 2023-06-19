@@ -37,5 +37,5 @@ msgstr "Hình ảnh này có phải về thông tin dinh dưỡng cho ngôn ng�
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Sản phẩm có yếu tố đóng gói này không?"
 
