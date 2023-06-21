@@ -82,9 +82,13 @@ class OrientationResult:
 
 
 class OCRResultGenerationException(Exception):
-    """An Error occurred while analyzing OCR
+    """An error occurred while downloading or analyzing OCR.
 
-    args may contain ocr_url"""
+    args contain two items:
+
+    - the error message (str)
+    - the OCR url (str)
+    """
 
     pass
 

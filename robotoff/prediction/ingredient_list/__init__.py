@@ -67,8 +67,9 @@ class IngredientPredictionOutput:
 
 def predict_from_ocr(
     input_ocr: Union[str, OCRResult],
-    aggregation_strategy: AggregationStrategy = AggregationStrategy.NONE,
+    aggregation_strategy: AggregationStrategy = AggregationStrategy.FIRST,
     predict_lang: bool = True,
+    model_version: str = "1",
 ) -> IngredientPredictionOutput:
     """Predict ingredient lists from an OCR.
 
@@ -78,6 +79,7 @@ def predict_from_ocr(
     :param predict_lang: if True, populate the `lang` field in
         `IngredientPredictionAggregatedEntity`. This flag is ignored if
         `aggregation_strategy` is `NONE`.
+    :param model_version: version of the model model to use, defaults to "1"
     :return: the `IngredientPredictionOutput`
     """
     ocr_result: OCRResult
@@ -91,7 +93,9 @@ def predict_from_ocr(
     if not text:
         return IngredientPredictionOutput(entities=[], text=text)  # type: ignore
 
-    predictions = predict_batch([text], aggregation_strategy, predict_lang)
+    predictions = predict_batch(
+        [text], aggregation_strategy, predict_lang, model_version
+    )
     return predictions[0]
 
 
@@ -111,6 +115,7 @@ def predict_batch(
     texts: list[str],
     aggregation_strategy: AggregationStrategy = AggregationStrategy.FIRST,
     predict_lang: bool = True,
+    model_version: str = "1",
 ) -> list[IngredientPredictionOutput]:
     """Predict ingredient lists from a batch of texts using the NER model.
 
@@ -121,6 +126,7 @@ def predict_batch(
     :param predict_lang: if True, populate the `lang` field in
         `IngredientPredictionAggregatedEntity`. This flag is ignored if
         `aggregation_strategy` is `NONE`.
+    :param model_version: version of the model model to use, defaults to "1"
     :return: a list of IngredientPredictionOutput (one for each input text)
     """
     tokenizer = get_tokenizer(INGREDIENT_NER_MODEL_DIR)
@@ -135,7 +141,10 @@ def predict_batch(
         return_special_tokens_mask=True,
     )
     logits = send_ner_infer_request(
-        batch_encoding.input_ids, batch_encoding.attention_mask, "ingredient-ner"
+        batch_encoding.input_ids,
+        batch_encoding.attention_mask,
+        "ingredient-ner",
+        model_version=model_version,
     )
     pipeline = TokenClassificationPipeline(tokenizer, INGREDIENT_ID2LABEL)
 
@@ -204,6 +213,7 @@ def send_ner_infer_request(
     input_ids: np.ndarray,
     attention_mask: np.ndarray,
     model_name: str,
+    model_version: str = "1",
 ) -> np.ndarray:
     """Send a NER infer request to the Triton inference server.
 
@@ -214,10 +224,11 @@ def send_ner_infer_request(
     :param attention_mask: attention mask, generated using the transformers
         tokenizer
     :param model_name: the name of the model to use
+    :param model_version: version of the model model to use, defaults to "1"
     :return: the predicted logits
     """
     stub = get_triton_inference_stub()
-    request = build_triton_request(input_ids, attention_mask, model_name)
+    request = build_triton_request(input_ids, attention_mask, model_name, model_version)
     response = stub.ModelInfer(request)
     num_tokens = response.outputs[0].shape[1]
     num_labels = response.outputs[0].shape[2]
@@ -228,7 +239,10 @@ def send_ner_infer_request(
 
 
 def build_triton_request(
-    input_ids: np.ndarray, attention_mask: np.ndarray, model_name: str
+    input_ids: np.ndarray,
+    attention_mask: np.ndarray,
+    model_name: str,
+    model_version: str = "1",
 ):
     """Build a Triton ModelInferRequest gRPC request.
 
@@ -240,6 +254,7 @@ def build_triton_request(
     """
     request = service_pb2.ModelInferRequest()
     request.model_name = model_name
+    request.model_version = model_version
 
     input_ids_input = service_pb2.ModelInferRequest().InferInputTensor()
     input_ids_input.name = "input_ids"
