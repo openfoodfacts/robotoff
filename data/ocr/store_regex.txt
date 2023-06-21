@@ -1,3 +1,4 @@
+Albertsons
 Aldi
 Aldi||gletscherkrone
 Aldi||gold[aä]hren
@@ -7,8 +8,11 @@ Aldi||sprengel
 Alnatura
 Alteza
 Auchan
+Asda
+Biedronka
 Coccimarket||belle france
 Coccinelle||belle france
+Coles
 Eurêka ma maison||belle france
 G20||belle france
 Diagonal||belle france
@@ -29,11 +33,14 @@ Casino
 Colruyt
 Delhaize
 Denner
+Dunnes Stores
 Edeka
 Edeka||gut[- \n]g[uü]nstig
 Eroski
 Franprix
+Giant Eagle
 Hacendado
+H-E-B
 Intermarché
 Intermarché||bouton d'or
 Intermarché||capitaine cook
@@ -51,8 +58,11 @@ Intermarché||top budget
 Kaufland
 Kaufland||k-bio
 Kaufland||k-classic
+Kroger
 La Vie Claire
 Leader Price
+Leclerc||eleclerc
+Leclerc||e.leclerc
 Leclerc||(?:œ|oe)ufs de nos r[ée]gions
 Leclerc||[ée]quador
 Leclerc||autour du dessert
@@ -189,6 +199,7 @@ Mercadona||hacendado
 Migros
 Monoprix
 Morrisson's
+Ocado
 Picard
 Cora||patrimoine gourmand
 Match||patrimoine gourmand
