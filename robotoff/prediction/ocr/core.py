@@ -50,6 +50,15 @@ PREDICTION_TYPE_TO_FUNC: dict[
 def get_ocr_result(
     ocr_url: str, session: requests.Session, error_raise: bool = True
 ) -> Optional[OCRResult]:
+    """Generate an OCRResult from the URL of an OCR JSON.
+
+    :param ocr_url: The URL of the JSON OCR
+    :param session: the requests Session to use to download the JSON file
+    :param error_raise: if True, raises an OCRResultGenerationException if an
+        error occured during download or analysis, defaults to True
+    :return: if `error_raise` is True, always return an OCRResult (or raises
+        an error). Otherwise return the OCRResult or None if an error occured.
+    """
     try:
         r = session.get(ocr_url)
     except requests.exceptions.RequestException as e:
@@ -61,9 +70,11 @@ def get_ocr_result(
         return None
 
     if not r.ok:
-        logger.warning(
-            "Non-200 status code (%s) when fetching OCR URL: %s", r.status_code, ocr_url
-        )
+        error_message = "Non-200 status code (%s) when fetching OCR URL"
+        if error_raise:
+            raise OCRResultGenerationException(error_message % r.status_code, ocr_url)
+
+        logger.warning(error_message + ": %s", r.status_code, ocr_url)
         return None
 
     try:

@@ -585,12 +585,14 @@ class IngredientListPredictorResource:
 
         ocr_url = req.get_param("ocr_url", required=True)
         aggregation_strategy = req.get_param("aggregation_strategy", default="FIRST")
+        model_version = req.get_param("model_version", default="1")
         try:
             output = ingredient_list.predict_from_ocr(
                 ocr_url,
                 aggregation_strategy=ingredient_list.AggregationStrategy[
                     aggregation_strategy
                 ],
+                model_version=model_version,
             )
         except OCRResultGenerationException as e:
             error_message, _ = e.args
