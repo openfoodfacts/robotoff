@@ -19,6 +19,12 @@ paths:
       tags:
         - Questions
       summary: Get questions for a given product
+      description: |
+        Questions are sorted by priority: we want questions with highest impact to be displayed first. The order is the following:
+          - category
+          - label
+          - brand
+          - remaining types
       parameters:
         - name: count
           in: query
