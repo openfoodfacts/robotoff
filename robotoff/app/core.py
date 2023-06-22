@@ -14,6 +14,7 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     annotate,
 )
+from robotoff.insights.question import QuestionFormatterFactory
 from robotoff.models import (
     AnnotationVote,
     ImageModel,
@@ -536,3 +537,22 @@ def update_logo_annotations(
         LogoAnnotation.bulk_update(updated_logos, fields=list(updated_fields))
 
     return updated_logos
+
+
+def filter_question_insight_types(keep_types: Optional[list[str]]):
+    """Utility function to validate `insight_types` parameters in /questions/*
+    queries.
+
+    If `keep_types` is None, we return default question types.
+    If `keep_types` is not None, we only keep valid types.
+
+    :param keep_types: the input `insight_types` list
+    :return: the sanitized `insight_types` list
+    """
+    if keep_types is None:
+        keep_types = QuestionFormatterFactory.get_default_types()
+    else:
+        keep_types = list(
+            set(keep_types) & set(QuestionFormatterFactory.get_available_types())
+        )
+    return keep_types

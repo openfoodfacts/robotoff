@@ -30,6 +30,7 @@ paths:
         - $ref: "#/components/parameters/barcode_path"
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/lang"
+        - $ref: "#/components/parameters/insight_types"
       responses:
         "200":
           description: "Questions about the requested product"
