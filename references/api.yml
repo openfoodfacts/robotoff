@@ -19,6 +19,12 @@ paths:
       tags:
         - Questions
       summary: Get questions for a given product
+      description: |
+        Questions are sorted by priority: we want questions with highest impact to be displayed first. The order is the following:
+          - category
+          - label
+          - brand
+          - remaining types
       parameters:
         - name: count
           in: query
@@ -30,6 +36,7 @@ paths:
         - $ref: "#/components/parameters/barcode_path"
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/lang"
+        - $ref: "#/components/parameters/insight_types"
       responses:
         "200":
           description: "Questions about the requested product"
