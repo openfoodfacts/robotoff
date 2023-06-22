@@ -25,6 +25,7 @@ from robotoff.app.auth import BasicAuthDecodeError, basic_decode
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
+    filter_question_insight_types,
     get_image_predictions,
     get_images,
     get_insights,
@@ -1200,7 +1201,10 @@ class ProductQuestionsResource:
 
         auth: Optional[OFFAuthentication] = parse_auth(req)
 
-        keep_types = QuestionFormatterFactory.get_default_types()
+        keep_types: Optional[list[str]] = req.get_param_as_list(
+            "insight_types", required=False
+        )
+        keep_types = filter_question_insight_types(keep_types)
 
         insights = list(
             get_insights(
@@ -1265,6 +1269,7 @@ def get_questions_resource_on_get(
     keep_types: Optional[list[str]] = req.get_param_as_list(
         "insight_types", required=False
     )
+    keep_types = filter_question_insight_types(keep_types)
     country: Optional[str] = req.get_param("country")
     value_tag: str = req.get_param("value_tag")
     brands = req.get_param_as_list("brands") or None
@@ -1291,12 +1296,6 @@ def get_questions_resource_on_get(
     if reserved_barcode:
         # Include all results, including non reserved barcodes
         reserved_barcode = None
-
-    if keep_types is None:
-        keep_types = QuestionFormatterFactory.get_default_types()
-    else:
-        # Limit the number of types to prevent slow SQL queries
-        keep_types = keep_types[:10]
 
     if brands is not None:
         # Limit the number of brands to prevent slow SQL queries
