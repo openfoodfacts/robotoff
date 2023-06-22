@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.30.0](https://github.com/openfoodfacts/robotoff/compare/v1.29.0...v1.30.0) (2023-06-22)
+
+
+### Features
+
+* add fasttext langid module ([432027b](https://github.com/openfoodfacts/robotoff/commit/432027bf61daf06c71ce9ccc49b307add06aea86)), closes [#1122](https://github.com/openfoodfacts/robotoff/issues/1122)
+* add first version of ingredient list NER + API ([9083bdb](https://github.com/openfoodfacts/robotoff/commit/9083bdb8f995b0dead012c3fa34e4ded05659ec2))
+
+
+### Bug Fixes
+
+* add `insight_types` parameter in /question/{barcode} ([fc7b76a](https://github.com/openfoodfacts/robotoff/commit/fc7b76a753df8d8c951c1965f9a6d730f06cd6dc)), closes [#1139](https://github.com/openfoodfacts/robotoff/issues/1139)
+* fix default FASTTEXT_MODEL_DIR value ([e4cc4e7](https://github.com/openfoodfacts/robotoff/commit/e4cc4e701ecb73467d483ede16cef349973b1e22))
+* improve error handling in /predict/ingredient_list route ([7a996cc](https://github.com/openfoodfacts/robotoff/commit/7a996cc3a7a4942e088ad7b0cea5d78492071222))
+* improve ingredient detection pipeline ([9ff8aec](https://github.com/openfoodfacts/robotoff/commit/9ff8aec390df2a3f2a5bd3ac2d74144442a240c2))
+* remove spellcheck module ([916132a](https://github.com/openfoodfacts/robotoff/commit/916132a4df39241515b81a51aab2d1daf45a3674))
+* sort product questions by priority ([5ea69e3](https://github.com/openfoodfacts/robotoff/commit/5ea69e39138f1c12d14b4db787cb3769eb262013)), closes [#1138](https://github.com/openfoodfacts/robotoff/issues/1138)
+* update apscheduler ([dd4eed8](https://github.com/openfoodfacts/robotoff/commit/dd4eed8967402a02aaadf09a8e92da92a02222c9))
+* update poetry install command in Dockerfile ([75f8b34](https://github.com/openfoodfacts/robotoff/commit/75f8b342ebf6348b80cb7c06cf41908a54a768aa))
+
 ## [1.29.0](https://github.com/openfoodfacts/robotoff/compare/v1.28.1...v1.29.0) (2023-06-01)
 
 
