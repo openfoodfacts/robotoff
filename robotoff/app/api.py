@@ -72,6 +72,7 @@ from robotoff.prediction.ocr.dataclass import (
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
+    InsightType,
     JSONType,
     NeuralCategoryClassifierModel,
     PredictionType,
@@ -1184,6 +1185,29 @@ class WebhookProductResource:
         }
 
 
+def question_insight_type_sort_func(insight: ProductInsight) -> int:
+    """Function to sort questions on a specific product by priority.
+
+    Some questions are more important than others, so we want them to be
+    displayed first. The order is the following:
+
+    - category
+    - label
+    - brand
+    - remaining questions
+
+    :param insight: The product insight
+    :return: a sorting key, lower has more priority
+    """
+    if insight.type == InsightType.category.name:
+        return 0
+    if insight.type == InsightType.label.name:
+        return 1
+    elif insight.type == InsightType.brand.name:
+        return 2
+    return 3
+
+
 class ProductQuestionsResource:
     """Get questions about a product to confirm/infirm an insight
 
@@ -1206,7 +1230,7 @@ class ProductQuestionsResource:
         )
         keep_types = filter_question_insight_types(keep_types)
 
-        insights = list(
+        insights = sorted(
             get_insights(
                 barcode=barcode,
                 server_type=server_type,
@@ -1215,7 +1239,8 @@ class ProductQuestionsResource:
                 order_by="n_votes",
                 avoid_voted_on=_get_skip_voted_on(auth, device_id),
                 automatically_processable=False,
-            )
+            ),
+            key=question_insight_type_sort_func,
         )
 
         if not insights:

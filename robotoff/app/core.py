@@ -152,7 +152,7 @@ def get_insights(
     if value_tag:
         where_clauses.append(ProductInsight.value_tag == value_tag)
 
-    if keep_types:
+    if keep_types is not None:
         where_clauses.append(ProductInsight.type.in_(keep_types))
 
     if country is not None:
