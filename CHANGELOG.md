@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.30.1](https://github.com/openfoodfacts/robotoff/compare/v1.30.0...v1.30.1) (2023-06-30)
+
+
+### Bug Fixes
+
+* allow to provide image embedding as input in /predict/category ([655a230](https://github.com/openfoodfacts/robotoff/commit/655a2305e1b6780abb5eea8b19c8352f7d337324))
+* make more robust unit tests ([bbebf3f](https://github.com/openfoodfacts/robotoff/commit/bbebf3fc937e51b880d0210529915cd07a8651bb))
+* remove false positive label for moderation ([bfd2b58](https://github.com/openfoodfacts/robotoff/commit/bfd2b586c2706624050a93eb9f8e7d8e4c1769e4))
+* remove previous categorization model ([058d0cc](https://github.com/openfoodfacts/robotoff/commit/058d0cc6ba66db0308b1abd67bbe2662eeabc647))
+* update /predict/category schema to accept images as input ([728246e](https://github.com/openfoodfacts/robotoff/commit/728246ebbba932ed9401f38ff50fcc10ccfd03d5))
+
+
+### Documentation
+
+* improve OpenAPI documentation ([c4b3843](https://github.com/openfoodfacts/robotoff/commit/c4b38433a0fb6edf38858e9a8728599140c95a56))
+* improve OpenAPI documentation (2) ([db5df96](https://github.com/openfoodfacts/robotoff/commit/db5df9614964beb05a100ccd31c9e52a5de8b22d))
+* update OpenAPI documentation ([07d1136](https://github.com/openfoodfacts/robotoff/commit/07d113680f19b70dfa1354869b9e0f6b05cefad9))
+
 ## [1.30.0](https://github.com/openfoodfacts/robotoff/compare/v1.29.0...v1.30.0) (2023-06-22)
 
 
