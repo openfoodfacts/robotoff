@@ -743,6 +743,14 @@ paths:
       summary: Predict categories for a product
       description: |
         Both `neural` and `matcher` categorizers are available.
+        As input, you can either provide:
+        
+        - the `barcode` of a product: Robotoff will fetch the product from
+          Product Opener and will use this data as inputs to predict categories.
+        - expected inputs under a `product` key. The neural category model
+          accepts the following fields as input: `product_name`, `ingredient_tags`,
+          `ocr`, `nutriments`, `images`. All fields are optional (but you should at least provide one).
+          The matcher categorizer requires the `lang` and `product.product_name` fields.
       requestBody:
         content:
           application/json:
@@ -805,12 +813,60 @@ paths:
                           example:
                             - "en:chicken"
                             - "en:salts"
+                        image_embeddings:
+                          description: |
+                            Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
+                            Each item of the list is the embedding of a single image, provided as a list of dimension 512.
+                            Shape: (num_images, 512)
+                          type: array
+                          maxItems: 10
+                          items:
+                            description: a single image embedding
+                            type: array
+                            items:
+                              type: number
+                            minItems: 512
+                            maxItems: 512
+                        ocr:
+                          description: |
+                            A list of string corresponding to the text extracted from the product images with OCR.
+                            Each element of the list is the text of a single image, the list order doesn't affect predictions.
+                            We use OCR text to detect ingredient mentions and use it as a model input.
+                            For optimal results, this field should be provided even if `ingredients_tags` is provided. 
+                          type: array
+                          items:
+                            type: string
+                        nutriments:
+                          type: object
+                          description: |
+                            Nutriment values. These fields have exactly the same meaning as those of Product Opener.
+                            All fields are optional, only send data for the field for which the value is not missing.
+                          properties:
+                            fat_100g:
+                              type: number
+                            saturated-fat_100g:
+                              type: number
+                            carbohydrates_100g:
+                              type: number
+                            sugars_100g:
+                              type: number
+                            fiber_100g:
+                              type: number
+                            proteins_100g:
+                              type: number
+                            salt_100g:
+                              type: number
+                            energy-kcal_100g:
+                              type: number
+                            fruits-vegetables-nuts_100g:
+                              type: number
+                          additionalProperties: false
                       required:
                         - product_name
                     lang:
                       type: string
                       minLength: 1
-                      description: Language of the product name, required for matcher algorithm
+                      description: Language of the product name, only required (and used) for matcher algorithm
                       example: en
                     deepest_only:
                       type: boolean
