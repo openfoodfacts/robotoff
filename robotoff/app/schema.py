@@ -86,6 +86,12 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                             "type": "array",
                             "items": {"type": "string"},
                         },
+                        "images": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                            },
+                        },
                         "nutriments": {
                             "type": "object",
                             "properties": {

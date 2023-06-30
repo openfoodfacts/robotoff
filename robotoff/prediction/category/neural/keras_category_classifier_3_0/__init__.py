@@ -122,6 +122,10 @@ def generate_image_embeddings(
         (num_images, IMAGE_EMBEDDING_DIM)
     """
     # Fetch the `MAX_IMAGE_EMBEDDING` most recent "raw" images
+    # product->images is either:
+    # - a dict, as returned by MongoDB or Product Opener API
+    # - a list of image IDs, if the inputs were provided directly (through the
+    # API for example)
     image_ids_int = sorted(
         # We convert it to int to get a correct recent sorting
         (int(image_id) for image_id in product.get("images", {}) if image_id.isdigit()),
