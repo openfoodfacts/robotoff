@@ -114,6 +114,7 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                     },
                     "required": [],
                     "additionalProperties": False,
+                    "minProperties": 1,
                 },
                 "deepest_only": {
                     "type": "boolean",

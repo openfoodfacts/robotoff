@@ -748,7 +748,7 @@ paths:
         - the `barcode` of a product: Robotoff will fetch the product from
           Product Opener and will use this data as inputs to predict categories.
         - expected inputs under a `product` key. The neural category model
-          accepts the following fields as input: `product_name`, `ingredient_tags`,
+          accepts the following fields as input: `product_name`, `ingredients_tags`,
           `ocr`, `nutriments`, `images`. All fields are optional (but you should at least provide one).
           The matcher categorizer requires the `lang` and `product.product_name` fields.
       requestBody:
@@ -807,12 +807,13 @@ paths:
                           minLength: 1
                           example: roasted chicken
                         ingredients_tags:
+                          description: the ingredient list, as an ordered list of ingredient tags
                           type: array
                           items:
                             type: string
-                          example:
-                            - "en:chicken"
-                            - "en:salts"
+                            example:
+                              - "en:chicken"
+                              - "en:salts"
                         image_embeddings:
                           description: |
                             Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
@@ -861,8 +862,7 @@ paths:
                             fruits-vegetables-nuts_100g:
                               type: number
                           additionalProperties: false
-                      required:
-                        - product_name
+                      minProperties: 1  # at least one input must be provided
                     lang:
                       type: string
                       minLength: 1
