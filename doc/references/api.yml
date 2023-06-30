@@ -801,6 +801,9 @@ paths:
                   properties:
                     product:
                       type: object
+                      description: |
+                        product information used as model input. All fields are optional, but at
+                        least one field must be provided. 
                       properties:
                         product_name:
                           type: string
@@ -811,9 +814,9 @@ paths:
                           type: array
                           items:
                             type: string
-                            example:
-                              - "en:chicken"
-                              - "en:salts"
+                          example:
+                            - "en:chicken"
+                            - "en:salts"
                         image_embeddings:
                           description: |
                             Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
@@ -1102,7 +1105,6 @@ paths:
                           $ref: "#/components/schemas/Prediction"
                     required:
                       - "predictions"
-                  - $ref: "#/components/schemas/ErrorResponse"
 
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
