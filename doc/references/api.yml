@@ -813,19 +813,20 @@ paths:
                           example:
                             - "en:chicken"
                             - "en:salts"
-                        images:
+                        image_embeddings:
                           description: |
-                            All product images, as a list of image IDs. Only images stored on Product Opener
-                            can be provided as input.
-                            The 10 most recent images will be fetched (based on image ID, higher is more recent)
-                            and image embeddings will be computed.
-                            Embeddings are cached in DB, so subsequent API calls will be faster.
+                            Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
+                            Each item of the list is the embedding of a single image, provided as a list of dimension 512.
+                            Shape: (num_images, 512)
                           type: array
+                          maxItems: 10
                           items:
-                            type: string
-                            pattern: "^[0-9]+$"
-                            description: an image ID, should be a digit
-                            example: "1"
+                            description: a single image embedding
+                            type: array
+                            items:
+                              type: number
+                            minItems: 512
+                            maxItems: 512
                         ocr:
                           description: |
                             A list of string corresponding to the text extracted from the product images with OCR.
