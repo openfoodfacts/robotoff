@@ -17,13 +17,7 @@ class ObjectDetectionModel(enum.Enum):
 
 @enum.unique
 class NeuralCategoryClassifierModel(enum.Enum):
-    keras_2_0 = "keras-2.0"
     keras_image_embeddings_3_0 = "keras-image-embeddings-3.0"
-    keras_300_epochs_3_0 = "keras-300-epochs-3-0"
-    keras_ingredient_ocr_3_0 = "keras-ingredient-ocr-3.0"
-    keras_baseline_3_0 = "keras-baseline-3.0"
-    keras_original_3_0 = "keras-original-3.0"
-    keras_product_name_only_3_0 = "keras-product-name-only-3.0"
 
 
 @enum.unique
