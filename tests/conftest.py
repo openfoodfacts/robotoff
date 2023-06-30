@@ -8,8 +8,12 @@ from robotoff.taxonomy import Taxonomy
 
 
 @pytest.fixture(autouse=True)
-def set_global_settings(mocker):
+def set_global_settings(mocker, monkeypatch):
     mocker.patch("robotoff.settings.ENABLE_MONGODB_ACCESS", True)
+    # Reset envvar to default value
+    monkeypatch.setenv("ROBOTOFF_INSTANCE", "dev")
+    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)
+    monkeypatch.delenv("ROBOTOFF_TLD", raising=False)
 
 
 @pytest.fixture(scope="session", autouse=True)

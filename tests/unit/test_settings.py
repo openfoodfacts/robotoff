@@ -41,8 +41,6 @@ from robotoff.types import ServerType  # noqa: F401
 )
 def test_base_url_provider(monkeypatch, instance, got_url, want_url):
     monkeypatch.setenv("ROBOTOFF_INSTANCE", instance)
-    monkeypatch.delenv("ROBOTOFF_TLD", raising=False)  # force defaults to apply
-    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
     assert eval(got_url) == want_url
 
 

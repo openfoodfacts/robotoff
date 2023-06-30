@@ -4,7 +4,6 @@ from robotoff.types import ServerType
 
 
 def test_crop_image_url(monkeypatch):
-    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
     logo_annotation = LogoAnnotation(
         image_prediction=ImagePrediction(
             type="label",
