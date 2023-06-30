@@ -86,10 +86,14 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                             "type": "array",
                             "items": {"type": "string"},
                         },
-                        "images": {
+                        "image_embeddings": {
                             "type": "array",
+                            "maxItems": 10,
                             "items": {
-                                "type": "string",
+                                "type": "array",
+                                "minItems": 512,
+                                "maxItems": 512,
+                                "items": {"type": "number"},
                             },
                         },
                         "nutriments": {

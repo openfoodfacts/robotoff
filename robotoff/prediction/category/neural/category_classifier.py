@@ -1,5 +1,7 @@
 from typing import Any, Optional
 
+import numpy as np
+
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import get_triton_inference_stub
 from robotoff.types import (
@@ -70,8 +72,41 @@ class CategoryClassifier:
         """Return an unordered list of category predictions for the given
         product and additional debug information.
 
-        :param product: the product to predict the categories from, should
-            have at least `product_name` and `ingredients` fields
+        :param product: the product to predict the categories from, the
+            following fields are used as input:
+            - `product_name`: the product name in the main language of the
+              product
+            - `ingredients`: a list of ingredient tags (ex: ["en:chicken"])
+            - `nutriments`: a dict with mapping nutriment name to value for
+              100g of product. The following nutriment names are accepted:
+              `fat_100g`, `saturated-fat_100g`, `carbohydrates_100g`,
+              `sugars_100g`, `fiber_100g`, `proteins_100g`, `salt_100g`,
+              `energy-kcal_100g`, `fruits-vegetables-nuts_100g`.
+              Don't provide the nutriment if the value is missing.
+            - `ocr`: a list of string corresponding to the text extracted from
+              the product images with OCR. Each element of the list is the
+              text of a single image, the list order doesn't affect
+              predictions. We use OCR text to detect ingredient mentions and
+              use it as a model input.
+              For optimal results, this field should be provided even if
+              `ingredients` is provided.
+              This fields is optional. If `ocr` is not provided, we fetch OCR
+              texts from Product Opener using  `product.code` and
+              `product.images` fields to build OCR URLs.
+            - `image_embeddings`: embeddings of the 10 most recent product
+              images generated with clip-vit-base-patch32 model.
+              Each item of the list is the embedding of a single image,
+              provided as a list of dimension 512. Shape: (num_images, 512).
+              This field is optional. If `image_embeddings` is not provided,
+              we fetch the 10 most recent images from Product Opener using
+              `product.code` and `product.images` fields to build image URLs.
+              We then compute image embeddings and cache them in
+              `embeddings.image_embedding` DB table. These cached embeddings
+              will be used instead of computing embeddings from scratch for
+              subsequent calls.
+            - `code` and `images`: these fields are only used if `ocr` or
+              `image_embeddings` are not provided, to generate OCR texts and
+              image embeddings respectively.
         :param product_id: identifier of the product
         :param deepest_only: controls whether the returned list should only
             contain the deepmost categories for a predicted taxonomy chain.
@@ -108,8 +143,26 @@ class CategoryClassifier:
                 else []
             )
 
-            # Only generate image embeddings if it's required by the model
-            triton_stub = get_triton_inference_stub()
+        # Only generate image embeddings if it's required by the model
+        triton_stub = get_triton_inference_stub()
+
+        # We check whether image embeddings were provided as input
+        if "image_embeddings" in product:
+            if product["image_embeddings"]:
+                image_embeddings = np.array(
+                    product["image_embeddings"], dtype=np.float32
+                )
+
+                if image_embeddings.ndim != 2 or image_embeddings.shape[1] != 512:
+                    raise ValueError(
+                        "invalid shape for image embeddings: %s, expected (-1, 512)",
+                        image_embeddings.shape,
+                    )
+            else:
+                # No image available
+                image_embeddings = None
+        else:
+            # Or we generate them (or fetch them from DB cache)
             image_embeddings = (
                 keras_category_classifier_3_0.generate_image_embeddings(
                     product, product_id, triton_stub
@@ -119,15 +172,16 @@ class CategoryClassifier:
                 )
                 else None
             )
-            raw_predictions, debug = keras_category_classifier_3_0.predict(
-                product,
-                ocr_texts,
-                model_name,
-                stub=triton_stub,
-                threshold=threshold,
-                image_embeddings=image_embeddings,
-                category_taxonomy=self.taxonomy,
-            )
+
+        raw_predictions, debug = keras_category_classifier_3_0.predict(
+            product,
+            ocr_texts,
+            model_name,
+            stub=triton_stub,
+            threshold=threshold,
+            image_embeddings=image_embeddings,
+            category_taxonomy=self.taxonomy,
+        )
 
         # Threshold for automatic detection, only available for
         # `keras_image_embeddings_3_0` model.
