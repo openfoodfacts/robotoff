@@ -365,38 +365,8 @@ def generate_debug_dict(
     return debug
 
 
-# Parameters on how to prepare data for each model type, see
-# `build_triton_request`
-model_input_flags: dict[NeuralCategoryClassifierModel, dict] = {
-    NeuralCategoryClassifierModel.keras_image_embeddings_3_0: {},
-    NeuralCategoryClassifierModel.keras_300_epochs_3_0: {"add_image_embeddings": False},
-    NeuralCategoryClassifierModel.keras_ingredient_ocr_3_0: {
-        "add_image_embeddings": False,
-    },
-    NeuralCategoryClassifierModel.keras_baseline_3_0: {
-        "add_ingredients_ocr_tags": False,
-        "add_image_embeddings": False,
-    },
-    NeuralCategoryClassifierModel.keras_original_3_0: {
-        "add_ingredients_ocr_tags": False,
-        "add_nutriments": False,
-        "add_image_embeddings": False,
-    },
-    NeuralCategoryClassifierModel.keras_product_name_only_3_0: {
-        "add_ingredients_ocr_tags": False,
-        "add_nutriments": False,
-        "add_ingredient_tags": False,
-        "add_image_embeddings": False,
-    },
-}
-
 triton_model_names = {
     NeuralCategoryClassifierModel.keras_image_embeddings_3_0: "category-classifier-keras-image-embeddings-3.0",
-    NeuralCategoryClassifierModel.keras_300_epochs_3_0: "category-classifier-keras-300-epochs-3.0",
-    NeuralCategoryClassifierModel.keras_ingredient_ocr_3_0: "category-classifier-keras-ingredient-ocr-3.0",
-    NeuralCategoryClassifierModel.keras_baseline_3_0: "category-classifier-keras-baseline-3.0",
-    NeuralCategoryClassifierModel.keras_original_3_0: "category-classifier-keras-original-3.0",
-    NeuralCategoryClassifierModel.keras_product_name_only_3_0: "category-classifier-keras-product-name-only-3.0",
 }
 
 
@@ -404,11 +374,7 @@ def _predict(
     inputs: JSONType, model_name: NeuralCategoryClassifierModel, stub
 ) -> tuple[np.ndarray, list[str]]:
     """Internal method to prepare and run triton request."""
-    request = build_triton_request(
-        inputs,
-        model_name=triton_model_names[model_name],
-        **model_input_flags[model_name],
-    )
+    request = build_triton_request(inputs, model_name=triton_model_names[model_name])
     response = stub.ModelInfer(request)
     scores = np.frombuffer(response.raw_output_contents[0], dtype=np.float32).reshape(
         (1, -1)
