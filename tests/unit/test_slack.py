@@ -85,8 +85,6 @@ def test_notify_image_flag_public(mocker, monkeypatch):
     mock_image_moderation = mocker.patch(
         "robotoff.slack.http_session.put", return_value=MockSlackResponse()
     )
-    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
-
     slack_notifier = slack.SlackNotifier("")
     notifier = slack.MultiNotifier(
         [slack_notifier, slack.ImageModerationNotifier("http://images.org/")]
@@ -132,8 +130,6 @@ def test_notify_image_flag_private(mocker, monkeypatch):
     mock_image_moderation = mocker.patch(
         "robotoff.slack.http_session.put", return_value=MockSlackResponse()
     )
-    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
-
     slack_notifier = slack.SlackNotifier("")
     notifier = slack.MultiNotifier(
         [slack_notifier, slack.ImageModerationNotifier("http://images.org/")]
@@ -175,8 +171,6 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
-    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
-
     notifier = slack.SlackNotifier("")
 
     print(settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, "/image/1"))
@@ -204,8 +198,6 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
     mock = mocker.patch(
         "robotoff.slack.http_session.post", return_value=MockSlackResponse()
     )
-    monkeypatch.delenv("ROBOTOFF_SCHEME", raising=False)  # force defaults to apply
-
     notifier = slack.SlackNotifier("")
 
     notifier.notify_automatic_processing(
