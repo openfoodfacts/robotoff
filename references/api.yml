@@ -749,7 +749,7 @@ paths:
           Product Opener and will use this data as inputs to predict categories.
         - expected inputs under a `product` key. The neural category model
           accepts the following fields as input: `product_name`, `ingredients_tags`,
-          `ocr`, `nutriments`, `images`. All fields are optional (but you should at least provide one).
+          `ocr`, `nutriments`, `image_embeddings`. All fields are optional (but you should at least provide one).
           The matcher categorizer requires the `lang` and `product.product_name` fields.
       requestBody:
         content:
