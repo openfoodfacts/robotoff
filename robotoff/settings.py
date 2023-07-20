@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import sentry_sdk
+import toml
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -250,10 +251,18 @@ def init_sentry(integrations: Optional[list[Integration]] = None):
             )
         )
         sentry_sdk.init(  # type:ignore # mypy say it's abstract
-            _sentry_dsn, environment=robotoff_instance, integrations=integrations
+            _sentry_dsn,
+            environment=robotoff_instance,
+            integrations=integrations,
+            release=get_package_version(),
         )
     elif robotoff_instance == "prod":
         raise ValueError("No SENTRY_DSN specified for prod Robotoff")
+
+
+def get_package_version() -> str:
+    """Return Robotoff version from pyproject.toml file."""
+    return toml.load(str(PROJECT_DIR / "pyproject.toml"))["tool"]["poetry"]["version"]
 
 
 OCR_DATA_DIR = DATA_DIR / "ocr"
