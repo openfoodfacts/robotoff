@@ -1,61 +1,16 @@
 import gzip
-import logging
-import os
 import pathlib
-import sys
-from io import BytesIO
-from typing import Any, Callable, Iterable, Optional, Union
-from urllib.parse import urlparse
+from typing import Any, Callable, Iterable, Union
 
 import orjson
-import PIL
 import requests
-from PIL import Image
 from requests.adapters import HTTPAdapter
-from requests.exceptions import ConnectionError as RequestConnectionError
-from requests.exceptions import SSLError, Timeout
 
 from robotoff import settings
 from robotoff.types import JSONType
 
-
-def get_logger(name=None, level: Optional[int] = None):
-    logger = logging.getLogger(name)
-
-    if level is None:
-        log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-        level = logging.getLevelName(log_level)
-
-        if not isinstance(level, int):
-            print(
-                "Unknown log level: {}, fallback to INFO".format(log_level),
-                file=sys.stderr,
-            )
-            level = 20
-
-    logger.setLevel(level)
-
-    if name is None:
-        configure_root_logger(logger, level)
-
-    return logger
-
-
-def configure_root_logger(logger, level: int = 20):
-    logger.setLevel(level)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s :: %(processName)s :: "
-        "%(threadName)s :: %(levelname)s :: "
-        "%(message)s"
-    )
-    handler.setFormatter(formatter)
-    handler.setLevel(level)
-    logger.addHandler(handler)
-
-    for name in ("redis_lock", "spacy"):
-        logging.getLogger(name).setLevel(logging.WARNING)
-
+from .image import ImageLoadingException, get_image_from_url  # noqa: F401
+from .logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -162,73 +117,6 @@ def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):
         for item in text_iter:
             item = item.strip("\n")
             f.write(item + "\n")
-
-
-class ImageLoadingException(Exception):
-    """Exception raised by `get_image_from_url`` when image cannot be fetched
-    from URL or if loading failed.
-    """
-
-    pass
-
-
-def get_image_from_url(
-    image_url: str,
-    error_raise: bool = True,
-    session: Optional[requests.Session] = None,
-) -> Optional[Image.Image]:
-    """Fetch an image from `image_url` and load it.
-
-    :param image_url: URL of the image to load
-    :param error_raise: if True, raises a `ImageLoadingException` if an error
-    occured, defaults to False. If False, None is returned if an error occurs.
-    :param session: requests Session to use, by default no session is used.
-    :raises ImageLoadingException: _description_
-    :return: the Pillow Image or None.
-    """
-    auth = (
-        settings._off_net_auth
-        if urlparse(image_url).netloc.endswith("openfoodfacts.net")
-        else None
-    )
-    try:
-        if session:
-            r = session.get(image_url, auth=auth)
-        else:
-            r = requests.get(image_url, auth=auth)
-    except (RequestConnectionError, SSLError, Timeout) as e:
-        error_message = "Cannot download image %s"
-        if error_raise:
-            raise ImageLoadingException(error_message % image_url) from e
-        logger.info(error_message, image_url, exc_info=e)
-        return None
-
-    if not r.ok:
-        error_message = "Cannot download image %s: HTTP %s"
-        error_args = (image_url, r.status_code)
-        if error_raise:
-            raise ImageLoadingException(error_message % error_args)
-        logger.log(
-            logging.INFO if r.status_code < 500 else logging.WARNING,
-            error_message,
-            *error_args,
-        )
-        return None
-
-    try:
-        return Image.open(BytesIO(r.content))
-    except PIL.UnidentifiedImageError:
-        error_message = f"Cannot identify image {image_url}"
-        if error_raise:
-            raise ImageLoadingException(error_message)
-        logger.info(error_message)
-    except PIL.Image.DecompressionBombError:
-        error_message = f"Decompression bomb error for image {image_url}"
-        if error_raise:
-            raise ImageLoadingException(error_message)
-        logger.info(error_message)
-
-    return None
 
 
 http_session = requests.Session()
