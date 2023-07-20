@@ -11,6 +11,7 @@ from robotoff.prediction.object_detection.utils import visualization_utils as vi
 from robotoff.triton import get_triton_inference_stub
 from robotoff.types import JSONType, ObjectDetectionModel
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.image import convert_image_to_array
 
 logger = get_logger(__name__)
 
@@ -68,15 +69,6 @@ class ObjectDetectionRawResult:
 
     def to_json(self, threshold: Optional[float] = None) -> list[JSONType]:
         return [dataclasses.asdict(r) for r in self.select(threshold)]
-
-
-def convert_image_to_array(image: Image.Image) -> np.ndarray:
-    if image.mode != "RGB":
-        image = image.convert("RGB")
-
-    (im_width, im_height) = image.size
-
-    return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
 
 
 def add_boxes_and_labels(image_array: np.ndarray, raw_result: ObjectDetectionRawResult):

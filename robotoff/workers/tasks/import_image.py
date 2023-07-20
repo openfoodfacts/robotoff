@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Optional
 
 import elasticsearch
-import numpy
 from elasticsearch.helpers import BulkIndexError
 from PIL import Image
 
@@ -45,6 +44,7 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils.image import convert_image_to_array
 from robotoff.workers.queues import enqueue_job, get_high_queue
 
 logger = get_logger(__name__)
@@ -267,7 +267,9 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
                 logger.info("Error while downloading image %s", image_url)
                 return
 
-            area, prediction_class, polygon = find_image_is_upc(numpy.array(image))
+            area, prediction_class, polygon = find_image_is_upc(
+                convert_image_to_array(image)
+            )
             ImagePrediction.create(
                 image=image_model,
                 type="upc_image",
