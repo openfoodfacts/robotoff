@@ -17,11 +17,12 @@ import json
 import os
 from typing import Iterator, Optional
 
+from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from sklearn.model_selection import train_test_split
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
-from robotoff.taxonomy import Taxonomy, TaxonomyNode, get_taxonomy
+from robotoff.taxonomy import get_taxonomy
 from robotoff.types import JSONType
 from robotoff.utils import dump_jsonl, get_logger
 

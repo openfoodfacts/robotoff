@@ -4,6 +4,7 @@ from typing import Any
 
 import falcon.testing
 import pytest
+from openfoodfacts.types import TaxonomyType
 
 import robotoff.insights.importer
 import robotoff.taxonomy
@@ -31,11 +32,11 @@ def _set_up_and_tear_down(peewee_db):
 
 @pytest.fixture
 def fake_taxonomy(monkeypatch):
-    def fetch_taxonomy_mock(url: str, *args, **kwargs):
+    def _get_taxonomy_mock(taxonomy_type: TaxonomyType, *args, **kwargs):
         data: Any = None
-        if "/brands." in url:
+        if taxonomy_type is TaxonomyType.brand:
             data = {"en:etorki": {"name": {"en": "Etorki"}}}
-        elif "/labels." in url:
+        elif taxonomy_type is TaxonomyType.label:
             data = {
                 "en:organic": {
                     "synonyms": {"fr": ["Bio"]},
@@ -50,8 +51,8 @@ def fake_taxonomy(monkeypatch):
 
     monkeypatch.setattr(
         robotoff.taxonomy,
-        "fetch_taxonomy",
-        fetch_taxonomy_mock,
+        "_get_taxonomy",
+        _get_taxonomy_mock,
     )
 
 
