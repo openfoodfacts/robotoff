@@ -46,4 +46,4 @@ def peewee_db(peewee_db_create):
 
 @pytest.fixture(scope="session")
 def category_taxonomy():
-    return Taxonomy.from_json(settings.TAXONOMY_PATHS["category"])
+    return Taxonomy.from_path(settings.TAXONOMY_PATHS["category"])

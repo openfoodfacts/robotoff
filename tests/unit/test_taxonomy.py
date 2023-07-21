@@ -3,8 +3,8 @@ import pytest
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy, TaxonomyType, match_taxonomized_value
 
-label_taxonomy = Taxonomy.from_json(settings.TAXONOMY_PATHS["label"])
-category_taxonomy = Taxonomy.from_json(settings.TAXONOMY_PATHS["category"])
+label_taxonomy = Taxonomy.from_path(settings.TAXONOMY_PATHS["label"])
+category_taxonomy = Taxonomy.from_path(settings.TAXONOMY_PATHS["category"])
 
 
 class TestTaxonomy:

@@ -863,7 +863,7 @@ class CategoryImporter(InsightImporter):
         campaigns = []
         if (
             insight.value_tag in taxonomy
-            and "agribalyse_food_code" in taxonomy[insight.value_tag].additional_data
+            and "agribalyse_food_code" in taxonomy[insight.value_tag].properties
         ):
             # This category is linked to an agribalyse category, add it as a
             # campaign tag

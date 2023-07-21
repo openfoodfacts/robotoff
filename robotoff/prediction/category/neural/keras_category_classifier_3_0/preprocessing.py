@@ -8,7 +8,7 @@ from typing import Optional
 import numpy as np
 
 from robotoff import settings
-from robotoff.taxonomy import Taxonomy, fetch_taxonomy
+from robotoff.taxonomy import Taxonomy
 from robotoff.types import JSONType
 from robotoff.utils.text import KeywordProcessor
 
@@ -35,11 +35,7 @@ V3_MODEL_DATA_DIR = settings.DATA_DIR / "category/neural/v3"
 
 @functools.cache
 def get_ingredient_taxonomy():
-    return fetch_taxonomy(
-        "",
-        V3_MODEL_DATA_DIR / "ingredients.full.json.gz",
-        offline=True,
-    )
+    return Taxonomy.from_path(V3_MODEL_DATA_DIR / "ingredients.full.json.gz")
 
 
 @functools.cache
