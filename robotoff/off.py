@@ -6,6 +6,7 @@ from typing import Any, Optional
 from urllib.parse import urlparse
 
 import requests
+from openfoodfacts.images import split_barcode
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
@@ -93,41 +94,6 @@ def get_barcode_from_path(path: str) -> Optional[str]:
             break
 
     return barcode or None
-
-
-BARCODE_PATH_REGEX = re.compile(r"^(...)(...)(...)(.*)$")
-
-
-def split_barcode(barcode: str) -> list[str]:
-    """Split barcode in the same way as done by Product Opener to generate a
-    product image folder.
-
-    :param barcode: The barcode of the product. For the pro platform only,
-        it must be prefixed with the org ID using the format
-        `{ORG_ID}/{BARCODE}`
-    :raises ValueError: raise a ValueError if `barcode` is invalid
-    :return: a list containing the splitted barcode
-    """
-    org_id = None
-    if "/" in barcode:
-        # For the pro platform, `barcode` is expected to be in the format
-        # `{ORG_ID}/{BARCODE}` (ex: `org-lea-nature/3307130803004`)
-        org_id, barcode = barcode.split("/", maxsplit=1)
-
-    if not barcode.isdigit():
-        raise ValueError(f"unknown barcode format: {barcode}")
-
-    match = BARCODE_PATH_REGEX.fullmatch(barcode)
-
-    splits = [x for x in match.groups() if x] if match else [barcode]
-
-    if org_id is not None:
-        # For the pro platform only, images and OCRs belonging to an org
-        # are stored in a folder named after the org for all its products, ex:
-        # https://images.pro.openfoodfacts.org/images/products/org-lea-nature/330/713/080/3004/1.jpg
-        splits.append(org_id)
-
-    return splits
 
 
 def _generate_file_path(product_id: ProductIdentifier, image_id: str, suffix: str):
