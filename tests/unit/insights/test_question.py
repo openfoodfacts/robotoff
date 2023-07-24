@@ -2,6 +2,7 @@ import json
 from typing import Optional
 
 import pytest
+from openfoodfacts.images import split_barcode
 
 from robotoff.insights.question import (
     CategoryQuestionFormatter,
@@ -11,7 +12,6 @@ from robotoff.insights.question import (
     get_display_image,
 )
 from robotoff.models import ProductInsight
-from robotoff.off import split_barcode
 from robotoff.settings import TEST_DATA_DIR
 from robotoff.types import InsightType, ProductIdentifier, ServerType
 from robotoff.utils.i18n import TranslationStore
