@@ -13,7 +13,7 @@ msgstr ""
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: id\n"
-"X-Crowdin-File-ID: 2554\n"
+"X-Crowdin-File-ID: 3469\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
