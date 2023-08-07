@@ -16,6 +16,7 @@ import requests
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
+from openfoodfacts import Country
 from PIL import Image
 from sentry_sdk.integrations.falcon import FalconIntegration
 
@@ -124,6 +125,38 @@ def get_server_type_from_req(
         raise falcon.HTTPBadRequest(f"invalid `server_type`: {server_type_str}")
 
 
+COUNTRY_NAME_TO_ENUM = {item.value: item for item in Country}
+
+
+def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
+    """Parse `countries` query string from request."""
+    countries_str: Optional[list[str]] = req.get_param_as_list("countries")
+    countries: Optional[list[Country]] = None
+
+    if countries_str is None:
+        # `country` parameter is deprecated
+        country: Optional[str] = req.get_param("country")
+
+        if country:
+            if country in COUNTRY_NAME_TO_ENUM:
+                country = COUNTRY_NAME_TO_ENUM[country]
+                countries = [country]
+            else:
+                countries = None
+    else:
+        try:
+            countries = [
+                Country.get_from_2_letter_code(country_str)
+                for country_str in countries_str
+            ]
+        except KeyError:
+            raise falcon.HTTPBadRequest(
+                description=f"invalid `countries` value: {countries_str}"
+            )
+
+    return countries
+
+
 def _get_skip_voted_on(
     auth: Optional[OFFAuthentication], device_id: str
 ) -> SkipVotedOn:
@@ -184,13 +217,13 @@ class InsightCollection:
             "insight_types", required=False
         )
         barcode: Optional[str] = req.get_param("barcode")
-        country: Optional[str] = req.get_param("country")
         annotated: Optional[bool] = req.get_param_as_bool("annotated")
         annotation: Optional[int] = req.get_param_as_int("annotation")
         value_tag: str = req.get_param("value_tag")
         brands = req.get_param_as_list("brands") or None
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
+        countries: Optional[list[str]] = get_countries_from_req(req)
 
         if keep_types:
             # Limit the number of types to prevent slow SQL queries
@@ -204,7 +237,7 @@ class InsightCollection:
             get_insights,
             server_type=server_type,
             keep_types=keep_types,
-            country=country,
+            countries=countries,
             value_tag=value_tag,
             brands=brands,
             annotated=annotated,
@@ -232,18 +265,18 @@ class RandomInsightResource:
         response: JSONType = {}
 
         insight_type: Optional[str] = req.get_param("type")
-        country: Optional[str] = req.get_param("country")
         value_tag: Optional[str] = req.get_param("value_tag")
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
+        countries: Optional[list[str]] = get_countries_from_req(req)
 
         keep_types = [insight_type] if insight_type else None
         get_insights_ = functools.partial(
             get_insights,
             server_type=server_type,
             keep_types=keep_types,
-            country=country,
+            countries=countries,
             value_tag=value_tag,
             order_by="random",
             predictor=predictor,
@@ -1295,13 +1328,13 @@ def get_questions_resource_on_get(
         "insight_types", required=False
     )
     keep_types = filter_question_insight_types(keep_types)
-    country: Optional[str] = req.get_param("country")
     value_tag: str = req.get_param("value_tag")
     brands = req.get_param_as_list("brands") or None
     reserved_barcode: Optional[bool] = req.get_param_as_bool(
         "reserved_barcode", default=False
     )
     server_type = get_server_type_from_req(req)
+    countries: Optional[list[str]] = get_countries_from_req(req)
     # filter by annotation campaigns
     campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
 
@@ -1330,7 +1363,7 @@ def get_questions_resource_on_get(
         get_insights,
         server_type=server_type,
         keep_types=keep_types,
-        country=country,
+        countries=countries,
         value_tag=value_tag,
         brands=brands,
         order_by=order_by,
@@ -1520,7 +1553,7 @@ class UnansweredQuestionCollection:
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         insight_type: str = req.get_param("type")
-        country: Optional[str] = req.get_param("country")
+        countries: Optional[list[str]] = get_countries_from_req(req)
         reserved_barcode: Optional[bool] = req.get_param_as_bool(
             "reserved_barcode", default=False
         )
@@ -1540,7 +1573,7 @@ class UnansweredQuestionCollection:
             keep_types=[insight_type] if insight_type else None,
             group_by_value_tag=True,
             limit=count,
-            country=country,
+            countries=countries,
             automatically_processable=False,
             reserved_barcode=reserved_barcode,
             campaigns=campaigns,
