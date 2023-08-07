@@ -64,7 +64,7 @@ paths:
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
-        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/countries"
         - $ref: "#/components/parameters/brands"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
@@ -116,7 +116,7 @@ paths:
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
-        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/countries"
         - $ref: "#/components/parameters/brands"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
@@ -156,7 +156,7 @@ paths:
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_types"
-        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/countries"
         - $ref: "#/components/parameters/brands"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/page"
@@ -185,7 +185,7 @@ paths:
             minimum: 1
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/insight_type"
-        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/countries"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/reserved_barcode"
         - $ref: "#/components/parameters/campaigns"
@@ -264,7 +264,7 @@ paths:
       summary: Get a random insight
       parameters:
         - $ref: "#/components/parameters/insight_type"
-        - $ref: "#/components/parameters/country"
+        - $ref: "#/components/parameters/countries"
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/count"
@@ -1319,13 +1319,13 @@ components:
       description: Filter by insight type
       schema:
         type: string
-    country:
-      name: country
+    countries:
+      name: countries
       in: query
-      description: Filter by country tag
+      description: Comma separated list, filter by country value (2-letter code)
       schema:
         type: string
-      example: en:france
+      example: uk
     brands:
       name: brands
       in: query

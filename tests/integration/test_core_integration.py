@@ -1,4 +1,5 @@
 import pytest
+from openfoodfacts.types import Country
 
 from robotoff.app.core import (
     get_image_predictions,
@@ -214,7 +215,7 @@ def test_get_unanswered_questions_list():
     assert len(insight_data_items5) == 2
 
     product6 = ProductInsightFactory(value_tag="en:raisins", countries="en:india")
-    insight_data6 = get_insights(country="en:india")
+    insight_data6 = get_insights(countries=[Country.in_])
     insight_data_items6 = [item.to_dict() for item in insight_data6]
     assert insight_data_items6[0]["id"] == product6.id
     assert insight_data_items6[0]["value_tag"] == "en:raisins"

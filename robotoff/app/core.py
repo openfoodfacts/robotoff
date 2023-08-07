@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Iterable, Literal, NamedTuple, Optional, Union
 
 import peewee
+from openfoodfacts import Country
 from peewee import JOIN, SQL, fn
 
 from robotoff.app import events
@@ -70,7 +71,7 @@ def get_insights(
     barcode: Optional[str] = None,
     server_type: ServerType = ServerType.off,
     keep_types: Optional[list[str]] = None,
-    country: Optional[str] = None,
+    countries: Optional[list[Country]] = None,
     brands: Optional[list[str]] = None,
     annotated: Optional[bool] = False,
     annotation: Optional[int] = None,
@@ -97,7 +98,8 @@ def get_insights(
         ServerType.off
     :param keep_types: only keep insights that have any of the these types,
         defaults to None
-    :param country: only keep insights with this country, defaults to None
+    :param countries: only keep insights with `country` in this list of
+        countries, defaults to None
     :param brands: only keep insights that have any of these brands, defaults
         to None
     :param annotated: only keep annotated (True), not annotated (False
@@ -155,8 +157,10 @@ def get_insights(
     if keep_types is not None:
         where_clauses.append(ProductInsight.type.in_(keep_types))
 
-    if country is not None:
-        where_clauses.append(ProductInsight.countries.contains(country))
+    if countries is not None:
+        where_clauses.append(
+            ProductInsight.countries.contains_any([c.value for c in countries])
+        )
 
     if brands:
         where_clauses.append(ProductInsight.brands.contains_any(brands))
