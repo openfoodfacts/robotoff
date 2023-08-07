@@ -10,7 +10,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-7.2.8">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-7.2.8">
     
     
       
@@ -873,16 +873,16 @@
 <p>After cloning the repository, customize parameters by editing the <code>.env</code> file.
 You should, consider those changes:</p>
 <ul>
-<li>
-<p>if you want to use ML models, add <code>docker/ml.yml</code> to <code>COMPOSE_FILE</code>, using <code>;</code> as separator.</p>
+<li>if you want to use ML models, add <code>docker/ml.yml</code> to <code>COMPOSE_FILE</code>, using <code>;</code> as separator.</li>
+</ul>
 <p>You should also run <code>make dl-models</code> to download all machine learning models locally.</p>
+<ul>
+<li>
+<p>if you don't work on Product Opener, you should launch MongoDB by adding <code>docker/mongodb.yml</code> to <code>COMPOSE_FILE</code></p>
 </li>
-</ul>
-<ul>
-<li>if you don't work on Product Opener, you should launch MongoDB by adding <code>docker/mongodb.yml</code> to <code>COMPOSE_FILE</code></li>
-</ul>
-<ul>
-<li>change <code>OFF_UID</code> and <code>OFF_GID</code> to match your own user UID/GID (optional, only if you experience some file permission issue, see <a href="https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e">Getting developper uid for docker</a>)</li>
+<li>
+<p>change <code>OFF_UID</code> and <code>OFF_GID</code> to match your own user UID/GID (optional, only if you experience some file permission issue, see <a href="https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e">Getting developper uid for docker</a>)</p>
+</li>
 </ul>
 <p>Note: <strong>beware</strong> not to commit your local changes to <code>.env</code> file!</p>
 <p>Because of Elasticsearch service, you may need to increase a system parameter (<code>vm.max_map_count=262144</code>), as described <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html">here</a>.</p>
@@ -901,8 +901,8 @@ The expected response is <code>{"status":"running"}</code>.</p>
 1. Make sure a <a href="https://python-poetry.org/docs/#installation">recent version of Poetry is installed</a></p>
 <ol>
 <li>
-<p>Configure Poetry to use Python 3.9:
-   <div class="highlight"><pre><span></span><code>poetry<span class="w"> </span>env<span class="w"> </span>use<span class="w"> </span>python3.9
+<p>Configure Poetry to use Python 3.11:
+   <div class="highlight"><pre><span></span><code>poetry<span class="w"> </span>env<span class="w"> </span>use<span class="w"> </span>python3.11
 </code></pre></div></p>
 </li>
 <li>
@@ -913,7 +913,7 @@ The expected response is <code>{"status":"running"}</code>.</p>
 <li>
 <p>Configure files required for the tests to run locally:</p>
 <p>Compile the i18n files:
-  <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>i18n<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>compile.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>..
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>i18n<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>compile.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>..
 </code></pre></div></p>
 </li>
 <li>
@@ -926,7 +926,7 @@ The expected response is <code>{"status":"running"}</code>.</p>
 <p>To debug in a running container, you need to run poetry in the container. For example:</p>
 <p><div class="highlight"><pre><span></span><code>docker-compose run --rm api poetry run python
 </code></pre></div>
-  Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code. </p>
+Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code. </p>
 </li>
 </ol>
 <h2 id="restore-db-dumps">Restore DB dumps</h2>

@@ -10,7 +10,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-7.2.8">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-7.2.8">
     
     
       
@@ -942,16 +942,20 @@
 </li>
 <li>
 <p>Clone your fork locally:</p>
+</li>
+</ol>
 <div class="highlight"><pre><span></span><code>git clone git@github.com:your_name_here/robotoff.git
 </code></pre></div>
-</li>
+<ol>
 <li>
 <p>Robotoff uses git lfs to store binary files necessary for it to work. To setup git lfs:</p>
-<ol>
-<li>Install <a href="https://git-lfs.com/">git lfs</a></li>
+</li>
+<li>
+<p>Install <a href="https://git-lfs.com/">git lfs</a></p>
+</li>
 <li>go to <code>robotoff</code> directory and setup git lfs with <code>git lfs install</code>. This only has to be done once.</li>
-<li>Fetch LFS files with <code>git lfs fetch &amp;&amp; git lfs checkout</code></li>
-</ol>
+<li>
+<p>Fetch LFS files with <code>git lfs fetch &amp;&amp; git lfs checkout</code></p>
 </li>
 <li>
 <p>choose between <a href="../../how-to-guides/deployment/dev-install/">docker install (recommended) or local install</a> and run it.</p>
@@ -961,6 +965,8 @@
 </li>
 <li>
 <p>When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:</p>
+</li>
+</ol>
 <p>If you are on Windows, make sure you have <a href="http://gnuwin32.sourceforge.net/packages/make.htm">Make for Windows</a> installed. Don't forget to add its path in your <a href="https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417">system environment variables</a>.</p>
 <p>A sample path may look like this: <code>C:\Program Files (x86)\GnuWin32\bin</code></p>
 <p>It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  </p>
@@ -969,7 +975,7 @@
 make checks
 make tests
 </code></pre></div>
- To test the APIs on your localhost run </p>
+   To test the APIs on your localhost run </p>
 <div class="highlight"><pre><span></span><code>docker-compose up
 </code></pre></div>
 <p>You can make a post request through <a href="https://www.postman.com/">Postman</a> or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/</p>
@@ -984,10 +990,10 @@ poetry run pytest tests
 <p>Before running the test cases make sure you have a database created. Have a look at <code>.env</code> and <code>robotoff/settings.py</code> the default database name, user, and password is:</p>
 <p><div class="highlight"><pre><span></span><code>postgres
 </code></pre></div>
- Configure them through environment (you may use <code>.env</code> if you use docker) as you like. See <a href="../../how-to-guides/deployment/dev-install/">dev install</a> for more information about how to restore database dumps.</p>
-</li>
-<li>
-<p>Commit your changes and push your branch to Github:</p>
+   Configure them through environment (you may use <code>.env</code> if you use docker) as you like. See <a href="../../how-to-guides/deployment/dev-install/">dev install</a> for more information about how to restore database dumps.</p>
+<ol>
+<li>Commit your changes and push your branch to Github:</li>
+</ol>
 <div class="highlight"><pre><span></span><code>git status
 git add files-you-have-modified
 git commit -m &quot;fix: your detailed description of your changes&quot;
@@ -996,26 +1002,22 @@ git push origin name-of-your-bugfix-or-feature
 <p>In brief, commit messages should follow these conventions:</p>
 <blockquote>
 <ul>
-<li>we follow <a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits</a> specification, please prefix your commit messages with <code>fix:</code>, <code>feat:</code>,...<ul>
+<li>we follow <a href="https://www.conventionalcommits.org/en/v1.0.0/">Conventional Commits</a> specification, please prefix your commit messages with <code>fix:</code>, <code>feat:</code>,...</li>
 <li>Always contain a subject line which briefly describes the changes made. For example "docs: update CONTRIBUTING.rst".</li>
-</ul>
-</li>
 <li>Subject lines should not exceed 50 characters.</li>
 <li>The commit body should contain context about the change - how the code worked before, how it works now and why you decided to solve the issue in the way you did.</li>
 </ul>
 </blockquote>
 <p>More tips at <a href="https://chris.beams.io/posts/git-commit">https://chris.beams.io/posts/git-commit</a></p>
-</li>
-<li>
-<p>Submit a pull request through the Github website.</p>
-</li>
+<ol>
+<li>Submit a pull request through the Github website.</li>
 </ol>
 <h2 id="pull-request-guidelines">Pull Request Guidelines</h2>
 <p>Before you submit a pull request, check that it meets these guidelines:</p>
 <ol>
 <li>The pull request should include tests.</li>
 <li>If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring.</li>
-<li>The pull request should work for Python 3.9. Check <a href="https://github.com/openfoodfacts/robotoff/actions">https://github.com/openfoodfacts/robotoff/actions</a> and make sure that the tests pass for all supported Python versions.</li>
+<li>The pull request should work for Python 3.11. Check <a href="https://github.com/openfoodfacts/robotoff/actions">https://github.com/openfoodfacts/robotoff/actions</a> and make sure that the tests pass for all supported Python versions.</li>
 </ol>
 <p>This contributing page was adapted from <a href="https://github.com/ljvmiranda921/pyswarms/blob/master/CONTRIBUTING.rst">Pyswarms documentation</a>.</p>
                 
