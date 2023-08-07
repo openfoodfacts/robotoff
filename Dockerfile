@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.11
 
 # base python setup
 # -----------------

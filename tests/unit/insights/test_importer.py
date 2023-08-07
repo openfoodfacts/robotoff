@@ -633,7 +633,9 @@ class TestInsightImporter:
             def get_required_prediction_types():
                 return {PredictionType.category, PredictionType.image_flag}
 
-        with pytest.raises(ValueError, match="unexpected prediction type: 'label'"):
+        with pytest.raises(
+            ValueError, match="unexpected prediction type: 'PredictionType.label'"
+        ):
             FakeImporter.import_insights(
                 DEFAULT_BARCODE,
                 [Prediction(type=PredictionType.label)],

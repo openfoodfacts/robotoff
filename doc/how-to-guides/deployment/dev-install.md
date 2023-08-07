@@ -43,9 +43,9 @@ This is an alternative if you are reluctant to use Docker, or have some other re
 After cloning the repository:
 1. Make sure a [recent version of Poetry is installed](https://python-poetry.org/docs/#installation)
 
-2. Configure Poetry to use Python 3.9:
+2. Configure Poetry to use Python 3.11:
    ```bash
-   poetry env use python3.9
+   poetry env use python3.11
    ```
 
 3.  Install the dependencies:
