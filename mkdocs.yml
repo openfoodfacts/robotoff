@@ -13,7 +13,6 @@ theme:
 
 markdown_extensions:
   - footnotes
-  - mdx_truly_sane_lists
   - pymdownx.highlight
   - pymdownx.superfences
 
