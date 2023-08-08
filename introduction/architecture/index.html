@@ -840,9 +840,11 @@ with a computer vision model.</p>
 <h2 id="other-services">Other services</h2>
 <p>Robotoff also depends on the following services:</p>
 <ul>
-<li>a single node Elasticsearch instance, used to:</li>
+<li>a single node Elasticsearch instance, used to:<ul>
 <li>infer the product category from the product name, using an improved string matching algorithm. <sup id="fnref:predict_category"><a class="footnote-ref" href="#fn:predict_category">10</a></sup> (used in conjunction with ML detection)</li>
 <li>index all logos to run ANN search for automatic logo classification <sup id="fnref2:logos"><a class="footnote-ref" href="#fn:logos">7</a></sup></li>
+</ul>
+</li>
 <li>a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) <sup id="fnref:robotoff_ml"><a class="footnote-ref" href="#fn:robotoff_ml">11</a></sup>.</li>
 <li>a Tensorflow Serving instance, used to serve the category detection model. We're going to get rid of Tensorflow Serving once a new categorizer is trained. <sup id="fnref2:robotoff_ml"><a class="footnote-ref" href="#fn:robotoff_ml">11</a></sup></li>
 <li><a href="https://github.com/openfoodfacts/robotoff-ann/">robotoff-ann</a> which uses an approximate KNN approach to predict logo label</li>
