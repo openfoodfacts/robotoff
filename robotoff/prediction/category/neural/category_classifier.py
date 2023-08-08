@@ -171,27 +171,12 @@ class CategoryClassifier:
             image_embeddings=image_embeddings,
             category_taxonomy=self.taxonomy,
         )
-
-        # Threshold for automatic detection, only available for
-        # `keras_image_embeddings_3_0` model.
-        # Currently we don't apply yet the category automatically, we only add
-        # a flag to add a specific annotation campaign during the insight
-        # import
-        thresholds = (
-            (keras_category_classifier_3_0.get_automatic_processing_thresholds())
-            if model_name.keras_image_embeddings_3_0
-            else {}
-        )
-
         predictions = []
 
         for category_id, score, neighbor_predictions in raw_predictions:
             if category_id not in self.taxonomy:
                 # If the category no longer exist in the taxonomy, ignore it
                 continue
-            # If the category is not in `thresholds` or if the score is
-            # below the threshold, set the above_threshold flag to False
-            above_threshold = score >= thresholds.get(category_id, 1.1)
             kwargs: dict[str, Any] = (
                 {}
                 if neighbor_predictions is None
@@ -203,13 +188,6 @@ class CategoryClassifier:
                     score,
                     model_name.value,
                     product_id=product_id,
-                    above_threshold=above_threshold,
-                    # We need to set a higher priority (=lower digit) if
-                    # above_threshold is True, as otherwise a deepest
-                    # predicted category with `above_threshold=False` will
-                    # take precedence, and we wouldn't generate any insight
-                    # for the prediction with `above_threshold=True`
-                    priority=0 if above_threshold else 1,
                     **kwargs,
                 )
             )
