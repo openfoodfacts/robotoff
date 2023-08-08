@@ -34,7 +34,6 @@ from robotoff.types import (
     InsightImportResult,
     InsightType,
     JSONType,
-    NeuralCategoryClassifierModel,
     ObjectDetectionModel,
     PackagingElementProperty,
     Prediction,
@@ -826,17 +825,9 @@ class CategoryImporter(InsightImporter):
         ]
         taxonomy = get_taxonomy(InsightType.category.name)
 
-        # Make sure we yield candidates with `above_threshold=True` even if
-        # there are candidates that are deepest in the category taxonomy
         yield from (
             ProductInsight(**candidate.to_dict())
             for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
-            if candidate.data.get("above_threshold") is True
-        )
-        yield from (
-            ProductInsight(**candidate.to_dict())
-            for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
-            if candidate.data.get("above_threshold", False) is False
         )
 
     @staticmethod
@@ -868,17 +859,6 @@ class CategoryImporter(InsightImporter):
             # This category is linked to an agribalyse category, add it as a
             # campaign tag
             campaigns.append("agribalyse-category")
-
-        if (
-            insight.predictor == "neural"
-            and insight.data.get("model_version")
-            == NeuralCategoryClassifierModel.keras_image_embeddings_3_0.value
-            and insight.data.get("above_threshold", False)
-        ):
-            # Add `v3-categorizer-automatic-processing` campaign to category
-            # insights that will be applied automatically soon
-            # (experimental phase)
-            campaigns.append("v3-categorizer-automatic-processing")
 
         if product and not product.categories_tags:
             # Add a campaign to track products with no categories filled in

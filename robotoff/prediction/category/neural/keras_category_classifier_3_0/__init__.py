@@ -1,4 +1,3 @@
-import functools
 from typing import Literal, Optional
 
 import numpy as np
@@ -16,13 +15,12 @@ from robotoff.triton import (
     serialize_byte_tensor,
 )
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
-from robotoff.utils import get_image_from_url, get_logger, http_session, load_json
+from robotoff.utils import get_image_from_url, get_logger, http_session
 
 from .preprocessing import (
     IMAGE_EMBEDDING_DIM,
     MAX_IMAGE_EMBEDDING,
     NUTRIMENT_NAMES,
-    V3_MODEL_DATA_DIR,
     generate_inputs_dict,
 )
 
@@ -223,20 +221,6 @@ def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[st
             ocr_texts.append(ocr_result.get_full_text_contiguous())
 
     return ocr_texts
-
-
-@functools.cache
-def get_automatic_processing_thresholds() -> dict[str, float]:
-    """Return a dict mapping category ID to minimum detection threshold
-    required to be able to process the insight automatically.
-    Only available for the current default model,
-    `keras_image_embeddings_3_0`.
-
-    The threshold was selected category-wise as the lowest threshold for which
-    we have a precision >= 0.99 on validation + test dataset for this
-    category.
-    """
-    return load_json(V3_MODEL_DATA_DIR / "image_embeddings_model_thresholds.json.gz", compressed=True)  # type: ignore
 
 
 # In NeighborPredictionType objects, we stores the score of parents, children
