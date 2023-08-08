@@ -99,6 +99,7 @@ flake8-github-actions = "~0.1.1"
 pytest-cov = "~4.0.0"
 mkdocs-material = "~7.2.3"
 mdx-truly-sane-lists = "~1.2"
+markdown = "~3.3"  # mdx-truly-sane-lists requires markdown < 3.4
 mkdocs-awesome-pages-plugin = "~2.8.0"
 coverage = { extras = ["toml"], version = "~6.3" }
 types-requests = "~2.28.11.5"
