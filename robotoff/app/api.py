@@ -1193,6 +1193,11 @@ class WebhookProductResource:
                 title="invalid_action",
                 description="action must be one of " "`deleted`, `updated`",
             )
+        if not barcode:
+            raise falcon.HTTPBadRequest(
+                title="invalid_barcode",
+                description="barcode should not be empty",
+            )
 
         server_type = ServerType.get_from_server_domain(server_domain)
         product_id = ProductIdentifier(barcode, server_type)
