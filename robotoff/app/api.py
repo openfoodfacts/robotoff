@@ -1669,6 +1669,15 @@ class LogoAnnotationCollection:
         resp.media = response
 
 
+class RobotsTxtResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        # Disallow completely indexation: otherwise web crawlers send millions
+        # of requests to Robotoff (420k requests/day by Google alone)
+        resp.body = "User-agent: *\nDisallow: /\n"
+        resp.content_type = falcon.MEDIA_TEXT
+        resp.status = falcon.HTTP_200
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -1731,3 +1740,4 @@ api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
+api.add_route("/robots.txt", RobotsTxtResource())
