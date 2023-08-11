@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.31.0](https://github.com/openfoodfacts/robotoff/compare/v1.30.1...v1.31.0) (2023-08-11)
+
+
+### Features
+
+* New Crowdin updates ([#1152](https://github.com/openfoodfacts/robotoff/issues/1152)) ([a0eae2d](https://github.com/openfoodfacts/robotoff/commit/a0eae2d39093df7f7bd2ceffc4b96e49549f268f))
+
+
+### Bug Fixes
+
+* add mdx-truly-sane-list extension back ([460dae6](https://github.com/openfoodfacts/robotoff/commit/460dae688061f0f49adb93e2c300f95201b3d119))
+* barcode should not be an empty str in webhook call ([a7b6472](https://github.com/openfoodfacts/robotoff/commit/a7b64727f568c716cbbc9609cfca69b15a23d722))
+* fix bug in run_upc_detection ([a62319d](https://github.com/openfoodfacts/robotoff/commit/a62319d69ddf13a50ca663ce6074722705fdce4c))
+* remove above-threshold-campaign ([326626a](https://github.com/openfoodfacts/robotoff/commit/326626ae5f44f31d5ca3a727f9119056116d43ab))
+* replace parameter `country` by `countries` ([56b0804](https://github.com/openfoodfacts/robotoff/commit/56b0804d53f3ef7aaadffc5f36d8f3e65d11ab7b))
+* send release info to Sentry ([58acf39](https://github.com/openfoodfacts/robotoff/commit/58acf397165309fc2eb2282e4c3b36461f3661d8))
+* use openfoodfacts-python package for taxonomy processing ([eaaeca3](https://github.com/openfoodfacts/robotoff/commit/eaaeca3e46bc5d6494414964e0390289c63ccafe))
+
+
+### Documentation
+
+* update OpenAPI documentation ([6da2978](https://github.com/openfoodfacts/robotoff/commit/6da29786991804279c032d336ded9b47ba1ca532))
+
 ## [1.30.1](https://github.com/openfoodfacts/robotoff/compare/v1.30.0...v1.30.1) (2023-06-30)
 
 
