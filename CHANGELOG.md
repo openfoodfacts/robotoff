@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.1](https://github.com/openfoodfacts/robotoff/compare/v1.31.0...v1.31.1) (2023-08-14)
+
+
+### Bug Fixes
+
+* add robots.txt ([10387ff](https://github.com/openfoodfacts/robotoff/commit/10387ffe83c91d2e42595873367808e5cc238e91))
+
 ## [1.31.0](https://github.com/openfoodfacts/robotoff/compare/v1.30.1...v1.31.0) (2023-08-11)
 
 
