@@ -136,7 +136,7 @@ DATASET_CHECK_MIN_PRODUCT_COUNT = 2_800_000
 # Products JSONL
 
 JSONL_DATASET_URL = (
-    BaseURLProvider.static(ServerType.off) + "/data/openfoodfacts-products.jsonl.gz"
+    "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz"
 )
 
 TAXONOMY_URLS = {
