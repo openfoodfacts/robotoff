@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.2](https://github.com/openfoodfacts/robotoff/compare/v1.31.1...v1.31.2) (2023-08-15)
+
+
+### Bug Fixes
+
+* use prod JSONL dump in staging ([07ab8fd](https://github.com/openfoodfacts/robotoff/commit/07ab8fdc102f7bc93a00634d263f3a87d8cb7d72))
+
 ## [1.31.1](https://github.com/openfoodfacts/robotoff/compare/v1.31.0...v1.31.1) (2023-08-14)
 
 
