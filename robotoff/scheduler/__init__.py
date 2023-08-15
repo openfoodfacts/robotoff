@@ -362,7 +362,7 @@ def run():
     scheduler.add_job(save_insight_metrics, "cron", day="*", hour=1, max_instances=1)
 
     # This job refreshes data needed to generate insights.
-    scheduler.add_job(_update_data, "cron", day="*", hour="3", max_instances=1)
+    scheduler.add_job(_update_data, "cron", day="*", hour="8", max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO
     # dump by:
@@ -373,21 +373,21 @@ def run():
         refresh_insights,
         "cron",
         day="*",
-        hour="4",
+        hour="9",
         max_instances=1,
     )
 
-    # This job generates category insights using ElasticSearch from the last
-    # Product Opener data dump.
+    # This job generates category insights using matcher algorithm from the
+    # last Product Opener data dump.
     scheduler.add_job(
-        generate_insights, "cron", day="*", hour="4", minute=15, max_instances=1
+        generate_insights, "cron", day="*", hour="10", minute=15, max_instances=1
     )
 
     scheduler.add_job(
         generate_quality_facets,
         "cron",
         day="*",
-        hour="5",
+        hour="11",
         minute=25,
         max_instances=1,
     )
