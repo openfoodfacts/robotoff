@@ -95,19 +95,31 @@ log:
 # Management #
 #------------#
 
-dl-models:
-	@echo "🥫 Downloading model files …"
-	mkdir -p models/triton; \
+dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model
+	@echo "⏬ Downloading all models …"
+
+dl-langid-model:
+	@echo "⏬ Downloading language identification model file …"
+	mkdir -p models; \
 	cd models; \
-	wget -cO - https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin > lid.176.bin; \
-	cd triton; \
+	wget -cO - https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin > lid.176.bin;
+
+dl-object-detection-models:
+	@echo "⏬ Downloading object detection model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
 	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
 		do \
 			dir=`echo $${asset_name} | sed 's/tf-//g'`; \
 			mkdir -p $${dir}/1; \
 			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
 	done; \
-	mkdir -p clip clip/1; \
+
+dl-category-classifier-model:
+	@echo "⏬ Downloading category classifier model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+	mkdir -p clip/1; \
 	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx; \
 	dir=category-classifier-keras-image-embeddings-3.0/1/model.savedmodel; \
 	mkdir -p $${dir}; \
@@ -115,6 +127,17 @@ dl-models:
 	cd $${dir}; \
 	tar -xzvf saved_model.tar.gz --strip-component=1; \
 	rm saved_model.tar.gz
+
+dl-ingredient-detection-model:
+	@echo "⏬ Downloading ingredient detection model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+    dir=ingredient-ner/1/model.onnx; \
+	mkdir -p $${dir}; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/pytorch-ingredient-detection-1.0/onnx.tar.gz > $${dir}/onnx.tar.gz; \
+	cd $${dir}; \
+	tar -xzvf onnx.tar.gz --strip-component=1; \
+	rm onnx.tar.gz
 
 init-elasticsearch:
 	@echo "Initializing elasticsearch indices"
