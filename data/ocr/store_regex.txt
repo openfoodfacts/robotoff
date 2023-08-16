@@ -40,6 +40,7 @@ Dunnes Stores
 Edeka
 Edeka||gut[- \n]g[uü]nstig
 Eroski
+Foodtown
 Franprix
 Fred Meyer
 Giant Eagle
@@ -47,6 +48,7 @@ Hacendado
 Haggen
 Harris Teeter
 H-E-B
+Hy-Vee
 Intermarché
 Intermarché||bouton d'or
 Intermarché||capitaine cook
@@ -203,20 +205,30 @@ Lidl||vitafit
 Lidl||vitasia
 Magasins U||u saveurs
 Marks & Spencer
+Market Basket
 Mercadona||hacendado
 Migros
 Monoprix
 Morrisson's
 Ocado
 Picard
+Piggly Wiggly
+Price Chopper
+Price Chopper||PriceChopper
 Cora||patrimoine gourmand
 Match||patrimoine gourmand
+Meijer
 REWE
 Sainsbury's
+Schnucks
+ShopRite
 Tang frères
 Tesco
 Toupargel
 Waitrose
 Walmart
+Wegmans
 Woolworths||woolworths?
 WinCo Foods
+Winn Dixie
+Winn Dixie||Winn-Dixie
