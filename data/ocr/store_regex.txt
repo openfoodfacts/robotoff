@@ -1,3 +1,4 @@
+7-eleven
 Albertsons
 Aldi
 Aldi||gletscherkrone
@@ -20,6 +21,7 @@ Coccimarket||les delices de belle france
 Coccinelle||les delices de belle france
 Eurêka ma maison||les delices de belle france
 G20||les delices de belle france
+Despar
 Diagonal||les delices de belle france
 Biocoop
 bonÀrea||bonarea
@@ -59,6 +61,7 @@ Kaufland
 Kaufland||k-bio
 Kaufland||k-classic
 Kroger
+La Grande Épicerie de Paris||La Grande [ée]picerie Paris
 La Vie Claire
 Leader Price
 Leclerc||eleclerc
@@ -205,6 +208,9 @@ Cora||patrimoine gourmand
 Match||patrimoine gourmand
 REWE
 Sainsbury's
+Tang frères
 Tesco
+Toupargel
 Waitrose
+Walmart
 Woolworths||woolworths?
