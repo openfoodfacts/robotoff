@@ -86,6 +86,9 @@ neural category prediction:
 - robotoff/prediction/category/neural/**/*
 - tests/unit/prediction/category/neural/**/*
 
+stores:
+- data/ocr/store_regex.txt
+
 legacy:
 - legacy/**/*
 - legacy/ocr_category/prediction_from_ocr/**/*
