@@ -1,7 +1,7 @@
 # Robotoff
 
 ![Build Status](https://github.com/openfoodfacts/robotoff/workflows/Robotoff%20unit%20tests%20and%20deployments/badge.svg)
-[![codecov](https://codecov.io/gh/openfoodfacts/robotoff/branch/master/graph/badge.svg?token=BY2T0KXNO1)](https://codecov.io/gh/openfoodfacts/robotoff)
+[![codecov](https://codecov.io/gh/openfoodfacts/robotoff/branch/main/graph/badge.svg?token=BY2T0KXNO1)](https://codecov.io/gh/openfoodfacts/robotoff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![GitHub language count](https://img.shields.io/github/languages/count/openfoodfacts/robotoff)
 ![GitHub top language](https://img.shields.io/github/languages/top/openfoodfacts/robotoff)

@@ -3,7 +3,7 @@ name: Container Image Deployment CI
 on:
   push:
     branches:
-      - master
+      - main
       - deploy-*
     tags:
       - v*.*.*
