@@ -33,6 +33,7 @@ Carrefour
 Carrefour||grand jury
 Casino
 Colruyt
+Costco
 Delhaize
 Denner
 Dunnes Stores
@@ -40,8 +41,11 @@ Edeka
 Edeka||gut[- \n]g[uü]nstig
 Eroski
 Franprix
+Fred Meyer
 Giant Eagle
 Hacendado
+Haggen
+Harris Teeter
 H-E-B
 Intermarché
 Intermarché||bouton d'or
@@ -60,6 +64,7 @@ Intermarché||top budget
 Kaufland
 Kaufland||k-bio
 Kaufland||k-classic
+King Soopers
 Kroger
 La Grande Épicerie de Paris||La Grande [ée]picerie Paris
 La Vie Claire
@@ -214,3 +219,4 @@ Toupargel
 Waitrose
 Walmart
 Woolworths||woolworths?
+WinCo Foods
