@@ -280,7 +280,7 @@ def mark_insights() -> int:
         insight.save()
         marked += 1
 
-    logger.info("{} insights marked".format(marked))
+    logger.info("%s insights marked", marked)
     return marked  # useful for tests
 
 

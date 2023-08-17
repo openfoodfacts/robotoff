@@ -24,13 +24,9 @@ def generate_category_hierarchy(
         if not node.parents:
             categories_hierarchy[root].add(category_index)
 
-        children_indexes = set(
-            [
-                category_to_index[c.id]
-                for c in node.children
-                if c.id in category_to_index
-            ]
-        )
+        children_indexes = {
+            category_to_index[c.id] for c in node.children if c.id in category_to_index
+        }
 
         categories_hierarchy[category_index] = categories_hierarchy[
             category_index

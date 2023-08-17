@@ -85,7 +85,7 @@ def run_object_detection_model(
         image, output_image=False
     )
     data = results.to_json(threshold=threshold)
-    max_confidence = max([item["score"] for item in data], default=None)
+    max_confidence = max((item["score"] for item in data), default=None)
     return ImagePrediction.create(
         image=image_model,
         type="object_detection",

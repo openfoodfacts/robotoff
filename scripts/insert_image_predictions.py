@@ -59,12 +59,12 @@ def insert_batch(
         )
 
         if image_instance is None:
-            logger.warning("Unknown image in DB: {}".format(source_image))
+            logger.warning("Unknown image in DB: %s", source_image)
             continue
 
         results = [r for r in item["result"] if r["score"] > 0.1]
         data = {"objects": results}
-        max_confidence = max([r["score"] for r in results], default=None)
+        max_confidence = max((r["score"] for r in results), default=None)
 
         inserted += 1
         image_prediction = ImagePrediction.create(
@@ -97,7 +97,7 @@ def main():
     with db:
         inserted = insert_batch(DATA_PATH, MODEL_NAME, MODEL_VERSION, SERVER_TYPE)
 
-    logger.info("{} image predictions inserted".format(inserted))
+    logger.info("%s image predictions inserted", inserted)
 
 
 if __name__ == "__main__":

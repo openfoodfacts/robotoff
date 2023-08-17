@@ -65,7 +65,7 @@ def import_logos(
 
                 results = [r for r in item["result"] if r["score"] > 0.1]
                 data = {"objects": results}
-                max_confidence = max([r["score"] for r in results], default=None)
+                max_confidence = max((r["score"] for r in results), default=None)
 
                 inserted += 1
                 image_prediction = ImagePrediction.create(
