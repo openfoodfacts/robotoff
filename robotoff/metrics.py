@@ -313,12 +313,3 @@ def generate_recent_changes_metrics(items: Iterable[dict]) -> Iterator[dict]:
             "time": item["t"],
             "fields": {"count": 1},
         }
-
-
-def save_recent_changes_metrics():
-    from robotoff.utils import jsonl_iter
-
-    if (client := get_influx_client()) is not None:
-        write_client = client.write_api(write_options=SYNCHRONOUS)
-        inserts = jsonl_iter()
-        write_client.write(bucket=settings.INFLUXDB_BUCKET, record=inserts)
