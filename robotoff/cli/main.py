@@ -1,13 +1,8 @@
-import logging
-import os
-import pathlib
 from pathlib import Path
 from typing import Optional
 
 import typer
 
-from robotoff.elasticsearch import get_es_client
-from robotoff.off import get_barcode_from_url
 from robotoff.types import (
     NeuralCategoryClassifierModel,
     ObjectDetectionModel,
@@ -164,6 +159,8 @@ def categorize(
     the deepmost categories for a predicted taxonomy chain. For example, if we
     predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product, setting
     deepest_only=True will return 'beans'."""
+    import logging
+
     from robotoff.off import get_product
     from robotoff.prediction.category.neural.category_classifier import (
         CategoryClassifier,
@@ -201,11 +198,11 @@ def import_insights(
     batch_size: int = typer.Option(
         128, help="Number of insights that are imported in each atomic SQL transaction"
     ),
-    input_path: Optional[pathlib.Path] = typer.Option(
+    input_path: Optional[Path] = typer.Option(
         None,
         help="Input path of the JSONL archive, is incompatible with --generate-from",
     ),
-    generate_from: Optional[pathlib.Path] = typer.Option(
+    generate_from: Optional[Path] = typer.Option(
         None, help="Input path of the OCR archive, is incompatible with --input-path"
     ),
     server_type: ServerType = typer.Option(
@@ -403,7 +400,7 @@ def run_object_detection_model(
     from peewee import JOIN
 
     from robotoff.models import ImageModel, ImagePrediction, db
-    from robotoff.off import generate_image_url
+    from robotoff.off import generate_image_url, get_barcode_from_url
     from robotoff.utils import text_file_iter
     from robotoff.workers.queues import enqueue_job, low_queue
     from robotoff.workers.tasks.import_image import (
@@ -505,6 +502,7 @@ def add_logo_to_ann(
     from more_itertools import chunked
     from playhouse.postgres_ext import ServerSide
 
+    from robotoff.elasticsearch import get_es_client
     from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
     from robotoff.models import LogoEmbedding, db
     from robotoff.utils import get_logger
@@ -664,7 +662,7 @@ def import_logo_embeddings(
 
 @app.command()
 def import_logos(
-    data_path: pathlib.Path = typer.Argument(
+    data_path: Path = typer.Argument(
         ...,
         help="Path to the JSONL file containing data to import",
         exists=True,
@@ -716,7 +714,7 @@ def import_logos(
 
 @app.command()
 def export_logos(
-    output: pathlib.Path = typer.Argument(
+    output: Path = typer.Argument(
         ...,
         help="Path to the output file, can either have .jsonl or .jsonl.gz as "
         "extension",
@@ -838,6 +836,8 @@ def generate_ocr_result(
         help="Directory where the OCR JSON should be saved",
     ),
 ) -> None:
+    import os
+
     import orjson
 
     from robotoff.cli.ocr import run_ocr_on_image
