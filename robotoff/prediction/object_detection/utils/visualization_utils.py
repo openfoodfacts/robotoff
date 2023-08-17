@@ -483,8 +483,8 @@ def draw_keypoints_on_image(
     keypoints_x = [k[1] for k in keypoints]
     keypoints_y = [k[0] for k in keypoints]
     if use_normalized_coordinates:
-        keypoints_x = tuple([im_width * x for x in keypoints_x])
-        keypoints_y = tuple([im_height * y for y in keypoints_y])
+        keypoints_x = tuple((im_width * x for x in keypoints_x))
+        keypoints_y = tuple((im_height * y for y in keypoints_y))
     for keypoint_x, keypoint_y in zip(keypoints_x, keypoints_y):
         draw.ellipse(
             [

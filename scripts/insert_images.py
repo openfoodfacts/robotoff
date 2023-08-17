@@ -47,4 +47,4 @@ with db:
 
             saved += 1
 
-logger.info("{} image saved".format(saved))
+logger.info("%s image saved", saved)

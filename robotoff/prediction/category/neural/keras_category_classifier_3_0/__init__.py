@@ -199,10 +199,7 @@ def _generate_image_embeddings(
         response.raw_output_contents[0],
         dtype=np.float32,
     ).reshape((len(images_by_id), -1))
-    return {
-        image_id: embedding
-        for image_id, embedding in zip(images_by_id.keys(), computed_embeddings)
-    }
+    return dict(zip(images_by_id.keys(), computed_embeddings))
 
 
 def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[str]:

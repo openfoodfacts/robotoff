@@ -61,7 +61,7 @@ class KeywordProcessor:
         self._keyword = "_keyword_"
         self._white_space_chars = set([".", "\t", "\n", "\a", " ", ","])
         self.non_word_boundaries = set(string.digits + string.ascii_letters + "_")
-        self.keyword_trie_dict = dict()  # type: ignore
+        self.keyword_trie_dict = {}  # type: ignore
         self.case_sensitive = case_sensitive
         self._terms_in_trie = 0
 

@@ -172,7 +172,7 @@ def download_dataset(output_path: os.PathLike) -> str:
     current_etag = r.headers.get("ETag", "").strip("'\"")
 
     logger.info("Dataset has changed, downloading file")
-    logger.debug("Saving temporary file in {}".format(output_path))
+    logger.debug("Saving temporary file in %s", output_path)
 
     with open(output_path, "wb") as f:
         shutil.copyfileobj(r.raw, f)

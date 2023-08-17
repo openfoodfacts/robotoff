@@ -106,7 +106,7 @@ def generate_train_test_val_datasets(
 
 
 def run(lang: Optional[str] = None):
-    logger.info("Generating category dataset for lang {}".format(lang or "xx"))
+    logger.info("Generating category dataset for lang %s", lang or "xx")
     dataset = ProductDataset.load()
     training_stream = dataset.stream().filter_nonempty_tag_field("categories_tags")
 
@@ -136,7 +136,7 @@ def run(lang: Optional[str] = None):
             WRITE_PATH / "category_{}.{}.jsonl".format(lang or "xx", key),
             data,
         )
-        logger.info("{} items for dataset {}, lang {}".format(count, key, lang or "xx"))
+        logger.info("%s items for dataset %s, lang %s", count, key, lang or "xx")
 
 
 if __name__ == "__main__":
