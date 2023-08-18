@@ -1,19 +1,26 @@
 7-eleven
+AhorraMás
+AhorraMás||ahorramas
 Albertsons
+Albert Heijn
+Alcampo
 Aldi
 Aldi||gletscherkrone
 Aldi||gold[aä]hren
 Aldi||gutbio
 Aldi||milsani
 Aldi||sprengel
+Alimerka
 Alnatura
 Alteza
 Auchan
 Asda
 Biedronka
+Caprabo
 Coccimarket||belle france
 Coccinelle||belle france
 Coles
+Conad
 Eurêka ma maison||belle france
 G20||belle france
 Diagonal||belle france
@@ -34,21 +41,28 @@ Carrefour||grand jury
 Casino
 Colruyt
 Costco
+Coviran
 Delhaize
 Denner
 Dunnes Stores
 Edeka
 Edeka||gut[- \n]g[uü]nstig
+El Corte Inglés
+Eurospin
 Eroski
+Esselunga
 Foodtown
 Franprix
 Fred Meyer
+Froiz
 Giant Eagle
 Hacendado
 Haggen
 Harris Teeter
 H-E-B
+Hipercor
 Hy-Vee
+IKEA
 Intermarché
 Intermarché||bouton d'or
 Intermarché||capitaine cook
@@ -68,6 +82,8 @@ Kaufland||k-bio
 Kaufland||k-classic
 King Soopers
 Kroger
+K-Market||Pirrka
+K-Market||K-Menu
 La Grande Épicerie de Paris||La Grande [ée]picerie Paris
 La Vie Claire
 Leader Price
@@ -204,24 +220,32 @@ Lidl||trattoria alfredo
 Lidl||vitafit
 Lidl||vitasia
 Magasins U||u saveurs
+Makro
 Marks & Spencer
 Market Basket
 Mercadona||hacendado
+Mega Image
 Migros
 Monoprix
 Morrisson's
 Ocado
+Penny
 Picard
 Piggly Wiggly
+Pingo Doce
 Price Chopper
 Price Chopper||PriceChopper
 Cora||patrimoine gourmand
 Match||patrimoine gourmand
 Meijer
+REMA 1000
 REWE
 Sainsbury's
 Schnucks
 ShopRite
+Simply Market
+Σκλαβενίτης
+Supercor
 Tang frères
 Tesco
 Toupargel
@@ -232,3 +256,5 @@ Woolworths||woolworths?
 WinCo Foods
 Winn Dixie
 Winn Dixie||Winn-Dixie
+Żabka
+Żabka||zabka
