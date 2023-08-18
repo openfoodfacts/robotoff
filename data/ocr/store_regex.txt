@@ -13,9 +13,11 @@ Aldi||sprengel
 Alimerka
 Alnatura
 Alteza
+Amazon Fresh
 Auchan
 Asda
 Biedronka
+Booths
 Caprabo
 Coccimarket||belle france
 Coccinelle||belle france
@@ -60,6 +62,7 @@ Hacendado
 Haggen
 Harris Teeter
 H-E-B
+Heron Foods
 Hipercor
 Hy-Vee
 IKEA
@@ -219,17 +222,21 @@ Lidl||toque du chef
 Lidl||trattoria alfredo
 Lidl||vitafit
 Lidl||vitasia
+Lewiatan
 Magasins U||u saveurs
 Makro
 Marks & Spencer
 Market Basket
 Mercadona||hacendado
+Mercator
 Mega Image
 Migros
 Monoprix
 Morrisson's
 Ocado
 Penny
+Penny||Penny Market
+Penny||Penny Markt
 Picard
 Piggly Wiggly
 Pingo Doce
@@ -244,8 +251,10 @@ Sainsbury's
 Schnucks
 ShopRite
 Simply Market
+Społem
 Σκλαβενίτης
 Supercor
+SuperValu
 Tang frères
 Tesco
 Toupargel
