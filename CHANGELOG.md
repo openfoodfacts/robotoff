@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.32.0](https://github.com/openfoodfacts/robotoff/compare/v1.31.1...v1.32.0) (2023-08-21)
+
+
+### Features
+
+* add a few more stores for automatic extraction ([878f7ed](https://github.com/openfoodfacts/robotoff/commit/878f7ed65cf8aaac1ca66e7f7cee6ee28741696c))
+* Stores from across Europe ([1274243](https://github.com/openfoodfacts/robotoff/commit/1274243f80a1a7edef18a688f23eeceebfcedea0))
+
+
+### Bug Fixes
+
+* fix re-imports ([9a6bcbe](https://github.com/openfoodfacts/robotoff/commit/9a6bcbe6a3bbc6337a1ba20651c0d31a23c40ac7))
+* fix some deepsource performance warnings ([7424587](https://github.com/openfoodfacts/robotoff/commit/74245872aaa787dc7457b4294351589f8b607d9f))
+* remove legacy code ([1aa13ad](https://github.com/openfoodfacts/robotoff/commit/1aa13adf85336c919364e2a9c13f1a95aa74b315))
+* use prod JSONL dump in staging ([07ab8fd](https://github.com/openfoodfacts/robotoff/commit/07ab8fdc102f7bc93a00634d263f3a87d8cb7d72))
+
+
+### Technical
+
+* add make command to download ingredient detection model ([fa305cd](https://github.com/openfoodfacts/robotoff/commit/fa305cd34bdb168bc2e190aa963fdc92f8374008))
+* delay scheduled jobs relying on JSONL export ([d4033f5](https://github.com/openfoodfacts/robotoff/commit/d4033f5524cf81362d12589cead667440145d408))
+* fix release-please.yml ([07a5ff7](https://github.com/openfoodfacts/robotoff/commit/07a5ff78a4d134c74c492a0983b3d8e55221f235))
+* improve release changelog ([57d4bbf](https://github.com/openfoodfacts/robotoff/commit/57d4bbf595f85a7305c47e17659aab2cf07c0c0e))
+* rename master to main (update workflows and doc) ([b9e1107](https://github.com/openfoodfacts/robotoff/commit/b9e11071c90947fffbd19b9d2a7737d2d917c718))
+
 ## [1.31.1](https://github.com/openfoodfacts/robotoff/compare/v1.31.0...v1.31.1) (2023-08-14)
 
 
