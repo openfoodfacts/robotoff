@@ -35,7 +35,7 @@ def save_image(
         source_image=source_image, server_type=product_id.server_type.name
     ):
         logger.info(
-            f"Image {source_image} already exist in DB, returning existing image"
+            "Image %s already exist in DB, returning existing image", source_image
         )
         return existing_image_model
 

@@ -356,7 +356,10 @@ class NoopSlackNotifier(SlackNotifier):
         """Overrides the actual posting to Slack with logging of the args that
         would've been posted."""
         logger.info(
-            f"Alerting on slack channel '{channel}', with message:\n{blocks}\nand additional args:\n{kwargs}"
+            "Alerting on slack channel '%s', with message:\n%s\nand additional args:\n%s",
+            channel,
+            blocks,
+            kwargs,
         )
 
 

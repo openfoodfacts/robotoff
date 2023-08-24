@@ -277,10 +277,10 @@ def refresh_insights(
 
     if barcode is not None:
         product_id = ProductIdentifier(barcode, server_type)
-        logger.info(f"Refreshing {product_id}")
+        logger.info("Refreshing %s", product_id)
         with db:
             imported = refresh_insights_(product_id)
-        logger.info(f"Refreshed insights: {imported}")
+        logger.info("Refreshed insights: %s", imported)
     else:
         logger.info("Launching insight refresh on full database")
         with db:
@@ -535,7 +535,7 @@ def add_logo_to_ann(
             if sleep_time:
                 time.sleep(sleep_time)
 
-    logger.info(f"{added} embeddings indexed")
+    logger.info("%s embeddings indexed", added)
 
 
 @app.command()

@@ -85,7 +85,7 @@ def generate_from_ocr_archive(
         barcode: Optional[str] = get_barcode_from_path(source_image)
 
         if barcode is None:
-            logger.warning("cannot extract barcode from source", source_image)
+            logger.warning("cannot extract barcode from source: %s", source_image)
             continue
 
         ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)

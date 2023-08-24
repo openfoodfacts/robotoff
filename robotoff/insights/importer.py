@@ -1652,7 +1652,9 @@ def is_valid_product_prediction(
         product.images, prediction.source_image
     ):
         logger.info(
-            f"Invalid image for product {product.barcode}: {prediction.source_image}"
+            "Invalid image for product %s: %s",
+            product.barcode,
+            prediction.source_image,
         )
         return False
 
