@@ -13,7 +13,7 @@ def get_logger(name=None, level: Optional[int] = None):
 
         if not isinstance(level, int):
             print(
-                "Unknown log level: {}, fallback to INFO".format(log_level),
+                f"Unknown log level: {log_level}, fallback to INFO",
                 file=sys.stderr,
             )
             level = 20

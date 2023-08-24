@@ -45,14 +45,15 @@ def delete_product_insights_job(product_id: ProductIdentifier):
     )
 
     logger.info(
-        f"{deleted_predictions} predictions deleted, "
-        f"{deleted_insights} insights deleted"
+        "%s predictions deleted, %s insights deleted",
+        deleted_predictions,
+        deleted_insights,
     )
 
 
 @with_db
 def refresh_insights_job(product_ids: list[ProductIdentifier]):
-    logger.info(f"Refreshing insights for {len(product_ids)} products")
+    logger.info("Refreshing insights for %s products", len(product_ids))
     for product_id in product_ids:
         import_results = refresh_insights(product_id)
         for import_result in import_results:
