@@ -46,7 +46,10 @@ def get_high_queue(product_id: Optional[ProductIdentifier] = None) -> Queue:
     # uniform and that all queues are sampled evenly with `queue_idx =
     # barcode_hash % len(high_queues)`
     barcode_hash: int = struct.unpack(
-        "<l", hashlib.md5(product_id.barcode.encode("utf-8")).digest()[-4:]
+        "<l",
+        hashlib.md5(product_id.barcode.encode("utf-8"), usedforsecurity=False).digest()[
+            -4:
+        ],
     )[0]
     queue_idx = barcode_hash % len(high_queues)
     logger.debug("Selecting queue idx %s for product %s", queue_idx, product_id)
