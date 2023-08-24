@@ -1588,7 +1588,7 @@ class UnansweredQuestionCollection:
         )
 
         offset: int = (page - 1) * count
-        insights = list(get_insights_(limit=count, offset=offset))
+        insights = list(get_insights_(offset=offset))
 
         response["count"] = get_insights_(count=True)
 
