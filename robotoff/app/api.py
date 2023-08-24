@@ -326,7 +326,9 @@ def device_id_from_request(req: falcon.Request) -> str:
     access route (which should be the IPs of the proxies and the client)."""
     return req.get_param(
         "device_id",
-        default=hashlib.sha1(str(req.access_route).encode()).hexdigest(),
+        default=hashlib.sha1(
+            str(req.access_route).encode(), usedforsecurity=False
+        ).hexdigest(),
     )
 
 
