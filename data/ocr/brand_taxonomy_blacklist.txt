@@ -93,6 +93,7 @@ sante
 schweizer
 selection
 serrano
+simple
 simply
 specially selected
 sommer
