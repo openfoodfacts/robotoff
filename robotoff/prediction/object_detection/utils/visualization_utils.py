@@ -396,55 +396,6 @@ def draw_bounding_boxes_on_image(
         )
 
 
-def _visualize_boxes(image, boxes, classes, scores, category_index, **kwargs):
-    return visualize_boxes_and_labels_on_image_array(
-        image, boxes, classes, scores, category_index=category_index, **kwargs
-    )
-
-
-def _visualize_boxes_and_masks(
-    image, boxes, classes, scores, masks, category_index, **kwargs
-):
-    return visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index=category_index,
-        instance_masks=masks,
-        **kwargs
-    )
-
-
-def _visualize_boxes_and_keypoints(
-    image, boxes, classes, scores, keypoints, category_index, **kwargs
-):
-    return visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index=category_index,
-        keypoints=keypoints,
-        **kwargs
-    )
-
-
-def _visualize_boxes_and_masks_and_keypoints(
-    image, boxes, classes, scores, masks, keypoints, category_index, **kwargs
-):
-    return visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index=category_index,
-        instance_masks=masks,
-        keypoints=keypoints,
-        **kwargs
-    )
-
-
 def draw_keypoints_on_image_array(
     image, keypoints, color="red", radius=2, use_normalized_coordinates=True
 ):
