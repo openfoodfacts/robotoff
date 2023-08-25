@@ -19,7 +19,7 @@ from robotoff.metrics import (
     save_facet_metrics,
     save_insight_metrics,
 )
-from robotoff.models import Prediction, ProductInsight, db, with_db
+from robotoff.models import Prediction, ProductInsight, db
 from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     Product,
@@ -256,34 +256,6 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
     return bool(updated_fields)
 
 
-@with_db
-def mark_insights() -> int:
-    marked = 0
-    insight: ProductInsight
-    for insight in (
-        ProductInsight.select()
-        .where(
-            ProductInsight.automatic_processing == True,  # noqa: E712
-            ProductInsight.process_after.is_null(),
-            ProductInsight.annotation.is_null(),
-        )
-        .iterator()
-    ):
-        logger.info(
-            "Marking insight %s as processable automatically (%s)",
-            insight.id,
-            insight.get_product_id(),
-        )
-        insight.process_after = datetime.datetime.utcnow() + datetime.timedelta(
-            minutes=10
-        )
-        insight.save()
-        marked += 1
-
-    logger.info("%s insights marked", marked)
-    return marked  # useful for tests
-
-
 def _download_product_dataset():
     logger.info("Downloading new version of product dataset")
 
@@ -345,11 +317,6 @@ def run():
     scheduler = BlockingScheduler()
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
-
-    # This job takes all of the newly added automatically-processable insights
-    # and sets the process_after field on them, indicating when these insights
-    # should be auto-applied.
-    scheduler.add_job(mark_insights, "interval", minutes=2, max_instances=1, jitter=20)
 
     # This job applies all of the automatically-processable insights that have
     # not been applied yet.
