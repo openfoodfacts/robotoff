@@ -13,7 +13,11 @@ from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
-from robotoff.insights.importer import import_insights, is_valid_insight_image
+from robotoff.insights.importer import (
+    BrandInsightImporter,
+    import_insights,
+    is_valid_insight_image,
+)
 from robotoff.metrics import (
     ensure_influx_database,
     save_facet_metrics,
@@ -28,7 +32,7 @@ from robotoff.products import (
     get_min_product_store,
     has_dataset_changed,
 )
-from robotoff.types import ServerType
+from robotoff.types import PredictionType, ServerType
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
@@ -181,6 +185,8 @@ def refresh_insights(with_deletion: bool = True) -> None:
                     logger.info("%s deleted, deleting insight %s", product_id, insight)
                     insight_deleted += 1
                     insight.delete_instance()
+                continue
+
             elif not is_valid_insight_image(product.image_ids, insight.source_image):
                 if with_deletion:
                     # insight source image is not referenced in DB
@@ -192,11 +198,27 @@ def refresh_insights(with_deletion: bool = True) -> None:
                     )
                     insight_deleted += 1
                     insight.delete_instance()
-            else:
-                was_updated = update_insight_attributes(product, insight)
+                    continue
+            # We remove insight with excluded brands, it can happen if the
+            # brand was added to exclude list after insight creation
+            elif (
+                insight.type == PredictionType.brand.value
+                and not BrandInsightImporter.is_prediction_valid(insight)
+            ):
+                if with_deletion:
+                    logger.info(
+                        "Brand insight with excluded brand %s, deleting insight %s",
+                        insight.value_tag,
+                        insight,
+                    )
+                    insight_deleted += 1
+                    insight.delete_instance()
+                    continue
 
-                if was_updated:
-                    insight_updated += 1
+            was_updated = update_insight_attributes(product, insight)
+
+            if was_updated:
+                insight_updated += 1
 
     logger.info("%s prediction deleted", prediction_deleted)
     logger.info("%s insight deleted", insight_deleted)
