@@ -493,11 +493,11 @@ class MemoryProductStore(ProductStore):
         return cls(store)
 
     @classmethod
-    def load_min(cls, projection: Optional[list[str]] = None):
+    def load_min(cls, projection: Optional[list[str]] = None) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH, projection)
 
     @classmethod
-    def load_full(cls):
+    def load_full(cls) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_DATASET_PATH)
 
     def __getitem__(self, item) -> Optional[Product]:
@@ -543,7 +543,7 @@ class DBProductStore(ProductStore):
             yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
-def get_min_product_store(projection: Optional[list[str]] = None) -> ProductStore:
+def get_min_product_store(projection: Optional[list[str]] = None) -> MemoryProductStore:
     logger.info("Loading product store in memory...")
     ps = MemoryProductStore.load_min(projection)
     logger.info("product store loaded (%s items)", len(ps))

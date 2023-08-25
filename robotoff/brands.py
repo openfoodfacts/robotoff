@@ -31,6 +31,8 @@ def get_brand_prefix() -> set[tuple[str, str]]:
 
 @functools.cache
 def get_brand_blacklist() -> set[str]:
+    """Return the list of brands we want to exclude from automatic detection
+    through the 'taxonomy' predictor."""
     logger.info("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
