@@ -628,7 +628,8 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
         insight.save()
         return SAVED_ANNOTATION_RESULT
 
-    def is_data_required(self):
+    @classmethod
+    def is_data_required(cls) -> bool:
         return True
 
 
