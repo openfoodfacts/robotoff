@@ -27,10 +27,9 @@ def test_add_category_insight_no_insights(mocker):
     import_insights_mock = mocker.patch(
         "robotoff.workers.tasks.product_updated.import_insights"
     )
-    imported = add_category_insight(DEFAULT_PRODUCT_ID, {"code": DEFAULT_BARCODE})
+    add_category_insight(DEFAULT_PRODUCT_ID, {"code": DEFAULT_BARCODE})
 
     assert not import_insights_mock.called
-    assert not imported
 
 
 def test_add_category_insight_with_ml_insights(mocker):
