@@ -89,6 +89,8 @@ milk
 natur
 natura
 netto
+# nutriscore triggers this one
+nutri
 organic
 organics
 origen
