@@ -13,6 +13,7 @@ american
 appel
 artisanal
 aroma
+// I've just cancelled one…
 best
 aucune
 asia
@@ -89,6 +90,7 @@ netto
 organic
 organics
 origen
+original
 pacific
 patissier
 // plus: common word in FR and EN, many false positive
