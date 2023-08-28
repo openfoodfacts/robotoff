@@ -231,7 +231,7 @@ def extract_label_flashtext(
             Prediction(
                 type=PredictionType.label,
                 value_tag=label_tag,
-                automatic_processing=False,
+                automatic_processing=None,
                 predictor="flashtext",
                 predictor_version=PREDICTOR_VERSION,
                 data=data,
