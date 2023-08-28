@@ -12,9 +12,7 @@ ambiente
 american
 appel
 artisanal
-### still in prod
 aroma
-// I've just cancelled one…
 best
 aucune
 asia
@@ -88,7 +86,7 @@ milk
 natur
 natura
 netto
-# nutriscore triggers this one
+// nutriscore triggers this one
 nutri
 organic
 organics
