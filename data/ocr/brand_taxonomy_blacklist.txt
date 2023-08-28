@@ -66,6 +66,7 @@ grenade
 gusto
 homemade
 ice-tea
+interdis
 ideal
 italia
 jacques
@@ -79,6 +80,7 @@ label-rouge
 le-porc-francais
 leger
 life
+ltd
 made-with
 marie
 merci
@@ -106,6 +108,7 @@ sante
 schweizer
 selection
 serrano
+sicilia
 simple
 simply
 specially selected
@@ -118,6 +121,7 @@ terra
 terrasuisse
 the-coca-cola-company
 thomas
+torino
 tradition
 tropical
 tous les jours
