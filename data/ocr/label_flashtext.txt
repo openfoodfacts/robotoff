@@ -74,6 +74,7 @@ en:made-in-the-eu||hecho en la ue
 en:made-in-the-eu||hergestellt in der eu
 en:made-in-the-eu||made in the eu
 en:max-havelaar||max havelaar
+en:no-added-sugar||bez dodatku cukru
 en:no-added-sugar||no added sugar
 en:no-added-sugar||ohne zuckerzusatz
 en:no-added-sugar||sans sucre ajoute
@@ -114,6 +115,7 @@ en:sustainable-palm-oil||sustainable palm oil
 en:sustainable-seafood-msc||www.msc.org
 en:sustainable-seafood-msc||pêche durable msc
 en:utz-certified||utz certified
+en:vegan||suitable for vegans
 en:vegan||vegan
 en:vegan||veganoveganistisch
 en:vegan||vegetalien

@@ -257,6 +257,7 @@ toupargel||Toupargel
 tropicana orange juice||Tropicana
 tropicana||Tropicana
 Tropicana||Tropicana
+TYMBARK||Tymbark
 U Saveurs||U Saveurs
 unilever||Unilever
 Unilever||Unilever
@@ -266,9 +267,11 @@ Vitamont||Vitamont
 volvic||Volvic
 Volvic||Volvic
 walgreens||Walgreens
+winiary||Winiary
 whole foods||Whole Foods
 William Saurin||William Saurin
 Woolworths||Woolworths
 woolworths||Woolworths
 yoplait||Yoplait
 yves rocher||Yves Rocher
+łowicz||Łowicz

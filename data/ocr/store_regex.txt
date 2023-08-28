@@ -1,15 +1,30 @@
 7-eleven
+Action
 AhorraMás
 AhorraMás||ahorramas
 Albertsons
 Albert Heijn
 Alcampo
 Aldi
+Aldi||asia green garden
+Aldi||balta mare
+Aldi||biscotto
+Aldi||buttella
+Aldi||cucina nobile
+Aldi||delikato
+Aldi||dolina smaku
 Aldi||gletscherkrone
 Aldi||gold[aä]hren
+Aldi||golden fruit
+Aldi||golden seafood
+Aldi||grandessa
 Aldi||gutbio
+Aldi||king's crown
+Aldi||mięsne specjały
 Aldi||milsani
 Aldi||sprengel
+Aldi||sweet valley
+Aldi||wędliniarnia
 Alimerka
 Alnatura
 Alteza
@@ -17,6 +32,18 @@ Amazon Fresh
 Auchan
 Asda
 Biedronka
+Biedronka||be power
+Biedronka||delikate
+Biedronka||fruvita
+Biedronka||go vege
+Biedronka||kraina wędlin
+Biedronka||madero
+Biedronka||marinero
+Biedronka||mleczna dolina
+Biedronka||polaris
+Biedronka||sottile gusto
+Biedronka||światowid
+Biedronka||vital fresh
 Booths
 Caprabo
 Coccimarket||belle france
@@ -44,8 +71,10 @@ Casino
 Colruyt
 Costco
 Coviran
+Dealz
 Delhaize
 Denner
+Dino
 Dunnes Stores
 Edeka
 Edeka||gut[- \n]g[uü]nstig
@@ -58,6 +87,7 @@ Franprix
 Fred Meyer
 Froiz
 Giant Eagle
+Groszek
 Hacendado
 Haggen
 Harris Teeter
@@ -81,8 +111,10 @@ Intermarché||s[ée]lection intermarch[ée]
 Intermarché||saint [ée]loi
 Intermarché||top budget
 Kaufland
+Kaufland||crazy wolf
 Kaufland||k-bio
 Kaufland||k-classic
+Kaufland||k-take it veggie
 King Soopers
 Kroger
 K-Market||Pirrka
@@ -178,12 +210,14 @@ Lidl||alesto
 Lidl||baresa
 Lidl||belbake
 Lidl||bellarom
+Lidl||bon gelati
 Lidl||biotrend
 Lidl||ch[êe]ne d'argent
 Lidl||chef select
 Lidl||chef select to go
 Lidl||chef to go select
 Lidl||combino
+Lidl||crownfield
 Lidl||crusti croc
 Lidl||culinea
 Lidl||dulano
@@ -209,6 +243,8 @@ Lidl||my best veggie
 Lidl||nixe
 Lidl||oaklands
 Lidl||ocean sea
+Lidl||pikok
+Lidl||pilos
 Lidl||piquebroche
 Lidl||saguaro
 Lidl||saint alby
@@ -220,6 +256,7 @@ Lidl||solevita
 Lidl||sondey
 Lidl||toque du chef
 Lidl||trattoria alfredo
+Lidl||vemondo
 Lidl||vitafit
 Lidl||vitasia
 Lewiatan
@@ -233,6 +270,16 @@ Mega Image
 Migros
 Monoprix
 Morrisson's
+Netto
+Netto||bergio
+Netto||corsarro
+Netto||happy vege
+Netto||miletto
+Netto||paradiso
+Netto||quallio
+Netto||rajski sad
+Netto||sztuka mięsa
+Netto||toremo
 Ocado
 Penny||Penny Market
 Penny||Penny Markt
@@ -250,7 +297,9 @@ Sainsbury's
 Schnucks
 ShopRite
 Simply Market
+Spar
 Społem
+Stokrotka
 Σκλαβενίτης
 Supercor
 SuperValu
@@ -266,3 +315,8 @@ Winn Dixie
 Winn Dixie||Winn-Dixie
 Żabka
 Żabka||zabka
+Żabka||szamamm
+Żabka||foodini
+Żabka||plant hunter
+Żabka||haps
+Żabka||level up

@@ -76,6 +76,7 @@ kelloggs
 kellogg
 kellogs
 label-rouge
+lays
 le-porc-francais
 leger
 life

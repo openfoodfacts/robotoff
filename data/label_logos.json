@@ -29,5 +29,7 @@
     "en:french-poultry": "https://static.openfoodfacts.org/images/lang/fr/labels/volaille-francaise.94x90.png",
     "en:french-beef": "https://static.openfoodfacts.org/images/lang/fr/labels/viande-bovine-francaise.94x90.png",
     "en:soil-association-organic": "https://static.openfoodfacts.org/images/lang/en/labels/soil-association-organic.89x90.png",
-    "en:not-advised-for-pregnant-women": "https://static.openfoodfacts.org/images/lang/en/labels/not-advised-for-pregnant-women.90x90.svg"
+    "en:not-advised-for-pregnant-women": "https://static.openfoodfacts.org/images/lang/en/labels/not-advised-for-pregnant-women.90x90.svg",
+    "pl:produkt-polski": "https://static.openfoodfacts.org/images/lang/pl/labels/produkt-polski.152x90.svg",
+    "pl:viva-dla-wegetarian-i-wegan": "https://static.openfoodfacts.org/images/lang/pl/labels/znak-v.83x90.svg"
 }
