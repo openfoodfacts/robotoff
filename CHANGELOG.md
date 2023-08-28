@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.32.1](https://github.com/openfoodfacts/robotoff/compare/v1.32.0...v1.32.1) (2023-08-28)
+
+
+### Bug Fixes
+
+* add some items to brand taxonomy blacklist ([ef0b626](https://github.com/openfoodfacts/robotoff/commit/ef0b626e171514a488a52c45e23f18e61a6bd243))
+* auupdate brand_taxonomy_blacklist.txt ([739c748](https://github.com/openfoodfacts/robotoff/commit/739c748428e792191328cfec55fdbe3008c1442d))
+* brand blocklist ([3055d13](https://github.com/openfoodfacts/robotoff/commit/3055d135c095d61fbea683502fe40985e4925273))
+* fix bug in doctext.py and improve script ([b54ef2b](https://github.com/openfoodfacts/robotoff/commit/b54ef2b227db8f6c58e3ba616277adabe6950d7b))
+* fix bug in pprint ([c620d59](https://github.com/openfoodfacts/robotoff/commit/c620d590d0a29b9f2d65fc51601ebdc699aa5f42))
+* fix call to get_insights_ ([5d909b9](https://github.com/openfoodfacts/robotoff/commit/5d909b969440d250b22233f00ec4012c6338b2ad))
+* fix is_data_required method signature ([6342832](https://github.com/openfoodfacts/robotoff/commit/6342832cabc7f5ffb440748b99b9f7405a0fa6f5))
+* fix wrong call to add_category_insight in tests ([69b5f1e](https://github.com/openfoodfacts/robotoff/commit/69b5f1e21373e3cc4f70aa01f44e299f3134f835))
+* improve brand exclusion for 'taxonomy' predictor ([7705823](https://github.com/openfoodfacts/robotoff/commit/770582338960610ab7c4ef9d81f17a6c67e1b250))
+* improve candidate generation in LabelInsightImporter ([51e046a](https://github.com/openfoodfacts/robotoff/commit/51e046a193591a2ef3294ae7a2cbfe32506a209f))
+* mark use of md5 and sha1 hash function as safe ([ca0963f](https://github.com/openfoodfacts/robotoff/commit/ca0963f83f2d43dbd6db3f657d39921dbae76243))
+* set automatic_processing=None for flashtext label insight ([ba6ceb7](https://github.com/openfoodfacts/robotoff/commit/ba6ceb72bed3296b16a9b9d9bb309c9910d838d4))
+
+
+### Technical
+
+* fix deepsource warning ([58ca3e7](https://github.com/openfoodfacts/robotoff/commit/58ca3e7560d27fb9318a819989e82e57ed634aa0))
+* remove legacy function mark_insights ([9460393](https://github.com/openfoodfacts/robotoff/commit/9460393475b09c90357a6d406a88b867555a7794))
+* remove legacy functions in visualization_utils.py ([b620062](https://github.com/openfoodfacts/robotoff/commit/b620062664af4734693d4a5950c247883a5e80e2))
+* remove pypi.yml action ([1773b87](https://github.com/openfoodfacts/robotoff/commit/1773b87f77c82e59ffa6297400a61c9d30e91890))
+* switch to f-strings ([fdeba36](https://github.com/openfoodfacts/robotoff/commit/fdeba36e21dbdd5ed4ec71ff2ea7a8d5b4e27035))
+* update brand taxonomy blacklist ([df19331](https://github.com/openfoodfacts/robotoff/commit/df1933174d67711c0f3cd80bacfb7705df626565))
+* use consistent logging arg passing ([2385889](https://github.com/openfoodfacts/robotoff/commit/238588945c6e10c8b3175496b079974fe76165ac))
+
 ## [1.32.0](https://github.com/openfoodfacts/robotoff/compare/v1.31.1...v1.32.0) (2023-08-21)
 
 
