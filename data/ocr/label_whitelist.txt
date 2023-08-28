@@ -106,3 +106,10 @@ en:halal
 en:utz-certified
 en:pefc
 en:small-producers-symbols
+fr:label-rouge
+en:sustainable-palm-oil
+en:small-producers-symbol
+en:no-cholesterol
+en:kosher
+en:fsc
+en:fair-trade
