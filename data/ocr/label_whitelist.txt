@@ -1,3 +1,5 @@
+// This is an allow-list of labels to apply automatically
+// when detected with `regex` and `flashtext` predictors
 en:at-bio-301
 en:at-bio-402
 en:at-bio-901

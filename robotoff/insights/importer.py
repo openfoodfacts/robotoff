@@ -1,5 +1,6 @@
 import abc
 import datetime
+import functools
 import itertools
 import operator
 import uuid
@@ -44,16 +45,15 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_logger, text_file_iter
-from robotoff.utils.cache import CachedStore
 
 logger = get_logger(__name__)
 
 
-def load_authorized_labels() -> set[str]:
+@functools.cache
+def get_authorized_labels() -> set[str]:
+    """Return a set of label `value_tag`s to apply automatically
+    for `flashtext` and `regex` predictors."""
     return set(text_file_iter(settings.OCR_LABEL_WHITELIST_DATA_PATH))
-
-
-AUTHORIZED_LABELS_STORE = CachedStore(load_authorized_labels, expiration_interval=None)
 
 
 def is_selected_image(images: dict[str, Any], image_id: str) -> bool:
@@ -777,12 +777,14 @@ class LabelInsightImporter(InsightImporter):
                     candidate.value_tag = value_tag
 
         taxonomy = get_taxonomy(InsightType.label.name)
+        authorized_labels = get_authorized_labels()
         for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy):
             insight = ProductInsight(**candidate.to_dict())
-            if insight.automatic_processing is None:
-                insight.automatic_processing = (
-                    candidate.value_tag in AUTHORIZED_LABELS_STORE.get()
-                )
+            if insight.automatic_processing is None and insight.predictor in (
+                "flashtext",
+                "regex",
+            ):
+                insight.automatic_processing = candidate.value_tag in authorized_labels
             yield insight
 
 

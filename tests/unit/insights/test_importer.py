@@ -802,7 +802,9 @@ class TestLabelInsightImporter:
             ),
             (
                 [
-                    Prediction(PredictionType.label, value_tag="en:organic"),
+                    Prediction(
+                        PredictionType.label, value_tag="en:organic", predictor="regex"
+                    ),
                 ],
                 Product({"code": DEFAULT_BARCODE}),
                 [("en:organic", True)],
@@ -810,21 +812,47 @@ class TestLabelInsightImporter:
             (
                 # en:organic is a parent of en:ecoveg
                 [
-                    Prediction(PredictionType.label, value_tag="en:organic"),
-                    Prediction(PredictionType.label, value_tag="en:ecoveg"),
+                    Prediction(
+                        PredictionType.label, value_tag="en:organic", predictor="regex"
+                    ),
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="en:ecoveg",
+                        predictor="flashtext",
+                    ),
                 ],
                 Product({"code": DEFAULT_BARCODE}),
                 [("en:ecoveg", False)],
             ),
             (
-                # en:organic and en:vagan are both parents of en:ecoveg
+                # en:organic and en:vegan are both parents of en:ecoveg
                 # we add a non existing tag and an independent label
                 [
-                    Prediction(PredictionType.label, value_tag="en:vegan"),
-                    Prediction(PredictionType.label, value_tag="en:ecoveg"),
-                    Prediction(PredictionType.label, value_tag="en:non-existing-tag"),
-                    Prediction(PredictionType.label, value_tag="en:max-havelaar"),
-                    Prediction(PredictionType.label, value_tag="en:organic"),
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="en:vegan",
+                        predictor="flashtext",
+                    ),
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="en:ecoveg",
+                        predictor="flashtext",
+                    ),
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="en:non-existing-tag",
+                        predictor="flashtext",
+                    ),
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="en:max-havelaar",
+                        predictor="flashtext",
+                    ),
+                    Prediction(
+                        PredictionType.label,
+                        value_tag="en:organic",
+                        predictor="flashtext",
+                    ),
                 ],
                 Product({"code": DEFAULT_BARCODE, "labels_tags": ["en:vegan"]}),
                 [("en:ecoveg", False), ("en:max-havelaar", True)],
