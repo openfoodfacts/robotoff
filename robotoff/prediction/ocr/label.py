@@ -25,11 +25,11 @@ def process_eu_bio_label_code(match) -> Optional[str]:
     if country == "de" and len(id_) != 3:
         return None
 
-    return "en:{}-{}-{}".format(country, bio_code, id_)
+    return f"en:{country}-{bio_code}-{id_}"
 
 
 def process_es_bio_label_code(match) -> str:
-    return "en:es-eco-{}-{}".format(match.group(1), match.group(2)).lower()
+    return f"en:es-eco-{match.group(1)}-{match.group(2)}".lower()
 
 
 EN_ORGANIC_REGEX_STR = [
