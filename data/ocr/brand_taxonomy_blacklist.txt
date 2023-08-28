@@ -25,6 +25,7 @@ boost
 bordeaux
 bourbon
 chateau
+chips
 classic
 cocacola
 comte
@@ -36,6 +37,7 @@ crunch
 cucina
 daily
 delice
+delicious
 delta
 deluxe
 demeter
@@ -49,6 +51,7 @@ extra
 fabrication-artisanale
 fair
 fairtrade
+family
 familia
 fini
 france
@@ -62,11 +65,13 @@ gold
 golden
 gourmet
 granola
+green
 grenade
 gusto
 homemade
 ice-tea
 interdis
+inc
 ideal
 italia
 jacques
@@ -90,6 +95,7 @@ natura
 netto
 // nutriscore triggers this one
 nutri
+omega
 organic
 organics
 origen
@@ -105,6 +111,7 @@ pure
 quick
 real
 rich
+rico
 royal
 salada
 sans
@@ -115,8 +122,10 @@ serrano
 sicilia
 simple
 simply
+solo
 specially selected
 sommer
+star
 super
 sweet
 tasty
@@ -129,6 +138,7 @@ torino
 tradition
 tropical
 tous les jours
+valencia
 valor
 vegan
 veggie
@@ -138,3 +148,4 @@ ice tea
 wrigley
 wal-mart-stores
 water
+whey
