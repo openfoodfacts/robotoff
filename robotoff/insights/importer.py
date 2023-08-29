@@ -740,6 +740,10 @@ class LabelInsightImporter(InsightImporter):
             # Predictions are always valid when product check is disabled
             # (product=None)
             return True
+        # We disable temporarily en:eu-agriculture and en:non-eu-agriculture
+        # See https://github.com/openfoodfacts/robotoff/issues/1245
+        if tag in ("en:eu-agriculture", "en:non-eu-agriculture"):
+            return False
         return not (
             tag in product.labels_tags
             or LabelInsightImporter.is_parent_label(tag, set(product.labels_tags))
