@@ -565,7 +565,7 @@ class CategoryPredictorResource:
                 f"category predictor is only available for 'off' server type (here: '{server_type.name}')"
             )
 
-        predictors: list[str] = req.media.get("predictors") or ["neural", "matcher"]
+        predictors: list[str] = req.media.get("predictors") or ["neural"]
         neural_model_name = None
         if (neural_model_name_str := req.media.get("neural_model_name")) is not None:
             neural_model_name = NeuralCategoryClassifierModel[neural_model_name_str]
