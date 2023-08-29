@@ -548,20 +548,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#matcher" class="md-nav__link">
-    Matcher
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ml-prediction" class="md-nav__link">
-    ML prediction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#changelog" class="md-nav__link">
     Changelog
   </a>
@@ -788,20 +774,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#matcher" class="md-nav__link">
-    Matcher
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ml-prediction" class="md-nav__link">
-    ML prediction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#changelog" class="md-nav__link">
     Changelog
   </a>
@@ -828,20 +800,7 @@
                 <h1 id="category-prediction">Category Prediction</h1>
 <p>Knowing the category of each product is critically important at Open Food Facts, as category is used to compute Nutriscore, to assess the environmental impact of the product (thanks to Agribalyse database), to compare the product to similar ones,...</p>
 <p>In Open Food Facts, more 12,500 categories exist in the <a href="https://static.openfoodfacts.org/data/taxonomies/categories.full.json">category taxonomy</a> (as of March 2023). Category prediction using product meta-data was one the first project developed as part of Robotoff in 2018.</p>
-<p>Two complementary approaches currently exist in production to predict categories: a matching-based approach and a machine learning one.</p>
-<h2 id="matcher">Matcher</h2>
-<p>A simple "matcher" algorithm is used to predict categories from product names. This used to be done using Elasticsearch but it's directly included in Robotoff codebase <sup id="fnref:matcher"><a class="footnote-ref" href="#fn:matcher">1</a></sup>. It currently works for the following languages: <code>fr</code>, <code>en</code>, <code>de</code>, <code>es</code>, <code>it</code>, <code>nl</code>.
-The product name and all category names in target languages are preprocessed with the following pipeline:</p>
-<ul>
-<li>lowercasing</li>
-<li>language-specific stop word removal</li>
-<li>language-specific lookup-based lemmatization: fast and independent of part of speech for speed and simplicity</li>
-<li>text normalization and accent stripping</li>
-</ul>
-<p>Then a category is predicted if the category name is a substring of the product name.</p>
-<p>Many false positive came from the fact some category names were also ingredients: category <em>fraise</em> matched product name <em>jus de fraise</em>. To prevent this, we only allow non-full matches (full match=the two preprocessed string are the same) to occur for an ingredient category if the match starts at the beginning of the product name. There are still false positive in English as adjectives come before nouns (ex: <em>strawberry juice</em>), so partial matching for ingredient categories is disabled for English. </p>
-<h2 id="ml-prediction">ML prediction</h2>
-<p>A neural network model is used to predict categories <sup id="fnref:neural"><a class="footnote-ref" href="#fn:neural">2</a></sup>. Details about the model training, results and model assets are available on the <a href="https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0">model robotoff-models release page</a>. </p>
+<p>A neural network model is used to predict categories <sup id="fnref:neural"><a class="footnote-ref" href="#fn:neural">1</a></sup>. Details about the model training, results and model assets are available on the <a href="https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0">model robotoff-models release page</a>. </p>
 <p>This model takes as inputs (all inputs are optional):</p>
 <ul>
 <li>the product name (<code>product_name</code> field)</li>
@@ -867,15 +826,13 @@ The product name and all category names in target languages are preprocessed wit
 </ul>
 <ul>
 <li>2023-03 | Deployment of the <a href="https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0">v3 model</a></li>
+<li>2023-08 | Disabling of the <code>matcher</code> predictor: after an analysis through Hunger Games, most errors were due to the <code>matcher</code> predictor, and the <code>neural</code> predictor gave most of the time accurate predictions for products for which the <code>matcher</code> predictor failed.</li>
 </ul>
 <div class="footnote">
 <hr />
 <ol>
-<li id="fn:matcher">
-<p>see <code>robotoff.prediction.category.matcher</code>&#160;<a class="footnote-backref" href="#fnref:matcher" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
 <li id="fn:neural">
-<p>see <code>robotoff.prediction.category.neural</code>&#160;<a class="footnote-backref" href="#fnref:neural" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<p>see <code>robotoff.prediction.category.neural</code>&#160;<a class="footnote-backref" href="#fnref:neural" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
