@@ -26,7 +26,7 @@ from robotoff.products import (
     get_min_product_store,
     has_dataset_changed,
 )
-from robotoff.types import PredictionType, ServerType
+from robotoff.types import InsightType, ServerType
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
@@ -120,6 +120,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
         # Check predictions first, as insights are computed from predictions
         for prediction in ServerSide(
             Prediction.select(
+                # id is needed to perform deletion
                 Prediction.id,
                 Prediction.barcode,
                 Prediction.server_type,
@@ -157,6 +158,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
         insight_updated = 0
         for insight in ServerSide(
             ProductInsight.select(
+                # id is needed to perform deletion
                 ProductInsight.id,
                 ProductInsight.barcode,
                 ProductInsight.server_type,
@@ -193,26 +195,39 @@ def refresh_insights(with_deletion: bool = True) -> None:
                     insight_deleted += 1
                     insight.delete_instance()
                     continue
-            # We remove insight with excluded brands, it can happen if the
-            # brand was added to exclude list after insight creation
-            elif (
-                insight.type == PredictionType.brand.value
-                and not BrandInsightImporter.is_prediction_valid(insight)
-            ):
-                if with_deletion:
-                    logger.info(
-                        "Brand insight with excluded brand %s, deleting insight %s",
-                        insight.value_tag,
-                        insight,
-                    )
-                    insight_deleted += 1
-                    insight.delete_instance()
-                    continue
 
             was_updated = update_insight_attributes(product, insight)
 
             if was_updated:
                 insight_updated += 1
+
+        # We remove insight with excluded brands, it can happen if the
+        # brand was added to exclude list after insight creation
+        for insight in ServerSide(
+            ProductInsight.select(
+                # id is needed to perform deletion
+                ProductInsight.id,
+                # predictor, data, value_tag and barcode are needed for
+                # BrandInsightImporter.is_prediction_valid()
+                ProductInsight.barcode,
+                ProductInsight.predictor,
+                ProductInsight.data,
+                ProductInsight.value_tag,
+            ).where(
+                ProductInsight.annotation.is_null(),
+                ProductInsight.server_type == server_type.name,
+                ProductInsight.type == InsightType.brand.value,
+            )
+        ):
+            if not BrandInsightImporter.is_prediction_valid(insight):
+                if with_deletion:
+                    logger.info(
+                        "Brand insight with brand %s is invalid, deleting insight %s",
+                        insight.value_tag,
+                        insight,
+                    )
+                    insight_deleted += 1
+                    insight.delete_instance()
 
     logger.info("%s prediction deleted", prediction_deleted)
     logger.info("%s insight deleted", insight_deleted)
