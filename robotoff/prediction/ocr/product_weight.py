@@ -85,15 +85,12 @@ def is_extreme_weight(normalized_value: float, unit: str) -> bool:
         # volumes above 10 l
         return normalized_value >= 10000 or normalized_value <= 10
 
-    raise ValueError("invalid unit: {}, 'g', or 'ml' " "expected".format(unit))
+    raise ValueError(f"invalid unit: {unit}, 'g', or 'ml' expected")
 
 
 def is_suspicious_weight(normalized_value: float, unit: str) -> bool:
     """Return True is the weight is suspicious, i.e is likely wrongly
     detected."""
-    if is_extreme_weight(normalized_value, unit):
-        return True
-
     if normalized_value > 1000:
         # weight value is above 1000 and
         # last digit is not 0
@@ -143,6 +140,9 @@ def process_product_weight(
 
     text = "{} {}".format(value, unit)
     normalized_value, normalized_unit = normalize_weight(value, unit)
+
+    if is_extreme_weight(normalized_value, unit):
+        return None
 
     if is_suspicious_weight(normalized_value, normalized_unit):
         # Don't process the prediction automatically if the value
