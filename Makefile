@@ -144,7 +144,7 @@ init-elasticsearch:
 	${DOCKER_COMPOSE} up -d elasticsearch 2>&1
 	@echo "Sleeping for 20s, waiting for elasticsearch to be ready..."
 	@sleep 20
-	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff init-elasticsearch --no-load-data
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff init-elasticsearch
 
 launch-burst-worker:
 ifdef queues
