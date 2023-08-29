@@ -1396,7 +1396,7 @@ class NutritionImageImporter(InsightImporter):
                 },
                 predictor_version=cls.PREDICTOR_VERSION,
                 value_tag=lang,
-                automatic_processing=False,
+                automatic_processing=True,
                 barcode=nutrient_mention_prediction.barcode,
                 server_type=nutrient_mention_prediction.server_type,
                 source_image=nutrient_mention_prediction.source_image,

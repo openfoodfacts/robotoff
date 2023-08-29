@@ -1447,7 +1447,7 @@ class TestNutritionImageImporter:
         assert insight.barcode == DEFAULT_BARCODE
         assert insight.server_type == DEFAULT_SERVER_TYPE.name
         assert insight.value_tag == "fr"
-        assert insight.automatic_processing is False
+        assert insight.automatic_processing is True
         assert insight.source_image == DEFAULT_SOURCE_IMAGE
         assert insight.data.get("from_prediction_ids") == {"nutrient_mention": 2}
         assert insight.data.get("rotation") == 90
