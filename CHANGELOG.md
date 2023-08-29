@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.33.0](https://github.com/openfoodfacts/robotoff/compare/v1.32.1...v1.33.0) (2023-08-29)
+
+
+### Features
+
+* disable matcher predictor for category ([07ada5b](https://github.com/openfoodfacts/robotoff/commit/07ada5bd0bde125f3e3cc3b718c5bcf97b8b05e3))
+
+
+### Bug Fixes
+
+* add new exception for packaging ([e397e57](https://github.com/openfoodfacts/robotoff/commit/e397e577a1c38a7f0ded9ad45ce8b41010ad5bd8)), closes [#1058](https://github.com/openfoodfacts/robotoff/issues/1058)
+* disable temporarily en:eu-non-agriculture and en:eu-agriculture ([043b96c](https://github.com/openfoodfacts/robotoff/commit/043b96c3f64507e860edab04eb4a3eabb692c415))
+* don't generate weight insight when value is suspicious ([51a19fa](https://github.com/openfoodfacts/robotoff/commit/51a19fa46efdb238d0eedfa69b7540f0a1333984)), closes [#302](https://github.com/openfoodfacts/robotoff/issues/302)
+* fix bug in refresh_insights ([dd19b6e](https://github.com/openfoodfacts/robotoff/commit/dd19b6e5ad778a648ea32b718884abdcd1a94c72))
+* fix init-elasticsearch Makefile command ([2d729d4](https://github.com/openfoodfacts/robotoff/commit/2d729d4c2ff67f5db29c802e9bd46c627375b519))
+* remove pdo and pgi regex ([008bd9d](https://github.com/openfoodfacts/robotoff/commit/008bd9dd840c5a392dc73da839da7196dc5bb53d))
+* update label whitelist ([2497642](https://github.com/openfoodfacts/robotoff/commit/2497642bf81d4ebcc1745d280d606e10e97c1246))
+
+
+### Technical
+
+* pin openfoodfacts dependency ([1f9ac80](https://github.com/openfoodfacts/robotoff/commit/1f9ac800e8a0545661edb7f9667adbf9609afb2b))
+* update branc blacklist and label whitelist ([d7948c5](https://github.com/openfoodfacts/robotoff/commit/d7948c5a60a58b24186af7ad4ab6067e1ac689a9))
+* upgrade requests ([f937442](https://github.com/openfoodfacts/robotoff/commit/f937442f36eeb9f451d27ff675364a5c16e044dc))
+
 ## [1.32.1](https://github.com/openfoodfacts/robotoff/compare/v1.32.0...v1.32.1) (2023-08-28)
 
 
