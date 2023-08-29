@@ -114,21 +114,6 @@ def generate_ocr_predictions(
 
 
 @app.command()
-def predict_category(output: str) -> None:
-    """Predict categories from the product JSONL dataset stored in `datasets`
-    directory."""
-    from robotoff import settings
-    from robotoff.prediction.category.matcher import predict_from_dataset
-    from robotoff.products import ProductDataset
-    from robotoff.utils import dump_jsonl
-
-    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-    insights = predict_from_dataset(dataset)
-    dict_insights = (i.to_dict() for i in insights)
-    dump_jsonl(output, dict_insights)
-
-
-@app.command()
 def download_dataset(minify: bool = False) -> None:
     """Download Open Food Facts dataset and save it in `datasets` directory."""
     from robotoff.products import fetch_dataset, has_dataset_changed

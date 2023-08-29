@@ -4,24 +4,6 @@ Knowing the category of each product is critically important at Open Food Facts,
 
 In Open Food Facts, more 12,500 categories exist in the [category taxonomy](https://static.openfoodfacts.org/data/taxonomies/categories.full.json) (as of March 2023). Category prediction using product meta-data was one the first project developed as part of Robotoff in 2018.
 
-Two complementary approaches currently exist in production to predict categories: a matching-based approach and a machine learning one.
-
-## Matcher
-
-A simple "matcher" algorithm is used to predict categories from product names. This used to be done using Elasticsearch but it's directly included in Robotoff codebase [^matcher]. It currently works for the following languages: `fr`, `en`, `de`, `es`, `it`, `nl`.
-The product name and all category names in target languages are preprocessed with the following pipeline:
-
-- lowercasing
-- language-specific stop word removal
-- language-specific lookup-based lemmatization: fast and independent of part of speech for speed and simplicity
-- text normalization and accent stripping
-
-Then a category is predicted if the category name is a substring of the product name.
-
-Many false positive came from the fact some category names were also ingredients: category *fraise* matched product name *jus de fraise*. To prevent this, we only allow non-full matches (full match=the two preprocessed string are the same) to occur for an ingredient category if the match starts at the beginning of the product name. There are still false positive in English as adjectives come before nouns (ex: *strawberry juice*), so partial matching for ingredient categories is disabled for English. 
-
-## ML prediction
-
 A neural network model is used to predict categories [^neural]. Details about the model training, results and model assets are available on the [model robotoff-models release page](https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0). 
 
 This model takes as inputs (all inputs are optional):
@@ -53,6 +35,6 @@ Here is a summary on the milestones in category detection:
 - 2022-10 | Remove Elasticsearch-based category predictor, switch to custom model in Robotoff codebase
 
 - 2023-03 | Deployment of the [v3 model](https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0)
+- 2023-08 | Disabling of the `matcher` predictor: after an analysis through Hunger Games, most errors were due to the `matcher` predictor, and the `neural` predictor gave most of the time accurate predictions for products for which the `matcher` predictor failed.
 
-[^matcher]: see `robotoff.prediction.category.matcher`
 [^neural]: see `robotoff.prediction.category.neural`
