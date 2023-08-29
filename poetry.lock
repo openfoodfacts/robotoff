@@ -1893,13 +1893,13 @@ numpy = [
 
 [[package]]
 name = "openfoodfacts"
-version = "0.1.9"
+version = "0.1.5"
 description = "Official Python SDK of Open Food Facts"
 optional = false
 python-versions = ">=3.8.1,<4.0"
 files = [
-    {file = "openfoodfacts-0.1.9-py3-none-any.whl", hash = "sha256:c37973532340e708abae7c4df2bb711acfb74eaf4ee3ca151c2cb8d3b0b0fd91"},
-    {file = "openfoodfacts-0.1.9.tar.gz", hash = "sha256:a2165ce494712e970f4ca02805165a8bf220b1bc2fd1c272410c31aad96b805e"},
+    {file = "openfoodfacts-0.1.5-py3-none-any.whl", hash = "sha256:efcf8ac8c76736d657fe81adbe6b1643febb9e412dfdeb893c8d437452426644"},
+    {file = "openfoodfacts-0.1.5.tar.gz", hash = "sha256:2b78d5ea2607e6d50c606fee8aeaadd3aeed881e3cbe0f7477370820a1fa4cc9"},
 ]
 
 [package.dependencies]
@@ -3952,4 +3952,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4b1f21f9d7e3a4ca355f415ebf4a0fa3298553ff0d06ab1e6b3974d8624564d3"
+content-hash = "cf93517e9d67eb01165e474173e2faf38af05ba0caa75ef5c0671822838039c3"
