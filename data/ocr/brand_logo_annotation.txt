@@ -1,4 +1,4 @@
-// These brands are found in Google Cloud Vision OCR output files. On the left, the Google Cloud annotation, on the right the value as it should appear in Open Food Facts.
+// These brands are found in Google Cloud Vision OCR output files under the key: logoAnnotations, eg: https://images.openfoodfacts.org/images/products/705/804/049/8007/1.json. On the left, the Google Cloud annotation, on the right the value as it should appear in Open Food Facts.
 alnatura||Alnatura
 Andros France||Andros
 andros||Andros
