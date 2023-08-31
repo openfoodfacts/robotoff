@@ -16,7 +16,11 @@ logger = get_logger(__name__)
 # want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
-ureg = pint.UnitRegistry()
+
+@functools.cache
+def get_unit_registry():
+    # We initialize UnitRegistry here to prevent
+    return pint.UnitRegistry()
 
 
 def normalize_weight(value: str, unit: str) -> tuple[float, str]:
@@ -32,6 +36,7 @@ def normalize_weight(value: str, unit: str) -> tuple[float, str]:
         value = str(float(value) * 30)
         unit = "ml"
 
+    ureg = get_unit_registry()
     quantity = ureg.parse_expression(f"{value} {unit}")
 
     if ureg.gram in quantity.compatible_units():
