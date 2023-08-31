@@ -30,7 +30,7 @@ from robotoff.types import Prediction, PredictionType
                     "shape": {"value": "bouteille", "value_tag": "en:bottle"},
                     "material": {
                         "value": "pet",
-                        "value_tag": "en:pet-polyethylene-terephthalate",
+                        "value_tag": "en:pet-1-polyethylene-terephthalate",
                     },
                 }
             ],
@@ -114,7 +114,7 @@ def test_match_packaging(text: str, expected: list[dict]):
                         "shape": {"value": "boite", "value_tag": "en:box"},
                         "material": {
                             "value": "pet",
-                            "value_tag": "en:pet-polyethylene-terephthalate",
+                            "value_tag": "en:pet-1-polyethylene-terephthalate",
                         },
                         "recycling": {"value": "recycler", "value_tag": "en:recycle"},
                     },
