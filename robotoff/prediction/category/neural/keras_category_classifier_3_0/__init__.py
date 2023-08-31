@@ -21,6 +21,7 @@ from .preprocessing import (
     IMAGE_EMBEDDING_DIM,
     MAX_IMAGE_EMBEDDING,
     NUTRIMENT_NAMES,
+    clear_ingredient_processing_cache,
     generate_inputs_dict,
 )
 
@@ -238,6 +239,7 @@ def predict(
     threshold: Optional[float] = None,
     image_embeddings: Optional[np.ndarray] = None,
     category_taxonomy: Optional[Taxonomy] = None,
+    clear_cache: bool = False,
 ) -> tuple[list[tuple[str, float, Optional[NeighborPredictionType]]], JSONType]:
     """Predict categories using v3 model.
 
@@ -251,6 +253,8 @@ def predict(
         available
     :param category_taxonomy: the category Taxonomy (optional), if provided
         the predicted scores of parents, children and siblings will be returned
+    :param clear_cache: if True, clear ingredient processing cache before
+        returning results
     :return: the predicted categories as a list of
         (category_tag, neighbor_predictions, confidence) tuples and a dict
         containing debug information. `neighbor_predictions` is None if
@@ -309,6 +313,9 @@ def predict(
             category_predictions.append((category, confidence, neighbor_predictions))
         else:
             break
+
+    if clear_cache:
+        clear_ingredient_processing_cache()
 
     return category_predictions, debug
 

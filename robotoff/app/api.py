@@ -565,7 +565,6 @@ class CategoryPredictorResource:
                 f"category predictor is only available for 'off' server type (here: '{server_type.name}')"
             )
 
-        predictors: list[str] = req.media.get("predictors") or ["neural"]
         neural_model_name = None
         if (neural_model_name_str := req.media.get("neural_model_name")) is not None:
             neural_model_name = NeuralCategoryClassifierModel[neural_model_name_str]
@@ -585,23 +584,13 @@ class CategoryPredictorResource:
                 # Convert to a format recognized by `CategoryClassifier` class
                 product["ingredients"] = [{"id": id_} for id_ in ingredient_tags]
 
-            if "matcher" in predictors:
-                if "lang" not in req.media:
-                    raise falcon.HTTPBadRequest(
-                        description="lang field is required when using matcher predictor"
-                    )
-                lang = req.media["lang"]
-                product[f"product_name_{lang}"] = product["product_name"]
-                product["languages_codes"] = [lang]
-
         resp.media = predict_category(
             product,
             product_id,
-            neural_predictor="neural" in predictors,
-            matcher_predictor="matcher" in predictors,
             deepest_only=req.media.get("deepest_only", False),
             threshold=req.media.get("threshold"),
             neural_model_name=neural_model_name,
+            clear_cache=True,
         )
 
 
