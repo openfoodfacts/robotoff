@@ -1,5 +1,4 @@
 7-eleven
-Action
 AhorraMás
 AhorraMás||ahorramas
 Albertsons
@@ -8,7 +7,6 @@ Alcampo
 Aldi
 Aldi||asia green garden
 Aldi||balta mare
-Aldi||biscotto
 Aldi||buttella
 Aldi||cucina nobile
 Aldi||delikato
