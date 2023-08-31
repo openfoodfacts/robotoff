@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.34.1](https://github.com/openfoodfacts/robotoff/compare/v1.34.0...v1.34.1) (2023-08-31)
+
+
+### Bug Fixes
+
+* fix bug in product_weight.py ([2e94d11](https://github.com/openfoodfacts/robotoff/commit/2e94d115732d05b9f9ca6addcdef2cb0b6aac180))
+* update normalize_weight function after Pint upgrade ([80d3a09](https://github.com/openfoodfacts/robotoff/commit/80d3a09af24447570a7c09362e6c416194add671))
+* update packaging denylist ([23e6e26](https://github.com/openfoodfacts/robotoff/commit/23e6e2641d8881fd5a36d8a1f9611dc6d8a0b060))
+
+
+### Technical
+
+* update dependencies ([5353f1c](https://github.com/openfoodfacts/robotoff/commit/5353f1caaef7f82be5b199bf864670b150233c72))
+
 ## [1.34.0](https://github.com/openfoodfacts/robotoff/compare/v1.33.0...v1.34.0) (2023-08-31)
 
 
