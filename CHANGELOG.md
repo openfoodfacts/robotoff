@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.34.0](https://github.com/openfoodfacts/robotoff/compare/v1.33.0...v1.34.0) (2023-08-31)
+
+
+### Features
+
+* apply automatically nutrition images insights ([6d79855](https://github.com/openfoodfacts/robotoff/commit/6d79855f9f02aa2fc355f17e7cb1112d88997554))
+
+
+### Bug Fixes
+
+* sort label whitelist ([7b13090](https://github.com/openfoodfacts/robotoff/commit/7b1309063279b769607d13f121aefecab26f4a06))
+* Update packaging material shape map for fr ([450409f](https://github.com/openfoodfacts/robotoff/commit/450409fea8bcb2cf783b5286ae04225c52364e59)), closes [#1250](https://github.com/openfoodfacts/robotoff/issues/1250)
+* update packaging shape denylist ([84256ba](https://github.com/openfoodfacts/robotoff/commit/84256ba9539095c2e6833037ba9f173a633b66c9))
+
+
+### Technical
+
+* update brand blacklist ([625111b](https://github.com/openfoodfacts/robotoff/commit/625111b4da013e982b6768098c5befe767220fce))
+* update label whitelist ([70bcfaf](https://github.com/openfoodfacts/robotoff/commit/70bcfaf6c742a6617320ca7faafc198e10ef34a3))
+
 ## [1.33.0](https://github.com/openfoodfacts/robotoff/compare/v1.32.1...v1.33.0) (2023-08-29)
 
 
