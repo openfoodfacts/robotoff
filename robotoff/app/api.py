@@ -590,7 +590,7 @@ class CategoryPredictorResource:
             deepest_only=req.media.get("deepest_only", False),
             threshold=req.media.get("threshold"),
             neural_model_name=neural_model_name,
-            clear_cache=True,
+            clear_cache=True,  # clear resource cache to save memory
         )
 
 

@@ -162,15 +162,6 @@ _off_net_auth = ("off", "off")
 _off_request_auth = _off_net_auth if _instance_tld() == "net" else None
 
 
-CATEGORY_MATCHER_DIR = DATA_DIR / "category/matcher"
-CATEGORY_MATCHER_MATCH_MAPS = {
-    "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
-    "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
-}
-CATEGORY_MATCHER_INTERSECT = (
-    CATEGORY_MATCHER_DIR / "category_ingredient_intersect.json.gz"
-)
-
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many
 # languages, with synonyms. Those are the full version of taxos.
 

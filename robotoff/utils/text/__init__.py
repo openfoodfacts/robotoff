@@ -1,8 +1,5 @@
-import functools
 import re
 import unicodedata
-
-import spacy
 
 from robotoff.utils import get_logger
 
@@ -52,23 +49,6 @@ def strip_accents_v2(s: str, keep_length: bool = False) -> str:
 def strip_consecutive_spaces(text: str) -> str:
     """Convert a sequence of 2+ spaces into a single space."""
     return CONSECUTIVE_SPACES_REGEX.sub(" ", text)
-
-
-@functools.cache
-def get_blank_nlp(lang: str) -> spacy.Language:
-    """Return a blank (without model) spaCy language pipeline."""
-    logger.info("Loading NLP for %s...", lang)
-    return spacy.blank(lang)
-
-
-@functools.cache
-def get_lemmatizing_nlp(lang: str) -> spacy.Language:
-    """Return a spaCy language pipeline with a lookup lemmatizer."""
-    logger.info("Loading NLP with lemmatizer for %s...", lang)
-    nlp = spacy.blank(lang)
-    nlp.add_pipe("lemmatizer", config={"mode": "lookup"})
-    nlp.initialize()
-    return nlp
 
 
 def get_tag(text: str) -> str:
