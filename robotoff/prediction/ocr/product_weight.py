@@ -1,4 +1,5 @@
 import functools
+import math
 import re
 from typing import Optional, Union
 
@@ -42,7 +43,13 @@ def normalize_weight(value: str, unit: str) -> tuple[float, str]:
     else:
         raise ValueError(f"unknown unit: {quantity.u}")
 
-    return normalized_quantity.magnitude, normalized_unit
+    # Rounding errors due to float may occur with Pint,
+    # round normalized value to floor if there is no significant difference
+    normalized_value = normalized_quantity.magnitude
+    if math.isclose(math.floor(normalized_value), normalized_value):
+        normalized_value = math.floor(normalized_value)
+
+    return normalized_value, normalized_unit
 
 
 def is_valid_weight(weight_value: str) -> bool:

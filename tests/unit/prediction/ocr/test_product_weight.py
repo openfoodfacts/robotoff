@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 from robotoff.prediction.ocr.dataclass import OCRRegex
@@ -66,8 +68,9 @@ def test_product_weight_with_ending_mention_regex(input_str: str, is_match: bool
     ],
 )
 def test_normalize_weight(value: str, unit: str, expected: tuple[float, str]):
-    result = normalize_weight(value, unit)
-    assert result == expected
+    normalized_value, normalized_unit = normalize_weight(value, unit)
+    assert math.isclose(normalized_value, expected[0])
+    assert normalized_unit == expected[1]
 
 
 @pytest.mark.parametrize(
