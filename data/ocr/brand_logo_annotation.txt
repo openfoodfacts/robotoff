@@ -273,4 +273,3 @@ Woolworths||Woolworths
 woolworths||Woolworths
 yoplait||Yoplait
 yves rocher||Yves Rocher
-łowicz||Łowicz

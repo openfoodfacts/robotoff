@@ -85,7 +85,6 @@ Franprix
 Fred Meyer
 Froiz
 Giant Eagle
-Groszek
 Hacendado
 Haggen
 Harris Teeter
@@ -268,7 +267,6 @@ Mega Image
 Migros
 Monoprix
 Morrisson's
-Netto
 Netto||bergio
 Netto||corsarro
 Netto||happy vege
