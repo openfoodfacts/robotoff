@@ -53,6 +53,7 @@ fair
 fairtrade
 family
 familia
+finest
 fini
 france
 fresh
@@ -90,9 +91,11 @@ made-with
 marie
 merci
 milk
+national
 natur
 natura
 netto
+noel
 // nutriscore triggers this one
 nutri
 omega
@@ -112,10 +115,13 @@ quick
 real
 rich
 rico
+roma
+rose
 royal
 salada
 sans
 sante
+scan
 schweizer
 selection
 serrano
