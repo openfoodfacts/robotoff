@@ -31,7 +31,7 @@ def normalize_weight(value: str, unit: str) -> tuple[float, str]:
         value = str(float(value) * 30)
         unit = "ml"
 
-    quantity = ureg.parse_expression("{} {}".format(value, unit))
+    quantity = ureg.parse_expression(f"{value} {unit}")
 
     if ureg.gram in quantity.compatible_units():
         normalized_quantity = quantity.to(ureg.gram)
@@ -40,7 +40,7 @@ def normalize_weight(value: str, unit: str) -> tuple[float, str]:
         normalized_quantity = quantity.to(ureg.milliliter)
         normalized_unit = "ml"
     else:
-        raise ValueError("unknown unit: {}".format(quantity.u))
+        raise ValueError(f"unknown unit: {quantity.u}")
 
     return normalized_quantity.magnitude, normalized_unit
 
@@ -138,10 +138,10 @@ def process_product_weight(
     # Strip value from endpoint point: '525. g' -> '525 g'
     value = value.strip(".")
 
-    text = "{} {}".format(value, unit)
+    text = f"{value} {unit}"
     normalized_value, normalized_unit = normalize_weight(value, unit)
 
-    if is_extreme_weight(normalized_value, unit):
+    if is_extreme_weight(normalized_value, normalized_unit):
         return None
 
     if is_suspicious_weight(normalized_value, normalized_unit):
@@ -181,7 +181,7 @@ def process_multi_packaging(match) -> Optional[dict]:
         return None
 
     normalized_value, normalized_unit = normalize_weight(value, unit)
-    text = "{} x {} {}".format(count, value, unit)
+    text = f"{count} x {value} {unit}"
     result = {
         "text": text,
         "raw": raw,
