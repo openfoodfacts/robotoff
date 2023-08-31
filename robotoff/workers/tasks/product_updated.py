@@ -3,7 +3,6 @@ import requests
 from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import import_insights, refresh_insights
 from robotoff.models import with_db
-from robotoff.prediction.category.matcher import predict as predict_category_matcher
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.products import get_product
 from robotoff.redis import Lock, LockedResourceException
@@ -55,7 +54,7 @@ def update_insights_job(product_id: ProductIdentifier):
         )
 
 
-def add_category_insight(product_id: ProductIdentifier, product: JSONType):
+def add_category_insight(product_id: ProductIdentifier, product: JSONType) -> None:
     """Predict categories for product and import predicted category insight.
 
     :param product_id: identifier of the product
@@ -68,21 +67,18 @@ def add_category_insight(product_id: ProductIdentifier, product: JSONType):
         )
         return
 
-    logger.info("Predicting product categories...")
-    # predict category using matching algorithm on product name
-    product_predictions = predict_category_matcher(product)
-
     # predict category using neural model
     try:
         neural_predictions, _ = CategoryClassifier(
             get_taxonomy(TaxonomyType.category.name)
         ).predict(product, product_id)
-        product_predictions += neural_predictions
+        product_predictions = neural_predictions
     except requests.exceptions.HTTPError as e:
         resp = e.response
         logger.error(
             f"Category classifier returned an error: {resp.status_code}: %s", resp.text
         )
+        return
 
     if len(product_predictions) < 1:
         return

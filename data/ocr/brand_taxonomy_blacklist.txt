@@ -25,6 +25,7 @@ boost
 bordeaux
 bourbon
 chateau
+chips
 classic
 cocacola
 comte
@@ -36,6 +37,7 @@ crunch
 cucina
 daily
 delice
+delicious
 delta
 deluxe
 demeter
@@ -49,7 +51,9 @@ extra
 fabrication-artisanale
 fair
 fairtrade
+family
 familia
+finest
 fini
 france
 fresh
@@ -62,10 +66,13 @@ gold
 golden
 gourmet
 granola
+green
 grenade
 gusto
 homemade
 ice-tea
+interdis
+inc
 ideal
 italia
 jacques
@@ -80,16 +87,23 @@ lays
 le-porc-francais
 leger
 life
+ltd
 made-with
 marie
 merci
 milk
+national
 natur
 natura
 netto
+noel
+// nutriscore triggers this one
+nutri
+omega
 organic
 organics
 origen
+original
 pacific
 patissier
 // plus: common word in FR and EN, many false positive
@@ -100,17 +114,25 @@ prima
 pure
 quick
 real
+rich
+rico
+roma
+rose
 royal
 salada
 sans
 sante
+scan
 schweizer
 selection
 serrano
+sicilia
 simple
 simply
+solo
 specially selected
 sommer
+star
 super
 sweet
 tasty
@@ -119,9 +141,11 @@ terra
 terrasuisse
 the-coca-cola-company
 thomas
+torino
 tradition
 tropical
 tous les jours
+valencia
 valor
 vegan
 veggie
@@ -131,3 +155,4 @@ ice tea
 wrigley
 wal-mart-stores
 water
+whey

@@ -13,26 +13,20 @@ from sentry_sdk import capture_exception
 
 from robotoff import settings, slack
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
-from robotoff.insights.importer import (
-    BrandInsightImporter,
-    import_insights,
-    is_valid_insight_image,
-)
+from robotoff.insights.importer import BrandInsightImporter, is_valid_insight_image
 from robotoff.metrics import (
     ensure_influx_database,
     save_facet_metrics,
     save_insight_metrics,
 )
 from robotoff.models import Prediction, ProductInsight, db
-from robotoff.prediction.category.matcher import predict_from_dataset
 from robotoff.products import (
     Product,
-    ProductDataset,
     fetch_dataset,
     get_min_product_store,
     has_dataset_changed,
 )
-from robotoff.types import PredictionType, ServerType
+from robotoff.types import InsightType, ServerType
 from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
@@ -126,6 +120,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
         # Check predictions first, as insights are computed from predictions
         for prediction in ServerSide(
             Prediction.select(
+                # id is needed to perform deletion
                 Prediction.id,
                 Prediction.barcode,
                 Prediction.server_type,
@@ -163,6 +158,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
         insight_updated = 0
         for insight in ServerSide(
             ProductInsight.select(
+                # id is needed to perform deletion
                 ProductInsight.id,
                 ProductInsight.barcode,
                 ProductInsight.server_type,
@@ -199,26 +195,39 @@ def refresh_insights(with_deletion: bool = True) -> None:
                     insight_deleted += 1
                     insight.delete_instance()
                     continue
-            # We remove insight with excluded brands, it can happen if the
-            # brand was added to exclude list after insight creation
-            elif (
-                insight.type == PredictionType.brand.value
-                and not BrandInsightImporter.is_prediction_valid(insight)
-            ):
-                if with_deletion:
-                    logger.info(
-                        "Brand insight with excluded brand %s, deleting insight %s",
-                        insight.value_tag,
-                        insight,
-                    )
-                    insight_deleted += 1
-                    insight.delete_instance()
-                    continue
 
             was_updated = update_insight_attributes(product, insight)
 
             if was_updated:
                 insight_updated += 1
+
+        # We remove insight with excluded brands, it can happen if the
+        # brand was added to exclude list after insight creation
+        for insight in ServerSide(
+            ProductInsight.select(
+                # id is needed to perform deletion
+                ProductInsight.id,
+                # predictor, data, value_tag and barcode are needed for
+                # BrandInsightImporter.is_prediction_valid()
+                ProductInsight.barcode,
+                ProductInsight.predictor,
+                ProductInsight.data,
+                ProductInsight.value_tag,
+            ).where(
+                ProductInsight.annotation.is_null(),
+                ProductInsight.server_type == server_type.name,
+                ProductInsight.type == InsightType.brand.value,
+            )
+        ):
+            if not BrandInsightImporter.is_prediction_valid(insight):
+                if with_deletion:
+                    logger.info(
+                        "Brand insight with brand %s is invalid, deleting insight %s",
+                        insight.value_tag,
+                        insight,
+                    )
+                    insight_deleted += 1
+                    insight.delete_instance()
 
     logger.info("%s prediction deleted", prediction_deleted)
     logger.info("%s insight deleted", insight_deleted)
@@ -294,26 +303,6 @@ def _update_data():
         logger.exception("Exception during product dataset refresh")
 
 
-def generate_insights() -> None:
-    """Generate and import category insights from the latest dataset dump, for
-    products added at day-1."""
-    logger.info("Generating new category insights")
-
-    datetime_threshold = datetime.datetime.utcnow().replace(
-        hour=0, minute=0, second=0, microsecond=0
-    ) - datetime.timedelta(days=1)
-    dataset = ProductDataset(settings.JSONL_DATASET_PATH)
-    product_predictions_iter = predict_from_dataset(dataset, datetime_threshold)
-
-    with db:
-        import_result = import_insights(
-            product_predictions_iter,
-            # Currently the JSONL dataset is OFF-only
-            server_type=ServerType.off,
-        )
-    logger.info(import_result)
-
-
 def transform_insight_iter(insights_iter: Iterable[dict]):
     for insight in insights_iter:
         for field, value in insight.items():
@@ -364,12 +353,6 @@ def run():
         day="*",
         hour="9",
         max_instances=1,
-    )
-
-    # This job generates category insights using matcher algorithm from the
-    # last Product Opener data dump.
-    scheduler.add_job(
-        generate_insights, "cron", day="*", hour="10", minute=15, max_instances=1
     )
 
     scheduler.add_job(

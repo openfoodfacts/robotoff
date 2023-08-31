@@ -1,5 +1,93 @@
 # Changelog
 
+## [1.34.1](https://github.com/openfoodfacts/robotoff/compare/v1.34.0...v1.34.1) (2023-08-31)
+
+
+### Bug Fixes
+
+* fix bug in product_weight.py ([2e94d11](https://github.com/openfoodfacts/robotoff/commit/2e94d115732d05b9f9ca6addcdef2cb0b6aac180))
+* update normalize_weight function after Pint upgrade ([80d3a09](https://github.com/openfoodfacts/robotoff/commit/80d3a09af24447570a7c09362e6c416194add671))
+* update packaging denylist ([23e6e26](https://github.com/openfoodfacts/robotoff/commit/23e6e2641d8881fd5a36d8a1f9611dc6d8a0b060))
+
+
+### Technical
+
+* update dependencies ([5353f1c](https://github.com/openfoodfacts/robotoff/commit/5353f1caaef7f82be5b199bf864670b150233c72))
+
+## [1.34.0](https://github.com/openfoodfacts/robotoff/compare/v1.33.0...v1.34.0) (2023-08-31)
+
+
+### Features
+
+* apply automatically nutrition images insights ([6d79855](https://github.com/openfoodfacts/robotoff/commit/6d79855f9f02aa2fc355f17e7cb1112d88997554))
+
+
+### Bug Fixes
+
+* sort label whitelist ([7b13090](https://github.com/openfoodfacts/robotoff/commit/7b1309063279b769607d13f121aefecab26f4a06))
+* Update packaging material shape map for fr ([450409f](https://github.com/openfoodfacts/robotoff/commit/450409fea8bcb2cf783b5286ae04225c52364e59)), closes [#1250](https://github.com/openfoodfacts/robotoff/issues/1250)
+* update packaging shape denylist ([84256ba](https://github.com/openfoodfacts/robotoff/commit/84256ba9539095c2e6833037ba9f173a633b66c9))
+
+
+### Technical
+
+* update brand blacklist ([625111b](https://github.com/openfoodfacts/robotoff/commit/625111b4da013e982b6768098c5befe767220fce))
+* update label whitelist ([70bcfaf](https://github.com/openfoodfacts/robotoff/commit/70bcfaf6c742a6617320ca7faafc198e10ef34a3))
+
+## [1.33.0](https://github.com/openfoodfacts/robotoff/compare/v1.32.1...v1.33.0) (2023-08-29)
+
+
+### Features
+
+* disable matcher predictor for category ([07ada5b](https://github.com/openfoodfacts/robotoff/commit/07ada5bd0bde125f3e3cc3b718c5bcf97b8b05e3))
+
+
+### Bug Fixes
+
+* add new exception for packaging ([e397e57](https://github.com/openfoodfacts/robotoff/commit/e397e577a1c38a7f0ded9ad45ce8b41010ad5bd8)), closes [#1058](https://github.com/openfoodfacts/robotoff/issues/1058)
+* disable temporarily en:eu-non-agriculture and en:eu-agriculture ([043b96c](https://github.com/openfoodfacts/robotoff/commit/043b96c3f64507e860edab04eb4a3eabb692c415))
+* don't generate weight insight when value is suspicious ([51a19fa](https://github.com/openfoodfacts/robotoff/commit/51a19fa46efdb238d0eedfa69b7540f0a1333984)), closes [#302](https://github.com/openfoodfacts/robotoff/issues/302)
+* fix bug in refresh_insights ([dd19b6e](https://github.com/openfoodfacts/robotoff/commit/dd19b6e5ad778a648ea32b718884abdcd1a94c72))
+* fix init-elasticsearch Makefile command ([2d729d4](https://github.com/openfoodfacts/robotoff/commit/2d729d4c2ff67f5db29c802e9bd46c627375b519))
+* remove pdo and pgi regex ([008bd9d](https://github.com/openfoodfacts/robotoff/commit/008bd9dd840c5a392dc73da839da7196dc5bb53d))
+* update label whitelist ([2497642](https://github.com/openfoodfacts/robotoff/commit/2497642bf81d4ebcc1745d280d606e10e97c1246))
+
+
+### Technical
+
+* pin openfoodfacts dependency ([1f9ac80](https://github.com/openfoodfacts/robotoff/commit/1f9ac800e8a0545661edb7f9667adbf9609afb2b))
+* update branc blacklist and label whitelist ([d7948c5](https://github.com/openfoodfacts/robotoff/commit/d7948c5a60a58b24186af7ad4ab6067e1ac689a9))
+* upgrade requests ([f937442](https://github.com/openfoodfacts/robotoff/commit/f937442f36eeb9f451d27ff675364a5c16e044dc))
+
+## [1.32.1](https://github.com/openfoodfacts/robotoff/compare/v1.32.0...v1.32.1) (2023-08-28)
+
+
+### Bug Fixes
+
+* add some items to brand taxonomy blacklist ([ef0b626](https://github.com/openfoodfacts/robotoff/commit/ef0b626e171514a488a52c45e23f18e61a6bd243))
+* auupdate brand_taxonomy_blacklist.txt ([739c748](https://github.com/openfoodfacts/robotoff/commit/739c748428e792191328cfec55fdbe3008c1442d))
+* brand blocklist ([3055d13](https://github.com/openfoodfacts/robotoff/commit/3055d135c095d61fbea683502fe40985e4925273))
+* fix bug in doctext.py and improve script ([b54ef2b](https://github.com/openfoodfacts/robotoff/commit/b54ef2b227db8f6c58e3ba616277adabe6950d7b))
+* fix bug in pprint ([c620d59](https://github.com/openfoodfacts/robotoff/commit/c620d590d0a29b9f2d65fc51601ebdc699aa5f42))
+* fix call to get_insights_ ([5d909b9](https://github.com/openfoodfacts/robotoff/commit/5d909b969440d250b22233f00ec4012c6338b2ad))
+* fix is_data_required method signature ([6342832](https://github.com/openfoodfacts/robotoff/commit/6342832cabc7f5ffb440748b99b9f7405a0fa6f5))
+* fix wrong call to add_category_insight in tests ([69b5f1e](https://github.com/openfoodfacts/robotoff/commit/69b5f1e21373e3cc4f70aa01f44e299f3134f835))
+* improve brand exclusion for 'taxonomy' predictor ([7705823](https://github.com/openfoodfacts/robotoff/commit/770582338960610ab7c4ef9d81f17a6c67e1b250))
+* improve candidate generation in LabelInsightImporter ([51e046a](https://github.com/openfoodfacts/robotoff/commit/51e046a193591a2ef3294ae7a2cbfe32506a209f))
+* mark use of md5 and sha1 hash function as safe ([ca0963f](https://github.com/openfoodfacts/robotoff/commit/ca0963f83f2d43dbd6db3f657d39921dbae76243))
+* set automatic_processing=None for flashtext label insight ([ba6ceb7](https://github.com/openfoodfacts/robotoff/commit/ba6ceb72bed3296b16a9b9d9bb309c9910d838d4))
+
+
+### Technical
+
+* fix deepsource warning ([58ca3e7](https://github.com/openfoodfacts/robotoff/commit/58ca3e7560d27fb9318a819989e82e57ed634aa0))
+* remove legacy function mark_insights ([9460393](https://github.com/openfoodfacts/robotoff/commit/9460393475b09c90357a6d406a88b867555a7794))
+* remove legacy functions in visualization_utils.py ([b620062](https://github.com/openfoodfacts/robotoff/commit/b620062664af4734693d4a5950c247883a5e80e2))
+* remove pypi.yml action ([1773b87](https://github.com/openfoodfacts/robotoff/commit/1773b87f77c82e59ffa6297400a61c9d30e91890))
+* switch to f-strings ([fdeba36](https://github.com/openfoodfacts/robotoff/commit/fdeba36e21dbdd5ed4ec71ff2ea7a8d5b4e27035))
+* update brand taxonomy blacklist ([df19331](https://github.com/openfoodfacts/robotoff/commit/df1933174d67711c0f3cd80bacfb7705df626565))
+* use consistent logging arg passing ([2385889](https://github.com/openfoodfacts/robotoff/commit/238588945c6e10c8b3175496b079974fe76165ac))
+
 ## [1.32.0](https://github.com/openfoodfacts/robotoff/compare/v1.31.1...v1.32.0) (2023-08-21)
 
 

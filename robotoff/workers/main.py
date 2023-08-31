@@ -23,10 +23,8 @@ def load_resources(refresh: bool = False):
         logger.info("Loading resources in memory...")
 
     from robotoff import brands, logos, taxonomy
-    from robotoff.prediction.category import matcher
     from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 
-    matcher.load_resources()
     taxonomy.load_resources()
     logos.load_resources()
     brands.load_resources()

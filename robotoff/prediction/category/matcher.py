@@ -1,3 +1,10 @@
+"""Simple "matcher" algorithm is used to predict categories from product names.
+
+It's currently disabled, as categorization errors mostly come from the matcher
+predictor on Hunger Games, and as the neural categorizer almost always returns
+more accurate predictions for products for which the matcher predictor fails.
+"""
+
 import datetime
 import functools
 import itertools

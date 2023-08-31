@@ -120,8 +120,6 @@ en:vegan||vegan
 en:vegan||veganoveganistisch
 en:vegan||vegetalien
 en:vegan||végétalien
-en:pdo||appellation d'origine controlee
-en:pdo||appellation d'origine contrôlée
 en:french-beef||viande bovine francaise
 en:french-beef||viande bovine française
 en:french-pork||le porc francais

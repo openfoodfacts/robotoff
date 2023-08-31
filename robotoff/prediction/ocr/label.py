@@ -25,11 +25,11 @@ def process_eu_bio_label_code(match) -> Optional[str]:
     if country == "de" and len(id_) != 3:
         return None
 
-    return "en:{}-{}-{}".format(country, bio_code, id_)
+    return f"en:{country}-{bio_code}-{id_}"
 
 
 def process_es_bio_label_code(match) -> str:
-    return "en:es-eco-{}-{}".format(match.group(1), match.group(2)).lower()
+    return f"en:es-eco-{match.group(1)}-{match.group(2)}".lower()
 
 
 EN_ORGANIC_REGEX_STR = [
@@ -72,19 +72,6 @@ LABELS_REGEX = {
             field=OCRField.full_text_contiguous,
         ),
     ],
-    "en:pgi": [
-        OCRRegex(
-            re.compile(
-                r"indication g[ée]ographique prot[eé]g[eé]e|Indicazione geografica protetta|geschützte geografische angabe",
-                re.I,
-            ),
-            field=OCRField.full_text_contiguous,
-        ),
-        OCRRegex(
-            re.compile(r"(?<!\w)(?:IGP|BGA|PGI)(?!\w)"),
-            field=OCRField.full_text_contiguous,
-        ),
-    ],
     "fr:label-rouge": [
         OCRRegex(
             re.compile(r"d[ée]cret du 0?5[./]01[./]07", re.I),
@@ -92,16 +79,6 @@ LABELS_REGEX = {
         ),
         OCRRegex(
             re.compile(r"(?<!\w)homologation(?: n°?)? ?la ?\d{2}\/\d{2}(?!\w)", re.I),
-            field=OCRField.full_text_contiguous,
-        ),
-    ],
-    "en:pdo": [
-        OCRRegex(
-            re.compile(r"(?<!\w)(?:PDO|AOP|DOP)(?!\w)"),
-            field=OCRField.full_text_contiguous,
-        ),
-        OCRRegex(
-            re.compile(r"appellation d'origine prot[eé]g[eé]e", re.I),
             field=OCRField.full_text_contiguous,
         ),
     ],
@@ -231,7 +208,7 @@ def extract_label_flashtext(
             Prediction(
                 type=PredictionType.label,
                 value_tag=label_tag,
-                automatic_processing=False,
+                automatic_processing=None,
                 predictor="flashtext",
                 predictor_version=PREDICTOR_VERSION,
                 data=data,
