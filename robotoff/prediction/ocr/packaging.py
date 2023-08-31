@@ -37,6 +37,8 @@ SHAPE_ONLY_EXCLUDE_SET = {
     "en:tablespoon",
     "en:mold",  # moule
     "en:cutlery",  # couverts
+    "en:overpack",  # suremballage
+    "en:plate",  # assiette
     None,
 }
 
