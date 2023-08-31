@@ -68,6 +68,7 @@ class CategoryClassifier:
         deepest_only: bool = False,
         threshold: Optional[float] = None,
         model_name: Optional[NeuralCategoryClassifierModel] = None,
+        clear_cache: bool = False,
     ) -> tuple[list[Prediction], JSONType]:
         """Return an unordered list of category predictions for the given
         product and additional debug information.
@@ -119,6 +120,8 @@ class CategoryClassifier:
         :param neural_model_name: the name of the neural model to use to
             perform prediction. `keras_image_embeddings_3_0` is used by
             default.
+        :param clear_cache: if True, clear ingredient processing cache before
+            returning results
         """
         logger.debug("predicting category with model %s", model_name)
 
@@ -170,6 +173,7 @@ class CategoryClassifier:
             threshold=threshold,
             image_embeddings=image_embeddings,
             category_taxonomy=self.taxonomy,
+            clear_cache=clear_cache,
         )
         predictions = []
 

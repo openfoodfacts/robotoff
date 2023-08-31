@@ -56,10 +56,6 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                     "type": "boolean",
                 },
                 "threshold": {"type": "number"},
-                "predictors": {
-                    "type": "array",
-                    "items": {"enum": ["neural", "matcher"]},
-                },
                 "neural_model_name": {
                     "type": "string",
                     "enum": [x.name for x in NeuralCategoryClassifierModel],
@@ -120,10 +116,6 @@ PREDICT_CATEGORY_SCHEMA: JSONType = {
                     "type": "boolean",
                 },
                 "threshold": {"type": "number"},
-                "predictors": {
-                    "type": "array",
-                    "items": {"enum": ["neural", "matcher"]},
-                },
                 "lang": {
                     "type": "string",
                     "minLength": 1,
