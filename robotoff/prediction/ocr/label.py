@@ -74,10 +74,6 @@ LABELS_REGEX = {
     ],
     "fr:label-rouge": [
         OCRRegex(
-            re.compile(r"d[ée]cret du 0?5[./]01[./]07", re.I),
-            field=OCRField.full_text_contiguous,
-        ),
-        OCRRegex(
             re.compile(r"(?<!\w)homologation(?: n°?)? ?la ?\d{2}\/\d{2}(?!\w)", re.I),
             field=OCRField.full_text_contiguous,
         ),
