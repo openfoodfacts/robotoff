@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.35.0](https://github.com/openfoodfacts/robotoff/compare/v1.34.1...v1.35.0) (2023-09-04)
+
+
+### Features
+
+* remove matcher predictor completely ([d0847c6](https://github.com/openfoodfacts/robotoff/commit/d0847c6036eec65a12f0af3d5f6c7c3f89896f45))
+* remove matcher predictor from API ([de97f9f](https://github.com/openfoodfacts/robotoff/commit/de97f9fa43d342a2d64e9611a7d4ff1f07e81dbd))
+
+
+### Bug Fixes
+
+* Crowdin PR title ([1adfc96](https://github.com/openfoodfacts/robotoff/commit/1adfc9610f96ddabf5c3b7d6efd1dab962470814))
+* don't initialize unit registry in product_weight.py ([468c4f6](https://github.com/openfoodfacts/robotoff/commit/468c4f65d2bba33ea13637e3b9556b8bd87e0dc7))
+* fix wrong label rouge detection ([492fda4](https://github.com/openfoodfacts/robotoff/commit/492fda49a97e13bdf8f3c5fc7d9d421ea0a0426c)), closes [#1255](https://github.com/openfoodfacts/robotoff/issues/1255)
+
+
+### Technical
+
+* add docstring ([279ced1](https://github.com/openfoodfacts/robotoff/commit/279ced16115d3da5b6616d4d71ef1723bf2543af))
+
 ## [1.34.1](https://github.com/openfoodfacts/robotoff/compare/v1.34.0...v1.34.1) (2023-08-31)
 
 
