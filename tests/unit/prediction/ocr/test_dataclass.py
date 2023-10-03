@@ -3,8 +3,7 @@ import pathlib
 import re
 
 import pytest
-
-from robotoff.prediction.ocr.dataclass import OCRParsingException, OCRResult
+from openfoodfacts.ocr import OCRParsingException, OCRResult
 
 data_dir = pathlib.Path(__file__).parent / "data"
 

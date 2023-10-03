@@ -1,15 +1,13 @@
-import json
 import pathlib
 from typing import Callable, Iterable, Optional, TextIO, Union
 
-import requests
+from openfoodfacts.ocr import OCRResult
 
 from robotoff.types import JSONType, Prediction, PredictionType, ProductIdentifier
 from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 
 from .brand import find_brands
 from .category import find_category
-from .dataclass import OCRParsingException, OCRResult, OCRResultGenerationException
 from .expiration_date import find_expiration_date
 from .image_flag import flag_image
 from .image_lang import get_image_lang
@@ -45,56 +43,6 @@ PREDICTION_TYPE_TO_FUNC: dict[
     PredictionType.location: find_locations,
     PredictionType.image_lang: get_image_lang,
 }
-
-
-def get_ocr_result(
-    ocr_url: str, session: requests.Session, error_raise: bool = True
-) -> Optional[OCRResult]:
-    """Generate an OCRResult from the URL of an OCR JSON.
-
-    :param ocr_url: The URL of the JSON OCR
-    :param session: the requests Session to use to download the JSON file
-    :param error_raise: if True, raises an OCRResultGenerationException if an
-        error occured during download or analysis, defaults to True
-    :return: if `error_raise` is True, always return an OCRResult (or raises
-        an error). Otherwise return the OCRResult or None if an error occured.
-    """
-    try:
-        r = session.get(ocr_url)
-    except requests.exceptions.RequestException as e:
-        error_message = "HTTP Error when fetching OCR URL"
-        if error_raise:
-            raise OCRResultGenerationException(error_message, ocr_url) from e
-
-        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
-        return None
-
-    if not r.ok:
-        error_message = "Non-200 status code (%s) when fetching OCR URL"
-        if error_raise:
-            raise OCRResultGenerationException(error_message % r.status_code, ocr_url)
-
-        logger.warning(error_message + ": %s", r.status_code, ocr_url)
-        return None
-
-    try:
-        ocr_data: dict = r.json()
-    except json.JSONDecodeError as e:
-        error_message = "Error while decoding OCR JSON"
-        if error_raise:
-            raise OCRResultGenerationException(error_message, ocr_url) from e
-
-        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
-        return None
-
-    try:
-        return OCRResult.from_json(ocr_data)
-    except OCRParsingException as e:
-        if error_raise:
-            raise OCRResultGenerationException(str(e), ocr_url) from e
-
-        logger.warning("Error while parsing OCR JSON from %s", ocr_url, exc_info=e)
-        return None
 
 
 def extract_predictions(

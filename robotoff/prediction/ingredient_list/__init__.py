@@ -4,13 +4,12 @@ from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
+from openfoodfacts.ocr import OCRResult
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 from tritonclient.grpc import service_pb2
 
 from robotoff import settings
 from robotoff.prediction.langid import LanguagePrediction, predict_lang_batch
-from robotoff.prediction.ocr.core import get_ocr_result
-from robotoff.prediction.ocr.dataclass import OCRResult
 from robotoff.triton import get_triton_inference_stub
 from robotoff.utils import http_session
 
@@ -85,7 +84,7 @@ def predict_from_ocr(
     ocr_result: OCRResult
     if isinstance(input_ocr, str):
         # `input_ocr` is a URL, fetch OCR JSON and get OCRResult
-        ocr_result = get_ocr_result(input_ocr, http_session, error_raise=True)  # type: ignore
+        ocr_result = OCRResult.from_url(input_ocr, http_session, error_raise=True)  # type: ignore
     else:
         ocr_result = input_ocr
 

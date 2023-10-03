@@ -1,9 +1,15 @@
 import re
 from typing import Union
 
-from robotoff.types import JSONType, Prediction, PredictionType
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
+from robotoff.types import JSONType, Prediction, PredictionType
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

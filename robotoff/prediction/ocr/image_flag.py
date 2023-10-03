@@ -1,12 +1,12 @@
 import functools
 from typing import Optional, Union
 
+from openfoodfacts.ocr import OCRResult, SafeSearchAnnotationLikelihood, get_text
+
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.text import KeywordProcessor
-
-from .dataclass import OCRResult, SafeSearchAnnotationLikelihood, get_text
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

@@ -4,11 +4,16 @@ import re
 from typing import Optional, Union
 
 import pint
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
-
-from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 logger = get_logger(__name__)
 

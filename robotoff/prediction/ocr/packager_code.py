@@ -1,13 +1,20 @@
 import re
 from typing import Optional, Union
 
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
+
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import KeywordProcessor
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 # Increase version ID when introducing breaking change: changes for which we
@@ -64,7 +71,7 @@ def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[str]:
     """Given a string, returns the USDA code it contains or None"""
     USDA_code = None
     matches: list[tuple[str, str]] = processor.extract_keywords(text)  # type: ignore
-    for (USDA_code_keyword, _) in matches:
+    for USDA_code_keyword, _ in matches:
         USDA_code = USDA_code_keyword
         # Once we found a match we can return the code
         # as there should not be more than one match

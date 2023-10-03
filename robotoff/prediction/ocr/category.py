@@ -1,12 +1,18 @@
 import re
 from typing import Optional, Union
 
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
+
 from robotoff.off import normalize_tag
 from robotoff.taxonomy import get_taxonomy
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
-
-from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 
 logger = get_logger(__name__)
 

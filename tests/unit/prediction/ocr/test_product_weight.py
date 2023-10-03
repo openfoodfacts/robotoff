@@ -1,8 +1,8 @@
 import math
 
 import pytest
+from openfoodfacts.ocr import OCRRegex
 
-from robotoff.prediction.ocr.dataclass import OCRRegex
 from robotoff.prediction.ocr.product_weight import (
     PRODUCT_WEIGHT_REGEX,
     find_product_weight,

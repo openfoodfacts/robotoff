@@ -8,10 +8,11 @@ import _io
 import dacite
 import orjson
 import tqdm
+from openfoodfacts.ocr import OCRResult
 
 from robotoff.insights.extraction import DEFAULT_OCR_PREDICTION_TYPES
 from robotoff.off import get_barcode_from_path
-from robotoff.prediction.ocr import OCRResult, extract_predictions
+from robotoff.prediction.ocr import extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, jsonl_iter
