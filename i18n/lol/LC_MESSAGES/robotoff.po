@@ -13,29 +13,29 @@ msgstr ""
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: lol\n"
-"X-Crowdin-File-ID: 3139\n"
+"X-Crowdin-File-ID: 3524\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr "crwdns228533:0crwdne228533:0"
+msgstr "crwdns245732:0crwdne245732:0"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr "crwdns228535:0crwdne228535:0"
+msgstr "crwdns245734:0crwdne245734:0"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr "crwdns228537:0crwdne228537:0"
+msgstr "crwdns245736:0crwdne245736:0"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr "crwdns228539:0crwdne228539:0"
+msgstr "crwdns245738:0crwdne245738:0"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr "crwdns228541:0crwdne228541:0"
+msgstr "crwdns245740:0crwdne245740:0"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr "crwdns228543:0crwdne228543:0"
+msgstr "crwdns245742:0crwdne245742:0"
 
