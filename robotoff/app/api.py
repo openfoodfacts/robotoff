@@ -16,7 +16,7 @@ import requests
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
-from openfoodfacts import Country
+from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from PIL import Image
 from sentry_sdk.integrations.falcon import FalconIntegration
 
@@ -125,7 +125,7 @@ def get_server_type_from_req(
         raise falcon.HTTPBadRequest(f"invalid `server_type`: {server_type_str}")
 
 
-COUNTRY_NAME_TO_ENUM = {item.value: item for item in Country}
+COUNTRY_NAME_TO_ENUM = {COUNTRY_CODE_TO_NAME[item]: item for item in Country}
 
 
 def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
@@ -134,7 +134,9 @@ def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
     countries: Optional[list[Country]] = None
 
     if countries_str is None:
-        # `country` parameter is deprecated
+        # `country` parameter is deprecated, we check here if it's provided
+        # when `countries` is not provided.
+        # It's assumed to be a single country tag (ex: `en:spain`)
         country: Optional[str] = req.get_param("country")
 
         if country:
@@ -144,11 +146,9 @@ def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
             else:
                 countries = None
     else:
+        # countries_str is a list of 2-letter country codes
         try:
-            countries = [
-                Country.get_from_2_letter_code(country_str)
-                for country_str in countries_str
-            ]
+            countries = [Country[country_str] for country_str in countries_str]
         except KeyError:
             raise falcon.HTTPBadRequest(
                 description=f"invalid `countries` value: {countries_str}"
