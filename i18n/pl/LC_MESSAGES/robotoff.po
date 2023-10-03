@@ -13,7 +13,7 @@ msgstr ""
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: pl\n"
-"X-Crowdin-File-ID: 3139\n"
+"X-Crowdin-File-ID: 3524\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
@@ -37,5 +37,5 @@ msgstr "Czy to zdjęcie przedstawia informacje żywieniowe w tym języku?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Czy produkt posiada ten element opakowania?"
 
