@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-from robotoff.types import Prediction, PredictionType
+from openfoodfacts.ocr import OCRResult
 
-from .dataclass import OCRResult
+from robotoff.types import Prediction, PredictionType
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

@@ -5,13 +5,13 @@ import re
 from pathlib import Path
 from typing import BinaryIO, Iterable, Optional, Union
 
+from openfoodfacts.ocr import OCRResult
+
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
 from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import KeywordProcessor, strip_accents_v1
-
-from .dataclass import OCRResult
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

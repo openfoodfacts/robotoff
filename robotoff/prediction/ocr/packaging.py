@@ -2,9 +2,9 @@ import functools
 from typing import Optional, Union
 
 from lark import Discard, Lark, Transformer
+from openfoodfacts.ocr import OCRResult, get_text
 
 from robotoff import settings
-from robotoff.prediction.ocr.dataclass import OCRResult, get_text
 from robotoff.prediction.ocr.grammar import (
     generate_terminal_symbols_file,
     normalize_string,

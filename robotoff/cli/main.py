@@ -782,9 +782,8 @@ def pprint_ocr_result(
     import sys
 
     import orjson
+    from openfoodfacts.ocr import OCRResult
 
-    from robotoff.prediction.ocr.core import get_ocr_result
-    from robotoff.prediction.ocr.dataclass import OCRResult
     from robotoff.utils import get_logger, http_session
 
     logger = get_logger()
@@ -795,7 +794,7 @@ def pprint_ocr_result(
     logger.info("displaying OCR result %s", uri)
 
     if uri.startswith("http"):
-        ocr_result = get_ocr_result(uri, http_session)
+        ocr_result = OCRResult.from_url(uri, http_session)
     else:
         with open(uri, "rb") as f:
             data = orjson.loads(f.read())

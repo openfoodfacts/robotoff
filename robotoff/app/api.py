@@ -16,6 +16,7 @@ import requests
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
+from openfoodfacts.ocr import OCRParsingException, OCRResultGenerationException
 from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from PIL import Image
 from sentry_sdk.integrations.falcon import FalconIntegration
@@ -66,10 +67,6 @@ from robotoff.off import (
 from robotoff.prediction import ingredient_list
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
-from robotoff.prediction.ocr.dataclass import (
-    OCRParsingException,
-    OCRResultGenerationException,
-)
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (

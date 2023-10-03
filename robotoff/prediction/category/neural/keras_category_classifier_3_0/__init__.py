@@ -1,13 +1,13 @@
 from typing import Literal, Optional
 
 import numpy as np
+from openfoodfacts.ocr import OCRResult
 from PIL import Image
 from tritonclient.grpc import service_pb2
 
 from robotoff.images import refresh_images_in_db
 from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
-from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
     deserialize_byte_tensor,
@@ -214,7 +214,7 @@ def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[st
     image_ids = (id_ for id_ in product.get("images", {}).keys() if id_.isdigit())
     for image_id in image_ids:
         ocr_url = generate_json_ocr_url(product_id, image_id)
-        ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
+        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
         if ocr_result:
             ocr_texts.append(ocr_result.get_full_text_contiguous())
 
