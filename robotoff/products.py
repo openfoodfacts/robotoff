@@ -23,7 +23,7 @@ MONGO_SELECTION_TIMEOUT_MS = 10_0000
 
 
 @functools.cache
-def get_mongo_client() -> Optional[MongoClient]:
+def get_mongo_client() -> MongoClient:
     return MongoClient(
         settings.MONGO_URI, serverSelectionTimeoutMS=MONGO_SELECTION_TIMEOUT_MS
     )
