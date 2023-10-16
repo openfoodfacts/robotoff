@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.36.0](https://github.com/openfoodfacts/robotoff/compare/v1.35.0...v1.36.0) (2023-10-16)
+
+
+### Features
+
+* use openfoodfacts SDK for OCR processing ([6344936](https://github.com/openfoodfacts/robotoff/commit/63449367eea12f46b576fe23a6631563bc0fa2c6))
+
+
+### Bug Fixes
+
+* update pymongo ([cac6241](https://github.com/openfoodfacts/robotoff/commit/cac624193a50cf7fd9fffa80b03eba66c4f85e8a))
+* use new version of openfoodfacts-python ([a7d0b28](https://github.com/openfoodfacts/robotoff/commit/a7d0b28dbd4df5252578acb06f8a3a07430de0c8))
+
+
+### Technical
+
+* upgrade to Pydantic V2 ([6979cec](https://github.com/openfoodfacts/robotoff/commit/6979cecb62557b4f7c56afcd409db99b8f898a5f))
+
 ## [1.35.0](https://github.com/openfoodfacts/robotoff/compare/v1.34.1...v1.35.0) (2023-09-04)
 
 
