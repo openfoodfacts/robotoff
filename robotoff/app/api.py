@@ -333,12 +333,27 @@ class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         insight_id = req.get_param_as_uuid("insight_id", required=True)
         annotation = req.get_param_as_int(
-            "annotation", required=True, min_value=-1, max_value=1
+            "annotation", required=True, min_value=-1, max_value=2
         )
 
         update = req.get_param_as_bool("update", default=True)
         # This field is only needed for nutritional table structure insights.
-        data = req.get_param_as_json("data")
+        data: JSONType | None = req.get_param_as_json("data")
+
+        if annotation == 2:
+            if data is None:
+                raise falcon.HTTPBadRequest(
+                    description="`data` must be provided when annotation == 2"
+                )
+            if not update:
+                raise falcon.HTTPBadRequest(
+                    description="`update` must be true when annotation == 2"
+                )
+
+        if data is not None and annotation != 2:
+            raise falcon.HTTPBadRequest(
+                description="`annotation` must be 2 when `data` is provided"
+            )
 
         auth = parse_auth(req)
         if auth is not None and auth.get_username() == "null":
@@ -346,6 +361,11 @@ class AnnotateInsightResource:
             auth = None
 
         trusted_annotator = auth is not None
+
+        if not trusted_annotator and annotation == 2:
+            raise falcon.HTTPBadRequest(
+                description="`data` cannot be provided when the user is not authenticated"
+            )
 
         device_id = device_id_from_request(req)
         logger.info(

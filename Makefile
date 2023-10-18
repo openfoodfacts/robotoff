@@ -89,7 +89,7 @@ livecheck:
 
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
-	${DOCKER_COMPOSE} logs -f triton api scheduler worker_high_1 worker_high_2 worker_low_1 worker_low_2
+	${DOCKER_COMPOSE} logs -f api scheduler worker_high_1 worker_high_2 worker_low_1 worker_low_2
 
 #------------#
 # Management #

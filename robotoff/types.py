@@ -338,4 +338,4 @@ class PackagingElementProperty(enum.Enum):
 
 LogoLabelType = tuple[str, Optional[str]]
 
-InsightAnnotation = Literal[-1, 0, 1]
+InsightAnnotation = Literal[-1, 0, 1, 2]

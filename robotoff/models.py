@@ -102,9 +102,10 @@ class ProductInsight(BaseModel):
 
     # The annotation of the given insight. Four possible values are possible:
     # null = This insight has not been annotated
-    #  -1 = Rejected
+    # -1 = Rejected
     # 0 = 'I don't know'
     # 1 = Validated
+    # 2 = value provided by user
     annotation = peewee.IntegerField(null=True, index=True)
 
     # Saves the value returned by Annotator.annotate
