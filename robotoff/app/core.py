@@ -373,7 +373,7 @@ def save_annotation(
     available for annotation again.
 
     :param insight_id: The ID of the insight
-    :param annotation: The annotation, either -1, 0, or 1
+    :param annotation: The annotation, either -1, 0, 1 or 2
     :param device_id: Unique identifier of the device, see
       `device_id_from_request`
     :param update: If True, perform the update on Product Opener if

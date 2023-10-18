@@ -326,10 +326,12 @@ paths:
         is an base64-encoded string of `user:password`. Don't provide an authentication header for anonymous
         users.
 
-        The annotation is an integer that can take 3 values: `0`, `1`, `-1`. `0` means the insight is incorrect
+        The annotation is an integer that can take 4 values: `0`, `1`, `2`, `-1`. `0` means the insight is incorrect
         (so it won't be applied), `1` means it is correct (so it will be applied) and `-1` means the insight
-        won't be returned to the user (_skip_). We use the voting mecanism system to remember which insight
-        to skip for a user (authenticated or not).
+        won't be returned to the user (_skip_). `2` is used when user submit some data to the annotate endpoint 
+        (for example in some cases of category annotation).
+        
+        We use the voting mecanism system to remember which insight to skip for a user (authenticated or not).
       requestBody:
         required: true
         content:

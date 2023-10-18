@@ -50,6 +50,8 @@ class AnnotationStatus(Enum):
     error_invalid_image = 8
     vote_saved = 9
     error_failed_update = 10
+    error_invalid_data = 11
+    user_input_updated = 12
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -61,6 +63,11 @@ UPDATED_ANNOTATION_RESULT = AnnotationResult(
     status_code=AnnotationStatus.updated.value,
     status=AnnotationStatus.updated.name,
     description="the annotation was saved and sent to OFF",
+)
+USER_INPUT_UPDATED_ANNOTATION_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.user_input_updated.value,
+    status=AnnotationStatus.user_input_updated.name,
+    description="the data provided by the user was saved and sent to OFF",
 )
 MISSING_PRODUCT_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_missing_product.value,
@@ -109,7 +116,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         to Product Opener if `update=True`.
 
         :param insight: the insight to annotate
-        :param annotation: the annotation as an integer, either -1, 0 or 1
+        :param annotation: the annotation as an integer, either -1, 0, 1 or 2
         :param update: if True, a write query is sent to Product Opener with
             the update, defaults to True
         :param data: additional data sent by the client, defaults to None
@@ -160,7 +167,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight.annotation = annotation
         insight.completed_at = datetime.datetime.utcnow()
 
-        if annotation == 1 and update:
+        if annotation in (1, 2) and update:
             # Save insight before processing the annotation
             insight.save()
             annotation_result = cls.process_annotation(
@@ -172,6 +179,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         if annotation_result.status_code in (
             AnnotationStatus.saved.value,
             AnnotationStatus.updated.value,
+            AnnotationStatus.user_input_updated.value,
             AnnotationStatus.error_invalid_image.value,
             AnnotationStatus.error_missing_product.value,
             AnnotationStatus.error_updated_product.value,
@@ -292,10 +300,31 @@ class CategoryAnnotator(InsightAnnotator):
 
         categories_tags: list[str] = product.get("categories_tags") or []
 
-        if insight.value_tag in categories_tags:
+        user_input = False
+        if data is None:
+            category_tag = insight.value_tag
+        else:
+            value_tag = data.get("value_tag")
+            if isinstance(value_tag, str):
+                user_input = True
+                category_tag = value_tag
+            else:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description="`data` is invalid, expected a single `value_tag` string field with the category tag",
+                )
+
+        if category_tag in categories_tags:
             return ALREADY_ANNOTATED_RESULT
 
-        category_tag = insight.value_tag
+        if user_input:
+            insight.data["original_value_tag"] = insight.value_tag
+            insight.data["user_input"] = True
+            insight.value_tag = value_tag
+            insight.value = None
+            insight.save()
+
         add_category(
             product_id,
             category_tag,
@@ -303,7 +332,11 @@ class CategoryAnnotator(InsightAnnotator):
             auth=auth,
             is_vote=is_vote,
         )
-        return UPDATED_ANNOTATION_RESULT
+        return (
+            USER_INPUT_UPDATED_ANNOTATION_RESULT
+            if user_input
+            else UPDATED_ANNOTATION_RESULT
+        )
 
 
 class ProductWeightAnnotator(InsightAnnotator):
@@ -656,6 +689,21 @@ def annotate(
     auth: Optional[OFFAuthentication] = None,
     is_vote: bool = False,
 ) -> AnnotationResult:
+    """Annotate an insight: save the annotation in DB and send the update
+    to Product Opener if `update=True`.
+
+    :param insight: the insight to annotate
+    :param annotation: the annotation as an integer, either -1, 0, 1 or 2
+    :param update: if True, a write query is sent to Product Opener with
+        the update, defaults to True
+    :param data: additional data sent by the client, defaults to None
+    :param auth: user authentication data, should be None if the
+        annotation was triggered by an anonymous vote (in which case
+        `is_vote=True`) or if the insight is applied automatically.
+    :param is_vote: True if the annotation was triggered by an anonymous
+        vote, defaults to False
+    :return: the result of the annotation process
+    """
     return ANNOTATOR_MAPPING[insight.type].annotate(
         insight=insight,
         annotation=annotation,
