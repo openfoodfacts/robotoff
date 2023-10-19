@@ -202,7 +202,9 @@ ELASTICSEARCH_TYPE = "document"
 
 
 # ANN index parameters
-K_NEAREST_NEIGHBORS = 100
+# K_NEAREST_NEIGHBORS is the number of closest nearest neighbor we consider
+# when predicting the value of a logo
+K_NEAREST_NEIGHBORS = 10
 
 # image moderation service
 IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
