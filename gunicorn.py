@@ -12,6 +12,6 @@ timeout = 60
 
 def on_starting(server):
     """Gunicorn server hook."""
-    with models.db:
-        models.db.execute_sql("CREATE SCHEMA IF NOT EXISTS embedding;")
-        models.db.create_tables(models.MODELS, safe=True)
+    # Perform migrations
+    with models.db.connection_context():
+        models.run_migration()

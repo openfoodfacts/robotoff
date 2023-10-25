@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 import peewee
+from peewee_migrate import Router
 from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
@@ -63,6 +64,13 @@ def crop_image_url(
     y_min, x_min, y_max, x_max = bounding_box
     base_robotoff_url = settings.BaseURLProvider.robotoff()
     return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
+
+
+def run_migration():
+    """Run all unapplied migrations."""
+    router = Router(db, migrate_dir=settings.MIGRATE_DIR)
+    # Run all unapplied migrations
+    router.run()
 
 
 class BaseModel(peewee.Model):

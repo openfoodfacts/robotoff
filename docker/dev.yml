@@ -23,6 +23,8 @@ x-robotoff-dev: &robotoff-dev
       - ./i18n:/opt/robotoff/i18n
       # make data available
       - ./data:/opt/robotoff/data
+      # make migration files available
+      - ./migrations:/opt/robotoff/migrations
       # make doc generation available
       - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
       - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
