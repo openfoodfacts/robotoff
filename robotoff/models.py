@@ -194,6 +194,15 @@ class ProductInsight(BaseModel):
     # Confidence score of the insight, may be null
     confidence = peewee.FloatField(null=True, index=True)
 
+    # bounding box corresponding to the area of the image related
+    # to the insight that was detected.
+    # For example:
+    # - for logo insights, it's the bounding box of the predicted
+    #   logo
+    # - for OCR-based insights, it's the text that triggered the
+    #   creation of the insight
+    bounding_box = BinaryJSONField(null=True, default=list)
+
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
 
