@@ -859,5 +859,36 @@ def generate_ocr_result(
     pprint_ocr_result(str(output_file))
 
 
+@app.command()
+def migrate_db():
+    """Run unapplied DB migrations."""
+    from robotoff.models import db, run_migration
+    from robotoff.utils import get_logger
+
+    get_logger()
+
+    with db.connection_context():
+        run_migration()
+
+
+@app.command()
+def create_migration(
+    name: str = typer.Argument(..., help="name of the migration"),
+    auto: bool = typer.Option(
+        False,
+        help="Scan sources and create db migrations automatically. Supports autodiscovery.",
+    ),
+):
+    """Create a new migration file using peewee_migrate."""
+    from peewee_migrate import Router
+
+    from robotoff import settings
+    from robotoff.models import db
+
+    with db.connection_context():
+        router = Router(db, migrate_dir=settings.MIGRATE_DIR)
+        router.create(name, auto=auto)
+
+
 def main() -> None:
     app()
