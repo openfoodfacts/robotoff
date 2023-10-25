@@ -170,7 +170,7 @@ jobs:
           # stop all containers before applying DB migrations
           make down
           # apply all unapplied DB migrations
-          make robotoff-cli args='migrate-db'
+          make migrate-db
           make up
 
     - name: Check services are up
