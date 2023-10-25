@@ -77,6 +77,7 @@ h5py = "~3.8.0"
 opencv-contrib-python = "~4.7.0.72"
 toml = "~0.10.2"
 openfoodfacts = "0.1.10"
+imagehash = "~4.3.1"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "~1.14.0"
