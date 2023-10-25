@@ -68,6 +68,8 @@ def crop_image_url(
 
 def run_migration():
     """Run all unapplied migrations."""
+    # embedding schema does not exist at DB initialization
+    db.execute_sql("CREATE SCHEMA IF NOT EXISTS embedding;")
     router = Router(db, migrate_dir=settings.MIGRATE_DIR)
     # Run all unapplied migrations
     router.run()
