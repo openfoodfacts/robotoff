@@ -2,6 +2,10 @@ import datetime
 from pathlib import Path
 from typing import Optional
 
+import imagehash
+import numpy as np
+from PIL import Image
+
 from robotoff.models import ImageModel
 from robotoff.off import generate_image_path, generate_image_url
 from robotoff.types import JSONType, ProductIdentifier
@@ -128,3 +132,38 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
         image_url = generate_image_url(product_id, missing_image_id)
         logger.debug("Creating missing image %s in DB", source_image)
         save_image(product_id, source_image, image_url, images)
+
+
+def add_image_fingerprint(image_model: ImageModel):
+    """Update image in DB to add the image fingerprint.
+
+    :param image_model: the image model to update
+    """
+    image_url = image_model.get_image_url()
+    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+
+    if image is None:
+        logger.info(
+            "could not fetch image from %s, aborting image fingerprinting", image_url
+        )
+        return
+
+    image_model.fingerprint = generate_image_fingerprint(image)
+    ImageModel.bulk_update([image_model], fields=["fingerprint"])
+
+
+def generate_image_fingerprint(image: Image.Image) -> int:
+    """Generate a fingerprint from an image, used for near-duplicate
+    detection.
+
+    We use perceptual hashing algorithm.
+
+    :param image: the input image
+    :return: the fingerprint, as a 64-bit integer
+    """
+    array = imagehash.phash(image).hash
+    # `int_array` is a flattened int array of dim 64
+    int_array = array.flatten().astype(int)
+    # convert the 64-bit array to a 64 bits integer
+    fingerprint = int_array.dot(2 ** np.arange(int_array.size)[::-1])
+    return fingerprint

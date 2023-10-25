@@ -2,6 +2,7 @@
 import datetime
 import functools
 import uuid
+from pathlib import Path
 from typing import Iterable
 
 import peewee
@@ -9,6 +10,7 @@ from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
+from robotoff.off import generate_image_url
 from robotoff.types import ProductIdentifier, ServerType
 
 db = PostgresqlExtDatabase(
@@ -245,12 +247,23 @@ class ImageModel(BaseModel):
     height = peewee.IntegerField(null=False, index=True)
     deleted = peewee.BooleanField(null=False, index=True, default=False)
     server_type = peewee.CharField(null=True, max_length=10, index=True)
+    # Perceptual hash of the image, used to find near-duplicates
+    # It's a 64-bit bitmap, so it can be stored as a bigint (8 bits)
+    fingerprint = peewee.BigIntegerField(null=True, index=True)
 
     class Meta:
         table_name = "image"
 
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
+
+    def get_image_url(self) -> str:
+        """Get the full image URL from the product `barcode`, `server_type`
+        and `source_image` fields.
+
+        :return: the image URL
+        """
+        return generate_image_url(self.get_product_id(), Path(self.source_image).stem)
 
 
 class ImagePrediction(BaseModel):
