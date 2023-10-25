@@ -330,3 +330,9 @@ ENABLE_MONGODB_ACCESS = bool(int(os.environ.get("ENABLE_MONGODB_ACCESS", 1)))
 # Number of rq workers running, this is used to know the number of high
 # priority queues that exist
 NUM_RQ_WORKERS = int(os.environ.get("NUM_RQ_WORKERS", 4))
+
+# Directory where all DB migration files are located
+# We use peewee_migrate to perform the migrations
+# (https://github.com/klen/peewee_migrate)
+# Migrations are automatically applied when the API service is launched
+MIGRATE_DIR = PROJECT_DIR / "migrations"

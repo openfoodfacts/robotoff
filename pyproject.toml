@@ -78,6 +78,7 @@ opencv-contrib-python = "~4.7.0.72"
 toml = "~0.10.2"
 openfoodfacts = "0.1.10"
 imagehash = "~4.3.1"
+peewee-migrate = "~1.12.2"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = "~1.14.0"
