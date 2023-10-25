@@ -57,6 +57,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     confidence: Optional[float] = None
     predictor: Optional[str] = None
     predictor_version: Optional[str] = None
+    bounding_box: Optional[list[float]] = None
 
 
 class PredictionFactory(PeeweeModelFactory):
