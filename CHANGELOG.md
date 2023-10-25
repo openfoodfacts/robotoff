@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.37.0](https://github.com/openfoodfacts/robotoff/compare/v1.36.0...v1.37.0) (2023-10-25)
+
+
+### Features
+
+* allow to submit category value_tag in /annotate route ([dd6d81e](https://github.com/openfoodfacts/robotoff/commit/dd6d81e3f62949eb89feaacf4d3d2c508f2ee495))
+* store fingerprint of all images ([ed8fd38](https://github.com/openfoodfacts/robotoff/commit/ed8fd388215268a2709ae055cf223e9c65139dd4))
+
+
+### Bug Fixes
+
+* improve add-logo-to-ann CLI command ([c67b8ff](https://github.com/openfoodfacts/robotoff/commit/c67b8ff03e433da9216357f1078e6aae1480e8d3))
+* set K_NEAREST_NEIGHBORS to 10 (instead of 100) ([a177e13](https://github.com/openfoodfacts/robotoff/commit/a177e137bea4b6ed50fe59bc3ba320b4e16218a1))
+
+
+### Technical
+
+* use json.dump instead of f.write + json.dumps ([60f15e9](https://github.com/openfoodfacts/robotoff/commit/60f15e923de2a04822d1e48ed382f23fe385ca74))
+
 ## [1.36.0](https://github.com/openfoodfacts/robotoff/compare/v1.35.0...v1.36.0) (2023-10-16)
 
 
