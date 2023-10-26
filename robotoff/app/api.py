@@ -1217,6 +1217,7 @@ class WebhookProductResource:
                 settings.UPDATED_PRODUCT_WAIT,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
+                diffs=diffs,
             )
         elif action == "deleted":
             enqueue_job(

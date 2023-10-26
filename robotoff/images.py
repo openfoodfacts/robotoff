@@ -6,7 +6,7 @@ import imagehash
 import numpy as np
 from PIL import Image
 
-from robotoff.models import ImageModel
+from robotoff.models import ImageModel, Prediction, ProductInsight
 from robotoff.off import generate_image_path, generate_image_url
 from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_image_from_url, get_logger, http_session
@@ -167,3 +167,70 @@ def generate_image_fingerprint(image: Image.Image) -> int:
     # convert the 64-bit array to a 64 bits integer
     fingerprint = int_array.dot(2 ** np.arange(int_array.size)[::-1])
     return fingerprint
+
+
+def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
+    """Delete images and related items in DB.
+
+    This function must be called when Robotoff gets notified of an image
+    deletion. It proceeds as follow:
+
+    - mark the image as `deleted` in the `image` table
+    - delete all predictions associated with the image (`prediction` table)
+    - delete all non-annotated insights associated with the image
+      (`product_insight` table). Annotated insights are kept for reference.
+
+    :param product_id: identifier of the product
+    :param image_ids: a list of image IDs to delete.
+      Each image ID must be a digit.
+    """
+    server_type = product_id.server_type.name
+    # Perform batching as we don't know the number of images to delete
+    updated_models = []
+    source_images = []
+    for image_id in image_ids:
+        source_image = generate_image_path(product_id, image_id)
+        image_model = ImageModel.get_or_none(
+            source_image=source_image, server_type=server_type
+        )
+
+        if image_model is None:
+            logger.info(
+                "image to delete %s for product %s not found in DB, skipping",
+                image_id,
+                product_id,
+            )
+            continue
+
+        # set the `deleted` flag to True: image models are always kept in DB
+        image_model.deleted = True
+        updated_models.append(image_model)
+        source_images.append(source_image)
+
+    updated_image_models: int = ImageModel.bulk_update(
+        updated_models, fields=["deleted"]
+    )
+    deleted_predictions: int = (
+        Prediction.delete()
+        .where(
+            Prediction.source_image.in_(source_images),
+            Prediction.server_type == server_type,
+        )
+        .execute()
+    )
+    deleted_insights: int = (
+        ProductInsight.delete()
+        .where(
+            ProductInsight.source_image.in_(source_images),
+            ProductInsight.server_type == server_type,
+            ProductInsight.annotation.is_null(),
+        )
+        .execute()
+    )
+
+    logger.info(
+        "deleted %s image in DB, %s deleted predictions, %s deleted insights",
+        updated_image_models,
+        deleted_predictions,
+        deleted_insights,
+    )
