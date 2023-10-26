@@ -167,10 +167,9 @@ jobs:
         script_stop: false
         script: |
           cd ${{ matrix.env}}
-          # stop all containers before applying DB migrations
-          make down
-          # apply all unapplied DB migrations
+          # Apply migrations
           make migrate-db
+          # Start new version
           make up
 
     - name: Check services are up
