@@ -64,6 +64,10 @@ else
 	${DOCKER_COMPOSE} up -d 2>&1
 endif
 
+# pull images from image repository
+pull:
+	${DOCKER_COMPOSE} pull
+
 build:
 	${DOCKER_COMPOSE} build api 2>&1
 
