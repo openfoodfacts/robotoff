@@ -14,7 +14,7 @@
     
     
       
-        <title>Logo-ANN - Robotoff</title>
+        <title>Database migrations - Robotoff</title>
       
     
     
@@ -61,7 +61,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#logo-ann" class="md-skip">
+        <a href="#database-migrations" class="md-skip">
           Skip to content
         </a>
       
@@ -91,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Logo-ANN
+              Database migrations
             
           </span>
         </div>
@@ -385,14 +385,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
       
       <label class="md-nav__link" for="__nav_4">
         Technical reference
@@ -408,65 +406,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Logo-ANN
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../references/logos-ANN/" class="md-nav__link">
         Logo-ANN
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#logos-extraction" class="md-nav__link">
-    Logos extraction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#logos-embedding" class="md-nav__link">
-    Logos embedding
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#approximate-nearest-neighbors-logos-search" class="md-nav__link">
-    Approximate Nearest Neighbors Logos Search
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -476,7 +420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/" class="md-nav__link">
+      <a href="../../references/models/" class="md-nav__link">
         Models
       </a>
     </li>
@@ -488,7 +432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../package/" class="md-nav__link">
+      <a href="../../references/package/" class="md-nav__link">
         Package reference
       </a>
     </li>
@@ -521,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../predictions/nutrition-table/" class="md-nav__link">
+      <a href="../../references/predictions/nutrition-table/" class="md-nav__link">
         Nutrition table
       </a>
     </li>
@@ -546,12 +490,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
         Some explanations
@@ -569,7 +515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../explanations/category-prediction/" class="md-nav__link">
+      <a href="../category-prediction/" class="md-nav__link">
         Category Prediction
       </a>
     </li>
@@ -579,11 +525,65 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../explanations/db-migrations/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Database migrations
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Database migrations
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-migration" class="md-nav__link">
+    Create a migration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#apply-the-migration" class="md-nav__link">
+    Apply the migration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-if-i-had-a-previous-installation-of-robotoff-with-an-initialized-db" class="md-nav__link">
+    What if I had a previous installation of Robotoff with an initialized DB?
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -593,7 +593,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../explanations/interactions-product-opener/" class="md-nav__link">
+      <a href="../interactions-product-opener/" class="md-nav__link">
         Interactions with Product Opener
       </a>
     </li>
@@ -605,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../explanations/predictions/" class="md-nav__link">
+      <a href="../predictions/" class="md-nav__link">
         Predictions and insights
       </a>
     </li>
@@ -617,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../explanations/questions/" class="md-nav__link">
+      <a href="../questions/" class="md-nav__link">
         Question format proposal
       </a>
     </li>
@@ -800,22 +800,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#logos-extraction" class="md-nav__link">
-    Logos extraction
+  <a href="#create-a-migration" class="md-nav__link">
+    Create a migration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#logos-embedding" class="md-nav__link">
-    Logos embedding
+  <a href="#apply-the-migration" class="md-nav__link">
+    Apply the migration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#approximate-nearest-neighbors-logos-search" class="md-nav__link">
-    Approximate Nearest Neighbors Logos Search
+  <a href="#what-if-i-had-a-previous-installation-of-robotoff-with-an-initialized-db" class="md-nav__link">
+    What if I had a previous installation of Robotoff with an initialized DB?
   </a>
   
 </li>
@@ -832,53 +832,36 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/doc/references/logos-ANN.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/doc/explanations/db-migrations.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="logo-ann">Logo-ANN</h1>
-<p>About 1600 products are added every day to the database.
-Each product having multiple logos on its packaging, thousands of new logos are added every day to the valuable sources of information.
-These logos are often useful to get important data on products (origin, brand, quality, label, etc...). </p>
-<p>A logo automatic detection from images and a logo manual classification features are implemented to Robotoff.
-The first step is to extract logos from products images of the database.
-The second one is to vectorize each logo thanks to a computer vision model.
-The third and last one is to search for each logo its nearest neighbors in an index containing all the embedded logos.</p>
-<h2 id="logos-extraction">Logos extraction</h2>
-<p>When a new image is added to the database, Robotoff applies an object detection model to extract logos from it.<sup id="fnref:logos_extraction"><a class="footnote-ref" href="#fn:logos_extraction">1</a></sup>
-This model, named "universal-logo-detector" <sup id="fnref:universal-logo-detector"><a class="footnote-ref" href="#fn:universal-logo-detector">2</a></sup>, is an ONNX model trained by Open Food Facts on numerous data from the database.
-For each input image, it returns bounding boxes that represent the detection zone of each logo of the image and the category of the logo, namely "brand" or "label".
-To know more about this model, see the <a href="https://github.com/openfoodfacts/robotoff-models/releases">robotoff-models release</a>.</p>
-<h2 id="logos-embedding">Logos embedding</h2>
-<p>After the detection of a logo, in the same function <sup id="fnref2:logos_extraction"><a class="footnote-ref" href="#fn:logos_extraction">1</a></sup>, Robotoff uses a computer vision model to vectorize it.
-The model we use is <a href="https://huggingface.co/docs/transformers/model_doc/clip">CLIP-vit-base-patch32</a>, a model developed and trained by OpenAI.
-Only the vision part of the model is used here, as the objective is only to vectorize the logos.
-The choice of CLIP-vit-base-patch32 was made after this <a href="https://openfoodfacts.github.io/robotoff/research/logo-detection/embedding-benchmark/">benchmark</a>.
-The model is loaded with <a href="https://developer.nvidia.com/nvidia-triton-inference-server">Triton</a> and is used only for inference.</p>
-<p>With the logo crop of the initial image as input, CLIP returns an embedding and Robotoff stores it in its postgresql database.<sup id="fnref:clip_embedding"><a class="footnote-ref" href="#fn:clip_embedding">3</a></sup></p>
-<h2 id="approximate-nearest-neighbors-logos-search">Approximate Nearest Neighbors Logos Search</h2>
-<p>Each generated embedding is stored in an ElasticSearch index for nearest neighbor search. 
-ElasticSearch allows for approximate nearest neighbor (ANN) search with an HNSW (Hierarchical Navigable Small World) index, which leads to fast and accurate search (see <a href="https://openfoodfacts.github.io/robotoff/research/logo-detection/ann-benchmark/">ANN benchmark</a>). </p>
-<p>After storing the embedding in the index, a search for its nearest neighbors is performed and the IDs of these neighbors are stored in the Robotoff PostgreSQL database. 
-The nearest neighbor search is available via an API <sup id="fnref:api_ann_search"><a class="footnote-ref" href="#fn:api_ann_search">4</a></sup> available (here)[https://robotoff.openfoodfacts.org/api/v1/ann/search/185171?count=50] and used by (Hunger Games)[https://hunger.openfoodfacts.org/], the annotation game connected to Robotoff.</p>
-<div class="footnote">
-<hr />
-<ol>
-<li id="fn:logos_extraction">
-<p>see <code>robotoff.workers.tasks.import_image.run_logo_object_detection</code>&#160;<a class="footnote-backref" href="#fnref:logos_extraction" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:logos_extraction" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
-<li id="fn:universal-logo-detector">
-<p>see <code>models.universal-logo-detector</code>&#160;<a class="footnote-backref" href="#fnref:universal-logo-detector" title="Jump back to footnote 2 in the text">&#8617;</a></p>
-</li>
-<li id="fn:clip_embedding">
-<p>see <code>robotoff.workers.tasks.import_image.save_logo_embeddings</code>&#160;<a class="footnote-backref" href="#fnref:clip_embedding" title="Jump back to footnote 3 in the text">&#8617;</a></p>
-</li>
-<li id="fn:api_ann_search">
-<p>see <code>robotoff.app.api.ANNResource</code>&#160;<a class="footnote-backref" href="#fnref:api_ann_search" title="Jump back to footnote 4 in the text">&#8617;</a></p>
-</li>
-</ol>
-</div>
+                <h1 id="database-migrations">Database migrations</h1>
+<p>We use <a href="https://github.com/klen/peewee_migrate">peewee_migrate</a> to handle our SQL database migrations.</p>
+<h2 id="create-a-migration">Create a migration</h2>
+<p>You should create a migration if you update the SQL database schema.
+To create a new migration, use:</p>
+<p><code>make robotoff-cli args='create-migration MIGRATION_NAME --auto'</code></p>
+<p>You should use an identifiable name (such as "add_bounding_box") to the migration.</p>
+<p>The <code>--auto</code> flag is used to ask <code>peewee_migrate</code> to scan all table definitions in the source code and create the migration file
+automatically. You can skip it if you want <code>peewee_migrate</code> to create a blank migration file.</p>
+<h2 id="apply-the-migration">Apply the migration</h2>
+<p>To apply all pending migrations, use:</p>
+<p><code>make migrate-db</code></p>
+<h2 id="what-if-i-had-a-previous-installation-of-robotoff-with-an-initialized-db">What if I had a previous installation of Robotoff with an initialized DB?</h2>
+<p>You should then create yourself the migration table:</p>
+<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="ss">&quot;migratehistory&quot;</span>
+<span class="p">(</span>
+<span class="w">    </span><span class="ss">&quot;id&quot;</span><span class="w"> </span><span class="nb">SERIAL</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+<span class="w">    </span><span class="ss">&quot;name&quot;</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+<span class="w">    </span><span class="ss">&quot;migrated_at&quot;</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Then add manually the the initial migration file in database:</p>
+<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="ss">&quot;migratehistory&quot;</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;001_initial&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="p">);</span>
+</code></pre></div>
+<p>Then you can apply remaining migrations with <code>make migrate-db</code>.</p>
                 
               
               
@@ -898,7 +881,7 @@ The nearest neighbor search is available via an API <sup id="fnref:api_ann_searc
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../../how-to-guides/deployment/maintenance/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Services maintenance" rel="prev">
+        <a href="../category-prediction/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Category Prediction" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -907,20 +890,20 @@ The nearest neighbor search is available via an API <sup id="fnref:api_ann_searc
               <span class="md-footer__direction">
                 Previous
               </span>
-              Services maintenance
+              Category Prediction
             </div>
           </div>
         </a>
       
       
         
-        <a href="../models/" class="md-footer__link md-footer__link--next" aria-label="Next: Models" rel="next">
+        <a href="../interactions-product-opener/" class="md-footer__link md-footer__link--next" aria-label="Next: Interactions with Product Opener" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Models
+              Interactions with Product Opener
             </div>
           </div>
           <div class="md-footer__button md-icon">
