@@ -10,6 +10,15 @@ Aldi||gold[aä]hren
 Aldi||gutbio
 Aldi||milsani
 Aldi||sprengel
+Aldi||liveGfree
+Aldi||Simply Nature
+Aldi||Specially Selected
+Aldi||Little Journey
+Aldi||Winking Owl
+Aldi||Ambiano
+Aldi||Barissimo
+Aldi||Friendly Farms
+Aldi||Millville
 Alimerka
 Alnatura
 Alteza
@@ -42,6 +51,7 @@ Carrefour
 Carrefour||grand jury
 Casino
 Colruyt
+Conad
 Costco
 Coviran
 Delhaize
@@ -54,6 +64,7 @@ Eurospin
 Eroski
 Esselunga
 Foodtown
+Fortnum & Mason
 Franprix
 Fred Meyer
 Froiz
@@ -61,6 +72,7 @@ Giant Eagle
 Hacendado
 Haggen
 Harris Teeter
+Harrods
 H-E-B
 Heron Foods
 Hipercor
@@ -257,6 +269,7 @@ SuperValu
 Tang frères
 Tesco
 Toupargel
+Magasins U||u Bio
 Waitrose
 Walmart
 Wegmans
