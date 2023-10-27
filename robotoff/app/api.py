@@ -696,7 +696,11 @@ class ImageCropResource:
         x_min = req.get_param_as_float("x_min", required=True)
         y_max = req.get_param_as_float("y_max", required=True)
         x_max = req.get_param_as_float("x_max", required=True)
-        image = get_image_from_url(image_url, session=http_session, error_raise=False)
+        # Get image from cache, as Hunger Games can requests many crops
+        # from the same image
+        image = get_image_from_url(
+            image_url, session=http_session, error_raise=False, use_cache=True
+        )
 
         if image is None:
             raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
@@ -799,7 +803,9 @@ class ImagePredictorResource:
                 "when `output_image` is True",
             )
 
-        image = get_image_from_url(image_url, session=http_session, error_raise=False)
+        image = get_image_from_url(
+            image_url, session=http_session, error_raise=False, use_cache=True
+        )
 
         if image is None:
             raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")

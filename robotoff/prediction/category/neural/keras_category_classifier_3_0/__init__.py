@@ -149,6 +149,7 @@ def generate_image_embeddings(
                     generate_image_url(product_id, f"{image_id}.400"),
                     error_raise=False,
                     session=http_session,
+                    use_cache=True,
                 )
                 for image_id in missing_embedding_ids
             }

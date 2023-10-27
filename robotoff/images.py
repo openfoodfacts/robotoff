@@ -19,6 +19,7 @@ def save_image(
     source_image: str,
     image_url: str,
     images: Optional[JSONType],
+    use_cache: bool = False,
 ) -> Optional[ImageModel]:
     """Save imported image details in DB.
 
@@ -83,7 +84,9 @@ def save_image(
         # MongoDB (in the `images` field), we download the image to know the
         # image size
         logger.info("DB Product check disabled, downloading image to get image size")
-        image = get_image_from_url(image_url, error_raise=False, session=http_session)
+        image = get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=use_cache
+        )
 
         if image is None:
             logger.info("Could not import image %s in DB", image_url)
@@ -131,7 +134,7 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
         source_image = generate_image_path(product_id, missing_image_id)
         image_url = generate_image_url(product_id, missing_image_id)
         logger.debug("Creating missing image %s in DB", source_image)
-        save_image(product_id, source_image, image_url, images)
+        save_image(product_id, source_image, image_url, images, use_cache=True)
 
 
 def add_image_fingerprint(image_model: ImageModel):
@@ -140,7 +143,9 @@ def add_image_fingerprint(image_model: ImageModel):
     :param image_model: the image model to update
     """
     image_url = image_model.get_image_url()
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info(
