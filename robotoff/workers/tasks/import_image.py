@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 from pathlib import Path
 from typing import Optional
@@ -32,6 +33,7 @@ from robotoff.models import (
     with_db,
 )
 from robotoff.off import generate_image_url, get_source_from_url
+from robotoff.prediction import ingredient_list
 from robotoff.prediction.upc_image import UPCImageType, find_image_is_upc
 from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
@@ -112,6 +114,15 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             image_url=image_url,
+            ocr_url=ocr_url,
+        )
+        # Only extract ingredient lists for food products, as the model was not
+        # trained on non-food products
+        enqueue_job(
+            extract_ingredients_job,
+            get_high_queue(product_id),
+            job_kwargs={"result_ttl": 0},
+            product_id=product_id,
             ocr_url=ocr_url,
         )
     # We make sure there are no concurrent insight processing by sending
@@ -535,3 +546,50 @@ def add_image_fingerprint_job(image_model_id: int):
         return
 
     add_image_fingerprint(image_model)
+
+
+@with_db
+def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
+    """Extracts ingredients using ingredient extraction model from an image
+    OCR.
+
+    :param product_id: The identifier of the product to extract ingredients
+      for.
+    :param ocr_url: The URL of the image to extract ingredients from.
+    """
+    source_image = get_source_from_url(ocr_url)
+
+    with db:
+        image_model = ImageModel.get_or_none(
+            source_image=source_image, server_type=product_id.server_type.name
+        )
+
+        if not image_model:
+            logger.info("Missing image in DB for image %s", source_image)
+            return
+
+        # Stop the job here if the image has already been processed
+        if (
+            ImagePrediction.get_or_none(
+                image=image_model, model_name=ingredient_list.MODEL_NAME
+            )
+        ) is not None:
+            return
+
+        output = ingredient_list.predict_from_ocr(ocr_url)
+        logger.warning("predict_from_ocr output: %s", output)
+        entities: list[
+            ingredient_list.IngredientPredictionAggregatedEntity
+        ] = output.entities  # type: ignore (we know it's an
+        # aggregated entity)
+
+        ImagePrediction.create(
+            image=image_model,
+            type="ner",
+            model_name=ingredient_list.MODEL_NAME,
+            model_version=ingredient_list.MODEL_VERSION,
+            data=dataclasses.asdict(output),
+            timestamp=datetime.datetime.utcnow(),
+            max_confidence=max(entity.score for entity in entities),
+        )
+        logger.info("create image prediction (ingredient detection) from %s", ocr_url)
