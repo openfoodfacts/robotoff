@@ -98,7 +98,7 @@ def _get_image_from_url(
     image_url: str,
     error_raise: bool = True,
     session: Optional[requests.Session] = None,
-) -> requests.Request | None:
+) -> requests.Response | None:
     auth = (
         settings._off_net_auth
         if urlparse(image_url).netloc.endswith("openfoodfacts.net")
