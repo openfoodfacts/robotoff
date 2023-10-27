@@ -2,6 +2,7 @@ import dataclasses
 import gzip
 import json
 import re
+from functools import cache
 from pathlib import Path
 from typing import BinaryIO, Iterable, Optional, Union
 
@@ -10,7 +11,6 @@ from openfoodfacts.ocr import OCRResult
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
-from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import KeywordProcessor, strip_accents_v1
 
 # Increase version ID when introducing breaking change: changes for which we
@@ -31,6 +31,7 @@ class City:
     coordinates: Optional[tuple[float, float]]
 
 
+@cache()
 def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
     """Load French cities dataset.
 
@@ -254,11 +255,6 @@ class AddressExtractor:
             return match.group(1), sub_start + match.start(1), sub_start + match.end(1)
 
 
-ADDRESS_EXTRACTOR_STORE = CachedStore(
-    lambda: AddressExtractor(load_cities_fr()), expiration_interval=None
-)
-
-
 def find_locations(content: Union[OCRResult, str]) -> list[Prediction]:
     """Find location predictions in the text content.
 
@@ -270,5 +266,5 @@ def find_locations(content: Union[OCRResult, str]) -> list[Prediction]:
     Returns:
         list of Prediction: See :meth:`.AddressExtractor.extract_addresses`.
     """
-    location_extractor: AddressExtractor = ADDRESS_EXTRACTOR_STORE.get()
+    location_extractor = AddressExtractor(load_cities_fr())
     return location_extractor.extract_addresses(content)
