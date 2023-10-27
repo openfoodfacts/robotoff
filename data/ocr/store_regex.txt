@@ -27,6 +27,18 @@ Auchan
 Asda
 Biedronka
 Booths
+Biocoop
+bonÀrea||bonarea
+Bonpreu
+Coop||betty bossi
+Coop||coop naturaplan
+Coop||naturaplan
+Carrefour
+Carrefour||grand jury
+Casino
+Colruyt
+Costco
+Coviran
 Caprabo
 Coccimarket||belle france
 Coccinelle||belle france
@@ -41,19 +53,6 @@ Eurêka ma maison||les delices de belle france
 G20||les delices de belle france
 Despar
 Diagonal||les delices de belle france
-Biocoop
-bonÀrea||bonarea
-Bonpreu
-Coop||betty bossi
-Coop||coop naturaplan
-Coop||naturaplan
-Carrefour
-Carrefour||grand jury
-Casino
-Colruyt
-Conad
-Costco
-Coviran
 Delhaize
 Denner
 Dunnes Stores
