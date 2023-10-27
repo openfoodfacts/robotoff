@@ -98,8 +98,8 @@ def save_image_embeddings(
         for image_id, embedding in embeddings.items()
         if image_id in image_id_to_model_id
     ]
-    inserted = ImageEmbedding.insert_many(rows).returning().execute()
-    logger.info("%d image embeddings created in db", inserted)
+    ImageEmbedding.insert_many(rows).execute()
+    logger.info("%d image embeddings created in db", len(rows))
 
 
 @with_db
