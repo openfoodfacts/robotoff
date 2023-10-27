@@ -28,7 +28,8 @@ def test_load_cities_fr(mocker):
         ],
     )
 
-    res = load_cities_fr()
+    # Bypass the cache
+    res = load_cities_fr.__wrapped__()
 
     m_gzip_open.assert_called_once_with(settings.OCR_CITIES_FR_PATH, "rb")
     m_json_load.assert_called_once_with(m_gzip_open.return_value.__enter__.return_value)
@@ -46,7 +47,7 @@ def test_load_cities_fr(mocker):
     with pytest.raises(
         ValueError, match="'123', invalid FR postal code for city 'yolo'"
     ):
-        load_cities_fr()
+        load_cities_fr.__wrapped__()
 
     m_gzip_open.assert_called_once_with(settings.OCR_CITIES_FR_PATH, "rb")
     m_json_load.assert_called_once_with(m_gzip_open.return_value.__enter__.return_value)
@@ -60,14 +61,14 @@ def test_load_cities_fr(mocker):
     with pytest.raises(
         ValueError, match="'12A42', invalid FR postal code for city 'yolo'"
     ):
-        load_cities_fr()
+        load_cities_fr.__wrapped__()
 
     m_gzip_open.assert_called_once_with(settings.OCR_CITIES_FR_PATH, "rb")
     m_json_load.assert_called_once_with(m_gzip_open.return_value.__enter__.return_value)
 
 
 def test_cities_fr_dataset():
-    cities_fr = load_cities_fr()
+    cities_fr = load_cities_fr.__wrapped__()
 
     assert all(isinstance(item, City) for item in cities_fr)
     assert len(set(cities_fr)) == len(cities_fr)
