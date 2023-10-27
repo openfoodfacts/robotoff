@@ -57,7 +57,7 @@ def process_USDA_match_to_flashtext(match) -> Optional[str]:
     return USDA_code
 
 
-@cache()
+@cache
 def generate_USDA_code_keyword_processor() -> KeywordProcessor:
     """Builds the KeyWordProcessor for USDA codes."""
 
@@ -184,7 +184,7 @@ def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction
     return results
 
 
-@cache()
+@cache
 def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     codes = text_file_iter(settings.OCR_FISHING_FLASHTEXT_DATA_PATH)
     return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))

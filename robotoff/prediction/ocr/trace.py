@@ -13,6 +13,7 @@ from openfoodfacts.ocr import (
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
+from robotoff.utils.text.flashtext import KeywordProcessor
 
 from .utils import generate_keyword_processor
 
@@ -21,8 +22,10 @@ from .utils import generate_keyword_processor
 PREDICTOR_VERSION = "1"
 
 
-@cache()
-def generate_trace_keyword_processor(labels: Optional[list[str]] = None):
+@cache
+def generate_trace_keyword_processor(
+    labels: Optional[list[str]] = None,
+) -> KeywordProcessor:
     if labels is None:
         labels = list(text_file_iter(settings.OCR_TRACE_ALLERGEN_DATA_PATH))
 

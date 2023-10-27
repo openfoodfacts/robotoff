@@ -31,7 +31,7 @@ class City:
     coordinates: Optional[tuple[float, float]]
 
 
-@cache()
+@cache
 def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
     """Load French cities dataset.
 

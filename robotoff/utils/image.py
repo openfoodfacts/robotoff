@@ -72,6 +72,9 @@ def get_image_from_url(
             error_raise=error_raise,
             session=session,
         )
+
+        if content_bytes is None:
+            return None
     else:
         r = _get_image_from_url(image_url, error_raise, session)
         if r is None:
