@@ -11,11 +11,9 @@ Aldi||gutbio
 Aldi||milsani
 Aldi||sprengel
 Aldi||liveGfree
-Aldi||Little Journey
 Aldi||Winking Owl
 Aldi||Ambiano
 Aldi||Barissimo
-Aldi||Friendly Farms
 Aldi||Millville
 Alimerka
 Alnatura
