@@ -336,3 +336,7 @@ NUM_RQ_WORKERS = int(os.environ.get("NUM_RQ_WORKERS", 4))
 # (https://github.com/klen/peewee_migrate)
 # Migrations are automatically applied when the API service is launched
 MIGRATE_DIR = PROJECT_DIR / "migrations"
+
+
+# Path of the local disk cache, see robotoff.cache for more information
+DISKCACHE_DIR = DATA_DIR / "diskcache"

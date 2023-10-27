@@ -61,6 +61,7 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
     2. Extracts the nutriscore prediction based on the nutriscore ML model.
     3. Triggers the 'object_detection' task
     4. Stores the imported image metadata in the Robotoff DB.
+    5. Compute image fingerprint, for duplicate image detection.
     """
     logger.info("Running `import_image` for %s, image %s", product_id, image_url)
     source_image = get_source_from_url(image_url)
@@ -75,7 +76,9 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 
     product_images: Optional[JSONType] = getattr(product, "images", None)
     with db:
-        image_model = save_image(product_id, source_image, image_url, product_images)
+        image_model = save_image(
+            product_id, source_image, image_url, product_images, use_cache=True
+        )
 
         if image_model is None:
             # The image is invalid, no need to perform image extraction jobs
@@ -143,7 +146,9 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 def import_insights_from_image(
     product_id: ProductIdentifier, image_url: str, ocr_url: str
 ):
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -196,6 +201,8 @@ def save_image_job(batch: list[tuple[ProductIdentifier, str]], server_type: Serv
                     source_image,
                     image_url,
                     getattr(product, "images", None),
+                    # set use_cache=False, as we process many images only once
+                    use_cache=False,
                 )
 
 
@@ -206,7 +213,9 @@ def run_nutrition_table_object_detection(product_id: ProductIdentifier, image_ur
         image_url,
     )
 
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -269,7 +278,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
             # run upc detection
             if (
                 image := get_image_from_url(
-                    image_url, error_raise=False, session=http_session
+                    image_url, error_raise=False, session=http_session, use_cache=True
                 )
             ) is None:
                 logger.info("Error while downloading image %s", image_url)
@@ -319,7 +328,9 @@ def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: st
         "Running nutriscore object detection for %s, image %s", product_id, image_url
     )
 
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -385,7 +396,9 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
