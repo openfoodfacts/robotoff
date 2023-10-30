@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.1](https://github.com/openfoodfacts/robotoff/compare/v1.38.0...v1.38.1) (2023-10-30)
+
+
+### Bug Fixes
+
+* fix bug in get_image_from_url ([ce0c1b2](https://github.com/openfoodfacts/robotoff/commit/ce0c1b25502d13e87e76ad4bdc6aa68357486d3c))
+
 ## [1.38.0](https://github.com/openfoodfacts/robotoff/compare/v1.37.0...v1.38.0) (2023-10-30)
 
 
