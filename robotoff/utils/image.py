@@ -69,6 +69,7 @@ def get_image_from_url(
             tag="image",
             func=_get_image_from_url,
             # kwargs passed to func
+            image_url=image_url,
             error_raise=error_raise,
             session=session,
         )
