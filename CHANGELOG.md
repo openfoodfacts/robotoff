@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.38.0](https://github.com/openfoodfacts/robotoff/compare/v1.37.0...v1.38.0) (2023-10-30)
+
+
+### Features
+
+* add a disk cache mechanism to cache images ([0330216](https://github.com/openfoodfacts/robotoff/commit/0330216b398071691e68eac9f05753521cb93828))
+* add migrate_peewee library to handle DB migrations ([8b77195](https://github.com/openfoodfacts/robotoff/commit/8b77195329810b915154fff48ee823206f483e58))
+* add product_insight.bounding_box field ([1901b15](https://github.com/openfoodfacts/robotoff/commit/1901b1531435ff5030230a05710143603629080d))
+
+
+### Bug Fixes
+
+* fix Dockerfile related to migrations folder ([0fc70ef](https://github.com/openfoodfacts/robotoff/commit/0fc70ef3b0ceb30b66f9ab37ec598e3c9c3b38f6))
+* fix logging issue ([5e86341](https://github.com/openfoodfacts/robotoff/commit/5e86341ec698257df5db46a380ccf8ce61935046))
+* fix migration application during deployment ([27ea630](https://github.com/openfoodfacts/robotoff/commit/27ea6305dc004dbfd65e38d89611fd79d1ceeeaf))
+* fix previously introduced issues ([0624efe](https://github.com/openfoodfacts/robotoff/commit/0624efeb666c63a2cd2975bbee536041f6a901d5))
+* improve DB migration ([e67d271](https://github.com/openfoodfacts/robotoff/commit/e67d271eff7b68b3ff9783576f37b41eba4bc8a7))
+* mark images as deleted in DB when deleted on Product Opener ([997e989](https://github.com/openfoodfacts/robotoff/commit/997e98949c8ae3df9856c1a17c1f295aed73bf1d))
+* migrate-db when running make dev ([0a2171d](https://github.com/openfoodfacts/robotoff/commit/0a2171d82efb68e76b06f285607406e2e0b16ac4))
+* more stores ([3dea05d](https://github.com/openfoodfacts/robotoff/commit/3dea05d1a2a13f6d9ef1010f536408e390ae3f1e))
+* pull image before launching migration ([bd6a15a](https://github.com/openfoodfacts/robotoff/commit/bd6a15a723c1e25ef74678f6558d92a0043fc452))
+* upgrade peewee ([264d9bf](https://github.com/openfoodfacts/robotoff/commit/264d9bf27067f86262f74ac6ba0165b8ba802623))
+
+
+### Technical
+
+* add documentation about DB migration ([16c865f](https://github.com/openfoodfacts/robotoff/commit/16c865f2998f8b98117f5e609df2445bf76d205f))
+* **deps:** bump pillow from 9.3.0 to 10.0.1 ([e056268](https://github.com/openfoodfacts/robotoff/commit/e056268d2bef5cebbc5a62909a1baa7051910ca5))
+* remove CachedStore class ([5d8c007](https://github.com/openfoodfacts/robotoff/commit/5d8c007dc3a0868d9ce8c80a3aaf3b4a497560f2))
+
 ## [1.37.0](https://github.com/openfoodfacts/robotoff/compare/v1.36.0...v1.37.0) (2023-10-25)
 
 
