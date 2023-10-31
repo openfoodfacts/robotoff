@@ -27,7 +27,7 @@ OBJECT_DETECTION_MODEL_VERSION = {
 
 @dataclasses.dataclass
 class ObjectDetectionResult:
-    bounding_box: tuple
+    bounding_box: tuple[int, int, int, int]
     score: float
     label: str
 
@@ -59,7 +59,7 @@ class ObjectDetectionRawResult:
             label_str = self.label_names[label_int]
             if label_str is not None:
                 result = ObjectDetectionResult(
-                    bounding_box=tuple(bounding_box.tolist()),
+                    bounding_box=tuple(bounding_box.tolist()),  # type: ignore
                     score=float(score),
                     label=label_str,
                 )

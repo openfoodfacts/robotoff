@@ -43,25 +43,32 @@ def clear_disk_cache():
 
 def test_cache_http_request(clear_disk_cache):
     cached_bytes = cache_http_request(
-        "test_key", CallbackFunctions.get_bytes, tag="unit_test"
+        "test_key", cache=disk_cache, func=CallbackFunctions.get_bytes, tag="unit_test"
     )
     assert cached_bytes == b"test bytes"
     assert CallbackFunctions.get_bytes_called is True
     CallbackFunctions.get_bytes_called = False
 
     cache_http_request(
-        key="test_key", func=CallbackFunctions.get_bytes, tag="unit_test"
+        key="test_key",
+        cache=disk_cache,
+        func=CallbackFunctions.get_bytes,
+        tag="unit_test",
     )
     assert CallbackFunctions.get_bytes_called is False
     del disk_cache["test_key"]
 
     cached_none = cache_http_request(
-        key="test_key_none", func=CallbackFunctions.get_none, tag="unit_test"
+        key="test_key_none",
+        cache=disk_cache,
+        func=CallbackFunctions.get_none,
+        tag="unit_test",
     )
     assert cached_none is None
 
     cached_bytes_with_expire = cache_http_request(
         key="test_key_with_expire",
+        cache=disk_cache,
         func=CallbackFunctions.get_bytes_with_expire,
         cache_expire=0.1,
         tag="unit_test",
@@ -74,7 +81,9 @@ def test_cache_http_request(clear_disk_cache):
     time.sleep(0.1)
 
     cached_bytes_with_expire = cache_http_request(
-        key="test_key_with_expire", func=CallbackFunctions.get_bytes_with_expire
+        key="test_key_with_expire",
+        cache=disk_cache,
+        func=CallbackFunctions.get_bytes_with_expire,
     )
     assert cached_bytes_with_expire == b"test bytes with expire"
     # Check that the function was called again
