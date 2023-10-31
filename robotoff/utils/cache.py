@@ -1,5 +1,6 @@
 from typing import Callable
 
+import requests
 from diskcache import Cache
 
 from robotoff import settings
@@ -15,7 +16,8 @@ disk_cache = Cache(settings.DISKCACHE_DIR)
 
 def cache_http_request(
     key: str,
-    func: Callable,
+    cache: Cache,
+    func: Callable[..., requests.Response | None],
     cache_expire: int | None = None,
     tag: str | None = None,
     *args,
@@ -24,6 +26,7 @@ def cache_http_request(
     """Cache raw response (bytes) of HTTP requests.
 
     :param key: the cache key
+    :param cache: the cache to use
     :param func: the function to call, must return a Request object
     :param cache_expire: expiration time of the item in the cache, defaults to
         None (no expiration)
@@ -33,7 +36,7 @@ def cache_http_request(
     """
     # Check if the item is already cached, and use it instead of sending
     # the HTTP request if it is
-    content_bytes = disk_cache.get(key)
+    content_bytes = cache.get(key)
     if content_bytes is None:
         r = func(*args, **kwargs)
         if r is None:

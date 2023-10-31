@@ -342,6 +342,8 @@ class LogoAnnotation(BaseModel):
     nearest_neighbors = BinaryJSONField(null=True)
     barcode = peewee.CharField(max_length=100, null=True, index=True)
     source_image = peewee.TextField(null=True, index=True)
+    # The logo text extracted from the image using OCR
+    text = peewee.TextField(null=True)
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]

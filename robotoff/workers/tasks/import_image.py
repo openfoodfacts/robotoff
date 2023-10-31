@@ -4,6 +4,7 @@ from typing import Optional
 
 import elasticsearch
 from elasticsearch.helpers import BulkIndexError
+from openfoodfacts import OCRResult
 from PIL import Image
 
 from robotoff import settings
@@ -123,6 +124,7 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
         job_kwargs={"result_ttl": 0},
         product_id=product_id,
         image_url=image_url,
+        ocr_url=ocr_url,
     )
     enqueue_job(
         run_nutrition_table_object_detection,
@@ -387,18 +389,22 @@ def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: st
         logger.info(import_result)
 
 
-def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
+def run_logo_object_detection(
+    product_id: ProductIdentifier, image_url: str, ocr_url: str
+):
     """Detect logos using the universal logo detector model and generate
     logo-related predictions.
 
     :param product_id: identifier of the product
     :param image_url: URL of the image to use
+    :param ocr_url: URL of the OCR JSON file, used to extract text of each logo
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
     image = get_image_from_url(
         image_url, error_raise=False, session=http_session, use_cache=True
     )
+    ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -430,6 +436,12 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
                 score_threshold=0.5,
                 iou_threshold=0.95,
             ):
+                text = None
+                if ocr_result:
+                    # We try to find the text in the bounding box of the logo
+                    text = get_text_from_bounding_box(
+                        ocr_result, item["bounding_box"], image.width, image.height
+                    )
                 logos.append(
                     LogoAnnotation.create(
                         image_prediction=image_prediction,
@@ -438,6 +450,7 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
                         bounding_box=item["bounding_box"],
                         barcode=image_model.barcode,
                         source_image=image_model.source_image,
+                        text=text,
                     )
                 )
             logger.info("%s logos found for image %s", len(logos), source_image)
@@ -460,6 +473,31 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
             image_prediction_id=image_prediction.id,
             server_type=product_id.server_type,
         )
+
+
+def get_text_from_bounding_box(
+    ocr_result: OCRResult,
+    bounding_box: tuple[int, int, int, int],
+    image_width: int,
+    image_height: int,
+) -> str | None:
+    """Get the text from an OCR result for a given bounding box.
+
+    :param ocr_result: the OCR result
+    :param bounding_box: the logo bounding box (in relative coordinates)
+    :param image_width: the image width
+    :param image_height: the image height
+    :return: the text found in the bounding box, or None if no text was found
+    """
+    absolute_bounding_box = (
+        bounding_box[0] * image_height,
+        bounding_box[1] * image_width,
+        bounding_box[2] * image_height,
+        bounding_box[3] * image_width,
+    )
+    if words := ocr_result.get_words_in_area(absolute_bounding_box):
+        return "".join(word.text for word in words)
+    return None
 
 
 def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):

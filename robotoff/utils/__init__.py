@@ -9,7 +9,7 @@ from requests.adapters import HTTPAdapter
 from robotoff import settings
 from robotoff.types import JSONType
 
-from .image import ImageLoadingException, get_image_from_url  # noqa: F401
+from .image import get_image_from_url  # noqa: F401
 from .logger import get_logger
 
 logger = get_logger(__name__)
