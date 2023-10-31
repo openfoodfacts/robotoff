@@ -8,6 +8,7 @@ dist
 .idea
 robotoff.egg-info
 ml/data/*
+cache
 datasets
 *.joblib
 .ipynb_checkpoints
@@ -41,5 +42,4 @@ coverage.xml
 site/
 gh_pages/
 doc/README.md
-doc/references/cli.md 
-data/diskcache
+doc/references/cli.md

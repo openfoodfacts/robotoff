@@ -123,6 +123,7 @@ class BaseURLProvider(object):
 
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / "data"
+CACHE_DIR = PROJECT_DIR / "cache"
 DATASET_DIR = PROJECT_DIR / "datasets"
 DATASET_DIR.mkdir(exist_ok=True)
 I18N_DIR = PROJECT_DIR / "i18n"
@@ -338,5 +339,8 @@ NUM_RQ_WORKERS = int(os.environ.get("NUM_RQ_WORKERS", 4))
 MIGRATE_DIR = PROJECT_DIR / "migrations"
 
 
-# Path of the local disk cache, see robotoff.cache for more information
-DISKCACHE_DIR = DATA_DIR / "diskcache"
+# Path of the main local disk cache, see robotoff.cache for more information
+DISKCACHE_DIR = CACHE_DIR / "diskcache"
+
+# Path of the local disk cache used for tests
+TESTS_DISKCACHE_DIR = CACHE_DIR / "diskcache_tests_assets"
