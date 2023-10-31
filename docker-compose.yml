@@ -3,6 +3,7 @@ version: "3.9"
 x-robotoff-base-volumes:
   &robotoff-base-volumes
   - ./data:/opt/robotoff/data
+  - ./cache:/opt/robotoff/cache
   - ./datasets:/opt/robotoff/datasets
   - ./tf_models:/opt/robotoff/tf_models
   - ./models:/opt/robotoff/models
