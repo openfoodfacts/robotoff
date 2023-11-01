@@ -162,15 +162,6 @@ _off_net_auth = ("off", "off")
 _off_request_auth = _off_net_auth if _instance_tld() == "net" else None
 
 
-CATEGORY_MATCHER_DIR = DATA_DIR / "category/matcher"
-CATEGORY_MATCHER_MATCH_MAPS = {
-    "category": CATEGORY_MATCHER_DIR / "category_match_maps.json.gz",
-    "ingredient": CATEGORY_MATCHER_DIR / "ingredient_match_maps.json.gz",
-}
-CATEGORY_MATCHER_INTERSECT = (
-    CATEGORY_MATCHER_DIR / "category_ingredient_intersect.json.gz"
-)
-
 # Taxonomies are huge JSON files that describe many concepts in OFF, in many
 # languages, with synonyms. Those are the full version of taxos.
 
@@ -211,7 +202,9 @@ ELASTICSEARCH_TYPE = "document"
 
 
 # ANN index parameters
-K_NEAREST_NEIGHBORS = 100
+# K_NEAREST_NEIGHBORS is the number of closest nearest neighbor we consider
+# when predicting the value of a logo
+K_NEAREST_NEIGHBORS = 10
 
 # image moderation service
 IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
@@ -337,3 +330,13 @@ ENABLE_MONGODB_ACCESS = bool(int(os.environ.get("ENABLE_MONGODB_ACCESS", 1)))
 # Number of rq workers running, this is used to know the number of high
 # priority queues that exist
 NUM_RQ_WORKERS = int(os.environ.get("NUM_RQ_WORKERS", 4))
+
+# Directory where all DB migration files are located
+# We use peewee_migrate to perform the migrations
+# (https://github.com/klen/peewee_migrate)
+# Migrations are automatically applied when the API service is launched
+MIGRATE_DIR = PROJECT_DIR / "migrations"
+
+
+# Path of the local disk cache, see robotoff.cache for more information
+DISKCACHE_DIR = DATA_DIR / "diskcache"

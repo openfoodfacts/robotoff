@@ -46,6 +46,19 @@ def get_ingredient_processor():
     )
 
 
+def clear_ingredient_processing_cache():
+    """Clear all ingredient processing cache:
+
+    - Ingredient processor
+    - Model ingredient taxonomy
+
+    As these resources are memory-hungry, it should be cleared from memory if
+    not used anymore.
+    """
+    get_ingredient_taxonomy.cache_clear()
+    get_ingredient_processor.cache_clear()
+
+
 def generate_inputs_dict(
     product: JSONType,
     ocr_texts: list[str],

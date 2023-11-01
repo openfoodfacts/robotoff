@@ -2,7 +2,11 @@ import datetime
 from pathlib import Path
 from typing import Optional
 
-from robotoff.models import ImageModel
+import imagehash
+import numpy as np
+from PIL import Image
+
+from robotoff.models import ImageModel, Prediction, ProductInsight
 from robotoff.off import generate_image_path, generate_image_url
 from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_image_from_url, get_logger, http_session
@@ -15,6 +19,7 @@ def save_image(
     source_image: str,
     image_url: str,
     images: Optional[JSONType],
+    use_cache: bool = False,
 ) -> Optional[ImageModel]:
     """Save imported image details in DB.
 
@@ -79,7 +84,9 @@ def save_image(
         # MongoDB (in the `images` field), we download the image to know the
         # image size
         logger.info("DB Product check disabled, downloading image to get image size")
-        image = get_image_from_url(image_url, error_raise=False, session=http_session)
+        image = get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=use_cache
+        )
 
         if image is None:
             logger.info("Could not import image %s in DB", image_url)
@@ -127,4 +134,108 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
         source_image = generate_image_path(product_id, missing_image_id)
         image_url = generate_image_url(product_id, missing_image_id)
         logger.debug("Creating missing image %s in DB", source_image)
-        save_image(product_id, source_image, image_url, images)
+        save_image(product_id, source_image, image_url, images, use_cache=True)
+
+
+def add_image_fingerprint(image_model: ImageModel):
+    """Update image in DB to add the image fingerprint.
+
+    :param image_model: the image model to update
+    """
+    image_url = image_model.get_image_url()
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
+
+    if image is None:
+        logger.info(
+            "could not fetch image from %s, aborting image fingerprinting", image_url
+        )
+        return
+
+    image_model.fingerprint = generate_image_fingerprint(image)
+    ImageModel.bulk_update([image_model], fields=["fingerprint"])
+
+
+def generate_image_fingerprint(image: Image.Image) -> int:
+    """Generate a fingerprint from an image, used for near-duplicate
+    detection.
+
+    We use perceptual hashing algorithm.
+
+    :param image: the input image
+    :return: the fingerprint, as a 64-bit integer
+    """
+    array = imagehash.phash(image).hash
+    # `int_array` is a flattened int array of dim 64
+    int_array = array.flatten().astype(int)
+    # convert the 64-bit array to a 64 bits integer
+    fingerprint = int_array.dot(2 ** np.arange(int_array.size)[::-1])
+    return fingerprint
+
+
+def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
+    """Delete images and related items in DB.
+
+    This function must be called when Robotoff gets notified of an image
+    deletion. It proceeds as follow:
+
+    - mark the image as `deleted` in the `image` table
+    - delete all predictions associated with the image (`prediction` table)
+    - delete all non-annotated insights associated with the image
+      (`product_insight` table). Annotated insights are kept for reference.
+
+    :param product_id: identifier of the product
+    :param image_ids: a list of image IDs to delete.
+      Each image ID must be a digit.
+    """
+    server_type = product_id.server_type.name
+    # Perform batching as we don't know the number of images to delete
+    updated_models = []
+    source_images = []
+    for image_id in image_ids:
+        source_image = generate_image_path(product_id, image_id)
+        image_model = ImageModel.get_or_none(
+            source_image=source_image, server_type=server_type
+        )
+
+        if image_model is None:
+            logger.info(
+                "image to delete %s for product %s not found in DB, skipping",
+                image_id,
+                product_id,
+            )
+            continue
+
+        # set the `deleted` flag to True: image models are always kept in DB
+        image_model.deleted = True
+        updated_models.append(image_model)
+        source_images.append(source_image)
+
+    updated_image_models: int = ImageModel.bulk_update(
+        updated_models, fields=["deleted"]
+    )
+    deleted_predictions: int = (
+        Prediction.delete()
+        .where(
+            Prediction.source_image.in_(source_images),
+            Prediction.server_type == server_type,
+        )
+        .execute()
+    )
+    deleted_insights: int = (
+        ProductInsight.delete()
+        .where(
+            ProductInsight.source_image.in_(source_images),
+            ProductInsight.server_type == server_type,
+            ProductInsight.annotation.is_null(),
+        )
+        .execute()
+    )
+
+    logger.info(
+        "deleted %s image in DB, %s deleted predictions, %s deleted insights",
+        updated_image_models,
+        deleted_predictions,
+        deleted_insights,
+    )

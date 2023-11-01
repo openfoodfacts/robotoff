@@ -52,6 +52,7 @@ RUN cd /opt/robotoff/i18n && \
     chown off:off -R /opt/robotoff/
 COPY --chown=off:off robotoff /opt/robotoff/robotoff/
 COPY --chown=off:off gunicorn.py /opt/robotoff/
+COPY --chown=off:off migrations /opt/robotoff/migrations
 
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh

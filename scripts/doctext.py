@@ -7,10 +7,8 @@ from pathlib import Path
 from typing import List, Optional
 
 import requests
+from openfoodfacts.ocr import BoundingPoly, OCRResult
 from PIL import Image, ImageDraw
-
-from robotoff.prediction.ocr import OCRResult
-from robotoff.prediction.ocr.dataclass import BoundingPoly
 
 
 class FeatureType(Enum):

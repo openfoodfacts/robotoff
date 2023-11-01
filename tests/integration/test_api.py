@@ -666,6 +666,88 @@ def test_annotation_event(client, monkeypatch, httpserver):
     assert result.status_code == 200
 
 
+def test_annotate_category_with_user_input(client, mocker, peewee_db):
+    """We test category insight annotation with user input."""
+    # mock because as we validate the insight, we will ask mongo for product
+    mocker.patch(
+        "robotoff.insights.annotate.get_product", return_value={"categories_tags": []}
+    )
+    add_category = mocker.patch("robotoff.insights.annotate.add_category")
+
+    with peewee_db:
+        insight = ProductInsightFactory(type="category", value_tag="en:seeds")
+
+    # data must be provided when annotation == 2
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={"insight_id": str(insight.id), "annotation": 2},
+    )
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "`data` must be provided when annotation == 2",
+        "title": "400 Bad Request",
+    }
+
+    # update must be true when annotation == 2
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": str(insight.id),
+            "annotation": 2,
+            "data": "{}",
+            "update": False,
+        },
+    )
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "`update` must be true when annotation == 2",
+        "title": "400 Bad Request",
+    }
+
+    # user input during annotation is forbidden for unauthenticated users
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": str(insight.id),
+            "annotation": 2,
+            "data": '{"value_tag": "en:beef"}',
+        },
+    )
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "`data` cannot be provided when the user is not authenticated",
+        "title": "400 Bad Request",
+    }
+
+    # authorized annotation with user input
+    auth = base64.b64encode(b"a:b").decode("ascii")
+    result = client.simulate_post(
+        "/api/v1/insights/annotate",
+        params={
+            "insight_id": str(insight.id),
+            "annotation": 2,
+            "data": '{"value_tag": "en:beef"}',
+        },
+        headers={"Authorization": "Basic " + auth},
+    )
+    assert result.status_code == 200
+    assert result.json == {
+        "status_code": 12,
+        "status": "user_input_updated",
+        "description": "the data provided by the user was saved and sent to OFF",
+    }
+    add_category.assert_called_once()
+
+    with peewee_db:
+        updated_insight = ProductInsight.get_or_none(id=insight.id)
+        assert updated_insight is not None
+        assert updated_insight.value_tag == "en:beef"
+        assert updated_insight.data == {
+            "original_value_tag": "en:seeds",
+            "user_input": True,
+        }
+
+
 def test_prediction_collection_no_result(client):
     result = client.simulate_get("/api/v1/predictions")
     assert result.status_code == 200

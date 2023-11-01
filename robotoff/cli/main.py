@@ -477,6 +477,13 @@ def add_logo_to_ann(
     sleep_time: float = typer.Option(
         0.0, help="Time to sleep between each query (in s)"
     ),
+    existing_ids_path: Optional[Path] = typer.Argument(
+        None,
+        file_okay=True,
+        dir_okay=False,
+        help="Path of the plain text file containing logo IDs (one ID per line). If not provided, "
+        "existing IDs will be fetched from Elasticsearch.",
+    ),
 ) -> None:
     """Index all missing logos in Elasticsearch ANN index."""
     import logging
@@ -490,26 +497,28 @@ def add_logo_to_ann(
     from robotoff.elasticsearch import get_es_client
     from robotoff.logos import add_logos_to_ann, get_stored_logo_ids
     from robotoff.models import LogoEmbedding, db
-    from robotoff.utils import get_logger
+    from robotoff.utils import get_logger, text_file_iter
 
     logger = get_logger()
     logging.getLogger("elastic_transport.transport").setLevel(logging.WARNING)
 
     es_client = get_es_client()
-    seen = get_stored_logo_ids(es_client)
+    if existing_ids_path is not None and existing_ids_path.is_file():
+        seen = set(int(x) for x in text_file_iter(existing_ids_path))
+    else:
+        seen = get_stored_logo_ids(es_client)
+
     added = 0
 
     with db.connection_context():
         logger.info("Fetching logo embedding to index...")
         query = LogoEmbedding.select().objects()
-        logo_embedding_iter = tqdm.tqdm(
-            (
-                logo_embedding
-                for logo_embedding in ServerSide(query)
-                if logo_embedding.logo_id not in seen
-            ),
-            desc="logo",
+        logo_embedding_iter = (
+            logo_embedding
+            for logo_embedding in tqdm.tqdm(ServerSide(query), desc="logo")
+            if logo_embedding.logo_id not in seen
         )
+
         for logo_embedding_batch in chunked(logo_embedding_iter, 500):
             try:
                 add_logos_to_ann(es_client, logo_embedding_batch, server_type)
@@ -782,9 +791,8 @@ def pprint_ocr_result(
     import sys
 
     import orjson
+    from openfoodfacts.ocr import OCRResult
 
-    from robotoff.prediction.ocr.core import get_ocr_result
-    from robotoff.prediction.ocr.dataclass import OCRResult
     from robotoff.utils import get_logger, http_session
 
     logger = get_logger()
@@ -795,7 +803,7 @@ def pprint_ocr_result(
     logger.info("displaying OCR result %s", uri)
 
     if uri.startswith("http"):
-        ocr_result = get_ocr_result(uri, http_session)
+        ocr_result = OCRResult.from_url(uri, http_session)
     else:
         with open(uri, "rb") as f:
             data = orjson.loads(f.read())
@@ -849,6 +857,37 @@ def generate_ocr_result(
         f.write(orjson.dumps(response))
 
     pprint_ocr_result(str(output_file))
+
+
+@app.command()
+def migrate_db():
+    """Run unapplied DB migrations."""
+    from robotoff.models import db, run_migration
+    from robotoff.utils import get_logger
+
+    get_logger()
+
+    with db.connection_context():
+        run_migration()
+
+
+@app.command()
+def create_migration(
+    name: str = typer.Argument(..., help="name of the migration"),
+    auto: bool = typer.Option(
+        False,
+        help="Scan sources and create db migrations automatically. Supports autodiscovery.",
+    ),
+):
+    """Create a new migration file using peewee_migrate."""
+    from peewee_migrate import Router
+
+    from robotoff import settings
+    from robotoff.models import db
+
+    with db.connection_context():
+        router = Router(db, migrate_dir=settings.MIGRATE_DIR)
+        router.create(name, auto=auto)
 
 
 def main() -> None:

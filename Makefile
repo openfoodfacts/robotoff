@@ -45,7 +45,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello build init-elasticsearch up create_external_networks
+dev: hello build init-elasticsearch migrate-db up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -63,6 +63,10 @@ ifdef service
 else
 	${DOCKER_COMPOSE} up -d 2>&1
 endif
+
+# pull images from image repository
+pull:
+	${DOCKER_COMPOSE} pull
 
 build:
 	${DOCKER_COMPOSE} build api 2>&1
@@ -89,7 +93,7 @@ livecheck:
 
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
-	${DOCKER_COMPOSE} logs -f triton api scheduler worker_high_1 worker_high_2 worker_low_1 worker_low_2
+	${DOCKER_COMPOSE} logs -f api scheduler worker_high_1 worker_high_2 worker_low_1 worker_low_2
 
 #------------#
 # Management #
@@ -276,3 +280,8 @@ guard-%: # guard clause for targets that require an environment variable (usuall
 
 robotoff-cli: guard-args
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff ${args}
+
+
+# apply DB migrations
+migrate-db:
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff migrate-db

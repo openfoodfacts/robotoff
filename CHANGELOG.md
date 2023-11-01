@@ -1,5 +1,99 @@
 # Changelog
 
+## [1.38.1](https://github.com/openfoodfacts/robotoff/compare/v1.38.0...v1.38.1) (2023-10-30)
+
+
+### Bug Fixes
+
+* fix bug in get_image_from_url ([ce0c1b2](https://github.com/openfoodfacts/robotoff/commit/ce0c1b25502d13e87e76ad4bdc6aa68357486d3c))
+
+## [1.38.0](https://github.com/openfoodfacts/robotoff/compare/v1.37.0...v1.38.0) (2023-10-30)
+
+
+### Features
+
+* add a disk cache mechanism to cache images ([0330216](https://github.com/openfoodfacts/robotoff/commit/0330216b398071691e68eac9f05753521cb93828))
+* add migrate_peewee library to handle DB migrations ([8b77195](https://github.com/openfoodfacts/robotoff/commit/8b77195329810b915154fff48ee823206f483e58))
+* add product_insight.bounding_box field ([1901b15](https://github.com/openfoodfacts/robotoff/commit/1901b1531435ff5030230a05710143603629080d))
+
+
+### Bug Fixes
+
+* fix Dockerfile related to migrations folder ([0fc70ef](https://github.com/openfoodfacts/robotoff/commit/0fc70ef3b0ceb30b66f9ab37ec598e3c9c3b38f6))
+* fix logging issue ([5e86341](https://github.com/openfoodfacts/robotoff/commit/5e86341ec698257df5db46a380ccf8ce61935046))
+* fix migration application during deployment ([27ea630](https://github.com/openfoodfacts/robotoff/commit/27ea6305dc004dbfd65e38d89611fd79d1ceeeaf))
+* fix previously introduced issues ([0624efe](https://github.com/openfoodfacts/robotoff/commit/0624efeb666c63a2cd2975bbee536041f6a901d5))
+* improve DB migration ([e67d271](https://github.com/openfoodfacts/robotoff/commit/e67d271eff7b68b3ff9783576f37b41eba4bc8a7))
+* mark images as deleted in DB when deleted on Product Opener ([997e989](https://github.com/openfoodfacts/robotoff/commit/997e98949c8ae3df9856c1a17c1f295aed73bf1d))
+* migrate-db when running make dev ([0a2171d](https://github.com/openfoodfacts/robotoff/commit/0a2171d82efb68e76b06f285607406e2e0b16ac4))
+* more stores ([3dea05d](https://github.com/openfoodfacts/robotoff/commit/3dea05d1a2a13f6d9ef1010f536408e390ae3f1e))
+* pull image before launching migration ([bd6a15a](https://github.com/openfoodfacts/robotoff/commit/bd6a15a723c1e25ef74678f6558d92a0043fc452))
+* upgrade peewee ([264d9bf](https://github.com/openfoodfacts/robotoff/commit/264d9bf27067f86262f74ac6ba0165b8ba802623))
+
+
+### Technical
+
+* add documentation about DB migration ([16c865f](https://github.com/openfoodfacts/robotoff/commit/16c865f2998f8b98117f5e609df2445bf76d205f))
+* **deps:** bump pillow from 9.3.0 to 10.0.1 ([e056268](https://github.com/openfoodfacts/robotoff/commit/e056268d2bef5cebbc5a62909a1baa7051910ca5))
+* remove CachedStore class ([5d8c007](https://github.com/openfoodfacts/robotoff/commit/5d8c007dc3a0868d9ce8c80a3aaf3b4a497560f2))
+
+## [1.37.0](https://github.com/openfoodfacts/robotoff/compare/v1.36.0...v1.37.0) (2023-10-25)
+
+
+### Features
+
+* allow to submit category value_tag in /annotate route ([dd6d81e](https://github.com/openfoodfacts/robotoff/commit/dd6d81e3f62949eb89feaacf4d3d2c508f2ee495))
+* store fingerprint of all images ([ed8fd38](https://github.com/openfoodfacts/robotoff/commit/ed8fd388215268a2709ae055cf223e9c65139dd4))
+
+
+### Bug Fixes
+
+* improve add-logo-to-ann CLI command ([c67b8ff](https://github.com/openfoodfacts/robotoff/commit/c67b8ff03e433da9216357f1078e6aae1480e8d3))
+* set K_NEAREST_NEIGHBORS to 10 (instead of 100) ([a177e13](https://github.com/openfoodfacts/robotoff/commit/a177e137bea4b6ed50fe59bc3ba320b4e16218a1))
+
+
+### Technical
+
+* use json.dump instead of f.write + json.dumps ([60f15e9](https://github.com/openfoodfacts/robotoff/commit/60f15e923de2a04822d1e48ed382f23fe385ca74))
+
+## [1.36.0](https://github.com/openfoodfacts/robotoff/compare/v1.35.0...v1.36.0) (2023-10-16)
+
+
+### Features
+
+* use openfoodfacts SDK for OCR processing ([6344936](https://github.com/openfoodfacts/robotoff/commit/63449367eea12f46b576fe23a6631563bc0fa2c6))
+
+
+### Bug Fixes
+
+* update pymongo ([cac6241](https://github.com/openfoodfacts/robotoff/commit/cac624193a50cf7fd9fffa80b03eba66c4f85e8a))
+* use new version of openfoodfacts-python ([a7d0b28](https://github.com/openfoodfacts/robotoff/commit/a7d0b28dbd4df5252578acb06f8a3a07430de0c8))
+
+
+### Technical
+
+* upgrade to Pydantic V2 ([6979cec](https://github.com/openfoodfacts/robotoff/commit/6979cecb62557b4f7c56afcd409db99b8f898a5f))
+
+## [1.35.0](https://github.com/openfoodfacts/robotoff/compare/v1.34.1...v1.35.0) (2023-09-04)
+
+
+### Features
+
+* remove matcher predictor completely ([d0847c6](https://github.com/openfoodfacts/robotoff/commit/d0847c6036eec65a12f0af3d5f6c7c3f89896f45))
+* remove matcher predictor from API ([de97f9f](https://github.com/openfoodfacts/robotoff/commit/de97f9fa43d342a2d64e9611a7d4ff1f07e81dbd))
+
+
+### Bug Fixes
+
+* Crowdin PR title ([1adfc96](https://github.com/openfoodfacts/robotoff/commit/1adfc9610f96ddabf5c3b7d6efd1dab962470814))
+* don't initialize unit registry in product_weight.py ([468c4f6](https://github.com/openfoodfacts/robotoff/commit/468c4f65d2bba33ea13637e3b9556b8bd87e0dc7))
+* fix wrong label rouge detection ([492fda4](https://github.com/openfoodfacts/robotoff/commit/492fda49a97e13bdf8f3c5fc7d9d421ea0a0426c)), closes [#1255](https://github.com/openfoodfacts/robotoff/issues/1255)
+
+
+### Technical
+
+* add docstring ([279ced1](https://github.com/openfoodfacts/robotoff/commit/279ced16115d3da5b6616d4d71ef1723bf2543af))
+
 ## [1.34.1](https://github.com/openfoodfacts/robotoff/compare/v1.34.0...v1.34.1) (2023-08-31)
 
 

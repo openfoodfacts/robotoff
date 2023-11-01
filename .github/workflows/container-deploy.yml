@@ -167,6 +167,11 @@ jobs:
         script_stop: false
         script: |
           cd ${{ matrix.env}}
+          # Get the latest version (to apply migration next)
+          make pull
+          # Apply migrations
+          make migrate-db
+          # Launch new version
           make up
 
     - name: Check services are up

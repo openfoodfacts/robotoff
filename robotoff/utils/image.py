@@ -12,6 +12,7 @@ from requests.exceptions import SSLError, Timeout
 
 from robotoff import settings
 
+from .cache import cache_http_request
 from .logger import get_logger
 
 logger = get_logger(__name__)
@@ -44,17 +45,64 @@ class ImageLoadingException(Exception):
 def get_image_from_url(
     image_url: str,
     error_raise: bool = True,
-    session: Optional[requests.Session] = None,
-) -> Optional[Image.Image]:
+    session: requests.Session | None = None,
+    use_cache: bool = False,
+    cache_expire: int = 86400,
+) -> Image.Image | None:
     """Fetch an image from `image_url` and load it.
 
     :param image_url: URL of the image to load
     :param error_raise: if True, raises a `ImageLoadingException` if an error
-    occured, defaults to False. If False, None is returned if an error occurs.
+      occured, defaults to False. If False, None is returned if an error
+      occured.
     :param session: requests Session to use, by default no session is used.
-    :raises ImageLoadingException: _description_
+    :param use_cache: if True, we use the local file cache (and save the
+      result in the cache in case of cache miss)
+    :param cache_expire: the expiration value of the item in the cache (in
+      seconds), default to 86400 (24h).
     :return: the Pillow Image or None.
     """
+    if use_cache:
+        content_bytes = cache_http_request(
+            key=f"image:{image_url}",
+            cache_expire=cache_expire,
+            tag="image",
+            func=_get_image_from_url,
+            # kwargs passed to func
+            image_url=image_url,
+            error_raise=error_raise,
+            session=session,
+        )
+
+        if content_bytes is None:
+            return None
+    else:
+        r = _get_image_from_url(image_url, error_raise, session)
+        if r is None:
+            return None
+        content_bytes = r.content
+
+    try:
+        return Image.open(BytesIO(content_bytes))
+    except PIL.UnidentifiedImageError:
+        error_message = f"Cannot identify image {image_url}"
+        if error_raise:
+            raise ImageLoadingException(error_message)
+        logger.info(error_message)
+    except PIL.Image.DecompressionBombError:
+        error_message = f"Decompression bomb error for image {image_url}"
+        if error_raise:
+            raise ImageLoadingException(error_message)
+        logger.info(error_message)
+
+    return None
+
+
+def _get_image_from_url(
+    image_url: str,
+    error_raise: bool = True,
+    session: Optional[requests.Session] = None,
+) -> requests.Response | None:
     auth = (
         settings._off_net_auth
         if urlparse(image_url).netloc.endswith("openfoodfacts.net")
@@ -84,17 +132,4 @@ def get_image_from_url(
         )
         return None
 
-    try:
-        return Image.open(BytesIO(r.content))
-    except PIL.UnidentifiedImageError:
-        error_message = f"Cannot identify image {image_url}"
-        if error_raise:
-            raise ImageLoadingException(error_message)
-        logger.info(error_message)
-    except PIL.Image.DecompressionBombError:
-        error_message = f"Decompression bomb error for image {image_url}"
-        if error_raise:
-            raise ImageLoadingException(error_message)
-        logger.info(error_message)
-
-    return None
+    return r

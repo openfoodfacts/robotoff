@@ -38,5 +38,5 @@ def configure_root_logger(logger, level: int = 20):
     handler.setLevel(level)
     logger.addHandler(handler)
 
-    for name in ("redis_lock", "spacy"):
+    for name in ("redis_lock",):
         logging.getLogger(name).setLevel(logging.WARNING)

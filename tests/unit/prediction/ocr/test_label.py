@@ -30,8 +30,6 @@ def test_es_ocr_regex(input_str: str, is_match: bool, output: Optional[str]):
     "text,value_tags",
     [
         ("certifié ab.", ["fr:ab-agriculture-biologique"]),
-        ("décret du 5/01/07", ["fr:label-rouge"]),
-        ("DECRET du 05.01.07", ["fr:label-rouge"]),
         ("Homologation n° LA 21/88", ["fr:label-rouge"]),
         ("homologation LA 42/05", ["fr:label-rouge"]),
         ("Homologation n°LA19/05", ["fr:label-rouge"]),

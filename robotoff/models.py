@@ -2,13 +2,16 @@
 import datetime
 import functools
 import uuid
+from pathlib import Path
 from typing import Iterable
 
 import peewee
+from peewee_migrate import Router
 from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
+from robotoff.off import generate_image_url
 from robotoff.types import ProductIdentifier, ServerType
 
 db = PostgresqlExtDatabase(
@@ -63,6 +66,15 @@ def crop_image_url(
     return f"{base_robotoff_url}/api/v1/images/crop?image_url={base_url}&y_min={y_min}&x_min={x_min}&y_max={y_max}&x_max={x_max}"
 
 
+def run_migration():
+    """Run all unapplied migrations."""
+    # embedding schema does not exist at DB initialization
+    db.execute_sql("CREATE SCHEMA IF NOT EXISTS embedding;")
+    router = Router(db, migrate_dir=settings.MIGRATE_DIR)
+    # Run all unapplied migrations
+    router.run()
+
+
 class BaseModel(peewee.Model):
     class Meta:
         database = db
@@ -102,9 +114,10 @@ class ProductInsight(BaseModel):
 
     # The annotation of the given insight. Four possible values are possible:
     # null = This insight has not been annotated
-    #  -1 = Rejected
+    # -1 = Rejected
     # 0 = 'I don't know'
     # 1 = Validated
+    # 2 = value provided by user
     annotation = peewee.IntegerField(null=True, index=True)
 
     # Saves the value returned by Annotator.annotate
@@ -183,6 +196,15 @@ class ProductInsight(BaseModel):
     # Confidence score of the insight, may be null
     confidence = peewee.FloatField(null=True, index=True)
 
+    # bounding box corresponding to the area of the image related
+    # to the insight that was detected.
+    # For example:
+    # - for logo insights, it's the bounding box of the predicted
+    #   logo
+    # - for OCR-based insights, it's the text that triggered the
+    #   creation of the insight
+    bounding_box = BinaryJSONField(null=True, default=list)
+
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
 
@@ -244,12 +266,23 @@ class ImageModel(BaseModel):
     height = peewee.IntegerField(null=False, index=True)
     deleted = peewee.BooleanField(null=False, index=True, default=False)
     server_type = peewee.CharField(null=True, max_length=10, index=True)
+    # Perceptual hash of the image, used to find near-duplicates
+    # It's a 64-bit bitmap, so it can be stored as a bigint (8 bits)
+    fingerprint = peewee.BigIntegerField(null=True, index=True)
 
     class Meta:
         table_name = "image"
 
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
+
+    def get_image_url(self) -> str:
+        """Get the full image URL from the product `barcode`, `server_type`
+        and `source_image` fields.
+
+        :return: the image URL
+        """
+        return generate_image_url(self.get_product_id(), Path(self.source_image).stem)
 
 
 class ImagePrediction(BaseModel):

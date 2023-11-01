@@ -1,5 +1,6 @@
 import requests
 
+from robotoff.images import delete_images
 from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import import_insights, refresh_insights
 from robotoff.models import with_db
@@ -14,7 +15,7 @@ logger = get_logger(__name__)
 
 
 @with_db
-def update_insights_job(product_id: ProductIdentifier):
+def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
     """This job is triggered by the webhook API, when product information has
     been updated.
 
@@ -22,6 +23,10 @@ def update_insights_job(product_id: ProductIdentifier):
 
     1. Generate new predictions related to the product's category and name.
     2. Regenerate all insights from the product associated predictions.
+
+    :param product_id: identifier of the product
+    :param diffs: a dict containing a diff of the update, the format is
+      defined by Product Opener
     """
     logger.info("Running `update_insights` for %s", product_id)
 
@@ -36,6 +41,12 @@ def update_insights_job(product_id: ProductIdentifier):
             # reprocessing with another task arriving concurrently.
             # The expire is there only in case the lock is not released
             # (process killed)
+            deleted_images = diffs.get("uploaded_images", {}).get("delete")
+            if deleted_images:
+                # deleted_images is a list of image IDs that have been deleted
+                logger.info("images deleted: %s, launching DB update", deleted_images)
+                delete_images(product_id, deleted_images)
+
             product_dict = get_product(product_id)
 
             if product_dict is None:

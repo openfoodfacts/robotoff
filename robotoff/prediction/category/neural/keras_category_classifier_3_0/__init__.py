@@ -1,13 +1,13 @@
 from typing import Literal, Optional
 
 import numpy as np
+from openfoodfacts.ocr import OCRResult
 from PIL import Image
 from tritonclient.grpc import service_pb2
 
 from robotoff.images import refresh_images_in_db
 from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
-from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
     deserialize_byte_tensor,
@@ -21,6 +21,7 @@ from .preprocessing import (
     IMAGE_EMBEDDING_DIM,
     MAX_IMAGE_EMBEDDING,
     NUTRIMENT_NAMES,
+    clear_ingredient_processing_cache,
     generate_inputs_dict,
 )
 
@@ -97,8 +98,8 @@ def save_image_embeddings(
         for image_id, embedding in embeddings.items()
         if image_id in image_id_to_model_id
     ]
-    inserted = ImageEmbedding.insert_many(rows).returning().execute()
-    logger.info("%d image embeddings created in db", inserted)
+    ImageEmbedding.insert_many(rows).execute()
+    logger.info("%d image embeddings created in db", len(rows))
 
 
 @with_db
@@ -148,6 +149,7 @@ def generate_image_embeddings(
                     generate_image_url(product_id, f"{image_id}.400"),
                     error_raise=False,
                     session=http_session,
+                    use_cache=True,
                 )
                 for image_id in missing_embedding_ids
             }
@@ -213,7 +215,7 @@ def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[st
     image_ids = (id_ for id_ in product.get("images", {}).keys() if id_.isdigit())
     for image_id in image_ids:
         ocr_url = generate_json_ocr_url(product_id, image_id)
-        ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
+        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
         if ocr_result:
             ocr_texts.append(ocr_result.get_full_text_contiguous())
 
@@ -238,6 +240,7 @@ def predict(
     threshold: Optional[float] = None,
     image_embeddings: Optional[np.ndarray] = None,
     category_taxonomy: Optional[Taxonomy] = None,
+    clear_cache: bool = False,
 ) -> tuple[list[tuple[str, float, Optional[NeighborPredictionType]]], JSONType]:
     """Predict categories using v3 model.
 
@@ -251,6 +254,8 @@ def predict(
         available
     :param category_taxonomy: the category Taxonomy (optional), if provided
         the predicted scores of parents, children and siblings will be returned
+    :param clear_cache: if True, clear ingredient processing cache before
+        returning results
     :return: the predicted categories as a list of
         (category_tag, neighbor_predictions, confidence) tuples and a dict
         containing debug information. `neighbor_predictions` is None if
@@ -309,6 +314,9 @@ def predict(
             category_predictions.append((category, confidence, neighbor_predictions))
         else:
             break
+
+    if clear_cache:
+        clear_ingredient_processing_cache()
 
     return category_predictions, debug
 

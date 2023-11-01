@@ -16,7 +16,8 @@ import requests
 from falcon.media.validators import jsonschema
 from falcon_cors import CORS
 from falcon_multipart.middleware import MultipartMiddleware
-from openfoodfacts import Country
+from openfoodfacts.ocr import OCRParsingException, OCRResultGenerationException
+from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from PIL import Image
 from sentry_sdk.integrations.falcon import FalconIntegration
 
@@ -66,10 +67,6 @@ from robotoff.off import (
 from robotoff.prediction import ingredient_list
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
-from robotoff.prediction.ocr.dataclass import (
-    OCRParsingException,
-    OCRResultGenerationException,
-)
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
@@ -125,7 +122,7 @@ def get_server_type_from_req(
         raise falcon.HTTPBadRequest(f"invalid `server_type`: {server_type_str}")
 
 
-COUNTRY_NAME_TO_ENUM = {item.value: item for item in Country}
+COUNTRY_NAME_TO_ENUM = {COUNTRY_CODE_TO_NAME[item]: item for item in Country}
 
 
 def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
@@ -134,7 +131,9 @@ def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
     countries: Optional[list[Country]] = None
 
     if countries_str is None:
-        # `country` parameter is deprecated
+        # `country` parameter is deprecated, we check here if it's provided
+        # when `countries` is not provided.
+        # It's assumed to be a single country tag (ex: `en:spain`)
         country: Optional[str] = req.get_param("country")
 
         if country:
@@ -144,11 +143,9 @@ def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
             else:
                 countries = None
     else:
+        # countries_str is a list of 2-letter country codes
         try:
-            countries = [
-                Country.get_from_2_letter_code(country_str)
-                for country_str in countries_str
-            ]
+            countries = [Country[country_str] for country_str in countries_str]
         except KeyError:
             raise falcon.HTTPBadRequest(
                 description=f"invalid `countries` value: {countries_str}"
@@ -336,12 +333,27 @@ class AnnotateInsightResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         insight_id = req.get_param_as_uuid("insight_id", required=True)
         annotation = req.get_param_as_int(
-            "annotation", required=True, min_value=-1, max_value=1
+            "annotation", required=True, min_value=-1, max_value=2
         )
 
         update = req.get_param_as_bool("update", default=True)
         # This field is only needed for nutritional table structure insights.
-        data = req.get_param_as_json("data")
+        data: JSONType | None = req.get_param_as_json("data")
+
+        if annotation == 2:
+            if data is None:
+                raise falcon.HTTPBadRequest(
+                    description="`data` must be provided when annotation == 2"
+                )
+            if not update:
+                raise falcon.HTTPBadRequest(
+                    description="`update` must be true when annotation == 2"
+                )
+
+        if data is not None and annotation != 2:
+            raise falcon.HTTPBadRequest(
+                description="`annotation` must be 2 when `data` is provided"
+            )
 
         auth = parse_auth(req)
         if auth is not None and auth.get_username() == "null":
@@ -349,6 +361,11 @@ class AnnotateInsightResource:
             auth = None
 
         trusted_annotator = auth is not None
+
+        if not trusted_annotator and annotation == 2:
+            raise falcon.HTTPBadRequest(
+                description="`data` cannot be provided when the user is not authenticated"
+            )
 
         device_id = device_id_from_request(req)
         logger.info(
@@ -565,7 +582,6 @@ class CategoryPredictorResource:
                 f"category predictor is only available for 'off' server type (here: '{server_type.name}')"
             )
 
-        predictors: list[str] = req.media.get("predictors") or ["neural"]
         neural_model_name = None
         if (neural_model_name_str := req.media.get("neural_model_name")) is not None:
             neural_model_name = NeuralCategoryClassifierModel[neural_model_name_str]
@@ -585,23 +601,13 @@ class CategoryPredictorResource:
                 # Convert to a format recognized by `CategoryClassifier` class
                 product["ingredients"] = [{"id": id_} for id_ in ingredient_tags]
 
-            if "matcher" in predictors:
-                if "lang" not in req.media:
-                    raise falcon.HTTPBadRequest(
-                        description="lang field is required when using matcher predictor"
-                    )
-                lang = req.media["lang"]
-                product[f"product_name_{lang}"] = product["product_name"]
-                product["languages_codes"] = [lang]
-
         resp.media = predict_category(
             product,
             product_id,
-            neural_predictor="neural" in predictors,
-            matcher_predictor="matcher" in predictors,
             deepest_only=req.media.get("deepest_only", False),
             threshold=req.media.get("threshold"),
             neural_model_name=neural_model_name,
+            clear_cache=True,  # clear resource cache to save memory
         )
 
 
@@ -690,7 +696,11 @@ class ImageCropResource:
         x_min = req.get_param_as_float("x_min", required=True)
         y_max = req.get_param_as_float("y_max", required=True)
         x_max = req.get_param_as_float("x_max", required=True)
-        image = get_image_from_url(image_url, session=http_session, error_raise=False)
+        # Get image from cache, as Hunger Games can requests many crops
+        # from the same image
+        image = get_image_from_url(
+            image_url, session=http_session, error_raise=False, use_cache=True
+        )
 
         if image is None:
             raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
@@ -793,7 +803,9 @@ class ImagePredictorResource:
                 "when `output_image` is True",
             )
 
-        image = get_image_from_url(image_url, session=http_session, error_raise=False)
+        image = get_image_from_url(
+            image_url, session=http_session, error_raise=False, use_cache=True
+        )
 
         if image is None:
             raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
@@ -1211,6 +1223,7 @@ class WebhookProductResource:
                 settings.UPDATED_PRODUCT_WAIT,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
+                diffs=diffs,
             )
         elif action == "deleted":
             enqueue_job(

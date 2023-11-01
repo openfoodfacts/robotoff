@@ -23,6 +23,11 @@ Aldi||milsani
 Aldi||sprengel
 Aldi||sweet valley
 Aldi||wędliniarnia
+Aldi||liveGfree
+Aldi||Winking Owl
+Aldi||Ambiano
+Aldi||Barissimo
+Aldi||Millville
 Alimerka
 Alnatura
 Alteza
@@ -43,6 +48,18 @@ Biedronka||sottile gusto
 Biedronka||światowid
 Biedronka||vital fresh
 Booths
+Biocoop
+bonÀrea||bonarea
+Bonpreu
+Coop||betty bossi
+Coop||coop naturaplan
+Coop||naturaplan
+Carrefour
+Carrefour||grand jury
+Casino
+Colruyt
+Costco
+Coviran
 Caprabo
 Coccimarket||belle france
 Coccinelle||belle france
@@ -57,18 +74,6 @@ Eurêka ma maison||les delices de belle france
 G20||les delices de belle france
 Despar
 Diagonal||les delices de belle france
-Biocoop
-bonÀrea||bonarea
-Bonpreu
-Coop||betty bossi
-Coop||coop naturaplan
-Coop||naturaplan
-Carrefour
-Carrefour||grand jury
-Casino
-Colruyt
-Costco
-Coviran
 Dealz
 Delhaize
 Denner
@@ -81,6 +86,7 @@ Eurospin
 Eroski
 Esselunga
 Foodtown
+Fortnum & Mason
 Franprix
 Fred Meyer
 Froiz
@@ -88,6 +94,7 @@ Giant Eagle
 Hacendado
 Haggen
 Harris Teeter
+Harrods
 H-E-B
 Heron Foods
 Hipercor
@@ -302,6 +309,7 @@ SuperValu
 Tang frères
 Tesco
 Toupargel
+Magasins U||u Bio
 Waitrose
 Walmart
 Wegmans

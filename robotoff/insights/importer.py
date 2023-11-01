@@ -420,6 +420,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
                     candidate.source_image,
                 )
 
+            # Copy bounding box information to reserved field,
+            # `data->bounding_box` for insights is deprecated and will be
+            # removed in a future release
+            if "bounding_box" in candidate.data:
+                candidate.bounding_box = candidate.data["bounding_box"]
+
             if candidate.data.get("is_annotation"):
                 username = candidate.data.get("username")
                 if username:
@@ -1978,6 +1984,15 @@ def get_product_predictions(
     server_type: ServerType,
     prediction_types: Optional[list[str]] = None,
 ) -> Iterator[dict]:
+    """Fetch from DB predictions with barcode in `barcodes`.
+
+    :param barcodes: the barcodes we want to fetch
+        predictions for.
+    :param server_type: filter by server type (project)
+    :param prediction_types: filter by prediction types, defaults to None
+        (fetch all types)
+    :yield: predictions as dict
+    """
     where_clauses = [
         PredictionModel.barcode.in_(barcodes),
         PredictionModel.server_type == server_type.name,

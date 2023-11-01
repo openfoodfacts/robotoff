@@ -8,7 +8,7 @@ from PIL import Image
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
-from robotoff.images import save_image
+from robotoff.images import add_image_fingerprint, save_image
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
     extract_ocr_predictions,
@@ -45,7 +45,7 @@ from robotoff.types import (
 )
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.image import convert_image_to_array
-from robotoff.workers.queues import enqueue_job, get_high_queue
+from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 
 logger = get_logger(__name__)
 
@@ -61,6 +61,7 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
     2. Extracts the nutriscore prediction based on the nutriscore ML model.
     3. Triggers the 'object_detection' task
     4. Stores the imported image metadata in the Robotoff DB.
+    5. Compute image fingerprint, for duplicate image detection.
     """
     logger.info("Running `import_image` for %s, image %s", product_id, image_url)
     source_image = get_source_from_url(image_url)
@@ -75,7 +76,9 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 
     product_images: Optional[JSONType] = getattr(product, "images", None)
     with db:
-        image_model = save_image(product_id, source_image, image_url, product_images)
+        image_model = save_image(
+            product_id, source_image, image_url, product_images, use_cache=True
+        )
 
         if image_model is None:
             # The image is invalid, no need to perform image extraction jobs
@@ -91,6 +94,14 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
             image_model.deleted = True
             ImageModel.bulk_update([image_model], fields=["deleted"])
             return
+
+    # Compute image fingerprint, this job is low priority
+    enqueue_job(
+        add_image_fingerprint_job,
+        low_queue,
+        job_kwargs={"result_ttl": 0},
+        image_model_id=image_model.id,
+    )
 
     if product_id.server_type.is_food():
         # Currently we don't support insight generation for projects other
@@ -135,7 +146,9 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 def import_insights_from_image(
     product_id: ProductIdentifier, image_url: str, ocr_url: str
 ):
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -188,6 +201,8 @@ def save_image_job(batch: list[tuple[ProductIdentifier, str]], server_type: Serv
                     source_image,
                     image_url,
                     getattr(product, "images", None),
+                    # set use_cache=False, as we process many images only once
+                    use_cache=False,
                 )
 
 
@@ -198,7 +213,9 @@ def run_nutrition_table_object_detection(product_id: ProductIdentifier, image_ur
         image_url,
     )
 
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -261,7 +278,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
             # run upc detection
             if (
                 image := get_image_from_url(
-                    image_url, error_raise=False, session=http_session
+                    image_url, error_raise=False, session=http_session, use_cache=True
                 )
             ) is None:
                 logger.info("Error while downloading image %s", image_url)
@@ -311,7 +328,9 @@ def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: st
         "Running nutriscore object detection for %s, image %s", product_id, image_url
     )
 
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -377,7 +396,9 @@ def run_logo_object_detection(product_id: ProductIdentifier, image_url: str):
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
-    image = get_image_from_url(image_url, error_raise=False, session=http_session)
+    image = get_image_from_url(
+        image_url, error_raise=False, session=http_session, use_cache=True
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -495,3 +516,22 @@ def process_created_logos(image_prediction_id: int, server_type: ServerType):
         logos = [embedding.logo for embedding in logo_embeddings]
         thresholds = get_logo_confidence_thresholds()
         import_logo_insights(logos, thresholds=thresholds, server_type=server_type)
+
+
+@with_db
+def add_image_fingerprint_job(image_model_id: int):
+    """Job to add the fingerprint of an image in DB.
+
+    :param image_model_id: the DB ID of the image
+    """
+    logger.info("Computing fingerprint for image ID %s", image_model_id)
+
+    image_model: ImageModel
+    if (image_model := ImageModel.get_or_none(id=image_model_id)) is None:
+        logger.warning(
+            "image ID %s not found in DB, skipping fingerprint generation",
+            image_model_id,
+        )
+        return
+
+    add_image_fingerprint(image_model)

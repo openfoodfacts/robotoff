@@ -1,13 +1,20 @@
 import re
+from functools import cache
 from typing import Optional, Union
+
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
-from robotoff.utils.cache import CachedStore
 from robotoff.utils.text import KeywordProcessor
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 # Increase version ID when introducing breaking change: changes for which we
@@ -45,16 +52,14 @@ def process_USDA_match_to_flashtext(match) -> Optional[str]:
     unchecked_code = match.group().upper()
     unchecked_code = re.sub(r"\s*\.*", "", unchecked_code)
 
-    processor = USDA_CODE_KEYWORD_PROCESSOR_STORE.get()
+    processor = generate_USDA_code_keyword_processor()
     USDA_code = extract_USDA_code(processor, unchecked_code)
     return USDA_code
 
 
+@cache
 def generate_USDA_code_keyword_processor() -> KeywordProcessor:
-    """Builds the KeyWordProcessor for USDA codes
-
-    This will be called only once thanks to CachedStore
-    """
+    """Builds the KeyWordProcessor for USDA codes."""
 
     codes = text_file_iter(settings.OCR_USDA_CODE_FLASHTEXT_DATA_PATH)
     return generate_keyword_processor(codes)
@@ -64,17 +69,12 @@ def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[str]:
     """Given a string, returns the USDA code it contains or None"""
     USDA_code = None
     matches: list[tuple[str, str]] = processor.extract_keywords(text)  # type: ignore
-    for (USDA_code_keyword, _) in matches:
+    for USDA_code_keyword, _ in matches:
         USDA_code = USDA_code_keyword
         # Once we found a match we can return the code
         # as there should not be more than one match
         break
     return USDA_code
-
-
-USDA_CODE_KEYWORD_PROCESSOR_STORE = CachedStore(
-    fetch_func=generate_USDA_code_keyword_processor, expiration_interval=None
-)
 
 
 PACKAGER_CODE = {
@@ -184,6 +184,7 @@ def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction
     return results
 
 
+@cache
 def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     codes = text_file_iter(settings.OCR_FISHING_FLASHTEXT_DATA_PATH)
     return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
@@ -219,13 +220,8 @@ def extract_fishing_code(
     return predictions
 
 
-FISHING_KEYWORD_PROCESSOR_STORE = CachedStore(
-    fetch_func=generate_fishing_code_keyword_processor, expiration_interval=None
-)
-
-
 def find_packager_codes(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = find_packager_codes_regex(content)
-    processor = FISHING_KEYWORD_PROCESSOR_STORE.get()
+    processor = generate_fishing_code_keyword_processor()
     predictions += extract_fishing_code(processor, content)
     return predictions

@@ -54,6 +54,7 @@ x-robotoff-worker-base:
   environment: *robotoff-base-env
   depends_on:
     - postgres
+    - redis
   mem_limit: 8g
 services:
   api:
@@ -64,6 +65,7 @@ services:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
     depends_on:
       - postgres
+      - redis
 
   worker_high_1:
     <<: *robotoff-worker

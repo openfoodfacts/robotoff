@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Iterable, Literal, NamedTuple, Optional, Union
 
 import peewee
-from openfoodfacts import Country
+from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from peewee import JOIN, SQL, fn
 
 from robotoff.app import events
@@ -159,7 +159,9 @@ def get_insights(
 
     if countries is not None:
         where_clauses.append(
-            ProductInsight.countries.contains_any([c.value for c in countries])
+            ProductInsight.countries.contains_any(
+                [COUNTRY_CODE_TO_NAME[c] for c in countries]
+            )
         )
 
     if brands:
@@ -303,7 +305,6 @@ def get_image_predictions(
     count: bool = False,
     limit: Optional[int] = None,
 ) -> Iterable[ImagePrediction]:
-
     query = ImagePrediction.select()
 
     query = query.switch(ImagePrediction).join(ImageModel)
@@ -372,7 +373,7 @@ def save_annotation(
     available for annotation again.
 
     :param insight_id: The ID of the insight
-    :param annotation: The annotation, either -1, 0, or 1
+    :param annotation: The annotation, either -1, 0, 1 or 2
     :param device_id: Unique identifier of the device, see
       `device_id_from_request`
     :param update: If True, perform the update on Product Opener if

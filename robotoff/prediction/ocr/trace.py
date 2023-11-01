@@ -1,12 +1,20 @@
 import re
+from functools import cache
 from typing import Optional, Union
+
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
-from robotoff.utils.cache import CachedStore
+from robotoff.utils.text.flashtext import KeywordProcessor
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_match_bounding_box, get_text
 from .utils import generate_keyword_processor
 
 # Increase version ID when introducing breaking change: changes for which we
@@ -14,7 +22,10 @@ from .utils import generate_keyword_processor
 PREDICTOR_VERSION = "1"
 
 
-def generate_trace_keyword_processor(labels: Optional[list[str]] = None):
+@cache
+def generate_trace_keyword_processor(
+    labels: Optional[list[str]] = None,
+) -> KeywordProcessor:
     if labels is None:
         labels = list(text_file_iter(settings.OCR_TRACE_ALLERGEN_DATA_PATH))
 
@@ -29,10 +40,6 @@ TRACES_REGEX = OCRRegex(
     field=OCRField.full_text_contiguous,
 )
 
-TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
-    fetch_func=generate_trace_keyword_processor, expiration_interval=None
-)
-
 
 def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = []
@@ -42,7 +49,7 @@ def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
     if not text:
         return []
 
-    processor = TRACE_KEYWORD_PROCESSOR_STORE.get()
+    processor = generate_trace_keyword_processor()
 
     for match in TRACES_REGEX.regex.finditer(text):
         prompt = match.group()

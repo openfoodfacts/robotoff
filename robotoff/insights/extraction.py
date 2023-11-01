@@ -1,6 +1,7 @@
 import datetime
 from typing import Iterable, Optional
 
+from openfoodfacts.ocr import OCRResult
 from PIL import Image
 
 from robotoff.models import ImageModel, ImagePrediction
@@ -10,7 +11,6 @@ from robotoff.prediction.object_detection import (
     OBJECT_DETECTION_MODEL_VERSION,
     ObjectDetectionModelRegistry,
 )
-from robotoff.prediction.ocr.core import get_ocr_result
 from robotoff.types import (
     ObjectDetectionModel,
     Prediction,
@@ -124,7 +124,7 @@ def extract_ocr_predictions(
 
     predictions_all: list[Prediction] = []
     source_image = get_source_from_url(ocr_url)
-    ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
+    ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
 
     if ocr_result is None:
         return predictions_all

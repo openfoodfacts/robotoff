@@ -121,11 +121,11 @@ def run(lang: Optional[str] = None):
 
     category_taxonomy = get_taxonomy("category")
     with open(WRITE_PATH / "categories.full.json", "w") as f:
-        f.write(json.dumps(category_taxonomy.to_dict()))
+        json.dump(category_taxonomy.to_dict(), f)
 
     ingredient_taxonomy = get_taxonomy("ingredient")
     with open(WRITE_PATH / "ingredients.full.json", "w") as f:
-        f.write(json.dumps(category_taxonomy.to_dict()))
+        json.dump(ingredient_taxonomy.to_dict(), f)
 
     datasets = generate_train_test_val_datasets(
         category_taxonomy, ingredient_taxonomy, training_stream, lang
