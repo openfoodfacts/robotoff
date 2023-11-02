@@ -58,7 +58,7 @@ def get_image_from_url(
             cache_expire=cache_expire,
             tag="image",
             # kwargs passed to get_asset_from_url
-            image_url=image_url,
+            asset_url=image_url,
             error_raise=error_raise,
             session=session,
         )

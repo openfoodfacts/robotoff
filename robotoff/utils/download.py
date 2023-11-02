@@ -62,18 +62,18 @@ def get_asset_from_url(
 
 def cache_asset_from_url(
     key: str,
+    asset_url: str,
     cache: Cache | None = None,
     cache_expire: int | None = None,
     tag: str | None = None,
-    *args,
     **kwargs,
 ) -> bytes | None:
     """Cache response on disk from `get_asset_from_url`.
 
-    args and kwargs are passed to `get_asset_from_url`.
+    kwargs are passed to `get_asset_from_url`.
 
     :param key: the cache key
-    :param url: the URL of the asset to fetch
+    :param asset_url: the URL of the asset to fetch
     :param session: the requests session to use
     :param cache: the cache to use, defaults to Robotoff default cache
     :param cache_expire: expiration time of the item in the cache, defaults to
@@ -83,12 +83,12 @@ def cache_asset_from_url(
       `func`
     """
     cache = cache or disk_cache
+    kwargs["asset_url"] = asset_url
     return cache_http_request(
         key,
         cache,
         get_asset_from_url,
         cache_expire,
         tag,
-        *args,
         **kwargs,
     )
