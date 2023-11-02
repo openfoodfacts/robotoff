@@ -203,7 +203,7 @@ class ProductInsight(BaseModel):
     #   logo
     # - for OCR-based insights, it's the text that triggered the
     #   creation of the insight
-    bounding_box = BinaryJSONField(null=True, default=list)
+    bounding_box = BinaryJSONField(null=True)
 
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
