@@ -338,9 +338,26 @@ def import_logo_insights(
     logos: list[LogoAnnotation],
     thresholds: dict[LogoLabelType, float],
     server_type: ServerType,
-    default_threshold: float = 0.1,
+    default_threshold: float = 0.2,
     notify: bool = True,
 ) -> InsightImportResult:
+    """Generate and import insights from logos.
+
+    Unannotated logos are considered instances of label "UNKNOWN". The
+    majority class is used as prediction, and the "UNKNOWN" prediction is
+    ignored.
+
+    :param logos: a list of `LogoAnnotation` model instances, used to generate
+        insights
+    :param thresholds: a dict of confidence thresholds for each class. If the
+        class is not defined, default threshold is used
+    :param server_type: the server type (project) associated with the logos
+    :param default_threshold: the default confidence threshold to use,
+        defaults to 0.2
+    :param notify: whether to send a notification for each logo selected to
+        generate an insight, defaults to True
+    :return: the result from the insight import
+    """
     selected_logos = []
     logo_probs = []
     for logo in logos:
