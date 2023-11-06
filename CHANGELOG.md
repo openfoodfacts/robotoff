@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.39.0](https://github.com/openfoodfacts/robotoff/compare/v1.38.1...v1.39.0) (2023-11-06)
+
+
+### Features
+
+* save logo text (extracted using OCR in DB) ([bf4632f](https://github.com/openfoodfacts/robotoff/commit/bf4632fbf84727a1b158bf174fb44c6eea631439))
+
+
+### Bug Fixes
+
+* add cache directory to repo ([2905741](https://github.com/openfoodfacts/robotoff/commit/29057413d14615065b2f81dcecbdb74de63199eb))
+* add timeout to robotoff request (healthcheck) ([ab17cee](https://github.com/openfoodfacts/robotoff/commit/ab17cee4bd75b540d943710c49e86b3640a5e819))
+* fix bounding box field default value ([5b78f5d](https://github.com/openfoodfacts/robotoff/commit/5b78f5d839e6c320a1e38582fee5cdc959cb4e70))
+* fix incorrect call to cache_asset_from_url ([d5562c1](https://github.com/openfoodfacts/robotoff/commit/d5562c17b3f1219ff1ca6894f5d3212d9ec5f3bd))
+* use distinct cache for test assets ([c52d3f9](https://github.com/openfoodfacts/robotoff/commit/c52d3f9ec3569eca432ee7df3ec90a2a39a45469))
+
 ## [1.38.1](https://github.com/openfoodfacts/robotoff/compare/v1.38.0...v1.38.1) (2023-10-30)
 
 
