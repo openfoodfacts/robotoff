@@ -62,7 +62,7 @@ def test_connect_influxdb():
 def test_connect_robotoff_api():
     logger.debug("health: testing robotoff API status")
     status = requests.get(
-        f"{settings.BaseURLProvider.robotoff()}/api/v1/status"
+        f"{settings.BaseURLProvider.robotoff()}/api/v1/status", timeout=10
     ).json()["status"]
 
     if status != "running":
