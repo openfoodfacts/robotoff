@@ -70,11 +70,12 @@ CMD [ "gunicorn", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotof
 FROM builder-base as builder-dev
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
-# full install
+# full install, with dev packages
 RUN poetry install
 
 # image with dev tooling
 # ----------------------
+# This image will be used by default, unless a target is specified in docker-compose.yml
 FROM runtime as runtime-dev
 COPY --from=builder-dev $VENV_PATH $VENV_PATH
 COPY --from=builder-dev $POETRY_HOME $POETRY_HOME
