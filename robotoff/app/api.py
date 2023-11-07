@@ -836,9 +836,16 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Return details about requested logos."""
         logo_ids: list[str] = req.get_param_as_list(
             "logo_ids", transform=int, required=True
         )
+
+        if len(logo_ids) > 500:
+            raise falcon.HTTPBadRequest(
+                description="too many logos requested, max: 500"
+            )
+
         logos = []
         for logo in (
             LogoAnnotation.select()
@@ -885,7 +892,11 @@ class ImageLogoSearchResource:
                 "for label type"
             )
 
-        where_clauses = [ImageModel.server_type == server_type.name]
+        where_clauses = [
+            ImageModel.server_type == server_type.name,
+            # Don't include logos from deleted images
+            ImageModel.deleted == False,  # noqa
+        ]
         if annotated is not None:
             where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
 
@@ -1135,7 +1146,16 @@ class ANNResource:
 
         if logo_id is None:
             logo_embeddings = list(
-                LogoEmbedding.select().order_by(peewee.fn.Random()).limit(1)
+                LogoEmbedding.select()
+                .join(ImagePrediction)
+                .join(ImageModel)
+                .where(
+                    ImageModel.server_type == server_type.name,
+                    # Don't include logos from deleted images
+                    ImageModel.deleted == False,  # noqa
+                )
+                .order_by(peewee.fn.Random())
+                .limit(1)
             )
 
             if not logo_embeddings:
@@ -1746,8 +1766,6 @@ api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}/reset", ImageLogoResetResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
-api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
-api.add_route("/api/v1/ann", ANNResource())
 api.add_route("/api/v1/ann/search/{logo_id:int}", ANNResource())
 api.add_route("/api/v1/ann/search", ANNResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())

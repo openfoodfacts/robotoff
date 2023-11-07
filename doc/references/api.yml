@@ -587,7 +587,7 @@ paths:
       tags:
         - Logos
       summary: Fetch logos
-      description: Return details about requested logos
+      description: Return details about requested logos (maximum 500 logos can be fetched per request).
       parameters:
         - name: logo_ids
           description: Comma-separated string of logo IDs
