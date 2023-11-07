@@ -9,11 +9,12 @@ from transformers import AutoTokenizer, PreTrainedTokenizerBase
 from tritonclient.grpc import service_pb2
 
 from robotoff import settings
+from robotoff.prediction.ingredient_list.postprocess import detect_additional_mentions
 from robotoff.prediction.langid import LanguagePrediction, predict_lang_batch
 from robotoff.triton import get_triton_inference_stub
 from robotoff.utils import http_session
 
-from .postprocess import AggregationStrategy, TokenClassificationPipeline
+from .transformers_pipeline import AggregationStrategy, TokenClassificationPipeline
 
 # The tokenizer assets are stored in the model directory
 INGREDIENT_NER_MODEL_DIR = settings.TRITON_MODELS_DIR / "ingredient-ner/1/model.onnx"
@@ -27,6 +28,9 @@ class IngredientPredictionAggregatedEntity:
     start: int
     # character end index of the entity
     end: int
+    # character start index of the entity, before postprocessing (i.e.
+    # before adding organic or allergen mentions)
+    raw_end: int
     # confidence score
     score: float
     # entity text
@@ -175,13 +179,16 @@ def predict_batch(
             agg_entities = []
             for output in pipeline_output:
                 start = int(output["start"])
-                end = int(output["end"])
+                raw_end = int(output["end"])
+                end = detect_additional_mentions(sentence, raw_end)
+                text = sentence[start:end]
                 agg_entities.append(
                     IngredientPredictionAggregatedEntity(
                         start=start,
                         end=end,
+                        raw_end=raw_end,
                         score=float(output["score"]),
-                        text=sentence[start:end],
+                        text=text,
                     ),
                 )
             if predict_lang:
