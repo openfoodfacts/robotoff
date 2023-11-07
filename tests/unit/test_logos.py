@@ -1,7 +1,11 @@
-import pytest
+from unittest.mock import MagicMock, patch
 
-from robotoff.logos import compute_iou, generate_prediction
-from robotoff.types import Prediction, PredictionType, ServerType
+import pytest
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import BulkIndexError
+
+from robotoff.logos import compute_iou, delete_ann_logos, generate_prediction
+from robotoff.types import ElasticSearchIndex, Prediction, PredictionType, ServerType
 
 
 @pytest.mark.parametrize(
@@ -70,3 +74,34 @@ def test_generate_prediction(
         )
         == prediction
     )
+
+
+@patch("robotoff.logos.elasticsearch_bulk")
+def test_delete_ann_logos(mock_bulk):
+    es_client = MagicMock(spec=Elasticsearch)
+    logo_ids = [1, 2, 3]
+    actions = [
+        {
+            "_op_type": "delete",
+            "_index": ElasticSearchIndex.logo.name,
+            "_id": logo_id,
+        }
+        for logo_id in logo_ids
+    ]
+    mock_bulk.return_value = (len(logo_ids), [])
+    assert delete_ann_logos(es_client, logo_ids) == len(logo_ids)
+    mock_bulk.assert_called_once()
+    call = mock_bulk.mock_calls[0]
+    assert call.args[0] == es_client
+    assert list(call.args[1]) == actions
+
+    mock_bulk.reset_mock()
+    mock_bulk.side_effect = BulkIndexError("error", ["error1"])
+
+    with pytest.raises(BulkIndexError):
+        count = delete_ann_logos(es_client, logo_ids)
+        assert count == 0
+
+    call = mock_bulk.mock_calls[0]
+    assert call.args[0] == es_client
+    assert list(call.args[1]) == actions

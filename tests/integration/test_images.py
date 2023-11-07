@@ -1,12 +1,24 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from robotoff.images import delete_images
-from robotoff.models import ImageModel, Prediction, ProductInsight
+from robotoff.models import (
+    ImageModel,
+    ImagePrediction,
+    LogoAnnotation,
+    LogoEmbedding,
+    Prediction,
+    ProductInsight,
+)
 from robotoff.off import generate_image_path
 from robotoff.types import ProductIdentifier, ServerType
 
 from .models_utils import (
     ImageModelFactory,
+    ImagePredictionFactory,
+    LogoAnnotationFactory,
+    LogoEmbeddingFactory,
     PredictionFactory,
     ProductInsightFactory,
     clean_db,
@@ -27,6 +39,9 @@ def _set_up_and_tear_down(peewee_db):
 
 
 def test_delete_images(peewee_db, mocker):
+    mock_es_client = MagicMock()
+    mocker.patch("robotoff.images.get_es_client", return_value=mock_es_client)
+    mock_delete_ann_logos = mocker.patch("robotoff.images.delete_ann_logos")
     with peewee_db:
         barcode = "1"
         image_id = "1"
@@ -42,6 +57,11 @@ def test_delete_images(peewee_db, mocker):
         image_4 = ImageModelFactory(
             barcode=barcode, image_id=image_id, server_type="obf"
         )
+
+        image_prediction_1 = ImagePredictionFactory(image=image_1)
+        logo_annotation_1 = LogoAnnotationFactory(image_prediction=image_prediction_1)
+        logo_embedding_1 = LogoEmbeddingFactory(logo=logo_annotation_1)
+
         # to be deleted
         prediction_1 = PredictionFactory(barcode=barcode, source_image=source_image)
         # to be kept (different barcode)
@@ -85,3 +105,15 @@ def test_delete_images(peewee_db, mocker):
         # nor the ones unrelated to the deleted image
         assert ProductInsight.get_or_none(id=insight_3.id) is not None
         assert ProductInsight.get_or_none(id=insight_4.id) is not None
+
+        # the image prediction is deleted as there are no annotated logos
+        # associated with it
+        assert ImagePrediction.get_or_none(id=image_prediction_1.id) is None
+        # same for the logo annotation
+        assert LogoAnnotation.get_or_none(id=logo_annotation_1.id) is None
+        # check that the embedding is deleted
+        assert LogoEmbedding.get_or_none(logo_id=logo_embedding_1.id) is None
+
+    mock_delete_ann_logos.assert_called_once_with(
+        mock_es_client, [logo_annotation_1.id]
+    )
