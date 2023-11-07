@@ -481,9 +481,28 @@ def get_logo_annotation(
     offset: Optional[int] = None,
     count: bool = False,
 ) -> Iterable[LogoAnnotation]:
+    """Return logos that fit the criteria passed as parameters.
+
+    :param server_type: the server type (project) associated with the logos
+    :param barcode: the barcode of the product associated with the logos,
+        defaults to None (no barcode filter)
+    :param keep_types: the list of logo types to keep, defaults to None (no
+        type filter)
+    :param value_tag: the annotation value tag to filter on, defaults to None
+        (no value tag filter)
+    :param limit: maximum number of logos to return, defaults to 25
+    :param offset: offset for pagination, defaults to None (page 1)
+    :param count: if True, return the number of logos instead of the logos,
+        defaults to False
+    :return: either the number of logos (if `count=True`) or an iterable of
+        logos
+    """
     query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 
-    where_clauses = [ImageModel.server_type == server_type.name]
+    where_clauses = [
+        ImageModel.server_type == server_type.name,
+        ImageModel.deleted == False,  # noqa
+    ]
 
     if barcode:
         where_clauses.append(LogoAnnotation.barcode == barcode)
