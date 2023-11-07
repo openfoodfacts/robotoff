@@ -851,7 +851,11 @@ class ImageLogoResource:
             LogoAnnotation.select()
             .join(ImagePrediction)
             .join(ImageModel)
-            .where(LogoAnnotation.id.in_(logo_ids))
+            .where(
+                LogoAnnotation.id.in_(logo_ids),
+                # Don't include logos from deleted images
+                ImageModel.deleted == False,  # noqa
+            )  # noqa
             .iterator()
         ):
             logo_dict = logo.to_dict()
