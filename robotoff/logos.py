@@ -127,6 +127,27 @@ def get_stored_logo_ids(es_client: elasticsearch.Elasticsearch) -> set[int]:
     return set(int(item["_id"]) for item in scan_iter)
 
 
+def delete_ann_logos(
+    es_client: elasticsearch.Elasticsearch, logo_ids: list[int]
+) -> int:
+    """Delete logos from the ANN index.
+
+    :param es_client: Elasticsearch client
+    :param logo_ids: a list of logo ids to delete
+    :return: the number of logos deleted
+    """
+    actions = (
+        {
+            "_op_type": "delete",
+            "_index": ElasticSearchIndex.logo.name,
+            "_id": logo_id,
+        }
+        for logo_id in logo_ids
+    )
+    success, _ = elasticsearch_bulk(es_client, actions)
+    return success
+
+
 def add_logos_to_ann(
     es_client: elasticsearch.Elasticsearch,
     logo_embeddings: list[LogoEmbedding],

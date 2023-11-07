@@ -6,7 +6,16 @@ import imagehash
 import numpy as np
 from PIL import Image
 
-from robotoff.models import ImageModel, Prediction, ProductInsight
+from robotoff.elasticsearch import get_es_client
+from robotoff.logos import delete_ann_logos
+from robotoff.models import (
+    ImageModel,
+    ImagePrediction,
+    LogoAnnotation,
+    LogoEmbedding,
+    Prediction,
+    ProductInsight,
+)
 from robotoff.off import generate_image_path, generate_image_url
 from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_image_from_url, get_logger, http_session
@@ -193,6 +202,9 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
     # Perform batching as we don't know the number of images to delete
     updated_models = []
     source_images = []
+    deleted_embeddings_total = 0
+    deleted_logos_total = 0
+    es_client = get_es_client()
     for image_id in image_ids:
         source_image = generate_image_path(product_id, image_id)
         image_model = ImageModel.get_or_none(
@@ -211,6 +223,36 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
         image_model.deleted = True
         updated_models.append(image_model)
         source_images.append(source_image)
+
+        # Fetch all logos associated with the image to delete
+        logos = list(
+            LogoAnnotation.select(LogoAnnotation.id)
+            .join(ImagePrediction)
+            .where(ImagePrediction.image == image_model)
+        )
+        # Delete the logos from ES
+        logo_ids = [logo.id for logo in logos]
+        delete_ann_logos(es_client, logo_ids)
+        # delete the embeddings associated with the logos in DB
+        deleted_embeddings_total += (
+            LogoEmbedding.delete().where(LogoEmbedding.logo_id.in_(logo_ids)).execute()
+        )
+        deleted_logos = (
+            LogoAnnotation.delete()
+            .where(
+                LogoAnnotation.id.in_(logo_ids),
+                # Only delete logos that are not annotated
+                LogoAnnotation.completed_at.is_null(True),
+            )
+            .execute()
+        )
+        deleted_logos_total += deleted_logos
+
+        if deleted_logos == len(logo_ids):
+            # All logos were deleted, delete the image prediction
+            ImagePrediction.delete().where(
+                ImagePrediction.image == image_model
+            ).execute()
 
     updated_image_models: int = ImageModel.bulk_update(
         updated_models, fields=["deleted"]
@@ -234,8 +276,11 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
     )
 
     logger.info(
-        "deleted %s image in DB, %s deleted predictions, %s deleted insights",
+        "deleted %s image in DB, %s deleted predictions, %s deleted insights, "
+        "%s deleted embeddings, %s deleted logos",
         updated_image_models,
         deleted_predictions,
         deleted_insights,
+        deleted_embeddings_total,
+        deleted_logos_total,
     )
