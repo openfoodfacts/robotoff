@@ -131,7 +131,7 @@ def generate_terminal_symbols_text(
     """
     ignore_ids = ignore_ids or set()
     texts = []
-    taxonomy = get_taxonomy(taxonomy_type.name, offline=True)
+    taxonomy = get_taxonomy(taxonomy_type.name, offline=False)
     seen_set: dict[str, str] = {}
 
     node_id_names = extract_taxonomy_names(
