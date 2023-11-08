@@ -3,6 +3,7 @@ import pytest
 from robotoff.prediction.ingredient_list.postprocess import (
     ORGANIC_MENTIONS_RE,
     detect_additional_mentions,
+    detect_trace_mention,
 )
 
 
@@ -43,6 +44,16 @@ def test_organic_mention_detection(text: str, match: bool):
             33,
             74,
         ),
+        (
+            "Eau, poireaux*, carottes*, navet*, *ingrédients issus de l'agriculture bio. Peut contenir des traces de noix. Valeurs nutritionnelles",
+            33,
+            108,
+        ),
+        (
+            "Eau, poireaux*, carottes*, navet*. Peut contenir des traces de noix. *ingrédients issus de l'agriculture bio. Valeurs nutritionnelles",
+            33,
+            108,
+        ),
         # If no mention was detected, reset the end index to its initial value
         (
             "Eau, poireaux*, carottes*, navet*, ",
@@ -53,3 +64,32 @@ def test_organic_mention_detection(text: str, match: bool):
 )
 def test_detect_additional_mentions(text: str, initial_end_idx, new_end_idx: int):
     assert detect_additional_mentions(text, initial_end_idx) == new_end_idx
+
+
+@pytest.mark.parametrize(
+    "text, initial_end_idx, new_end_idx",
+    [
+        ("Peut contenir des traces de fruit à coque.", 0, 41),
+        (
+            "Peut contenir des traces de soja, lait, sésame, amande, noisette, noix de cajou et arachide !",
+            0,
+            91,
+        ),
+        ("Eau, banane", 0, 0),
+        ("peut contenir des traces d'arachides et de cacahuètes. Attention", 0, 53),
+        (
+            "produit élaboré dans un atelier utilisant du lait demi-écrémé et du gorgonzola. OTHER",
+            0,
+            78,
+        ),
+        # This should not match, as the string does not start with the
+        # allergen mention
+        ("OTHER. Peut contenir des traces d'arachides et de cacahuètes", 0, 0),
+        ("contient naturellement du jaune d'oeuf. Info nutritionnelles", 0, 38),
+        # This should not match, as the first word is "acontient" and not
+        # "contient" (we check for word boundaries)
+        ("acontient naturellement du jaune d'oeuf. Info nutritionnelles", 0, 0),
+    ],
+)
+def test_detect_trace_mention(text: str, initial_end_idx, new_end_idx: int):
+    assert detect_trace_mention(text, end_idx=initial_end_idx) == new_end_idx
