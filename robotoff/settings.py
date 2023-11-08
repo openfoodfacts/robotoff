@@ -155,6 +155,8 @@ TAXONOMY_URLS = {
     + "/data/taxonomies/packaging_materials.full.json",
     "packaging_recycling": BaseURLProvider.static(ServerType.off)
     + "/data/taxonomies/packaging_recycling.full.json",
+    "allergen": BaseURLProvider.static(ServerType.off)
+    + "/data/taxonomies/allergen.full.json",
 }
 
 _off_password = os.environ.get("OFF_PASSWORD", "")
