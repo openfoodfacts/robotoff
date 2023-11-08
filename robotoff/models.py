@@ -132,7 +132,7 @@ class ProductInsight(BaseModel):
     # the annotator (or first annotator, if multiple votes were cast).
     username = peewee.TextField(index=True, null=True)
 
-    # Stores the list of counties that are associated with the product.
+    # Stores the list of countries that are associated with the product.
     # E.g. possible values are "en:united-states" or "en:france".
     countries = BinaryJSONField(null=True, index=True, default=list)
 
@@ -171,7 +171,7 @@ class ProductInsight(BaseModel):
         null=True,
         max_length=10,
         help_text="project associated with the insight, "
-        "one of 'off', 'obf', 'opff', 'opf'",
+        "one of 'off', 'obf', 'opff', 'opf', 'off-pro'",
         index=True,
     )
 
