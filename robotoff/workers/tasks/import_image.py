@@ -621,7 +621,6 @@ def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
             return
 
         output = ingredient_list.predict_from_ocr(ocr_url)
-        logger.warning("predict_from_ocr output: %s", output)
         entities: list[
             ingredient_list.IngredientPredictionAggregatedEntity
         ] = output.entities  # type: ignore
