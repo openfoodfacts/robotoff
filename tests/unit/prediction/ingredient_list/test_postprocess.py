@@ -21,6 +21,8 @@ from robotoff.prediction.ingredient_list.postprocess import (
         ("* = ingrédients issus de l'agriculture durable", True),
         ("* Produit issu de l'Agriculture Biologique", True),
         ("*organic", True),
+        ('"aus biologischer Landwirtschaft', True),
+        ("*de cultivo ecologico certificado", True),
         ("organic", False),
         ("agriculture biologique", False),
         ("produit issu", False),
@@ -67,29 +69,47 @@ def test_detect_additional_mentions(text: str, initial_end_idx, new_end_idx: int
 
 
 @pytest.mark.parametrize(
-    "text, initial_end_idx, new_end_idx",
+    "text, new_end_idx",
     [
-        ("Peut contenir des traces de fruit à coque.", 0, 41),
+        ("Peut contenir des traces de fruit à coque.", 41),
         (
             "Peut contenir des traces de soja, lait, sésame, amande, noisette, noix de cajou et arachide !",
-            0,
             91,
         ),
-        ("Eau, banane", 0, 0),
-        ("peut contenir des traces d'arachides et de cacahuètes. Attention", 0, 53),
+        ("Eau, banane", 0),
+        ("peut contenir des traces d'arachides et de cacahuètes. Attention", 53),
         (
             "produit élaboré dans un atelier utilisant du lait demi-écrémé et du gorgonzola. OTHER",
-            0,
             78,
         ),
         # This should not match, as the string does not start with the
         # allergen mention
-        ("OTHER. Peut contenir des traces d'arachides et de cacahuètes", 0, 0),
-        ("contient naturellement du jaune d'oeuf. Info nutritionnelles", 0, 38),
+        ("OTHER. Peut contenir des traces d'arachides et de cacahuètes", 0),
+        ("contient naturellement du jaune d'oeuf. Info nutritionnelles", 38),
         # This should not match, as the first word is "acontient" and not
         # "contient" (we check for word boundaries)
-        ("acontient naturellement du jaune d'oeuf. Info nutritionnelles", 0, 0),
+        ("acontient naturellement du jaune d'oeuf. Info nutritionnelles", 0),
+        # EN
+        ("contains wheat", 14),
     ],
 )
-def test_detect_trace_mention(text: str, initial_end_idx, new_end_idx: int):
-    assert detect_trace_mention(text, end_idx=initial_end_idx) == new_end_idx
+def test_detect_trace_mention(text: str, new_end_idx: int):
+    assert detect_trace_mention(text, end_idx=0) == new_end_idx
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # FR
+        "Peut contenir des traces de fruit à coque",
+        # ES
+        "CONTIENE LECHE",
+        "Contiene lecitina de soya",
+        "Este producto contiene espelta, trigo y gluten",
+        "PUEDE CONTENER LECHE",
+    ],
+)
+def test_detect_trace_mention_full_match(text: str):
+    """Test that the trace mention detection works (only full matches are
+    tested here)."""
+    assert detect_trace_mention(text, end_idx=0) == len(text)
