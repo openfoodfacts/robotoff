@@ -267,6 +267,10 @@ prune_cache:
 
 clean: goodbye hdown prune prune_cache
 
+# clean tests, remove containers and volume (useful if you changed env variables, etc.)
+clean_tests:
+	${DOCKER_COMPOSE_TEST} down -v --remove-orphans
+
 #-----------#
 # Utilities #
 #-----------#
