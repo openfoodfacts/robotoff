@@ -36,7 +36,7 @@ class IngredientPredictionAggregatedEntity:
     raw_end: int
     # confidence score
     score: float
-    # entity text
+    # entity text (without organic or allergen mentions)
     text: str
     # language prediction of the entity text
     lang: Optional[LanguagePrediction] = None
