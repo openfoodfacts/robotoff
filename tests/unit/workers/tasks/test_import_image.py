@@ -1,6 +1,11 @@
 import pytest
+from openfoodfacts.types import TaxonomyType
 
-from robotoff.workers.tasks.import_image import get_text_from_bounding_box
+from robotoff.taxonomy import get_taxonomy
+from robotoff.workers.tasks.import_image import (
+    add_ingredient_in_taxonomy_field,
+    get_text_from_bounding_box,
+)
 
 from ...pytest_utils import get_ocr_result_asset
 
@@ -41,3 +46,114 @@ def test_get_text_from_bounding_box(
         ocr_result, bounding_box, image_width, image_height
     )
     assert text == expected_text
+
+
+def test_add_ingredient_in_taxonomy_field():
+    parsed_ingredients = [
+        {
+            "id": "en:water",
+            "text": "water",
+            "percent_min": 33.3333333333333,
+            "percent_max": 100,
+            "percent_estimate": 66.6666666666667,
+            "vegan": "yes",
+            "vegetarian": "yes",
+        },
+        {
+            "id": "en:salt",
+            "text": "salt",
+            "percent_min": 0,
+            "percent_max": 50,
+            "percent_estimate": 16.6666666666667,
+            "vegan": "yes",
+            "vegetarian": "yes",
+        },
+        {
+            "id": "en:sugar",
+            "text": "sugar",
+            "percent_min": 0,
+            "percent_max": 33.3333333333333,
+            "percent_estimate": 16.6666666666667,
+            "vegan": "yes",
+            "vegetarian": "yes",
+            "ingredients": [
+                {
+                    "id": "en:glucose",
+                    "text": "glucose",
+                    "percent_min": 0,
+                    "percent_max": 100,
+                    "percent_estimate": 100,
+                    "vegan": "yes",
+                    "vegetarian": "yes",
+                },
+                {
+                    "id": "en:unknown-ingredient",
+                    "text": "Unknown ingredient",
+                    "percent_min": 0,
+                    "percent_max": 100,
+                    "percent_estimate": 100,
+                },
+            ],
+        },
+    ]
+    ingredient_taxonomy = get_taxonomy(TaxonomyType.ingredient, offline=True)
+
+    total_ingredients_n, known_ingredients_n = add_ingredient_in_taxonomy_field(
+        parsed_ingredients, ingredient_taxonomy
+    )
+
+    assert total_ingredients_n == 5
+    assert known_ingredients_n == 4
+
+    assert parsed_ingredients == [
+        {
+            "id": "en:water",
+            "text": "water",
+            "percent_min": 33.3333333333333,
+            "percent_max": 100,
+            "percent_estimate": 66.6666666666667,
+            "vegan": "yes",
+            "vegetarian": "yes",
+            "in_taxonomy": True,
+        },
+        {
+            "id": "en:salt",
+            "text": "salt",
+            "percent_min": 0,
+            "percent_max": 50,
+            "percent_estimate": 16.6666666666667,
+            "vegan": "yes",
+            "vegetarian": "yes",
+            "in_taxonomy": True,
+        },
+        {
+            "id": "en:sugar",
+            "text": "sugar",
+            "percent_min": 0,
+            "percent_max": 33.3333333333333,
+            "percent_estimate": 16.6666666666667,
+            "vegan": "yes",
+            "vegetarian": "yes",
+            "in_taxonomy": True,
+            "ingredients": [
+                {
+                    "id": "en:glucose",
+                    "text": "glucose",
+                    "percent_min": 0,
+                    "percent_max": 100,
+                    "percent_estimate": 100,
+                    "vegan": "yes",
+                    "vegetarian": "yes",
+                    "in_taxonomy": True,
+                },
+                {
+                    "id": "en:unknown-ingredient",
+                    "text": "Unknown ingredient",
+                    "percent_min": 0,
+                    "percent_max": 100,
+                    "percent_estimate": 100,
+                    "in_taxonomy": False,
+                },
+            ],
+        },
+    ]

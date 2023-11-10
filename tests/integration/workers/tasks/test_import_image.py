@@ -97,7 +97,6 @@ def test_extract_ingredients_job(mocker, peewee_db):
         )
         assert image_prediction is not None
         assert image_prediction.data == {
-            "text": full_text,
             "entities": [
                 {
                     "end": 51,

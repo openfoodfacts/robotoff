@@ -6,6 +6,7 @@ from typing import Optional
 import elasticsearch
 from elasticsearch.helpers import BulkIndexError
 from openfoodfacts import OCRResult
+from openfoodfacts.taxonomy import Taxonomy
 from openfoodfacts.types import TaxonomyType
 from PIL import Image
 
@@ -626,48 +627,105 @@ def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
         ] = output.entities  # type: ignore
         # (we know it's an aggregated entity, so we can ignore the type)
 
-        image_prediction_data = dataclasses.asdict(output)
-        ingredient_taxonomy = get_taxonomy(TaxonomyType.ingredient)
-
-        for entity in image_prediction_data["entities"]:
-            # This is just an extra check, we should have lang information
-            # available
-            if entity["lang"]:
-                lang_id = entity["lang"]["lang"]
-                try:
-                    # Parse ingredients using Product Opener ingredient parser,
-                    # and add it to the entity data
-                    parsed_ingredients = parse_ingredients(entity["text"], lang_id)
-                except RuntimeError as e:
-                    logger.info(
-                        "Error while parsing ingredients, skipping "
-                        "to the next ingredient list",
-                        exc_info=e,
-                    )
-                    continue
-
-                known_ingredients_n = 0
-                ingredients_n = len(parsed_ingredients)
-                for ingredient_data in parsed_ingredients:
-                    ingredient_id = ingredient_data["id"]
-                    ingredient_data["in_taxonomy"] = (
-                        ingredient_id in ingredient_taxonomy
-                    )
-                    known_ingredients_n += int(ingredient_data["in_taxonomy"])
-
-                # We use the same terminology as Product Opener
-                entity["ingredients_n"] = ingredients_n
-                entity["known_ingredients_n"] = known_ingredients_n
-                entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
-                entity["ingredients"] = parsed_ingredients
-
+        ingredient_prediction_data = generate_ingredient_prediction_data(output)
         ImagePrediction.create(
             image=image_model,
             type="ner",
             model_name=ingredient_list.MODEL_NAME,
             model_version=ingredient_list.MODEL_VERSION,
-            data=image_prediction_data,
+            data=ingredient_prediction_data,
             timestamp=datetime.datetime.utcnow(),
-            max_confidence=max(entity.score for entity in entities),
+            max_confidence=max(entity.score for entity in entities)
+            if entities
+            else None,
         )
         logger.info("create image prediction (ingredient detection) from %s", ocr_url)
+
+
+def generate_ingredient_prediction_data(
+    ingredient_prediction_output: ingredient_list.IngredientPredictionOutput,
+) -> JSONType:
+    """Generate a JSON-like object from the ingredient prediction output to
+    be saved in ImagePrediction data field.
+
+    We remove the full text, as it's usually very long, and add a few
+    additional fields:
+
+    - `ingredients_n`: the total number of ingredients
+    - `known_ingredients_n`: the number of known ingredients
+    - `unknown_ingredients_n`: the number of unknown ingredients
+    - `ingredients`: the parsed ingredients, in Product Opener format (with
+        the `in_taxonomy` field added)
+
+    :param ingredient_prediction_output: the ingredient prediction output
+    :return: the generated JSON-like object
+    """
+    ingredient_prediction_data = dataclasses.asdict(ingredient_prediction_output)
+    # Remove the full text, as it's usually very long
+    ingredient_prediction_data.pop("text")
+    ingredient_taxonomy = get_taxonomy(TaxonomyType.ingredient)
+
+    for entity in ingredient_prediction_data["entities"]:
+        # This is just an extra check, we should have lang information
+        # available
+        if entity["lang"]:
+            lang_id = entity["lang"]["lang"]
+            try:
+                # Parse ingredients using Product Opener ingredient parser,
+                # and add it to the entity data
+                parsed_ingredients = parse_ingredients(entity["text"], lang_id)
+            except RuntimeError as e:
+                logger.info(
+                    "Error while parsing ingredients, skipping "
+                    "to the next ingredient list",
+                    exc_info=e,
+                )
+                continue
+
+            ingredients_n, known_ingredients_n = add_ingredient_in_taxonomy_field(
+                parsed_ingredients, ingredient_taxonomy
+            )
+
+            # We use the same terminology as Product Opener
+            entity["ingredients_n"] = ingredients_n
+            entity["known_ingredients_n"] = known_ingredients_n
+            entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
+            entity["ingredients"] = parsed_ingredients
+
+    return ingredient_prediction_data
+
+
+def add_ingredient_in_taxonomy_field(
+    parsed_ingredients: list[JSONType], ingredient_taxonomy: Taxonomy
+) -> tuple[int, int]:
+    """Add the `in_taxonomy` field to each ingredient in `parsed_ingredients`.
+
+    This function is called recursively to add the `in_taxonomy` field to each
+    sub-ingredient. It returns the total number of ingredients and the number
+    of known ingredients (including sub-ingredients).
+
+    :param parsed_ingredients: a list of parsed ingredients, in Product Opener
+        format
+    :param ingredient_taxonomy: the ingredient taxonomy
+    :return: a (total_ingredients_n, known_ingredients_n) tuple
+    """
+    ingredients_n = 0
+    known_ingredients_n = 0
+    for ingredient_data in parsed_ingredients:
+        ingredient_id = ingredient_data["id"]
+        in_taxonomy = ingredient_id in ingredient_taxonomy
+        ingredient_data["in_taxonomy"] = in_taxonomy
+        known_ingredients_n += int(in_taxonomy)
+        ingredients_n += 1
+
+        if "ingredients" in ingredient_data:
+            (
+                sub_ingredients_n,
+                known_sub_ingredients_n,
+            ) = add_ingredient_in_taxonomy_field(
+                ingredient_data["ingredients"], ingredient_taxonomy
+            )
+            ingredients_n += sub_ingredients_n
+            known_ingredients_n += known_sub_ingredients_n
+
+    return ingredients_n, known_ingredients_n
