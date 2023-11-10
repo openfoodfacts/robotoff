@@ -11,7 +11,11 @@ ORGANIC_MENTIONS_RE = re.compile(
     rf"{ASTERISK_SYMBOL}?ingr[ée]dients?( agricoles?)? {FROM_ORGANIC_FARMING_FR}"
     rf"|{ASTERISK_SYMBOL}?produits? {FROM_ORGANIC_FARMING_FR}"
     rf"|{ASTERISK_SYMBOL}?{FROM_ORGANIC_FARMING_FR}"
-    rf"|{ASTERISK_SYMBOL}organic( farming)?",
+    rf"|{ASTERISK_SYMBOL}organic( farming)?"
+    rf"|{ASTERISK_SYMBOL}?aus biologischer landwirtschaft"
+    rf"|{ASTERISK_SYMBOL}?procedentes del cultivo ecol[óo]gico"
+    rf"|{ASTERISK_SYMBOL}?de cultivo ecol[óo]gico certificado"
+    rf"|{ASTERISK_SYMBOL}?ingredientes? ecol[óo]gicos?",
     re.I,
 )
 
