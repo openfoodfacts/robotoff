@@ -6,6 +6,7 @@ from typing import Optional
 import elasticsearch
 from elasticsearch.helpers import BulkIndexError
 from openfoodfacts import OCRResult
+from openfoodfacts.types import TaxonomyType
 from PIL import Image
 
 from robotoff import settings
@@ -33,11 +34,12 @@ from robotoff.models import (
     db,
     with_db,
 )
-from robotoff.off import generate_image_url, get_source_from_url
+from robotoff.off import generate_image_url, get_source_from_url, parse_ingredients
 from robotoff.prediction import ingredient_list
 from robotoff.prediction.upc_image import UPCImageType, find_image_is_upc
 from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
+from robotoff.taxonomy import get_taxonomy
 from robotoff.triton import generate_clip_embedding
 from robotoff.types import (
     JSONType,
@@ -122,7 +124,10 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
         enqueue_job(
             extract_ingredients_job,
             get_high_queue(product_id),
-            job_kwargs={"result_ttl": 0},
+            # We add a higher timeout, as we request Product Opener to
+            # parse ingredient list, which may take a while depending on
+            # the number of ingredient list (~1s per ingredient list)
+            job_kwargs={"result_ttl": 0, "timeout": "2m"},
             product_id=product_id,
             ocr_url=ocr_url,
         )
@@ -618,15 +623,50 @@ def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
         logger.warning("predict_from_ocr output: %s", output)
         entities: list[
             ingredient_list.IngredientPredictionAggregatedEntity
-        ] = output.entities  # type: ignore (we know it's an
-        # aggregated entity)
+        ] = output.entities  # type: ignore
+        # (we know it's an aggregated entity, so we can ignore the type)
+
+        image_prediction_data = dataclasses.asdict(output)
+        ingredient_taxonomy = get_taxonomy(TaxonomyType.ingredient)
+
+        for entity in image_prediction_data["entities"]:
+            # This is just an extra check, we should have lang information
+            # available
+            if entity["lang"]:
+                lang_id = entity["lang"]["lang"]
+                try:
+                    # Parse ingredients using Product Opener ingredient parser,
+                    # and add it to the entity data
+                    parsed_ingredients = parse_ingredients(entity["text"], lang_id)
+                except RuntimeError as e:
+                    logger.info(
+                        "Error while parsing ingredients, skipping "
+                        "to the next ingredient list",
+                        exc_info=e,
+                    )
+                    continue
+
+                known_ingredients_n = 0
+                ingredients_n = len(parsed_ingredients)
+                for ingredient_data in parsed_ingredients:
+                    ingredient_id = ingredient_data["id"]
+                    ingredient_data["in_taxonomy"] = (
+                        ingredient_id in ingredient_taxonomy
+                    )
+                    known_ingredients_n += int(ingredient_data["in_taxonomy"])
+
+                # We use the same terminology as Product Opener
+                entity["ingredients_n"] = ingredients_n
+                entity["known_ingredients_n"] = known_ingredients_n
+                entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
+                entity["ingredients"] = parsed_ingredients
 
         ImagePrediction.create(
             image=image_model,
             type="ner",
             model_name=ingredient_list.MODEL_NAME,
             model_version=ingredient_list.MODEL_VERSION,
-            data=dataclasses.asdict(output),
+            data=image_prediction_data,
             timestamp=datetime.datetime.utcnow(),
             max_confidence=max(entity.score for entity in entities),
         )

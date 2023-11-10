@@ -40,7 +40,7 @@ def generate_category_hierarchy(
 
 
 @cachetools.cached(cache=cachetools.TTLCache(maxsize=100, ttl=12 * 60 * 60))  # 12h
-def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
+def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Taxonomy:
     """Return the taxonomy of type `taxonomy_type`.
 
     The taxonomy is cached in memory and locally on disk. Every 12h, we check
@@ -57,8 +57,11 @@ def get_taxonomy(taxonomy_type: str, offline: bool = False) -> Taxonomy:
     if offline:
         return Taxonomy.from_path(str(settings.TAXONOMY_PATHS[taxonomy_type]))
 
+    taxonomy_type_enum = (
+        TaxonomyType[taxonomy_type] if isinstance(taxonomy_type, str) else taxonomy_type
+    )
     return _get_taxonomy(
-        TaxonomyType[taxonomy_type],
+        taxonomy_type_enum,
         force_download=False,
         cache_dir=settings.DATA_DIR / "taxonomies",
     )
