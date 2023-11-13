@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.40.0](https://github.com/openfoodfacts/robotoff/compare/v1.39.0...v1.40.0) (2023-11-13)
+
+
+### Features
+
+* add basic detection for mention of organic ingredient ([0939075](https://github.com/openfoodfacts/robotoff/commit/0939075e58515bcf3c9792c7fb3fc11ea0060ec9))
+* add bounding box info to IngredientPredictionAggregatedEntity ([f45cd39](https://github.com/openfoodfacts/robotoff/commit/f45cd39903a8c0a009a4e7a3eae12ffa80233b24))
+* add ingredient parsing information ([e9f2b60](https://github.com/openfoodfacts/robotoff/commit/e9f2b60672a0812d2804b6295d31078f2fe391c6))
+* save ingredient list detection in DB ([8f2a4b4](https://github.com/openfoodfacts/robotoff/commit/8f2a4b41fef431857db6057293052709c68ebe33))
+* use allergen grammar to postprocess ingredient detections ([36eac56](https://github.com/openfoodfacts/robotoff/commit/36eac566730b660e71374394cb13227626fa9bf0))
+
+
+### Bug Fixes
+
+* add bounding box information to /predict/ingredient_list route ([af40b55](https://github.com/openfoodfacts/robotoff/commit/af40b558c626b0206e3eed7101c6b2b43a479c56))
+* add missing transformer_pipeline.py file ([7543ef0](https://github.com/openfoodfacts/robotoff/commit/7543ef05ea6cb57ef9d34ed1501148e242144e94))
+* delete logos in elasticsearch when image is deleted ([b137866](https://github.com/openfoodfacts/robotoff/commit/b1378665bc74ea1cff3905f4cdae64e7e7b42adb))
+* don't include deleted images in searched logos ([1fce684](https://github.com/openfoodfacts/robotoff/commit/1fce684a0f1256af364dc2ac8f9f645dce937267))
+* don't include logos from deleted images in additional routes ([4b7e130](https://github.com/openfoodfacts/robotoff/commit/4b7e1300853bf14483a9833c9746178596db7ff1))
+* improve allergen detection ([2a66666](https://github.com/openfoodfacts/robotoff/commit/2a666665b9f294189ff6a18f6daad53c6db594da))
+* improve ingredient detection output saved in DB ([6b62ca2](https://github.com/openfoodfacts/robotoff/commit/6b62ca221db87c2901c300ca7add634b39fa9a31))
+* increase default logo threshold to 0.2 (from 0.1) ([74b48f5](https://github.com/openfoodfacts/robotoff/commit/74b48f55ade813aed21633eb38c9245946c86e88))
+* remove warning log message ([8ea3476](https://github.com/openfoodfacts/robotoff/commit/8ea3476e558d5da1f10cff27ee03e150caba1c4b))
+
+
+### Technical
+
+* add allergen taxonomy ([6704189](https://github.com/openfoodfacts/robotoff/commit/67041891d18b1aa6f471fd434c0013a40af32558))
+* add clean_tests command ([a6f8f33](https://github.com/openfoodfacts/robotoff/commit/a6f8f333f3074c561432ae0ce5a0c40d21d49152))
+* add first version of trace grammar ([6bafa88](https://github.com/openfoodfacts/robotoff/commit/6bafa882baaca4441de0b74665c4d5c69e79f4e8))
+* fix docstring in models.py ([d9edc6f](https://github.com/openfoodfacts/robotoff/commit/d9edc6fec0dfe8122fa415453bd431320949970e))
+* improve documentation on Dockerfile and docker-compose.yml ([ab4c4ac](https://github.com/openfoodfacts/robotoff/commit/ab4c4acaeeca6dc26efa698d327f70be88f1f0f0))
+
 ## [1.39.0](https://github.com/openfoodfacts/robotoff/compare/v1.38.1...v1.39.0) (2023-11-06)
 
 
