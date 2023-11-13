@@ -647,17 +647,7 @@ class IngredientListPredictorResource:
             ],
             model_version=model_version,
         )
-
-        output_dict = dataclasses.asdict(output)
-
-        if aggregation_strategy != "NONE":
-            # Add bounding boxes to entities
-            for entity in output_dict["entities"]:
-                entity["bounding_boxes"] = ocr_result.get_match_bounding_box(
-                    entity["start"], entity["end"]
-                )
-
-        resp.media = output_dict
+        resp.media = dataclasses.asdict(output)
 
 
 class UpdateDatasetResource:

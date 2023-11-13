@@ -1,7 +1,7 @@
 import dataclasses
 import functools
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 from openfoodfacts.ocr import OCRResult
@@ -39,7 +39,10 @@ class IngredientPredictionAggregatedEntity:
     # entity text (without organic or allergen mentions)
     text: str
     # language prediction of the entity text
-    lang: Optional[LanguagePrediction] = None
+    lang: LanguagePrediction | None = None
+    # the bounding box of the entity in absolute coordinates
+    # (y_min, x_min, y_max, x_max), or None if not available
+    bounding_box: tuple[int, int, int, int] | None = None
 
 
 @dataclasses.dataclass
@@ -102,7 +105,16 @@ def predict_from_ocr(
     predictions = predict_batch(
         [text], aggregation_strategy, predict_lang, model_version
     )
-    return predictions[0]
+    prediction = predictions[0]
+
+    for entity in prediction.entities:
+        if isinstance(entity, IngredientPredictionAggregatedEntity):
+            # Add the bounding box to the entity
+            entity.bounding_box = ocr_result.get_match_bounding_box(
+                entity.start, entity.end
+            )
+
+    return prediction
 
 
 @functools.cache

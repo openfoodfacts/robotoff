@@ -33,6 +33,7 @@ def test_extract_ingredients_job(mocker, peewee_db):
             score=0.9,
             text="water, salt, sugar.",
             lang=LanguagePrediction(lang="en", confidence=0.9),
+            bounding_box=(0, 0, 100, 100),
         )
     ]
     parsed_ingredients = [
@@ -112,6 +113,7 @@ def test_extract_ingredients_job(mocker, peewee_db):
                         {"in_taxonomy": True, **ingredient}
                         for ingredient in parsed_ingredients
                     ],
+                    "bounding_box": [0, 0, 100, 100],
                 }
             ],
         }
