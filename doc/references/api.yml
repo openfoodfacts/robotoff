@@ -1021,7 +1021,63 @@ paths:
 
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
- 
+
+  /predict/lang:
+    get:
+      tags:
+        - Predict
+      summary: Predict the language of a text
+      parameters:
+        - name: text
+          in: query
+          required: true
+          description: The text to predict language of
+          schema:
+            type: string
+            example: "hello world"
+        - name: k
+          in: query
+          required: false
+          description: |
+            the number of predictions to return
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+        - name: threshold
+          in: query
+          required: false
+          description: |
+            the minimum probability for a language to be returned
+          schema:
+            type: number
+            default: 0.01
+            minimum: 0
+            maximum: 1
+      responses:
+        "200":
+          description: the predicted languages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  predictions:
+                    type: array
+                    description: a list of predicted languages, sorted by descending probability
+                    items:
+                      type: object
+                      properties:
+                        lang:
+                          type: string
+                          description: the predicted language (2-letter code)
+                          example: "en"
+                        confidence:
+                          type: number
+                          description: the probability of the predicted language
+                          example: 0.9
+        "400":
+          description: "An HTTP 400 is returned if the provided parameters are invalid"
 
 components:
   schemas:
