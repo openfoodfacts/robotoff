@@ -9,6 +9,7 @@ from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
+from robotoff.prediction.langid import LanguagePrediction
 from robotoff.types import ProductIdentifier, ServerType
 
 from .models_utils import (
@@ -1205,3 +1206,47 @@ def test_logo_annotation_collection_pagination(client, peewee_db):
         "truffle cake-00",
         "truffle cake-01",
     ]
+
+
+def test_predict_lang_invalid_params(client, mocker):
+    mocker.patch(
+        "robotoff.app.api.predict_lang",
+        return_value=[],
+    )
+    # no text
+    result = client.simulate_get("/api/v1/predict/lang", params={"k": 2})
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "1 validation error: [{'type': 'missing', 'loc': ('text',), 'msg': 'Field required', 'input': {'k': '2'}}]",
+        "title": "400 Bad Request",
+    }
+
+    # invalid k and threshold parameters
+    result = client.simulate_get(
+        "/api/v1/predict/lang",
+        params={"text": "test", "k": "invalid", "threshold": 1.05},
+    )
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "2 validation errors: [{'type': 'int_parsing', 'loc': ('k',), 'msg': 'Input should be a valid integer, unable to parse string as an integer', 'input': 'invalid'}, {'type': 'less_than_equal', 'loc': ('threshold',), 'msg': 'Input should be less than or equal to 1', 'input': '1.05', 'ctx': {'le': 1.0}}]",
+        "title": "400 Bad Request",
+    }
+
+
+def test_predict_lang(client, mocker):
+    mocker.patch(
+        "robotoff.app.api.predict_lang",
+        return_value=[
+            LanguagePrediction("en", 0.9),
+            LanguagePrediction("fr", 0.1),
+        ],
+    )
+    expected_predictions = [
+        {"lang": "en", "confidence": 0.9},
+        {"lang": "fr", "confidence": 0.1},
+    ]
+    result = client.simulate_get(
+        "/api/v1/predict/lang", params={"text": "hello", "k": 2}
+    )
+    assert result.status_code == 200
+    assert result.json == {"predictions": expected_predictions}

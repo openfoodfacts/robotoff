@@ -3,9 +3,11 @@ import functools
 from enum import Enum
 from typing import Iterable, Literal, NamedTuple, Optional, Union
 
+import falcon
 import peewee
 from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from peewee import JOIN, SQL, fn
+from pydantic import BaseModel, ValidationError
 
 from robotoff.app import events
 from robotoff.insights.annotate import (
@@ -27,7 +29,7 @@ from robotoff.models import (
 )
 from robotoff.off import OFFAuthentication
 from robotoff.taxonomy import match_taxonomized_value
-from robotoff.types import InsightAnnotation, ServerType
+from robotoff.types import InsightAnnotation, JSONType, ServerType
 from robotoff.utils import get_logger
 from robotoff.utils.text import get_tag
 
@@ -580,3 +582,23 @@ def filter_question_insight_types(keep_types: Optional[list[str]]):
             set(keep_types) & set(QuestionFormatterFactory.get_available_types())
         )
     return keep_types
+
+
+def validate_params(params: JSONType, schema: type) -> BaseModel:
+    """Validate the parameters passed to a Falcon resource.
+
+    Either returns a validated params object or raises a falcon.HTTPBadRequest.
+
+    :param params: the input parameters to validate, as a dict
+    :param schema: the pydantic schema to use for validation
+    :raises falcon.HTTPBadRequest: if the parameters are invalid
+    """
+    # Remove None values from the params dict
+    params = {k: v for k, v in params.items() if v is not None}
+    try:
+        return schema.model_validate(params)  # type: ignore
+    except ValidationError as e:
+        errors = e.errors(include_url=False)
+        plural = "s" if len(errors) > 1 else ""
+        description = f"{len(errors)} validation error{plural}: {errors}"
+        raise falcon.HTTPBadRequest(description=description)

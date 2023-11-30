@@ -7,7 +7,7 @@ import io
 import re
 import tempfile
 import uuid
-from typing import Literal, Optional
+from typing import Literal, Optional, cast
 
 import falcon
 import orjson
@@ -36,6 +36,7 @@ from robotoff.app.core import (
     get_predictions,
     save_annotation,
     update_logo_annotations,
+    validate_params,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
 from robotoff.elasticsearch import get_es_client
@@ -67,6 +68,7 @@ from robotoff.off import (
 )
 from robotoff.prediction import ingredient_list
 from robotoff.prediction.category import predict_category
+from robotoff.prediction.langid import predict_lang
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
@@ -97,8 +99,6 @@ from robotoff.workers.tasks import (
 logger = get_logger()
 
 settings.init_sentry(integrations=[FalconIntegration()])
-
-es_client = get_es_client()
 
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
@@ -650,6 +650,26 @@ class IngredientListPredictorResource:
         resp.media = dataclasses.asdict(output)
 
 
+class LanguagePredictorResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text."""
+        params = validate_params(
+            {
+                "text": req.get_param("text"),
+                "k": req.get_param("k"),
+                "threshold": req.get_param("threshold"),
+            },
+            schema.LanguagePredictorResourceParams,
+        )
+        params = cast(schema.LanguagePredictorResourceParams, params)
+        language_predictions = predict_lang(params.text, params.k, params.threshold)
+        resp.media = {
+            "predictions": [
+                dataclasses.asdict(prediction) for prediction in language_predictions
+            ]
+        }
+
+
 class UpdateDatasetResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         """Re-import the Product Opener product dump."""
@@ -1150,6 +1170,7 @@ class ANNResource:
         """
         count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
         server_type = get_server_type_from_req(req)
+        es_client = get_es_client()
 
         if logo_id is None:
             logo_embeddings = list(
@@ -1759,6 +1780,7 @@ api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
 api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource())
+api.add_route("/api/v1/predict/lang", LanguagePredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images", ImageCollection())
