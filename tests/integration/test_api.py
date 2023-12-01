@@ -10,7 +10,7 @@ from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.prediction.langid import LanguagePrediction
-from robotoff.types import ProductIdentifier, ServerType
+from robotoff.types import PredictionType, ProductIdentifier, ServerType
 
 from .models_utils import (
     AnnotationVoteFactory,
@@ -1250,3 +1250,44 @@ def test_predict_lang(client, mocker):
     )
     assert result.status_code == 200
     assert result.json == {"predictions": expected_predictions}
+
+
+def test_predict_product_language(client, peewee_db):
+    barcode = "123456789"
+    prediction_data_1 = {"count": {"en": 10, "fr": 5, "es": 3, "words": 18}}
+    prediction_data_2 = {"count": {"en": 2, "fr": 3, "words": 5}}
+
+    with peewee_db:
+        PredictionFactory(
+            barcode=barcode,
+            server_type=ServerType.off.name,
+            type=PredictionType.image_lang.name,
+            data=prediction_data_1,
+            source_image="/123/45678/2.jpg",
+        )
+        PredictionFactory(
+            barcode=barcode,
+            server_type=ServerType.off.name,
+            type=PredictionType.image_lang.name,
+            data=prediction_data_2,
+            source_image="/123/45678/4.jpg",
+        )
+
+    # Send GET request to the API endpoint
+    result = client.simulate_get(f"/api/v1/predict/lang/product?barcode={barcode}")
+
+    # Assert the response
+    assert result.status_code == 200
+    assert result.json == {
+        "counts": [
+            {"count": 12, "lang": "en"},
+            {"count": 8, "lang": "fr"},
+            {"count": 3, "lang": "es"},
+        ],
+        "percent": [
+            {"percent": 12 * 100 / 23, "lang": "en"},
+            {"percent": 8 * 100 / 23, "lang": "fr"},
+            {"percent": 3 * 100 / 23, "lang": "es"},
+        ],
+        "image_ids": [2, 4],
+    }
