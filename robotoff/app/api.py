@@ -651,8 +651,11 @@ class IngredientListPredictorResource:
 
 
 class LanguagePredictorResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
-        """Predict language of a text."""
+    def _on_get_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text.
+
+        This method is used by both GET and POST endpoints.
+        """
         params = validate_params(
             {
                 "text": req.get_param("text"),
@@ -668,6 +671,18 @@ class LanguagePredictorResource:
                 dataclasses.asdict(prediction) for prediction in language_predictions
             ]
         }
+
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text."""
+        self._on_get_post(req, resp)
+
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text.
+
+        For long text, use POST instead of GET, as the length of the query
+        string is limited.
+        """
+        self._on_get_post(req, resp)
 
 
 class UpdateDatasetResource:
