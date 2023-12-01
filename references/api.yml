@@ -1027,6 +1027,13 @@ paths:
       tags:
         - Predict
       summary: Predict the language of a text
+      description: |
+        Predict the language of a text using a neural model.
+        A POST version of this endpoint is also available, it accepts a JSON body with exactly the
+        same parameters.
+
+        Use the POST version if you want to predict the language of a long text, as the GET version
+        has a limit on the length of the text that can be provided.
       parameters:
         - name: text
           in: query
@@ -1078,6 +1085,85 @@ paths:
                           example: 0.9
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
+
+  /predict/lang/product:
+    get:
+      tags:
+        - Predict
+      summary: Predict the languages of the product
+      description: |
+        Return the most common languages present on the product images, based on word-level
+        language detection from product images.
+
+        Language detection is not performed on the fly, but is based on predictions of type
+        `image_lang` stored in the `prediction` table.
+
+      parameters:
+        - $ref: "#/components/parameters/barcode"
+        - $ref: "#/components/parameters/server_type"
+          in: query
+          required: false
+          description: |
+            the minimum probability for a language to be returned
+          schema:
+            type: number
+            default: 0.01
+            minimum: 0
+            maximum: 1
+      responses:
+        "200":
+          description: |
+            The predicted languages, sorted by descending probability.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  counts:
+                    type: array
+                    description: |
+                      the number of words detected for each language, over all images,
+                      sorted by descending count
+                    items:
+                      type: object
+                      properties:
+                        lang:
+                          type: string
+                          description: the predicted language (2-letter code). `null` if the language could not be detected.
+                          example: "en"
+                        count:
+                          type: number
+                          description: the number of words for which this language was detected over all images
+                          example: 10
+                  percent:
+                    type: array
+                    description: |
+                      the percentage of words detected for each language, over all images,
+                      sorted by descending percentage
+                    items:
+                      type: object
+                      properties:
+                        lang:
+                          type: string
+                          description: the predicted language (2-letter code). `null` if the language could not be detected.
+                          example: "en"
+                        percent:
+                          type: number
+                          description: the percentage of words for which the language was detected over all images
+                          minimum: 0
+                          maximum: 100
+                          example: 80.5
+                  image_ids:
+                    type: array
+                    description: |
+                      the IDs of the images that were used to generate the predictions
+                    items:
+                      type: number
+                      example: 1
+                      description: the ID of an image
+        "400":
+          description: "An HTTP 400 is returned if the provided parameters are invalid"
+
 
 components:
   schemas:
