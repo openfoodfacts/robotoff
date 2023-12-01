@@ -1027,6 +1027,13 @@ paths:
       tags:
         - Predict
       summary: Predict the language of a text
+      description: |
+        Predict the language of a text using a neural model.
+        A POST version of this endpoint is also available, it accepts a JSON body with exactly the
+        same parameters.
+
+        Use the POST version if you want to predict the language of a long text, as the GET version
+        has a limit on the length of the text that can be provided.
       parameters:
         - name: text
           in: query
