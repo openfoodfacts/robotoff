@@ -7,6 +7,8 @@ import io
 import re
 import tempfile
 import uuid
+from collections import defaultdict
+from pathlib import Path
 from typing import Literal, Optional, cast
 
 import falcon
@@ -683,6 +685,43 @@ class LanguagePredictorResource:
         string is limited.
         """
         self._on_get_post(req, resp)
+
+
+class ProductLanguagePredictorResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Predict the languages displayed on the product images, using
+        `image_lang` predictions as input."""
+        barcode = req.get_param("barcode", required=True)
+        server_type = get_server_type_from_req(req)
+        counts: dict[str, int] = defaultdict(int)
+        image_ids: list[int] = []
+
+        for prediction_data, source_image in (
+            Prediction.select(Prediction.data, Prediction.source_image)
+            .where(
+                Prediction.barcode == barcode,
+                Prediction.server_type == server_type.name,
+                Prediction.type == PredictionType.image_lang.name,
+            )
+            .tuples()
+            .iterator()
+        ):
+            image_ids.append(int(Path(source_image).stem))
+            for lang, lang_count in prediction_data["count"].items():
+                counts[lang] += lang_count
+
+        words_n = counts.pop("words")
+        sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+        counts_list = [{"count": count, "lang": lang} for lang, count in sorted_counts]
+        percent_list = [
+            {"percent": (count * 100 / words_n), "lang": lang}
+            for lang, count in sorted_counts
+        ]
+        resp.media = {
+            "counts": counts_list,
+            "percent": percent_list,
+            "image_ids": sorted(image_ids),
+        }
 
 
 class UpdateDatasetResource:
@@ -1796,6 +1835,7 @@ api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource()
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource())
 api.add_route("/api/v1/predict/lang", LanguagePredictorResource())
+api.add_route("/api/v1/predict/lang/product", ProductLanguagePredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images", ImageCollection())
