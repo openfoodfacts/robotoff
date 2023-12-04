@@ -16,8 +16,6 @@ import orjson
 import peewee
 import requests
 from falcon.media.validators import jsonschema
-from falcon_cors import CORS
-from falcon_multipart.middleware import MultipartMiddleware
 from openfoodfacts import OCRResult
 from openfoodfacts.ocr import OCRParsingException, OCRResultGenerationException
 from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
@@ -111,8 +109,9 @@ def get_server_type_from_req(
 ) -> ServerType:
     """Get `ServerType` value from POST x-www-form-urlencoded or GET
     requests."""
-    if req.media and "server_type" in req.media:
-        server_type_str = req.media["server_type"]
+    media = req.get_media(default_when_empty=None)
+    if media is not None and "server_type" in media:
+        server_type_str = media["server_type"]
     else:
         server_type_str = req.get_param("server_type")
 
@@ -578,26 +577,27 @@ class CategoryPredictorResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         """Predict categories using neural categorizer and matching algorithm
         for a specific product."""
-        server_type: ServerType = ServerType[req.media.get("server_type", "off")]
+        server_type = get_server_type_from_req(req)
 
         if server_type != ServerType.off:
             raise falcon.HTTPBadRequest(
                 f"category predictor is only available for 'off' server type (here: '{server_type.name}')"
             )
 
+        media = req.get_media()
         neural_model_name = None
-        if (neural_model_name_str := req.media.get("neural_model_name")) is not None:
+        if (neural_model_name_str := media.get("neural_model_name")) is not None:
             neural_model_name = NeuralCategoryClassifierModel[neural_model_name_str]
 
-        if "barcode" in req.media:
+        if "barcode" in media:
             # Fetch product from DB
-            barcode: str = req.media["barcode"]
+            barcode: str = media["barcode"]
             product = get_product(ProductIdentifier(barcode, server_type)) or {}
             if not product:
                 raise falcon.HTTPNotFound(description=f"product {barcode} not found")
             product_id = ProductIdentifier(barcode, server_type)
         else:
-            product = req.media["product"]
+            product = media["product"]
             product_id = ProductIdentifier("NULL", server_type)
 
             if (ingredient_tags := product.pop("ingredients_tags", None)) is not None:
@@ -607,8 +607,8 @@ class CategoryPredictorResource:
         resp.media = predict_category(
             product,
             product_id,
-            deepest_only=req.media.get("deepest_only", False),
-            threshold=req.media.get("threshold"),
+            deepest_only=media.get("deepest_only", False),
+            threshold=media.get("threshold"),
             neural_model_name=neural_model_name,
             clear_cache=True,  # clear resource cache to save memory
         )
@@ -798,8 +798,9 @@ class ImagePredictionImporterResource:
         server_type = get_server_type_from_req(req)
         timestamp = datetime.datetime.utcnow()
         inserts = []
+        media = req.get_media()
 
-        for prediction in req.media["predictions"]:
+        for prediction in media["predictions"]:
             product_id = ProductIdentifier(prediction["barcode"], server_type)
             source_image = generate_image_path(product_id, prediction.pop("image_id"))
             inserts.append(
@@ -1044,6 +1045,7 @@ class ImageLogoDetailResource:
     @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
     def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
         auth = parse_auth(req)
+        media = req.get_media()
         if auth is None:
             raise falcon.HTTPForbidden(
                 description="authentication is required to annotate logos"
@@ -1055,8 +1057,8 @@ class ImageLogoDetailResource:
                 resp.status = falcon.HTTP_404
                 return
 
-            type_ = req.media["type"]
-            value = req.media.get("value") or None
+            type_ = media["type"]
+            value = media.get("value") or None
             check_logo_annotation(type_, value)
 
             if type_ != logo.annotation_type or value != logo.annotation_value:
@@ -1127,12 +1129,13 @@ class ImageLogoAnnotateResource:
     @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         auth = parse_auth(req)
+        media = req.get_media()
         if auth is None:
             raise falcon.HTTPForbidden(
                 description="authentication is required to annotate logos"
             )
-        server_type: ServerType = ServerType[req.media.get("server_type", "off")]
-        annotations = req.media["annotations"]
+        server_type = get_server_type_from_req(req)
+        annotations = media["annotations"]
         completed_at = datetime.datetime.utcnow()
         annotation_logos = []
 
@@ -1800,16 +1803,19 @@ class RobotsTxtResource:
         resp.status = falcon.HTTP_200
 
 
-cors = CORS(
-    allow_all_origins=True,
-    allow_all_headers=True,
-    allow_all_methods=True,
-    allow_credentials_all_origins=True,
-    max_age=600,
-)
+def custom_handle_uncaught_exception(
+    req: falcon.Request, resp: falcon.Response, ex: Exception, params
+):
+    """Handle uncaught exceptions and log them. Return a 500 error to the
+    client."""
+    raise falcon.HTTPInternalServerError(description=str(ex))
 
-api = falcon.API(
-    middleware=[cors.middleware, MultipartMiddleware(), DBConnectionMiddleware()]
+
+api = falcon.App(
+    middleware=[
+        falcon.CORSMiddleware(allow_origins="*", allow_credentials="*"),
+        DBConnectionMiddleware(),
+    ],
 )
 
 json_handler = falcon.media.JSONHandler(dumps=orjson.dumps, loads=orjson.loads)
@@ -1817,6 +1823,7 @@ extra_handlers = {
     "application/json": json_handler,
 }
 
+api.req_options.media_handlers.update(extra_handlers)
 api.resp_options.media_handlers.update(extra_handlers)
 
 # Parse form parameters

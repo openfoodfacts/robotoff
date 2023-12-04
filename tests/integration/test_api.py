@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 import pytest
+import requests
 from falcon import testing
 
 from robotoff.app import events
@@ -1250,6 +1251,18 @@ def test_predict_lang(client, mocker):
     )
     assert result.status_code == 200
     assert result.json == {"predictions": expected_predictions}
+
+
+def test_predict_lang_http_error(client, mocker):
+    mocker.patch(
+        "robotoff.app.api.predict_lang",
+        side_effect=requests.exceptions.ConnectionError("A connection error occurred"),
+    )
+    result = client.simulate_get(
+        "/api/v1/predict/lang", params={"text": "hello", "k": 2}
+    )
+    assert result.status_code == 500
+    assert result.json == {"title": "500 Internal Server Error"}
 
 
 def test_predict_product_language(client, peewee_db):
