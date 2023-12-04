@@ -1800,6 +1800,14 @@ class RobotsTxtResource:
         resp.status = falcon.HTTP_200
 
 
+def custom_handle_uncaught_exception(
+    req: falcon.Request, resp: falcon.Response, ex: Exception, params
+):
+    """Handle uncaught exceptions and log them. Return a 500 error to the
+    client."""
+    raise falcon.HTTPInternalServerError(description=str(ex))
+
+
 cors = CORS(
     allow_all_origins=True,
     allow_all_headers=True,
@@ -1818,6 +1826,8 @@ extra_handlers = {
 }
 
 api.resp_options.media_handlers.update(extra_handlers)
+# Handle uncaught exceptions
+api.add_error_handler(Exception, custom_handle_uncaught_exception)
 
 # Parse form parameters
 api.req_options.auto_parse_form_urlencoded = True
