@@ -1256,14 +1256,14 @@ def test_predict_lang(client, mocker):
 def test_predict_lang_http_error(client, mocker):
     mocker.patch(
         "robotoff.app.api.predict_lang",
-        side_effect=requests.exceptions.ConnectionError(),
+        side_effect=requests.exceptions.ConnectionError("A connection error occurred"),
     )
     result = client.simulate_get(
         "/api/v1/predict/lang", params={"text": "hello", "k": 2}
     )
     assert result.status_code == 500
     assert result.json == {
-        "description": "Internal Server Error",
+        "description": "A connection error occurred",
         "title": "500 Internal Server Error",
     }
 
