@@ -88,3 +88,5 @@ RUN \
     mkdir -p /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov && \
     chown -R off:off /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov
 USER off
+CMD [ "gunicorn", "--reload", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotoff.app.api:api"]
+
