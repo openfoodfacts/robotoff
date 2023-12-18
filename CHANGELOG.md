@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.41.1](https://github.com/openfoodfacts/robotoff/compare/v1.41.0...v1.41.1) (2023-12-18)
+
+
+### Bug Fixes
+
+* fix image_response function ([82a826d](https://github.com/openfoodfacts/robotoff/commit/82a826d420bb4e2310dd9835741fad3130c4cc7c))
+
 ## [1.41.0](https://github.com/openfoodfacts/robotoff/compare/v1.40.0...v1.41.0) (2023-12-18)
 
 
