@@ -907,9 +907,9 @@ def image_response(image: Image.Image, resp: falcon.Response) -> None:
     resp.content_type = "image/jpeg"
     fp = io.BytesIO()
     image.save(fp, "JPEG")
-    resp.stream_len = fp.tell()
+    stream_len = fp.tell()
     fp.seek(0)
-    resp.stream = fp
+    resp.set_stream(fp, stream_len)
 
 
 class ImageLogoResource:
