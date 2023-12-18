@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.41.0](https://github.com/openfoodfacts/robotoff/compare/v1.40.0...v1.41.0) (2023-12-18)
+
+
+### Features
+
+* add endpoint to predict language ([686e180](https://github.com/openfoodfacts/robotoff/commit/686e180cd3d7a1a76460fb71ec3cbfb3f9e88d39))
+* add language predictor for product ([c77f049](https://github.com/openfoodfacts/robotoff/commit/c77f049da0a3e28053acab64ee1f077bf9b1e367))
+
+
+### Bug Fixes
+
+* add a POST version of /predict/lang endpoint ([619c477](https://github.com/openfoodfacts/robotoff/commit/619c47726a2d60f99564ae9eae0cadf97498ee4b))
+* allow gunicorn auto-reload locally ([a1ffa44](https://github.com/openfoodfacts/robotoff/commit/a1ffa444c25ca190c322275f8e2379299afeaf9a))
+* fix delete_images call ([f0ad1e1](https://github.com/openfoodfacts/robotoff/commit/f0ad1e1d56a0927f9bd0fe6fa3ff85440bff23df))
+* fix missing SQL join in ANNResource ([607f743](https://github.com/openfoodfacts/robotoff/commit/607f743a926530c36bf68819e5a778ef4a37ed43))
+* fix parse_ingredients function ([189c5cc](https://github.com/openfoodfacts/robotoff/commit/189c5cc98f9c6e45ae25cce82e55c5d5d45e0f1f))
+
+
+### Technical
+
+* **deps-dev:** bump werkzeug from 3.0.0 to 3.0.1 ([#1276](https://github.com/openfoodfacts/robotoff/issues/1276)) ([da54a80](https://github.com/openfoodfacts/robotoff/commit/da54a803588235b40832d7740b9abbd7585e55a7))
+* increase mem limit of API service ([ed32bfb](https://github.com/openfoodfacts/robotoff/commit/ed32bfb4452f740b8ae26282a90cd75123801473))
+* New Crowdin translations to review and merge ([#1291](https://github.com/openfoodfacts/robotoff/issues/1291)) ([9b10ae0](https://github.com/openfoodfacts/robotoff/commit/9b10ae006b5b06f3854dbb6196e247dd6782a352))
+* switch to Falcon 3.X ([6362185](https://github.com/openfoodfacts/robotoff/commit/6362185b7d6c12dda086d87ef9e0ed8ec38c00c7))
+
 ## [1.40.0](https://github.com/openfoodfacts/robotoff/compare/v1.39.0...v1.40.0) (2023-11-13)
 
 
