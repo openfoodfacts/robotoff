@@ -875,7 +875,7 @@ def parse_ingredients(text: str, lang: str, timeout: int = 10) -> list[JSONType]
     if response_data.get("status") != "success":
         raise RuntimeError(f"Unable to parse ingredients: {response_data}")
 
-    return response_data["product"]["ingredients"]
+    return response_data["product"].get("ingredients", [])
 
 
 def normalize_tag(value, lowercase=True):
