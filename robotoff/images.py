@@ -254,8 +254,10 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
                 ImagePrediction.image == image_model
             ).execute()
 
-    updated_image_models: int = ImageModel.bulk_update(
-        updated_models, fields=["deleted"]
+    updated_image_models: int = (
+        ImageModel.bulk_update(updated_models, fields=["deleted"])
+        if updated_models
+        else 0
     )
     deleted_predictions: int = (
         Prediction.delete()
