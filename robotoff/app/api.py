@@ -1232,6 +1232,7 @@ class ANNResource:
         if logo_id is None:
             logo_embeddings = list(
                 LogoEmbedding.select()
+                .join(LogoAnnotation)
                 .join(ImagePrediction)
                 .join(ImageModel)
                 .where(
