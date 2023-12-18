@@ -63,7 +63,7 @@ services:
   api:
     <<: *robotoff-base
     environment: *robotoff-base-env
-    mem_limit: 4g
+    mem_limit: 6g
     ports:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
     depends_on:
