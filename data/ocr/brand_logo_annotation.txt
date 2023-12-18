@@ -267,6 +267,7 @@ Vitamont||Vitamont
 volvic||Volvic
 Volvic||Volvic
 walgreens||Walgreens
+winiary||Winiary
 whole foods||Whole Foods
 William Saurin||William Saurin
 Woolworths||Woolworths
