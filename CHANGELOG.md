@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.41.2](https://github.com/openfoodfacts/robotoff/compare/v1.41.1...v1.41.2) (2024-01-08)
+
+
+### Bug Fixes
+
+* update .gitignore ([7b2b849](https://github.com/openfoodfacts/robotoff/commit/7b2b8494b57c6d969b1127cf4e23b421b70aaf0b))
+
+
+### Technical
+
+* new mongodb connection through stunnel ([#1302](https://github.com/openfoodfacts/robotoff/issues/1302)) ([bc41164](https://github.com/openfoodfacts/robotoff/commit/bc4116449dd3c00d1db7185dc710165a6d5cf941))
+
+## [1.41.1](https://github.com/openfoodfacts/robotoff/compare/v1.41.0...v1.41.1) (2023-12-18)
+
+
+### Bug Fixes
+
+* fix image_response function ([82a826d](https://github.com/openfoodfacts/robotoff/commit/82a826d420bb4e2310dd9835741fad3130c4cc7c))
+
 ## [1.41.0](https://github.com/openfoodfacts/robotoff/compare/v1.40.0...v1.41.0) (2023-12-18)
 
 
