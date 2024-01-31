@@ -164,6 +164,42 @@ def test_is_suspicious_weight(value: float, unit: str, expected: bool):
                 ),
             ],
         ),
+        (
+            "10 x 60g",
+            [
+                Prediction(
+                    type=PredictionType.product_weight,
+                    data={
+                        "raw": "10 x 60g",
+                        "unit": "g",
+                        "count": "10",
+                        "value": "60",
+                        "notify": False,
+                        "priority": 2,
+                        "matcher_type": "multi_packaging",
+                        "normalized_unit": "g",
+                        "normalized_value": 60,
+                        "automatic_processing": True,
+                    },
+                    value_tag=None,
+                    value="10 x 60 g",
+                    automatic_processing=True,
+                    predictor="regex",
+                    predictor_version="1",
+                    barcode=None,
+                    timestamp=None,
+                    source_image=None,
+                    id=None,
+                    confidence=None,
+                    server_type=ServerType.off,
+                ),
+            ],
+        ),
+        # Extreme weight should not trigger a prediction
+        (
+            "50 x 50kg",
+            [],
+        ),
     ],
 )
 def test_find_product_weight(text: str, expected: list[dict]):

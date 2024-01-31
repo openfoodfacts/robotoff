@@ -198,6 +198,11 @@ def process_multi_packaging(match) -> Optional[dict]:
         return None
 
     normalized_value, normalized_unit = normalize_weight(value, unit)
+
+    # Check that the weight is not extreme
+    if is_extreme_weight(normalized_value, normalized_unit):
+        return None
+
     text = f"{count} x {value} {unit}"
     result = {
         "text": text,
