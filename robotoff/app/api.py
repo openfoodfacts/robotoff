@@ -1019,7 +1019,14 @@ class ImageLogoSearchResource:
         resp.media = {"logos": items, "count": query_count}
 
 
-def check_logo_annotation(type_: str, value: Optional[str] = None):
+def check_logo_annotation(type_: str, value: str | None = None) -> None:
+    """Check if the log annotation type and value are valid, and raise an
+    exception if not.
+
+    :param type_: the annotation type (brand, category, label, store)
+    :param value: the annotation value, if any
+    :raises falcon.HTTPBadRequest: if the annotation type or value is invalid
+    """
     if value is not None:
         if type_ == "label" and not is_prefixed_value(value):
             raise falcon.HTTPBadRequest(
@@ -1045,6 +1052,11 @@ class ImageLogoDetailResource:
     @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
     def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
         auth = parse_auth(req)
+        logger.info(
+            "Received logo annotation update request for logo %s (user: %s)",
+            logo_id,
+            auth.get_username() if auth else "unknown",
+        )
         media = req.get_media()
         if auth is None:
             raise falcon.HTTPForbidden(

@@ -444,9 +444,17 @@ def generate_insights_from_annotated_logos_job(
 def generate_insights_from_annotated_logos(
     logos: list[LogoAnnotation], auth: OFFAuthentication, server_type: ServerType
 ) -> int:
-    """Generate and apply insights from annotated logos."""
+    """Generate and apply insights from annotated logos.
+
+    :param logos: a list of `LogoAnnotation` model instances, used to generate
+        insights
+    :param auth: the authentication credentials to use for the annotation
+    :param server_type: the server type (project) associated with the logos
+    :return: the number of insights annotated
+    """
     predictions = []
     for logo in logos:
+        logger.debug("Generating prediction for logo %s", logo.id)
         prediction = generate_prediction(
             logo_type=logo.annotation_type,
             logo_value=logo.taxonomy_value,
@@ -463,15 +471,19 @@ def generate_insights_from_annotated_logos(
         )
 
         if prediction is None:
+            logger.debug("No prediction generated for logo %s", logo.id)
             continue
 
         prediction.barcode = logo.barcode
         prediction.source_image = logo.source_image
+        logger.debug("Prediction generated for logo %s: %s", logo.id, prediction)
         predictions.append(prediction)
 
     import_result = import_insights(predictions, server_type)
     if import_result.created_predictions_count():
         logger.info(import_result)
+    else:
+        logger.debug("No insight created")
 
     annotated = 0
     for created_id in itertools.chain.from_iterable(

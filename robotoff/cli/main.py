@@ -828,6 +828,9 @@ def generate_ocr_result(
         dir_okay=True,
         help="Directory where the OCR JSON should be saved",
     ),
+    overwrite: bool = typer.Option(
+        False, help="Overwrite the output file if it already exists"
+    ),
 ) -> None:
     import os
 
@@ -846,6 +849,10 @@ def generate_ocr_result(
         str(source_image_path.parent).replace("/", "_")[1:]
         + f"_{source_image_path.stem}.json"
     )
+    if output_file.is_file() and not overwrite:
+        logger.info("Skipping %s, file already exists", output_file)
+        return
+
     logger.info("Downloading image %s", image_url)
     r = http_session.get(image_url)
     r.raise_for_status()
