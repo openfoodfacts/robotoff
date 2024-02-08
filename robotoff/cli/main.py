@@ -137,6 +137,10 @@ def categorize(
         help="name of the model to use",
     ),
     threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton server to use. If not provided, the default value from settings is used.",
+    ),
 ) -> None:
     """Predict product categories based on the neural category classifier.
 
@@ -164,7 +168,12 @@ def categorize(
     predictions, _ = CategoryClassifier(
         get_taxonomy(TaxonomyType.category.name, offline=True)
     ).predict(
-        product, product_id, deepest_only, threshold=threshold, model_name=model_name
+        product,
+        product_id,
+        deepest_only,
+        threshold=threshold,
+        model_name=model_name,
+        triton_uri=triton_uri,
     )
 
     if predictions:
@@ -375,6 +384,10 @@ def run_object_detection_model(
         "for the specified model.",
     ),
     limit: Optional[int] = typer.Option(None, help="Maximum numbers of job to launch"),
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
 ):
     """Launch object detection model jobs on all missing images (images
     without an ImagePrediction item for this model) in DB."""
@@ -451,6 +464,7 @@ def run_object_detection_model(
                 job_kwargs={"result_ttl": 0},
                 product_id=ProductIdentifier(barcode, server_type),
                 image_url=image_url,
+                triton_uri=triton_uri,
             )
 
 

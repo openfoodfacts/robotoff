@@ -41,7 +41,11 @@ from robotoff.prediction.upc_image import UPCImageType, find_image_is_upc
 from robotoff.products import get_product_store
 from robotoff.slack import NotifierFactory
 from robotoff.taxonomy import get_taxonomy
-from robotoff.triton import generate_clip_embedding
+from robotoff.triton import (
+    GRPCInferenceServiceStub,
+    generate_clip_embedding,
+    get_triton_inference_stub,
+)
 from robotoff.types import (
     JSONType,
     ObjectDetectionModel,
@@ -200,7 +204,9 @@ def import_insights_from_image(
         logger.info(import_result)
 
 
-def save_image_job(batch: list[tuple[ProductIdentifier, str]], server_type: ServerType):
+def save_image_job(
+    batch: list[tuple[ProductIdentifier, str]], server_type: ServerType
+) -> None:
     """Save a batch of images in DB.
 
     :param batch: a batch of (product_id, source_image) tuples
@@ -225,7 +231,16 @@ def save_image_job(batch: list[tuple[ProductIdentifier, str]], server_type: Serv
                 )
 
 
-def run_nutrition_table_object_detection(product_id: ProductIdentifier, image_url: str):
+def run_nutrition_table_object_detection(
+    product_id: ProductIdentifier, image_url: str, triton_uri: str | None = None
+) -> None:
+    """Detect the nutrition table in an image and generate a prediction.
+
+    :param product_id: identifier of the product
+    :param image_url: URL of the image to use
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used.
+    """
     logger.info(
         "Running nutrition table object detection for %s, image %s",
         product_id,
@@ -247,7 +262,10 @@ def run_nutrition_table_object_detection(product_id: ProductIdentifier, image_ur
             source_image=source_image, server_type=product_id.server_type.name
         ):
             run_object_detection_model(
-                ObjectDetectionModel.nutrition_table, image, image_model
+                ObjectDetectionModel.nutrition_table,
+                image,
+                image_model,
+                triton_uri=triton_uri,
             )
         else:
             logger.info("Missing image in DB for image %s", source_image)
@@ -342,7 +360,16 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
         logger.info(import_result)
 
 
-def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: str):
+def run_nutriscore_object_detection(
+    product_id: ProductIdentifier, image_url: str, triton_uri: str | None = None
+) -> None:
+    """Detect the nutriscore in an image and generate a prediction.
+
+    :param product_id: identifier of the product
+    :param image_url: URL of the image to use
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used.
+    """
     logger.info(
         "Running nutriscore object detection for %s, image %s", product_id, image_url
     )
@@ -367,7 +394,7 @@ def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: st
             return
 
         image_prediction = run_object_detection_model(
-            ObjectDetectionModel.nutriscore, image, image_model
+            ObjectDetectionModel.nutriscore, image, image_model, triton_uri=triton_uri
         )
 
     if image_prediction is None:
@@ -407,14 +434,16 @@ def run_nutriscore_object_detection(product_id: ProductIdentifier, image_url: st
 
 
 def run_logo_object_detection(
-    product_id: ProductIdentifier, image_url: str, ocr_url: str
-):
+    product_id: ProductIdentifier, image_url: str, ocr_url: str, triton_uri: str | None
+) -> None:
     """Detect logos using the universal logo detector model and generate
     logo-related predictions.
 
     :param product_id: identifier of the product
     :param image_url: URL of the image to use
     :param ocr_url: URL of the OCR JSON file, used to extract text of each logo
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used.
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
@@ -443,6 +472,7 @@ def run_logo_object_detection(
             image,
             image_model,
             return_null_if_exist=False,
+            triton_uri=triton_uri,
         )
         existing_logos = list(image_prediction.logos)
 
@@ -481,8 +511,9 @@ def run_logo_object_detection(
             ]
 
     if logos:
+        triton_stub = get_triton_inference_stub(triton_uri)
         with db.connection_context():
-            save_logo_embeddings(logos, image)
+            save_logo_embeddings(logos, image, triton_stub)
         enqueue_job(
             process_created_logos,
             get_high_queue(product_id),
@@ -517,7 +548,11 @@ def get_text_from_bounding_box(
     return None
 
 
-def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
+def save_logo_embeddings(
+    logos: list[LogoAnnotation],
+    image: Image.Image,
+    triton_stub: GRPCInferenceServiceStub,
+):
     """Generate logo embeddings using CLIP model and save them in
     logo_embedding table."""
     resized_cropped_images = []
@@ -531,7 +566,7 @@ def save_logo_embeddings(logos: list[LogoAnnotation], image: Image.Image):
         )
         cropped_image = image.crop((left, top, right, bottom))
         resized_cropped_images.append(cropped_image.resize((224, 224)))
-    embeddings = generate_clip_embedding(resized_cropped_images)
+    embeddings = generate_clip_embedding(resized_cropped_images, triton_stub)
 
     with db.atomic():
         for i in range(len(logos)):
@@ -593,13 +628,17 @@ def add_image_fingerprint_job(image_model_id: int):
 
 
 @with_db
-def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
+def extract_ingredients_job(
+    product_id: ProductIdentifier, ocr_url: str, triton_uri: str | None = None
+):
     """Extracts ingredients using ingredient extraction model from an image
     OCR.
 
     :param product_id: The identifier of the product to extract ingredients
-      for.
+        for.
     :param ocr_url: The URL of the image to extract ingredients from.
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used.
     """
     source_image = get_source_from_url(ocr_url)
 
@@ -620,7 +659,7 @@ def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
         ) is not None:
             return
 
-        output = ingredient_list.predict_from_ocr(ocr_url)
+        output = ingredient_list.predict_from_ocr(ocr_url, triton_uri=triton_uri)
         entities: list[
             ingredient_list.IngredientPredictionAggregatedEntity
         ] = output.entities  # type: ignore
@@ -634,9 +673,9 @@ def extract_ingredients_job(product_id: ProductIdentifier, ocr_url: str):
             model_version=ingredient_list.MODEL_VERSION,
             data=ingredient_prediction_data,
             timestamp=datetime.datetime.utcnow(),
-            max_confidence=max(entity.score for entity in entities)
-            if entities
-            else None,
+            max_confidence=(
+                max(entity.score for entity in entities) if entities else None
+            ),
         )
         logger.info("create image prediction (ingredient detection) from %s", ocr_url)
 

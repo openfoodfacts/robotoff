@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -66,9 +66,10 @@ class CategoryClassifier:
         product: dict,
         product_id: ProductIdentifier,
         deepest_only: bool = False,
-        threshold: Optional[float] = None,
-        model_name: Optional[NeuralCategoryClassifierModel] = None,
+        threshold: float | None = None,
+        model_name: NeuralCategoryClassifierModel | None = None,
         clear_cache: bool = False,
+        triton_uri: str | None = None,
     ) -> tuple[list[Prediction], JSONType]:
         """Return an unordered list of category predictions for the given
         product and additional debug information.
@@ -122,6 +123,8 @@ class CategoryClassifier:
             default.
         :param clear_cache: if True, clear ingredient processing cache before
             returning results
+        :param triton_uri: URI of the Triton Inference Server, defaults to
+            None. If not provided, the default value from settings is used.
         """
         logger.debug("predicting category with model %s", model_name)
 
@@ -142,7 +145,7 @@ class CategoryClassifier:
             )
 
         # Only generate image embeddings if it's required by the model
-        triton_stub = get_triton_inference_stub()
+        triton_stub = get_triton_inference_stub(triton_uri)
 
         # We check whether image embeddings were provided as input
         if "image_embeddings" in product:

@@ -65,11 +65,15 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
         )
 
 
-def add_category_insight(product_id: ProductIdentifier, product: JSONType) -> None:
+def add_category_insight(
+    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
+) -> None:
     """Predict categories for product and import predicted category insight.
 
     :param product_id: identifier of the product
     :param product: product as retrieved from MongoDB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
     """
     if not product_id.server_type.is_food():
         # Category prediction is only available for Food products
@@ -82,7 +86,7 @@ def add_category_insight(product_id: ProductIdentifier, product: JSONType) -> No
     try:
         neural_predictions, _ = CategoryClassifier(
             get_taxonomy(TaxonomyType.category.name)
-        ).predict(product, product_id)
+        ).predict(product, product_id, triton_uri=triton_uri)
         product_predictions = neural_predictions
     except requests.exceptions.HTTPError as e:
         resp = e.response
