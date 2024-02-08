@@ -428,7 +428,7 @@ def run_object_detection_model(
     else:
         with db:
             query = (
-                ImageModel.select(ImageModel.barcode, ImageModel.id)
+                ImageModel.select(ImageModel.barcode, ImageModel.image_id)
                 .join(
                     ImagePrediction,
                     JOIN.LEFT_OUTER,
@@ -438,8 +438,7 @@ def run_object_detection_model(
                     ),
                 )
                 .where(
-                    ImageModel.server_type
-                    == server_type.name
+                    (ImageModel.server_type == server_type.name)
                     & ImagePrediction.model_name.is_null()
                     & (ImageModel.deleted == False),  # noqa: E712
                 )
