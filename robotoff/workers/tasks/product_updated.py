@@ -65,6 +65,25 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
         )
 
 
+@with_db
+def add_category_insight_job(
+    product_id: ProductIdentifier, triton_uri: str | None = None
+) -> None:
+    """Job to add category insight for a product.
+
+    :param product_id: identifier of the product
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
+    """
+    product_dict = get_product(product_id)
+
+    if product_dict is None:
+        logger.info("Product does not exist: %s", product_id)
+        return
+
+    add_category_insight(product_id, product_dict, triton_uri=triton_uri)
+
+
 def add_category_insight(
     product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
 ) -> None:
@@ -107,15 +126,17 @@ def add_category_insight(
 
 
 def updated_product_predict_insights(
-    product_id: ProductIdentifier, product: JSONType
+    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
 ) -> None:
     """Predict and import category insights and insights-derived from product
     name.
 
     :param product_id: identifier of the product
     :param product: product as retrieved from MongoDB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
     """
-    add_category_insight(product_id, product)
+    add_category_insight(product_id, product, triton_uri=triton_uri)
     product_name = product.get("product_name")
 
     if not product_name:

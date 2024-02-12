@@ -367,6 +367,70 @@ def import_images_in_db(
 
 
 @app.command()
+def run_category_prediction(
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
+    limit: Optional[int] = typer.Option(
+        None, help="Maximum numbers of job to launch (default: all)"
+    ),
+):
+    """Launch category prediction jobs on all products without categories in
+    DB."""
+    import tqdm
+    from openfoodfacts.dataset import ProductDataset
+
+    from robotoff.models import Prediction, db
+    from robotoff.settings import DATASET_DIR
+    from robotoff.utils import get_logger
+    from robotoff.workers.queues import enqueue_job, low_queue
+    from robotoff.workers.tasks.product_updated import add_category_insight_job
+
+    logger = get_logger()
+    # Download the latest dump of the dataset, cache it in DATASET_DIR
+    ds = ProductDataset(force_download=True, download_newer=True, cache_dir=DATASET_DIR)
+
+    # The category detector only works for food products
+    server_type = ServerType.off
+
+    logger.info("Fetching products without categories in DB...")
+    with db:
+        barcode_with_categories = set(
+            barcode
+            for (barcode,) in Prediction.select(Prediction.barcode)
+            .distinct()
+            .where(
+                Prediction.server_type == server_type.name,
+                Prediction.type == PredictionType.category.name,
+            )
+            .tuples()
+            .limit(limit)
+        )
+    logger.info(
+        "%d products with categories already in DB", len(barcode_with_categories)
+    )
+    seen: set[str] = set()
+    added = 0
+    for product in tqdm.tqdm(ds, desc="products"):
+        barcode = product.get("code")
+        if not barcode or barcode in seen or barcode in barcode_with_categories:
+            continue
+        seen.add(barcode)
+        # Enqueue a job to predict category for this product
+        enqueue_job(
+            add_category_insight_job,
+            low_queue,
+            job_kwargs={"result_ttl": 0},
+            product_id=ProductIdentifier(barcode, server_type),
+            triton_uri=triton_uri,
+        )
+        added += 1
+
+    logger.info("%d jobs added", added)
+
+
+@app.command()
 def run_object_detection_model(
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
