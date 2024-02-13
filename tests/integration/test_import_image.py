@@ -36,6 +36,7 @@ def test_save_logo_embeddings(peewee_db, mocker):
         "robotoff.workers.tasks.import_image.generate_clip_embedding",
         return_value=expected_embeddings,
     )
+    triton_stub = mocker.MagicMock()
 
     image_array = np.random.rand(800, 800, 3) * 255
     image = Image.fromarray(image_array.astype("uint8")).convert("RGB")
@@ -45,7 +46,7 @@ def test_save_logo_embeddings(peewee_db, mocker):
             LogoAnnotationFactory(image_prediction=image_prediction, index=i)
             for i in range(5)
         ]
-        save_logo_embeddings(logos, image)
+        save_logo_embeddings(logos, image, triton_stub)
         logo_embedding_instances = LogoEmbedding.select().where(
             LogoEmbedding.logo_id.in_([logo.id for logo in logos])
         )
