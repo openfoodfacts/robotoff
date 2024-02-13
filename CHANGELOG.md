@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.42.0](https://github.com/openfoodfacts/robotoff/compare/v1.41.2...v1.42.0) (2024-02-13)
+
+
+### Features
+
+* add multiple triton backend ([#1314](https://github.com/openfoodfacts/robotoff/issues/1314)) ([a7eab33](https://github.com/openfoodfacts/robotoff/commit/a7eab33622f13da3554274f70a2eb5c938cd6578))
+
+
+### Bug Fixes
+
+* fix extreme weight detection for multi-packaging ([#1298](https://github.com/openfoodfacts/robotoff/issues/1298)) ([d9660c6](https://github.com/openfoodfacts/robotoff/commit/d9660c6e713bd2b578d6d8c6dab232d75add5994))
+* fix run_logo_detection function ([4775ccc](https://github.com/openfoodfacts/robotoff/commit/4775ccccf545ef0079e63de35943b5370ee10640))
+* fix unit test ([cf12304](https://github.com/openfoodfacts/robotoff/commit/cf12304ed55bee018be98ec97cf6d75233e43a1c))
+* improve docstring and add log messages ([#1310](https://github.com/openfoodfacts/robotoff/issues/1310)) ([3e03f83](https://github.com/openfoodfacts/robotoff/commit/3e03f836ec99ab6c8a33c1253730a4a68af03c44))
+
+
+### Technical
+
+* change prod mongodb address (again) ([ade67c2](https://github.com/openfoodfacts/robotoff/commit/ade67c21bab152afe64c33b9f540bf91b212efb0))
+* Create FEATURES.md to doc features and todos ([#1309](https://github.com/openfoodfacts/robotoff/issues/1309)) ([8c1b404](https://github.com/openfoodfacts/robotoff/commit/8c1b404f0a5c74ccf4af2a0d8d2c7c7cb6cb4668))
+* **deps-dev:** bump cryptography from 41.0.7 to 42.0.0 ([#1308](https://github.com/openfoodfacts/robotoff/issues/1308)) ([6585390](https://github.com/openfoodfacts/robotoff/commit/65853904e3ba911867f55dad9d78febf55506afc))
+* **deps-dev:** bump jinja2 from 3.1.2 to 3.1.3 ([#1305](https://github.com/openfoodfacts/robotoff/issues/1305)) ([e237b6a](https://github.com/openfoodfacts/robotoff/commit/e237b6ab6350010f5e9a3702a7d35cf6a0b32c1c))
+* **deps:** bump pillow from 10.0.1 to 10.2.0 ([#1306](https://github.com/openfoodfacts/robotoff/issues/1306)) ([5ea2ab7](https://github.com/openfoodfacts/robotoff/commit/5ea2ab7e08d34cf4f7ae55f65fd95f6434f721db))
+* **deps:** bump transformers from 4.30.2 to 4.36.0 ([#1301](https://github.com/openfoodfacts/robotoff/issues/1301)) ([e36eb3b](https://github.com/openfoodfacts/robotoff/commit/e36eb3b5135aaeb40e0cb14b591f8bbde6f4c66c))
+* New Crowdin translations to review and merge ([#1303](https://github.com/openfoodfacts/robotoff/issues/1303)) ([bc00a7c](https://github.com/openfoodfacts/robotoff/commit/bc00a7c77f17105e1ddefbe292c67fd5d5342ee1))
+
 ## [1.41.2](https://github.com/openfoodfacts/robotoff/compare/v1.41.1...v1.41.2) (2024-01-08)
 
 
