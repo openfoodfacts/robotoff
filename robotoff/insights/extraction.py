@@ -52,6 +52,7 @@ def run_object_detection_model(
     image_model: ImageModel,
     threshold: float = 0.1,
     return_null_if_exist: bool = True,
+    triton_uri: str | None = None,
 ) -> Optional[ImagePrediction]:
     """Run a model detection model and save the results in the
     `image_prediction` table.
@@ -67,7 +68,10 @@ def run_object_detection_model(
       `image` table)
     :param threshold: the minimum object score above which we keep the object
         data
-
+    :param return_null_if_exist: if True, return None if the image prediction
+        already exists in DB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
     :return: return None if the image does not exist in DB, or the created
       `ImagePrediction` otherwise
     """
@@ -82,7 +86,7 @@ def run_object_detection_model(
 
     timestamp = datetime.datetime.utcnow()
     results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
-        image, output_image=False
+        image, output_image=False, triton_uri=triton_uri
     )
     data = results.to_json(threshold=threshold)
     max_confidence = max((item["score"] for item in data), default=None)

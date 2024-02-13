@@ -90,7 +90,9 @@ def test_extract_ingredients_job(mocker, peewee_db):
         extract_ingredients_job(
             ProductIdentifier(barcode, ServerType.off), ocr_url=ocr_url
         )
-        ingredient_list_mocker.predict_from_ocr.assert_called_once_with(ocr_url)
+        ingredient_list_mocker.predict_from_ocr.assert_called_once_with(
+            ocr_url, triton_uri=None
+        )
         parse_ingredients_mocker.assert_called_once_with("water, salt, sugar.", "en")
         image_prediction = ImagePrediction.get_or_none(
             ImagePrediction.model_name == "ingredient-detection",

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
 
@@ -10,9 +8,10 @@ def predict_category(
     product: dict,
     product_id: ProductIdentifier,
     deepest_only: bool,
-    threshold: Optional[float] = None,
-    neural_model_name: Optional[NeuralCategoryClassifierModel] = None,
+    threshold: float | None = None,
+    neural_model_name: NeuralCategoryClassifierModel | None = None,
     clear_cache: bool = False,
+    triton_uri: str | None = None,
 ) -> JSONType:
     """Predict categories for a product using neural model.
 
@@ -30,6 +29,8 @@ def predict_category(
         prediction
     :param clear_cache: if True, clear ingredient processing cache of neural
         model before returning results
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
     """
     taxonomy = get_taxonomy(TaxonomyType.category.name)
     predictions, debug = CategoryClassifier(taxonomy).predict(
@@ -39,6 +40,7 @@ def predict_category(
         threshold,
         neural_model_name,
         clear_cache=clear_cache,
+        triton_uri=triton_uri,
     )
     return {
         "neural": {

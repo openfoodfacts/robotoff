@@ -93,7 +93,7 @@ livecheck:
 
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
-	${DOCKER_COMPOSE} logs -f api scheduler worker_high_1 worker_high_2 worker_low_1 worker_low_2
+	${DOCKER_COMPOSE} logs -f api scheduler worker_1 worker_2 worker_3 worker_4
 
 #------------#
 # Management #
@@ -152,10 +152,10 @@ init-elasticsearch:
 
 launch-burst-worker:
 ifdef queues
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker ${queues} --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_1 python -m robotoff run-worker ${queues} --burst
 # Only launch burst worker on low priority queue if queue is not specified
 else
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker robotoff-low --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_1 python -m robotoff run-worker robotoff-low --burst
 endif
 
 #------------#
@@ -204,26 +204,26 @@ health:
 i18n-compile:
 	@echo "🥫 Compiling translations …"
 # Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
-	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker_high_1 -c "cd i18n && . compile.sh"
+	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker_1 -c "cd i18n && . compile.sh"
 
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker_high_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
 integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker_high_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings
 # usage: make pytest args='test/unit/my-test.py --pdb'
 pytest: guard-args
 	@echo "🥫 Running test: ${args} …"
-	${DOCKER_COMPOSE_TEST} run --rm worker_high_1 poetry run pytest ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest ${args}
 
 #------------#
 # Production #

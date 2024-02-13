@@ -7,6 +7,7 @@ from more_itertools import chunked
 from PIL import Image
 from transformers import CLIPImageProcessor
 from tritonclient.grpc import service_pb2, service_pb2_grpc
+from tritonclient.grpc.service_pb2_grpc import GRPCInferenceServiceStub
 
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -21,8 +22,18 @@ CLIP_MAX_BATCH_SIZE = 32
 
 
 @functools.cache
-def get_triton_inference_stub() -> service_pb2_grpc.GRPCInferenceServiceStub:
-    channel = grpc.insecure_channel(settings.TRITON_URI)
+def get_triton_inference_stub(
+    triton_uri: str | None = None,
+) -> GRPCInferenceServiceStub:
+    """Return a gRPC stub for Triton Inference Server.
+
+    If `triton_uri` is not provided, the default value from settings is used.
+
+    :param triton_uri: URI of the Triton Inference Server, defaults to None
+    :return: gRPC stub for Triton Inference Server
+    """
+    triton_uri = triton_uri or settings.TRITON_URI
+    channel = grpc.insecure_channel(triton_uri)
     return service_pb2_grpc.GRPCInferenceServiceStub(channel)
 
 
@@ -67,13 +78,13 @@ def generate_clip_embedding_request(images: list[Image.Image]):
     return request
 
 
-def generate_clip_embedding(images: list[Image.Image]) -> np.ndarray:
+def generate_clip_embedding(
+    images: list[Image.Image], triton_stub: GRPCInferenceServiceStub
+) -> np.ndarray:
     embedding_batches = []
-    stub = get_triton_inference_stub()
-
     for image_batch in chunked(images, CLIP_MAX_BATCH_SIZE):
         request = generate_clip_embedding_request(image_batch)
-        response = stub.ModelInfer(request)
+        response = triton_stub.ModelInfer(request)
         embedding_batch = np.frombuffer(
             response.raw_output_contents[0],
             dtype=np.float32,

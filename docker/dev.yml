@@ -36,13 +36,13 @@ x-robotoff-dev: &robotoff-dev
 services:
   api:
     <<: *robotoff-dev
-  worker_high_1:
+  worker_1:
     <<: *robotoff-dev
-  worker_high_2:
+  worker_2:
     <<: *robotoff-dev
-  worker_low_1:
+  worker_3:
     <<: *robotoff-dev
-  worker_low_2:
+  worker_4:
     <<: *robotoff-dev
 
   scheduler:

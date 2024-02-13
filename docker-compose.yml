@@ -70,26 +70,27 @@ services:
       - postgres
       - redis
 
-  worker_high_1:
+  worker_1:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_1
-    command: python -m robotoff run-worker robotoff-high-1
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_1
+    # Each worker listens to a single high priority queue and to the low priority queue.
+    # As the low priority queue comes last, it will only be processed if there are no high
+    # priority tasks.
+    command: python -m robotoff run-worker robotoff-high-1 robotoff-low
 
-  worker_high_2:
+  worker_2:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_2
-    command: python -m robotoff run-worker robotoff-high-2
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_2
+    command: python -m robotoff run-worker robotoff-high-2 robotoff-low
 
-  worker_low_1:
+  worker_3:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_1
-    # Each worker (whether it's a high or low priority worker) listens to a
-    # single high priority queue
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_3
     command: python -m robotoff run-worker robotoff-high-3 robotoff-low
 
-  worker_low_2:
+  worker_4:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_2
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_4
     command: python -m robotoff run-worker robotoff-high-4 robotoff-low
 
   scheduler:

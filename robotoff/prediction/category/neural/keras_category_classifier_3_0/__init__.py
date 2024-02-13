@@ -1,3 +1,4 @@
+import time
 from typing import Literal, Optional
 
 import numpy as np
@@ -168,8 +169,14 @@ def generate_image_embeddings(
                 )
 
             if non_null_image_by_ids:
+                start_time = time.monotonic()
                 computed_embeddings_by_id = _generate_image_embeddings(
                     non_null_image_by_ids, stub
+                )
+                logger.debug(
+                    "Computed %d embeddings in %.2f seconds",
+                    len(computed_embeddings_by_id),
+                    time.monotonic() - start_time,
                 )
                 # Make sure all image IDs are in image table
                 refresh_images_in_db(product_id, product.get("images", {}))
@@ -267,7 +274,9 @@ def predict(
 
     inputs = generate_inputs_dict(product, ocr_texts, image_embeddings)
     debug = generate_debug_dict(model_name, threshold, inputs)
+    start_time = time.monotonic()
     scores, labels = _predict(inputs, model_name, stub)
+    logger.debug("Predicted categories in %.2f seconds", time.monotonic() - start_time)
     indices = np.argsort(-scores)
 
     category_predictions: list[tuple[str, float, Optional[NeighborPredictionType]]] = []

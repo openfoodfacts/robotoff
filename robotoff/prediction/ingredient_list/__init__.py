@@ -11,7 +11,7 @@ from tritonclient.grpc import service_pb2
 from robotoff import settings
 from robotoff.prediction.ingredient_list.postprocess import detect_additional_mentions
 from robotoff.prediction.langid import LanguagePrediction, predict_lang_batch
-from robotoff.triton import get_triton_inference_stub
+from robotoff.triton import GRPCInferenceServiceStub, get_triton_inference_stub
 from robotoff.utils import http_session
 
 from .transformers_pipeline import AggregationStrategy, TokenClassificationPipeline
@@ -75,10 +75,11 @@ class IngredientPredictionOutput:
 
 
 def predict_from_ocr(
-    input_ocr: Union[str, OCRResult],
+    input_ocr: str | OCRResult,
     aggregation_strategy: AggregationStrategy = AggregationStrategy.FIRST,
     predict_lang: bool = True,
     model_version: str = "1",
+    triton_uri: str | None = None,
 ) -> IngredientPredictionOutput:
     """Predict ingredient lists from an OCR.
 
@@ -89,6 +90,8 @@ def predict_from_ocr(
         `IngredientPredictionAggregatedEntity`. This flag is ignored if
         `aggregation_strategy` is `NONE`.
     :param model_version: version of the model model to use, defaults to "1"
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used.
     :return: the `IngredientPredictionOutput`
     """
     ocr_result: OCRResult
@@ -102,8 +105,9 @@ def predict_from_ocr(
     if not text:
         return IngredientPredictionOutput(entities=[], text=text)  # type: ignore
 
+    triton_stub = get_triton_inference_stub(triton_uri)
     predictions = predict_batch(
-        [text], aggregation_strategy, predict_lang, model_version
+        [text], triton_stub, aggregation_strategy, predict_lang, model_version
     )
     prediction = predictions[0]
 
@@ -131,6 +135,7 @@ def get_tokenizer(model_dir: Path) -> PreTrainedTokenizerBase:
 
 def predict_batch(
     texts: list[str],
+    triton_stub: GRPCInferenceServiceStub,
     aggregation_strategy: AggregationStrategy = AggregationStrategy.FIRST,
     predict_lang: bool = True,
     model_version: str = "1",
@@ -138,6 +143,7 @@ def predict_batch(
     """Predict ingredient lists from a batch of texts using the NER model.
 
     :param texts: a list of strings
+    :param triton_stub: the Triton gRPC inference service stub
     :param aggregation_strategy: the aggregation strategy to use, defaults to
         AggregationStrategy.FIRST. See the HuggingFace documentation:
         https://huggingface.co/docs/transformers/main_classes/pipelines#transformers.TokenClassificationPipeline
@@ -162,6 +168,7 @@ def predict_batch(
         batch_encoding.input_ids,
         batch_encoding.attention_mask,
         "ingredient-ner",
+        triton_stub=triton_stub,
         model_version=model_version,
     )
     pipeline = TokenClassificationPipeline(tokenizer, INGREDIENT_ID2LABEL)
@@ -234,6 +241,7 @@ def send_ner_infer_request(
     input_ids: np.ndarray,
     attention_mask: np.ndarray,
     model_name: str,
+    triton_stub: GRPCInferenceServiceStub,
     model_version: str = "1",
 ) -> np.ndarray:
     """Send a NER infer request to the Triton inference server.
@@ -248,9 +256,8 @@ def send_ner_infer_request(
     :param model_version: version of the model model to use, defaults to "1"
     :return: the predicted logits
     """
-    stub = get_triton_inference_stub()
     request = build_triton_request(input_ids, attention_mask, model_name, model_version)
-    response = stub.ModelInfer(request)
+    response = triton_stub.ModelInfer(request)
     num_tokens = response.outputs[0].shape[1]
     num_labels = response.outputs[0].shape[2]
     return np.frombuffer(

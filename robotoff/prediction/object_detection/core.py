@@ -1,5 +1,6 @@
 import dataclasses
 import pathlib
+import time
 from typing import Optional
 
 import numpy as np
@@ -104,11 +105,23 @@ class RemoteModel:
         self.label_names = label_names
 
     def detect_from_image(
-        self, image: Image.Image, output_image: bool = False
+        self,
+        image: Image.Image,
+        output_image: bool = False,
+        triton_uri: str | None = None,
     ) -> ObjectDetectionRawResult:
+        """Run object detection model on an image.
+
+        :param image: the input Pillow image
+        :param output_image: if True, the image with boxes and labels is
+            returned in the result
+        :param triton_uri: URI of the Triton Inference Server, defaults to
+            None. If not provided, the default value from settings is used.
+        :return: the detection result
+        """
         resized_image = resize_image(image, settings.OBJECT_DETECTION_IMAGE_MAX_SIZE)
         image_array = convert_image_to_array(resized_image)
-        grpc_stub = get_triton_inference_stub()
+        grpc_stub = get_triton_inference_stub(triton_uri)
         request = service_pb2.ModelInferRequest()
         request.model_name = self.name
 
@@ -129,7 +142,11 @@ class RemoteModel:
             request.outputs.extend([output])
 
         request.raw_input_contents.extend([image_array.tobytes()])
+        start_time = time.monotonic()
         response = grpc_stub.ModelInfer(request)
+        logger.debug(
+            "Inference time for %s: %s", self.name, time.monotonic() - start_time
+        )
 
         if len(response.outputs) != 4:
             raise Exception(f"expected 4 output, got {len(response.outputs)}")
