@@ -434,7 +434,10 @@ def run_nutriscore_object_detection(
 
 
 def run_logo_object_detection(
-    product_id: ProductIdentifier, image_url: str, ocr_url: str, triton_uri: str | None
+    product_id: ProductIdentifier,
+    image_url: str,
+    ocr_url: str,
+    triton_uri: str | None = None,
 ) -> None:
     """Detect logos using the universal logo detector model and generate
     logo-related predictions.
