@@ -4,7 +4,6 @@ from typing import Optional
 import typer
 
 from robotoff.types import (
-    NeuralCategoryClassifierModel,
     ObjectDetectionModel,
     PredictionType,
     ProductIdentifier,
@@ -132,10 +131,6 @@ def categorize(
         ServerType.off, help="Server type of the product"
     ),
     deepest_only: bool = False,
-    model_name: NeuralCategoryClassifierModel = typer.Option(
-        NeuralCategoryClassifierModel.keras_image_embeddings_3_0,
-        help="name of the model to use",
-    ),
     threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
     triton_uri: Optional[str] = typer.Option(
         None,
@@ -172,7 +167,6 @@ def categorize(
         product_id,
         deepest_only,
         threshold=threshold,
-        model_name=model_name,
         triton_uri=triton_uri,
     )
 
