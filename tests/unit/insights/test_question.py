@@ -104,9 +104,9 @@ def generate_insight(
         value=value,
         value_tag=value_tag,
         barcode=barcode,
-        source_image=f"/{'/'.join(split_barcode(barcode))}/1.jpg"
-        if add_source_image
-        else None,
+        source_image=(
+            f"/{'/'.join(split_barcode(barcode))}/1.jpg" if add_source_image else None
+        ),
         server_type=server_type.name,
     )
 
@@ -188,7 +188,7 @@ def test_category_question_formatter(
             "Nutriscore Grade A",
             "en:nutriscore-grade-a",
             "Does the product have this label?",
-            "https://static.openfoodfacts.org/images/attributes/nutriscore-a.svg",
+            "https://static.openfoodfacts.org/images/attributes/dist/nutriscore-a.svg",
         ),
         (
             "en",
