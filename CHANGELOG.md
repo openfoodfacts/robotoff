@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.42.1](https://github.com/openfoodfacts/robotoff/compare/v1.42.0...v1.42.1) (2024-02-22)
+
+
+### Technical
+
+* **deps-dev:** bump cryptography from 42.0.0 to 42.0.2 ([#1316](https://github.com/openfoodfacts/robotoff/issues/1316)) ([cc3a6bf](https://github.com/openfoodfacts/robotoff/commit/cc3a6bf074bd319b6a614ce78898da05139a184d))
+* **deps-dev:** bump cryptography from 42.0.2 to 42.0.4 ([#1318](https://github.com/openfoodfacts/robotoff/issues/1318)) ([b775b8d](https://github.com/openfoodfacts/robotoff/commit/b775b8d06a3b9ae10ceb51f2e8a6fe6cd7c5ca94))
+
 ## [1.42.0](https://github.com/openfoodfacts/robotoff/compare/v1.41.2...v1.42.0) (2024-02-13)
 
 
