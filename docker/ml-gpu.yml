@@ -8,17 +8,8 @@ version: "3.9"
 
 services:
   triton:
-    # restart: $RESTART_POLICY
-    # This is a custom built of Triton with:
-    # - GRPC/HTTP support
-    # - GPU support
-    # - Tensorflow and ONNX support
-    # This allows us to reduce the image size
-    # Build with `python3 compose.py --backend tensorflow --backend
-    # onnxruntime`
-    # Release (23.04 version):
-    # https://github.com/triton-inference-server/server/releases/tag/v2.33.0
-    image: ghcr.io/openfoodfacts/triton:23.04-gpu
+    restart: $RESTART_POLICY
+    image: nvcr.io/nvidia/tritonserver:24.01-py3
     ports:
      - ${TRITON_EXPOSE_HTTP:-8000}:8000
      - ${TRITON_EXPOSE_GRPC:-8001}:8001
