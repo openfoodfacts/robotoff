@@ -26,15 +26,15 @@ All Robotoff services are running on one of the two Docker instances (OVH 200 VM
 see [dev-install](./dev-install.md)
 
 You can then use:
-`docker-compose start [service-name]` or `docker-compose stop [service-name]`
+`docker compose start [service-name]` or `docker compose stop [service-name]`
 
-Or `make up` when you refresh the product (it will re-build and run `docker-compose up -d`).
+Or `make up` when you refresh the product (it will re-build and run `docker compose up -d`).
 
 Take the time to become a bit familiar with docker-compose if it's your first use.
 
 ## Monitor
 
-To display the logs of the container, `docker-compose logs [service-name]`.
+To display the logs of the container, `docker compose logs [service-name]`.
 (without service-name, you got all logs).
 
 Two options are often used: `-f` to follow output and `--tail n` to only display last n lines.

@@ -68,7 +68,7 @@ After cloning the repository:
 5. To debug in a running container, you need to run poetry in the container. For example:
 
     ```
-    docker-compose run --rm api poetry run python
+    docker compose run --rm api poetry run python
     ```
     Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb](https://docs.python.org/3/library/pdb.html) or play with the code. 
 
