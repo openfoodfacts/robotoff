@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.43.0](https://github.com/openfoodfacts/robotoff/compare/v1.42.1...v1.43.0) (2024-03-26)
+
+
+### Features
+
+* **main:** correct and add label logos ([#1322](https://github.com/openfoodfacts/robotoff/issues/1322)) ([1213c7d](https://github.com/openfoodfacts/robotoff/commit/1213c7d8cfb550906489022b64e37238730da21d))
+
+
+### Technical
+
+* **deps:** bump orjson from 3.8.14 to 3.9.15 ([#1319](https://github.com/openfoodfacts/robotoff/issues/1319)) ([0f2ee58](https://github.com/openfoodfacts/robotoff/commit/0f2ee58702a5050e2b2d88af18e249d07ae847fc))
+* New Crowdin translations to review and merge ([#1312](https://github.com/openfoodfacts/robotoff/issues/1312)) ([6f888aa](https://github.com/openfoodfacts/robotoff/commit/6f888aada983f512e7406c4c5f6f3e79a2557b88))
+* switch to docker compose v2 ([#1325](https://github.com/openfoodfacts/robotoff/issues/1325)) ([5bde479](https://github.com/openfoodfacts/robotoff/commit/5bde4790fbc7000f8cc225cc24a6737f55a06491))
+* Update docker config ([#1321](https://github.com/openfoodfacts/robotoff/issues/1321)) ([09dc8b4](https://github.com/openfoodfacts/robotoff/commit/09dc8b454c621b49e0c994b8517ac937d3f52bcc))
+
 ## [1.42.1](https://github.com/openfoodfacts/robotoff/compare/v1.42.0...v1.42.1) (2024-02-22)
 
 
