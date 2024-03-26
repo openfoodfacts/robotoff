@@ -79,7 +79,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
    To test the APIs on your localhost run 
 
    ```
-   docker-compose up
+   docker compose up
    ```
 
    You can make a post request through [Postman](https://www.postman.com/) or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/

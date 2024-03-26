@@ -19,7 +19,7 @@ We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create 
 
 If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
 ```
-$ docker-compose run --rm api poetry run python
+$ docker compose run --rm api poetry run python
 ...
 > from tests.integration.models_utils import *
 > PredictionFactory()
