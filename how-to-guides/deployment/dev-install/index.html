@@ -936,7 +936,7 @@ The expected response is <code>{"status":"running"}</code>.</p>
 </li>
 <li>
 <p>To debug in a running container, you need to run poetry in the container. For example:</p>
-<p><div class="highlight"><pre><span></span><code>docker-compose run --rm api poetry run python
+<p><div class="highlight"><pre><span></span><code>docker compose run --rm api poetry run python
 </code></pre></div>
   Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code. </p>
 </li>
