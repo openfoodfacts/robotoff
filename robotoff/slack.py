@@ -173,18 +173,30 @@ class ImageModerationNotifier(NotifierInterface):
         it"""
         if not predictions:
             return
+
+        prediction = predictions[0]
         image_url = settings.BaseURLProvider.image_url(
             product_id.server_type, source_image
         )
         image_id = int(source_image.rsplit("/", 1)[-1].split(".", 1)[0])
-        params = {"imgid": image_id, "url": image_url}
+        data = {
+            "barcode": product_id.barcode,
+            "type": "image",
+            "url": image_url,
+            "user_id": "roboto-app",
+            "source": "robotoff",
+            "confidence": prediction.confidence,
+            "image_id": image_id,
+            "flavor": product_id.server_type.value,
+            "comment": json.dumps(prediction.data),
+        }
         try:
-            http_session.put(f"{self.service_url}/{product_id.barcode}", data=params)
+            http_session.post(self.service_url, json=data)
         except Exception:
             logger.exception(
                 "Error while notifying image to moderation service",
                 extra={
-                    "params": params,
+                    "params": data,
                     "url": image_url,
                     "barcode": product_id.barcode,
                 },
