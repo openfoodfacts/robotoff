@@ -4,8 +4,15 @@ from typing import Optional
 
 import pytest
 
-from robotoff import settings, slack
+from robotoff import settings
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
+from robotoff.notifier import (
+    ImageModerationNotifier,
+    MultiNotifier,
+    NoopSlackNotifier,
+    NotifierFactory,
+    SlackNotifier,
+)
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 
 DEFAULT_BARCODE = "123"
@@ -49,24 +56,22 @@ class PartialRequestMatcher:
 @pytest.mark.parametrize(
     "token_value, moderation_url, want_type",
     [
-        ("T", "", slack.SlackNotifier),
-        ("T", "http://test.org/", slack.MultiNotifier),
-        ("", "", slack.NoopSlackNotifier),
+        ("T", "", SlackNotifier),
+        ("T", "http://test.org/", MultiNotifier),
+        ("", "", NoopSlackNotifier),
     ],
 )
 def test_notifier_factory(monkeypatch, token_value, moderation_url, want_type):
     monkeypatch.setattr(settings, "slack_token", lambda: token_value)
     monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_URL", moderation_url)
-    notifier = slack.NotifierFactory.get_notifier()
+    notifier = NotifierFactory.get_notifier()
     assert type(notifier) is want_type
 
 
 def test_notify_image_flag_no_prediction(mocker):
-    mock = mocker.patch("robotoff.slack.http_session.post")
+    mock = mocker.patch("robotoff.notifier.http_session.post")
 
-    notifier = slack.MultiNotifier(
-        [slack.SlackNotifier(""), slack.ImageModerationNotifier("")]
-    )
+    notifier = MultiNotifier([SlackNotifier(""), ImageModerationNotifier("")])
     # no predictions associated to image
     notifier.notify_image_flag(
         [],
@@ -79,15 +84,12 @@ def test_notify_image_flag_no_prediction(mocker):
 
 def test_notify_image_flag_public(mocker, monkeypatch):
     """Test notifying a potentially sensitive public image"""
-    mock_slack = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+    mock_http = mocker.patch(
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    mock_image_moderation = mocker.patch(
-        "robotoff.slack.http_session.put", return_value=MockSlackResponse()
-    )
-    slack_notifier = slack.SlackNotifier("")
-    notifier = slack.MultiNotifier(
-        [slack_notifier, slack.ImageModerationNotifier("http://images.org/")]
+    slack_notifier = SlackNotifier("")
+    notifier = MultiNotifier(
+        [slack_notifier, ImageModerationNotifier("https://images.org")]
     )
 
     notifier.notify_image_flag(
@@ -101,7 +103,8 @@ def test_notify_image_flag_public(mocker, monkeypatch):
         DEFAULT_PRODUCT_ID,
     )
 
-    mock_slack.assert_called_once_with(
+    assert len(mock_http.mock_calls) == 2
+    mock_http.assert_any_call(
         slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
             f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/cgi/product.pl?type=edit&code=123|*Edit*>",
@@ -111,28 +114,30 @@ def test_notify_image_flag_public(mocker, monkeypatch):
             ),
         ),
     )
-    mock_image_moderation.assert_called_once_with(
-        "http://images.org/123",
-        data={
-            "imgid": 2,
-            "url": settings.BaseURLProvider.image_url(
-                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
-            ),
+    mock_http.assert_any_call(
+        "https://images.org",
+        json={
+            "barcode": "123",
+            "type": "image",
+            "url": "https://images.openfoodfacts.net/images/products/source_image/2.jpg",
+            "user_id": "roboto-app",
+            "source": "robotoff",
+            "confidence": None,
+            "image_id": 2,
+            "flavor": "off",
+            "comment": '{"text": "bad_word", "type": "SENSITIVE", "label": "flagged"}',
         },
     )
 
 
 def test_notify_image_flag_private(mocker, monkeypatch):
     """Test notifying a potentially sensitive private image"""
-    mock_slack = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+    mock_http = mocker.patch(
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    mock_image_moderation = mocker.patch(
-        "robotoff.slack.http_session.put", return_value=MockSlackResponse()
-    )
-    slack_notifier = slack.SlackNotifier("")
-    notifier = slack.MultiNotifier(
-        [slack_notifier, slack.ImageModerationNotifier("http://images.org/")]
+    slack_notifier = SlackNotifier("")
+    notifier = MultiNotifier(
+        [slack_notifier, ImageModerationNotifier("https://images.org")]
     )
 
     notifier.notify_image_flag(
@@ -140,13 +145,15 @@ def test_notify_image_flag_private(mocker, monkeypatch):
             Prediction(
                 type=PredictionType.image_flag,
                 data={"type": "label_annotation", "label": "face", "likelihood": 0.8},
+                confidence=0.8,
             )
         ],
         "/source_image/2.jpg",
         DEFAULT_PRODUCT_ID,
     )
 
-    mock_slack.assert_called_once_with(
+    assert len(mock_http.mock_calls) == 2
+    mock_http.assert_any_call(
         slack_notifier.POST_MESSAGE_URL,
         data=PartialRequestMatcher(
             f"type: label_annotation\nlabel: *face*, score: 0.8\n\n <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/cgi/product.pl?type=edit&code=123|*Edit*>",
@@ -156,22 +163,27 @@ def test_notify_image_flag_private(mocker, monkeypatch):
             ),
         ),
     )
-    mock_image_moderation.assert_called_once_with(
-        "http://images.org/123",
-        data={
-            "imgid": 2,
-            "url": settings.BaseURLProvider.image_url(
-                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
-            ),
+    mock_http.assert_any_call(
+        "https://images.org",
+        json={
+            "barcode": "123",
+            "type": "image",
+            "url": "https://images.openfoodfacts.net/images/products/source_image/2.jpg",
+            "user_id": "roboto-app",
+            "source": "robotoff",
+            "image_id": 2,
+            "flavor": "off",
+            "comment": '{"type": "label_annotation", "label": "face", "likelihood": 0.8}',
+            "confidence": 0.8,
         },
     )
 
 
 def test_notify_automatic_processing_weight(mocker, monkeypatch):
     mock = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    notifier = slack.SlackNotifier("")
+    notifier = SlackNotifier("")
 
     print(settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, "/image/1"))
     notifier.notify_automatic_processing(
@@ -196,9 +208,9 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
 
 def test_notify_automatic_processing_label(mocker, monkeypatch):
     mock = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    notifier = slack.SlackNotifier("")
+    notifier = SlackNotifier("")
 
     notifier.notify_automatic_processing(
         ProductInsight(
@@ -221,7 +233,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
 
 def test_noop_slack_notifier_logging(caplog):
     caplog.set_level(logging.INFO)
-    notifier = slack.NoopSlackNotifier()
+    notifier = NoopSlackNotifier()
 
     notifier.send_logo_notification(
         LogoAnnotation(

@@ -22,8 +22,8 @@ from robotoff.models import (
 )
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
+from robotoff.notifier import NotifierFactory
 from robotoff.off import OFFAuthentication
-from robotoff.slack import NotifierFactory
 from robotoff.types import (
     ElasticSearchIndex,
     InsightImportResult,
