@@ -127,6 +127,7 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
                         "likelihood": label_annotation.score,
                     },
                     predictor_version=PREDICTOR_VERSION,
+                    confidence=label_annotation.score,
                 )
             )
             break
