@@ -11,7 +11,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from playhouse.postgres_ext import ServerSide
 from sentry_sdk import capture_exception
 
-from robotoff import settings, slack
+from robotoff import notifier, settings
 from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import BrandInsightImporter, is_valid_insight_image
 from robotoff.metrics import (
@@ -60,7 +60,7 @@ def process_insights() -> None:
                 if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
                     "notify", False
                 ):
-                    slack.NotifierFactory.get_notifier().notify_automatic_processing(
+                    notifier.NotifierFactory.get_notifier().notify_automatic_processing(
                         insight
                     )
             except Exception as e:

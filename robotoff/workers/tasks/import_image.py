@@ -35,11 +35,11 @@ from robotoff.models import (
     db,
     with_db,
 )
+from robotoff.notifier import NotifierFactory
 from robotoff.off import generate_image_url, get_source_from_url, parse_ingredients
 from robotoff.prediction import ingredient_list
 from robotoff.prediction.upc_image import UPCImageType, find_image_is_upc
 from robotoff.products import get_product_store
-from robotoff.slack import NotifierFactory
 from robotoff.taxonomy import get_taxonomy
 from robotoff.triton import (
     GRPCInferenceServiceStub,

@@ -4,8 +4,15 @@ from typing import Optional
 
 import pytest
 
-from robotoff import settings, slack
+from robotoff import settings
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, ProductInsight
+from robotoff.notifier import (
+    ImageModerationNotifier,
+    MultiNotifier,
+    NoopSlackNotifier,
+    NotifierFactory,
+    SlackNotifier,
+)
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 
 DEFAULT_BARCODE = "123"
@@ -49,24 +56,22 @@ class PartialRequestMatcher:
 @pytest.mark.parametrize(
     "token_value, moderation_url, want_type",
     [
-        ("T", "", slack.SlackNotifier),
-        ("T", "http://test.org/", slack.MultiNotifier),
-        ("", "", slack.NoopSlackNotifier),
+        ("T", "", SlackNotifier),
+        ("T", "http://test.org/", MultiNotifier),
+        ("", "", NoopSlackNotifier),
     ],
 )
 def test_notifier_factory(monkeypatch, token_value, moderation_url, want_type):
     monkeypatch.setattr(settings, "slack_token", lambda: token_value)
     monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_URL", moderation_url)
-    notifier = slack.NotifierFactory.get_notifier()
+    notifier = NotifierFactory.get_notifier()
     assert type(notifier) is want_type
 
 
 def test_notify_image_flag_no_prediction(mocker):
-    mock = mocker.patch("robotoff.slack.http_session.post")
+    mock = mocker.patch("robotoff.notifier.http_session.post")
 
-    notifier = slack.MultiNotifier(
-        [slack.SlackNotifier(""), slack.ImageModerationNotifier("")]
-    )
+    notifier = MultiNotifier([SlackNotifier(""), ImageModerationNotifier("")])
     # no predictions associated to image
     notifier.notify_image_flag(
         [],
@@ -80,11 +85,11 @@ def test_notify_image_flag_no_prediction(mocker):
 def test_notify_image_flag_public(mocker, monkeypatch):
     """Test notifying a potentially sensitive public image"""
     mock_http = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    slack_notifier = slack.SlackNotifier("")
-    notifier = slack.MultiNotifier(
-        [slack_notifier, slack.ImageModerationNotifier("https://images.org")]
+    slack_notifier = SlackNotifier("")
+    notifier = MultiNotifier(
+        [slack_notifier, ImageModerationNotifier("https://images.org")]
     )
 
     notifier.notify_image_flag(
@@ -128,11 +133,11 @@ def test_notify_image_flag_public(mocker, monkeypatch):
 def test_notify_image_flag_private(mocker, monkeypatch):
     """Test notifying a potentially sensitive private image"""
     mock_http = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    slack_notifier = slack.SlackNotifier("")
-    notifier = slack.MultiNotifier(
-        [slack_notifier, slack.ImageModerationNotifier("https://images.org")]
+    slack_notifier = SlackNotifier("")
+    notifier = MultiNotifier(
+        [slack_notifier, ImageModerationNotifier("https://images.org")]
     )
 
     notifier.notify_image_flag(
@@ -176,9 +181,9 @@ def test_notify_image_flag_private(mocker, monkeypatch):
 
 def test_notify_automatic_processing_weight(mocker, monkeypatch):
     mock = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    notifier = slack.SlackNotifier("")
+    notifier = SlackNotifier("")
 
     print(settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, "/image/1"))
     notifier.notify_automatic_processing(
@@ -203,9 +208,9 @@ def test_notify_automatic_processing_weight(mocker, monkeypatch):
 
 def test_notify_automatic_processing_label(mocker, monkeypatch):
     mock = mocker.patch(
-        "robotoff.slack.http_session.post", return_value=MockSlackResponse()
+        "robotoff.notifier.http_session.post", return_value=MockSlackResponse()
     )
-    notifier = slack.SlackNotifier("")
+    notifier = SlackNotifier("")
 
     notifier.notify_automatic_processing(
         ProductInsight(
@@ -228,7 +233,7 @@ def test_notify_automatic_processing_label(mocker, monkeypatch):
 
 def test_noop_slack_notifier_logging(caplog):
     caplog.set_level(logging.INFO)
-    notifier = slack.NoopSlackNotifier()
+    notifier = NoopSlackNotifier()
 
     notifier.send_logo_notification(
         LogoAnnotation(
