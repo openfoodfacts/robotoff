@@ -26,9 +26,12 @@ Booths
 Biocoop
 bonÀrea||bonarea
 Bonpreu
+Bunnpris
 Coop||betty bossi
 Coop||coop naturaplan
 Coop||naturaplan
+Coop Obs!
+Coop Extra
 Carrefour
 Carrefour||grand jury
 Casino
@@ -87,10 +90,12 @@ Intermarché||s[ée]lection des mousquetaires
 Intermarché||s[ée]lection intermarch[ée]
 Intermarché||saint [ée]loi
 Intermarché||top budget
+Joker
 Kaufland
 Kaufland||k-bio
 Kaufland||k-classic
 King Soopers
+KIWI
 Kroger
 K-Market||Pirrka
 K-Market||K-Menu
@@ -234,12 +239,14 @@ Magasins U||u saveurs
 Makro
 Marks & Spencer
 Market Basket
+Meny
 Mercadona||hacendado
 Mercator
 Mega Image
 Migros
 Monoprix
 Morrisson's
+Narvesen
 Ocado
 Penny||Penny Market
 Penny||Penny Markt
@@ -257,6 +264,7 @@ Sainsbury's
 Schnucks
 ShopRite
 Simply Market
+SPAR
 Społem
 Σκλαβενίτης
 Supercor
