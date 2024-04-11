@@ -191,6 +191,7 @@ class ImageModerationNotifier(NotifierInterface):
             "comment": json.dumps(prediction.data),
         }
         try:
+            logger.info("Notifying image %s to moderation service", image_url)
             http_session.post(self.service_url, json=data)
         except Exception:
             logger.exception(
