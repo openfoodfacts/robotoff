@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.44.0](https://github.com/openfoodfacts/robotoff/compare/v1.43.0...v1.44.0) (2024-04-11)
+
+
+### Features
+
+* Add nutripatrol integration ([#1326](https://github.com/openfoodfacts/robotoff/issues/1326)) ([fa3dc0c](https://github.com/openfoodfacts/robotoff/commit/fa3dc0cea60b6c34f95200e2fb983ea8bdd9ec39))
+
+
+### Bug Fixes
+
+* fix nutripatrol deployment ([#1333](https://github.com/openfoodfacts/robotoff/issues/1333)) ([9e88ac2](https://github.com/openfoodfacts/robotoff/commit/9e88ac28544b54b273c475f0efeb4ad5330135a1))
+* fix nutripatrol deployment and API call ([8455a0e](https://github.com/openfoodfacts/robotoff/commit/8455a0e4786edb3be33bc9eb790031f5a65ec8ee))
+* fix unit test ([9d339d0](https://github.com/openfoodfacts/robotoff/commit/9d339d0a57681e17fd073bd1a78387a869e66af6))
+* **tests:** fix unit test ([0195926](https://github.com/openfoodfacts/robotoff/commit/0195926e09e7a78b3fa7b2099daf8e9c30d5c507))
+
+
+### Technical
+
+* **deps:** bump pillow from 10.2.0 to 10.3.0 ([#1328](https://github.com/openfoodfacts/robotoff/issues/1328)) ([a3357dc](https://github.com/openfoodfacts/robotoff/commit/a3357dc88543733bf9be24fe7ab913de74a717bc))
+* **deps:** bump pymongo from 4.5.0 to 4.6.3 ([#1330](https://github.com/openfoodfacts/robotoff/issues/1330)) ([5f8b75e](https://github.com/openfoodfacts/robotoff/commit/5f8b75e1e40e5196dfd453c9ef49e647a3e92ead))
+* **deps:** bump transformers from 4.36.0 to 4.38.0 ([#1331](https://github.com/openfoodfacts/robotoff/issues/1331)) ([4fe0ede](https://github.com/openfoodfacts/robotoff/commit/4fe0ede6e95e88319706e7f5b46bc9ee1e913ab0))
+* **docker:** remove legacy "version" field in docker-compose configs ([1e047aa](https://github.com/openfoodfacts/robotoff/commit/1e047aaf6305391097e77299ed4208800335397c))
+
 ## [1.43.0](https://github.com/openfoodfacts/robotoff/compare/v1.42.1...v1.43.0) (2024-03-26)
 
 
