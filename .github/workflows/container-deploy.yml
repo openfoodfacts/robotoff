@@ -30,6 +30,7 @@ jobs:
         echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags"
     - name: Set various variable for production deployment
       if: matrix.env == 'robotoff-org'
       run: |
@@ -39,6 +40,7 @@ jobs:
         # use prod mongodb through stunnel
         echo "MONGO_URI=mongodb://10.1.0.113:27017" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags"
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
       id: wait-build
@@ -134,8 +136,7 @@ jobs:
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=8"
           echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
-          # TODO: remove this url when we have a proper server running for this purpose
-          echo "IMAGE_MODERATION_SERVICE_URL=https://amathjourney.com/api/off-annotation/flag-image"
+          echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
 
 
     - name: Create Docker volumes
