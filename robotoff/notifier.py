@@ -178,7 +178,7 @@ class ImageModerationNotifier(NotifierInterface):
         image_url = settings.BaseURLProvider.image_url(
             product_id.server_type, source_image
         )
-        image_id = int(source_image.rsplit("/", 1)[-1].split(".", 1)[0])
+        image_id = source_image.rsplit("/", 1)[-1].split(".", 1)[0]
         data = {
             "barcode": product_id.barcode,
             "type": "image",
