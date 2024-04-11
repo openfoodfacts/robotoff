@@ -4,8 +4,6 @@
 # instructions:
 # https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/user-guide.html#adding-the-nvidia-runtime
 
-version: "3.9"
-
 services:
   triton:
     restart: $RESTART_POLICY

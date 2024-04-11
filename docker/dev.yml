@@ -1,5 +1,3 @@
-version: "3.9"
-
 x-robotoff-dev: &robotoff-dev
     image: openfoodfacts/robotoff:dev
     build:

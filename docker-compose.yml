@@ -1,5 +1,3 @@
-version: "3.9"
-
 x-robotoff-base-volumes:
   &robotoff-base-volumes
   - ./data:/opt/robotoff/data
