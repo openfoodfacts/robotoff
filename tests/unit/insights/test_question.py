@@ -181,7 +181,7 @@ def test_category_question_formatter(
             "Bio européen",
             "en:eu-organic",
             "Le produit a-t-il ce label ?",
-            "https://static.openfoodfacts.net/images/lang/en/labels/eu-organic.135x90.svg",
+            "https://static.openfoodfacts.org/images/lang/en/labels/eu-organic.135x90.svg",
         ),
         (
             "en",
