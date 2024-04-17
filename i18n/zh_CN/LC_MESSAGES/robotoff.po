@@ -37,5 +37,5 @@ msgstr "这个图片是用这个语言写的营养成分图片吗？"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "产品有这个包装元素吗？"
 
