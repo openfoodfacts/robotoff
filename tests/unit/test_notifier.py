@@ -103,17 +103,7 @@ def test_notify_image_flag_public(mocker, monkeypatch):
         DEFAULT_PRODUCT_ID,
     )
 
-    assert len(mock_http.mock_calls) == 2
-    mock_http.assert_any_call(
-        slack_notifier.POST_MESSAGE_URL,
-        data=PartialRequestMatcher(
-            f"type: SENSITIVE\nlabel: *flagged*, match: bad_word\n\n <{settings.BaseURLProvider.image_url(DEFAULT_SERVER_TYPE, '/source_image/2.jpg')}|Image> -- <{settings.BaseURLProvider.world(DEFAULT_SERVER_TYPE)}/cgi/product.pl?type=edit&code=123|*Edit*>",
-            slack_notifier.ROBOTOFF_PUBLIC_IMAGE_ALERT_CHANNEL,
-            settings.BaseURLProvider.image_url(
-                DEFAULT_SERVER_TYPE, "/source_image/2.jpg"
-            ),
-        ),
-    )
+    assert len(mock_http.mock_calls) == 1
     mock_http.assert_any_call(
         "https://images.org",
         json={
@@ -125,6 +115,7 @@ def test_notify_image_flag_public(mocker, monkeypatch):
             "confidence": None,
             "image_id": "2",
             "flavor": "off",
+            "reason": "other",
             "comment": '{"text": "bad_word", "type": "SENSITIVE", "label": "flagged"}',
         },
     )
@@ -173,7 +164,8 @@ def test_notify_image_flag_private(mocker, monkeypatch):
             "source": "robotoff",
             "image_id": "2",
             "flavor": "off",
-            "comment": '{"type": "label_annotation", "label": "face", "likelihood": 0.8}',
+            "reason": "human",
+            "comment": '{"type": "label_annotation", "label": "face"}',
             "confidence": 0.8,
         },
     )
