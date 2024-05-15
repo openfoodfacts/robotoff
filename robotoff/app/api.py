@@ -895,7 +895,8 @@ class ImagePredictorResource:
             result = model.detect_from_image(image, output_image=output_image)
 
             if output_image:
-                image_response(result.boxed_image, resp)
+                boxed_image = cast(Image.Image, result.boxed_image)
+                image_response(boxed_image, resp)
                 return
             else:
                 predictions[model_name] = result.to_json()
