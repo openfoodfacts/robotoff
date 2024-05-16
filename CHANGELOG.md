@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.45.0](https://github.com/openfoodfacts/robotoff/compare/v1.44.0...v1.45.0) (2024-05-15)
+
+
+### Features
+
+* improve Slack & nutripatrol notifier ([#1343](https://github.com/openfoodfacts/robotoff/issues/1343)) ([076fb11](https://github.com/openfoodfacts/robotoff/commit/076fb11e125bfade78ce30c3076463a92fefe434))
+
+
+### Technical
+
+* **deps-dev:** bump jinja2 from 3.1.3 to 3.1.4 ([#1342](https://github.com/openfoodfacts/robotoff/issues/1342)) ([60e7f13](https://github.com/openfoodfacts/robotoff/commit/60e7f132166fe3d4582485c44aa28f723a48e37f))
+* **deps-dev:** bump werkzeug from 3.0.1 to 3.0.3 ([#1341](https://github.com/openfoodfacts/robotoff/issues/1341)) ([a9244f9](https://github.com/openfoodfacts/robotoff/commit/a9244f967b3b44f71be30086b6720b3d3ad14d6e))
+* **deps:** bump dnspython from 2.4.2 to 2.6.1 ([#1335](https://github.com/openfoodfacts/robotoff/issues/1335)) ([084b9d9](https://github.com/openfoodfacts/robotoff/commit/084b9d915ede638c9e71307de276f41fa4ab864c))
+* **deps:** bump gunicorn from 20.1.0 to 22.0.0 ([#1336](https://github.com/openfoodfacts/robotoff/issues/1336)) ([9ec607a](https://github.com/openfoodfacts/robotoff/commit/9ec607a7377becdd92ed099b3f50f6a64a5a0028))
+* **deps:** bump idna from 3.6 to 3.7 ([#1334](https://github.com/openfoodfacts/robotoff/issues/1334)) ([d514f82](https://github.com/openfoodfacts/robotoff/commit/d514f82d4fcc5f9f542d4b978a86a148ff7394e9))
+* **deps:** bump tqdm from 4.66.1 to 4.66.3 ([#1340](https://github.com/openfoodfacts/robotoff/issues/1340)) ([beef9a4](https://github.com/openfoodfacts/robotoff/commit/beef9a4066c9a5b7e7015c4c8238e84465a507d9))
+* New Crowdin translations to review and merge ([#1324](https://github.com/openfoodfacts/robotoff/issues/1324)) ([5310130](https://github.com/openfoodfacts/robotoff/commit/5310130a9bee99115ed170595bf88cb8cbf5a6aa))
+
 ## [1.44.0](https://github.com/openfoodfacts/robotoff/compare/v1.43.0...v1.44.0) (2024-04-11)
 
 
