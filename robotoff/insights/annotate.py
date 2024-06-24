@@ -623,6 +623,12 @@ class NutritionImageAnnotator(InsightAnnotator):
                 description="the image is invalid",
             )
 
+        image_key = f"nutrition_{insight.value_tag}"
+        # We don't want to select the nutrition image if one has already been
+        # selected
+        if image_key in images:
+            return ALREADY_ANNOTATED_RESULT
+
         rotation = insight.data.get("rotation", 0)
         crop_bounding_box: Optional[tuple[float, float, float, float]] = None
         if "bounding_box" in insight.data:
@@ -635,7 +641,6 @@ class NutritionImageAnnotator(InsightAnnotator):
                 insight.data["bounding_box"], width, height, rotation
             )
 
-        image_key = f"nutrition_{insight.value_tag}"
         select_rotate_image(
             product_id=product_id,
             image_id=image_id,
