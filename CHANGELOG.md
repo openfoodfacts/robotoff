@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.45.1](https://github.com/openfoodfacts/robotoff/compare/v1.45.0...v1.45.1) (2024-06-24)
+
+
+### Bug Fixes
+
+* don't select nutrition image if one has already been selected ([#1348](https://github.com/openfoodfacts/robotoff/issues/1348)) ([68cc43d](https://github.com/openfoodfacts/robotoff/commit/68cc43dbc8156892264187e8f6a4f96f5f8f554f))
+
+
+### Technical
+
+* **deps:** bump urllib3 from 2.1.0 to 2.2.2 ([#1347](https://github.com/openfoodfacts/robotoff/issues/1347)) ([0937f1e](https://github.com/openfoodfacts/robotoff/commit/0937f1eee8f9d2c991d6b5ce3233bdf95bad0741))
+
 ## [1.45.0](https://github.com/openfoodfacts/robotoff/compare/v1.44.0...v1.45.0) (2024-05-15)
 
 
