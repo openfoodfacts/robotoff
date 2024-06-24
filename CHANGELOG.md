@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.45.2](https://github.com/openfoodfacts/robotoff/compare/v1.45.1...v1.45.2) (2024-06-24)
+
+
+### Bug Fixes
+
+* improve OCR dump script ([#1351](https://github.com/openfoodfacts/robotoff/issues/1351)) ([b49836b](https://github.com/openfoodfacts/robotoff/commit/b49836b45a3046b679a9aed397b0a6c1215517d8))
+
 ## [1.45.1](https://github.com/openfoodfacts/robotoff/compare/v1.45.0...v1.45.1) (2024-06-24)
 
 
