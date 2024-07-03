@@ -21,7 +21,7 @@ def convert_image_to_array(image: Image.Image) -> np.ndarray:
 
     The image is converted to RGB if needed before generating the array.
 
-    :param image: the input image
+    :param image: the input image.
     :return: the generated numpy array of shape (width, height, 3)
     """
     if image.mode != "RGB":
@@ -29,7 +29,7 @@ def convert_image_to_array(image: Image.Image) -> np.ndarray:
 
     (im_width, im_height) = image.size
 
-    return np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+    return np.array(image.getdata()).reshape((im_height, im_width, 3))
 
 
 def get_image_from_url(

@@ -11,6 +11,7 @@ JSONType = dict[str, Any]
 
 class ObjectDetectionModel(enum.Enum):
     nutriscore = "nutriscore"
+    nutriscore_yolo = "nutriscore-yolo"
     universal_logo_detector = "universal-logo-detector"
     nutrition_table = "nutrition-table"
 

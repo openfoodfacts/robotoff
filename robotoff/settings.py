@@ -293,7 +293,6 @@ _triton_grpc_port = os.environ.get("TRITON_PORT", "8001")
 TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
 
 TRITON_MODELS_DIR = PROJECT_DIR / "models/triton"
-OBJECT_DETECTION_IMAGE_MAX_SIZE = (1024, 1024)
 
 _fasttext_host = os.environ.get("FASTTEXT_HOST", "fasttext")
 _fasttext_port = os.environ.get("FASTTEXT_PORT", "8000")

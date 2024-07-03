@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import elasticsearch
+import numpy as np
 from elasticsearch.helpers import BulkIndexError
 from openfoodfacts import OCRResult
 from openfoodfacts.taxonomy import Taxonomy
@@ -322,7 +323,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
                 return
 
             area, prediction_class, polygon = find_image_is_upc(
-                convert_image_to_array(image)
+                convert_image_to_array(image).astype(np.uint8)
             )
             ImagePrediction.create(
                 image=image_model,
@@ -394,7 +395,10 @@ def run_nutriscore_object_detection(
             return
 
         image_prediction = run_object_detection_model(
-            ObjectDetectionModel.nutriscore, image, image_model, triton_uri=triton_uri
+            ObjectDetectionModel.nutriscore_yolo,
+            image,
+            image_model,
+            triton_uri=triton_uri,
         )
 
     if image_prediction is None:

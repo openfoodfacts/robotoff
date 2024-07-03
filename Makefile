@@ -118,6 +118,8 @@ dl-object-detection-models:
 			mkdir -p $${dir}/1; \
 			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
 	done; \
+	mkdir -p nutriscore-yolo/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutriscore-yolo/resolve/main/weights/best.onnx > nutriscore-yolo/1/model.onnx
 
 dl-category-classifier-model:
 	@echo "⏬ Downloading category classifier model files …"
