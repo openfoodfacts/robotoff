@@ -134,9 +134,13 @@ jobs:
           echo "INFLUXDB_BUCKET=off_metrics" >> .env
           echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
-          echo "GUNICORN_NUM_WORKERS=8"
+          echo "GUNICORN_NUM_WORKERS=8" >> .env
           echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
           echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+
+          # PostgreSQL config
+          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> .env
+          echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> .env
 
 
     - name: Create Docker volumes
