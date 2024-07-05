@@ -320,7 +320,7 @@ class RemoteModel:
         # Perform NMS (Non Maximum Suppression)
         detection_box_indices = dnn.NMSBoxes(
             raw_detection_boxes,  # type: ignore
-            raw_detection_scores,
+            raw_detection_scores,  # type: ignore
             score_threshold=threshold,
             # the following values are copied from Ultralytics settings
             nms_threshold=0.45,

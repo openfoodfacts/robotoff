@@ -65,7 +65,8 @@ def get_is_upc_image_from_image(
     # box other return values in order are a bool of whether the barcode was
     # detected, any strings found in the region as a tuple, and the type of
     # barcode (EAN_13, etc)
-    _, _, _, polygon = bd.detectAndDecode(image)
+    # retval, points, straight_code
+    _, polygon, _ = bd.detectAndDecode(image)
 
     if polygon is not None:
         # means we have detected a UPC
