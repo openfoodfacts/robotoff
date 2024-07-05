@@ -158,13 +158,15 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 
     # Run UPC detection to detect if the image is dominated by a UPC (and thus
     # should not be a product selected image)
-    enqueue_job(
-        run_upc_detection,
-        get_high_queue(product_id),
-        job_kwargs={"result_ttl": 0},
-        product_id=product_id,
-        image_url=image_url,
-    )
+    # UPC detection is buggy since the upgrade to OpenCV 4.10
+    # Unit tests are failing, we need to fix them before re-enabling this task
+    # enqueue_job(
+    #     run_upc_detection,
+    #     get_high_queue(product_id),
+    #     job_kwargs={"result_ttl": 0},
+    #     product_id=product_id,
+    #     image_url=image_url,
+    # )
 
 
 def import_insights_from_image(
