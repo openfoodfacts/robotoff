@@ -17,7 +17,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv" \
     POETRY_HOME="/opt/poetry" \
-    POETRY_VERSION=1.4.2 \
+    POETRY_VERSION=1.8.3 \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
     # Used by Robotoff to know if we're running inside docker
