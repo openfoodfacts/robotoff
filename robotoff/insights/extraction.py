@@ -86,9 +86,9 @@ def run_object_detection_model(
 
     timestamp = datetime.datetime.utcnow()
     results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
-        image, output_image=False, triton_uri=triton_uri
+        image, output_image=False, triton_uri=triton_uri, threshold=threshold
     )
-    data = results.to_json(threshold=threshold)
+    data = results.to_json()
     max_confidence = max((item["score"] for item in data), default=None)
     return ImagePrediction.create(
         image=image_model,
