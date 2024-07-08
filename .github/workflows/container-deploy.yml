@@ -139,7 +139,7 @@ jobs:
           echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
 
           # PostgreSQL config
-          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> .env
+          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> .env
           echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> .env
 
 
