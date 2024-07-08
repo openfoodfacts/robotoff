@@ -1315,11 +1315,10 @@ class WebhookProductResource:
         diffs: dict = req.get_param_as_json("diffs", required=True)
         check_server_domain(server_domain)
         logger.info(
-            "New webhook event received for product %s (action: %s, domain: %s, diffs: %s)",
+            "New webhook event received for product %s (action: %s, domain: %s)",
             barcode,
             action,
             server_domain,
-            diffs,
         )
         if action not in ("updated", "deleted"):
             raise falcon.HTTPBadRequest(
