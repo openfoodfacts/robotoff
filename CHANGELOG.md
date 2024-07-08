@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.46.0](https://github.com/openfoodfacts/robotoff/compare/v1.45.2...v1.46.0) (2024-07-08)
+
+
+### Features
+
+* add yolo model for nutriscore object detection ([#1356](https://github.com/openfoodfacts/robotoff/issues/1356)) ([be19217](https://github.com/openfoodfacts/robotoff/commit/be192179c188e17cd6359afd3104bdcdc0e880bc))
+
+
+### Bug Fixes
+
+* fix incorrect astype call ([#1359](https://github.com/openfoodfacts/robotoff/issues/1359)) ([f3d3ff6](https://github.com/openfoodfacts/robotoff/commit/f3d3ff64d4c77fff37b77c6dc1ab6c51d713ab89))
+* make log message less verbose in api.py ([#1361](https://github.com/openfoodfacts/robotoff/issues/1361)) ([83e043b](https://github.com/openfoodfacts/robotoff/commit/83e043bc76584c74a2d0e54f0fb680aef80d9f32))
+
+
+### Technical
+
+* update some envvar config ([#1360](https://github.com/openfoodfacts/robotoff/issues/1360)) ([923324e](https://github.com/openfoodfacts/robotoff/commit/923324efe5db65b9a76f6b2f06a6d37309e9ae76))
+* upgrade dep ([#1358](https://github.com/openfoodfacts/robotoff/issues/1358)) ([a02ec39](https://github.com/openfoodfacts/robotoff/commit/a02ec391b86d0281ac25ff4bb26b210d92a95261))
+
 ## [1.45.2](https://github.com/openfoodfacts/robotoff/compare/v1.45.1...v1.45.2) (2024-07-04)
 
 
