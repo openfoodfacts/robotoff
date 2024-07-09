@@ -548,8 +548,8 @@ def convert_crop_bounding_box(
         y_max, x_max)
     :param width: original height of the image
     :param height: original width of the image
-    :param rotate: rotation angle that we should apply to the bounding box,
-        defaults to 0 (no rotation)
+    :param rotate: rotation angle (counter-clockwise) that we should apply to
+        the bounding box, defaults to 0 (no rotation)
     :return: the converted bounding box coordinates
     """
     y_min, x_min, y_max, x_max = bounding_box
