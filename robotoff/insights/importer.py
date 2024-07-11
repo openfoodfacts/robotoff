@@ -1222,7 +1222,8 @@ class NutritionImageImporter(InsightImporter):
             .where(
                 ImageModel.barcode == product_id.barcode,
                 ImageModel.server_type == product_id.server_type.name,
-                ImagePrediction.model_name == ObjectDetectionModel.get_type(),
+                ImagePrediction.model_name
+                == ObjectDetectionModel.nutrition_table_yolo.get_type(),
                 ImagePrediction.max_confidence >= min_score,
             )
             .tuples()
