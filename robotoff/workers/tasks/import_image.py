@@ -265,7 +265,7 @@ def run_nutrition_table_object_detection(
             source_image=source_image, server_type=product_id.server_type.name
         ):
             run_object_detection_model(
-                ObjectDetectionModel.nutrition_table,
+                ObjectDetectionModel.nutrition_table_yolo,
                 image,
                 image_model,
                 triton_uri=triton_uri,

@@ -11,9 +11,10 @@ JSONType = dict[str, Any]
 
 class ObjectDetectionModel(enum.Enum):
     nutriscore = "nutriscore"
-    nutriscore_yolo = "nutriscore-yolo"
+    nutriscore_yolo = "nutriscore"
     universal_logo_detector = "universal-logo-detector"
     nutrition_table = "nutrition-table"
+    nutrition_table_yolo = "nutrition-table"
 
 
 @enum.unique
