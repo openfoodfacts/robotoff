@@ -11,10 +11,28 @@ JSONType = dict[str, Any]
 
 class ObjectDetectionModel(enum.Enum):
     nutriscore = "nutriscore"
-    nutriscore_yolo = "nutriscore"
+    nutriscore_yolo = "nutriscore-yolo"
     universal_logo_detector = "universal-logo-detector"
     nutrition_table = "nutrition-table"
-    nutrition_table_yolo = "nutrition-table"
+    nutrition_table_yolo = "nutrition-table-yolo"
+
+    def get_type(self) -> str:
+        """This helper function is useful as long as we have two model (yolo
+        and tf) for each type of detection.
+        Once we've migrated all models to Yolo, we can remove this function.
+        """
+        if self in (
+            ObjectDetectionModel.nutriscore,
+            ObjectDetectionModel.nutriscore_yolo,
+        ):
+            return "nutriscore"
+        if self in (
+            ObjectDetectionModel.nutrition_table,
+            ObjectDetectionModel.nutrition_table_yolo,
+        ):
+            return "nutrition-table"
+
+        return "universal-logo-detector"
 
 
 @enum.unique

@@ -77,7 +77,7 @@ def run_object_detection_model(
     """
     if (
         existing_image_prediction := ImagePrediction.get_or_none(
-            image=image_model, model_name=model_name.value
+            image=image_model, model_name=model_name.get_type()
         )
     ) is not None:
         if return_null_if_exist:

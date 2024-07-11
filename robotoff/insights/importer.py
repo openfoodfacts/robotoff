@@ -213,9 +213,11 @@ def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight
         candidates,
         key=lambda candidate: (
             candidate.data.get("priority", 1),
-            -int(get_image_id(candidate.source_image) or 0)
-            if candidate.source_image
-            else 0,
+            (
+                -int(get_image_id(candidate.source_image) or 0)
+                if candidate.source_image
+                else 0
+            ),
             # automatically processable insights come first
             -int(candidate.automatic_processing),
             # hack to set a higher priority to prediction with a predictor
@@ -462,9 +464,11 @@ class InsightImporter(metaclass=abc.ABCMeta):
             predictions,
             key=lambda prediction: (
                 prediction.data.get("priority", 1),
-                -int(get_image_id(prediction.source_image) or 0)
-                if prediction.source_image
-                else 0,
+                (
+                    -int(get_image_id(prediction.source_image) or 0)
+                    if prediction.source_image
+                    else 0
+                ),
                 # hack to set a higher priority to prediction with a predictor
                 # value
                 prediction.predictor or "z",
@@ -1218,8 +1222,7 @@ class NutritionImageImporter(InsightImporter):
             .where(
                 ImageModel.barcode == product_id.barcode,
                 ImageModel.server_type == product_id.server_type.name,
-                ImagePrediction.model_name
-                == ObjectDetectionModel.nutrition_table_yolo.value,
+                ImagePrediction.model_name == ObjectDetectionModel.get_type(),
                 ImagePrediction.max_confidence >= min_score,
             )
             .tuples()
@@ -1281,9 +1284,11 @@ class NutritionImageImporter(InsightImporter):
             # `nutrient` prediction is optional, so the dict value associated
             # with `nutrient` PredictionType may be null
             image_prediction_by_type = {
-                type_: [p for p in image_predictions if p.type == type_][0]
-                if any(p for p in image_predictions if p.type == type_)
-                else None
+                type_: (
+                    [p for p in image_predictions if p.type == type_][0]
+                    if any(p for p in image_predictions if p.type == type_)
+                    else None
+                )
                 for type_ in (
                     PredictionType.nutrient_mention,
                     PredictionType.nutrient,
