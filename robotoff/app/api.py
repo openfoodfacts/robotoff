@@ -1120,11 +1120,14 @@ class ImageLogoResetResource:
                 insights_deleted = (
                     ProductInsight.delete()
                     .where(
+                        # Speed-up filtering by providing additional filters
                         ProductInsight.barcode == logo.barcode,
                         ProductInsight.type == annotation_type,
                         # never delete annotated insights
                         ProductInsight.annotation.is_null(),
                         ProductInsight.predictor == "universal-logo-detector",
+                        # We don't have an index on data, but the number of
+                        # rows should be small enough to not be a problem
                         ProductInsight.data["logo_id"] == str(logo_id),
                     )
                     .execute()
