@@ -103,7 +103,7 @@ class ProductInsight(BaseModel):
     # NOTE: there is no 1:1 mapping between the type and the JSON format
     # provided here, for example for type==label, the data here could be:
     # {"logo_id":X,"bounding_box":Y}, or {"text":X,"notify":Y}
-    data = BinaryJSONField(index=True, default=dict)
+    data = BinaryJSONField(default=dict)
 
     # Timestamp is the timestamp of when this insight was imported into the DB.
     timestamp = peewee.DateTimeField(null=True, index=True)
@@ -187,7 +187,7 @@ class ProductInsight(BaseModel):
 
     # Predictor version is used to know what the version of the predictor
     # that generated the prediction. It can be either a digit or a model name
-    predictor_version = peewee.CharField(max_length=100, null=True, index=True)
+    predictor_version = peewee.CharField(max_length=100, null=True)
 
     # annotation campaigns enable contributors to focus their efforts (on
     # Hunger Games) on a subset of products. Each product have 0+ campaign
@@ -262,8 +262,8 @@ class ImageModel(BaseModel):
     # The complete image path can be constructed with
     # robotoff.settings.OFF_IMAGE_BASE_URL + source_image.
     source_image = peewee.TextField(null=False, index=True)
-    width = peewee.IntegerField(null=False, index=True)
-    height = peewee.IntegerField(null=False, index=True)
+    width = peewee.IntegerField(null=False)
+    height = peewee.IntegerField(null=False)
     deleted = peewee.BooleanField(null=False, index=True, default=False)
     server_type = peewee.CharField(null=True, max_length=10, index=True)
     # Perceptual hash of the image, used to find near-duplicates
@@ -299,12 +299,11 @@ class ImagePrediction(BaseModel):
     type = peewee.CharField(max_length=256)
     model_name = peewee.CharField(max_length=100, null=False, index=True)
     model_version = peewee.CharField(max_length=256, null=False, index=True)
-    data = BinaryJSONField(index=True)
+    data = BinaryJSONField()
     timestamp = peewee.DateTimeField(null=True)
     image = peewee.ForeignKeyField(ImageModel, null=False, backref="predictions")
     max_confidence = peewee.FloatField(
         null=True,
-        index=True,
         help_text="for object detection models, confidence of the highest confident"
         "object detected, null if no object was detected",
     )

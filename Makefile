@@ -291,3 +291,6 @@ robotoff-cli: guard-args
 # apply DB migrations
 migrate-db:
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff migrate-db
+
+create-migration: guard-args
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff create-migration ${args}
