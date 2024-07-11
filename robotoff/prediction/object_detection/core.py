@@ -24,6 +24,7 @@ OBJECT_DETECTION_MODEL_VERSION = {
     ObjectDetectionModel.nutriscore: "tf-nutriscore-1.0",
     ObjectDetectionModel.nutriscore_yolo: "yolo-nutriscore-1.0",
     ObjectDetectionModel.nutrition_table: "tf-nutrition-table-1.0",
+    ObjectDetectionModel.nutrition_table_yolo: "yolo-nutrition-table-1.0",
     ObjectDetectionModel.universal_logo_detector: "tf-universal-logo-detector-1.0",
 }
 

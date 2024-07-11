@@ -1219,7 +1219,7 @@ class NutritionImageImporter(InsightImporter):
                 ImageModel.barcode == product_id.barcode,
                 ImageModel.server_type == product_id.server_type.name,
                 ImagePrediction.model_name
-                == ObjectDetectionModel.nutrition_table.value,
+                == ObjectDetectionModel.nutrition_table_yolo.value,
                 ImagePrediction.max_confidence >= min_score,
             )
             .tuples()
