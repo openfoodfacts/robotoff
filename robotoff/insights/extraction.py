@@ -93,7 +93,7 @@ def run_object_detection_model(
     return ImagePrediction.create(
         image=image_model,
         type="object_detection",
-        model_name=model_name.value,
+        model_name=model_name.get_type(),
         model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
         data={"objects": data},
         timestamp=timestamp,
