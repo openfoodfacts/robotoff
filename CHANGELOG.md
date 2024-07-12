@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.47.0](https://github.com/openfoodfacts/robotoff/compare/v1.46.0...v1.47.0) (2024-07-12)
+
+
+### Features
+
+* add Yolov8 model for nutrition table detection ([#1365](https://github.com/openfoodfacts/robotoff/issues/1365)) ([5b069af](https://github.com/openfoodfacts/robotoff/commit/5b069af7e1dc7d1f264b2a05c40a9c1c84cd8620))
+
+
+### Bug Fixes
+
+* decrease minimum score to leverage nutrition table detections ([4a26918](https://github.com/openfoodfacts/robotoff/commit/4a26918081215e1781a5f4c6ce2b97df807462f4))
+* drop unused indices ([#1364](https://github.com/openfoodfacts/robotoff/issues/1364)) ([f0c348f](https://github.com/openfoodfacts/robotoff/commit/f0c348f2d2a6f83f8d2f9e7730d50066a5742e4f))
+* fix get_type call ([18181bb](https://github.com/openfoodfacts/robotoff/commit/18181bb5fa96e4ad0dbe39d88f5153c037e8a471))
+* fix ImagePrediction.model_name ([4a9e1a6](https://github.com/openfoodfacts/robotoff/commit/4a9e1a659111dcb5557c611b0d1fce9040a3725f))
+* fix issue with model loading ([1e15d72](https://github.com/openfoodfacts/robotoff/commit/1e15d7257ff1f34d74d8ac5437040a650b3a1e0f))
+
+
+### Technical
+
+* add doc about triton ([3a6fcb3](https://github.com/openfoodfacts/robotoff/commit/3a6fcb36732cee54752862f71f2b7d552725e766))
+* improve docstring ([e6f8533](https://github.com/openfoodfacts/robotoff/commit/e6f8533e04d053e3682a4214f6f8eb8e1ee77d6c))
+
 ## [1.46.0](https://github.com/openfoodfacts/robotoff/compare/v1.45.2...v1.46.0) (2024-07-08)
 
 
