@@ -1156,7 +1156,7 @@ class NutritionImageImporter(InsightImporter):
     MIN_NUM_NUTRIENT_VALUES = 3
     # Minimum score for nutrition-table object detections to be considered
     # valid
-    NUTRITION_TABLE_MODEL_MIN_SCORE = 0.9
+    NUTRITION_TABLE_MODEL_MIN_SCORE = 0.8
 
     # Number of pixels we add to enlarge the nutrition image crop.
     # Most of the time the crop around the nutrition table is too tight, so
