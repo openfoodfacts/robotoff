@@ -345,3 +345,7 @@ DISKCACHE_DIR = CACHE_DIR / "diskcache"
 
 # Path of the local disk cache used for tests
 TESTS_DISKCACHE_DIR = CACHE_DIR / "diskcache_tests_assets"
+
+
+# Domains allowed to be used as image sources while cropping
+CROP_ALLOWED_DOMAINS = os.environ.get("CROP_ALLOWED_DOMAINS", "").split(",")

@@ -3,6 +3,7 @@ import dataclasses
 import datetime
 import functools
 import hashlib
+import urllib
 import io
 import re
 import tempfile
@@ -773,6 +774,11 @@ class ImageCropResource:
         x_min = req.get_param_as_float("x_min", required=True)
         y_max = req.get_param_as_float("y_max", required=True)
         x_max = req.get_param_as_float("x_max", required=True)
+
+        parsed_img_url = urllib.parse.urlparse(image_url)
+        if parsed_img_url.hostname not in settings.CROP_ALLOWED_DOMAINS:
+            raise falcon.HTTPBadRequest("Domain not allowed!")
+
         # Get image from cache, as Hunger Games can requests many crops
         # from the same image
         image = get_image_from_url(
