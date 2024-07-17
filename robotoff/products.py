@@ -1,28 +1,42 @@
 import abc
 import datetime
 import enum
+import functools
 import gzip
 import json
 import os
-import pathlib
 import shutil
 import tempfile
-from typing import Dict, Iterable, Iterator, List, Optional, Union
+from pathlib import Path
+from typing import Iterable, Iterator, Optional, Union
 
 import requests
 from pymongo import MongoClient
 
 from robotoff import settings
-from robotoff.mongo import MONGO_CLIENT_CACHE
+from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
-from robotoff.utils.cache import CachedStore
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
+MONGO_SELECTION_TIMEOUT_MS = 10_0000
+
+
+@functools.cache
+def get_mongo_client() -> MongoClient:
+    return MongoClient(
+        settings.MONGO_URI, serverSelectionTimeoutMS=MONGO_SELECTION_TIMEOUT_MS
+    )
+
 
 def get_image_id(image_path: str) -> Optional[str]:
-    image_id = pathlib.Path(image_path).stem
+    """Return the image ID from an image path.
+
+    :param image_path: the image path (ex: /322/247/762/7888/2.jpg)
+    :return: the image ID ("2" in the previous example) or None if the image
+    is not "raw" (not digit-numbered)
+    """
+    image_id = Path(image_path).stem
 
     if image_id.isdigit():
         return image_id
@@ -31,7 +45,7 @@ def get_image_id(image_path: str) -> Optional[str]:
 
 
 def is_valid_image(images: JSONType, image_path: str) -> bool:
-    image_id = pathlib.Path(image_path).stem
+    image_id = Path(image_path).stem
     if not image_id.isdigit():
         return False
 
@@ -63,7 +77,7 @@ def is_special_image(
     if not is_valid_image(images, image_path):
         return False
 
-    image_id = pathlib.Path(image_path).stem
+    image_id = Path(image_path).stem
 
     for image_key, image_data in images.items():
         if (
@@ -79,7 +93,7 @@ def is_special_image(
     return False
 
 
-def minify_product_dataset(dataset_path: pathlib.Path, output_path: pathlib.Path):
+def minify_product_dataset(dataset_path: Path, output_path: Path):
     if dataset_path.suffix == ".gz":
         jsonl_iter_func = gzip_jsonl_iter
     else:
@@ -114,7 +128,7 @@ def save_product_dataset_etag(etag: str):
 
 def fetch_dataset(minify: bool = True) -> bool:
     with tempfile.TemporaryDirectory() as tmp_dir:
-        output_dir = pathlib.Path(tmp_dir)
+        output_dir = Path(tmp_dir)
         output_path = output_dir / "products.jsonl.gz"
         etag = download_dataset(output_path)
 
@@ -158,7 +172,7 @@ def download_dataset(output_path: os.PathLike) -> str:
     current_etag = r.headers.get("ETag", "").strip("'\"")
 
     logger.info("Dataset has changed, downloading file")
-    logger.debug("Saving temporary file in {}".format(output_path))
+    logger.debug("Saving temporary file in %s", output_path)
 
     with open(output_path, "wb") as f:
         shutil.copyfileobj(r.raw, f)
@@ -166,8 +180,10 @@ def download_dataset(output_path: os.PathLike) -> str:
     return current_etag
 
 
-def is_valid_dataset(dataset_path: pathlib.Path) -> bool:
-    """Check the dataset integrity: readable end to end and with a minimum number of products.
+def is_valid_dataset(dataset_path: Path) -> bool:
+    """Check the dataset integrity: readable end to end and with a minimum
+    number of products.
+
     This is used to spot corrupted archive files."""
     dataset = ProductDataset(dataset_path)
     try:
@@ -333,11 +349,25 @@ class ProductStream:
     def iter(self) -> Iterable[JSONType]:
         return iter(self)
 
-    def iter_product(self) -> Iterable["Product"]:
+    def iter_product(
+        self, projection: Optional[list[str]] = None
+    ) -> Iterable["Product"]:
         for item in self:
-            yield Product(item)
+            projected_item = item
+            if projection:
+                projected_item = {k: item[k] for k in projection if k in item}
+                if projection is not None and "image_ids" in projection:
+                    # image_ids field is infered from `images` field, and
+                    # `images` is not necessarily in projection, so compute it
+                    # here
+                    projected_item["image_ids"] = list(
+                        key
+                        for key in (item.get("images") or {}).keys()
+                        if key.isdigit()
+                    )
+            yield Product(projected_item)
 
-    def collect(self) -> List[JSONType]:
+    def collect(self) -> list[JSONType]:
         return list(self)
 
 
@@ -350,12 +380,10 @@ class ProductDataset:
         self.jsonl_path = jsonl_path
 
     def stream(self) -> ProductStream:
-        json_path_str = str(self.jsonl_path)
-
-        if json_path_str.endswith(".gz"):
-            iterator = gzip_jsonl_iter(json_path_str)
+        if str(self.jsonl_path).endswith(".gz"):
+            iterator = gzip_jsonl_iter(self.jsonl_path)
         else:
-            iterator = jsonl_iter(json_path_str)
+            iterator = jsonl_iter(self.jsonl_path)
 
         return ProductStream(iterator)
 
@@ -386,20 +414,31 @@ class Product:
         "stores_tags",
         "unique_scans_n",
         "images",
+        "image_ids",
+        "packagings",
+        "lang",
     )
 
     def __init__(self, product: JSONType):
         self.barcode: Optional[str] = product.get("code")
-        self.countries_tags: List[str] = product.get("countries_tags") or []
-        self.categories_tags: List[str] = product.get("categories_tags") or []
-        self.emb_codes_tags: List[str] = product.get("emb_codes_tags") or []
-        self.labels_tags: List[str] = product.get("labels_tags") or []
+        self.countries_tags: list[str] = product.get("countries_tags") or []
+        self.categories_tags: list[str] = product.get("categories_tags") or []
+        self.emb_codes_tags: list[str] = product.get("emb_codes_tags") or []
+        self.labels_tags: list[str] = product.get("labels_tags") or []
         self.quantity: Optional[str] = product.get("quantity") or None
         self.expiration_date: Optional[str] = product.get("expiration_date") or None
-        self.brands_tags: List[str] = product.get("brands_tags") or []
-        self.stores_tags: List[str] = product.get("stores_tags") or []
+        self.brands_tags: list[str] = product.get("brands_tags") or []
+        self.stores_tags: list[str] = product.get("stores_tags") or []
+        self.packagings: list = product.get("packagings") or []
         self.unique_scans_n: int = product.get("unique_scans_n") or 0
         self.images: JSONType = product.get("images") or {}
+        # list of raw image IDs
+        self.image_ids: list[str] = (
+            product["image_ids"]
+            if "image_ids" in product
+            else list(key for key in self.images.keys() if key.isdigit())
+        )
+        self.lang: Optional[str] = product.get("lang")
 
     @staticmethod
     def get_fields():
@@ -429,32 +468,36 @@ class ProductStore(metaclass=abc.ABCMeta):
 
 
 class MemoryProductStore(ProductStore):
-    def __init__(self, store: Dict[str, Product]):
-        self.store: Dict[str, Product] = store
+    def __init__(self, store: dict[str, Product]):
+        self.store: dict[str, Product] = store
 
     def __len__(self):
         return len(self.store)
 
     @classmethod
-    def load_from_path(cls, path: str):
+    def load_from_path(cls, path: Path, projection: Optional[list[str]] = None):
         logger.info("Loading product store")
+
+        if projection is not None and "code" not in projection:
+            raise ValueError("at least `code` must be in projection")
+
         ds = ProductDataset(path)
         stream = ds.stream()
 
-        store: Dict[str, Product] = {}
+        store: dict[str, Product] = {}
 
-        for product in stream.iter_product():
+        for product in stream.iter_product(projection):
             if product.barcode:
                 store[product.barcode] = product
 
         return cls(store)
 
     @classmethod
-    def load_min(cls):
-        return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH)
+    def load_min(cls, projection: Optional[list[str]] = None) -> "MemoryProductStore":
+        return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH, projection)
 
     @classmethod
-    def load_full(cls):
+    def load_full(cls) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_DATASET_PATH)
 
     def __getitem__(self, item) -> Optional[Product]:
@@ -465,47 +508,60 @@ class MemoryProductStore(ProductStore):
 
 
 class DBProductStore(ProductStore):
-    def __init__(self, client: MongoClient):
+    def __init__(self, server_type: ServerType, client: MongoClient):
         self.client = client
-        self.db = self.client.off
+        self.server_type = server_type
+        db_name = server_type.value
+        self.db = self.client[db_name]
         self.collection = self.db.products
 
     def __len__(self):
         return len(self.collection.estimated_document_count())
 
     def get_product(
-        self, barcode: str, projection: Optional[List[str]] = None
+        self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
     ) -> Optional[JSONType]:
-        return self.collection.find_one({"code": barcode}, projection)
+        if not settings.ENABLE_MONGODB_ACCESS:
+            # if `ENABLE_MONGODB_ACCESS=False`, we don't disable MongoDB
+            # access and return None
+            return None
+        # We use `_id` instead of `code` field, as `_id` contains org ID +
+        # barcode for pro platform, which is also the case for
+        # `product_id.barcode`
+        return self.collection.find_one({"_id": product_id.barcode}, projection)
 
-    def __getitem__(self, barcode: str) -> Optional[Product]:
-        product = self.get_product(barcode)
+    def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
+        product = self.get_product(product_id)
 
         if product:
             return Product(product)
 
         return None
 
-    def __iter__(self):
-        raise NotImplementedError("cannot iterate over database product store")
+    def iter_product(self, projection: Optional[list[str]] = None):
+        if self.collection is not None:
+            yield from (Product(p) for p in self.collection.find(projection=projection))
 
 
-def load_min_dataset() -> ProductStore:
-    ps = MemoryProductStore.load_min()
-    logger.info("product store loaded ({} items)".format(len(ps)))
+def get_min_product_store(projection: Optional[list[str]] = None) -> MemoryProductStore:
+    logger.info("Loading product store in memory...")
+    ps = MemoryProductStore.load_min(projection)
+    logger.info("product store loaded (%s items)", len(ps))
     return ps
 
 
-def get_product_store() -> DBProductStore:
-    mongo_client = MONGO_CLIENT_CACHE.get()
-    return DBProductStore(client=mongo_client)
+def get_product_store(server_type: ServerType) -> DBProductStore:
+    return DBProductStore(server_type, client=get_mongo_client())
 
 
 def get_product(
-    barcode: str, projection: Optional[List[str]] = None
+    product_id: ProductIdentifier, projection: Optional[list[str]] = None
 ) -> Optional[JSONType]:
-    mongo_client = MONGO_CLIENT_CACHE.get()
-    return mongo_client.off.products.find_one({"code": barcode}, projection)
+    """Get product from MongoDB.
 
-
-CACHED_PRODUCT_STORE = CachedStore(load_min_dataset)
+    :param product_id: identifier of the product to fetch
+    :param projection: list of fields to retrieve, if not provided all fields
+    are queried
+    :return: the product as a dict or None if it was not found
+    """
+    return get_product_store(product_id.server_type).get_product(product_id, projection)

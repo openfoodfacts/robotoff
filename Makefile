@@ -14,8 +14,13 @@ NAME = "robotoff"
 ENV_FILE ?= .env
 MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
-DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
-DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker-compose --env-file=${ENV_FILE}
+DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
+DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker compose --env-file=${ENV_FILE}
+ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
+
+# mount information for robotoff backup ZFS dataset
+NFS_VOLUMES_ADDRESS_OVH3 ?= 10.0.0.3
+NFS_VOLUMES_BACKUP_BASE_PATH ?= /rpool/backups/robotoff
 
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
@@ -40,8 +45,8 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello up create_external_networks
-	@echo "🥫 You should be able to access your local install of Robotoff at http://robotoff.openfoodfacts.localhost"
+dev: hello build init-elasticsearch migrate-db up create_external_networks
+	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
 	@grep -qxF -- "${HOSTS}" /etc/hosts || echo "${HOSTS}" >> /etc/hosts
@@ -53,7 +58,18 @@ up:
 # creates a docker network and runs docker-compose
 	@echo "🥫 Building and starting containers …"
 	docker network create po_default || true  
-	${DOCKER_COMPOSE} up -d --build 2>&1
+ifdef service
+	${DOCKER_COMPOSE} up -d ${service} 2>&1
+else
+	${DOCKER_COMPOSE} up -d 2>&1
+endif
+
+# pull images from image repository
+pull:
+	${DOCKER_COMPOSE} pull
+
+build:
+	${DOCKER_COMPOSE} build api 2>&1
 
 down:
 	@echo "🥫 Bringing down containers …"
@@ -64,7 +80,7 @@ hdown:
 	${DOCKER_COMPOSE} down -v
 
 restart:
-	@echo "🥫 Restarting frontend & backend containers …"
+	@echo "🥫 Restarting containers …"
 	${DOCKER_COMPOSE} restart
 
 status:
@@ -77,16 +93,75 @@ livecheck:
 
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
-	${DOCKER_COMPOSE} logs -f
+	${DOCKER_COMPOSE} logs -f api scheduler worker_1 worker_2 worker_3 worker_4
 
 #------------#
 # Management #
 #------------#
 
-# TODO: uncomment once model download CLI is ready 
-# dl-models:
-# 	@echo "🥫 Downloading models …"
-# 	${DOCKER_COMPOSE} run --rm api poetry run robotoff-cli download-models
+dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model
+	@echo "⏬ Downloading all models …"
+
+dl-langid-model:
+	@echo "⏬ Downloading language identification model file …"
+	mkdir -p models; \
+	cd models; \
+	wget -cO - https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin > lid.176.bin;
+
+dl-object-detection-models:
+	@echo "⏬ Downloading object detection model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
+		do \
+			dir=`echo $${asset_name} | sed 's/tf-//g'`; \
+			mkdir -p $${dir}/1; \
+			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
+	done; \
+	mkdir -p nutriscore-yolo/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutriscore-yolo/resolve/main/weights/best.onnx > nutriscore-yolo/1/model.onnx; \
+	mkdir -p nutrition-table-yolo/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutrition-table-yolo/resolve/8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647/weights/best.onnx > nutrition-table-yolo/1/model.onnx;
+
+
+dl-category-classifier-model:
+	@echo "⏬ Downloading category classifier model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+	mkdir -p clip/1; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx; \
+	dir=category-classifier-keras-image-embeddings-3.0/1/model.savedmodel; \
+	mkdir -p $${dir}; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-image-embeddings-3.0/saved_model.tar.gz > $${dir}/saved_model.tar.gz; \
+	cd $${dir}; \
+	tar -xzvf saved_model.tar.gz --strip-component=1; \
+	rm saved_model.tar.gz
+
+dl-ingredient-detection-model:
+	@echo "⏬ Downloading ingredient detection model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+    dir=ingredient-ner/1/model.onnx; \
+	mkdir -p $${dir}; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/pytorch-ingredient-detection-1.0/onnx.tar.gz > $${dir}/onnx.tar.gz; \
+	cd $${dir}; \
+	tar -xzvf onnx.tar.gz --strip-component=1; \
+	rm onnx.tar.gz
+
+init-elasticsearch:
+	@echo "Initializing elasticsearch indices"
+	${DOCKER_COMPOSE} up -d elasticsearch 2>&1
+	@echo "Sleeping for 20s, waiting for elasticsearch to be ready..."
+	@sleep 20
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff init-elasticsearch
+
+launch-burst-worker:
+ifdef queues
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_1 python -m robotoff run-worker ${queues} --burst
+# Only launch burst worker on low priority queue if queue is not specified
+else
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_1 python -m robotoff run-worker robotoff-low --burst
+endif
 
 #------------#
 # Quality    #
@@ -134,41 +209,55 @@ health:
 i18n-compile:
 	@echo "🥫 Compiling translations …"
 # Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
-	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps workers -c "cd i18n && . compile.sh"
+	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker_1 -c "cd i18n && . compile.sh"
 
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest --cov-report xml --cov=robotoff tests/unit
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit
 
 integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings
 # usage: make pytest args='test/unit/my-test.py --pdb'
 pytest: guard-args
 	@echo "🥫 Running test: ${args} …"
-	${DOCKER_COMPOSE_TEST} run --rm workers poetry run pytest ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest ${args}
 
 #------------#
 # Production #
 #------------#
+
+# Create all external volumes needed for production. Using external volumes is useful to prevent data loss (as they are not deleted when performing docker down -v)
 create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
 	docker volume create api-dataset
 	docker volume create postgres-data
 	docker volume create es-data
+# This is an NFS mount from robotoff backup ZFS dataset.
+# Two important notes:
+# - we use `nolock` as there shouldn't be any concurrent writes on the same file, and `soft` to prevent the docker container from freezing if the NFS
+#   connection is lost
+# - we cannot mount directly `${NFS_VOLUMES_BACKUP_BASE_PATH}`, we have to mount a subfolder (`backups`) to prevent permission issues
+	docker volume create --driver local --opt type=nfs --opt o=addr=${NFS_VOLUMES_ADDRESS_OVH3},nolock,soft,rw --opt device=:${NFS_VOLUMES_BACKUP_BASE_PATH}/backups ${COMPOSE_PROJECT_NAME}_backup
+
 
 create_external_networks:
 	@echo "🥫 Creating external networks if needed … (dev only)"
 	( docker network create ${PO_LOCAL_NET} || true )
 # for tests
 	( docker network create po_test || true )
+
+# Backup PostgreSQL database in robotoff_backup volume
+backup_postgres:
+	@echo "🥫 Performing PostgreSQL backup"
+	${DOCKER_COMPOSE} exec -t postgres bash /opt/backup_postgres.sh
 
 #---------#
 # Cleanup #
@@ -183,6 +272,10 @@ prune_cache:
 
 clean: goodbye hdown prune prune_cache
 
+# clean tests, remove containers and volume (useful if you changed env variables, etc.)
+clean_tests:
+	${DOCKER_COMPOSE_TEST} down -v --remove-orphans
+
 #-----------#
 # Utilities #
 #-----------#
@@ -193,3 +286,14 @@ guard-%: # guard clause for targets that require an environment variable (usuall
    		echo use "make ${MAKECMDGOALS} $*=you-args"; \
    		exit 1; \
 	fi;
+
+robotoff-cli: guard-args
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff ${args}
+
+
+# apply DB migrations
+migrate-db:
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff migrate-db
+
+create-migration: guard-args
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff create-migration ${args}

@@ -1,5 +1,4 @@
 from base64 import b64decode
-from typing import Tuple
 from urllib.parse import unquote
 
 
@@ -7,10 +6,10 @@ class BasicAuthDecodeError(Exception):
     pass
 
 
-def basic_decode(encoded_str: str) -> Tuple[str, str]:
+def basic_decode(encoded_str: str) -> tuple[str, str]:
     """Decode an encrypted HTTP basic authentication string. Returns a tuple of
-    the form (username, password), and raises a BasicAuthDecodeError exception if
-    nothing could be decoded.
+    the form (username, password), and raises a BasicAuthDecodeError exception
+    if nothing could be decoded.
     """
     split = encoded_str.strip().split(" ")
 

@@ -1,5 +1,3 @@
-from typing import Dict, Set
-
 import pytest
 
 from robotoff import settings
@@ -11,7 +9,7 @@ from robotoff.utils import text_file_iter
 
 
 def test_check_logo_annotation_brands():
-    items: Set[str] = set()
+    items = set()
 
     for item in text_file_iter(settings.OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH):
         assert "||" in item
@@ -59,7 +57,7 @@ def brand_keyword_processor():
     ],
 )
 def test_extract_brand_taxonomy(
-    brand_taxonomy_keyword_processor, text: str, expected: Dict
+    brand_taxonomy_keyword_processor, text: str, expected: dict
 ):
     insights = extract_brands(
         brand_taxonomy_keyword_processor, text, "test", automatic_processing=False

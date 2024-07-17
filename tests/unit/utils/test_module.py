@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from robotoff.utils import ImageLoadingException, get_image_from_url
+from robotoff.utils import get_image_from_url
+from robotoff.utils.download import AssetLoadingException
 
 
 def test_get_image_from_url_http_error(mocker):
@@ -13,7 +14,7 @@ def test_get_image_from_url_http_error(mocker):
     response_mock.ok = False
     response_mock.status_code = 404
     session_mock.get.return_value = response_mock
-    with pytest.raises(ImageLoadingException, match="Cannot load image.*"):
+    with pytest.raises(AssetLoadingException, match="Cannot download .*"):
         get_image_from_url("MOCK_URL", error_raise=True, session=session_mock)
 
     image = get_image_from_url("MOCK_URL", error_raise=False, session=session_mock)
@@ -54,7 +55,7 @@ def test_get_image_from_url_empty_content(mocker):
     response_mock.status_code = 200
     session_mock.get.return_value = response_mock
 
-    with pytest.raises(ImageLoadingException, match="Cannot identify image MOCK_URL"):
+    with pytest.raises(AssetLoadingException, match="Cannot identify image MOCK_URL"):
         get_image_from_url("MOCK_URL", error_raise=True, session=session_mock)
 
     image = get_image_from_url("MOCK_URL", error_raise=False, session=session_mock)
@@ -69,7 +70,7 @@ def test_get_image_from_url_invalid_content(mocker):
     response_mock.status_code = 200
     session_mock.get.return_value = response_mock
 
-    with pytest.raises(ImageLoadingException, match="Cannot identify image MOCK_URL"):
+    with pytest.raises(AssetLoadingException, match="Cannot identify image MOCK_URL"):
         get_image_from_url("MOCK_URL", error_raise=True, session=session_mock)
 
     image = get_image_from_url("MOCK_URL", error_raise=False, session=session_mock)
@@ -80,7 +81,8 @@ def test_get_image_from_url_decompression_bomb(mocker):
     session_mock = mocker.Mock()
     response_mock = mocker.Mock()
     mocker.patch(
-        "robotoff.utils.Image", **{"open.side_effect": Image.DecompressionBombError()}
+        "robotoff.utils.image.Image",
+        **{"open.side_effect": Image.DecompressionBombError()}
     )
     response_mock.content = generate_image()
     response_mock.ok = True
@@ -88,7 +90,7 @@ def test_get_image_from_url_decompression_bomb(mocker):
     session_mock.get.return_value = response_mock
 
     with pytest.raises(
-        ImageLoadingException, match="Decompression bomb error for image MOCK_URL"
+        AssetLoadingException, match="Decompression bomb error for image MOCK_URL"
     ):
         get_image_from_url("MOCK_URL", error_raise=True, session=session_mock)
 

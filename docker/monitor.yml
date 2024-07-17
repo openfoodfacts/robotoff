@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   api:
     command:
@@ -11,20 +10,20 @@ services:
     depends_on:
       - statsd
   statsd:
+    restart: $RESTART_POLICY
     image: prom/statsd-exporter:v0.22.2
     volumes:
       - ./statsd.conf:/statsd/statsd.conf
     command:
       - "--statsd.mapping-config=/statsd/statsd.conf"
     ports:
-      - 9102:9102
-    networks:
-      - webnet
+      - ${STATSD_EXPOSE:-9102}:9102
   postgres_exporter:
-    image: prometheuscommunity/postgres-exporter:v0.10.0
+    restart: $RESTART_POLICY
+    image: prometheuscommunity/postgres-exporter:v0.11.1
     environment:
       - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable
-    networks:
-      - webnet
     depends_on:
       - postgres
+    ports:
+      - ${POSTGRES_EXPORTER_EXPOSE:-9187}:9187

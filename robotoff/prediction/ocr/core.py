@@ -1,19 +1,13 @@
-import json
 import pathlib
-from typing import Callable, Dict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import Callable, Iterable, Optional, TextIO, Union
 
-import orjson
-import requests
+from openfoodfacts.ocr import OCRResult
 
-from robotoff.off import generate_json_ocr_url, get_barcode_from_path, split_barcode
-from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.settings import BaseURLProvider
-from robotoff.utils import get_logger, http_session, jsonl_iter, jsonl_iter_fp
-from robotoff.utils.types import JSONType
+from robotoff.types import JSONType, Prediction, PredictionType, ProductIdentifier
+from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
 
 from .brand import find_brands
 from .category import find_category
-from .dataclass import OCRParsingException, OCRResult, OCRResultGenerationException
 from .expiration_date import find_expiration_date
 from .image_flag import flag_image
 from .image_lang import get_image_lang
@@ -30,8 +24,8 @@ from .trace import find_traces
 logger = get_logger(__name__)
 
 
-PREDICTION_TYPE_TO_FUNC: Dict[
-    str, Callable[[Union[OCRResult, str]], List[Prediction]]
+PREDICTION_TYPE_TO_FUNC: dict[
+    str, Callable[[Union[OCRResult, str]], list[Prediction]]
 ] = {
     PredictionType.category: find_category,
     PredictionType.packager_code: find_packager_codes,
@@ -51,96 +45,36 @@ PREDICTION_TYPE_TO_FUNC: Dict[
 }
 
 
-def fetch_images_for_ean(ean: str):
-    url = BaseURLProvider().get() + "/api/v0/product/{}.json?fields=images".format(ean)
-    images = http_session.get(url).json()
-    return images
-
-
-def get_json_for_image(barcode: str, image_id: str) -> Optional[JSONType]:
-    url = generate_json_ocr_url(barcode, image_id)
-    r = http_session.get(url)
-
-    if r.status_code == 404:
-        return None
-
-    return r.json()
-
-
-def get_ocr_result(
-    ocr_url: str, session: requests.Session, error_raise: bool = True
-) -> Optional[OCRResult]:
-    try:
-        r = session.get(ocr_url)
-    except requests.exceptions.RequestException as e:
-        error_message = "HTTP Error when fetching OCR URL"
-        if error_raise:
-            raise OCRResultGenerationException(error_message, ocr_url) from e
-
-        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
-        return None
-
-    try:
-        ocr_data: Dict = r.json()
-    except json.JSONDecodeError as e:
-        error_message = "Error while decoding OCR JSON"
-        if error_raise:
-            raise OCRResultGenerationException(error_message, ocr_url) from e
-
-        logger.warning(error_message + ": %s", ocr_url, exc_info=e)
-        return None
-
-    try:
-        return OCRResult.from_json(ocr_data)
-    except OCRParsingException as e:
-        if error_raise:
-            raise OCRResultGenerationException(str(e), ocr_url) from e
-
-        logger.warning("Error while parsing OCR JSON from %s", ocr_url, exc_info=e)
-        return None
-
-
 def extract_predictions(
     content: Union[OCRResult, str],
     prediction_type: PredictionType,
-    barcode: Optional[str] = None,
+    product_id: Optional[ProductIdentifier] = None,
     source_image: Optional[str] = None,
-) -> List[Prediction]:
+) -> list[Prediction]:
     """Extract predictions from OCR using for provided prediction type.
 
     :param content: OCR output to extract predictions from.
-    :param barcode: Barcode to add to each prediction, defaults to None.
+    :param prediction_type: type of the prediction to extract.
+    :param product_id: identifier of the product (barcode + server type) to
+        add to each prediction, defaults to None.
     :param source_image: `source_image`to add to each prediction, defaults to
-    None.
+        None.
     :return: The generated predictions.
     """
     if prediction_type in PREDICTION_TYPE_TO_FUNC:
         predictions = PREDICTION_TYPE_TO_FUNC[prediction_type](content)
         for prediction in predictions:
-            prediction.barcode = barcode
             prediction.source_image = source_image
+            if product_id is not None:
+                prediction.barcode = product_id.barcode
+                prediction.server_type = product_id.server_type
+
         return predictions
     else:
         raise ValueError(f"unknown prediction type: {prediction_type}")
 
 
-def is_barcode(text: str):
-    return text.isdigit()
-
-
-def get_source(
-    image_name: str, json_path: str = None, barcode: Optional[str] = None
-) -> str:
-    if not barcode:
-        barcode = get_barcode_from_path(str(json_path))
-
-        if not barcode:
-            raise ValueError("invalid JSON path: {}".format(json_path))
-
-    return "/{}/{}.jpg" "".format("/".join(split_barcode(barcode)), image_name)
-
-
-def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[Tuple[Optional[str], Dict]]:
+def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[Optional[str], dict]]:
     for item in items:
         if "content" in item:
             source = item["source"].replace("//", "/").replace(".json", ".jpg")
@@ -149,7 +83,7 @@ def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[Tuple[Optional[str],
 
 def ocr_iter(
     source: Union[str, TextIO, pathlib.Path]
-) -> Iterable[Tuple[Optional[str], Dict]]:
+) -> Iterable[tuple[Optional[str], dict]]:
     if isinstance(source, pathlib.Path):
         items = jsonl_iter(source)
         yield from ocr_content_iter(items)
@@ -157,36 +91,3 @@ def ocr_iter(
     elif not isinstance(source, str):
         items = jsonl_iter_fp(source)
         yield from ocr_content_iter(items)
-
-    elif is_barcode(source):
-        barcode: str = source
-        image_data = fetch_images_for_ean(source)["product"]["images"]
-
-        for image_id in image_data.keys():
-            if image_id.isdigit():
-                print("Getting OCR for image {}".format(image_id))
-                data = get_json_for_image(barcode, image_id)
-                source = get_source(image_id, barcode=barcode)
-                if data:
-                    yield source, data
-
-    else:
-        input_path = pathlib.Path(source)
-
-        if not input_path.exists():
-            print("Unrecognized input: {}".format(input_path))
-            return
-
-        if input_path.is_dir():
-            for json_path in input_path.glob("**/*.json"):
-                with open(str(json_path), "rb") as f:
-                    source = get_source(json_path.stem, json_path=str(json_path))
-                    yield source, orjson.loads(f.read())
-        else:
-            if ".json" in input_path.suffixes:
-                with open(str(input_path), "rb") as f:
-                    yield None, orjson.loads(f.read())
-
-            elif ".jsonl" in input_path.suffixes:
-                items = jsonl_iter(input_path)
-                yield from ocr_content_iter(items)

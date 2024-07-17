@@ -1,6 +1,6 @@
 from typing import Callable, Iterable, Optional
 
-from flashtext import KeywordProcessor
+from robotoff.utils.text import KeywordProcessor
 
 
 def generate_keyword_processor(

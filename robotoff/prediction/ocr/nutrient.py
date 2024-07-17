@@ -1,24 +1,33 @@
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
-from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.utils.types import JSONType
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from robotoff.types import JSONType, Prediction, PredictionType
 
-EXTRACTOR_VERSION = "2"
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
 
-NutrientMentionType = Tuple[str, List[str]]
+NutrientMentionType = tuple[str, list[str]]
 
-NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
+NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
     "energy": [
-        ("[ée]nergie", ["fr", "de"]),
+        ("énergie", ["fr"]),
+        ("energie", ["fr", "de", "nl"]),
         ("valeurs? [ée]nerg[ée]tiques?", ["fr"]),
         ("energy", ["en"]),
         ("calories", ["fr", "en"]),
         ("energia", ["es", "it", "pt"]),
         ("valor energ[ée]tico", ["es"]),
+        ("energi", ["da"]),
     ],
     "saturated_fat": [
         ("mati[èe]res? grasses? satur[ée]s?", ["fr"]),
@@ -31,6 +40,7 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
         ("waarvan verzadigde", ["nl"]),
         ("gesättigte fettsäuren", ["de"]),
         ("[aá]cidos grasos saturados", ["es"]),
+        ("mættede fedtsyrer", ["da"]),
     ],
     "trans_fat": [("mati[èe]res? grasses? trans", ["fr"]), ("trans fat", ["en"])],
     "fat": [
@@ -43,6 +53,7 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
         ("grasas", ["es"]),
         ("grassi", ["it"]),
         ("l[íi]pidos", ["es"]),
+        ("fedt", ["da"]),
     ],
     "sugar": [
         ("sucres?", ["fr"]),
@@ -51,6 +62,7 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
         ("suikers?", ["nl"]),
         ("zucker", ["de"]),
         ("az[úu]cares", ["es"]),
+        ("sukkerarter", ["da"]),
     ],
     "carbohydrate": [
         ("total carbohydrate", ["en"]),
@@ -61,17 +73,18 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
         ("koolhydraat", ["nl"]),
         ("kohlenhydrate", ["de"]),
         ("hidratos de carbono", ["es"]),
+        ("kulhydrat", ["da"]),
     ],
     "protein": [
         ("prot[ée]ines?", ["fr"]),
-        ("protein", ["en"]),
+        ("protein", ["en", "da"]),
         ("eiwitten", ["nl"]),
         ("eiweiß", ["de"]),
         ("prote[íi]nas", ["es"]),
     ],
     "salt": [
         ("sel", ["fr"]),
-        ("salt", ["en"]),
+        ("salt", ["en", "da"]),
         ("zout", ["nl"]),
         ("salz", ["de"]),
         ("sale", ["it"]),
@@ -79,11 +92,12 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
     ],
     "fiber": [
         ("fibres?", ["en", "fr", "it"]),
-        ("fibers?", ["en"]),
+        ("(?:dietary )?fibers?", ["en"]),
         ("fibres? alimentaires?", ["fr"]),
         ("(?:voedings)?vezels?", ["nl"]),
         ("ballaststoffe", ["de"]),
         ("fibra(?: alimentaria)?", ["es"]),
+        ("kostfibre", ["da"]),
     ],
     "nutrition_values": [
         ("informations? nutritionnelles?(?: moyennes?)?", ["fr"]),
@@ -95,11 +109,13 @@ NUTRIENT_MENTION: Dict[str, List[NutrientMentionType]] = {
         ("average nutritional values?", ["en"]),
         ("valori nutrizionali medi", ["it"]),
         ("gemiddelde waarden per", ["nl"]),
+        ("nutritionele informatie", ["nl"]),
+        ("(er)?næringsindhold", ["da"]),
     ],
 }
 
 
-NUTRIENT_UNITS: Dict[str, List[str]] = {
+NUTRIENT_UNITS: dict[str, list[str]] = {
     "energy": ["kj", "kcal"],
     "saturated_fat": ["g"],
     "trans_fat": ["g"],
@@ -113,7 +129,7 @@ NUTRIENT_UNITS: Dict[str, List[str]] = {
 
 
 def generate_nutrient_regex(
-    nutrient_mentions: List[NutrientMentionType], units: List[str]
+    nutrient_mentions: list[NutrientMentionType], units: list[str]
 ):
     nutrient_names = [x[0] for x in nutrient_mentions]
     nutrient_names_str = "|".join(nutrient_names)
@@ -121,38 +137,44 @@ def generate_nutrient_regex(
     return re.compile(
         r"(?<!\w)({}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({})(?!\w)".format(
             nutrient_names_str, units_str
-        )
+        ),
+        re.I,
     )
 
 
-def generate_nutrient_mention_regex(nutrient_mentions: List[NutrientMentionType]):
+def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]):
     sub_re = "|".join(
         r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
         for i, (name, lang) in enumerate(nutrient_mentions)
     )
-    return re.compile(r"(?<!\w){}(?!\w)".format(sub_re))
+    return re.compile(r"(?<!\w){}(?!\w)".format(sub_re), re.I)
 
 
 NUTRIENT_VALUES_REGEX = {
     nutrient: OCRRegex(
         generate_nutrient_regex(NUTRIENT_MENTION[nutrient], units),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
     )
     for nutrient, units in NUTRIENT_UNITS.items()
 }
 
-NUTRIENT_MENTIONS_REGEX: Dict[str, OCRRegex] = {
+NUTRIENT_MENTIONS_REGEX: dict[str, OCRRegex] = {
     nutrient: OCRRegex(
         generate_nutrient_mention_regex(NUTRIENT_MENTION[nutrient]),
         field=OCRField.full_text_contiguous,
-        lowercase=True,
     )
     for nutrient in NUTRIENT_MENTION
 }
+NUTRIENT_MENTIONS_REGEX["nutrient_value"] = OCRRegex(
+    re.compile(
+        r"(?<!\w)([0-9]+[,.]?[0-9]*) ?(g|kj|kcal)(?!\w)",
+        re.I,
+    ),
+    field=OCRField.full_text_contiguous,
+)
 
 
-def find_nutrient_values(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
@@ -180,36 +202,50 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> List[Prediction]:
     return [
         Prediction(
             type=PredictionType.nutrient,
-            data={"nutrients": nutrients, "version": EXTRACTOR_VERSION},
+            data={"nutrients": nutrients},
+            predictor_version=PREDICTOR_VERSION,
+            predictor="regex",
         )
     ]
 
 
-def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
     nutrients: JSONType = {}
 
-    for regex_code, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
+    for nutrient_name, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():
         text = get_text(content, ocr_regex)
 
         if not text:
             continue
 
         for match in ocr_regex.regex.finditer(text):
-            nutrients.setdefault(regex_code, [])
-            group_dict = {k: v for k, v in match.groupdict().items() if v is not None}
+            nutrients.setdefault(nutrient_name, [])
+            nutrient_data = {
+                "raw": match.group(0),
+                "span": list(match.span()),
+            }
 
-            languages: List[str] = []
-            if group_dict:
-                languages_raw = list(group_dict.keys())[0]
-                languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")
-
-            nutrients[regex_code].append(
-                {
-                    "raw": match.group(0),
-                    "span": list(match.span()),
-                    "languages": languages,
+            if nutrient_name != "nutrient_value":
+                # Language available for all nutrient fields except
+                # 'nutrient_value'
+                group_dict = {
+                    k: v for k, v in match.groupdict().items() if v is not None
                 }
-            )
+                languages: list[str] = []
+                if group_dict:
+                    languages_raw = list(group_dict.keys())[0]
+                    languages = languages_raw.rsplit("_", maxsplit=1)[0].split("_")
+
+                nutrient_data["languages"] = languages
+
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                nutrient_data["bounding_box_absolute"] = bounding_box
+
+            nutrients[nutrient_name].append(nutrient_data)
 
     if not nutrients:
         return []
@@ -217,6 +253,7 @@ def find_nutrient_mentions(content: Union[OCRResult, str]) -> List[Prediction]:
     return [
         Prediction(
             type=PredictionType.nutrient_mention,
-            data={"mentions": nutrients, "version": EXTRACTOR_VERSION},
+            data={"mentions": nutrients},
+            predictor_version=PREDICTOR_VERSION,
         )
     ]

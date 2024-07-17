@@ -1,5 +1,3 @@
-version: "3.9"
-
 x-robotoff-dev: &robotoff-dev
     image: openfoodfacts/robotoff:dev
     build:
@@ -8,7 +6,7 @@ x-robotoff-dev: &robotoff-dev
       args:
         OFF_UID: ${OFF_UID:-1000}
         OFF_GID: ${OFF_GID:-1000}
-        PYTHON_VERSION: ${PYTHON_VERSION:-3.7}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
     volumes:
       # make updates to code available
       - ./robotoff:/opt/robotoff/robotoff
@@ -23,6 +21,9 @@ x-robotoff-dev: &robotoff-dev
       - ./i18n:/opt/robotoff/i18n
       # make data available
       - ./data:/opt/robotoff/data
+      - ./cache:/opt/robotoff/cache
+      # make migration files available
+      - ./migrations:/opt/robotoff/migrations
       # make doc generation available
       - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
       - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
@@ -30,35 +31,27 @@ x-robotoff-dev: &robotoff-dev
       - ./doc:/opt/robotoff/doc
       - ./gh_pages:/opt/robotoff/gh_pages
 
-x-networks-productopener-local: &networks-productopener-local
-    # in dev we want to be able to communicate with product opener
-    # using our docker-compose environment
-    networks:
-      po_local:
-      webnet:
-
 services:
   api:
     <<: *robotoff-dev
-    networks:
-      po_local:
-        aliases:
-        # trick: make robotoff available outside and inside with same name
-        # with this alias, we can call it from inside docker with same name as outside
-        # and Product Opener will call it from a browser (outside)
-        # or from within perl code (inside)
-        - robotoff.openfoodfacts.localhost
-        - api
-      webnet:
-  workers:
+  worker_1:
     <<: *robotoff-dev
-    <<: *networks-productopener-local
-  scheduler:
-    <<: *networks-productopener-local
+  worker_2:
+    <<: *robotoff-dev
+  worker_3:
+    <<: *robotoff-dev
+  worker_4:
     <<: *robotoff-dev
 
-networks:
-  # this links to the product opener dev environment on local machine
-  po_local:
-    name: ${PO_LOCAL_NET:-po_default}
-    external: true
+  scheduler:
+    <<: *robotoff-dev
+
+  elasticsearch:
+    ports:
+      - "127.0.0.1:9200:9200"
+
+volumes:
+  postgres-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
+  es-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data

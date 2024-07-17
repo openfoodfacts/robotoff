@@ -1,15 +1,14 @@
 import argparse
 import json
-import pathlib
+import sys
 import tempfile
 from enum import Enum
+from pathlib import Path
 from typing import List, Optional
 
 import requests
+from openfoodfacts.ocr import BoundingPoly, OCRResult
 from PIL import Image, ImageDraw
-
-from robotoff.prediction.ocr import OCRResult
-from robotoff.prediction.ocr.dataclass import BoundingPoly
 
 
 class FeatureType(Enum):
@@ -72,9 +71,6 @@ def get_document_bounds(feature: FeatureType, ocr_result: OCRResult):
             if feature == FeatureType.BLOCK:
                 bounds.append(block.bounding_poly)
 
-        if feature == FeatureType.PAGE:
-            bounds.append(block.bounding_poly)
-
     # The list `bounds` contains the coordinates of the bounding boxes.
     return bounds
 
@@ -84,9 +80,9 @@ def find_words():
 
 
 def render_doc_text(
-    image_path: pathlib.Path,
-    json_path: pathlib.Path,
-    output_path: Optional[pathlib.Path] = None,
+    image_path: Path,
+    json_path: Path,
+    output_path: Optional[Path] = None,
 ):
     image = Image.open(image_path)
 
@@ -112,26 +108,42 @@ def render_doc_text(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("image_url", help="The image URL for text detection.")
-    parser.add_argument("--output-path", help="Optional output file", type=pathlib.Path)
+    parser.add_argument("--image-url", help="The image URL for text detection.")
+    parser.add_argument("--image-path", help="The image path.")
+    parser.add_argument("--json-path", type=Path)
+    parser.add_argument("--output-path", help="Optional output file", type=Path)
     args = parser.parse_args()
 
-    image_url = args.image_url
-    json_url = image_url.replace(".jpg", ".json")
+    if args.image_url and args.image_path:
+        print(
+            "--image-url and --image-path are incompatible, choose one of these option"
+        )
+        sys.exit(1)
+    if args.image_path and args.json_path is None:
+        print("--json-path must be provided when --image-path is provided")
+        sys.exit(1)
 
-    temp_dir = pathlib.Path(tempfile.mkdtemp())
+    if args.image_path:
+        image_path = args.image_path
+    else:
+        image_url = args.image_url
+        temp_dir = Path(tempfile.mkdtemp())
 
-    image_path = temp_dir / "image.jpg"
-    json_path = temp_dir / "OCR.json"
+        image_path = temp_dir / "image.jpg"
+        json_path = temp_dir / "OCR.json"
 
-    r = requests.get(image_url)
+        r = requests.get(image_url)
 
-    with image_path.open("wb") as f:
-        f.write(r.content)
+        with image_path.open("wb") as f:
+            f.write(r.content)
 
-    r = requests.get(json_url)
+    if args.json_path is not None:
+        json_path = args.json_path
+    else:
+        json_url = image_url.replace(".jpg", ".json")
+        r = requests.get(json_url)
 
-    with json_path.open("wb") as f:
-        f.write(r.content)
+        with json_path.open("wb") as f:
+            f.write(r.content)
 
     render_doc_text(image_path, json_path)

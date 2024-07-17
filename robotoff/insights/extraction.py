@@ -1,18 +1,28 @@
-from typing import Dict, Iterable, List, Optional
+import datetime
+from typing import Iterable, Optional
 
+from openfoodfacts.ocr import OCRResult
 from PIL import Image
 
+from robotoff.models import ImageModel, ImagePrediction
 from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
-from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
-from robotoff.prediction.ocr.core import get_ocr_result
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.object_detection import (
+    OBJECT_DETECTION_MODEL_VERSION,
+    ObjectDetectionModelRegistry,
+)
+from robotoff.types import (
+    ObjectDetectionModel,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+)
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
 
 
-DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
+DEFAULT_OCR_PREDICTION_TYPES: list[PredictionType] = [
     PredictionType.category,
     PredictionType.label,
     PredictionType.packager_code,
@@ -29,129 +39,106 @@ DEFAULT_OCR_PREDICTION_TYPES: List[PredictionType] = [
 ]
 
 
-PRODUCT_NAME_PREDICTION_TYPES: List[PredictionType] = [
+PRODUCT_NAME_PREDICTION_TYPES: list[PredictionType] = [
     PredictionType.label,
     PredictionType.product_weight,
     PredictionType.brand,
 ]
 
 
+def run_object_detection_model(
+    model_name: ObjectDetectionModel,
+    image: Image.Image,
+    image_model: ImageModel,
+    threshold: float = 0.1,
+    return_null_if_exist: bool = True,
+    triton_uri: str | None = None,
+) -> Optional[ImagePrediction]:
+    """Run a model detection model and save the results in the
+    `image_prediction` table.
+
+    An item with the corresponding `source_image` in the `image` table is
+    expected to exist. Nothing is done if an image prediction already exists in
+    DB for this image and model.
+
+    :param model_name: name of the object detection model to use
+    :param image: the input Pillow image
+    :param image_model: the image in DB
+    :param source_image: the source image path (used to fetch the image from
+      `image` table)
+    :param threshold: the minimum object score above which we keep the object
+        data
+    :param return_null_if_exist: if True, return None if the image prediction
+        already exists in DB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
+    :return: return None if the image does not exist in DB, or the created
+      `ImagePrediction` otherwise
+    """
+    if (
+        existing_image_prediction := ImagePrediction.get_or_none(
+            image=image_model, model_name=model_name.get_type()
+        )
+    ) is not None:
+        if return_null_if_exist:
+            return None
+        return existing_image_prediction
+
+    timestamp = datetime.datetime.utcnow()
+    results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
+        image, output_image=False, triton_uri=triton_uri, threshold=threshold
+    )
+    data = results.to_json()
+    max_confidence = max((item["score"] for item in data), default=None)
+    return ImagePrediction.create(
+        image=image_model,
+        type="object_detection",
+        model_name=model_name.get_type(),
+        model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
+        data={"objects": data},
+        timestamp=timestamp,
+        max_confidence=max_confidence,
+    )
+
+
 def get_predictions_from_product_name(
-    barcode: str, product_name: str
-) -> List[Prediction]:
+    product_id: ProductIdentifier, product_name: str
+) -> list[Prediction]:
     predictions_all = []
     for prediction_type in PRODUCT_NAME_PREDICTION_TYPES:
         predictions = ocr.extract_predictions(
-            product_name, prediction_type, barcode=barcode
+            product_name, prediction_type, product_id=product_id
         )
         for prediction in predictions:
             prediction.data["source"] = "product_name"
+            # Predictions from product name are not as trustworthy as
+            # predictions from OCR, so disable automatic processing
+            prediction.automatic_processing = False
         predictions_all += predictions
 
     return predictions_all
 
 
-def get_predictions_from_image(
-    barcode: str, image: Image.Image, source_image: str, ocr_url: str
-) -> List[Prediction]:
-    logger.info(f"Generating OCR predictions from OCR {ocr_url}")
-    ocr_predictions = extract_ocr_predictions(
-        barcode, ocr_url, DEFAULT_OCR_PREDICTION_TYPES
-    )
-    extract_nutriscore = any(
-        prediction.value_tag == "en:nutriscore"
-        and prediction.type == PredictionType.label
-        for prediction in ocr_predictions
-    )
-    image_ml_predictions = extract_image_ml_predictions(
-        barcode, image, source_image, extract_nutriscore=extract_nutriscore
-    )
-    return ocr_predictions + image_ml_predictions
-
-
-def extract_image_ml_predictions(
-    barcode: str, image: Image.Image, source_image: str, extract_nutriscore: bool = True
-) -> List[Prediction]:
-    if extract_nutriscore:
-        # Currently all of the automatic processing for the Nutri-Score grades has been
-        # disabled due to a prediction quality issue.
-        # Last automatic processing threshold was set to 0.9 - resulting in ~70% incorrect
-        # detection.
-        nutriscore_prediction = extract_nutriscore_label(
-            image,
-            source_image,
-            manual_threshold=0.5,
-        )
-
-        if nutriscore_prediction:
-            nutriscore_prediction.barcode = barcode
-            nutriscore_prediction.source_image = source_image
-            return [nutriscore_prediction]
-
-    return []
-
-
 def extract_ocr_predictions(
-    barcode: str, ocr_url: str, prediction_types: Iterable[PredictionType]
-) -> List[Prediction]:
-    predictions_all: List[Prediction] = []
+    product_id: ProductIdentifier,
+    ocr_url: str,
+    prediction_types: Iterable[PredictionType],
+) -> list[Prediction]:
+    logger.info("Generating OCR predictions from OCR %s", ocr_url)
+
+    predictions_all: list[Prediction] = []
     source_image = get_source_from_url(ocr_url)
-    ocr_result = get_ocr_result(ocr_url, http_session, error_raise=False)
+    ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
 
     if ocr_result is None:
         return predictions_all
 
     for prediction_type in prediction_types:
         predictions_all += ocr.extract_predictions(
-            ocr_result, prediction_type, barcode=barcode, source_image=source_image
+            ocr_result,
+            prediction_type,
+            product_id=product_id,
+            source_image=source_image,
         )
 
     return predictions_all
-
-
-NUTRISCORE_LABELS: Dict[str, str] = {
-    "nutriscore-a": "en:nutriscore-grade-a",
-    "nutriscore-b": "en:nutriscore-grade-b",
-    "nutriscore-c": "en:nutriscore-grade-c",
-    "nutriscore-d": "en:nutriscore-grade-d",
-    "nutriscore-e": "en:nutriscore-grade-e",
-}
-
-
-def extract_nutriscore_label(
-    image: Image.Image,
-    source_image: str,
-    manual_threshold: float,
-    automatic_threshold: Optional[float] = None,
-) -> Optional[Prediction]:
-    model = ObjectDetectionModelRegistry.get("nutriscore")
-    raw_result = model.detect_from_image(image, output_image=False)
-    results = raw_result.select(threshold=manual_threshold)
-
-    if not results:
-        return None
-
-    if len(results) > 1:
-        logger.warning("more than one nutriscore detected, discarding detections")
-        return None
-
-    result = results[0]
-    score = result.score
-
-    automatic_processing = False
-    if automatic_threshold:
-        automatic_processing = score >= automatic_threshold
-    label_tag = NUTRISCORE_LABELS[result.label]
-
-    return Prediction(
-        type=PredictionType.label,
-        source_image=source_image,
-        value_tag=label_tag,
-        automatic_processing=automatic_processing,
-        data={
-            "confidence": score,
-            "bounding_box": result.bounding_box,
-            "model": "nutriscore",
-            "notify": True,
-        },
-    )

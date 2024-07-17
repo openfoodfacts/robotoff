@@ -15,8 +15,9 @@
 
 """A set of functions that are used for visualization.
 
-These functions often receive an image, perform some visualization on the image.
-The functions do not return a value, instead they modify the image itself.
+These functions often receive an image, perform some visualization on the
+image. The functions do not return a value, instead they modify the image
+itself.
 
 """
 import collections
@@ -260,19 +261,16 @@ def draw_bounding_box_on_image(
     normalized coordinates by setting the use_normalized_coordinates argument.
 
     Each string in display_str_list is displayed on a separate line above the
-    bounding box in black text on a rectangle filled with the input 'color'.
-    If the top of the bounding box extends to the edge of the image, the strings
+    bounding box in black text on a rectangle filled with the input 'color'. If
+    the top of the bounding box extends to the edge of the image, the strings
     are displayed below the bounding box.
 
     Args:
-      image: a PIL.Image object.
-      ymin: ymin of bounding box.
-      xmin: xmin of bounding box.
-      ymax: ymax of bounding box.
-      xmax: xmax of bounding box.
-      color: color to draw bounding box. Default is red.
-      thickness: line thickness. Default value is 4.
-      display_str_list: list of strings to display in box
+      image: a PIL.Image object. ymin: ymin of bounding box. xmin: xmin of
+      bounding box. ymax: ymax of bounding box. xmax: xmax of bounding box.
+      color: color to draw bounding box. Default is red. thickness: line
+      thickness. Default value is 4. display_str_list: list of strings to
+      display in box
                         (each to be shown on its own line).
       use_normalized_coordinates: If True (default), treat coordinates
         ymin, xmin, ymax, xmax as relative to the image.  Otherwise treat
@@ -299,10 +297,12 @@ def draw_bounding_box_on_image(
     except IOError:
         font = ImageFont.load_default()
 
-    # If the total height of the display strings added to the top of the bounding
-    # box exceeds the top of the image, stack the strings below the bounding box
-    # instead of above.
-    display_str_heights = [font.getsize(ds)[1] for ds in display_str_list]
+    # If the total height of the display strings added to the top of the
+    # bounding box exceeds the top of the image, stack the strings below the
+    # bounding box instead of above.
+    display_str_heights = [
+        font.getbbox(ds)[3] - font.getbbox(ds)[1] for ds in display_str_list
+    ]
     # Each display_str has a top and bottom margin of 0.05x.
     total_display_str_height = (1 + 2 * 0.05) * sum(display_str_heights)
 
@@ -312,7 +312,11 @@ def draw_bounding_box_on_image(
         text_bottom = bottom + total_display_str_height
     # Reverse list and print from bottom to top.
     for display_str in display_str_list[::-1]:
-        text_width, text_height = font.getsize(display_str)
+        display_left, display_top, display_right, display_bottom = font.getbbox(
+            display_str
+        )
+        text_width = display_right - display_left
+        text_height = display_bottom - display_top
         margin = np.ceil(0.05 * text_height)
         draw.rectangle(
             [
@@ -398,55 +402,6 @@ def draw_bounding_boxes_on_image(
         )
 
 
-def _visualize_boxes(image, boxes, classes, scores, category_index, **kwargs):
-    return visualize_boxes_and_labels_on_image_array(
-        image, boxes, classes, scores, category_index=category_index, **kwargs
-    )
-
-
-def _visualize_boxes_and_masks(
-    image, boxes, classes, scores, masks, category_index, **kwargs
-):
-    return visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index=category_index,
-        instance_masks=masks,
-        **kwargs
-    )
-
-
-def _visualize_boxes_and_keypoints(
-    image, boxes, classes, scores, keypoints, category_index, **kwargs
-):
-    return visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index=category_index,
-        keypoints=keypoints,
-        **kwargs
-    )
-
-
-def _visualize_boxes_and_masks_and_keypoints(
-    image, boxes, classes, scores, masks, keypoints, category_index, **kwargs
-):
-    return visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index=category_index,
-        instance_masks=masks,
-        keypoints=keypoints,
-        **kwargs
-    )
-
-
 def draw_keypoints_on_image_array(
     image, keypoints, color="red", radius=2, use_normalized_coordinates=True
 ):
@@ -485,8 +440,8 @@ def draw_keypoints_on_image(
     keypoints_x = [k[1] for k in keypoints]
     keypoints_y = [k[0] for k in keypoints]
     if use_normalized_coordinates:
-        keypoints_x = tuple([im_width * x for x in keypoints_x])
-        keypoints_y = tuple([im_height * y for y in keypoints_y])
+        keypoints_x = tuple((im_width * x for x in keypoints_x))
+        keypoints_y = tuple((im_height * y for y in keypoints_y))
     for keypoint_x, keypoint_y in zip(keypoints_x, keypoints_y):
         draw.ellipse(
             [
@@ -539,7 +494,7 @@ def visualize_boxes_and_labels_on_image_array(
     boxes,
     classes,
     scores,
-    category_index,
+    label_names,
     instance_masks=None,
     instance_boundaries=None,
     keypoints=None,
@@ -554,24 +509,23 @@ def visualize_boxes_and_labels_on_image_array(
 ):
     """Overlay labeled boxes on an image with formatted scores and label names.
 
-    This function groups boxes that correspond to the same location
-    and creates a display string for each detection and overlays these
-    on the image. Note that this function modifies the image in place, and returns
-    that same image.
+    This function groups boxes that correspond to the same location and creates
+    a display string for each detection and overlays these on the image. Note
+    that this function modifies the image in place, and returns that same
+    image.
 
     Args:
       image: uint8 numpy array with shape (img_height, img_width, 3)
-      boxes: a numpy array of shape [N, 4]
-      classes: a numpy array of shape [N]. Note that class indices are 1-based,
-        and match the keys in the label map.
+      boxes: a numpy array of shape [N, 4] classes: a numpy array of shape [N].
+      Note that class indices are 1-based, and match the keys in the label map.
       scores: a numpy array of shape [N] or None.  If scores=None, then
         this function assumes that the boxes to be plotted are groundtruth
         boxes and plot all boxes as black with no classes or scores.
-      category_index: a dict containing category dictionaries (each holding
-        category index `id` and category name `name`) keyed by category indices.
-      instance_masks: a numpy array of shape [N, image_height, image_width] with
+      label_names: a list containing label names. instance_masks: a numpy array
+      of shape [N, image_height, image_width] with
         values ranging between 0 and 1, can be None.
-      instance_boundaries: a numpy array of shape [N, image_height, image_width]
+      instance_boundaries: a numpy array of shape [N, image_height,
+      image_width]
         with values ranging between 0 and 1, can be None.
       keypoints: a numpy array of shape [N, num_keypoints, 2], can
         be None
@@ -580,20 +534,23 @@ def visualize_boxes_and_labels_on_image_array(
       max_boxes_to_draw: maximum number of boxes to visualize.  If None, draw
         all boxes.
       min_score_thresh: minimum score threshold for a box to be visualized
-      agnostic_mode: boolean (default: False) controlling whether to evaluate in
+      agnostic_mode: boolean (default: False) controlling whether to evaluate
+      in
         class-agnostic mode or not.  This mode will display scores but ignore
         classes.
       line_thickness: integer (default: 4) controlling line width of the boxes.
-      groundtruth_box_visualization_color: box color for visualizing groundtruth
+      groundtruth_box_visualization_color: box color for visualizing
+      groundtruth
         boxes
       skip_scores: whether to skip score when drawing a single detection
       skip_labels: whether to skip label when drawing a single detection
 
     Returns:
-      uint8 numpy array with shape (img_height, img_width, 3) with overlaid boxes.
+      uint8 numpy array with shape (img_height, img_width, 3) with overlaid
+      boxes.
     """
-    # Create a display string (and color) for every box location, group any boxes
-    # that correspond to the same location.
+    # Create a display string (and color) for every box location, group any
+    # boxes that correspond to the same location.
     box_to_display_str_map = collections.defaultdict(list)
     box_to_color_map = collections.defaultdict(str)
     box_to_instance_masks_map = {}
@@ -616,8 +573,8 @@ def visualize_boxes_and_labels_on_image_array(
                 display_str = ""
                 if not skip_labels:
                     if not agnostic_mode:
-                        if classes[i] in category_index.keys():
-                            class_name = category_index[classes[i]]["name"]
+                        if len(label_names) > classes[i]:
+                            class_name = label_names[classes[i]]
                         else:
                             class_name = "N/A"
                         display_str = str(class_name)

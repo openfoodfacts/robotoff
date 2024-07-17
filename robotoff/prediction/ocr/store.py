@@ -1,11 +1,22 @@
+import functools
 import re
-from typing import Dict, List, Set, Tuple, Union
+from typing import Union
+
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
 
 def get_store_tag(store: str) -> str:
@@ -22,8 +33,9 @@ def store_sort_key(item):
     return -len(store), store
 
 
-def get_sorted_stores() -> List[Tuple[str, str]]:
-    sorted_stores: Dict[str, str] = {}
+@functools.cache
+def get_sorted_stores() -> list[tuple[str, str]]:
+    sorted_stores: dict[str, str] = {}
 
     for item in text_file_iter(settings.OCR_STORES_DATA_PATH):
         if "||" in item:
@@ -37,36 +49,54 @@ def get_sorted_stores() -> List[Tuple[str, str]]:
     return sorted(sorted_stores.items(), key=store_sort_key)
 
 
-SORTED_STORES = get_sorted_stores()
-STORE_REGEX_STR = "|".join(
-    r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in SORTED_STORES
-)
-NOTIFY_STORES: Set[str] = set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
-STORE_REGEX = OCRRegex(
-    re.compile(STORE_REGEX_STR), field=OCRField.full_text_contiguous, lowercase=True
-)
+@functools.cache
+def get_store_ocr_regex() -> OCRRegex:
+    sorted_stores = get_sorted_stores()
+    store_regex_str = "|".join(
+        r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in sorted_stores
+    )
+    return OCRRegex(
+        re.compile(store_regex_str, re.I), field=OCRField.full_text_contiguous
+    )
 
 
-def find_stores(content: Union[OCRResult, str]) -> List[Prediction]:
+@functools.cache
+def get_notify_stores() -> set[str]:
+    return set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
+
+
+def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
-
-    text = get_text(content, STORE_REGEX)
+    store_ocr_regex = get_store_ocr_regex()
+    sorted_stores = get_sorted_stores()
+    notify_stores = get_notify_stores()
+    text = get_text(content, store_ocr_regex)
 
     if not text:
         return []
 
-    for match in STORE_REGEX.regex.finditer(text):
+    for match in store_ocr_regex.regex.finditer(text):
         groups = match.groups()
 
         for idx, match_str in enumerate(groups):
             if match_str is not None:
-                store, _ = SORTED_STORES[idx]
+                store, _ = sorted_stores[idx]
+                data = {"text": match_str, "notify": store in notify_stores}
+                if (
+                    bounding_box := get_match_bounding_box(
+                        content, match.start(), match.end()
+                    )
+                ) is not None:
+                    data["bounding_box_absolute"] = bounding_box
+
                 results.append(
                     Prediction(
                         type=PredictionType.store,
                         value=store,
                         value_tag=get_store_tag(store),
-                        data={"text": match_str, "notify": store in NOTIFY_STORES},
+                        data=data,
+                        predictor="regex",
+                        predictor_version=PREDICTOR_VERSION,
                     )
                 )
                 break

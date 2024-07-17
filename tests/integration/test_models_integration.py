@@ -7,12 +7,12 @@ from .models_utils import AnnotationVoteFactory, ProductInsightFactory, clean_db
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    clean_db()
-    # Run the test case.
-    yield
-    # Tear down.
-    clean_db()
+    with peewee_db:
+        # clean db
+        clean_db()
+        # Run the test case.
+        yield
+        clean_db()
 
 
 def test_vote_cascade_on_insight_deletion(peewee_db):

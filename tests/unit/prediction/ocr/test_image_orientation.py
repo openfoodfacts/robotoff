@@ -1,6 +1,5 @@
 import pytest
-
-from robotoff.prediction.ocr.dataclass import BoundingPoly, ImageOrientation
+from openfoodfacts.ocr import BoundingPoly, ImageOrientation
 
 
 def generate_bounding_poly(*items):

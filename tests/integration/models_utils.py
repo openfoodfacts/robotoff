@@ -1,25 +1,30 @@
 """Some factories for easy creation of models
 
 We use https://github.com/cam-stitt/factory_boy-peewee,
-although archived, this is lightweight, and should be easy to maintain or replace if needed
+although archived, this is lightweight, and should be easy to maintain or
+replace if needed
 """
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 import factory
+import numpy as np
 from factory_peewee import PeeweeModelFactory
 
-from robotoff import models, settings
+from robotoff import models
 from robotoff.models import (
     AnnotationVote,
     ImageModel,
     ImagePrediction,
     LogoAnnotation,
     LogoConfidenceThreshold,
+    LogoEmbedding,
     Prediction,
     ProductInsight,
 )
+from robotoff.off import generate_image_path
+from robotoff.types import ProductIdentifier, ServerType
 
 
 class UuidSequencer:
@@ -39,17 +44,20 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     id = factory.LazyFunction(uuid.uuid4)  # type: ignore
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
-    data: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
     timestamp: datetime = factory.LazyFunction(datetime.utcnow)
     countries = ["en:france"]
-    brands: List[str] = []
+    brands: list[str] = []
     n_votes = 0
     value_tag = "en:seeds"
-    # we use a lazy function for settings can change in a test
-    server_domain: str = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     server_type = "off"
     unique_scans_n = 10
     annotation = None
+    automatic_processing = False
+    confidence: Optional[float] = None
+    predictor: Optional[str] = None
+    predictor_version: Optional[str] = None
+    bounding_box: Optional[list[float]] = None
 
 
 class PredictionFactory(PeeweeModelFactory):
@@ -58,10 +66,14 @@ class PredictionFactory(PeeweeModelFactory):
 
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
-    data: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
     timestamp = factory.LazyFunction(datetime.utcnow)
     value_tag = "en:seeds"
-    server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
+    automatic_processing = None
+    predictor: Optional[str] = None
+    predictor_version: Optional[str] = None
+    confidence: Optional[float] = None
+    server_type: str = "off"
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):
@@ -82,11 +94,14 @@ class ImageModelFactory(PeeweeModelFactory):
 
     barcode = factory.Sequence(lambda n: f"{n:013}")
     uploaded_at = factory.LazyFunction(datetime.utcnow)
-    image_id = factory.Sequence(lambda n: f"image-{n:02}")
-    source_image = factory.Sequence(lambda n: f"/images/{n:02}.jpg")
+    image_id = factory.Sequence(lambda n: f"{n:02}")
+    source_image = factory.LazyAttribute(
+        lambda o: generate_image_path(
+            ProductIdentifier(o.barcode, ServerType[o.server_type]), o.image_id
+        )
+    )
     width = 400
     height = 400
-    server_domain = factory.LazyFunction(lambda: settings.OFF_SERVER_DOMAIN)
     server_type = "off"
 
 
@@ -119,6 +134,8 @@ class LogoAnnotationFactory(PeeweeModelFactory):
     taxonomy_value = "fr:ab-agriculture-biologique"
     annotation_type = "label"
     nearest_neighbors = {"logo_ids": [111111, 222222], "distances": [11.1, 12.4]}
+    barcode = factory.Sequence(lambda n: f"{n:013}")
+    source_image = factory.Sequence(lambda n: f"/images/{n:02}.jpg")
 
 
 class LogoConfidenceThresholdFactory(PeeweeModelFactory):
@@ -126,6 +143,14 @@ class LogoConfidenceThresholdFactory(PeeweeModelFactory):
         model = LogoConfidenceThreshold
 
     threshold = 0.7
+
+
+class LogoEmbeddingFactory(PeeweeModelFactory):
+    class Meta:
+        model = LogoEmbedding
+
+    logo = factory.SubFactory(LogoAnnotation)
+    embedding = factory.LazyFunction(lambda: np.random.rand(512).tobytes())
 
 
 def clean_db():
@@ -137,6 +162,7 @@ def clean_db():
         ImagePrediction,
         ImageModel,
         LogoConfidenceThreshold,
+        LogoEmbedding,
         Prediction,
         ProductInsight,
     ):

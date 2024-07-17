@@ -1,16 +1,31 @@
 import re
-from typing import List, Optional, Union
+from functools import cache
+from typing import Optional, Union
+
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
-from robotoff.utils.cache import CachedStore
+from robotoff.utils.text.flashtext import KeywordProcessor
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
 from .utils import generate_keyword_processor
 
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
-def generate_trace_keyword_processor(labels: Optional[List[str]] = None):
+
+@cache
+def generate_trace_keyword_processor(
+    labels: Optional[list[str]] = None,
+) -> KeywordProcessor:
     if labels is None:
         labels = list(text_file_iter(settings.OCR_TRACE_ALLERGEN_DATA_PATH))
 
@@ -19,18 +34,14 @@ def generate_trace_keyword_processor(labels: Optional[List[str]] = None):
 
 TRACES_REGEX = OCRRegex(
     re.compile(
-        r"(?:possibilit[ée] de traces|conditionné dans un atelier qui manipule|peut contenir(?: des traces)?|traces? [ée]ventuelles? d[e']|traces? d[e']|may contain)"
+        r"(?:possibilit[ée] de traces|conditionné dans un atelier qui manipule|peut contenir(?: des traces)?|traces? [ée]ventuelles? d[e']|traces? d[e']|may contain)",
+        re.I,
     ),
     field=OCRField.full_text_contiguous,
-    lowercase=True,
-)
-
-TRACE_KEYWORD_PROCESSOR_STORE = CachedStore(
-    fetch_func=generate_trace_keyword_processor, expiration_interval=None
 )
 
 
-def find_traces(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
     predictions = []
 
     text = get_text(content, TRACES_REGEX)
@@ -38,7 +49,7 @@ def find_traces(content: Union[OCRResult, str]) -> List[Prediction]:
     if not text:
         return []
 
-    processor = TRACE_KEYWORD_PROCESSOR_STORE.get()
+    processor = generate_trace_keyword_processor()
 
     for match in TRACES_REGEX.regex.finditer(text):
         prompt = match.group()
@@ -49,11 +60,21 @@ def find_traces(content: Union[OCRResult, str]) -> List[Prediction]:
             captured, span_info=True
         ):
             match_str = captured[span_start:span_end]
+            data = {"text": match_str, "prompt": prompt, "notify": False}
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                data["bounding_box_absolute"] = bounding_box
+
             predictions.append(
                 Prediction(
                     type=PredictionType.trace,
                     value_tag=trace_tag,
-                    data={"text": match_str, "prompt": prompt, "notify": False},
+                    data=data,
+                    predictor="regex",
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

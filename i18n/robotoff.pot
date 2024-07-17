@@ -31,3 +31,7 @@ msgstr ""
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
 msgstr ""
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product have this packaging element?"
+msgstr ""

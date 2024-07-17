@@ -19,10 +19,10 @@ def download_file(url: str, destination: Path, force: bool = False) -> None:
     """
     # Check if file exists
     if destination.is_file():
-        logger.info(f"Destination file already exists: {destination}")
+        logger.info("Destination file already exists: %s", destination)
 
         if not force:
-            logger.info(f"Skip download from {url}")
+            logger.info("Skip download from %s", url)
             return
         else:
             logger.info("--force used")
@@ -30,12 +30,12 @@ def download_file(url: str, destination: Path, force: bool = False) -> None:
     # Create directory if needed
     file_dir = destination.parent
     if not file_dir.is_dir():
-        logger.info(f"Create directory: {file_dir}")
+        logger.info("Create directory: %s", file_dir)
         file_dir.mkdir(exist_ok=True, parents=True)
 
     # Download file
-    logger.info(f"Start download from {url} to {destination}.")
+    logger.info("Start download from %s to %s.", url, destination)
     with requests.get(url, stream=True) as r:
         with destination.open("wb") as f:
-            shutil.copyfileobj(r.raw, f)
+            shutil.copyfileobj(r.raw, f)  # type: ignore
     logger.info("Download complete.")

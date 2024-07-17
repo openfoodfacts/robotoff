@@ -10,8 +10,9 @@ containing an 'errors' fields will be replaced.
 
 import argparse
 import base64
+import glob
 import gzip
-import json
+import logging
 import os
 import pathlib
 import sys
@@ -19,10 +20,22 @@ import time
 from datetime import datetime
 from typing import List, Optional
 
+import orjson
 import requests
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+file_handler = logging.FileHandler("run_ocr.log")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 API_KEY = os.environ.get("CLOUD_VISION_API_KEY")
-MAXIMUM_MODIFICATION_DATETIME = datetime(year=2019, month=5, day=1)
 
 if not API_KEY:
     sys.exit("missing Google Cloud CLOUD_VISION_API_KEY as envvar")
@@ -32,7 +45,6 @@ CLOUD_VISION_URL = "https://vision.googleapis.com/v1/images:annotate?key={}".for
     API_KEY
 )
 
-BASE_IMAGE_DIR = pathlib.Path("/srv2/off/html/images/products")
 session = requests.Session()
 
 
@@ -66,7 +78,7 @@ def get_base64_image_from_path(
         if error_raise:
             raise e
         else:
-            print(e)
+            logger.exception(e)
             return None
 
 
@@ -98,7 +110,7 @@ def run_ocr_on_image_paths(image_paths: List[pathlib.Path], override: bool = Fal
         json_path = image_path.with_suffix(".json.gz")
         if json_path.is_file():
             if override:
-                # print("Deleting file {}".format(json_path))
+                logger.debug("Overriding file %s", json_path)
                 json_path.unlink()
             else:
                 continue
@@ -114,12 +126,12 @@ def run_ocr_on_image_paths(image_paths: List[pathlib.Path], override: bool = Fal
     r = run_ocr_on_image_batch([x[1] for x in images_content])
 
     if not r.ok:
-        print("HTTP {} received".format(r.status_code))
-        print("Response: {}".format(r.text))
-        print(image_paths)
+        # logger.debug("HTTP %d received", r.status_code)
+        # logger.debug("Response: %s", r.text)
+        # logger.debug(image_paths)
         return [], True
 
-    r_json = r.json()
+    r_json = orjson.loads(r.content)
     responses = r_json["responses"]
     return (
         [(images_content[i][0], responses[i]) for i in range(len(images_content))],
@@ -135,15 +147,35 @@ def dump_ocr(
     for image_path, response in responses:
         json_path = image_path.with_suffix(".json.gz")
 
-        with gzip.open(str(json_path), "wt") as f:
-            # print("Dumping OCR JSON to {}".format(json_path))
-            json.dump({"responses": [response]}, f)
+        with gzip.open(str(json_path), "wb") as f:
+            logger.debug("Dumping OCR JSON to %s", json_path)
+            f.write(orjson.dumps({"responses": [response]}))
 
     if performed_request and sleep:
         time.sleep(sleep)
 
 
-def add_missing_ocr(sleep: float):
+def add_to_seen_set(seen_path: pathlib.Path, item: str):
+    with seen_path.open("a", encoding="utf-8") as f:
+        f.write("{}\n".format(item))
+
+
+def add_missing_ocr(
+    base_image_dir: pathlib.Path,
+    sleep: float,
+    seen_path: pathlib.Path,
+    maximum_modification_datetime: Optional[datetime] = None,
+    dry_run: bool = False,
+):
+    logger.info(
+        "Launching job with base_image_dir={},"
+        "sleep={}, "
+        "seen_path={}, "
+        "maximum_modification_datetime={}, "
+        "dry_run={}".format(
+            base_image_dir, sleep, seen_path, maximum_modification_datetime, dry_run
+        )
+    )
     total = 0
     missing = 0
     json_error = 0
@@ -151,18 +183,50 @@ def add_missing_ocr(sleep: float):
     valid = 0
     empty_images = 0
     expired = 0
+    # OCR is still in plain JSON
+    plain_json_count = 0
 
-    for i, image_path in enumerate(BASE_IMAGE_DIR.glob("**/*.jpg")):
+    with seen_path.open("r", encoding="utf-8") as f:
+        seen_set = set(map(str.strip, f))
+
+    for i, image_path_str in enumerate(
+        glob.iglob("{}/**/*.jpg".format(base_image_dir), recursive=True)
+    ):
+        if i % 10000 == 0:
+            logger.info(
+                "scanned: {}, total: {}, missing: {}, json_error: {}, "
+                "ocr_error: {}, empty images: {}, valid: {}, "
+                "plain_json: {}, expired: {}".format(
+                    i,
+                    total,
+                    missing,
+                    json_error,
+                    ocr_error,
+                    empty_images,
+                    valid,
+                    plain_json_count,
+                    expired,
+                )
+            )
+
+        image_path = pathlib.Path(image_path_str)
         if not image_path.stem.isdigit():
+            continue
+
+        if image_path_str in seen_set:
             continue
 
         image_size = image_path.stat().st_size
 
         if not image_size:
             empty_images += 1
+            if not dry_run:
+                add_to_seen_set(seen_path, image_path_str)
             continue
 
         if image_size >= 10485760:
+            if not dry_run:
+                add_to_seen_set(seen_path, image_path_str)
             continue
 
         json_path = image_path.with_suffix(".json.gz")
@@ -171,51 +235,76 @@ def add_missing_ocr(sleep: float):
         if not json_path.is_file():
             plain_json_path = image_path.with_suffix(".json")
             if plain_json_path.is_file():
+                plain_json_count += 1
                 continue
 
             missing += 1
-            dump_ocr([image_path], sleep=sleep, override=False)
+            if not dry_run:
+                dump_ocr([image_path], sleep=sleep, override=False)
+                add_to_seen_set(seen_path, image_path_str)
             continue
 
         modification_datetime = datetime.fromtimestamp(json_path.stat().st_mtime)
-        if modification_datetime < MAXIMUM_MODIFICATION_DATETIME:
-            dump_ocr([image_path], sleep=sleep, override=True)
+        if (
+            maximum_modification_datetime is not None
+            and modification_datetime < maximum_modification_datetime
+        ):
             expired += 1
+            if not dry_run:
+                dump_ocr([image_path], sleep=sleep, override=True)
+                add_to_seen_set(seen_path, image_path_str)
             continue
 
         has_json_error = False
-        with gzip.open(str(json_path), "rt", encoding="utf-8") as f:
+        with gzip.open(str(json_path), "rb") as f:
             try:
-                data = json.load(f)
-            except json.JSONDecodeError:
+                data = orjson.loads(f.read())
+            except orjson.JSONDecodeError:
                 has_json_error = True
 
         if has_json_error:
-            dump_ocr([image_path], sleep=sleep, override=True)
             json_error += 1
+            if not dry_run:
+                dump_ocr([image_path], sleep=sleep, override=True)
+                add_to_seen_set(seen_path, image_path_str)
             continue
 
         has_error = False
         for response in data["responses"]:
             if "error" in response:
-                ocr_error += 1
                 has_error = True
+
+        if has_error:
+            ocr_error += 1
+            if not dry_run:
                 dump_ocr([image_path], sleep=sleep, override=True)
-
-        if not has_error:
+                add_to_seen_set(seen_path, image_path_str)
+        else:
             valid += 1
-
-        if i % 1000 == 0:
-            print(
-                "total: {}, missing: {}, json_error: {}, ocr_error: {}, empty images: {}, valid: {}, "
-                "expired: {}".format(
-                    total, missing, json_error, ocr_error, empty_images, valid, expired
-                )
-            )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sleep", type=float, default=1.0)
+    parser.add_argument("--seen-path", type=pathlib.Path, required=True)
+    parser.add_argument(
+        "--maximum-modification-datetime",
+        required=False,
+        type=lambda s: datetime.fromisoformat(s),
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Dry run mode (don't write to disk or send Google Cloud Vision requests)",
+    )
+    parser.add_argument(
+        "--base-image-dir", type=pathlib.Path, default="/mnt/off/images/products/"
+    )
     args = parser.parse_args()
-    add_missing_ocr(sleep=args.sleep)
+    add_missing_ocr(
+        base_image_dir=args.base_image_dir,
+        sleep=args.sleep,
+        seen_path=args.seen_path,
+        maximum_modification_datetime=args.maximum_modification_datetime,
+        dry_run=args.dry_run,
+    )

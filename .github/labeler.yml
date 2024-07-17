@@ -1,5 +1,113 @@
+# Please see https://github.com/actions/labeler for reference
+
 github_actions:
-- .github/**/*
+- changed-files:
+  - any-glob-to-any-file: '.github/**/*'
 
 crowdin:
-- crowdin.yml
+- changed-files:
+  - any-glob-to-any-file: 'crowdin.yml'
+
+documentation:
+- changed-files:
+  - any-glob-to-any-file: ['*.MD']
+
+tests:
+- changed-files:
+  - any-glob-to-any-file: 'tests/**/*'
+
+integration tests:
+- changed-files:
+  - any-glob-to-any-file: 'tests/integration/**/*'
+  - any-glob-to-any-file: 'tests/integration/insights/**/*'
+
+unit tests:
+- changed-files:
+  - any-glob-to-any-file: 'tests/unit/**/*'
+  - any-glob-to-any-file: 'tests/unit/insights/**/*'
+  - any-glob-to-any-file: 'tests/unit/cli/**/*'
+  - any-glob-to-any-file: 'tests/unit/utils/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/neural/**/*'
+
+robotoff app:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/app/**/*'
+
+robotoff-cli:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/cli/**/*'
+  - any-glob-to-any-file: 'tests/unit/cli/**/*'
+
+utils:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/utils/**/*'
+  - any-glob-to-any-file: 'tests/unit/utils/**/*'
+
+workers:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/workers/**/*'
+  - any-glob-to-any-file: 'robotoff/workers/tasks/**/*'
+
+insights:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/insights/**/*'
+  - any-glob-to-any-file: 'tests/integration/insights/**/*'
+  - any-glob-to-any-file: 'tests/unit/insights/**/*'
+
+scheduler:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/scheduler/**/*'
+
+predictions:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/**/*'
+
+ocr prediction:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/ocr/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/ocr/**/*'
+  - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
+
+elasticsearch:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/elasticsearch/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/product/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/product/**/*'
+
+object detection:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/object_detection/utils/**/*'
+  - any-glob-to-any-file: 'robotoff/prediction/object_detection/**/*'
+
+category prediction:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
+  - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
+
+neural category prediction:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/category/neural/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/neural/**/*'
+
+stores:
+- changed-files:
+  - any-glob-to-any-file: 'data/ocr/store_regex.txt'
+
+legacy:
+- legacy/**/*
+- legacy/ocr_category/prediction_from_ocr/**/*

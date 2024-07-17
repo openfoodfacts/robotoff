@@ -1,42 +1,47 @@
 import pytest
 
-from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.models import ProductInsight
-from robotoff.prediction.types import Prediction, PredictionType
 from robotoff.products import Product
+from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 
 from ..models_utils import PredictionFactory, ProductInsightFactory, clean_db
 
 insight_id1 = "94371643-c2bc-4291-a585-af2cb1a5270a"
-barcode1 = "00001"
+DEFAULT_BARCODE = "00001"
+DEFAULT_SERVER_TYPE = ServerType.off
+DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 
 
 @pytest.fixture(autouse=True)
 def _set_up_and_tear_down(peewee_db):
-    # clean db
-    clean_db()
-    # a category already exists
-    PredictionFactory(
-        barcode=barcode1,
-        type="category",
-        value_tag="en:salmons",
-    )
-    ProductInsightFactory(
-        id=insight_id1,
-        barcode=barcode1,
-        type="category",
-        value_tag="en:salmons",
-    )
-    # Run the test case.
-    yield
-    # Tear down.
-    clean_db()
+    with peewee_db:
+        # clean db
+        clean_db()
+        # a category already exists
+        PredictionFactory(
+            barcode=DEFAULT_BARCODE,
+            type="category",
+            value_tag="en:salmons",
+            automatic_processing=False,
+            predictor="matcher",
+        )
+        ProductInsightFactory(
+            id=insight_id1,
+            barcode=DEFAULT_BARCODE,
+            type="category",
+            value_tag="en:salmons",
+            predictor="matcher",
+        )
+        # Run the test case.
+        yield
+        # Tear down.
+        clean_db()
 
 
 def matcher_prediction(category):
     return Prediction(
-        barcode=barcode1,
+        barcode=DEFAULT_BARCODE,
         type=PredictionType.category,
         value_tag=category,
         data={
@@ -50,12 +55,13 @@ def matcher_prediction(category):
 
 def neural_prediction(category, confidence=0.7, auto=False):
     return Prediction(
-        barcode=barcode1,
+        barcode=DEFAULT_BARCODE,
         type=PredictionType.category,
         value_tag=category,
-        data={"lang": "xx", "confidence": confidence},
+        data={"lang": "xx"},
         automatic_processing=auto,
         predictor="neural",
+        confidence=confidence,
     )
 
 
@@ -66,44 +72,49 @@ class TestCategoryImporter:
     """
 
     def fake_product_store(self):
-        return {barcode1: Product({"categories_tags": ["en:Fish"]})}
+        return {DEFAULT_PRODUCT_ID: Product({"categories_tags": ["en:fish"]})}
 
     def _run_import(self, predictions, product_store=None):
         if product_store is None:
             product_store = self.fake_product_store()
-        imported = import_insights(
-            predictions,
-            server_domain=settings.OFF_SERVER_DOMAIN,
-            automatic=True,
-            product_store=product_store,
+        return import_insights(
+            predictions, DEFAULT_SERVER_TYPE, product_store=product_store
         )
-        return imported
 
     @pytest.mark.parametrize(
         "predictions",
         [
-            # empty list
-            [],
             # category already on product
-            [matcher_prediction("en:Fish")],
-            [neural_prediction("en:Fish")],
+            [matcher_prediction("en:fish")],
+            [neural_prediction("en:fish")],
             # category already in insights
             [matcher_prediction("en:salmons")],
             [neural_prediction("en:salmons")],
             # both
             [
-                matcher_prediction("en:Fish"),
+                matcher_prediction("en:fish"),
                 matcher_prediction("en:salmons"),
-                neural_prediction("en:Fish"),
+                neural_prediction("en:fish"),
                 neural_prediction("en:salmons"),
             ],
         ],
     )
-    def test_import_nothing(self, predictions):
-        imported = self._run_import(predictions)
-        assert imported == 0
+    def test_import_one_same_value_tag(self, predictions):
+        """Test when there is a single import, but the value_tag stays the
+        same."""
+        original_insights = ProductInsight.select()
+        assert len(original_insights) == 1
+        original_timestamp = original_insights[0].timestamp
+        import_result = self._run_import(predictions)
+        assert import_result.created_insights_count() == 0
+        assert import_result.updated_insights_count() == 1
+        assert import_result.deleted_insights_count() == 0
         # no insight created
-        assert ProductInsight.select().count() == 1
+        insights = list(ProductInsight.select())
+        assert len(insights) == 1
+        insight = insights[0]
+        assert insight.value_tag == "en:salmons"
+        assert insight.timestamp > original_timestamp
 
     @pytest.mark.parametrize(
         "predictions",
@@ -119,26 +130,31 @@ class TestCategoryImporter:
             ],
         ],
     )
-    def test_import_one(self, predictions):
-        imported = self._run_import(predictions)
-        assert imported == 1
+    def test_import_one_different_value_tag(self, predictions):
+        """Test when a more precise category is available as prediction: the
+        prediction should be used as insight instead of the less precise
+        one."""
+        import_result = self._run_import(predictions)
+        assert import_result.created_insights_count() == 1
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 1
         # no insight created
         assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
         assert inserted.value_tag == "en:smoked-salmons"
-        assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
         assert not inserted.automatic_processing
 
     def test_import_auto(self):
-        imported = self._run_import(
+        import_result = self._run_import(
             [neural_prediction("en:smoked-salmons", confidence=0.91, auto=True)]
         )
-        assert imported == 1
+        assert import_result.created_insights_count() == 1
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 1
         # no insight created
         assert ProductInsight.select().count() == 1
         inserted = ProductInsight.get(ProductInsight.id != insight_id1)
         assert inserted.value_tag == "en:smoked-salmons"
-        assert inserted.server_domain == settings.OFF_SERVER_DOMAIN
         assert inserted.automatic_processing
 
     @pytest.mark.parametrize(
@@ -152,7 +168,11 @@ class TestCategoryImporter:
     )
     def test_import_product_not_in_store(self, predictions):
         # we should not create insight for non existing products !
-        imported = self._run_import(predictions, product_store={barcode1: None})
-        assert imported == 0
+        import_result = self._run_import(
+            predictions, product_store={DEFAULT_PRODUCT_ID: None}
+        )
+        assert import_result.created_insights_count() == 0
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 0
         # no insight created
         assert ProductInsight.select().count() == 1

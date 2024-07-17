@@ -1,5 +1,25 @@
+# The title of the new pull request
+pull_request_title: "chore: New Crowdin translations to review and merge"
+# The contents of the pull request
+pull_request_body: '### What\n- Automated pull request pulling in new or updated translations from Crowdin (https://translate.openfoodfacts.org).\n## Checklist\n- [ ] Check that they are no bad translations. If there are, correct them directly in Crowdin so that they are not resynced again. Then you can correct them here as well, or wait 24 hours for the sync to happen automatically.\n- [ ] Put extra attention on Brazilian, there is a recurring bug in plural that will break the build if merged as is.\n- [ ] Put extra attention on Acholi, which is used mistakenly as a sandbox by people discovering the self-service translation button on Open Food Facts\n- [ ] Once you are happy, that automated checks pass, you can approve the PR and merge it.\n### Part of\n- Translations'
 project_id_env: CROWDIN_PROJECT_ID
 api_token_env: CROWDIN_PERSONAL_TOKEN
 files:
   - source: /i18n/robotoff.pot
     translation: /i18n/%two_letters_code%/LC_MESSAGES/robotoff.po
+    languages_mapping:
+      two_letters_code:
+        pt-BR: pt_BR
+        pt-PT: pt_PT
+        zh-CN: zh_CN
+        zh-HK: zh_HK
+        en-GB: en_GB
+        en-AU: en_AU
+        en-US: en_US
+        nl-BE: nl_BE
+        nl: nl_NL
+        zh-TW: zh_TW
+        sr-CS: sr_CS
+        sr: sr_RS
+        ku : kmr_TR
+        kmr: kmr

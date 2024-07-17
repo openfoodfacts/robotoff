@@ -1,11 +1,21 @@
 import datetime
 import functools
 import re
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
-from robotoff.prediction.types import Prediction, PredictionType
+from openfoodfacts.ocr import (
+    OCRField,
+    OCRRegex,
+    OCRResult,
+    get_match_bounding_box,
+    get_text,
+)
 
-from .dataclass import OCRField, OCRRegex, OCRResult, get_text
+from robotoff.types import Prediction, PredictionType
+
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
 
 def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
@@ -26,11 +36,10 @@ def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime
     return date
 
 
-EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
+EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
     "full_digits_short": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{2})(?!\d)"),
         field=OCRField.full_text,
-        lowercase=False,
         processing_func=functools.partial(
             process_full_digits_expiration_date, short=True
         ),
@@ -38,7 +47,6 @@ EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
     "full_digits_long": OCRRegex(
         re.compile(r"(?<!\d)(\d{2})[-./](\d{2})[-./](\d{4})(?!\d)"),
         field=OCRField.full_text,
-        lowercase=False,
         processing_func=functools.partial(
             process_full_digits_expiration_date, short=False
         ),
@@ -46,10 +54,10 @@ EXPIRATION_DATE_REGEX: Dict[str, OCRRegex] = {
 }
 
 
-def find_expiration_date(content: Union[OCRResult, str]) -> List[Prediction]:
+def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
     # Parse expiration date
     #        "À consommer de préférence avant",
-    results: List[Prediction] = []
+    results: list[Prediction] = []
 
     for type_, ocr_regex in EXPIRATION_DATE_REGEX.items():
         text = get_text(content, ocr_regex)
@@ -74,12 +82,21 @@ def find_expiration_date(content: Union[OCRResult, str]) -> List[Prediction]:
             # Format dates according to ISO 8601
             value = date.strftime("%Y-%m-%d")
 
+            data = {"raw": raw, "type": type_, "notify": ocr_regex.notify}
+            if (
+                bounding_box := get_match_bounding_box(
+                    content, match.start(), match.end()
+                )
+            ) is not None:
+                data["bounding_box_absolute"] = bounding_box
             results.append(
                 Prediction(
                     value=value,
                     type=PredictionType.expiration_date,
-                    data={"raw": raw, "type": type_, "notify": ocr_regex.notify},
+                    data=data,
                     automatic_processing=True,
+                    predictor="regex",
+                    predictor_version=PREDICTOR_VERSION,
                 )
             )
 

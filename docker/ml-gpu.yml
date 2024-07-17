@@ -1,0 +1,33 @@
+# This docker compose file is intented to be used to launch a Triton server
+# with GPU support.
+# To make it work, you must register nvidia runtime to Docker following these
+# instructions:
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/user-guide.html#adding-the-nvidia-runtime
+
+services:
+  triton:
+    restart: $RESTART_POLICY
+    image: nvcr.io/nvidia/tritonserver:24.01-py3
+    ports:
+     - ${TRITON_EXPOSE_HTTP:-8000}:8000
+     - ${TRITON_EXPOSE_GRPC:-8001}:8001
+     - ${TRITON_EXPOSE_METRICS:-8002}:8002
+    volumes:
+      - ${TRITON_MODELS_DIR:-../models/triton}:/models
+    # We need to add nvidia_entrypoint.sh for the GPU to be correctly detected
+    # by Triton
+    # We use explicit model control mode to be able to load/unload model dynamically
+    # without having to restart Triton server
+    # See
+    # https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_management.md
+    # for more information
+    entrypoint: "/opt/nvidia/nvidia_entrypoint.sh tritonserver --model-repository=/models --model-control-mode=explicit --load-model=*"
+    mem_limit: 15g
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

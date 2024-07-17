@@ -1,64 +1,92 @@
 import contextlib
-import datetime
-import json
-import pathlib
+import gzip
 import sys
-from typing import Iterable, List, Optional, Set, TextIO, Union
+from pathlib import Path
+from typing import Iterable, Optional
 
 import _io
-import click
 import dacite
-from more_itertools import chunked
-from peewee import fn
+import orjson
+import tqdm
+from openfoodfacts.ocr import OCRResult
 
-from robotoff.insights import InsightType
-from robotoff.insights.annotate import InsightAnnotatorFactory
-from robotoff.insights.importer import AUTHORIZED_LABELS_STORE
-from robotoff.insights.importer import import_insights as import_insights_
-from robotoff.insights.importer import is_recent_image, is_selected_image
-from robotoff.models import ProductInsight, db
-from robotoff.off import get_barcode_from_path, get_product
-from robotoff.prediction.ocr import OCRResult, extract_predictions, ocr_iter
-from robotoff.prediction.types import Prediction, PredictionType
-from robotoff.products import get_product_store
+from robotoff.insights.extraction import DEFAULT_OCR_PREDICTION_TYPES
+from robotoff.off import get_barcode_from_path
+from robotoff.prediction.ocr import extract_predictions
+from robotoff.prediction.ocr.core import ocr_content_iter
+from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, jsonl_iter
 
 logger = get_logger(__name__)
 
 
 def run_from_ocr_archive(
-    input_: Union[str, TextIO],
-    prediction_type: PredictionType,
-    output: Optional[pathlib.Path] = None,
+    input_path: Path,
+    prediction_types: Optional[list[PredictionType]],
+    server_type: ServerType,
+    output: Optional[Path] = None,
 ):
-    predictions = generate_from_ocr_archive(input_, prediction_type)
+    """Generate predictions from an OCR archive file and save these
+    predictions on-disk or send them to stdout.
+
+    :param input_path: path of the archive file (gzipped JSONL)
+    :param prediction_types: list of prediction types to extract, if None
+        default OCR predictions types will be extracted (see
+        robotoff.insights.extraction.DEFAULT_OCR_PREDICTION_TYPES).
+    :param server_type: server type associated with the OCR archive.
+    :param output: the file path where to save the predictions, or None if
+        the JSON should be sent to stdout, defaults to None.
+    """
+    predictions = tqdm.tqdm(
+        generate_from_ocr_archive(input_path, prediction_types, server_type),
+        desc="prediction",
+    )
     output_f: _io._TextIOBase
+    need_decoding = False
 
     if output is not None:
-        output_f = output.open("w")
+        if output.suffix == ".gz":
+            output_f = gzip.open(output, "wb")
+        else:
+            output_f = output.open("wb")
     else:
         output_f = sys.stdout
+        need_decoding = True
 
     with contextlib.closing(output_f):
         for prediction in predictions:
-            output_f.write(json.dumps(prediction.to_dict()) + "\n")
+            raw_data = orjson.dumps(prediction.to_dict()) + b"\n"
+            data = raw_data.decode("utf-8") if need_decoding else raw_data
+            output_f.write(data)
 
 
 def generate_from_ocr_archive(
-    input_: Union[str, TextIO, pathlib.Path],
-    prediction_type: PredictionType,
+    input_path: Path,
+    prediction_types: Optional[list[PredictionType]],
+    server_type: ServerType,
 ) -> Iterable[Prediction]:
-    for source_image, ocr_json in ocr_iter(input_):
+    """Generate predictions from an OCR archive file.
+
+    :param input_path: path of the archive file (gzipped JSONL)
+    :param prediction_types: list of prediction types to extract, if None
+        default OCR predictions types will be extracted (see
+        robotoff.insights.extraction.DEFAULT_OCR_PREDICTION_TYPES).
+    :param server_type: server type associated with the OCR archive.
+    :yield: the extracted `Prediction`s
+    """
+    if prediction_types is None:
+        prediction_types = DEFAULT_OCR_PREDICTION_TYPES
+
+    for source_image, ocr_json in ocr_content_iter(
+        tqdm.tqdm(jsonl_iter(input_path), desc="OCR")
+    ):
         if source_image is None:
             continue
 
         barcode: Optional[str] = get_barcode_from_path(source_image)
 
         if barcode is None:
-            click.echo(
-                "cannot extract barcode from source " "{}".format(source_image),
-                err=True,
-            )
+            logger.warning("cannot extract barcode from source: %s", source_image)
             continue
 
         ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
@@ -66,126 +94,25 @@ def generate_from_ocr_archive(
         if ocr_result is None:
             continue
 
-        yield from extract_predictions(
-            ocr_result, prediction_type, barcode=barcode, source_image=source_image
-        )
+        for prediction_type in prediction_types:
+            yield from extract_predictions(
+                ocr_result,
+                prediction_type,
+                product_id=ProductIdentifier(barcode=barcode, server_type=server_type),
+                source_image=source_image,
+            )
 
 
-def insights_iter(file_path: pathlib.Path) -> Iterable[Prediction]:
+def prediction_iter(file_path: Path) -> Iterable[Prediction]:
+    """Iterates over a JSONL file containing predictions and yield
+    `Prediction`s.
+
+    :param file_path: JSONL file path containing predictions
+    :yield: the `Prediction`s contained in the file
+    """
     for prediction in jsonl_iter(file_path):
         yield dacite.from_dict(
             data_class=Prediction,
             data=prediction,
-            config=dacite.Config(cast=[PredictionType]),
+            config=dacite.Config(cast=[PredictionType, ServerType]),
         )
-
-
-def import_insights(
-    predictions: Iterable[Prediction],
-    server_domain: str,
-    batch_size: int = 1024,
-) -> int:
-    product_store = get_product_store()
-    imported: int = 0
-
-    prediction_batch: List[Prediction]
-    for prediction_batch in chunked(predictions, batch_size):
-        with db.atomic():
-            imported += import_insights_(
-                prediction_batch,
-                server_domain,
-                automatic=False,
-                product_store=product_store,
-            )
-
-    return imported
-
-
-class InvalidInsight(Exception):
-    pass
-
-
-def is_automatically_processable(
-    insight: ProductInsight, max_timedelta: datetime.timedelta
-) -> bool:
-    if not insight.source_image:
-        return False
-
-    image_path = pathlib.Path(insight.source_image)
-    image_id = image_path.stem
-
-    if not image_id.isdigit():
-        return False
-
-    product = get_product(insight.barcode, fields=["images"])
-
-    if product is None:
-        logger.info("Missing product: {}".format(insight.barcode))
-        raise InvalidInsight()
-
-    if "images" not in product:
-        logger.info("No images for product {}".format(insight.barcode))
-        raise InvalidInsight()
-
-    product_images = product["images"]
-
-    if image_id not in product_images:
-        logger.info(
-            "Missing image for product {}, ID: {}".format(insight.barcode, image_id)
-        )
-        raise InvalidInsight()
-
-    if is_recent_image(product_images, image_id, max_timedelta):
-        return True
-
-    if is_selected_image(product_images, image_id):
-        return True
-
-    return False
-
-
-def apply_insights(insight_type: str, max_timedelta: datetime.timedelta):
-    logger.info("Timedelta: {}".format(max_timedelta))
-    count = 0
-    insight: ProductInsight
-
-    annotator = InsightAnnotatorFactory.get(insight_type)
-    authorized_labels: Set[str] = AUTHORIZED_LABELS_STORE.get()
-
-    for insight in (
-        ProductInsight.select()
-        .where(
-            ProductInsight.type == insight_type,
-            ProductInsight.annotation.is_null(),
-        )
-        .order_by(fn.Random())
-    ):
-        if (
-            insight.process_after is not None
-            and insight.process_after >= datetime.datetime.utcnow()
-        ):
-            continue
-
-        if (
-            insight_type == InsightType.label.name
-            and insight.value_tag not in authorized_labels
-        ):
-            continue
-
-        try:
-            is_processable = is_automatically_processable(insight, max_timedelta)
-        except InvalidInsight:
-            logger.info("Deleting insight {}".format(insight.id))
-            insight.delete_instance()
-            continue
-
-        if is_processable:
-            logger.info(
-                "Annotating insight {} (barcode: {})".format(
-                    insight.value_tag or insight.value, insight.barcode
-                )
-            )
-            annotator.annotate(insight, 1, update=True, automatic=True)
-            count += 1
-
-    logger.info("Annotated insights: {}".format(count))

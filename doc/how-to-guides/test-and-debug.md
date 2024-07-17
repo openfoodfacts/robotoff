@@ -19,7 +19,7 @@ We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create 
 
 If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
 ```
-$ docker-compose run --rm api poetry run python
+$ docker compose run --rm api poetry run python
 ...
 > from tests.integration.models_utils import *
 > PredictionFactory()
@@ -66,16 +66,12 @@ Write test cases every time you write a new feature, to test a feature or to und
 
 There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
 
-There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. For local testing we do not yet provide a standarized approach to add a MongoDB Docker in the same network and configure Robotoff to use it.
-
-In such cases you will have to mock the function which calls MongoDB. Feel free to reuse the existing test cases.
-
-To identify parts of the code where Robotoff connects to MongoDB or to Open Food Facts server (the part you should mock), keep an eye for variables like `server_url`, `server_domain` or `settings.OFF_SERVER_DOMAIN`.
+There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. To disable this
+feature (this is disabled by default on local environments), set `ENABLE_MONGODB_ACCESS=0` in your `.env`.
 
 # Debugging guide
 
-We encourage using [PDB](https://docs.python.org/3/library/pdb.html)
-to debug.
+We encourage using [PDB](https://docs.python.org/3/library/pdb.html) to debug.
 
 Running test with `--pdb` flags, pytest will stop and open the pdb console as soon as there is an error or an assert fails.
 This can be a good way to try to understand why a test is failing.
@@ -95,17 +91,15 @@ import pdb; pdb.set_trace()
 and then run the `pytest`, with the `--pdb` option (as above).
 
 > **Note**  
-> we need the `--pdb` option,
-to view the inputs and outputs captured by pytest
-> and access the pdb console.
+> we need the `--pdb` option, to view the inputs and outputs captured by pytest and access the pdb console.
 
 
 
 # How to run checks locally
 
-When commiting your modifications to the main branch, your code have to pass several tests automatically run by GitHub in order to be merged.
+When committing your modifications to the main branch, your code have to pass several tests automatically run by Github in order to be merged.
 
-You can run theses checks locally before commiting by using the following command:
+You can run theses checks locally before committing by using the following command:
 
 ```bash
 $ 	make checks

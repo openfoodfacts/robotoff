@@ -1,7 +1,10 @@
-version: "3.9"
-
 volumes:
+  backup:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
+
   postgres-data:
     external: true
   es-data:
     external: true
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data

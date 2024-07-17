@@ -1,13 +1,12 @@
 import re
-from typing import Set
 
 from robotoff import settings
 from robotoff.utils import text_file_iter
 
 
-def test_check_ocr_stores():
-    stores: Set[str] = set()
-    items: Set[str] = set()
+def test_check_ocr_stores() -> None:
+    stores: set[str] = set()
+    items: set[str] = set()
 
     for item in text_file_iter(settings.OCR_STORES_DATA_PATH):
         assert item not in items

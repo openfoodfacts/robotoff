@@ -3,7 +3,7 @@ name: Container Image Deployment CI
 on:
   push:
     branches:
-      - master
+      - main
       - deploy-*
     tags:
       - v*.*.*
@@ -18,6 +18,29 @@ jobs:
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
     steps:
+    - name: Set common variables
+      run: |
+        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+    - name: Set various variable for staging deployment
+      if: matrix.env == 'robotoff-net'
+      run: |
+        echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
+    - name: Set various variable for production deployment
+      if: matrix.env == 'robotoff-org'
+      run: |
+        echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
+        # use prod mongodb through stunnel
+        echo "MONGO_URI=mongodb://10.1.0.113:27017" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
       id: wait-build
@@ -39,11 +62,11 @@ jobs:
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -59,14 +82,21 @@ jobs:
           # Checkout current commit SHA
           git checkout -qf ${{ github.sha }}
 
+          # Setup git lfs on the repository, in case it's not setup yet
+          git lfs install
+
+          # Fetch and checkout LFS files
+          git lfs fetch
+          git lfs checkout
+
     - name: Set environment variables
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -83,42 +113,44 @@ jobs:
           echo "RESTART_POLICY=always" >> .env
 
           # Set app variables
-          echo "ROBOTOFF_INSTANCE=${{ secrets.ROBOTOFF_INSTANCE }}" >> .env
-          echo "ROBOTOFF_DOMAIN=${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
-          echo "IPC_AUTHKEY=${{ secrets.IPC_AUTHKEY }}" >> .env
-          echo "IPC_HOST=${{ secrets.IPC_HOST }}" >> .env
-          echo "IPC_PORT=${{ secrets.IPC_PORT }}" >> .env
-          echo "WORKER_COUNT=${{ secrets.WORKER_COUNT }}" >> .env
-          echo "POSTGRES_HOST=postgres" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+          echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
+          echo "ROBOTOFF_TLD=${{ env.ROBOTOFF_TLD }}" >> .env
+          echo "REDIS_HOST=redis.robotoff_default" >> .env
+          echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
+          echo "POSTGRES_DB=postgres" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
-          echo "OFF_USER=${{ secrets.OFF_USER }}" >> .env
+          echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
+          echo "OFF_USER=roboto-app" >> .env
           echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
-          echo "ELASTICSEARCH_HOSTS=elasticsearch" >> .env
-          echo "TF_SERVING_HOST=${{ secrets.TF_SERVING_HOST }}" >> .env
-          echo "INFLUXDB_HOST=${{ secrets.INFLUXDB_HOST }}" >> .env
-          echo "INFLUXDB_PORT=8086" >> .env
-          echo "INFLUXDB_DB_NAME=${{ matrix.env == 'robotoff-org' && 'off_metrics' || 'off_net_metrics' }}" >> .env
-          echo "INFLUXDB_USERNAME=off" >> .env
-          echo "INFLUXDB_PASSWORD=${{ secrets.INFLUXDB_PASSWORD }}" >> .env
+          echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
+          echo "ELASTIC_USER=elastic" >> .env
+          echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
+          echo "TRITON_HOST=triton" >> .env
+          echo "FASTTEXT_HOST=fasttext" >> .env
+          echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
+          echo "INFLUXDB_PORT=8087" >> .env
+          echo "INFLUXDB_BUCKET=off_metrics" >> .env
+          echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
-          echo "GUNICORN_NUM_WORKERS=8"
-          echo "EVENTS_API_URL=https://event.${{ secrets.ROBOTOFF_DOMAIN }}" >> .env
-          # TODO: remove this url when we have a proper server running for this purpose
-          echo "IMAGE_MODERATION_SERVICE_URL=https://amathjourney.com/api/off-annotation/flag-image"
+          echo "GUNICORN_NUM_WORKERS=4" >> .env
+          echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
+          echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+
+          # PostgreSQL config
+          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> .env
+          echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> .env
 
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -131,16 +163,21 @@ jobs:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
           cd ${{ matrix.env}}
+          # Get the latest version (to apply migration next)
+          make pull
+          # Apply migrations
+          make migrate-db
+          # Launch new version
           make up
 
     - name: Check services are up
@@ -148,11 +185,11 @@ jobs:
       id: livecheck
       if: ${{ always() }}
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
@@ -169,11 +206,11 @@ jobs:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
@@ -185,21 +222,21 @@ jobs:
       uses: appleboy/ssh-action@master
       if: ${{ always() }}
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        proxy_host: ${{ secrets.PROXY_HOST }}
-        proxy_username: ${{ secrets.USERNAME }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         script_stop: false
         script: |
           cd ${{ matrix.env }}
           make prune
 
-    - uses: frankie567/grafana-annotation-action@v1.0.3
-      if: ${{ always() }}
-      with:
-        apiHost: https://grafana.openfoodfacts.org
-        apiToken: ${{ secrets.GRAFANA_API_TOKEN }}
-        text: <a href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}">Deployment ${{ steps.livecheck.outcome }} on ${{ matrix.env }}</a>
-        tags: type:deployment,origin:github,status:${{ steps.livecheck.outcome }},repo:${{ github.repository }},sha:${{ github.sha }},app:robotoff,env:${{ matrix.env }}
+    # - uses: basos9/grafana-annotation-action@v1.0.3
+    #   if: ${{ always() }}
+    #   with:
+    #     apiHost: https://grafana.openfoodfacts.org
+    #     apiToken: ${{ secrets.GRAFANA_API_TOKEN }}
+    #     text: <a href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}">Deployment ${{ steps.livecheck.outcome }} on ${{ matrix.env }}</a>
+    #     tags: type:deployment,origin:github,status:${{ steps.livecheck.outcome }},repo:${{ github.repository }},sha:${{ github.sha }},app:robotoff,env:${{ matrix.env }}

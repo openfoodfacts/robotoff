@@ -8,12 +8,12 @@ This document presents a brief, high-level overview of Robotoff’s library prim
 
 ## Install
 
-Robotoff is currently compatible with Python 3.7 and 3.8.
+Robotoff is currently compatible with Python 3.11.
 Robotoff can be installed [following dev install doc](../how-to-guides/deployment/dev-install.md)
 
 ## Play with the Open Food Facts dataset
 
-First, download the dataset: `robotoff-cli download-dataset`
+First, download the dataset: `python -m robotoff download-dataset`
 
 Robotoff includes a set of tools to easily handle the OFF dataset.
 As an example, we can print the product name of all complete products from France that have ingredients in French with:

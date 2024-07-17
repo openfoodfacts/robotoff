@@ -1,4 +1,5 @@
 from multiprocessing import Process, SimpleQueue
+from typing import Optional
 
 import requests
 
@@ -27,9 +28,9 @@ class EventProcessor:
         return self.queue
 
     def send_async(self, *args, **kwargs):
-        if settings.EVENTS_API_URL:
+        if settings.BaseURLProvider.event_api():
             queue = self.get()
-            queue.put((settings.EVENTS_API_URL, args, kwargs))
+            queue.put((settings.BaseURLProvider.event_api(), args, kwargs))
 
 
 # a singleton for event processor
@@ -48,15 +49,17 @@ def send_event(
     event_type: str,
     user_id: str,
     device_id: str,
-    barcode: str = None,
+    barcode: Optional[str] = None,
+    server_type: Optional[str] = None,
 ):
     event = {
         "event_type": event_type,
         "user_id": user_id,
         "device_id": device_id,
         "barcode": barcode,
+        "server_type": server_type,
     }
-    logger.debug(f"Event: {event}")
+    logger.debug("Event: %s", event)
     response = requests.post(api_url, json=event)
-    logger.debug(f"Event API response: {response}")
+    logger.debug("Event API response: %s", response)
     return response

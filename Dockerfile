@@ -1,10 +1,11 @@
-ARG PYTHON_VERSION=3.7
+ARG PYTHON_VERSION=3.11
 
 # base python setup
 # -----------------
 FROM python:$PYTHON_VERSION-slim as python-base
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends -y gettext curl build-essential && \
+    apt-get install ffmpeg libsm6 libxext6  -y && \
     apt-get autoremove --purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -13,21 +14,23 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
-    PYSETUP_PATH="/opt/pysetup" \ 
+    PYSETUP_PATH="/opt/pysetup" \
     VENV_PATH="/opt/pysetup/.venv" \
     POETRY_HOME="/opt/poetry" \
-    POETRY_VERSION=1.1.8 \
+    POETRY_VERSION=1.8.3 \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1
+    POETRY_NO_INTERACTION=1 \
+    # Used by Robotoff to know if we're running inside docker
+    IN_DOCKER_CONTAINER=1
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 # building packages
 # -----------------
 FROM python-base as builder-base
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
+RUN curl -sSL https://install.python-poetry.org | python3 -
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
-RUN poetry install --no-dev
+RUN poetry install --without dev
 
 # This is our final image
 # ------------------------
@@ -48,8 +51,8 @@ RUN cd /opt/robotoff/i18n && \
     bash compile.sh && \
     chown off:off -R /opt/robotoff/
 COPY --chown=off:off robotoff /opt/robotoff/robotoff/
-COPY --chown=off:off data /opt/robotoff/data
 COPY --chown=off:off gunicorn.py /opt/robotoff/
+COPY --chown=off:off migrations /opt/robotoff/migrations
 
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
@@ -67,11 +70,12 @@ CMD [ "gunicorn", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotof
 FROM builder-base as builder-dev
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
-# full install
+# full install, with dev packages
 RUN poetry install
 
 # image with dev tooling
 # ----------------------
+# This image will be used by default, unless a target is specified in docker-compose.yml
 FROM runtime as runtime-dev
 COPY --from=builder-dev $VENV_PATH $VENV_PATH
 COPY --from=builder-dev $POETRY_HOME $POETRY_HOME
@@ -84,3 +88,5 @@ RUN \
     mkdir -p /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov && \
     chown -R off:off /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov
 USER off
+CMD [ "gunicorn", "--reload", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotoff.app.api:api"]
+

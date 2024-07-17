@@ -1,9 +1,7 @@
-from typing import Dict, List
-
 import pytest
 
 from robotoff.prediction.ocr.nutrient import find_nutrient_mentions
-from robotoff.utils.types import JSONType
+from robotoff.types import JSONType
 
 
 @pytest.mark.parametrize(
@@ -21,7 +19,7 @@ from robotoff.utils.types import JSONType
         ("waarvan verzadigde", {"saturated_fat": [{"languages": ["nl"]}]}),
         (
             "Sale - Salt 0,210 g",
-            {"salt": [{"languages": ["it"]}, {"languages": ["en"]}]},
+            {"salt": [{"languages": ["it"]}, {"languages": ["en", "da"]}]},
         ),
         ("acides gras saturés", {"saturated_fat": [{"languages": ["fr"]}]}),
         (
@@ -30,7 +28,7 @@ from robotoff.utils.types import JSONType
         ),
     ],
 )
-def test_find_nutrient_mentions(text: str, nutrients: Dict[str, List[JSONType]]):
+def test_find_nutrient_mentions(text: str, nutrients: dict[str, list[JSONType]]):
     results = find_nutrient_mentions(text)
     assert len(results) == 1
     insight = results[0]

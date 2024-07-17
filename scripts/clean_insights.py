@@ -26,7 +26,7 @@ def check_field(insight: ProductInsight, field_name: str):
     return False
 
 
-def run():
+def run() -> None:
     count = 0
     errors = 0
     insight: ProductInsight
@@ -43,7 +43,7 @@ def run():
             data_source_image = insight.data["source"]
             if data_source_image == insight.source_image:
                 insight.data.pop("source")
-                logger.info("Deleting source field for insight {}".format(insight.id))
+                logger.info("Deleting source field for insight %s", insight.id)
                 count += 1
                 save = True
             else:
@@ -81,8 +81,8 @@ def run():
         if save:
             insight.save()
 
-    logger.info("Updated insights: {}".format(count))
-    logger.info("Errors: {}".format(errors))
+    logger.info("Updated insights: %s", count)
+    logger.info("Errors: %s", errors)
 
 
 if __name__ == "__main__":

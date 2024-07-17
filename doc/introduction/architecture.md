@@ -7,12 +7,21 @@ Robotoff is made of several services:
 - the public _API_ service
 - the _scheduler_, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...) [^scheduler]
 - the _workers_, responsible for all long-lasting tasks
+- a _redis_ instance
 
-Communication between API and Workers happens through ipc events. [^ipc_events]
+Communication between API and workers happens through Redis DB using [rq](https://python-rq.org). [^worker_job]
+
+Jobs are sent through rq messaging queues. We currently have two types of queues:
+- High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode [^product_specific_queue]. This way, we greatly reduce the risk of concurrent processing for the same product (DB deadlocks or integrity errors).
+- Low priority queue `robotoff-low`, which is used for all lower-priority jobs.
+
+We also have two kind of workers, low and high priority workers: `worker_low` and `worker_high` respectively. All types of workers handle high-priority jobs first. Each worker listens to a single high priority queue. Only low priority workers can handle low-priority jobs. This way, we ensure low priority jobs don't use excessive system resources, due to the limited number of workers that can handle such jobs.
 
 [^scheduler]: See `scheduler.run`
 
-[^ipc_events]: See `robotoff.workers.client` and `robotoff.workers.listener`
+[^worker_job]: See `robotoff.workers.queues` and `robotoff.workers.tasks`
+
+[^product_specific_queue]: See `get_high_queue` function in `robotoff.workers.queues`
 
 Robotoff allows to predict many information (also called _insights_), mostly from the product images or OCR.
 
@@ -22,7 +31,7 @@ We use simple string matching algorithms to find patterns in the OCR text to gen
 We also use a ML model to extract objects from images. [^image_predictions]
 
 One model tries to detect any logo [^logos].
-Detected logos are then embedded in a vector space using a pre-trained model.
+Detected logos are then embedded in a vector space using the openAI pre-trained model CLIP-vit-base-patch32.
 In this space we use a k-nearest-neighbor approach to try to classify the logo, predicting a brand or a label.
 Hunger game also collects users annotations to have ground truth ([logo game](https://hunger.openfoodfacts.org/logos)).
 
@@ -58,7 +67,7 @@ Some insights with high confidence are applied automatically, 10 minutes after i
 
 Robotoff is also notified by Product Opener every time a product is updated or deleted [^product_update]. This is used to delete insights associated with deleted products, or to update them accordingly.
 
-[^product_update]: see `workers.tasks.product_updated` and `workers.tasks.delete_product_insights`
+[^product_update]: see `workers.tasks.product_updated` and `workers.tasks.delete_product_insights_job`
 [^annotate]: see `robotoff.insights.annotate`
 
 
@@ -66,16 +75,9 @@ Robotoff is also notified by Product Opener every time a product is updated or d
 
 Robotoff also depends on the following services:
 
-- a single node Elasticsearch instance, used to:
-  - infer the product category from the product name, using an improved string matching algorithm. [^predict_category] (used in conjunction with ML detection)
-  - perform spellcheck on ingredient lists [^spellcheck_ingredients]
-- a Tensorflow Serving instance, used to serve object detection models (currently, only nutriscore and category), which is identified as `robotoff-ml`[^robotoff_ml].
-- [robotoff-ann](https://github.com/openfoodfacts/robotoff-ann/) which uses an approximate KNN approach to predict logo label
+- a single node Elasticsearch instance, used to index all logos to run ANN search for automatic logo classification [^logos]
+- a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) [^robotoff_ml].
 - MongoDB, to fetch the product latest version without querying Product Opener API.
 
 
-[^predict_category]: see `robotoff.elasticsearch.predict`
-
 [^robotoff_ml]: see `docker/ml.yml`
-
-[^spellcheck_ingredients]: see `robotoff.spellcheck.elasticsearch.es_handler.ElasticsearchHandler`

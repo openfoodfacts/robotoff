@@ -1,12 +1,16 @@
-from typing import List, Optional, Union
+import functools
+from typing import Optional, Union
 
-from flashtext import KeywordProcessor
+from openfoodfacts.ocr import OCRResult, SafeSearchAnnotationLikelihood, get_text
 
 from robotoff import settings
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
+from robotoff.utils.text import KeywordProcessor
 
-from .dataclass import OCRResult, SafeSearchAnnotationLikelihood, get_text
+# Increase version ID when introducing breaking change: changes for which we
+# want old predictions to be removed in DB and replaced by newer ones
+PREDICTOR_VERSION = "1"
 
 LABELS_TO_FLAG = {
     "Face",
@@ -28,8 +32,11 @@ LABELS_TO_FLAG = {
     "Facial Expression",
     "Glasses",
     "Eyewear",
-    "Gesture",
-    "Thumb",
+    # Gesture generate too many false positive
+    # "Gesture",
+    # Thumb is pretty common on OFF images (as products are often hold in
+    # hands)
+    # "Thumb",
     "Jeans",
     "Shoe",
     "Child",
@@ -44,6 +51,7 @@ LABELS_TO_FLAG = {
 }
 
 
+@functools.cache
 def generate_image_flag_keyword_processor() -> KeywordProcessor:
     processor = KeywordProcessor()
 
@@ -57,9 +65,6 @@ def generate_image_flag_keyword_processor() -> KeywordProcessor:
     return processor
 
 
-PROCESSOR = generate_image_flag_keyword_processor()
-
-
 def extract_image_flag_flashtext(
     processor: KeywordProcessor, text: str
 ) -> Optional[Prediction]:
@@ -70,16 +75,18 @@ def extract_image_flag_flashtext(
         return Prediction(
             type=PredictionType.image_flag,
             data={"text": match_str, "type": "text", "label": key},
+            predictor_version=PREDICTOR_VERSION,
         )
 
     return None
 
 
-def flag_image(content: Union[OCRResult, str]) -> List[Prediction]:
-    predictions: List[Prediction] = []
+def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
+    predictions: list[Prediction] = []
 
     text = get_text(content)
-    prediction = extract_image_flag_flashtext(PROCESSOR, text)
+    processor = generate_image_flag_keyword_processor()
+    prediction = extract_image_flag_flashtext(processor, text)
 
     if prediction is not None:
         predictions.append(prediction)
@@ -102,6 +109,7 @@ def flag_image(content: Union[OCRResult, str]) -> List[Prediction]:
                             "label": key,
                             "likelihood": value.name,
                         },
+                        predictor_version=PREDICTOR_VERSION,
                     )
                 )
 
@@ -118,6 +126,8 @@ def flag_image(content: Union[OCRResult, str]) -> List[Prediction]:
                         "label": label_annotation.description.lower(),
                         "likelihood": label_annotation.score,
                     },
+                    predictor_version=PREDICTOR_VERSION,
+                    confidence=label_annotation.score,
                 )
             )
             break

@@ -2,17 +2,22 @@
 robotoff.code-workspace
 __pycache__
 build
+# debug is a dev-only directory to store all temporary files
+debug
 dist
 .idea
 robotoff.egg-info
 ml/data/*
+cache
 datasets
+data/taxonomies
 *.joblib
-*.gz
 .ipynb_checkpoints
 .mypy_cache
 .pytest_cache
-models
+models/lid.176.bin
+models/**/model.savedmodel
+models/**/model.onnx
 local_models
 docker-compose.production.yml
 *.mo
@@ -20,6 +25,8 @@ docker-compose.production.yml
 images
 
 .venv/
+# pyenv file
+.python-version
 tf_models/*
 weights/
 
@@ -36,4 +43,4 @@ coverage.xml
 site/
 gh_pages/
 doc/README.md
-doc/references/cli.md 
+doc/references/cli.md

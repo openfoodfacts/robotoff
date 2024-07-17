@@ -1,15 +1,17 @@
-from typing import Tuple
+import math
 
 import pytest
+from openfoodfacts.ocr import OCRRegex
 
-from robotoff.prediction.ocr.dataclass import OCRRegex
 from robotoff.prediction.ocr.product_weight import (
     PRODUCT_WEIGHT_REGEX,
+    find_product_weight,
     is_extreme_weight,
     is_suspicious_weight,
     is_valid_weight,
     normalize_weight,
 )
+from robotoff.types import Prediction, PredictionType, ServerType
 
 
 @pytest.mark.parametrize(
@@ -65,9 +67,10 @@ def test_product_weight_with_ending_mention_regex(input_str: str, is_match: bool
         ("1", "oz", (28.349523125, "g")),
     ],
 )
-def test_normalize_weight(value: str, unit: str, expected: Tuple[float, str]):
-    result = normalize_weight(value, unit)
-    assert result == expected
+def test_normalize_weight(value: str, unit: str, expected: tuple[float, str]):
+    normalized_value, normalized_unit = normalize_weight(value, unit)
+    assert math.isclose(normalized_value, expected[0])
+    assert normalized_unit == expected[1]
 
 
 @pytest.mark.parametrize(
@@ -124,3 +127,80 @@ def test_is_extreme_weight(value: float, unit: str, expected: bool):
 )
 def test_is_suspicious_weight(value: float, unit: str, expected: bool):
     assert is_suspicious_weight(value, unit) is expected
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("760094310634\nGE PAPIER\n", []),
+        (
+            "Poids net: 150 g\nIngrédients:",
+            [
+                Prediction(
+                    type=PredictionType.product_weight,
+                    data={
+                        "automatic_processing": True,
+                        "matcher_type": "with_mention",
+                        "normalized_unit": "g",
+                        "normalized_value": 150,
+                        "notify": False,
+                        "priority": 1,
+                        "prompt": "Poids net",
+                        "raw": "Poids net: 150 g",
+                        "unit": "g",
+                        "value": "150",
+                    },
+                    value_tag=None,
+                    value="150 g",
+                    automatic_processing=True,
+                    predictor="regex",
+                    predictor_version="1",
+                    barcode=None,
+                    timestamp=None,
+                    source_image=None,
+                    id=None,
+                    confidence=None,
+                    server_type=ServerType.off,
+                ),
+            ],
+        ),
+        (
+            "10 x 60g",
+            [
+                Prediction(
+                    type=PredictionType.product_weight,
+                    data={
+                        "raw": "10 x 60g",
+                        "unit": "g",
+                        "count": "10",
+                        "value": "60",
+                        "notify": False,
+                        "priority": 2,
+                        "matcher_type": "multi_packaging",
+                        "normalized_unit": "g",
+                        "normalized_value": 60,
+                        "automatic_processing": True,
+                    },
+                    value_tag=None,
+                    value="10 x 60 g",
+                    automatic_processing=True,
+                    predictor="regex",
+                    predictor_version="1",
+                    barcode=None,
+                    timestamp=None,
+                    source_image=None,
+                    id=None,
+                    confidence=None,
+                    server_type=ServerType.off,
+                ),
+            ],
+        ),
+        # Extreme weight should not trigger a prediction
+        (
+            "50 x 50kg",
+            [],
+        ),
+    ],
+)
+def test_find_product_weight(text: str, expected: list[dict]):
+    assert find_product_weight(text) == expected

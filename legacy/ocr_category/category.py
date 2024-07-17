@@ -4,7 +4,8 @@ import numpy as np
 
 from robotoff.prediction.category.prediction_from_ocr.constants import LIST_CATEGORIES
 from robotoff.prediction.category.prediction_from_ocr.predictor import Predictor
-from robotoff.prediction.types import Prediction, PredictionType
+from robotoff.prediction.types import Prediction
+from robotoff.types import PredictionType
 
 from .dataclass import OCRResult, get_text
 

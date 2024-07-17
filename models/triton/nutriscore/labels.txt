@@ -1,0 +1,5 @@
+nutriscore-a
+nutriscore-b
+nutriscore-c
+nutriscore-d
+nutriscore-e

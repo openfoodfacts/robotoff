@@ -1,22 +1,39 @@
-import json
+import functools
 import operator
-from typing import Dict, List, Optional, Set, Tuple
-
-import orjson
-import requests
+from typing import Optional
 
 from robotoff import settings
 from robotoff.products import ProductDataset
-from robotoff.utils import dump_text, text_file_iter
-from robotoff.utils.cache import CachedStore
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import ServerType
+from robotoff.utils import (
+    dump_json,
+    dump_text,
+    get_logger,
+    http_session,
+    load_json,
+    text_file_iter,
+)
+
+logger = get_logger(__name__)
 
 
-def get_brand_prefix() -> Set:
-    with settings.BRAND_PREFIX_PATH.open("rb") as f:
-        return set(tuple(x) for x in orjson.loads(f.read()))
+@functools.cache
+def get_brand_prefix() -> set[tuple[str, str]]:
+    """Get a set of brand prefix tuples found in Open Food Facts databases.
+
+    Each tuple has the format (brand_tag, prefix) where prefix is a digit with
+    13 elements (EAN-13).
+    """
+    logger.info("Loading brand prefix...")
+    return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
-def get_brand_blacklist() -> Set[str]:
+@functools.cache
+def get_brand_blacklist() -> set[str]:
+    """Return the list of brands we want to exclude from automatic detection
+    through the 'taxonomy' predictor."""
+    logger.info("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
 
@@ -25,15 +42,13 @@ def generate_barcode_prefix(barcode: str) -> str:
         prefix = 7
         return barcode[:prefix] + "x" * (len(barcode) - prefix)
 
-    raise ValueError(
-        "barcode prefix only works on EAN-13 barcode " "(here: {})".format(barcode)
-    )
+    raise ValueError(f"barcode prefix only works on EAN-13 barcode (here: {barcode})")
 
 
 def compute_brand_prefix(
     product_dataset: ProductDataset, threshold: Optional[int] = None
-) -> Dict[Tuple[str, str], int]:
-    count: Dict[Tuple[str, str], int] = {}
+) -> dict[tuple[str, str], int]:
+    count: dict[tuple[str, str], int] = {}
 
     for product in (
         product_dataset.stream()
@@ -59,21 +74,18 @@ def compute_brand_prefix(
     return count
 
 
-def save_brand_prefix(count_threshold: int):
+def save_brand_prefix(count_threshold: int = 5):
     product_dataset = ProductDataset(settings.JSONL_DATASET_PATH)
     counts = compute_brand_prefix(product_dataset, threshold=count_threshold)
-
     brand_prefixes = list(counts.keys())
-
-    with settings.BRAND_PREFIX_PATH.open("w") as f:
-        json.dump(brand_prefixes, f)
+    dump_json(settings.BRAND_PREFIX_PATH, brand_prefixes, compressed=True)
 
 
 def keep_brand_from_taxonomy(
     brand_tag: str,
     brand: str,
     min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
+    blacklisted_brands: Optional[set[str]] = None,
 ) -> bool:
     if brand.isdigit():
         return False
@@ -89,18 +101,21 @@ def keep_brand_from_taxonomy(
 
 def generate_brand_list(
     threshold: int,
+    server_type: ServerType,
     min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
-) -> List[Tuple[str, str]]:
+    blacklisted_brands: Optional[set[str]] = None,
+) -> list[tuple[str, str]]:
     min_length = min_length or 0
-    brand_taxonomy = requests.get(settings.TAXONOMY_BRAND_URL).json()
-    brand_count_list = requests.get(settings.OFF_BRANDS_URL).json()["tags"]
+    brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
+    url = settings.BaseURLProvider.world(server_type) + "/brands.json"
+    brand_count_list = http_session.get(url).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}
     brand_list = []
 
-    for key in list(brand_taxonomy.keys()):
-        name = brand_taxonomy[key]["name"]["en"]
+    for node in brand_taxonomy.iter_nodes():
+        key = node.id
+        name = node.names["en"]
 
         if key.startswith("en:"):
             key = key[3:]
@@ -117,15 +132,19 @@ def generate_brand_list(
 def dump_taxonomy_brands(
     threshold: int,
     min_length: Optional[int] = None,
-    blacklisted_brands: Optional[Set[str]] = None,
+    blacklisted_brands: Optional[set[str]] = None,
 ):
-    filtered_brands = generate_brand_list(threshold, min_length, blacklisted_brands)
+    # Only support OFF for now
+    server_type = ServerType.off
+    filtered_brands = generate_brand_list(
+        threshold, server_type, min_length, blacklisted_brands
+    )
     line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 
 
 def in_barcode_range(
-    brand_prefix: Set[Tuple[str, str]], brand_tag: str, barcode: str
+    brand_prefix: set[tuple[str, str]], brand_tag: str, barcode: str
 ) -> bool:
     """Check that the insight barcode is in the range of the detected
     brand barcode range.
@@ -141,10 +160,11 @@ def in_barcode_range(
     return True
 
 
-BRAND_PREFIX_STORE = CachedStore(fetch_func=get_brand_prefix, expiration_interval=None)
-BRAND_BLACKLIST_STORE = CachedStore(
-    fetch_func=get_brand_blacklist, expiration_interval=None
-)
+def load_resources():
+    """Load and cache resources."""
+    get_brand_prefix()
+    get_brand_blacklist()
+
 
 if __name__ == "__main__":
     blacklisted_brands = get_brand_blacklist()

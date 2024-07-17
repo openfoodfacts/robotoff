@@ -13,7 +13,7 @@ msgstr ""
 "X-Crowdin-Project: openfoodfacts\n"
 "X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: ar\n"
-"X-Crowdin-File-ID: 2554\n"
+"X-Crowdin-File-ID: 3524\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
@@ -34,4 +34,8 @@ msgstr "هل يتطابق هذا الوزن مع الوزن المعروض عل�
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
 msgstr "هل هذه الصورة صورة غذائية لهذه اللغة؟"
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product have this packaging element?"
+msgstr "هل يحتوي المنتج على عنصر التغليف هذا؟"
 

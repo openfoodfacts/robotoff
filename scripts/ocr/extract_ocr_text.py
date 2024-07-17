@@ -351,7 +351,7 @@ class Paragraph:
 
     def get_text(self):
         """Return the text of the paragraph, by concatenating the words."""
-        return "".join(w.get_text() for w in self.words)
+        return "".join(w.text for w in self.words)
 
 
 class Word:
