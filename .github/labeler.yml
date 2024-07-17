@@ -8,10 +8,6 @@ crowdin:
 - changed-files:
   - any-glob-to-any-file: 'crowdin.yml'
 
-documentation:
-- changed-files:
-  - any-glob-to-any-file: ['*.MD']
-
 tests:
 - changed-files:
   - any-glob-to-any-file: 'tests/**/*'
@@ -109,5 +105,10 @@ stores:
   - any-glob-to-any-file: 'data/ocr/store_regex.txt'
 
 legacy:
-- legacy/**/*
-- legacy/ocr_category/prediction_from_ocr/**/*
+- changed-files:
+  - any-glob-to-any-file: 'legacy/**/*'
+  - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
+
+documentation:
+- changed-files:
+  - any-glob-to-any-file: ['*.MD']
