@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import elasticsearch
+import numpy as np
 from elasticsearch.helpers import BulkIndexError
 from openfoodfacts import OCRResult
 from openfoodfacts.taxonomy import Taxonomy
@@ -157,13 +158,15 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
 
     # Run UPC detection to detect if the image is dominated by a UPC (and thus
     # should not be a product selected image)
-    enqueue_job(
-        run_upc_detection,
-        get_high_queue(product_id),
-        job_kwargs={"result_ttl": 0},
-        product_id=product_id,
-        image_url=image_url,
-    )
+    # UPC detection is buggy since the upgrade to OpenCV 4.10
+    # Unit tests are failing, we need to fix them before re-enabling this task
+    # enqueue_job(
+    #     run_upc_detection,
+    #     get_high_queue(product_id),
+    #     job_kwargs={"result_ttl": 0},
+    #     product_id=product_id,
+    #     image_url=image_url,
+    # )
 
 
 def import_insights_from_image(
@@ -262,7 +265,7 @@ def run_nutrition_table_object_detection(
             source_image=source_image, server_type=product_id.server_type.name
         ):
             run_object_detection_model(
-                ObjectDetectionModel.nutrition_table,
+                ObjectDetectionModel.nutrition_table_yolo,
                 image,
                 image_model,
                 triton_uri=triton_uri,
@@ -322,7 +325,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
                 return
 
             area, prediction_class, polygon = find_image_is_upc(
-                convert_image_to_array(image)
+                convert_image_to_array(image).astype(np.uint8)
             )
             ImagePrediction.create(
                 image=image_model,
@@ -394,7 +397,10 @@ def run_nutriscore_object_detection(
             return
 
         image_prediction = run_object_detection_model(
-            ObjectDetectionModel.nutriscore, image, image_model, triton_uri=triton_uri
+            ObjectDetectionModel.nutriscore_yolo,
+            image,
+            image_model,
+            triton_uri=triton_uri,
         )
 
     if image_prediction is None:

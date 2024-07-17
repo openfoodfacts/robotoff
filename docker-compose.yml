@@ -109,8 +109,8 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - backup:/opt/robotoff-backups
       - ./scripts/backup_postgres.sh:/opt/backup_postgres.sh
-    command: postgres -c shared_buffers=1024MB -c work_mem=64MB
-    mem_limit: 4g
+    command: postgres -c shared_buffers=${ROBOTOFF_POSTGRES_SHARED_BUFFERS} -c work_mem=${ROBOTOFF_POSTGRES_WORK_MEM}
+    mem_limit: 20g
     shm_size: 1g
     ports:
       - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"

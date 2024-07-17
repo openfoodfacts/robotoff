@@ -1,5 +1,88 @@
 # Changelog
 
+## [1.47.0](https://github.com/openfoodfacts/robotoff/compare/v1.46.0...v1.47.0) (2024-07-12)
+
+
+### Features
+
+* add Yolov8 model for nutrition table detection ([#1365](https://github.com/openfoodfacts/robotoff/issues/1365)) ([5b069af](https://github.com/openfoodfacts/robotoff/commit/5b069af7e1dc7d1f264b2a05c40a9c1c84cd8620))
+
+
+### Bug Fixes
+
+* decrease minimum score to leverage nutrition table detections ([4a26918](https://github.com/openfoodfacts/robotoff/commit/4a26918081215e1781a5f4c6ce2b97df807462f4))
+* drop unused indices ([#1364](https://github.com/openfoodfacts/robotoff/issues/1364)) ([f0c348f](https://github.com/openfoodfacts/robotoff/commit/f0c348f2d2a6f83f8d2f9e7730d50066a5742e4f))
+* fix get_type call ([18181bb](https://github.com/openfoodfacts/robotoff/commit/18181bb5fa96e4ad0dbe39d88f5153c037e8a471))
+* fix ImagePrediction.model_name ([4a9e1a6](https://github.com/openfoodfacts/robotoff/commit/4a9e1a659111dcb5557c611b0d1fce9040a3725f))
+* fix issue with model loading ([1e15d72](https://github.com/openfoodfacts/robotoff/commit/1e15d7257ff1f34d74d8ac5437040a650b3a1e0f))
+
+
+### Technical
+
+* add doc about triton ([3a6fcb3](https://github.com/openfoodfacts/robotoff/commit/3a6fcb36732cee54752862f71f2b7d552725e766))
+* improve docstring ([e6f8533](https://github.com/openfoodfacts/robotoff/commit/e6f8533e04d053e3682a4214f6f8eb8e1ee77d6c))
+
+## [1.46.0](https://github.com/openfoodfacts/robotoff/compare/v1.45.2...v1.46.0) (2024-07-08)
+
+
+### Features
+
+* add yolo model for nutriscore object detection ([#1356](https://github.com/openfoodfacts/robotoff/issues/1356)) ([be19217](https://github.com/openfoodfacts/robotoff/commit/be192179c188e17cd6359afd3104bdcdc0e880bc))
+
+
+### Bug Fixes
+
+* fix incorrect astype call ([#1359](https://github.com/openfoodfacts/robotoff/issues/1359)) ([f3d3ff6](https://github.com/openfoodfacts/robotoff/commit/f3d3ff64d4c77fff37b77c6dc1ab6c51d713ab89))
+* make log message less verbose in api.py ([#1361](https://github.com/openfoodfacts/robotoff/issues/1361)) ([83e043b](https://github.com/openfoodfacts/robotoff/commit/83e043bc76584c74a2d0e54f0fb680aef80d9f32))
+
+
+### Technical
+
+* update some envvar config ([#1360](https://github.com/openfoodfacts/robotoff/issues/1360)) ([923324e](https://github.com/openfoodfacts/robotoff/commit/923324efe5db65b9a76f6b2f06a6d37309e9ae76))
+* upgrade dep ([#1358](https://github.com/openfoodfacts/robotoff/issues/1358)) ([a02ec39](https://github.com/openfoodfacts/robotoff/commit/a02ec391b86d0281ac25ff4bb26b210d92a95261))
+
+## [1.45.2](https://github.com/openfoodfacts/robotoff/compare/v1.45.1...v1.45.2) (2024-07-04)
+
+
+### Bug Fixes
+
+* improve OCR dump script ([#1351](https://github.com/openfoodfacts/robotoff/issues/1351)) ([b49836b](https://github.com/openfoodfacts/robotoff/commit/b49836b45a3046b679a9aed397b0a6c1215517d8))
+
+
+### Technical
+
+* increase SHARED_BUFFERS and WORK_MEM ([#1354](https://github.com/openfoodfacts/robotoff/issues/1354)) ([f26fdba](https://github.com/openfoodfacts/robotoff/commit/f26fdbac77314ac1d17e62fd6ad348423dbc37f2))
+
+## [1.45.1](https://github.com/openfoodfacts/robotoff/compare/v1.45.0...v1.45.1) (2024-06-24)
+
+
+### Bug Fixes
+
+* don't select nutrition image if one has already been selected ([#1348](https://github.com/openfoodfacts/robotoff/issues/1348)) ([68cc43d](https://github.com/openfoodfacts/robotoff/commit/68cc43dbc8156892264187e8f6a4f96f5f8f554f))
+
+
+### Technical
+
+* **deps:** bump urllib3 from 2.1.0 to 2.2.2 ([#1347](https://github.com/openfoodfacts/robotoff/issues/1347)) ([0937f1e](https://github.com/openfoodfacts/robotoff/commit/0937f1eee8f9d2c991d6b5ce3233bdf95bad0741))
+
+## [1.45.0](https://github.com/openfoodfacts/robotoff/compare/v1.44.0...v1.45.0) (2024-05-15)
+
+
+### Features
+
+* improve Slack & nutripatrol notifier ([#1343](https://github.com/openfoodfacts/robotoff/issues/1343)) ([076fb11](https://github.com/openfoodfacts/robotoff/commit/076fb11e125bfade78ce30c3076463a92fefe434))
+
+
+### Technical
+
+* **deps-dev:** bump jinja2 from 3.1.3 to 3.1.4 ([#1342](https://github.com/openfoodfacts/robotoff/issues/1342)) ([60e7f13](https://github.com/openfoodfacts/robotoff/commit/60e7f132166fe3d4582485c44aa28f723a48e37f))
+* **deps-dev:** bump werkzeug from 3.0.1 to 3.0.3 ([#1341](https://github.com/openfoodfacts/robotoff/issues/1341)) ([a9244f9](https://github.com/openfoodfacts/robotoff/commit/a9244f967b3b44f71be30086b6720b3d3ad14d6e))
+* **deps:** bump dnspython from 2.4.2 to 2.6.1 ([#1335](https://github.com/openfoodfacts/robotoff/issues/1335)) ([084b9d9](https://github.com/openfoodfacts/robotoff/commit/084b9d915ede638c9e71307de276f41fa4ab864c))
+* **deps:** bump gunicorn from 20.1.0 to 22.0.0 ([#1336](https://github.com/openfoodfacts/robotoff/issues/1336)) ([9ec607a](https://github.com/openfoodfacts/robotoff/commit/9ec607a7377becdd92ed099b3f50f6a64a5a0028))
+* **deps:** bump idna from 3.6 to 3.7 ([#1334](https://github.com/openfoodfacts/robotoff/issues/1334)) ([d514f82](https://github.com/openfoodfacts/robotoff/commit/d514f82d4fcc5f9f542d4b978a86a148ff7394e9))
+* **deps:** bump tqdm from 4.66.1 to 4.66.3 ([#1340](https://github.com/openfoodfacts/robotoff/issues/1340)) ([beef9a4](https://github.com/openfoodfacts/robotoff/commit/beef9a4066c9a5b7e7015c4c8238e84465a507d9))
+* New Crowdin translations to review and merge ([#1324](https://github.com/openfoodfacts/robotoff/issues/1324)) ([5310130](https://github.com/openfoodfacts/robotoff/commit/5310130a9bee99115ed170595bf88cb8cbf5a6aa))
+
 ## [1.44.0](https://github.com/openfoodfacts/robotoff/compare/v1.43.0...v1.44.0) (2024-04-11)
 
 

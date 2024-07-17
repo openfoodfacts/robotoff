@@ -895,7 +895,8 @@ class ImagePredictorResource:
             result = model.detect_from_image(image, output_image=output_image)
 
             if output_image:
-                image_response(result.boxed_image, resp)
+                boxed_image = cast(Image.Image, result.boxed_image)
+                image_response(boxed_image, resp)
                 return
             else:
                 predictions[model_name] = result.to_json()
@@ -1119,11 +1120,14 @@ class ImageLogoResetResource:
                 insights_deleted = (
                     ProductInsight.delete()
                     .where(
+                        # Speed-up filtering by providing additional filters
                         ProductInsight.barcode == logo.barcode,
                         ProductInsight.type == annotation_type,
                         # never delete annotated insights
                         ProductInsight.annotation.is_null(),
                         ProductInsight.predictor == "universal-logo-detector",
+                        # We don't have an index on data, but the number of
+                        # rows should be small enough to not be a problem
                         ProductInsight.data["logo_id"] == str(logo_id),
                     )
                     .execute()
@@ -1314,11 +1318,10 @@ class WebhookProductResource:
         diffs: dict = req.get_param_as_json("diffs", required=True)
         check_server_domain(server_domain)
         logger.info(
-            "New webhook event received for product %s (action: %s, domain: %s, diffs: %s)",
+            "New webhook event received for product %s (action: %s, domain: %s)",
             barcode,
             action,
             server_domain,
-            diffs,
         )
         if action not in ("updated", "deleted"):
             raise falcon.HTTPBadRequest(

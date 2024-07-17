@@ -467,10 +467,12 @@ def run_object_detection_model(
 
     if model_name == ObjectDetectionModel.universal_logo_detector:
         func: Callable = run_logo_object_detection
-    elif model_name == ObjectDetectionModel.nutrition_table:
+    elif model_name == ObjectDetectionModel.nutrition_table_yolo:
         func = run_nutrition_table_object_detection
-    else:
+    elif model_name == ObjectDetectionModel.nutriscore_yolo:
         func = run_nutriscore_object_detection
+    else:
+        raise ValueError(f"unsupported model: {model_name}")
 
     if input_path:
         image_urls = list(text_file_iter(input_path))

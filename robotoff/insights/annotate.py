@@ -548,8 +548,8 @@ def convert_crop_bounding_box(
         y_max, x_max)
     :param width: original height of the image
     :param height: original width of the image
-    :param rotate: rotation angle that we should apply to the bounding box,
-        defaults to 0 (no rotation)
+    :param rotate: rotation angle (counter-clockwise) that we should apply to
+        the bounding box, defaults to 0 (no rotation)
     :return: the converted bounding box coordinates
     """
     y_min, x_min, y_max, x_max = bounding_box
@@ -623,6 +623,12 @@ class NutritionImageAnnotator(InsightAnnotator):
                 description="the image is invalid",
             )
 
+        image_key = f"nutrition_{insight.value_tag}"
+        # We don't want to select the nutrition image if one has already been
+        # selected
+        if image_key in images:
+            return ALREADY_ANNOTATED_RESULT
+
         rotation = insight.data.get("rotation", 0)
         crop_bounding_box: Optional[tuple[float, float, float, float]] = None
         if "bounding_box" in insight.data:
@@ -635,7 +641,6 @@ class NutritionImageAnnotator(InsightAnnotator):
                 insight.data["bounding_box"], width, height, rotation
             )
 
-        image_key = f"nutrition_{insight.value_tag}"
         select_rotate_image(
             product_id=product_id,
             image_id=image_id,

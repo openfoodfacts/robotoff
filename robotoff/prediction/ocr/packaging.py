@@ -105,13 +105,13 @@ class PackagingFRTransformer(Transformer):
         return items[-1]
 
     def shape_material(self, items: list):
-        shape, *material = items
+        shape, *material_list = items
 
-        if len(material) == 1:
-            material = material[0]
+        if len(material_list) == 1:
+            material = material_list[0]
         else:
             # 2 items, "plastique PET", only keep the last one
-            material = material[1]
+            material = material_list[1]
         return {**shape, **material}
 
     def WS(self, token):
