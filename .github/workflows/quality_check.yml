@@ -1,0 +1,75 @@
+name: Robotoff code quality checks and unit tests
+
+on:
+  push:
+    paths:
+      - "**/robotoff/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "data/**"
+      - "tests/**"
+      - "**.pot"
+      - "**.po"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.11"
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      #----------------------------------------------
+      #       check-out repo
+      #----------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      #----------------------------------------------
+      # Launch checks and tests
+      #----------------------------------------------
+      - name: Configure docker
+        run: |
+          # ensure a new line for .env file might not have it !
+          echo "" >> .env
+          # align user id
+          echo "OFF_UID=$UID" >> .env
+          echo "PYTHON_VERSION=${{ matrix.python-version }}" >> .env
+
+      - name: Launch quality checks
+        run: make checks
+
+      - name: Launch tests
+        run: make tests
+
+      #----------------------------------------------
+      # Upload test coverage
+      #----------------------------------------------
+      - uses: codecov/codecov-action@v3.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+          directory: .cov
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # dev:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+  #     - name: Run developer workflow
+  #       run: make dev

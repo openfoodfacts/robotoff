@@ -2,7 +2,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-05-30 10:21\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Korean\n"
 "Language: ko\n"
@@ -12,8 +11,9 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Crowdin-Project: openfoodfacts\n"
+"X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: ko\n"
-"X-Crowdin-File: /master/i18n/robotoff.pot\n"
+"X-Crowdin-File-ID: 3524\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
@@ -34,4 +34,8 @@ msgstr "이 무게가 제품에 표시된 무게와 일치합니까?"
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
 msgstr "이 이미지가 이 언어의 영양 이미지입니까?"
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product have this packaging element?"
+msgstr ""
 

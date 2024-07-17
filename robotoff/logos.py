@@ -1,34 +1,114 @@
 import datetime
+import itertools
 import operator
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional
 
+import cachetools
+import elasticsearch
 import numpy as np
+from elasticsearch.helpers import bulk as elasticsearch_bulk
+from elasticsearch.helpers import scan as elasticsearch_scan
+from more_itertools import chunked
 
 from robotoff import settings
-from robotoff.insights import InsightType
-from robotoff.insights.annotate import InvalidInsight, is_automatically_processable
-from robotoff.insights.dataclass import ProductInsights, RawInsight
+from robotoff.elasticsearch import get_es_client
+from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
 from robotoff.insights.importer import import_insights
-from robotoff.models import ImageModel, LogoAnnotation, LogoConfidenceThreshold
-from robotoff.slack import post_message
-from robotoff.utils import get_logger, http_session
-from robotoff.utils.cache import CachedStore
-
+from robotoff.models import (
+    ImagePrediction,
+    LogoAnnotation,
+    LogoConfidenceThreshold,
+    LogoEmbedding,
+)
+from robotoff.models import Prediction as PredictionModel
+from robotoff.models import ProductInsight, db
+from robotoff.notifier import NotifierFactory
+from robotoff.off import OFFAuthentication
+from robotoff.types import (
+    ElasticSearchIndex,
+    InsightImportResult,
+    JSONType,
+    LogoLabelType,
+    Prediction,
+    PredictionType,
+    ServerType,
+)
+from robotoff.utils import get_logger
+from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
 
 
-LOGO_TYPE_MAPPING: Dict[str, InsightType] = {
-    "brand": InsightType.brand,
-    "label": InsightType.label,
+LOGO_TYPE_MAPPING: dict[str, PredictionType] = {
+    "brand": PredictionType.brand,
+    "label": PredictionType.label,
 }
 
-
-LogoLabelType = Tuple[str, Optional[str]]
 UNKNOWN_LABEL: LogoLabelType = ("UNKNOWN", None)
 
 
-def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
+BoundingBoxType = tuple[float, float, float, float]
+
+
+def load_resources():
+    """Load and cache resources."""
+    get_logo_confidence_thresholds()
+    get_logo_annotations()
+
+
+def compute_iou(box_1: BoundingBoxType, box_2: BoundingBoxType) -> float:
+    """Compute the IoU (intersection over union) for two bounding boxes.
+
+    The boxes are expected to have the following format:
+    (y_min, x_min, y_max, x_max).
+    """
+    y_min_1, x_min_1, y_max_1, x_max_1 = box_1
+    y_min_2, x_min_2, y_max_2, x_max_2 = box_2
+    x_max = min(x_max_1, x_max_2)
+    x_min = max(x_min_1, x_min_2)
+    y_max = min(y_max_1, y_max_2)
+    y_min = max(y_min_1, y_min_2)
+    width_inter = max(0, x_max - x_min)
+    height_inter = max(0, y_max - y_min)
+    area_inter = width_inter * height_inter
+    box_1_area = (x_max_1 - x_min_1) * (y_max_1 - y_min_1)
+    box_2_area = (x_max_2 - x_min_2) * (y_max_2 - y_min_2)
+    union_area = box_1_area + box_2_area - area_inter
+    return area_inter / union_area
+
+
+def filter_logos(
+    logos: list[JSONType], score_threshold: float, iou_threshold: float = 0.95
+) -> list[tuple[int, JSONType]]:
+    """Select logos that don't intersect with each other
+    (IoU < `iou_threshold`) and that have a confidence score above
+    `score_threshold`.
+
+    Return a list of (original_idx, logo) tuples.
+    """
+    filtered = []
+    skip_indexes = set()
+    for i in range(len(logos)):
+        logo = logos[i]
+        if i not in skip_indexes:
+            for j in range(i + 1, len(logos)):
+                if (
+                    compute_iou(logo["bounding_box"], logos[j]["bounding_box"])
+                    >= iou_threshold
+                ):
+                    # logos are sorted by descending confidence score, so we
+                    # ignore j logo (logo with lower confidence score)
+                    skip_indexes.add(j)
+
+        if logo["score"] >= score_threshold:
+            filtered.append((i, logo))
+
+    return filtered
+
+
+@cachetools.cached(cachetools.LRUCache(maxsize=1))
+def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
+    logger.info("Loading logo confidence thresholds from DB...")
     thresholds = {}
 
     for item in LogoConfidenceThreshold.select().iterator():
@@ -37,80 +117,138 @@ def get_logo_confidence_thresholds() -> Dict[LogoLabelType, float]:
     return thresholds
 
 
-LOGO_CONFIDENCE_THRESHOLDS = CachedStore(
-    get_logo_confidence_thresholds, expiration_interval=10
-)
-
-
-def get_stored_logo_ids() -> Set[int]:
-    r = http_session.get(
-        "https://robotoff.openfoodfacts.org/api/v1/ann/stored", timeout=30
+def get_stored_logo_ids(es_client: elasticsearch.Elasticsearch) -> set[int]:
+    scan_iter = elasticsearch_scan(
+        es_client,
+        query={"query": {"match_all": {}}},
+        index=ElasticSearchIndex.logo,
+        source=False,
     )
+    return set(int(item["_id"]) for item in scan_iter)
 
-    if not r.ok:
-        logger.warning(
-            f"error while fetching stored logo IDs ({r.status_code}): {r.text}"
+
+def delete_ann_logos(
+    es_client: elasticsearch.Elasticsearch, logo_ids: list[int]
+) -> int:
+    """Delete logos from the ANN index.
+
+    :param es_client: Elasticsearch client
+    :param logo_ids: a list of logo ids to delete
+    :return: the number of logos deleted
+    """
+    actions = (
+        {
+            "_op_type": "delete",
+            "_index": ElasticSearchIndex.logo.name,
+            "_id": logo_id,
+        }
+        for logo_id in logo_ids
+    )
+    success, _ = elasticsearch_bulk(es_client, actions)
+    return success
+
+
+def add_logos_to_ann(
+    es_client: elasticsearch.Elasticsearch,
+    logo_embeddings: list[LogoEmbedding],
+    server_type: ServerType,
+) -> None:
+    """Index logo embeddings in Elasticsearch ANN index.
+
+    :param es_client: Elasticsearch client
+    :param logo_embeddings: a list of `LogoEmbedding`s model instances, the
+        fields `logo_id` and `embedding` should be available
+    :param server_type: the server type (project) associated with the logo
+        embeddings
+    """
+    embeddings = [
+        np.frombuffer(logo_embedding.embedding, dtype=np.float32)
+        for logo_embedding in logo_embeddings
+    ]
+    actions = (
+        {
+            "_index": ElasticSearchIndex.logo.name,
+            "_id": logo_embedding.logo_id,
+            "embedding": embedding / np.linalg.norm(embedding),
+            "server_type": server_type.name,
+        }
+        for logo_embedding, embedding in zip(logo_embeddings, embeddings)
+    )
+    elasticsearch_bulk(es_client, actions)
+
+
+def save_nearest_neighbors(
+    es_client: elasticsearch.Elasticsearch,
+    logo_embeddings: list[LogoEmbedding],
+    server_type: ServerType,
+) -> None:
+    """Save nearest neighbors of a batch of logo embedding."""
+    updated = []
+    for logo_embedding in logo_embeddings:
+        results = knn_search(
+            es_client,
+            logo_embedding.embedding,
+            settings.K_NEAREST_NEIGHBORS,
+            server_type,
         )
-        return set()
+        results = [item for item in results if item[0] != logo_embedding.logo_id][
+            : settings.K_NEAREST_NEIGHBORS
+        ]
 
-    return set(r.json()["stored"])
-
-
-def add_logos_to_ann(image: ImageModel, logos: List[LogoAnnotation]) -> int:
-    if not logos:
-        return 0
-
-    image_url = settings.OFF_IMAGE_BASE_URL + image.source_image
-
-    data = {
-        "image_url": image_url,
-        "logos": [{"bounding_box": logo.bounding_box, "id": logo.id} for logo in logos],
-    }
-    r = http_session.post(
-        "https://robotoff.openfoodfacts.org/api/v1/ann/add", json=data, timeout=30
-    )
-
-    if not r.ok:
-        logger.warning(f"error while adding image to ANN ({r.status_code}): {r.text}")
-        return 0
-
-    return r.json()["added"]
-
-
-def save_nearest_neighbors(logos: List[LogoAnnotation]) -> int:
-    logo_ids_params = ",".join((str(logo.id) for logo in logos))
-    r = http_session.get(
-        f"https://robotoff.openfoodfacts.org/api/v1/ann/batch?logo_ids={logo_ids_params}",
-        timeout=30,
-    )
-
-    response = r.json()
-    results = {int(key): value for key, value in response["results"].items()}
-
-    logo_id_to_logo = {logo.id: logo for logo in logos}
-    missing_logo_ids = set(logo_id_to_logo.keys()).difference(set(results.keys()))
-
-    if missing_logo_ids:
-        logger.warning(f"Missing logo IDs in response: {missing_logo_ids}")
-
-    saved = 0
-    for logo_id, logo_results in results.items():
-        if logo_id in logo_id_to_logo:
-            logo = logo_id_to_logo[logo_id]
-            distances = [n["distance"] for n in logo_results]
-            logo_ids = [n["logo_id"] for n in logo_results]
-            logo.nearest_neighbors = {
+        if results:
+            logo_ids, distances = zip(*results)
+            logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
             }
-            logo.save()
-            saved += 1
+            updated.append(logo_embedding.logo)
 
-    return saved
+    if updated:
+        LogoAnnotation.bulk_update(updated, fields=["nearest_neighbors"], batch_size=50)
 
 
-def get_logo_annotations() -> Dict[int, LogoLabelType]:
-    annotations: Dict[int, LogoLabelType] = {}
+def knn_search(
+    client: elasticsearch.Elasticsearch,
+    embedding_bytes: bytes,
+    k: int = settings.K_NEAREST_NEIGHBORS,
+    server_type: Optional[ServerType] = None,
+) -> list[tuple[int, float]]:
+    """Search for k approximate nearest neighbors of `embedding_bytes` in the
+    Elasticsearch logos index.
+
+    :param client: Elasticsearch client
+    :param embedding_bytes: 1d array of the logo embedding serialized using
+        `numpy.tobytes()`
+    :param k: number of nearest neighbors to return, defaults to
+        `settings.K_NEAREST_NEIGHBORS`
+    :param server_type: the server type (project) associated with the logos
+        to be returned. If not provided, logos from all projects are returned.
+    """
+    embedding = np.frombuffer(embedding_bytes, dtype=np.float32)
+    knn_body = {
+        "field": "embedding",
+        "query_vector": embedding / np.linalg.norm(embedding),
+        "k": k + 1,
+        "num_candidates": k + 1,
+    }
+
+    if server_type is not None:
+        knn_body["filter"] = {"term": {"server_type": server_type.name}}
+
+    results = client.search(
+        index=ElasticSearchIndex.logo, knn=knn_body, source=False, size=k + 1
+    )
+    if hits := results["hits"]["hits"]:
+        return [(int(hit["_id"]), 1.0 - hit["_score"]) for hit in hits]
+
+    return []
+
+
+@cachetools.cached(cachetools.TTLCache(maxsize=1, ttl=3600))  # 1h
+def get_logo_annotations() -> dict[int, LogoLabelType]:
+    logger.info("Loading logo annotations from DB...")
+    annotations: dict[int, LogoLabelType] = {}
 
     for logo in (
         LogoAnnotation.select(
@@ -130,9 +268,6 @@ def get_logo_annotations() -> Dict[int, LogoLabelType]:
     return annotations
 
 
-LOGO_ANNOTATIONS_CACHE = CachedStore(get_logo_annotations, expiration_interval=1)
-
-
 def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
     probs = predict_proba(logo)
 
@@ -144,16 +279,16 @@ def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
 
 def predict_proba(
     logo: LogoAnnotation, weights: str = "distance"
-) -> Optional[Dict[LogoLabelType, float]]:
+) -> Optional[dict[LogoLabelType, float]]:
     if logo.nearest_neighbors is None:
         return None
 
     nn_distances = logo.nearest_neighbors["distances"]
     nn_logo_ids = logo.nearest_neighbors["logo_ids"]
 
-    logo_annotations = LOGO_ANNOTATIONS_CACHE.get()
+    logo_annotations = get_logo_annotations()
 
-    nn_labels: List[LogoLabelType] = []
+    nn_labels: list[LogoLabelType] = []
     for nn_logo_id in nn_logo_ids:
         nn_labels.append(logo_annotations.get(nn_logo_id, UNKNOWN_LABEL))
 
@@ -161,13 +296,13 @@ def predict_proba(
 
 
 def _predict_proba(
-    logo_ids: List[int],
-    nn_labels: List[LogoLabelType],
-    nn_distances: List[float],
+    logo_ids: list[int],
+    nn_labels: list[LogoLabelType],
+    nn_distances: list[float],
     weights: str,
-) -> Dict[LogoLabelType, float]:
+) -> dict[LogoLabelType, float]:
     weights = get_weights(np.array(nn_distances), weights)
-    labels: List[LogoLabelType] = [UNKNOWN_LABEL] + [
+    labels: list[LogoLabelType] = [UNKNOWN_LABEL] + [
         x for x in set(nn_labels) if x != UNKNOWN_LABEL
     ]
     label_to_id = {label: i for i, label in enumerate(labels)}
@@ -179,7 +314,7 @@ def _predict_proba(
 
     proba_k /= proba_k.sum()
 
-    prediction: Dict[LogoLabelType, float] = {}
+    prediction: dict[LogoLabelType, float] = {}
     for i in range(len(proba_k)):
         prediction[labels[i]] = float(proba_k[i])
 
@@ -221,11 +356,29 @@ def get_weights(dist: np.ndarray, weights: str = "uniform"):
 
 
 def import_logo_insights(
-    logos: List[LogoAnnotation],
-    server_domain: str,
-    thresholds: Dict[LogoLabelType, float],
-    default_threshold: float = 0.1,
-):
+    logos: list[LogoAnnotation],
+    thresholds: dict[LogoLabelType, float],
+    server_type: ServerType,
+    default_threshold: float = 0.2,
+    notify: bool = True,
+) -> InsightImportResult:
+    """Generate and import insights from logos.
+
+    Unannotated logos are considered instances of label "UNKNOWN". The
+    majority class is used as prediction, and the "UNKNOWN" prediction is
+    ignored.
+
+    :param logos: a list of `LogoAnnotation` model instances, used to generate
+        insights
+    :param thresholds: a dict of confidence thresholds for each class. If the
+        class is not defined, default threshold is used
+    :param server_type: the server type (project) associated with the logos
+    :param default_threshold: the default confidence threshold to use,
+        defaults to 0.2
+    :param notify: whether to send a notification for each logo selected to
+        generate an insight, defaults to True
+    :return: the result from the insight import
+    """
     selected_logos = []
     logo_probs = []
     for logo in logos:
@@ -247,58 +400,115 @@ def import_logo_insights(
         selected_logos.append(logo)
         logo_probs.append(probs)
 
-    product_insights = predict_logo_insights(selected_logos, logo_probs)
-    imported = import_insights(product_insights, server_domain, automatic=True)
+    if not logos:
+        return InsightImportResult()
 
-    for logo, probs in zip(selected_logos, logo_probs):
-        send_logo_notification(logo, probs)
+    # Delete all predictions for these logos from universal logo detectors
+    # that are not from a human annotator
+    PredictionModel.delete().where(
+        (
+            PredictionModel.data["logo_id"]
+            .cast("integer")
+            .in_([logo.id for logo in logos])
+        )
+        & (~(PredictionModel.data["is_annotation"].cast("bool") == True))  # noqa: E712
+        # Add a filter on barcode to speed-up filtering
+        & (PredictionModel.barcode.in_([logo.barcode for logo in logos]))
+    ).execute()
+    predictions = predict_logo_predictions(selected_logos, logo_probs, server_type)
+    import_result = import_insights(predictions, server_type)
 
-    return imported
+    if notify:
+        for logo, probs in zip(selected_logos, logo_probs):
+            NotifierFactory.get_notifier().send_logo_notification(logo, probs)
+
+    return import_result
+
+
+def generate_insights_from_annotated_logos_job(
+    logo_ids: list[int], auth: OFFAuthentication, server_type: ServerType
+):
+    """Wrap generate_insights_from_annotated_logos function into a python-rq
+    compatible job."""
+    with db:
+        logos = list(
+            LogoAnnotation.select(LogoAnnotation, ImagePrediction)
+            .where(LogoAnnotation.id.in_(logo_ids))
+            .join(ImagePrediction)
+        )
+
+        if logos:
+            generate_insights_from_annotated_logos(logos, auth, server_type)
 
 
 def generate_insights_from_annotated_logos(
-    logos: List[LogoAnnotation], server_domain: str
-):
-    product_insights: List[ProductInsights] = []
+    logos: list[LogoAnnotation], auth: OFFAuthentication, server_type: ServerType
+) -> int:
+    """Generate and apply insights from annotated logos.
+
+    :param logos: a list of `LogoAnnotation` model instances, used to generate
+        insights
+    :param auth: the authentication credentials to use for the annotation
+    :param server_type: the server type (project) associated with the logos
+    :return: the number of insights annotated
+    """
+    predictions = []
     for logo in logos:
-        raw_insight = generate_raw_insight(
-            logo.annotation_type, logo.taxonomy_value, confidence=1.0, logo_id=logo.id
+        logger.debug("Generating prediction for logo %s", logo.id)
+        prediction = generate_prediction(
+            logo_type=logo.annotation_type,
+            logo_value=logo.taxonomy_value,
+            automatic_processing=False,  # we're going to apply it immediately
+            data={
+                "logo_id": logo.id,
+                "bounding_box": logo.bounding_box,
+                "username": logo.username,
+                "is_annotation": True,  # it's worth restating it
+            },
+            confidence=1.0,
+            server_type=server_type,
+            model_version=logo.image_prediction.model_version,
         )
 
-        if raw_insight is None:
-            return
+        if prediction is None:
+            logger.debug("No prediction generated for logo %s", logo.id)
+            continue
 
-        image = logo.image_prediction.image
+        prediction.barcode = logo.barcode
+        prediction.source_image = logo.source_image
+        logger.debug("Prediction generated for logo %s: %s", logo.id, prediction)
+        predictions.append(prediction)
 
-        try:
-            raw_insight.automatic_processing = is_automatically_processable(
-                image.barcode, image.source_image, datetime.timedelta(days=30)
+    import_result = import_insights(predictions, server_type)
+    if import_result.created_predictions_count():
+        logger.info(import_result)
+    else:
+        logger.debug("No insight created")
+
+    annotated = 0
+    for created_id in itertools.chain.from_iterable(
+        insight_import_result.insight_created_ids
+        for insight_import_result in import_result.product_insight_import_results
+    ):
+        insight: Optional[ProductInsight] = ProductInsight.get_or_none(id=created_id)
+        if insight:
+            logger.info(
+                "Annotating insight %s (%s)",
+                insight.id,
+                insight.get_product_id(),
             )
-        except InvalidInsight:
-            return
+            annotation_result = annotate(insight, 1, auth=auth)
+            annotated += int(annotation_result == UPDATED_ANNOTATION_RESULT)
 
-        if raw_insight.automatic_processing:
-            raw_insight.data["notify"] = True
-
-        product_insights.append(
-            ProductInsights(
-                insights=[raw_insight],
-                type=raw_insight.type,
-                barcode=image.barcode,
-                source_image=image.source_image,
-            )
-        )
-
-    imported = import_insights(product_insights, server_domain, automatic=True)
-
-    if imported:
-        logger.info(f"{imported} logo insights imported after annotation")
+    return annotated
 
 
-def predict_logo_insights(
-    logos: List[LogoAnnotation], logo_probs: List[Dict[LogoLabelType, float]],
-) -> List[ProductInsights]:
-    grouped_insights: Dict[Tuple[str, str, InsightType], List[RawInsight]] = {}
+def predict_logo_predictions(
+    logos: list[LogoAnnotation],
+    logo_probs: list[dict[LogoLabelType, float]],
+    server_type: ServerType,
+) -> list[Prediction]:
+    predictions = []
 
     for logo, probs in zip(logos, logo_probs):
         if not probs:
@@ -313,78 +523,114 @@ def predict_logo_insights(
         if label == UNKNOWN_LABEL:
             continue
 
-        raw_insight = generate_raw_insight(
-            label[0], label[1], confidence=max_prob, logo_id=logo.id
+        prediction = generate_prediction(
+            logo_type=label[0],
+            logo_value=label[1],
+            confidence=max_prob,
+            data={
+                "logo_id": logo.id,
+                "bounding_box": logo.bounding_box,
+            },
+            server_type=server_type,
+            model_version=logo.image_prediction.model_version,
         )
 
-        if raw_insight is not None:
-            image = logo.image_prediction.image
-            source_image = image.source_image
-            barcode = image.barcode
-            key = (barcode, source_image, raw_insight.type)
-            grouped_insights.setdefault(key, [])
-            grouped_insights[key].append(raw_insight)
+        if prediction is not None:
+            prediction.barcode = logo.barcode
+            prediction.source_image = logo.source_image
+            predictions.append(prediction)
 
-    insights: List[ProductInsights] = []
-
-    for (barcode, source_image, insight_type), raw_insights in grouped_insights.items():
-        insights.append(
-            ProductInsights(
-                insights=raw_insights,
-                type=insight_type,
-                barcode=barcode,
-                source_image=source_image,
-            )
-        )
-
-    return insights
+    return predictions
 
 
-def generate_raw_insight(
-    logo_type: str, logo_value: Optional[str], **kwargs
-) -> Optional[RawInsight]:
-    if logo_type not in LOGO_TYPE_MAPPING:
+def generate_prediction(
+    logo_type: str,
+    logo_value: Optional[str],
+    data: dict,
+    confidence: float,
+    server_type: ServerType,
+    automatic_processing: Optional[bool] = False,
+    model_version: Optional[str] = None,
+) -> Optional[Prediction]:
+    """Generate a Prediction from a logo.
+
+    The Prediction may either be created after the annotation of the logo by
+    a human (in which case the insight should be annotated right after
+    creation), or by infering the logo value from nearest neighbor labels.
+
+    Currently, only brand and label logo types are supported: None is returned
+    if the logo type is different, or if the logo_value is None.
+    """
+    if logo_type not in LOGO_TYPE_MAPPING or logo_value is None:
         return None
 
-    insight_type = LOGO_TYPE_MAPPING[logo_type]
+    prediction_type = LOGO_TYPE_MAPPING[logo_type]
 
     value_tag = None
     value = None
 
-    if insight_type == InsightType.brand:
+    if prediction_type == PredictionType.brand:
         value = logo_value
-        if value is None:
-            return None
+        value_tag = get_tag(value)
 
-    elif insight_type == InsightType.label:
+    elif prediction_type == PredictionType.label:
         value_tag = logo_value
-        if value_tag is None:
-            return None
 
-    return RawInsight(
-        type=insight_type,
+    return Prediction(
+        type=prediction_type,
         value_tag=value_tag,
         value=value,
-        automatic_processing=False,
+        automatic_processing=automatic_processing,
         predictor="universal-logo-detector",
-        data=kwargs,
+        predictor_version=model_version,
+        data=data,
+        confidence=confidence,
+        server_type=server_type,
     )
 
 
-def send_logo_notification(logo: LogoAnnotation, probs: Dict[LogoLabelType, float]):
-    crop_url = logo.get_crop_image_url()
-    prob_text = "\n".join(
+def refresh_nearest_neighbors(
+    server_type: ServerType, day_offset: int = 7, batch_size: int = 500
+):
+    """Refresh each logo nearest neighbors if the last refresh is more than
+    `day_offset` days old."""
+    sql_query = """
+        SELECT
+        id
+        FROM
+        logo_annotation
+        WHERE
         (
-            f"{label[0]} - {label[1]}: {prob:.2g}"
-            for label, prob in sorted(
-                probs.items(), key=operator.itemgetter(1), reverse=True
+            logo_annotation.completed_at IS NULL
+            AND (
+                logo_annotation.nearest_neighbors IS NULL
+                OR ((logo_annotation.nearest_neighbors ->> 'updated_at') ::timestamp < (now() - '%s days' ::interval))
             )
-        )
-    )
-    barcode = logo.image_prediction.image.barcode
-    text = (
-        f"Prediction for <{crop_url}|image> "
-        f"(<https://hunger.openfoodfacts.org/logos?logo_id={logo.id}|annotate logo>, "
-        f"<https://world.openfoodfacts.org/product/{barcode}|product>):\n{prob_text}"
-    )
-    post_message(text, settings.SLACK_OFF_ROBOTOFF_ALERT_CHANNEL)
+        );"""
+    logo_ids = [item[0] for item in db.execute_sql(sql_query, (day_offset,))]
+    logger.info("%s logos to refresh", len(logo_ids))
+
+    es_client = get_es_client()
+    thresholds = get_logo_confidence_thresholds()
+
+    for logo_id_batch in chunked(logo_ids, batch_size):
+        with db.atomic():
+            logo_embeddings = list(
+                LogoEmbedding.select(LogoEmbedding, LogoAnnotation)
+                .join(LogoAnnotation)
+                .where(LogoEmbedding.logo_id.in_(logo_id_batch))
+            )
+            try:
+                save_nearest_neighbors(es_client, logo_embeddings, server_type)
+            except (
+                elasticsearch.ConnectionError,
+                elasticsearch.ConnectionTimeout,
+            ) as e:
+                logger.info("Request error during ANN batch query", exc_info=e)
+            else:
+                logos = [embedding.logo for embedding in logo_embeddings]
+                import_logo_insights(
+                    logos, thresholds=thresholds, server_type=server_type, notify=False
+                )
+
+    logger.info("refresh of logo nearest neighbors finished")

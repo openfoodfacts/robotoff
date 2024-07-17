@@ -1,160 +1,150 @@
-import time
-from typing import Dict, Optional
+import requests
 
-from robotoff.elasticsearch.category.predict import (
-    predict_from_product as predict_category_from_product_es,
-)
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import ProductInsights
-from robotoff.insights.extraction import get_insights_from_product_name
-from robotoff.insights.importer import InsightImporterFactory
-from robotoff.insights.validator import (
-    InsightValidationResult,
-    InsightValidator,
-    InsightValidatorFactory,
-    validate_insight,
-)
-from robotoff.ml.category.neural.model import (
-    predict_from_product as predict_category_from_product_ml,
-)
-from robotoff.models import ProductInsight
-from robotoff.off import get_server_type, ServerType
-from robotoff.products import get_product, get_product_store, Product
+from robotoff.images import delete_images
+from robotoff.insights.extraction import get_predictions_from_product_name
+from robotoff.insights.importer import import_insights, refresh_insights
+from robotoff.models import with_db
+from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
+from robotoff.products import get_product
+from robotoff.redis import Lock, LockedResourceException
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
 
-def update_insights(barcode: str, server_domain: str):
-    # Sleep 10s to let the OFF update request that triggered the webhook call
-    # to finish
-    time.sleep(10)
-    product_dict = get_product(barcode)
+@with_db
+def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
+    """This job is triggered by the webhook API, when product information has
+    been updated.
+
+    When a product is updated, Robotoff will:
+
+    1. Generate new predictions related to the product's category and name.
+    2. Regenerate all insights from the product associated predictions.
+
+    :param product_id: identifier of the product
+    :param diffs: a dict containing a diff of the update, the format is
+      defined by Product Opener
+    """
+    logger.info("Running `update_insights` for %s", product_id)
+
+    try:
+        with Lock(
+            name=f"robotoff:product_update_job:{product_id.server_type.name}:{product_id.barcode}",
+            expire=300,
+            timeout=10,
+        ):
+            # We handle concurrency thanks to the lock as the task will fetch
+            # product from MongoDB at the time it runs, it's not worth
+            # reprocessing with another task arriving concurrently.
+            # The expire is there only in case the lock is not released
+            # (process killed)
+            deleted_images = diffs.get("uploaded_images", {}).get("delete")
+            if deleted_images:
+                # deleted_images is a list of image IDs that have been deleted
+                logger.info("images deleted: %s, launching DB update", deleted_images)
+                delete_images(product_id, deleted_images)
+
+            product_dict = get_product(product_id)
+
+            if product_dict is None:
+                logger.info("Updated product does not exist: %s", product_id)
+                return
+
+            updated_product_predict_insights(product_id, product_dict)
+            logger.info("Refreshing insights...")
+            import_results = refresh_insights(product_id)
+            for import_result in import_results:
+                logger.info(import_result)
+    except LockedResourceException:
+        logger.info(
+            "Couldn't acquire product_update lock, skipping product_update for product %s",
+            product_id,
+        )
+
+
+@with_db
+def add_category_insight_job(
+    product_id: ProductIdentifier, triton_uri: str | None = None
+) -> None:
+    """Job to add category insight for a product.
+
+    :param product_id: identifier of the product
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
+    """
+    product_dict = get_product(product_id)
 
     if product_dict is None:
-        logger.warn("Updated product does not exist: {}".format(barcode))
+        logger.info("Product does not exist: %s", product_id)
         return
 
-    updated = updated_product_predict_insights(barcode, product_dict, server_domain)
+    add_category_insight(product_id, product_dict, triton_uri=triton_uri)
 
-    if updated:
-        logger.info("Product {} updated".format(barcode))
 
-    update_ingredients(barcode, product_dict, server_domain)
+def add_category_insight(
+    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
+) -> None:
+    """Predict categories for product and import predicted category insight.
 
-    product = Product(product_dict)
-    validators: Dict[str, Optional[InsightValidator]] = {}
-
-    for insight in (
-        ProductInsight.select()
-        .where(
-            ProductInsight.annotation.is_null(),
-            ProductInsight.barcode == barcode,
-            ProductInsight.server_domain == server_domain,
+    :param product_id: identifier of the product
+    :param product: product as retrieved from MongoDB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
+    """
+    if not product_id.server_type.is_food():
+        # Category prediction is only available for Food products
+        logger.info(
+            "`server_type=%s`, skipping category prediction", product_id.server_type
         )
-        .iterator()
-    ):
-        if insight.type not in validators:
-            validators[insight.type] = InsightValidatorFactory.create(
-                insight.type, None
-            )
+        return
 
-        validator = validators[insight.type]
+    # predict category using neural model
+    try:
+        neural_predictions, _ = CategoryClassifier(
+            get_taxonomy(TaxonomyType.category.name)
+        ).predict(product, product_id, triton_uri=triton_uri)
+        product_predictions = neural_predictions
+    except requests.exceptions.HTTPError as e:
+        resp = e.response
+        logger.error(
+            f"Category classifier returned an error: {resp.status_code}: %s", resp.text
+        )
+        return
 
-        if validator is not None:
-            result = validate_insight(insight, validator=validator, product=product)
-            if result == InsightValidationResult.deleted:
-                logger.info(
-                    "Insight {} deleted (type: {})".format(insight.id, insight.type)
-                )
-            elif result == InsightValidationResult.updated:
-                logger.info(
-                    "Insight {} converted to latent (type: {})".format(
-                        insight.id, insight.type
-                    )
-                )
+    if len(product_predictions) < 1:
+        return
 
+    for prediction in product_predictions:
+        prediction.barcode = product_id.barcode
+        prediction.server_type = product_id.server_type
 
-def add_category_insight(barcode: str, product: JSONType, server_domain: str) -> bool:
-    if get_server_type(server_domain) != ServerType.off:
-        return False
-
-    product_insights = []
-    product_insight = predict_category_from_product_es(product)
-
-    if product_insight is not None:
-        product_insights.append(product_insight)
-
-    product_insight = predict_category_from_product_ml(product, filter_blacklisted=True)
-
-    if product_insight is not None:
-        product_insights.append(product_insight)
-
-    if not product_insights:
-        return False
-
-    merged_product_insight = ProductInsights.merge(product_insights)
-    product_store = get_product_store()
-    importer = InsightImporterFactory.create(InsightType.category, product_store)
-
-    imported = importer.import_insights(
-        [merged_product_insight], server_domain=server_domain, automatic=False,
-    )
-
-    if imported:
-        logger.info("Category insight imported for product {}".format(barcode))
-
-    return bool(imported)
+    import_result = import_insights(product_predictions, product_id.server_type)
+    logger.info(import_result)
 
 
 def updated_product_predict_insights(
-    barcode: str, product: JSONType, server_domain: str
-) -> bool:
-    updated = add_category_insight(barcode, product, server_domain)
+    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
+) -> None:
+    """Predict and import category insights and insights-derived from product
+    name.
+
+    :param product_id: identifier of the product
+    :param product: product as retrieved from MongoDB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
+    """
+    add_category_insight(product_id, product, triton_uri=triton_uri)
     product_name = product.get("product_name")
 
     if not product_name:
-        return updated
+        return
 
-    product_store = get_product_store()
-    insights_all = get_insights_from_product_name(barcode, product_name)
-
-    for insight_type, insights in insights_all.items():
-        importer = InsightImporterFactory.create(insight_type, product_store)
-        imported = importer.import_insights(
-            [insights], server_domain=server_domain, automatic=False
-        )
-
-        if imported:
-            logger.info(
-                "{} insights ({}) imported for product {}".format(
-                    imported, insight_type, barcode
-                )
-            )
-            updated = True
-
-    return updated
-
-
-def update_ingredients(barcode: str, product: JSONType, server_domain: str) -> int:
-    deleted = 0
-
-    for insight in ProductInsight.select().where(
-        ProductInsight.type == InsightType.ingredient_spellcheck.name,
-        ProductInsight.annotation.is_null(True),
-        ProductInsight.barcode == barcode,
-    ):
-        lang = insight.data["lang"]
-        insight_text = insight.data["text"]
-        field_name = "ingredients_text_{}".format(lang)
-
-        if field_name not in product or product[field_name] != insight_text:
-            logger.info(
-                "Ingredients deleted or updated for product {} (lang: {}), deleting "
-                "insight".format(barcode, lang)
-            )
-            insight.delete_instance()
-            deleted += 1
-
-    return deleted
+    if product_id.server_type.is_food():
+        # Only available for food products for now
+        logger.info("Generating predictions from product name...")
+        predictions_all = get_predictions_from_product_name(product_id, product_name)
+        import_result = import_insights(predictions_all, product_id.server_type)
+        logger.info(import_result)

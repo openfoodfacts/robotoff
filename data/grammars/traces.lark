@@ -1,0 +1,59 @@
+// match any non-whitespace word that is not detected by other rule/terminal
+// it has priority 0, lower than packaging related terminals that have priority
+// 1, so it matches words that were not detected by other terminals
+OTHER: /[^\s]+/
+
+
+// ## FR ##
+
+OF_FR.1: /\bdes?\b/
+       | /\bd\'/
+       | /\bd\b/
+       | /\bdu\b/
+
+POSSIBLE_FR.1: /\b[ée]ventuelles?\b/
+             | /\bpossibles?\b/
+
+PRODUCTED_FR.1: /\bfabriqu[ée]\b/
+              | /\bélabor[ée]\b/
+
+THAT_USES_FR.1: /\bqui utilise\b/
+             | /\butilisant\b/
+
+// Peut contenir des traces de fruits à coque, de cacahuete de sésame, de sulfites et de gluten
+manufactured_in_fr: ("produit"i WS)? PRODUCTED_FR WS "dans" WS "un" WS "atelier" WS THAT_USES_FR WS? (":" WS)? trace_list_fr
+can_contain_fr: ("peut"i WS "contenir" WS "des" WS)? "traces"i WS (POSSIBLE_FR? WS)? ("de"? WS? ":" WS?)? trace_list_fr
+can_contain_2_fr: "peut"i WS "contenir" WS? (":" WS?)? trace_list_fr
+contains_fr: "contient"i (WS "naturellement")? WS trace_list_fr
+
+trace_list_fr: (OF_FR WS?)? ALLERGEN_FR (WS? ("," WS?)? (("et" WS)? (OF_FR WS?)?)? ALLERGEN_FR)*
+traces_fr: can_contain_fr | can_contain_2_fr | contains_fr | manufactured_in_fr
+
+// ## EN ##
+
+// It may contain traces of nuts, peanuts, sesame, sulphites and gluten.
+can_contain_en: ("it"i WS)? "may" WS "contain" WS ("traces" WS "of" WS)? trace_list_en
+contain_en: "contains"i (WS "traces" WS "of")? (WS? ":")? WS? trace_list_en
+manufactured_in_en: "prepared"i WS "in" WS "premises" WS "where" WS "traces" WS "of" WS trace_list_en WS "are" WS "used"
+trace_list_en: ALLERGEN_EN (WS? ("," WS)? (("and" WS)? ("of" WS)?)? ALLERGEN_EN)*
+traces_en: can_contain_en | contain_en | manufactured_in_en
+
+// ## ES ##
+
+// PUEDE CONTENER LECHE
+can_contain_es: ("este" WS "producto" WS)? "puede" WS "contener"i (WS? ":")? WS? trace_list_es 
+// Contiene leche
+contain_es: ("este" WS "producto" WS)? "contiene"i (WS? ":")? WS? trace_list_es
+trace_list_es: ALLERGEN_ES (WS? ("," WS)? (("y" WS)?)? ALLERGEN_ES)*
+traces_es: contain_es | can_contain_es
+
+
+traces: traces_fr | traces_en | traces_fr | traces_es
+start: (traces | junk | WS)+
+// all other words
+junk: OTHER+
+
+%import common.WS
+%import .terminal_allergen_fr.ALLERGEN_FR
+%import .terminal_allergen_en.ALLERGEN_EN
+%import .terminal_allergen_es.ALLERGEN_ES

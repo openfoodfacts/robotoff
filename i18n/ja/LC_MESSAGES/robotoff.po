@@ -2,7 +2,6 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openfoodfacts\n"
 "POT-Creation-Date: 2019-02-18 11:44+0100\n"
-"PO-Revision-Date: 2020-05-02 11:40\n"
 "Last-Translator: Raphaël Bournhonesque\n"
 "Language-Team: Japanese\n"
 "Language: ja\n"
@@ -12,26 +11,31 @@ msgstr ""
 "X-Generator: Poedit 2.2.1\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Crowdin-Project: openfoodfacts\n"
+"X-Crowdin-Project-ID: 243092\n"
 "X-Crowdin-Language: ja\n"
-"X-Crowdin-File: /master/i18n/robotoff.pot\n"
+"X-Crowdin-File-ID: 3524\n"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "製品はこのカテゴリに属していますか？"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "製品にはこのラベルがありますか？"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "製品はこのブランドに属していますか？"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "この重量は製品に表示される重量と一致しますか？"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "この画像はこの言語の栄養表示ですか？"
+
+# Question that appears for logged-in users on the Web and Android
+msgid "Does the product have this packaging element?"
+msgstr "製品にはこの梱包要素がありますか?"
 

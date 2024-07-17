@@ -1,53 +1,140 @@
-version: '3'
+x-robotoff-base-volumes:
+  &robotoff-base-volumes
+  - ./data:/opt/robotoff/data
+  - ./cache:/opt/robotoff/cache
+  - ./datasets:/opt/robotoff/datasets
+  - ./tf_models:/opt/robotoff/tf_models
+  - ./models:/opt/robotoff/models
 
+x-robotoff-base:
+  &robotoff-base
+  restart: $RESTART_POLICY
+  # this image is built with target=runtime, so it won't have the dev dependencies
+  image: ghcr.io/openfoodfacts/robotoff:${TAG}
+  volumes: *robotoff-base-volumes
+
+x-robotoff-base-env:
+  &robotoff-base-env
+  LOG_LEVEL:
+  ROBOTOFF_INSTANCE:
+  ROBOTOFF_TLD:
+  ROBOTOFF_SCHEME:
+  STATIC_DOMAIN:
+  GUNICORN_PRELOAD_APP:
+  GUNICORN_NUM_WORKERS:
+  ROBOTOFF_UPDATED_PRODUCT_WAIT:
+  REDIS_HOST:
+  POSTGRES_HOST:
+  POSTGRES_DB:
+  POSTGRES_USER:
+  POSTGRES_PASSWORD:
+  MONGO_URI:
+  OFF_USER:
+  OFF_PASSWORD:
+  INFLUXDB_HOST:
+  INFLUXDB_PORT:
+  INFLUXDB_BUCKET:
+  INFLUXDB_AUTH_TOKEN:
+  SLACK_TOKEN:
+  SENTRY_DSN:
+  ELASTIC_HOST:
+  ELASTIC_PASSWORD:
+  ELASTIC_USER:
+  TRITON_HOST:
+  FASTTEXT_HOST:
+  FASTTEXT_PORT:
+  ENABLE_MONGODB_ACCESS:
+  IN_DOCKER_CONTAINER:
+  IMAGE_MODERATION_SERVICE_URL:
+  NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
+
+x-robotoff-worker-base:
+  &robotoff-worker
+  restart: $RESTART_POLICY
+  image: ghcr.io/openfoodfacts/robotoff:${TAG}
+  volumes: *robotoff-base-volumes
+  environment: *robotoff-base-env
+  depends_on:
+    - postgres
+    - redis
+  mem_limit: 8g
 services:
   api:
-    restart: always
-    image: openfoodfacts/robotoff
-    network_mode: "host"
-    volumes:
-      - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
-    mem_limit: 2g
+    <<: *robotoff-base
+    environment: *robotoff-base-env
+    mem_limit: 6g
     ports:
-      - "5500:5500"
+      - "${ROBOTOFF_EXPOSE:-5500}:5500"
+    depends_on:
+      - postgres
+      - redis
 
-  workers:
-    restart: always
-    image: openfoodfacts/robotoff
-    volumes:
-      - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
-    entrypoint: "python3 -m robotoff run workers"
-    mem_limit: 8g
+  worker_1:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_1
+    # Each worker listens to a single high priority queue and to the low priority queue.
+    # As the low priority queue comes last, it will only be processed if there are no high
+    # priority tasks.
+    command: python -m robotoff run-worker robotoff-high-1 robotoff-low
+
+  worker_2:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_2
+    command: python -m robotoff run-worker robotoff-high-2 robotoff-low
+
+  worker_3:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_3
+    command: python -m robotoff run-worker robotoff-high-3 robotoff-low
+
+  worker_4:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_4
+    command: python -m robotoff run-worker robotoff-high-4 robotoff-low
 
   scheduler:
-    image: openfoodfacts/robotoff
-    volumes:
-      - api-dataset:/opt/robotoff/datasets
-      - ./tf_models:/opt/robotoff/tf_models:Z
-      - ./models:/opt/robotoff/models:Z
-    entrypoint: "python3 -m robotoff run scheduler"
+    <<: *robotoff-base
+    environment: *robotoff-base-env
+    command: python -m robotoff run-scheduler
     mem_limit: 4g
 
   postgres:
-    restart: always
+    restart: $RESTART_POLICY
     image: postgres:11.2-alpine
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
     volumes:
-    - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - backup:/opt/robotoff-backups
+      - ./scripts/backup_postgres.sh:/opt/backup_postgres.sh
+    command: postgres -c shared_buffers=${ROBOTOFF_POSTGRES_SHARED_BUFFERS} -c work_mem=${ROBOTOFF_POSTGRES_WORK_MEM}
+    mem_limit: 20g
+    shm_size: 1g
     ports:
-      - "127.0.0.1:5432:5432"
-    mem_limit: 2g
+      - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"
+
+  redis:
+    restart: $RESTART_POLICY
+    image: redis:7.0.5-alpine
+    volumes:
+      - redis-data:/data
+    environment:
+      REDIS_ARGS: --save 60 1000 --appendonly yes
+    mem_limit: 4g
+    ports:
+      - "${REDIS_EXPOSE:-127.0.0.1:6379}:6379"
 
   elasticsearch:
-    restart: always
-    image: raphael0202/elasticsearch
+    restart: $RESTART_POLICY
+    image: elasticsearch:8.5.3
     environment:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD
+      - xpack.security.http.ssl.enabled=false
     ulimits:
       memlock:
         soft: -1
@@ -55,25 +142,18 @@ services:
       nofile:
         soft: 262144
         hard: 262144
-    mem_limit: 1500m
+    mem_limit: 15g
     volumes:
       - es-data:/usr/share/elasticsearch/data
-    ports:
-      - "127.0.0.1:9200:9200"
-      - "127.0.0.1:9300:9300"
-
-  tf_serving:
-    restart: always
-    image: tensorflow/serving:1.15.0
-    ports:
-      - "8501:8501"
-      - "8500:8500"
-    volumes:
-      - ./tf_models:/models:Z
-    entrypoint: "tensorflow_model_server --port=8500 --rest_api_port=8501 --model_config_file=/models/models.config"
-    mem_limit: 3g
 
 volumes:
   postgres-data:
-  api-dataset:
+  backup:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
   es-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
+  redis-data:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
+
+networks:
+  default:

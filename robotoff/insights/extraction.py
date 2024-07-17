@@ -1,274 +1,144 @@
-import pathlib
-from typing import Dict, Iterable, List, Optional
-from urllib.parse import urlparse
+import datetime
+from typing import Iterable, Optional
 
+from openfoodfacts.ocr import OCRResult
 from PIL import Image
-import requests
 
-from robotoff.insights import ocr
-from robotoff.insights._enum import InsightType
-from robotoff.insights.dataclass import ProductInsights, RawInsight
-from robotoff.insights.ocr.core import get_barcode_from_path
-from robotoff.insights.ocr.dataclass import OCRParsingException
-from robotoff.ml.object_detection import (
+from robotoff.models import ImageModel, ImagePrediction
+from robotoff.off import get_source_from_url
+from robotoff.prediction import ocr
+from robotoff.prediction.object_detection import (
+    OBJECT_DETECTION_MODEL_VERSION,
     ObjectDetectionModelRegistry,
-    ObjectDetectionRawResult,
 )
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.types import (
+    ObjectDetectionModel,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+)
+from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
 
 
-DEFAULT_INSIGHT_TYPES: List[InsightType] = [
-    InsightType.label,
-    InsightType.packager_code,
-    InsightType.product_weight,
-    InsightType.image_flag,
-    InsightType.expiration_date,
-    InsightType.brand,
-    InsightType.store,
-    InsightType.packaging,
-]
-
-IMAGE_IMPORT_INSIGHT_TYPES: List[InsightType] = [
-    InsightType.label,
-    InsightType.packager_code,
-    InsightType.product_weight,
-    InsightType.image_flag,
-    InsightType.expiration_date,
-    InsightType.brand,
-    InsightType.store,
-    InsightType.packaging,
-    InsightType.nutrient,
-    InsightType.nutrient_mention,
-    InsightType.image_lang,
-    InsightType.image_orientation,
+DEFAULT_OCR_PREDICTION_TYPES: list[PredictionType] = [
+    PredictionType.category,
+    PredictionType.label,
+    PredictionType.packager_code,
+    PredictionType.product_weight,
+    PredictionType.image_flag,
+    PredictionType.expiration_date,
+    PredictionType.brand,
+    PredictionType.store,
+    PredictionType.packaging,
+    PredictionType.nutrient,
+    PredictionType.nutrient_mention,
+    PredictionType.image_lang,
+    PredictionType.image_orientation,
 ]
 
 
-PRODUCT_NAME_INSIGHT_TYPES: List[InsightType] = [
-    InsightType.label,
-    InsightType.product_weight,
-    InsightType.brand,
+PRODUCT_NAME_PREDICTION_TYPES: list[PredictionType] = [
+    PredictionType.label,
+    PredictionType.product_weight,
+    PredictionType.brand,
 ]
 
 
-def get_insights_from_product_name(
-    barcode: str, product_name: str
-) -> Dict[InsightType, ProductInsights]:
-    results = {}
-    for insight_type in PRODUCT_NAME_INSIGHT_TYPES:
-        insights = ocr.extract_insights(product_name, insight_type)
+def run_object_detection_model(
+    model_name: ObjectDetectionModel,
+    image: Image.Image,
+    image_model: ImageModel,
+    threshold: float = 0.1,
+    return_null_if_exist: bool = True,
+    triton_uri: str | None = None,
+) -> Optional[ImagePrediction]:
+    """Run a model detection model and save the results in the
+    `image_prediction` table.
 
-        if insights:
-            for insight in insights:
-                insight.data["source"] = "product_name"
+    An item with the corresponding `source_image` in the `image` table is
+    expected to exist. Nothing is done if an image prediction already exists in
+    DB for this image and model.
 
-            results[insight_type] = ProductInsights(
-                insights=insights, barcode=barcode, type=insight_type,
-            )
-
-    return results
-
-
-def get_insights_from_image(
-    barcode: str, image_url: str, ocr_url: str
-) -> Dict[InsightType, ProductInsights]:
-    try:
-        ocr_insights = extract_ocr_insights(ocr_url, IMAGE_IMPORT_INSIGHT_TYPES)
-    except requests.exceptions.RequestException as e:
-        logger.info("error during OCR JSON download", exc_info=e)
-        return {}
-    except OCRParsingException as e:
-        logger.error("OCR JSON Parsing error", exc_info=e)
-        return {}
-
-    extract_nutriscore = has_nutriscore_insight(
-        ocr_insights.get(InsightType.label, None)
-    )
-    image_ml_insights = extract_image_ml_insights(
-        image_url, extract_nutriscore=extract_nutriscore
-    )
-
-    insight_types = set(ocr_insights.keys()).union(image_ml_insights.keys())
-
-    results: Dict[InsightType, ProductInsights] = {}
-
-    for insight_type in insight_types:
-        product_insights: List[ProductInsights] = []
-
-        if insight_type in ocr_insights:
-            product_insights.append(ocr_insights[insight_type])
-
-        if insight_type in image_ml_insights:
-            product_insights.append(image_ml_insights[insight_type])
-
-        results[insight_type] = ProductInsights.merge(product_insights)
-
-    return results
-
-
-def has_nutriscore_insight(label_insights: Optional[ProductInsights]) -> bool:
-    if label_insights is None:
-        return False
-
-    for insight in label_insights.insights:
-        if insight.value_tag == "en:nutriscore":
-            return True
-
-    return False
-
-
-def get_source_from_image_url(image_url: str) -> str:
-    image_url_path = urlparse(image_url).path
-
-    if image_url_path.startswith("/images/products"):
-        image_url_path = image_url_path[len("/images/products") :]
-
-    return image_url_path
-
-
-def get_source_from_ocr_url(ocr_url: str) -> str:
-    url_path = urlparse(ocr_url).path
-
-    if url_path.startswith("/images/products"):
-        url_path = url_path[len("/images/products") :]
-
-    if url_path.endswith(".json"):
-        url_path = str(pathlib.Path(url_path).with_suffix(".jpg"))
-
-    return url_path
-
-
-def get_barcode_from_url(ocr_url: str) -> Optional[str]:
-    url_path = urlparse(ocr_url).path
-    return get_barcode_from_path(url_path)
-
-
-def extract_image_ml_insights(
-    image_url: str, extract_nutriscore: bool = True
-) -> Dict[InsightType, ProductInsights]:
-    barcode = get_barcode_from_url(image_url)
-    if barcode is None:
-        raise ValueError("cannot extract barcode from URL: {}".format(barcode))
-
-    results: Dict[InsightType, ProductInsights] = {}
-
-    if extract_nutriscore:
-        image = get_image_from_url(image_url, error_raise=True, session=http_session)
-        nutriscore_insight = extract_nutriscore_label(
-            image, manual_threshold=0.5, automatic_threshold=0.9
+    :param model_name: name of the object detection model to use
+    :param image: the input Pillow image
+    :param image_model: the image in DB
+    :param source_image: the source image path (used to fetch the image from
+      `image` table)
+    :param threshold: the minimum object score above which we keep the object
+        data
+    :param return_null_if_exist: if True, return None if the image prediction
+        already exists in DB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
+    :return: return None if the image does not exist in DB, or the created
+      `ImagePrediction` otherwise
+    """
+    if (
+        existing_image_prediction := ImagePrediction.get_or_none(
+            image=image_model, model_name=model_name.get_type()
         )
+    ) is not None:
+        if return_null_if_exist:
+            return None
+        return existing_image_prediction
 
-        if not nutriscore_insight:
-            return results
+    timestamp = datetime.datetime.utcnow()
+    results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
+        image, output_image=False, triton_uri=triton_uri, threshold=threshold
+    )
+    data = results.to_json()
+    max_confidence = max((item["score"] for item in data), default=None)
+    return ImagePrediction.create(
+        image=image_model,
+        type="object_detection",
+        model_name=model_name.get_type(),
+        model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
+        data={"objects": data},
+        timestamp=timestamp,
+        max_confidence=max_confidence,
+    )
 
-        source_image = get_source_from_image_url(image_url)
-        results[InsightType.label] = ProductInsights(
-            insights=[nutriscore_insight],
-            barcode=barcode,
-            source_image=source_image,
-            type=InsightType.label,
+
+def get_predictions_from_product_name(
+    product_id: ProductIdentifier, product_name: str
+) -> list[Prediction]:
+    predictions_all = []
+    for prediction_type in PRODUCT_NAME_PREDICTION_TYPES:
+        predictions = ocr.extract_predictions(
+            product_name, prediction_type, product_id=product_id
         )
+        for prediction in predictions:
+            prediction.data["source"] = "product_name"
+            # Predictions from product name are not as trustworthy as
+            # predictions from OCR, so disable automatic processing
+            prediction.automatic_processing = False
+        predictions_all += predictions
 
-    return results
+    return predictions_all
 
 
-def extract_ocr_insights(
-    ocr_url: str, insight_types: Iterable[InsightType]
-) -> Dict[InsightType, ProductInsights]:
-    source_image = get_source_from_ocr_url(ocr_url)
-    barcode = get_barcode_from_url(ocr_url)
+def extract_ocr_predictions(
+    product_id: ProductIdentifier,
+    ocr_url: str,
+    prediction_types: Iterable[PredictionType],
+) -> list[Prediction]:
+    logger.info("Generating OCR predictions from OCR %s", ocr_url)
 
-    if barcode is None:
-        raise ValueError("cannot extract barcode fro URL: {}".format(ocr_url))
-
-    ocr_result = get_ocr_result(ocr_url)
+    predictions_all: list[Prediction] = []
+    source_image = get_source_from_url(ocr_url)
+    ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
 
     if ocr_result is None:
-        logger.info("Error during OCR extraction: {}".format(ocr_url))
-        return {}
+        return predictions_all
 
-    results = {}
+    for prediction_type in prediction_types:
+        predictions_all += ocr.extract_predictions(
+            ocr_result,
+            prediction_type,
+            product_id=product_id,
+            source_image=source_image,
+        )
 
-    for insight_type in insight_types:
-        insights = ocr.extract_insights(ocr_result, insight_type)
-
-        if insights:
-            results[insight_type] = ProductInsights(
-                barcode=barcode,
-                insights=insights,
-                source_image=source_image,
-                type=insight_type,
-            )
-
-    return results
-
-
-def get_ocr_result(ocr_url: str) -> Optional[ocr.OCRResult]:
-    r = http_session.get(ocr_url)
-    r.raise_for_status()
-
-    ocr_data: Dict = r.json()
-    return ocr.OCRResult.from_json(ocr_data)
-
-
-NUTRISCORE_LABELS: Dict[str, str] = {
-    "nutriscore-a": "en:nutriscore-grade-a",
-    "nutriscore-b": "en:nutriscore-grade-b",
-    "nutriscore-c": "en:nutriscore-grade-c",
-    "nutriscore-d": "en:nutriscore-grade-d",
-    "nutriscore-e": "en:nutriscore-grade-e",
-}
-
-
-def extract_nutriscore_label(
-    image: Image.Image, manual_threshold: float, automatic_threshold: float
-) -> Optional[RawInsight]:
-    model = ObjectDetectionModelRegistry.get("nutriscore")
-    raw_result = model.detect_from_image(image, output_image=False)
-    results = raw_result.select(threshold=manual_threshold)
-
-    if not results:
-        return None
-
-    if len(results) > 1:
-        logger.warn("more than one nutriscore detected, discarding detections")
-        return None
-
-    result = results[0]
-    score = result.score
-
-    automatic_processing = score >= automatic_threshold
-    label_tag = NUTRISCORE_LABELS[result.label]
-
-    return RawInsight(
-        type=InsightType.label,
-        value_tag=label_tag,
-        automatic_processing=automatic_processing,
-        data={
-            "confidence": score,
-            "bounding_box": result.bounding_box,
-            "model": "nutriscore",
-            "notify": True,
-        },
-    )
-
-
-def predict_objects(
-    barcode: str, image_url: str, server_domain: str
-) -> Dict[str, ObjectDetectionRawResult]:
-    image = get_image_from_url(image_url, error_raise=True, session=http_session)
-    results: Dict[str, ObjectDetectionRawResult] = {}
-
-    if image is None:
-        logger.warning("Invalid image: {}".format(image_url))
-        return results
-
-    image.load()
-
-    for model_name in ("universal-logo-detector",):
-        model = ObjectDetectionModelRegistry.get(model_name)
-        results[model_name] = model.detect_from_image(image, output_image=False)
-
-    return results
+    return predictions_all

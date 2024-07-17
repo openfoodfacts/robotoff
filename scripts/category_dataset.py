@@ -1,18 +1,37 @@
-from typing import List, Iterator, Set, Optional
+"""
+This script is used to generate the datasets for the 'neural' category ML
+model. For example:
+https://github.com/openfoodfacts/openfoodfacts-ai/releases/tag/dataset-category-2020-06-30
+
+Usage: 1. Use 'python -m robotoff download-dataset' to fetch the latest version
+of the PO data. 2. Run 'python scripts/category_dataset.py' to construct the
+train/test/val datasets,
+   alongside the category/ingredient taxonomy dump.
+3. Gzip the train/test/val datasets.
+4. Upload all of the data (products.json.gz, generated and zipped files under
+   'datasets/category/') to
+   https://github.com/openfoodfacts/openfoodfacts-ai/releases/ with a
+   description of what the data consists of.
+"""
+import json
+import os
+from typing import Iterator, Optional
+
+from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
+from sklearn.model_selection import train_test_split
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
-from robotoff.taxonomy import get_taxonomy, Taxonomy, TaxonomyNode
+from robotoff.taxonomy import get_taxonomy
+from robotoff.types import JSONType
 from robotoff.utils import dump_jsonl, get_logger
-from robotoff.utils.types import JSONType
-
 
 logger = get_logger()
 
+WRITE_PATH = settings.PROJECT_DIR / "datasets" / "category"
 
-def infer_category_tags(
-    categories: List["str"], taxonomy: Taxonomy
-) -> Set[TaxonomyNode]:
+
+def infer_category_tags(categories: list[str], taxonomy: Taxonomy) -> set[TaxonomyNode]:
     category_nodes = []
     for category_tag in categories:
         if category_tag:
@@ -29,13 +48,15 @@ def infer_category_tags(
     return all_categories
 
 
-def generate_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSONType]:
-    category_taxonomy = get_taxonomy("category")
-    ingredient_taxonomy = get_taxonomy("ingredient")
-
+def generate_base_dataset(
+    category_taxonomy: Taxonomy,
+    ingredient_taxonomy: Taxonomy,
+    stream: ProductStream,
+    lang: Optional[str],
+) -> Iterator[JSONType]:
     for product in stream.iter():
-        categories_tags: List[str] = product["categories_tags"]
-        inferred_categories_tags: List[TaxonomyNode] = list(
+        categories_tags: list[str] = product["categories_tags"]
+        inferred_categories_tags: list[TaxonomyNode] = list(
             infer_category_tags(categories_tags, category_taxonomy)
         )
 
@@ -68,8 +89,24 @@ def generate_dataset(stream: ProductStream, lang: Optional[str]) -> Iterator[JSO
             }
 
 
+def generate_train_test_val_datasets(
+    category_taxonomy: Taxonomy,
+    ingredient_taxonomy: Taxonomy,
+    stream: ProductStream,
+    lang: Optional[str],
+) -> dict[str, Iterator[JSONType]]:
+    base_dataset = generate_base_dataset(
+        category_taxonomy, ingredient_taxonomy, stream, lang
+    )
+
+    train, rem = train_test_split(list(base_dataset), train_size=0.8)
+    test, val = train_test_split(rem, train_size=0.5)
+
+    return {"train": train, "test": test, "val": val}
+
+
 def run(lang: Optional[str] = None):
-    logger.info("Generating category dataset for lang {}".format(lang or "xx"))
+    logger.info("Generating category dataset for lang %s", lang or "xx")
     dataset = ProductDataset.load()
     training_stream = dataset.stream().filter_nonempty_tag_field("categories_tags")
 
@@ -80,17 +117,30 @@ def run(lang: Optional[str] = None):
     else:
         training_stream = training_stream.filter_nonempty_text_field("product_name")
 
-    dataset_iter = generate_dataset(training_stream, lang)
-    count = dump_jsonl(
-        settings.PROJECT_DIR
-        / "datasets"
-        / "category"
-        / "category_{}.jsonl".format(lang or "xx"),
-        dataset_iter,
+    os.makedirs(WRITE_PATH, exist_ok=True)
+
+    category_taxonomy = get_taxonomy("category")
+    with open(WRITE_PATH / "categories.full.json", "w") as f:
+        json.dump(category_taxonomy.to_dict(), f)
+
+    ingredient_taxonomy = get_taxonomy("ingredient")
+    with open(WRITE_PATH / "ingredients.full.json", "w") as f:
+        json.dump(ingredient_taxonomy.to_dict(), f)
+
+    datasets = generate_train_test_val_datasets(
+        category_taxonomy, ingredient_taxonomy, training_stream, lang
     )
-    logger.info("{} items for lang {}".format(count, lang or "xx"))
+
+    for key, data in datasets.items():
+        count = dump_jsonl(
+            WRITE_PATH / "category_{}.{}.jsonl".format(lang or "xx", key),
+            data,
+        )
+        logger.info("%s items for dataset %s, lang %s", count, key, lang or "xx")
 
 
 if __name__ == "__main__":
-    for lang in (None, "fr", "it", "en", "de", "es"):
+    # By default generate the complete dataset - if specific language datasets
+    # are required, change the list to ('es', 'fr', 'en') etc.
+    for lang in (None,):
         run(lang=lang)

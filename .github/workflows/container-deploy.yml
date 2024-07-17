@@ -1,0 +1,242 @@
+name: Container Image Deployment CI
+
+on:
+  push:
+    branches:
+      - main
+      - deploy-*
+    tags:
+      - v*.*.*
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env:
+          - ${{ startsWith(github.ref, 'refs/tags/v') && 'robotoff-org' || 'robotoff-net' }}
+    environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}
+    steps:
+    - name: Set common variables
+      run: |
+        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+    - name: Set various variable for staging deployment
+      if: matrix.env == 'robotoff-net'
+      run: |
+        echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
+    - name: Set various variable for production deployment
+      if: matrix.env == 'robotoff-org'
+      run: |
+        echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
+        # use prod mongodb through stunnel
+        echo "MONGO_URI=mongodb://10.1.0.113:27017" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
+    - name: Wait for container build workflow
+      uses: tomchv/wait-my-workflow@v1.1.0
+      id: wait-build
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        checkName: build
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        intervalSeconds: 10
+        timeoutSeconds: 600 # 10m
+
+    - name: Do something if build fail
+      if: steps.wait-build.outputs.conclusion == 'failure'
+      run: echo fail && false # fail if build fail
+
+    - name: Do something if build timeout
+      if: steps.wait-build.outputs.conclusion == 'timed_out'
+      run: echo Timeout && false # fail if build time out
+
+    - name: Checkout git repository
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          # Clone Git repository if not already there
+          [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
+
+          # Go to repository directory
+          cd ${{ matrix.env}}
+
+          # Fetch newest commits (in case it wasn't freshly cloned)
+          git fetch --depth 1
+
+          # Checkout current commit SHA
+          git checkout -qf ${{ github.sha }}
+
+          # Setup git lfs on the repository, in case it's not setup yet
+          git lfs install
+
+          # Fetch and checkout LFS files
+          git lfs fetch
+          git lfs checkout
+
+    - name: Set environment variables
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          # Go to repository directory
+          cd ${{ matrix.env}}
+
+          # Set Docker Compose variables
+          echo "DOCKER_CLIENT_TIMEOUT=200" > .env
+          echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
+          echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
+          echo "COMPOSE_PATH_SEPARATOR=;" >> .env
+          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml" >> .env
+          echo "TAG=sha-${{ github.sha }}" >> .env
+          echo "RESTART_POLICY=always" >> .env
+
+          # Set app variables
+          echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
+          echo "ROBOTOFF_TLD=${{ env.ROBOTOFF_TLD }}" >> .env
+          echo "REDIS_HOST=redis.robotoff_default" >> .env
+          echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
+          echo "POSTGRES_DB=postgres" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
+          echo "OFF_USER=roboto-app" >> .env
+          echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
+          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
+          echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
+          echo "ELASTIC_USER=elastic" >> .env
+          echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
+          echo "TRITON_HOST=triton" >> .env
+          echo "FASTTEXT_HOST=fasttext" >> .env
+          echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
+          echo "INFLUXDB_PORT=8087" >> .env
+          echo "INFLUXDB_BUCKET=off_metrics" >> .env
+          echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
+          echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
+          echo "GUNICORN_NUM_WORKERS=4" >> .env
+          echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
+          echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+
+          # PostgreSQL config
+          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> .env
+          echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> .env
+
+
+    - name: Create Docker volumes
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ matrix.env }}
+          make create_external_volumes
+
+    - name: Start services
+      uses: appleboy/ssh-action@master
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script_stop: false
+        script: |
+          cd ${{ matrix.env}}
+          # Get the latest version (to apply migration next)
+          make pull
+          # Apply migrations
+          make migrate-db
+          # Launch new version
+          make up
+
+    - name: Check services are up
+      uses: appleboy/ssh-action@master
+      id: livecheck
+      if: ${{ always() }}
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ matrix.env}}
+          # let api 15s to be up !
+          sleep 15s
+          make livecheck
+
+    - name: Run health tests
+      uses: appleboy/ssh-action@master
+      id: health
+      if: ${{ always() }}
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script_stop: false
+        script: |
+          cd ${{ matrix.env}}
+          make health
+
+    - name: Cleanup obsolete Docker objects
+      uses: appleboy/ssh-action@master
+      if: ${{ always() }}
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script_stop: false
+        script: |
+          cd ${{ matrix.env }}
+          make prune
+
+    # - uses: basos9/grafana-annotation-action@v1.0.3
+    #   if: ${{ always() }}
+    #   with:
+    #     apiHost: https://grafana.openfoodfacts.org
+    #     apiToken: ${{ secrets.GRAFANA_API_TOKEN }}
+    #     text: <a href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}">Deployment ${{ steps.livecheck.outcome }} on ${{ matrix.env }}</a>
+    #     tags: type:deployment,origin:github,status:${{ steps.livecheck.outcome }},repo:${{ github.repository }},sha:${{ github.sha }},app:robotoff,env:${{ matrix.env }}

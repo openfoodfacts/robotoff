@@ -1,19 +1,14 @@
-from typing import Dict, List, Optional, Set
-import uuid
+from pymongo.collection import Collection
 
-from robotoff import settings
-from robotoff.insights._enum import InsightType
-from robotoff.models import ProductInsight
+from robotoff.models import Prediction, with_db
 from robotoff.products import (
     DBProductStore,
-    get_image_id,
     get_product_store,
-    has_nutrition_image,
     is_nutrition_image,
     is_valid_image,
 )
+from robotoff.types import PredictionType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger
-from robotoff.utils.types import JSONType
 
 logger = get_logger(__name__)
 
@@ -27,28 +22,33 @@ def generate_quality_facets():
     generate_fiber_quality_facet()
 
 
-def generate_fiber_quality_facet():
-    product_store: DBProductStore = get_product_store()
-    collection = product_store.collection
+@with_db
+def generate_fiber_quality_facet() -> None:
+    # Use ServerType.off as fiber quality facet is only for OFF
+    server_type = ServerType.off
+    product_store: DBProductStore = get_product_store(server_type)
+    collection: Collection = product_store.collection
     added = 0
-    seen_set: Set[str] = set()
+    seen_set: set[str] = set()
 
-    for insight in (
-        ProductInsight.select(ProductInsight.barcode, ProductInsight.source_image)
+    for prediction in (
+        Prediction.select(Prediction.barcode, Prediction.source_image)
         .where(
-            ProductInsight.type == InsightType.nutrient_mention.name,
-            ProductInsight.data["mentions"].contains("fiber"),
-            ProductInsight.source_image.is_null(False),
+            Prediction.type == PredictionType.nutrient_mention.name,
+            Prediction.data["mentions"].contains("fiber"),
+            Prediction.source_image.is_null(False),
+            Prediction.server_type == server_type.name,
         )
         .iterator()
     ):
-        barcode = insight.barcode
+        barcode = prediction.barcode
 
         if barcode in seen_set:
             continue
 
+        product_id = ProductIdentifier(barcode, server_type)
         product = product_store.get_product(
-            barcode, ["nutriments", "data_quality_tags", "images"]
+            product_id, ["nutriments", "data_quality_tags", "images"]
         )
 
         if product is None:
@@ -59,7 +59,7 @@ def generate_fiber_quality_facet():
         images = product.get("images", {})
 
         if (
-            not is_valid_image(images, insight.source_image)
+            not is_valid_image(images, prediction.source_image)
             or "fiber" in nutriments
             or "fiber_prepared" in nutriments
         ):
@@ -72,14 +72,14 @@ def generate_fiber_quality_facet():
 
         if (
             FIBER_NUTRITION_QUALITY_FACET_NAME not in data_quality_tags
-            and is_nutrition_image(images, insight.source_image)
+            and is_nutrition_image(images, prediction.source_image)
         ):
             facets.append(FIBER_NUTRITION_QUALITY_FACET_NAME)
 
         if not facets:
             continue
 
-        logger.info("Adding facets to {}: {}".format(barcode, facets))
+        logger.info("Adding facets to %s: %s", barcode, facets)
         seen_set.add(barcode)
         added += 1
         collection.update_one(
@@ -91,130 +91,4 @@ def generate_fiber_quality_facet():
                 }
             },
         )
-    logger.info("Fiber quality facets added on {} products".format(added))
-
-
-def get_image_orientation(barcode: str, image_id: str) -> Optional[int]:
-    for insight in (
-        ProductInsight.select(ProductInsight.data, ProductInsight.source_image)
-        .where(
-            ProductInsight.barcode == barcode,
-            ProductInsight.type == InsightType.image_orientation.name,
-            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-            ProductInsight.source_image.is_null(False),
-        )
-        .iterator()
-    ):
-        insight_image_id = get_image_id(insight.source_image)  # type: ignore
-
-        if image_id is not None and insight_image_id == image_id:
-            return insight.data.get("rotation")
-
-    return None
-
-
-def generate_nutrition_image_insights():
-    logger.info("Starting nutrition image insight generation")
-    logger.info("Deleting previous nutrition image insights...")
-    deleted = (
-        ProductInsight.delete()
-        .where(
-            ProductInsight.annotation.is_null(),
-            ProductInsight.type == InsightType.nutrition_image.name,
-            ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-        )
-        .execute()
-    )
-    logger.info("{} insights deleted".format(deleted))
-    product_store: DBProductStore = get_product_store()
-    added = 0
-    seen_set: Set[str] = set()
-
-    latent_insight: ProductInsight
-    for latent_insight in (
-        ProductInsight.select()
-        .where(ProductInsight.type == InsightType.nutrient_mention.name)
-        .order_by(ProductInsight.source_image.desc())
-        .iterator()
-    ):
-        barcode = latent_insight.barcode
-
-        if barcode in seen_set:
-            continue
-
-        mentions = latent_insight.data["mentions"]
-        nutrition_image_langs = find_nutrition_image_lang(mentions)
-
-        if not nutrition_image_langs:
-            continue
-
-        image_id = get_image_id(latent_insight.source_image)
-        rotation = get_image_orientation(barcode, image_id)
-
-        if rotation is None:
-            continue
-
-        product = product_store.get_product(barcode, ["images"])
-
-        if product is None:
-            continue
-
-        images = product.get("images", {})
-
-        if not has_nutrition_image(images):
-            for lang in nutrition_image_langs:
-                if not (
-                    ProductInsight.select()
-                    .where(
-                        ProductInsight.type == InsightType.nutrition_image.name,
-                        ProductInsight.barcode == barcode,
-                        ProductInsight.value_tag == lang,
-                        ProductInsight.server_domain == settings.OFF_SERVER_DOMAIN,
-                    )
-                    .count()
-                ):
-                    ProductInsight.create_from_latent(
-                        latent_insight,
-                        type=InsightType.nutrition_image.name,
-                        value_tag=lang,
-                        data={
-                            "from_latent": str(latent_insight.id),
-                            "languages": nutrition_image_langs,
-                            "rotation": rotation or None,
-                        },
-                        id=str(uuid.uuid4()),
-                    )
-                    added += 1
-
-    logger.info("Added: {}".format(added))
-
-
-def find_nutrition_image_lang(mentions: JSONType, min_count: int = 4) -> List[str]:
-    nutrient_languages = find_nutrition_image_nutrient_languages(mentions)
-
-    lang_count: Dict[str, int] = {}
-    for _, langs in nutrient_languages.items():
-        for lang, count in langs.items():
-            lang_count.setdefault(lang, 0)
-            lang_count[lang] += count
-
-    return [lang for lang, count in lang_count.items() if count >= min_count]
-
-
-def find_nutrition_image_nutrient_languages(
-    mentions: JSONType,
-) -> Dict[str, Dict[str, int]]:
-    languages: Dict[str, Dict[str, int]] = {}
-    for nutrient, matches in mentions.items():
-        seen_lang: Set[str] = set()
-
-        for match in matches:
-            for lang in match.get("languages", []):
-                if lang not in seen_lang:
-                    languages.setdefault(nutrient, {})
-                    nutrient_languages = languages[nutrient]
-                    nutrient_languages.setdefault(lang, 0)
-                    nutrient_languages[lang] += 1
-                    seen_lang.add(lang)
-
-    return languages
+    logger.info("Fiber quality facets added on %s products", added)

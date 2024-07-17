@@ -1,0 +1,12 @@
+# Basic .gitattributes to work with docker, even on windows
+# prefer keeping line ending unix style
+# since most files are used in linux docker containers
+* text=auto eol=lf
+[core]
+    # avoid line ending conversion on windows
+    autocrlf=false
+    # try to respect symlinks even on windows
+    symlinks=true
+*.json.gz filter=lfs diff=lfs merge=lfs -text
+*.gz filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text

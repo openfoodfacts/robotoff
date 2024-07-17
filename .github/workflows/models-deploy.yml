@@ -1,0 +1,44 @@
+name: Sync ML models to Proxmox VM
+on:
+  push:
+    tags:
+      - model-deploy-net*
+      - model-deploy-org*
+
+jobs:
+  ml-models-sync:
+    name: Sync ML models
+    runs-on: ubuntu-latest
+    environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}-${{ matrix.asset_name }}
+    strategy:
+      matrix:
+        env:
+          - ${{ startsWith(github.ref, 'refs/tags/model-deploy-org') && 'robotoff-ml-org' || 'robotoff-ml-net' }}
+    steps:
+      - name: Set common variables
+        run: |
+          echo "PROJECT_DIR=robotoff-ml" >> $GITHUB_ENV
+          echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+          echo "SSH_USERNAME=off" >> $GITHUB_ENV
+      - name: Set various variables for 'robotoff-ml-net' environment
+        if: matrix.env == 'robotoff-ml-net'
+        run: |
+          echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+      - name: Set various variables for 'robotoff-ml-org' environment
+        if: matrix.env == 'robotoff-ml-org'
+        run: |
+          echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
+      - name: Download
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ env.PROJECT_DIR }}
+            make dl-models

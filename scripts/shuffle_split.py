@@ -2,12 +2,11 @@ import pathlib
 from random import shuffle
 
 from robotoff import settings
-from robotoff.utils import jsonl_iter, dump_jsonl
-
+from robotoff.utils import dump_jsonl, jsonl_iter
 
 lang = "pt"
-input_path: pathlib.Path = settings.DATASET_DIR / "category" / "category_{}.jsonl".format(
-    lang
+input_path: pathlib.Path = (
+    settings.DATASET_DIR / "category" / "category_{}.jsonl".format(lang)
 )
 
 items = list(jsonl_iter(input_path))

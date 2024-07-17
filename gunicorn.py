@@ -1,12 +1,11 @@
-from robotoff import models
+import os
 
 bind = ":5500"
-workers = 4
-preload_app = True
+# we have a trade-off with memory vs cpu numbers
+workers = int(os.environ.get("GUNICORN_NUM_WORKERS", 4))
+worker_connections = 1000
+# gunicorn --auto-reload is not compatible with preload_app
+# so it has to be disabled when developing
+# Default to True (production) if not specified
+preload_app = bool(os.environ.get("GUNICORN_PRELOAD_APP", True))
 timeout = 60
-
-
-def on_starting(server):
-    """Gunicorn server hook."""
-    with models.db:
-        models.db.create_tables(models.MODELS, safe=True)

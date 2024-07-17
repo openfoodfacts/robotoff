@@ -1,5 +1,6 @@
-from robotoff.taxonomy import get_taxonomy
 import csv
+
+from robotoff.taxonomy import get_taxonomy
 
 for taxonomy_name in ("ingredient", "category", "label"):
     taxonomy = get_taxonomy(taxonomy_name)

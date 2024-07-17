@@ -11,20 +11,20 @@ en:fair-trade||fair trade
 en:fair-trade||fair-trade
 en:fsc-mix||fsc mixte
 en:fsc||vwww.fsc.org
-en:gluten-free||bez lepku
-en:gluten-free||bezglutenomy
-en:gluten-free||gluten free
-en:gluten-free||gluten-free
-en:gluten-free||glutenfrei
-en:gluten-free||glutenvrij
-en:gluten-free||gluténmentes
-en:gluten-free||ni gluten
-en:gluten-free||sans gluten
-en:gluten-free||sem gluten
-en:gluten-free||senza glutine
-en:gluten-free||sin gluten
-en:gluten-free||без глютена
-en:gluten-free||не містить глютену
+en:no-gluten||bez lepku
+en:no-gluten||bezglutenomy
+en:no-gluten||gluten free
+en:no-gluten||gluten-free
+en:no-gluten||glutenfrei
+en:no-gluten||glutenvrij
+en:no-gluten||gluténmentes
+en:no-gluten||ni gluten
+en:no-gluten||sans gluten
+en:no-gluten||sem gluten
+en:no-gluten||senza glutine
+en:no-gluten||sin gluten
+en:no-gluten||без глютена
+en:no-gluten||не містить глютену
 en:halal||halal
 en:kosher||casher
 en:kosher||kosher
@@ -118,11 +118,9 @@ en:vegan||vegan
 en:vegan||veganoveganistisch
 en:vegan||vegetalien
 en:vegan||végétalien
-fr:aoc||appellation d'origine controlee
-fr:aoc||appellation d'origine contrôlée
-fr:viande-bovine-francaise||viande bovine francaise
-fr:viande-bovine-francaise||viande bovine française
-fr:viande-porcine-francaise||le porc francais
-fr:viande-porcine-francaise||le porc français
+en:french-beef||viande bovine francaise
+en:french-beef||viande bovine française
+en:french-pork||le porc francais
+en:french-pork||le porc français
 en:small-producers-symbol||symbole des producteurs paysans
 en:small-producers-symbol||www.spp.coop

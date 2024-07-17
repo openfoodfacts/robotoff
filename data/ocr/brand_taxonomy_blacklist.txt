@@ -1,5 +1,6 @@
-// These brands are excluded from Robotoff's detection. So these brands won't be suggested by Robotoff to users.
-// Also Hunger Game won't propose suggestions for these brands.
+// These brands are excluded from Robotoff's detection using the 'taxonomy' predictor.
+// If you find some false positives for brand insight that were generated using the 'taxonomy' predictor, you should add them here.
+// Insight removal of excluded brands is performed once a day. 
 //
 // Why adding brands here?
 // * avoid brands that are common words in some languages ("plus", "king", "everyday",...)
@@ -11,14 +12,20 @@ ambiente
 american
 appel
 artisanal
+aroma
+best
 aucune
+asia
+atlantic
 // 'auchan' is the brand to use
 auchan production
 avenue
 bien
+boost
 bordeaux
 bourbon
 chateau
+chips
 classic
 cocacola
 comte
@@ -28,30 +35,44 @@ crisp
 cristal
 crunch
 cucina
+daily
+delice
+delicious
 delta
 deluxe
 demeter
 douceur
+doux
 edulis
 ensemble
 everyday
 excellence
 extra
 fabrication-artisanale
+fair
 fairtrade
+family
 familia
+finest
 fini
 france
+fresh
 frigo
 fromage
 fruite
 geant
+good-food
+gold
 golden
 gourmet
 granola
+green
 grenade
 gusto
+homemade
 ice-tea
+interdis
+inc
 ideal
 italia
 jacques
@@ -64,13 +85,24 @@ kellogs
 label-rouge
 le-porc-francais
 leger
+life
+ltd
 made-with
 marie
 merci
+milk
+national
+natur
 natura
 netto
+noel
+// nutriscore triggers this one
+nutri
+omega
 organic
+organics
 origen
+original
 pacific
 patissier
 // plus: common word in FR and EN, many false positive
@@ -81,24 +113,45 @@ prima
 pure
 quick
 real
+rich
+rico
+roma
+rose
 royal
 salada
 sans
 sante
+scan
 schweizer
 selection
 serrano
+sicilia
+simple
 simply
+solo
 specially selected
 sommer
+star
+super
 sweet
 tasty
 terra
+// terrasuisse: it's a label (from Migros brand), but not a brand
+terrasuisse
 the-coca-cola-company
 thomas
+torino
 tradition
 tropical
+tous les jours
+valencia
 valor
 vegan
+veggie
 veritas
 ice tea
+// wrigley's is the correct brand
+wrigley
+wal-mart-stores
+water
+whey

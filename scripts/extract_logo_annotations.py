@@ -1,6 +1,7 @@
-from robotoff.models import db, LogoAnnotation
-from robotoff import settings
 import json
+
+from robotoff import settings
+from robotoff.models import LogoAnnotation, db
 
 annotations = {}
 with db:

@@ -1,9 +1,12 @@
 es
 ml
 ocr.jsonl.gz
+data
 datasets
 local_models
 models
 tf_models
 .git
 .idea
+weights
+debug

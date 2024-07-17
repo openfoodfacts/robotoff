@@ -1,6 +1,6 @@
+from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.utils import dump_jsonl, get_logger
-from robotoff import settings
 
 logger = get_logger()
 
