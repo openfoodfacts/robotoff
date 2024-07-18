@@ -3,6 +3,7 @@ import os
 import uuid
 from typing import Iterable
 
+import pytz
 import requests.exceptions
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
@@ -325,7 +326,7 @@ def run():
     # ensure influxdb database exists
     ensure_influx_database()
 
-    scheduler = BlockingScheduler()
+    scheduler = BlockingScheduler(timezone=pytz.utc)
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
 
@@ -351,7 +352,7 @@ def run():
         refresh_insights,
         "cron",
         day="*",
-        hour="9",
+        hour="15",
         max_instances=1,
     )
 
