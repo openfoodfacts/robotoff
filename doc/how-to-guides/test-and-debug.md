@@ -29,7 +29,7 @@ $ docker compose run --rm api poetry run python
 > If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. 
+We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](https://github.com/openfoodfacts/robotoff/blob/main/Makefile) to run our commands. 
 
 The following command will run all the test cases one by one:
 
