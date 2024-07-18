@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.48.0](https://github.com/openfoodfacts/robotoff/compare/v1.47.0...v1.48.0) (2024-07-18)
+
+
+### Features
+
+* use Redis Stream to listen to events ([e79e8ec](https://github.com/openfoodfacts/robotoff/commit/e79e8ecc46382a0991881de6e536dada17476e32))
+
+
+### Bug Fixes
+
+* fix bug when latest ID was not found in Redis ([ca1b37a](https://github.com/openfoodfacts/robotoff/commit/ca1b37a943b38806850654e6439a4ff7de5a73c4))
+* fix typing issues ([a56c03b](https://github.com/openfoodfacts/robotoff/commit/a56c03be7691656c3e60f44a1e0dd35328c781e8))
+
+
+### Technical
+
+* **deps-dev:** bump black from 22.10.0 to 24.3.0 ([#1323](https://github.com/openfoodfacts/robotoff/issues/1323)) ([bc259ec](https://github.com/openfoodfacts/robotoff/commit/bc259ecf87744c2c0aebcb61573a3f2f8529ef06))
+* upgrade black ([462483d](https://github.com/openfoodfacts/robotoff/commit/462483d37cdc3b0dab6c6b2dd6c62da489e96dd6))
+* use the common network to access update redis & mongodb ([6cf259f](https://github.com/openfoodfacts/robotoff/commit/6cf259f0265e650e93528d8ffc38234c9d69dc7f))
+
 ## [1.47.0](https://github.com/openfoodfacts/robotoff/compare/v1.46.0...v1.47.0) (2024-07-12)
 
 
