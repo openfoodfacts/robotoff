@@ -310,9 +310,9 @@ class PredictionImportResult:
 
 @dataclasses.dataclass
 class InsightImportResult:
-    product_insight_import_results: list[
-        ProductInsightImportResult
-    ] = dataclasses.field(default_factory=list)
+    product_insight_import_results: list[ProductInsightImportResult] = (
+        dataclasses.field(default_factory=list)
+    )
     prediction_import_results: list[PredictionImportResult] = dataclasses.field(
         default_factory=list
     )

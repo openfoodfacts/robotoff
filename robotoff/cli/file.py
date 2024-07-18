@@ -1,6 +1,7 @@
 """
 Helper to download weights files for different Robotoff models.
 """
+
 import shutil
 from pathlib import Path
 

@@ -13,6 +13,7 @@ train/test/val datasets,
    https://github.com/openfoodfacts/openfoodfacts-ai/releases/ with a
    description of what the data consists of.
 """
+
 import json
 import os
 from typing import Iterator, Optional

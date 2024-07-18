@@ -17,6 +17,7 @@ were the following:
 - `postprocess` now accepts a single sample (instead of a batched sample of
     size 1)
 """
+
 import enum
 import warnings
 from typing import List, Optional, Tuple
