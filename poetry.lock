@@ -3612,6 +3612,17 @@ files = [
 ]
 
 [[package]]
+name = "types-pytz"
+version = "2024.1.0.20240417"
+description = "Typing stubs for pytz"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-pytz-2024.1.0.20240417.tar.gz", hash = "sha256:6810c8a1f68f21fdf0f4f374a432487c77645a0ac0b31de4bf4690cf21ad3981"},
+    {file = "types_pytz-2024.1.0.20240417-py3-none-any.whl", hash = "sha256:8335d443310e2db7b74e007414e74c4f53b67452c0cb0d228ca359ccfba59659"},
+]
+
+[[package]]
 name = "types-redis"
 version = "4.6.0.20240425"
 description = "Typing stubs for redis"
@@ -3841,4 +3852,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b70e85e4e23bd56cf34d116ed76e1757c6fb3bb496f1112d752fc40e5bf3a776"
+content-hash = "92fafdcbf3b1b5d8e4f4042c374b84cabaa335a19bef1fe021f9ad84ce721d90"
