@@ -12,6 +12,9 @@ x-robotoff-base:
   # this image is built with target=runtime, so it won't have the dev dependencies
   image: ghcr.io/openfoodfacts/robotoff:${TAG}
   volumes: *robotoff-base-volumes
+  networks:
+    - default
+    - common_net
 
 x-robotoff-base-env:
   &robotoff-base-env
@@ -61,6 +64,10 @@ x-robotoff-worker-base:
     - postgres
     - redis
   mem_limit: 8g
+  networks:
+    - default
+    - common_net
+
 services:
   api:
     <<: *robotoff-base
@@ -168,3 +175,8 @@ volumes:
 
 networks:
   default:
+
+  # this is the network shared with product opener
+  common_net:
+    name: ${COMMON_NET_NAME}
+    external: true

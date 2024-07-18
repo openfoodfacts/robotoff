@@ -15,7 +15,7 @@ ENV_FILE ?= .env
 MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
-DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker compose --env-file=${ENV_FILE}
+DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test COMMON_NET_NAME=po_test docker compose --env-file=${ENV_FILE}
 ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
 
 # mount information for robotoff backup ZFS dataset
@@ -194,7 +194,7 @@ docs:
 	@echo "🥫 Generationg doc…"
 	${DOCKER_COMPOSE} run --rm --no-deps api ./build_mkdocs.sh
 
-checks: toml-check flake8 black-check mypy isort-check docs
+checks: create_external_networks toml-check flake8 black-check mypy isort-check docs
 
 lint: toml-lint isort black
 
@@ -250,7 +250,7 @@ create_external_volumes:
 
 create_external_networks:
 	@echo "🥫 Creating external networks if needed … (dev only)"
-	( docker network create ${PO_LOCAL_NET} || true )
+	( docker network create ${COMMON_NET_NAME} || true )
 # for tests
 	( docker network create po_test || true )
 
