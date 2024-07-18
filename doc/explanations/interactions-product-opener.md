@@ -2,21 +2,25 @@
 
 Robotoff mainly interacts with Product Opener (Open Food Facts backend service) through three means:
 
-- it receives updates through a webhook when a product is created/modified/deleted or when an image is uploaded
+- it receives updates through Redis when a product is created/modified/deleted or when an image is uploaded
 - it has a direct read/write access to the underlying MongoDB that powers Open Food Facts
 - it calls Product Opener API to update/delete products and images and to fetch some information
 
-## Webhook calls
+## Redis notification
 
 ### Product update
 
-Product Opener calls `POST /api/v1/webhook/product` whenever a product is updated, with the following parameters:
+A new event is published on the `product_updates_off` Redis stream whenever a product is updated or deleted. This event contains the following fields:
 
-- `barcode`: the barcode of product
-- `action`:  either `updated` or `deleted`
-- `server_domain`: the server domain (ex: `api.openfoodfacts.org`)
+- `code`: the barcode of the product
+- `action`: the action performed, either `updated` or `deleted`. Image upload uses the `updated` action.
+- `flavor`: the flavor (`off`, `obf`, `opff`, `off_pro`)
+- `user_id`: the user ID that performed the action
+- `comment`: the user comment associated with the action
+- `diffs`: the differences between the old and new product data
+- `product_type`: the product type (`food`, `petfood`, `beauty`,...)
 
-After receiving a `product_update` webhook call, Robotoff does the following [^product_update]:
+After receiving an `updated` event, Robotoff does the following [^product_update]:
 
 - predict categories and import category predictions/insights
 - generate and import predictions/insights from product name (regex/flashtext-based)
@@ -24,14 +28,19 @@ After receiving a `product_update` webhook call, Robotoff does the following [^p
 
 ### Image uploaded
 
-Product Opener calls `POST /api/v1/images/import` whenever an new image is uploaded, with the following parameters:
+Uploaded images trigger an `updated` event, with the following diffs:
 
-- `barcode`: the barcode of product
-- `image_url`:  the URL of the image
-- `ocr_url`:  the URL of the OCR result (JSON file)
-- `server_domain`: the server domain (ex: `api.openfoodfacts.org`)
+```json
+{
+    "uploaded_images": {
+        "add": ["1"]
+    }
+}
+```
 
-After receiving a `import_image` webhook call, Robotoff does the following [^image_import]:
+with `1` being the ID of the uploaded image.
+
+After receiving this event, Robotoff does the following [^image_import]:
 
 - save the image metadata in the `Image` DB table
 - import insights from the image

@@ -83,18 +83,8 @@ from robotoff.types import (
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
-from robotoff.workers.queues import (
-    enqueue_in_job,
-    enqueue_job,
-    get_high_queue,
-    low_queue,
-)
-from robotoff.workers.tasks import (
-    delete_product_insights_job,
-    download_product_dataset_job,
-    run_import_image_job,
-    update_insights_job,
-)
+from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
+from robotoff.workers.tasks import download_product_dataset_job
 
 logger = get_logger()
 
@@ -743,24 +733,12 @@ class UpdateDatasetResource:
 
 
 class ImageImporterResource:
+    """DEPRECATED
+    Robotoff used to be notified of new image from Product Opener using
+    webhooks, it now relies on Redis stream using the update-listener service.
+    """
+
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        image_url = req.get_param("image_url", required=True)
-        ocr_url = req.get_param("ocr_url", required=True)
-        server_domain: str = req.get_param(
-            "server_domain", default="api.openfoodfacts.org"
-        )
-        check_server_domain(server_domain)
-        server_type = ServerType.get_from_server_domain(server_domain)
-        product_id = ProductIdentifier(barcode, server_type)
-        enqueue_job(
-            run_import_image_job,
-            get_high_queue(product_id),
-            job_kwargs={"result_ttl": 0},
-            product_id=product_id,
-            image_url=image_url,
-            ocr_url=ocr_url,
-        )
         resp.media = {
             "status": "scheduled",
         }
@@ -1306,54 +1284,12 @@ def check_server_domain(server_domain: str):
 
 
 class WebhookProductResource:
-    """This handles requests from product opener
-    that act as webhooks on product update or deletion.
+    """DEPRECATED
+    Robotoff used to be notified of product updates from Product Opener using
+    webhooks, it now relies on Redis stream using the update-listener service.
     """
 
     def on_post(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        action = req.get_param("action", required=True)
-        server_domain: str = req.get_param("server_domain", required=True)
-        # `diffs` is a JSON containing what fields were created/deleted/updated
-        diffs: dict = req.get_param_as_json("diffs", required=True)
-        check_server_domain(server_domain)
-        logger.info(
-            "New webhook event received for product %s (action: %s, domain: %s)",
-            barcode,
-            action,
-            server_domain,
-        )
-        if action not in ("updated", "deleted"):
-            raise falcon.HTTPBadRequest(
-                title="invalid_action",
-                description="action must be one of " "`deleted`, `updated`",
-            )
-        if not barcode:
-            raise falcon.HTTPBadRequest(
-                title="invalid_barcode",
-                description="barcode should not be empty",
-            )
-
-        server_type = ServerType.get_from_server_domain(server_domain)
-        product_id = ProductIdentifier(barcode, server_type)
-
-        if action == "updated":
-            enqueue_in_job(
-                update_insights_job,
-                get_high_queue(product_id),
-                settings.UPDATED_PRODUCT_WAIT,
-                job_kwargs={"result_ttl": 0},
-                product_id=product_id,
-                diffs=diffs,
-            )
-        elif action == "deleted":
-            enqueue_job(
-                delete_product_insights_job,
-                get_high_queue(product_id),
-                job_kwargs={"result_ttl": 0},
-                product_id=product_id,
-            )
-
         resp.media = {
             "status": "scheduled",
         }

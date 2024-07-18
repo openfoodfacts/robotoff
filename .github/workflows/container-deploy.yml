@@ -29,6 +29,11 @@ jobs:
         echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
+        # In staging, we use the Redis of shared services to get Product Update
+        echo "REDIS_UPDATE_HOST=redis.po_webnet" >> $GITHUB_ENV
+        echo "REDIS_UPDATE_PORT=6379" >> $GITHUB_ENV
+        # And the local redis for the rest
+        echo "REDIS_HOST=redis.robotoff_default" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
     - name: Set various variable for production deployment
@@ -39,6 +44,9 @@ jobs:
         echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
         # use prod mongodb through stunnel
         echo "MONGO_URI=mongodb://10.1.0.113:27017" >> $GITHUB_ENV
+        # In prod, we use the Redis running in VM
+        echo "REDIS_UPDATE_HOST=10.1.0.113" >> $GITHUB_ENV
+        echo "REDIS_UPDATE_PORT=6379" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
     - name: Wait for container build workflow

@@ -63,7 +63,7 @@ logger = get_logger(__name__)
 
 def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url: str):
     """This job is triggered every time there is a new OCR image available for
-    processing by Robotoff, via /api/v1/images/import.
+    processing by Robotoff, via an event published on the Redis stream.
 
     On each image import, Robotoff performs the following tasks:
 

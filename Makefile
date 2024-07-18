@@ -93,7 +93,7 @@ livecheck:
 
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
-	${DOCKER_COMPOSE} logs -f api scheduler worker_1 worker_2 worker_3 worker_4
+	${DOCKER_COMPOSE} logs -f --tail 100 api update-listener scheduler worker_1 worker_2 worker_3 worker_4
 
 #------------#
 # Management #

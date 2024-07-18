@@ -46,6 +46,9 @@ services:
   scheduler:
     <<: *robotoff-dev
 
+  update-listener:
+    <<: *robotoff-dev
+
   elasticsearch:
     ports:
       - "127.0.0.1:9200:9200"
