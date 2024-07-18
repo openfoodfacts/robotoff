@@ -3,10 +3,10 @@ import dataclasses
 import datetime
 import functools
 import hashlib
-import urllib
 import io
 import re
 import tempfile
+import urllib
 import uuid
 from collections import defaultdict
 from pathlib import Path
