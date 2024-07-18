@@ -130,7 +130,7 @@ class ProductInsight(BaseModel):
 
     # If the insight was annotated manually, this field stores the username of
     # the annotator (or first annotator, if multiple votes were cast).
-    username = peewee.TextField(index=True, null=True)
+    username = peewee.TextField(null=True)
 
     # Stores the list of countries that are associated with the product.
     # E.g. possible values are "en:united-states" or "en:france".
@@ -194,7 +194,7 @@ class ProductInsight(BaseModel):
     # tags
     campaign = BinaryJSONField(null=True, index=True, default=list)
     # Confidence score of the insight, may be null
-    confidence = peewee.FloatField(null=True, index=True)
+    confidence = peewee.FloatField(null=True)
 
     # bounding box corresponding to the area of the image related
     # to the insight that was detected.
@@ -212,11 +212,11 @@ class ProductInsight(BaseModel):
 class Prediction(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256, index=True)
-    data = BinaryJSONField(index=True)
+    data = BinaryJSONField()
     timestamp = peewee.DateTimeField(index=True)
     value_tag = peewee.TextField(null=True)
     value = peewee.TextField(null=True)
-    source_image = peewee.TextField(null=True, index=True)
+    source_image = peewee.TextField(null=True)
     automatic_processing = peewee.BooleanField(null=True)
     predictor = peewee.CharField(max_length=100, null=True)
     predictor_version = peewee.CharField(max_length=100, null=True)
@@ -392,8 +392,8 @@ class ImageEmbedding(BaseModel):
 
 
 class LogoConfidenceThreshold(BaseModel):
-    type = peewee.CharField(null=True, index=True)
-    value = peewee.CharField(null=True, index=True)
+    type = peewee.CharField(null=True)
+    value = peewee.CharField(null=True)
     threshold = peewee.FloatField(null=False)
 
 

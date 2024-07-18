@@ -264,6 +264,8 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
         .where(
             Prediction.source_image.in_(source_images),
             Prediction.server_type == server_type,
+            # Add barcode filter to speed up the query
+            Prediction.barcode == product_id.barcode,
         )
         .execute()
     )
@@ -273,6 +275,8 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
             ProductInsight.source_image.in_(source_images),
             ProductInsight.server_type == server_type,
             ProductInsight.annotation.is_null(),
+            # Add barcode filter to speed up the query
+            ProductInsight.barcode == product_id.barcode,
         )
         .execute()
     )
