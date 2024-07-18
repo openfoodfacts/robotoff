@@ -108,7 +108,7 @@ def filter_logos(
 
 @cachetools.cached(cachetools.LRUCache(maxsize=1))
 def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
-    logger.info("Loading logo confidence thresholds from DB...")
+    logger.debug("Loading logo confidence thresholds from DB...")
     thresholds = {}
 
     for item in LogoConfidenceThreshold.select().iterator():
@@ -247,7 +247,7 @@ def knn_search(
 
 @cachetools.cached(cachetools.TTLCache(maxsize=1, ttl=3600))  # 1h
 def get_logo_annotations() -> dict[int, LogoLabelType]:
-    logger.info("Loading logo annotations from DB...")
+    logger.debug("Loading logo annotations from DB...")
     annotations: dict[int, LogoLabelType] = {}
 
     for logo in (

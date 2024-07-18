@@ -25,7 +25,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
     Each tuple has the format (brand_tag, prefix) where prefix is a digit with
     13 elements (EAN-13).
     """
-    logger.info("Loading brand prefix...")
+    logger.debug("Loading brand prefix...")
     return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
@@ -33,7 +33,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
 def get_brand_blacklist() -> set[str]:
     """Return the list of brands we want to exclude from automatic detection
     through the 'taxonomy' predictor."""
-    logger.info("Loading brand blacklist...")
+    logger.debug("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
 
