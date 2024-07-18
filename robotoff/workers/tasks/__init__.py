@@ -20,10 +20,11 @@ def download_product_dataset_job():
 
 @with_db
 def delete_product_insights_job(product_id: ProductIdentifier):
-    """This job is triggered by Product Opener via /api/v1/webhook/product
-    when the given product has been removed from the database - in this case
-    we must delete all of the associated predictions and insights that have
-    not been annotated.
+    """This job is triggered by a `deleted` event on Redis Stream,
+    when the given product has been removed from the database.
+
+    In this case, we must delete all the associated predictions and insights
+    that have not been annotated.
     """
     logger.info("%s deleted, deleting associated insights...", product_id)
     deleted_predictions = (

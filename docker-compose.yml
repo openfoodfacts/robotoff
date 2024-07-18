@@ -24,6 +24,9 @@ x-robotoff-base-env:
   GUNICORN_NUM_WORKERS:
   ROBOTOFF_UPDATED_PRODUCT_WAIT:
   REDIS_HOST:
+  REDIS_UPDATE_HOST:
+  REDIS_UPDATE_PORT:
+  REDIS_STREAM_NAME:
   POSTGRES_HOST:
   POSTGRES_DB:
   POSTGRES_USER:
@@ -68,6 +71,14 @@ services:
     depends_on:
       - postgres
       - redis
+
+  update-listener:
+    <<: *robotoff-base
+    environment: *robotoff-base-env
+    mem_limit: 1g
+    depends_on:
+      - redis
+    command: python -m robotoff run-update-listener
 
   worker_1:
     <<: *robotoff-worker

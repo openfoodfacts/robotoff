@@ -1,3 +1,4 @@
+import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -35,6 +36,74 @@ def run_worker(
     from robotoff.workers.main import run
 
     run(queues=queues, burst=burst)
+
+
+@app.command()
+def run_update_listener():
+    """Launch a process that listens to product updates published on Redis
+    stream."""
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import run_update_listener
+
+    get_logger()
+    run_update_listener()
+
+
+@app.command()
+def process_updates_since(
+    since: datetime.datetime = typer.Argument(
+        ..., help="Datetime to start processing updates from"
+    )
+):
+    """Process all updates since a given datetime."""
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import process_updates_since
+
+    logger = get_logger()
+    logger.info("Processing Redis updates since %s", since)
+    process_updates_since(since)
+
+
+@app.command()
+def create_redis_update(
+    barcode: str = typer.Option(default="3274080005003", help="barcode of the product"),
+    flavor: str = typer.Option(default="off", help="flavor of the product"),
+    user_id: str = typer.Option(default="app-user", help="user id"),
+    action: str = typer.Option(default="updated", help="user action"),
+    comment: Optional[str] = typer.Option(
+        default="modification: ", help="user comment"
+    ),
+    uploaded_image_id: Optional[int] = typer.Option(
+        default=None, help="ID of the uploaded image"
+    ),
+):
+    """Create a new product update event in Redis.
+
+    This command is meant for **local development only**. It creates a new
+    product update event in Redis stream `product_updates_off`.
+    """
+    import json
+
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import get_redis_client
+
+    get_logger()
+    client = get_redis_client()
+    event = {
+        "code": barcode,
+        "flavor": flavor,
+        "user_id": user_id,
+        "action": action,
+        "comment": comment,
+    }
+
+    if uploaded_image_id is not None:
+        diffs = {"uploaded_images": {"add": [uploaded_image_id]}}
+    else:
+        diffs = {"fields": {"change": ["generic_name", "generic_name_fr"]}}
+
+    event["diffs"] = json.dumps(diffs)
+    client.xadd("product_updates_off", event)
 
 
 @app.command()
@@ -807,53 +876,6 @@ def export_logos(
             LogoAnnotation.barcode,
         )
         dump_jsonl(output, query.dicts().iterator())
-
-
-@app.command()
-def import_image_webhook(
-    image_url: str = typer.Argument(
-        ...,
-        help="URL of the image to import to the output file, can either have .jsonl or .jsonl.gz as "
-        "extension",
-    ),
-    server_domain: str = typer.Option(
-        "api.openfoodfacts.net", help="Server domain to use for image import"
-    ),
-) -> None:
-    """Import an image in Robotoff by calling POST /api/v1/images/import.
-
-    The OCR URL will be generated automatically from the image URL. This is a
-    helper CLI command created for debugging/local developpement only.
-    """
-    import os
-
-    from robotoff.off import get_barcode_from_url
-    from robotoff.utils import get_logger, http_session
-
-    logger = get_logger()
-    ocr_url = image_url.replace(".jpg", ".json")
-    barcode = get_barcode_from_url(image_url)
-
-    # Use `api` alias instead of localhost if we're running in a docker
-    # container
-    domain = (
-        "http://localhost:5500"
-        if bool(os.environ.get("IN_DOCKER_CONTAINER", False))
-        else "http://api:5500"
-    )
-    r = http_session.post(
-        f"{domain}/api/v1/images/import",
-        data={
-            "barcode": barcode,
-            "image_url": image_url,
-            "ocr_url": ocr_url,
-            "server_domain": server_domain,
-        },
-    )
-    if not r.ok:
-        logger.info("HTTP error (%s) during image import: %s", r.status_code, r.text)
-    else:
-        logger.info("Robotoff response: %s", r.json())
 
 
 @app.command()
