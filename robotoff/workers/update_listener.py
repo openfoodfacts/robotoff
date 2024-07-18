@@ -100,7 +100,7 @@ def process_redis_update(redis_update: RedisUpdate):
     elif action == "updated":
         if redis_update.is_image_upload():
             # A new image was uploaded
-            image_id = redis_update.diffs["uploaded_images"]["add"][0]
+            image_id = redis_update.diffs["uploaded_images"]["add"][0]  # type: ignore
             logger.info("Image %s was added on product %s", image_id, redis_update.code)
             environment = (
                 Environment.org if settings._get_tld() == "org" else Environment.net
