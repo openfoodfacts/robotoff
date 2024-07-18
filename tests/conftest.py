@@ -1,5 +1,6 @@
 """Database tests tools
 """
+
 import pytest
 
 from robotoff import models, settings

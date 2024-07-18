@@ -4,7 +4,6 @@ Flashtext library is not maintained anymore, and we needed some bugs to be
 fixed (especially https://github.com/vi3k6i5/flashtext/issues/119).
 """
 
-
 import functools
 import io
 import os

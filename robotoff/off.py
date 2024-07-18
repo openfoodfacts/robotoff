@@ -1,5 +1,6 @@
 """Interacting with OFF server to eg. update products or get infos
 """
+
 import re
 from pathlib import Path
 from typing import Any, Optional

@@ -414,12 +414,12 @@ class InsightImporter(metaclass=abc.ABCMeta):
             # the conversion here. Skip this step if product validity check is
             # disabled (product=None), as we don't have image information
             if ("bounding_box_absolute" in candidate.data) and product:
-                candidate.data[
-                    "bounding_box"
-                ] = convert_bounding_box_absolute_to_relative(
-                    candidate.data.pop("bounding_box_absolute"),
-                    product.images,
-                    candidate.source_image,
+                candidate.data["bounding_box"] = (
+                    convert_bounding_box_absolute_to_relative(
+                        candidate.data.pop("bounding_box_absolute"),
+                        product.images,
+                        candidate.source_image,
+                    )
                 )
 
             # Copy bounding box information to reserved field,
