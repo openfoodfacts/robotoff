@@ -897,9 +897,10 @@
 <p>To perform some actions when the insight has been annotated and marked as correct (<code>annotation=1</code>), you should add a new class subclassing <code>InsightAnnotator</code> in <code>robotoff.insights.annotate</code> and add it to the <code>ANNOTATOR_MAPPING</code> dictionary.</p>
 <p>If you need a call to Product Opener API that is not implemented yet, add it to <code>robotoff.off</code>.</p>
 <h2 id="test-your-predictor">Test your predictor</h2>
-<p>To test your predictor, you can simulate an image import using <a href="https://openfoodfacts.github.io/robotoff/references/api/#tag/Images/paths/~1images~1import/post">POST /api/v1/images/import</a> endpoint. There is a CLI command that does this for you:</p>
-<div class="highlight"><pre><span></span><code>make<span class="w"> </span>robotoff-cli<span class="w"> </span><span class="nv">args</span><span class="o">=</span><span class="s1">&#39;import-image-webhook https://images.openfoodfacts.org/images/products/377/001/626/6048/1.jpg&#39;</span>
+<p>To test your predictor, you can simulate an image import by adding an event to the Redis Stream. There is a CLI command that does this for you:</p>
+<div class="highlight"><pre><span></span><code>make<span class="w"> </span>robotoff-cli<span class="w"> </span><span class="nv">args</span><span class="o">=</span><span class="s1">&#39;create-redis-update --barcode 3770016266048 --uploaded-image-id 1&#39;</span>
 </code></pre></div>
+<p>This command will create an event in the <code>product_updates_off</code> stream with the barcode <code>3770016266048</code>, action <code>updated</code> and diffs <code>{"uploaded_images": {"add": ["1"]}}</code>.</p>
 <p>You can check that:</p>
 <ul>
 <li>the predictor is indeed called</li>

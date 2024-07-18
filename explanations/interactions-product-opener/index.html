@@ -572,11 +572,11 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#webhook-calls" class="md-nav__link">
-    Webhook calls
+  <a href="#redis-notification" class="md-nav__link">
+    Redis notification
   </a>
   
-    <nav class="md-nav" aria-label="Webhook calls">
+    <nav class="md-nav" aria-label="Redis notification">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -832,11 +832,11 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#webhook-calls" class="md-nav__link">
-    Webhook calls
+  <a href="#redis-notification" class="md-nav__link">
+    Redis notification
   </a>
   
-    <nav class="md-nav" aria-label="Webhook calls">
+    <nav class="md-nav" aria-label="Redis notification">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -892,33 +892,38 @@
                 <h1 id="interactions-with-product-opener">Interactions with Product Opener</h1>
 <p>Robotoff mainly interacts with Product Opener (Open Food Facts backend service) through three means:</p>
 <ul>
-<li>it receives updates through a webhook when a product is created/modified/deleted or when an image is uploaded</li>
+<li>it receives updates through Redis when a product is created/modified/deleted or when an image is uploaded</li>
 <li>it has a direct read/write access to the underlying MongoDB that powers Open Food Facts</li>
 <li>it calls Product Opener API to update/delete products and images and to fetch some information</li>
 </ul>
-<h2 id="webhook-calls">Webhook calls</h2>
+<h2 id="redis-notification">Redis notification</h2>
 <h3 id="product-update">Product update</h3>
-<p>Product Opener calls <code>POST /api/v1/webhook/product</code> whenever a product is updated, with the following parameters:</p>
+<p>A new event is published on the <code>product_updates_off</code> Redis stream whenever a product is updated or deleted. This event contains the following fields:</p>
 <ul>
-<li><code>barcode</code>: the barcode of product</li>
-<li><code>action</code>:  either <code>updated</code> or <code>deleted</code></li>
-<li><code>server_domain</code>: the server domain (ex: <code>api.openfoodfacts.org</code>)</li>
+<li><code>code</code>: the barcode of the product</li>
+<li><code>action</code>: the action performed, either <code>updated</code> or <code>deleted</code>. Image upload uses the <code>updated</code> action.</li>
+<li><code>flavor</code>: the flavor (<code>off</code>, <code>obf</code>, <code>opff</code>, <code>off_pro</code>)</li>
+<li><code>user_id</code>: the user ID that performed the action</li>
+<li><code>comment</code>: the user comment associated with the action</li>
+<li><code>diffs</code>: the differences between the old and new product data</li>
+<li><code>product_type</code>: the product type (<code>food</code>, <code>petfood</code>, <code>beauty</code>,...)</li>
 </ul>
-<p>After receiving a <code>product_update</code> webhook call, Robotoff does the following <sup id="fnref:product_update"><a class="footnote-ref" href="#fn:product_update">1</a></sup>:</p>
+<p>After receiving an <code>updated</code> event, Robotoff does the following <sup id="fnref:product_update"><a class="footnote-ref" href="#fn:product_update">1</a></sup>:</p>
 <ul>
 <li>predict categories and import category predictions/insights</li>
 <li>generate and import predictions/insights from product name (regex/flashtext-based)</li>
 <li>refresh all insights for this product (i.e: import all predictions again, and update insight table accordingly)</li>
 </ul>
 <h3 id="image-uploaded">Image uploaded</h3>
-<p>Product Opener calls <code>POST /api/v1/images/import</code> whenever an new image is uploaded, with the following parameters:</p>
-<ul>
-<li><code>barcode</code>: the barcode of product</li>
-<li><code>image_url</code>:  the URL of the image</li>
-<li><code>ocr_url</code>:  the URL of the OCR result (JSON file)</li>
-<li><code>server_domain</code>: the server domain (ex: <code>api.openfoodfacts.org</code>)</li>
-</ul>
-<p>After receiving a <code>import_image</code> webhook call, Robotoff does the following <sup id="fnref:image_import"><a class="footnote-ref" href="#fn:image_import">2</a></sup>:</p>
+<p>Uploaded images trigger an <code>updated</code> event, with the following diffs:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;uploaded_images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;add&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>with <code>1</code> being the ID of the uploaded image.</p>
+<p>After receiving this event, Robotoff does the following <sup id="fnref:image_import"><a class="footnote-ref" href="#fn:image_import">2</a></sup>:</p>
 <ul>
 <li>save the image metadata in the <code>Image</code> DB table</li>
 <li>import insights from the image</li>
