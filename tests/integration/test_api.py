@@ -875,7 +875,7 @@ def test_get_unanswered_questions_api_with_country_filter(client, peewee_db):
         )
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered", params={"country": "en:india"}
+        "/api/v1/questions/unanswered", params={"countries": "in"}
     )
     assert result.status_code == 200
     data = result.json

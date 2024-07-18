@@ -42,6 +42,7 @@ def test_get_text_from_bounding_box(
     image_height: int,
 ):
     ocr_result = get_ocr_result_asset(ocr_asset_path)
+    assert ocr_result is not None
     text = get_text_from_bounding_box(
         ocr_result, bounding_box, image_width, image_height
     )

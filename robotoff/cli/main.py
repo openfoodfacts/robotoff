@@ -84,6 +84,8 @@ def create_redis_update(
     """
     import json
 
+    from openfoodfacts.types import JSONType
+
     from robotoff.utils.logger import get_logger
     from robotoff.workers.update_listener import get_redis_client
 
@@ -97,6 +99,7 @@ def create_redis_update(
         "comment": comment,
     }
 
+    diffs: JSONType
     if uploaded_image_id is not None:
         diffs = {"uploaded_images": {"add": [uploaded_image_id]}}
     else:
