@@ -46,7 +46,7 @@ license = "GNU Affero General Public License v3"
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = ">=2.31,<2.33"
-peewee = "~3.16.3"
+peewee = "~3.17.6"
 psycopg2-binary = "~2.9.1"
 gunicorn = ">=20.1,<22.1"
 falcon = "~3.1.3"
