@@ -237,9 +237,8 @@ pytest: guard-args
 # Create all external volumes needed for production. Using external volumes is useful to prevent data loss (as they are not deleted when performing docker down -v)
 create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
-	docker volume create api-dataset
-	docker volume create postgres-data
-	docker volume create es-data
+	docker volume create robotoff_postgres-data
+	docker volume create robotoff_es-data
 # This is an NFS mount from robotoff backup ZFS dataset.
 # Two important notes:
 # - we use `nolock` as there shouldn't be any concurrent writes on the same file, and `soft` to prevent the docker container from freezing if the NFS

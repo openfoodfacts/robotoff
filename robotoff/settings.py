@@ -182,7 +182,7 @@ TAXONOMY_PATHS = {
 # Credentials for the Robotoff insights database
 
 POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
-POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
+POSTGRES_DB = os.environ.get("POSTGRES_DB", "robotoff")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
 
