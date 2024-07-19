@@ -13,6 +13,6 @@ mkdir -p $BASE_DIR
 # We backup the two schemas in distinct backups, because the embedding schema is huge
 # Save the backup in progress in a temporary file so that the latest dump file is always valid
 # Wait 10s max for the lock to be released (avoid concurrent dump)
-pg_dump --lock-wait-timeout=10000 -F c -U postgres postgres -f $BASE_DIR/robotoff_postgres.dump.tmp
+pg_dump --lock-wait-timeout=10000 -F c -U postgres robotoff -f $BASE_DIR/robotoff_postgres.dump.tmp
 mv $BASE_DIR/robotoff_postgres.dump.tmp $BASE_DIR/robotoff_postgres.dump
 echo "$(date -u '+%Y-%m-%d %H:%M:%S') :: back-up completed"

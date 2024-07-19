@@ -129,7 +129,7 @@ jobs:
           # We use local PostgreSQL instance with `robotoff_default` network,
           # so that there is no possibility of conflict with PO PostgreSQL instance.
           echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
-          echo "POSTGRES_DB=postgres" >> .env
+          echo "POSTGRES_DB=robotoff" >> .env
           echo "POSTGRES_USER=postgres" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
