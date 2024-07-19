@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.48.1](https://github.com/openfoodfacts/robotoff/compare/v1.48.0...v1.48.1) (2024-07-19)
+
+
+### Bug Fixes
+
+* apply toml lint on pyproject.toml ([c316e41](https://github.com/openfoodfacts/robotoff/commit/c316e414b94a10d677fbf9fd879a7701357dba9d))
+* avoid failing all metrics for a single failure ([86f0cae](https://github.com/openfoodfacts/robotoff/commit/86f0cae6608bc19aa645210247b7a7b0435ebd7d))
+* delete more unused DB indices ([4942c44](https://github.com/openfoodfacts/robotoff/commit/4942c440cd9d831c4f0da9133b208b0ca18e3ecc))
+* improve scheduler ([88501e3](https://github.com/openfoodfacts/robotoff/commit/88501e3a3a2588f0ea3bceefe49e047c7aff9c86))
+* switch some info logs into debug ([03e8213](https://github.com/openfoodfacts/robotoff/commit/03e82133e72d1008097c38f74e4006a45d65efab))
+* turn more info message into debug ([3dffceb](https://github.com/openfoodfacts/robotoff/commit/3dffceb2e74a8d09780ac49c83a53030b794b339))
+
+
+### Technical
+
+* add types-pytz dev dep ([6d29674](https://github.com/openfoodfacts/robotoff/commit/6d296749a0d281d41d43ac1dfdec561fab993b28))
+* fix backup script ([1a03dd8](https://github.com/openfoodfacts/robotoff/commit/1a03dd8ed0560889bfff8364e5c1976b124994b9))
+* fix errors when building docs ([bf26f57](https://github.com/openfoodfacts/robotoff/commit/bf26f578d8229947e4e3e2949c2654d7b30f154c))
+* upgrade poetry ([c742e10](https://github.com/openfoodfacts/robotoff/commit/c742e1014cd51cfc531482cf5bea9378b0160281))
+
 ## [1.48.0](https://github.com/openfoodfacts/robotoff/compare/v1.47.0...v1.48.0) (2024-07-18)
 
 
