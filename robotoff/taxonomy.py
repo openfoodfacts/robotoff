@@ -79,7 +79,7 @@ def get_taxonomy_mapping(taxonomy_type: str) -> dict[str, str]:
     languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
     canonical value (`en:organic` for the previous example).
     """
-    logger.info("Loading taxonomy mapping %s...", taxonomy_type)
+    logger.debug("Loading taxonomy mapping %s...", taxonomy_type)
     taxonomy = get_taxonomy(taxonomy_type)
     ids: dict[str, str] = {}
 

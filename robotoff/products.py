@@ -476,7 +476,7 @@ class MemoryProductStore(ProductStore):
 
     @classmethod
     def load_from_path(cls, path: Path, projection: Optional[list[str]] = None):
-        logger.debug("Loading product store")
+        logger.info("Loading product store")
 
         if projection is not None and "code" not in projection:
             raise ValueError("at least `code` must be in projection")
