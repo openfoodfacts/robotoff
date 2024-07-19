@@ -117,33 +117,42 @@ def save_facet_metrics():
     server_type = ServerType.off
     inserts = []
     target_datetime = datetime.datetime.now()
-    product_counts = {
-        country_tag: get_product_count(server_type, country_tag)
-        for country_tag in COUNTRY_TAGS
-    }
 
     for country_tag in COUNTRY_TAGS:
-        count = product_counts[country_tag]
+        try:
+            count = get_product_count(server_type, country_tag)
+        except Exception:
+            logger.exception()
+            count = None
 
         for url_path in URL_PATHS:
+            try:
+                inserts += generate_metrics_from_path(
+                    server_type, country_tag, url_path, target_datetime, count
+                )
+            except Exception:
+                logger.exception()
+
+        try:
             inserts += generate_metrics_from_path(
-                server_type, country_tag, url_path, target_datetime, count
+                server_type,
+                country_tag,
+                "/entry-date/{}/contributors?json=1".format(
+                    # get contribution metrics for the previous day
+                    (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                ),
+                target_datetime,
+                facet="contributors",
             )
+        except Exception:
+            logger.exception()
 
+    try:
         inserts += generate_metrics_from_path(
-            server_type,
-            country_tag,
-            "/entry-date/{}/contributors?json=1".format(
-                # get contribution metrics for the previous day
-                (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-            ),
-            target_datetime,
-            facet="contributors",
+            server_type, "world", "/countries?json=1", target_datetime
         )
-
-    inserts += generate_metrics_from_path(
-        server_type, "world", "/countries?json=1", target_datetime
-    )
+    except Exception:
+        logger.exception()
     client = get_influx_client()
     if client is not None:
         write_client = client.write_api(write_options=SYNCHRONOUS)
