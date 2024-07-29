@@ -55,7 +55,10 @@ def run_update_listener():
     for redis_update in get_new_updates(
         client, stream_name=settings.REDIS_STREAM_NAME, min_id=latest_id
     ):
-        process_redis_update(redis_update)
+        try:
+            process_redis_update(redis_update)
+        except Exception as e:
+            logger.exception(e)
         client.set(redis_latest_id_key, redis_update.id)
 
 
