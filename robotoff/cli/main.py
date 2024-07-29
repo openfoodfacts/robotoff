@@ -42,10 +42,12 @@ def run_worker(
 def run_update_listener():
     """Launch a process that listens to product updates published on Redis
     stream."""
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
     from robotoff.workers.update_listener import run_update_listener
 
     get_logger()
+    settings.init_sentry()
     run_update_listener()
 
 
