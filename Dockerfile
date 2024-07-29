@@ -2,7 +2,7 @@ ARG PYTHON_VERSION=3.11
 
 # base python setup
 # -----------------
-FROM python:$PYTHON_VERSION-slim as python-base
+FROM python:$PYTHON_VERSION-slim AS python-base
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends -y gettext curl build-essential && \
     apt-get install ffmpeg libsm6 libxext6  -y && \
@@ -26,7 +26,7 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 # building packages
 # -----------------
-FROM python-base as builder-base
+FROM python-base AS builder-base
 RUN curl -sSL https://install.python-poetry.org | python3 -
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
@@ -34,7 +34,7 @@ RUN poetry install --without dev
 
 # This is our final image
 # ------------------------
-FROM python-base as runtime
+FROM python-base AS runtime
 COPY --from=builder-base $VENV_PATH $VENV_PATH
 COPY --from=builder-base $POETRY_HOME $POETRY_HOME
 RUN poetry config virtualenvs.create false
@@ -67,7 +67,7 @@ CMD [ "gunicorn", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotof
 
 # building dev packages
 # ----------------------
-FROM builder-base as builder-dev
+FROM builder-base AS builder-dev
 WORKDIR $PYSETUP_PATH
 COPY poetry.lock  pyproject.toml poetry.toml ./
 # full install, with dev packages
@@ -76,7 +76,7 @@ RUN poetry install
 # image with dev tooling
 # ----------------------
 # This image will be used by default, unless a target is specified in docker-compose.yml
-FROM runtime as runtime-dev
+FROM runtime AS runtime-dev
 COPY --from=builder-dev $VENV_PATH $VENV_PATH
 COPY --from=builder-dev $POETRY_HOME $POETRY_HOME
 # Handle possible issue with Docker being too eager after copying files
@@ -89,4 +89,3 @@ RUN \
     chown -R off:off /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov
 USER off
 CMD [ "gunicorn", "--reload", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotoff.app.api:api"]
-
