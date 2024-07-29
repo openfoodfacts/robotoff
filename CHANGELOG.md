@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.49.0](https://github.com/openfoodfacts/robotoff/compare/v1.48.1...v1.49.0) (2024-07-29)
+
+
+### Features
+
+* add sentry to update-listener daemon ([65a1a49](https://github.com/openfoodfacts/robotoff/commit/65a1a493f61183f4fb89b856dbaa2d96ccaea628))
+
+
+### Bug Fixes
+
+* catch all exceptions in run_update_listener ([3a4a8ea](https://github.com/openfoodfacts/robotoff/commit/3a4a8ea1e2c3a9d3b7c7fca9fbf731e6fb280e1b))
+* lint Dockerfile ([3477239](https://github.com/openfoodfacts/robotoff/commit/34772397fb12e18fdad0dced363baa61761498bd))
+
+
+### Technical
+
+* upgrade matplotlib ([e094e60](https://github.com/openfoodfacts/robotoff/commit/e094e60b6f0504720c920783ec93c5979391900d))
+
 ## [1.48.1](https://github.com/openfoodfacts/robotoff/compare/v1.48.0...v1.48.1) (2024-07-19)
 
 
