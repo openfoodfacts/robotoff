@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.50.0](https://github.com/openfoodfacts/robotoff/compare/v1.49.0...v1.50.0) (2024-07-30)
+
+
+### Features
+
+* switch from PostgreSQL 11 to PostgreSQL 16 ([7cdb0d2](https://github.com/openfoodfacts/robotoff/commit/7cdb0d2003a607b80156f675825a14b2229b2883))
+
 ## [1.49.0](https://github.com/openfoodfacts/robotoff/compare/v1.48.1...v1.49.0) (2024-07-29)
 
 
