@@ -1,23 +1,27 @@
 # Please see https://github.com/actions/labeler for reference
 
-github_actions:
+GitHub Actions:
 - changed-files:
   - any-glob-to-any-file: '.github/**/*'
 
-crowdin:
+Crowdin:
 - changed-files:
   - any-glob-to-any-file: 'crowdin.yml'
 
-tests:
+🧪 tests:
 - changed-files:
   - any-glob-to-any-file: 'tests/**/*'
 
-integration tests:
+🐋 Docker:
+- changed-files:
+  - any-glob-to-any-file: 'docker/**/*'
+
+🧪 integration tests:
 - changed-files:
   - any-glob-to-any-file: 'tests/integration/**/*'
   - any-glob-to-any-file: 'tests/integration/insights/**/*'
 
-unit tests:
+🧪 unit tests:
 - changed-files:
   - any-glob-to-any-file: 'tests/unit/**/*'
   - any-glob-to-any-file: 'tests/unit/insights/**/*'
@@ -28,11 +32,11 @@ unit tests:
   - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
   - any-glob-to-any-file: 'tests/unit/prediction/category/neural/**/*'
 
-robotoff app:
+Robotoff - App:
 - changed-files:
   - any-glob-to-any-file: 'robotoff/app/**/*'
 
-robotoff-cli:
+Robotoff - CLI:
 - changed-files:
   - any-glob-to-any-file: 'robotoff/cli/**/*'
   - any-glob-to-any-file: 'tests/unit/cli/**/*'
@@ -62,7 +66,7 @@ predictions:
   - any-glob-to-any-file: 'robotoff/prediction/**/*'
   - any-glob-to-any-file: 'tests/unit/prediction/**/*'
 
-ocr prediction:
+OCR prediction:
 - changed-files:
   - any-glob-to-any-file: 'robotoff/prediction/ocr/**/*'
   - any-glob-to-any-file: 'tests/unit/prediction/ocr/**/*'
@@ -100,7 +104,7 @@ neural category prediction:
   - any-glob-to-any-file: 'robotoff/prediction/category/neural/**/*'
   - any-glob-to-any-file: 'tests/unit/prediction/category/neural/**/*'
 
-stores:
+🏪 Stores:
 - changed-files:
   - any-glob-to-any-file: 'data/ocr/store_regex.txt'
 
@@ -109,6 +113,6 @@ legacy:
   - any-glob-to-any-file: 'legacy/**/*'
   - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
 
-documentation:
+📚 Documentation:
 - changed-files:
   - any-glob-to-any-file: ['*.MD']
