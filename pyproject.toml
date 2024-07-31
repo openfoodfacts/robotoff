@@ -80,7 +80,7 @@ peewee-migrate = "~1.12.2"
 diskcache = "~5.6.3"
 
 [tool.poetry.dependencies.sentry-sdk]
-version = "~1.14.0"
+version = ">=1.14,<2.9"
 extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]
