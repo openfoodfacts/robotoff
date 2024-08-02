@@ -41,7 +41,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello build init-elasticsearch migrate-db up create_external_networks
+dev: hello create-po-default-network build init-elasticsearch migrate-db up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -53,7 +53,6 @@ edit_etc_hosts:
 up:
 # creates a docker network and runs docker-compose
 	@echo "🥫 Building and starting containers …"
-	docker network create po_default || true  
 ifdef service
 	${DOCKER_COMPOSE} up -d ${service} 2>&1
 else
@@ -286,3 +285,7 @@ migrate-db:
 
 create-migration: guard-args
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff create-migration ${args}
+
+# create network if not exists
+create-po-default-network:
+	docker network create po_default || true  
