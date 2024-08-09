@@ -33,6 +33,7 @@ jobs:
         echo "REDIS_UPDATE_HOST=redis.po_webnet" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org" >> $GITHUB_ENV
     - name: Set various variable for production deployment
       if: matrix.env == 'robotoff-org'
       run: |
@@ -45,6 +46,7 @@ jobs:
         echo "REDIS_UPDATE_HOST=10.1.0.113" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org" >> $GITHUB_ENV
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
       id: wait-build
@@ -149,6 +151,7 @@ jobs:
           echo "GUNICORN_NUM_WORKERS=4" >> .env
           echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
           echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+          echo "CROP_ALLOWED_DOMAINS=${{ env.CROP_ALLOWED_DOMAINS }}" >> .env
 
           # PostgreSQL config
           echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> .env
