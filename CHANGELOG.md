@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.50.1](https://github.com/openfoodfacts/robotoff/compare/v1.50.0...v1.50.1) (2024-08-09)
+
+
+### Technical
+
+* add envvar during deployment ([57488d0](https://github.com/openfoodfacts/robotoff/commit/57488d087b33d970e3cb3100dc062613137a2b1b))
+
 ## [1.50.0](https://github.com/openfoodfacts/robotoff/compare/v1.49.0...v1.50.0) (2024-07-30)
 
 
