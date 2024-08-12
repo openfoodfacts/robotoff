@@ -27,7 +27,6 @@ images
 .venv/
 # pyenv file
 .python-version
-tf_models/*
 weights/
 
 # direnv
