@@ -49,12 +49,9 @@ class SkipVotedOn(NamedTuple):
     id: str
 
 
-def _add_vote_exclusions(
-    query: peewee.Query, exclusion: Optional[SkipVotedOn]
-) -> peewee.Query:
-    if not exclusion:
-        return query
-
+def _add_vote_exclusion_clause(exclusion: SkipVotedOn) -> peewee.Expression:
+    """Return a peewee expression to exclude insights that have been voted on
+    by the user."""
     if exclusion.by == SkipVotedType.DEVICE_ID:
         criteria = AnnotationVote.device_id == exclusion.id
     elif exclusion.by == SkipVotedType.USERNAME:
@@ -62,11 +59,9 @@ def _add_vote_exclusions(
     else:
         raise ValueError(f"Unknown SkipVoteType: {exclusion.by}")
 
-    return query.join(
-        AnnotationVote,
-        join_type=peewee.JOIN.LEFT_OUTER,
-        on=((AnnotationVote.insight_id == ProductInsight.id) & (criteria)),
-    ).where(AnnotationVote.id.is_null())
+    return ProductInsight.id.not_in(
+        AnnotationVote.select(AnnotationVote.insight_id).where(criteria)
+    )
 
 
 def get_insights(
@@ -178,8 +173,10 @@ def get_insights(
     if predictor is not None:
         where_clauses.append(ProductInsight.predictor == predictor)
 
-    query = _add_vote_exclusions(ProductInsight.select(), avoid_voted_on)
+    if avoid_voted_on:
+        where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))
 
+    query = ProductInsight.select()
     if where_clauses:
         query = query.where(*where_clauses)
 
