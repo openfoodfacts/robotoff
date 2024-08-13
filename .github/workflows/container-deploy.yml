@@ -24,6 +24,7 @@ jobs:
         echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "SSH_PROTOCOL=tcp" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
@@ -41,7 +42,8 @@ jobs:
         # First connect on the SSH proxy, using ipv6 address
         echo "SSH_PROXY_HOST=osm45.openstreetmap.fr" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
-        echo "SSH_HOST=10.3.0.200" >> $GITHUB_ENV
+        echo "SSH_PROTOCOL=tcp6" >> $GITHUB_ENV
+        echo "SSH_HOST=2a06:c484:5::200" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
         # use prod mongodb through stunnel
@@ -81,6 +83,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           # Clone Git repository if not already there
@@ -111,6 +114,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           # Go to repository directory
@@ -177,6 +181,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           cd ${{ matrix.env }}
@@ -194,6 +199,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
@@ -216,6 +222,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           cd ${{ matrix.env}}
@@ -237,6 +244,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
@@ -253,6 +261,7 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           cd ${{ matrix.env }}
