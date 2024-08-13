@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.50.1](https://github.com/openfoodfacts/robotoff/compare/v1.50.0...v1.50.1) (2024-08-13)
+
+
+### Technical
+
+* add envvar during deployment ([57488d0](https://github.com/openfoodfacts/robotoff/commit/57488d087b33d970e3cb3100dc062613137a2b1b))
+* update configuration for Robotoff Moji migration ([eaf8699](https://github.com/openfoodfacts/robotoff/commit/eaf8699aa142ba8a39cbd82d726ef4e6430de8f4))
+
 ## [1.50.0](https://github.com/openfoodfacts/robotoff/compare/v1.49.0...v1.50.0) (2024-07-30)
 
 
