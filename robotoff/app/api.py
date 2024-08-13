@@ -1429,6 +1429,11 @@ def get_questions_resource_on_get(
         # Limit the number of brands to prevent slow SQL queries
         brands = brands[:10]
 
+    avoid_voted_on = _get_skip_voted_on(auth, device_id)
+    # Counting the number of insights that match the vote
+    # criteria can be very costly, so we limit the count to 100
+    # if avoid_voted_on is not None
+    max_count = 100 if avoid_voted_on is not None else None
     get_insights_ = functools.partial(
         get_insights,
         server_type=server_type,
@@ -1438,7 +1443,8 @@ def get_questions_resource_on_get(
         brands=brands,
         order_by=order_by,
         reserved_barcode=reserved_barcode,
-        avoid_voted_on=_get_skip_voted_on(auth, device_id),
+        avoid_voted_on=avoid_voted_on,
+        max_count=max_count,
         automatically_processable=False,
         campaigns=campaigns,
         predictor=predictor,

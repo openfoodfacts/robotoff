@@ -79,6 +79,7 @@ def get_insights(
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
+    max_count: Optional[int] = None,
     avoid_voted_on: Optional[SkipVotedOn] = None,
     group_by_value_tag: Optional[bool] = False,
     automatically_processable: Optional[bool] = None,
@@ -116,6 +117,10 @@ def get_insights(
     :param offset: query offset (used for pagination), defaults to None
     :param count: if True, return the number of results instead of the
         results, defaults to False
+    :param count_max: an upper bound on the number of insights to count,
+        defaults to None. If provided, the count will be limited to this
+        value. It allows to dramatically speed up the count query.
+        If not provided, an exact count will be returned.
     :param avoid_voted_on: a SkipVotedOn used to remove results insights the
         user previously ignored, defaults to None
     :param group_by_value_tag: if True, group results by value_tag, defaults
@@ -181,6 +186,8 @@ def get_insights(
         query = query.where(*where_clauses)
 
     if count:
+        if max_count is not None:
+            query = query.limit(max_count)
         return query.count()
 
     if limit is not None:
