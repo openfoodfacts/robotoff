@@ -507,6 +507,7 @@ def run_logo_object_detection(
                         barcode=image_model.barcode,
                         source_image=image_model.source_image,
                         text=text,
+                        server_type=product_id.server_type.name,
                     )
                 )
             logger.info("%s logos found for image %s", len(logos), source_image)
