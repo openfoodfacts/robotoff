@@ -224,8 +224,8 @@ class Prediction(BaseModel):
     server_type = peewee.CharField(
         null=False,
         max_length=10,
-        help_text="project associated with the insight, "
-        "one of 'off', 'obf', 'opff', 'opf'",
+        help_text="project associated with the prediction, "
+        "one of 'off', 'obf', 'opff', 'opf', 'off-pro'",
         index=True,
         default="off",
     )
@@ -343,6 +343,17 @@ class LogoAnnotation(BaseModel):
     source_image = peewee.TextField(null=True, index=True)
     # The logo text extracted from the image using OCR
     text = peewee.TextField(null=True)
+    # This is the same as ImageModel.server_type, but we store it here to
+    # avoid performing a double join with ImageModel table when we need to
+    # filter logos by server_type
+    # (LogoAnnotation > ImagePrediction > ImageModel)
+    server_type = peewee.CharField(
+        null=True,
+        max_length=10,
+        help_text="project associated with the logo annotation, "
+        "one of 'off', 'obf', 'opff', 'opf', 'off-pro'",
+        index=False,
+    )
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]

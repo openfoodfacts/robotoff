@@ -89,6 +89,7 @@ def import_logos(
                         bounding_box=item["bounding_box"],
                         barcode=image_instance.barcode,
                         source_image=image_instance.source_image,
+                        server_type=server_type.name,
                     )
                 seen_set.add(key)
 
