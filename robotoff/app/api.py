@@ -1217,38 +1217,39 @@ class ANNResource:
         es_client = get_es_client()
 
         if logo_id is None:
-            logo_embeddings = list(
-                LogoEmbedding.select()
-                .join(LogoAnnotation)
-                .join(ImagePrediction)
-                .join(ImageModel)
-                .where(
-                    ImageModel.server_type == server_type.name,
-                    # Don't include logos from deleted images
-                    ImageModel.deleted == False,  # noqa
-                )
-                .order_by(peewee.fn.Random())
-                .limit(1)
-            )
+            # To fetch a random logo that has an embedding, we use
+            # TABLESAMPLE SYSTEM. The parameter in parentheses is the
+            # percentage of rows to sample.
+            # Here, we sample 20% of the rows in the logo_embedding table.
+            # See https://www.postgresql.org/docs/current/sql-select.html
+            # for more information.
+            result = db.execute_sql(
+                """
+                SELECT logo_id, embedding
+                FROM embedding.logo_embedding as t1 TABLESAMPLE SYSTEM (20)
+                JOIN logo_annotation AS t2 ON t1.logo_id = t2.id
+                WHERE t2.server_type = %s
+                LIMIT 1;
+                """,
+                (server_type.name,),
+            ).fetchone()
 
-            if not logo_embeddings:
+            if not result:
                 resp.media = {"results": [], "count": 0, "query_logo_id": None}
                 return
 
-            logo_embedding = logo_embeddings[0]
-            logo_id = logo_embedding.logo_id
+            logo_id, embedding = result
         else:
             logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
 
             if logo_embedding is None:
                 resp.status = falcon.HTTP_404
                 return
+            embedding = logo_embedding.embedding
 
         raw_results = [
             item
-            for item in knn_search(
-                es_client, logo_embedding.embedding, count, server_type=server_type
-            )
+            for item in knn_search(es_client, embedding, count, server_type=server_type)
             if item[0] != logo_id
         ][:count]
         results = [{"logo_id": item[0], "distance": item[1]} for item in raw_results]
