@@ -654,6 +654,7 @@ def add_logo_to_ann(
         seen = set(int(x) for x in text_file_iter(existing_ids_path))
     else:
         seen = get_stored_logo_ids(es_client)
+    logger.info("Number of existing logos: %d", len(seen))
 
     added = 0
 
