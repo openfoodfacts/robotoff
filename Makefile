@@ -234,6 +234,8 @@ create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
 	docker volume create robotoff_postgres-data
 	docker volume create robotoff_es-data
+# In production, robotoff_backup is a NFS mount, this should be created manually in production
+	docker volume create robotoff_backup
 
 
 create_external_networks:
