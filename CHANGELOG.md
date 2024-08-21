@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.50.3](https://github.com/openfoodfacts/robotoff/compare/v1.50.2...v1.50.3) (2024-08-21)
+
+
+### Technical
+
+* update proxy_username in container-deploy.yml ([d469798](https://github.com/openfoodfacts/robotoff/commit/d4697987ebdd3e38288b88c565aa325a95e3d6c7))
+
 ## [1.50.2](https://github.com/openfoodfacts/robotoff/compare/v1.50.1...v1.50.2) (2024-08-21)
 
 
