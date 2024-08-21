@@ -86,6 +86,11 @@ from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 from robotoff.workers.tasks import download_product_dataset_job
+from robotoff.batch import (
+    BatchJobType, 
+    GoogleBatchJob,
+    GoogleBatchJobConfig
+)
 
 logger = get_logger()
 
@@ -1748,6 +1753,24 @@ class RobotsTxtResource:
         resp.status = falcon.HTTP_200
 
 
+class BatchJobResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        job_type_str: str = req.get_param("job_type", required=True)
+
+        # Batch extraction
+
+        # Launch Batch job
+        logger.info(f"Start batch with job_type: {job_type_str}")
+        try:
+            job_type = BatchJobType[job_type_str]
+        except KeyError: 
+            raise falcon.HTTPBadRequest(description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}")
+        
+        batch_job_config = GoogleBatchJobConfig.init(job_type=job_type)
+        batch_job = GoogleBatchJob.launch_job(batch_job_config=batch_job_config)
+        resp.media = {"batch_job_details": batch_job}
+
+
 def custom_handle_uncaught_exception(
     req: falcon.Request, resp: falcon.Response, ex: Exception, params
 ):
@@ -1785,7 +1808,7 @@ api.add_route("/api/v1/insights/dump", DumpResource())
 api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
 api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
-api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource())
+api.add_route("/api/v1/predict/ ", IngredientListPredictorResource())
 api.add_route("/api/v1/predict/lang", LanguagePredictorResource())
 api.add_route("/api/v1/predict/lang/product", ProductLanguagePredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())

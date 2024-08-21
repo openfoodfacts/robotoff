@@ -74,8 +74,7 @@ class InsightType(str, enum.Enum):
     """InsightType defines the type of the insight."""
 
     # The 'ingredient spellcheck' insight corrects the spelling in the given
-    # ingredients list. NOTE: this insight is deprecated until a new spellcheck
-    # method is developed
+    # ingredients list.
     ingredient_spellcheck = "ingredient_spellcheck"
 
     # The 'packager code' insight extracts the packager code using regex from
@@ -359,3 +358,40 @@ class PackagingElementProperty(enum.Enum):
 LogoLabelType = tuple[str, Optional[str]]
 
 InsightAnnotation = Literal[-1, 0, 1, 2]
+
+
+
+
+
+@enum.unique
+class Lang(str, enum.Enum):
+    english = "en"
+    french = "fr"
+    german = "de"
+    spanish = "es"
+    italian = "it"
+    portuguese = "pt"
+    dutch = "nl"
+    polish = "pl"
+    russian = "ru"
+    japanese = "ja"
+    chinese = "zh"
+    arabic = "ar"
+    turkish = "tr"
+    vietnamese = "vi"
+    thai = "th"
+    korean = "ko"
+    ukrainian = "uk"
+    indonesian = "id"
+    hungarian = "hu"
+    greek = "el"
+    romanian = "ro"
+    danish = "da"
+    swedish = "sv"
+    norwegian = "no"
+    finnish = "fi"
+    bulgarian = "bg"
+    czech = "cs"
+    slovak = "sk"
+    croatian = "hr"
+    
