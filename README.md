@@ -33,11 +33,11 @@ A detailed description of [how predictions and insights work is available here](
 
 Robotoff works together with [Product Opener](https://github.com/openfoodfacts/openfoodfacts-server), the Core server of Open Food Facts (in Perl, which can also be installed locally using Docker) and the [Open Food Facts apps](https://github.com/openfoodfacts/smooth-app) (which can work with your local instance after enabling dev mode)
 
-**Documentation:** <https://openfoodfacts.github.io/robotoff>
+**📚 Documentation:** <https://openfoodfacts.github.io/robotoff>
 
 **Source code:** <https://github.com/openfoodfacts/robotoff>
 
-**Open Food Facts:** <https://world.openfoodfacts.org>
+**🍊 Open Food Facts:** <https://world.openfoodfacts.org>
 
 ## Overview
 
@@ -51,11 +51,10 @@ Robotoff works together with [Product Opener](https://github.com/openfoodfacts/o
 
 **NOTE:** This documentation tries to follow as much as possible the documentation system from [Diátaxis](https://diataxis.fr/).
 
-## Licence
+## 👩‍⚖️ Licence
+- Robotoff is licensed under the AGPLv3.
 
-Robotoff is licensed under the AGPLv3.
-
-## Weekly meetings
+## 📆 Weekly meetings
 - We e-meet every Tuesday at 11:00 Paris Time (10:00 London Time, 15:30 IST, 02:00 AM PT)
 - ![Google Meet](https://img.shields.io/badge/Google%20Meet-00897B?logo=google-meet&logoColor=white) Video call link: https://meet.google.com/qvv-grzm-gzb
 - Join by phone: https://tel.meet/qvv-grzm-gzb?pin=9965177492770

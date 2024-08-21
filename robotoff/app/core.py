@@ -49,12 +49,9 @@ class SkipVotedOn(NamedTuple):
     id: str
 
 
-def _add_vote_exclusions(
-    query: peewee.Query, exclusion: Optional[SkipVotedOn]
-) -> peewee.Query:
-    if not exclusion:
-        return query
-
+def _add_vote_exclusion_clause(exclusion: SkipVotedOn) -> peewee.Expression:
+    """Return a peewee expression to exclude insights that have been voted on
+    by the user."""
     if exclusion.by == SkipVotedType.DEVICE_ID:
         criteria = AnnotationVote.device_id == exclusion.id
     elif exclusion.by == SkipVotedType.USERNAME:
@@ -62,11 +59,9 @@ def _add_vote_exclusions(
     else:
         raise ValueError(f"Unknown SkipVoteType: {exclusion.by}")
 
-    return query.join(
-        AnnotationVote,
-        join_type=peewee.JOIN.LEFT_OUTER,
-        on=((AnnotationVote.insight_id == ProductInsight.id) & (criteria)),
-    ).where(AnnotationVote.id.is_null())
+    return ProductInsight.id.not_in(
+        AnnotationVote.select(AnnotationVote.insight_id).where(criteria)
+    )
 
 
 def get_insights(
@@ -84,6 +79,7 @@ def get_insights(
     limit: Optional[int] = 25,
     offset: Optional[int] = None,
     count: bool = False,
+    max_count: Optional[int] = None,
     avoid_voted_on: Optional[SkipVotedOn] = None,
     group_by_value_tag: Optional[bool] = False,
     automatically_processable: Optional[bool] = None,
@@ -121,6 +117,10 @@ def get_insights(
     :param offset: query offset (used for pagination), defaults to None
     :param count: if True, return the number of results instead of the
         results, defaults to False
+    :param count_max: an upper bound on the number of insights to count,
+        defaults to None. If provided, the count will be limited to this
+        value. It allows to dramatically speed up the count query.
+        If not provided, an exact count will be returned.
     :param avoid_voted_on: a SkipVotedOn used to remove results insights the
         user previously ignored, defaults to None
     :param group_by_value_tag: if True, group results by value_tag, defaults
@@ -178,12 +178,16 @@ def get_insights(
     if predictor is not None:
         where_clauses.append(ProductInsight.predictor == predictor)
 
-    query = _add_vote_exclusions(ProductInsight.select(), avoid_voted_on)
+    if avoid_voted_on:
+        where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))
 
+    query = ProductInsight.select()
     if where_clauses:
         query = query.where(*where_clauses)
 
     if count:
+        if max_count is not None:
+            query = query.limit(max_count)
         return query.count()
 
     if limit is not None:

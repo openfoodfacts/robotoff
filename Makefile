@@ -18,10 +18,6 @@ DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
 DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test COMMON_NET_NAME=po_test docker compose --env-file=${ENV_FILE}
 ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
 
-# mount information for robotoff backup ZFS dataset
-NFS_VOLUMES_ADDRESS_OVH3 ?= 10.0.0.3
-NFS_VOLUMES_BACKUP_BASE_PATH ?= /rpool/backups/robotoff
-
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
 .PHONY: *
@@ -45,7 +41,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello build init-elasticsearch migrate-db up create_external_networks
+dev: hello create-po-default-network build init-elasticsearch migrate-db up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -57,7 +53,6 @@ edit_etc_hosts:
 up:
 # creates a docker network and runs docker-compose
 	@echo "🥫 Building and starting containers …"
-	docker network create po_default || true  
 ifdef service
 	${DOCKER_COMPOSE} up -d ${service} 2>&1
 else
@@ -239,12 +234,8 @@ create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
 	docker volume create robotoff_postgres-data
 	docker volume create robotoff_es-data
-# This is an NFS mount from robotoff backup ZFS dataset.
-# Two important notes:
-# - we use `nolock` as there shouldn't be any concurrent writes on the same file, and `soft` to prevent the docker container from freezing if the NFS
-#   connection is lost
-# - we cannot mount directly `${NFS_VOLUMES_BACKUP_BASE_PATH}`, we have to mount a subfolder (`backups`) to prevent permission issues
-	docker volume create --driver local --opt type=nfs --opt o=addr=${NFS_VOLUMES_ADDRESS_OVH3},nolock,soft,rw --opt device=:${NFS_VOLUMES_BACKUP_BASE_PATH}/backups ${COMPOSE_PROJECT_NAME}_backup
+# In production, robotoff_backup is a NFS mount, this should be created manually in production
+	docker volume create robotoff_backup
 
 
 create_external_networks:
@@ -296,3 +287,7 @@ migrate-db:
 
 create-migration: guard-args
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff create-migration ${args}
+
+# create network if not exists
+create-po-default-network:
+	docker network create po_default || true  

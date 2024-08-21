@@ -18,33 +18,47 @@ jobs:
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
     steps:
-    - name: Set common variables
-      run: |
-        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
-        echo "SSH_USERNAME=off" >> $GITHUB_ENV
     - name: Set various variable for staging deployment
       if: matrix.env == 'robotoff-net'
       run: |
+        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+        echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
         echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "SSH_PROTOCOL=tcp" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
         echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
         # In staging, we use the Redis of shared services to get Product Update
         echo "REDIS_UPDATE_HOST=redis.po_webnet" >> $GITHUB_ENV
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "INFLUXDB_PORT=8087" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
     - name: Set various variable for production deployment
       if: matrix.env == 'robotoff-org'
       run: |
-        echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
+        # This is the OSM proxy server, that does have an ipv4 address
+        echo "SSH_PROXY_HOST=45.147.209.254" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+        # We use 'raphael' user as we don't have an off user yet on the proxy machine
+        echo "SSH_PROXY_USERNAME=raphael" >> $GITHUB_ENV
+        echo "SSH_PROTOCOL=tcp" >> $GITHUB_ENV
+        echo "SSH_HOST=10.3.0.200" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
         echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
         # use prod mongodb through stunnel
-        echo "MONGO_URI=mongodb://10.1.0.113:27017" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://10.3.0.101:27017" >> $GITHUB_ENV
         # In prod, we use the Redis running in VM
-        echo "REDIS_UPDATE_HOST=10.1.0.113" >> $GITHUB_ENV
-        echo "INFLUXDB_HOST=10.1.0.201" >> $GITHUB_ENV
+        echo "REDIS_UPDATE_HOST=10.3.0.101" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.3.0.101" >> $GITHUB_ENV
+        echo "INFLUXDB_PORT=8086" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
     - name: Wait for container build workflow
       uses: tomchv/wait-my-workflow@v1.1.0
       id: wait-build
@@ -70,8 +84,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           # Clone Git repository if not already there
@@ -100,8 +115,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           # Go to repository directory
@@ -112,7 +128,7 @@ jobs:
           echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
           echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
           echo "COMPOSE_PATH_SEPARATOR=;" >> .env
-          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml" >> .env
+          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml;docker/ml.yml" >> .env
           echo "TAG=sha-${{ github.sha }}" >> .env
           echo "RESTART_POLICY=always" >> .env
 
@@ -140,19 +156,23 @@ jobs:
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
           echo "TRITON_HOST=triton" >> .env
+          echo "TRITON_EXPOSE_HTTP=8003" >> .env
+          echo "TRITON_MODELS_DIR=./models/triton" >> .env
           echo "FASTTEXT_HOST=fasttext" >> .env
+          echo "FASTTEXT_MODEL_DIR=./models" >> .env
           echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
-          echo "INFLUXDB_PORT=8087" >> .env
+          echo "INFLUXDB_PORT=${{ env.INFLUXDB_PORT }}" >> .env
           echo "INFLUXDB_BUCKET=off_metrics" >> .env
           echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
           echo "SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}" >> .env
           echo "GUNICORN_NUM_WORKERS=4" >> .env
           echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
           echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+          echo "CROP_ALLOWED_DOMAINS=${{ env.CROP_ALLOWED_DOMAINS }}" >> .env
 
           # PostgreSQL config
-          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> .env
-          echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> .env
+          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=${{ env.ROBOTOFF_POSTGRES_SHARED_BUFFERS }}" >> .env
+          echo "ROBOTOFF_POSTGRES_WORK_MEM=${{ env.ROBOTOFF_POSTGRES_WORK_MEM }}" >> .env
 
 
     - name: Create Docker volumes
@@ -162,8 +182,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           cd ${{ matrix.env }}
@@ -179,8 +200,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
@@ -201,8 +223,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           cd ${{ matrix.env}}
@@ -222,8 +245,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
         script_stop: false
         script: |
@@ -238,8 +262,9 @@ jobs:
         username: ${{ env.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ env.SSH_PROXY_HOST }}
-        proxy_username: ${{ env.SSH_USERNAME }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        protocol: ${{ env.SSH_PROTOCOL }}
         script_stop: false
         script: |
           cd ${{ matrix.env }}

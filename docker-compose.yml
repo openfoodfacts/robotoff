@@ -3,7 +3,6 @@ x-robotoff-base-volumes:
   - ./data:/opt/robotoff/data
   - ./cache:/opt/robotoff/cache
   - ./datasets:/opt/robotoff/datasets
-  - ./tf_models:/opt/robotoff/tf_models
   - ./models:/opt/robotoff/models
 
 x-robotoff-base:
@@ -168,12 +167,12 @@ services:
 volumes:
   postgres-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
-  backup:
-    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
   es-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
   redis-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
+  backup:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
 
 networks:
   default:

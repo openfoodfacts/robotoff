@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.50.3](https://github.com/openfoodfacts/robotoff/compare/v1.50.2...v1.50.3) (2024-08-21)
+
+
+### Technical
+
+* update proxy_username in container-deploy.yml ([d469798](https://github.com/openfoodfacts/robotoff/commit/d4697987ebdd3e38288b88c565aa325a95e3d6c7))
+
+## [1.50.2](https://github.com/openfoodfacts/robotoff/compare/v1.50.1...v1.50.2) (2024-08-21)
+
+
+### Bug Fixes
+
+* add logo_annotation.server_type field ([a318737](https://github.com/openfoodfacts/robotoff/commit/a3187375a551bb7757f033a43146d3acd0c4d5bd))
+* **dev_build:** :zap: Add network po-default before build in make dev ([c99b2c1](https://github.com/openfoodfacts/robotoff/commit/c99b2c160bd2f34abc0de2351e2dd1e19fa08a36))
+* display number of logos in index in add-logo-to-ann command ([8251082](https://github.com/openfoodfacts/robotoff/commit/825108258d2cfb41694b0640f3444f310b00c36f))
+* improve performance of random logo search ([dec765f](https://github.com/openfoodfacts/robotoff/commit/dec765f148dc1bdaee1419438ae6bb1b2c963c4e))
+* improve question count query performance with vote ([f19d49a](https://github.com/openfoodfacts/robotoff/commit/f19d49a9f832b91c4317c163fb82ec3f78f4edee))
+* remove some store regex false positive ([6ba5f7e](https://github.com/openfoodfacts/robotoff/commit/6ba5f7e4dc4fe09221eda3c45a86b70b20cee00d))
+* use subquery when fetching questions without user votes ([15e6cfb](https://github.com/openfoodfacts/robotoff/commit/15e6cfb0749bafff9de25b6f3328f61d445f84e5))
+
+
+### Technical
+
+* add index on logo_annotation.server_type ([0da1006](https://github.com/openfoodfacts/robotoff/commit/0da1006e94008ac454c1c061dfc726c171e9a029))
+* bring back robotoff-backups ([0f5b8ca](https://github.com/openfoodfacts/robotoff/commit/0f5b8ca7c0a2762bfba053d84a66b408f1a2be65))
+* fix deploy configuration ([e4999ac](https://github.com/openfoodfacts/robotoff/commit/e4999acb519e1e00aa703855764a818274c0296e))
+* Update README.md ([fc94d96](https://github.com/openfoodfacts/robotoff/commit/fc94d96f6a4a25fc76f4edd8f5494bf48912ad5f))
+
+## [1.50.1](https://github.com/openfoodfacts/robotoff/compare/v1.50.0...v1.50.1) (2024-08-13)
+
+
+### Technical
+
+* add envvar during deployment ([57488d0](https://github.com/openfoodfacts/robotoff/commit/57488d087b33d970e3cb3100dc062613137a2b1b))
+* update configuration for Robotoff Moji migration ([eaf8699](https://github.com/openfoodfacts/robotoff/commit/eaf8699aa142ba8a39cbd82d726ef4e6430de8f4))
+
 ## [1.50.0](https://github.com/openfoodfacts/robotoff/compare/v1.49.0...v1.50.0) (2024-07-30)
 
 

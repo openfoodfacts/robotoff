@@ -1,14 +1,13 @@
 volumes:
-  backup:
-    external: true
-    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
-
   postgres-data:
     external: true
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
   es-data:
     external: true
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
+  backup:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
 
 
 networks:
