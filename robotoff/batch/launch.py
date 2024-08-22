@@ -19,8 +19,7 @@ class BatchJobType(enum.Enum):
 
 # Paths batch job config files
 BATCH_JOB_TYPE_TO_CONFIG_PATH = {
-    BatchJobType.ingredients_spellcheck: settings.BATCH_JOB_CONFIG_DIR
-    / "spellcheck.yaml",
+    BatchJobType.ingredients_spellcheck: settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml",
 }
 
 
