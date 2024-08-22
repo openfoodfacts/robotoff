@@ -1,6 +1,7 @@
 import argparse
 import tempfile
 import logging
+import sys
 from typing import List
 
 import pandas as pd
@@ -12,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
 FEATURES_VALIDATION = ["code", "text"]
@@ -22,8 +24,8 @@ def parse() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(description="Spellcheck module.")
     parser.add_argument("--data_bucket", type=str, default="robotoff-spellcheck", help="Bucket name.")
-    parser.add_argument("--pre_data_suffix", type=str, default="data/test_data.parquet", help="Dataset suffix containing the data to be processed.")
-    parser.add_argument("--post_data_suffix", type=str, default="data/test_processed_data.parquet", help="Dataset suffix containing the processed data.")
+    parser.add_argument("--pre_data_suffix", type=str, default="data/preprocessed_data.parquet", help="Dataset suffix containing the data to be processed.")
+    parser.add_argument("--post_data_suffix", type=str, default="data/postprocessed_data.parquet", help="Dataset suffix containing the processed data.")
     parser.add_argument("--model_path", default="openfoodfacts/spellcheck-mistral-7b", type=str, help="HF model path.")
     parser.add_argument("--max_model_len", default=1024, type=int, help="Maximum model context length. A lower max context length reduces the memory footprint and accelerate the inference.")
     parser.add_argument("--temperature", default=0, type=float, help="Sampling temperature.")
@@ -47,7 +49,7 @@ def main():
     LOGGER.info(f"Loading data from GCS: {args.data_bucket}/{args.pre_data_suffix}")
     data = load_gcs(bucket_name=args.data_bucket, suffix=args.pre_data_suffix)
     LOGGER.info(f"Feature in uploaded data: {data.columns}")
-    if not all(feature in data.columns for feature in FEATURES_VALIDATION):
+    if not all(feature in FEATURES_VALIDATION for feature in data.columns):
         raise ValueError(f"Data should contain the following features: {FEATURES_VALIDATION}. Current features: {data.columns}")
 
     instructions = [prepare_instruction(text) for text in data["text"]]
