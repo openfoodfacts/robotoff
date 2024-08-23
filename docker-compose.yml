@@ -4,7 +4,7 @@ x-robotoff-base-volumes:
   - ./cache:/opt/robotoff/cache
   - ./datasets:/opt/robotoff/datasets
   - ./models:/opt/robotoff/models
-  - tmp:/tmp
+  - robotoff_tmp:/tmp
 
 x-robotoff-base:
   &robotoff-base
@@ -164,6 +164,7 @@ services:
     mem_limit: 15g
     volumes:
       - es-data:/usr/share/elasticsearch/data
+      - elasticsearch_tmp:/tmp
 
 volumes:
   postgres-data:
@@ -176,8 +177,11 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
   # Volume mount on /tmp on API and workers, to prevent
   # large docker layer overlay
-  tmp:
+  robotoff_tmp:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_tmp
+  elasticsearch_tmp:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_elasticsearch_tmp
+
 
 networks:
   default:
