@@ -4,6 +4,7 @@ x-robotoff-base-volumes:
   - ./cache:/opt/robotoff/cache
   - ./datasets:/opt/robotoff/datasets
   - ./models:/opt/robotoff/models
+  - tmp:/tmp
 
 x-robotoff-base:
   &robotoff-base
@@ -173,6 +174,10 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
   backup:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
+  # Volume mount on /tmp on API and workers, to prevent
+  # large docker layer overlay
+  tmp:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_tmp
 
 networks:
   default:
