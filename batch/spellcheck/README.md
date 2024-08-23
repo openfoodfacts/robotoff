@@ -11,6 +11,7 @@
     * A100: a2-highgpu-1g: $3.748064
 * A100/Cuda doesn't support FP8
 * A100 has less availability than L4: need to wait for batch job (can be long)
+* Don't forget to enable **Batch & Storage API** if used without gcloud
 
 ## Links
 

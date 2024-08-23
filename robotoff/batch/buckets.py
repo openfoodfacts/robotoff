@@ -35,9 +35,9 @@ class GoogleStorageBucketForBatchJob(GoogleStorageBucket):
         self.suffix_postprocess = suffix_postprocess
     
     @classmethod
-    def from_job_type(cls, job_type:BatchJobType) -> "GoogleStorageBucketForBatchJob":
-        """Initialize the class with the configuration file corresponding to the batch job type.
-        Useful to adapt bucket upload and download during the batch job process.
+    def from_job_type(cls, job_type: BatchJobType) -> "GoogleStorageBucketForBatchJob":
+        """Initialize the class with the bucket and suffix names corresponding to the batch job type.
+        Used to adapt bucket upload and download during the batch job process.
 
         :param job_type: Batch job type. 
         :type job_type: BatchJobType
