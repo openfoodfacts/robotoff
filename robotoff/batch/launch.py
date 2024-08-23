@@ -3,9 +3,10 @@ from typing import List, Optional
 import enum
 import yaml
 import datetime
+import re
 
 from google.cloud import batch_v1
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from robotoff import settings
 
@@ -14,7 +15,7 @@ from robotoff import settings
 class BatchJobType(enum.Enum):
     """Each job type correspond to a task that will be executed in the batch job."""
 
-    ingredients_spellcheck = "ingredients_spellcheck"
+    ingredients_spellcheck = "ingredients-spellcheck"
 
 
 # Paths batch job config files
@@ -25,6 +26,8 @@ BATCH_JOB_TYPE_TO_CONFIG_PATH = {
 
 class GoogleBatchJobConfig(BaseModel):
     """Batch job configuration class."""
+    # By default, extra fields are just ignored. We raise an error in case of extra fields.
+    model_config: ConfigDict = {"extra": "forbid"}
 
     job_name: str = Field(
         description="The name of the job. It needs to be unique amongst exisiting batch job names.",
@@ -32,6 +35,9 @@ class GoogleBatchJobConfig(BaseModel):
     location: str = Field(
         pattern=r"^europe-west\d{1,2}$",
         description="The region in which the job will run. Regions that are available for Batch are listed on: https://cloud.google.com/compute/docs/gpus/gpu-regions-zones. We restrict to Europe-West for now.",
+    )
+    container_image_uri: str = Field(
+        description="The URI of the container image to use for the job. SHould be a valid Image URI.",
     )
     entrypoint: Optional[str] = Field(
         default=None,
@@ -100,12 +106,16 @@ class GoogleBatchJobConfig(BaseModel):
         :param job_type: Batch job type.
         :type job_type: BatchJobType
         """
+        # Batch job name should respect a specific pattern, or returns an error
+        pattern = "^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
+        if not re.match(pattern, job_type.value):
+            raise ValueError(f"Job name should respect the pattern: {pattern}. Current job name: {job_type.value}")
+        
         # Generate unique id for the job
         unique_job_name = (
-            job_type.name + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            job_type.value + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         )
-
-        # Load config from job_type
+        # Load config file from job_type
         config_path = BATCH_JOB_TYPE_TO_CONFIG_PATH[job_type]
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -135,8 +145,10 @@ class GoogleBatchJob(BatchJob):
     ) -> batch_v1.Job:
         """This method creates a Batch Job on GCP.
 
-        Method copied from https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch/create
-
+        Sources:
+        * https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch/create
+        * https://cloud.google.com/python/docs/reference/batch/latest/google.cloud.batch_v1.types
+        
         :param google_batch_launch_config: Config to run a job on Google Batch.
         :type google_batch_launch_config: GoogleBatchLaunchConfig
         :param batch_job_config: Config to run a specific job on Google Batch.
