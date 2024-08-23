@@ -31,7 +31,7 @@ class BatchExtraction:
 
         :param job_type: Batch job type.
         :type job_type: BatchJobType
-        :param output_dir: Directory to save the extracted data.
+        :param output_dir: Directory to save the extracted data as a parquet file.
         :type output_dir: str
         :param dataset_path: Path to the jsonl.gz dataset.
         :type dataset_path: Path, optional. Default to settings.JSONL_DATASET_PATH. Mainly used for testing.
