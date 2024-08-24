@@ -1475,6 +1475,35 @@ class NutritionImageImporter(InsightImporter):
         return results
 
 
+class IngredientsSpellcheckImporter(InsightImporter):
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.ingredient_spellcheck
+    
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_spellcheck}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        # No reason to have different candidates for now
+        candidate = predictions[0]
+        yield ProductInsight(**candidate.to_dict())
+    
+    @classmethod
+    def is_conflicting_insight(
+        cls, 
+        candidate: ProductInsight, 
+        reference: ProductInsight
+    ) -> bool:
+        candidate.value == reference.value
+
 class PackagingElementTaxonomyException(Exception):
     pass
 
