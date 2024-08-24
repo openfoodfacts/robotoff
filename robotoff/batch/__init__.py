@@ -9,3 +9,4 @@ from .extraction import (
 from .buckets import (
     GoogleStorageBucketForBatchJob,
 )
+from .importer import generate_predictions_from_batch
