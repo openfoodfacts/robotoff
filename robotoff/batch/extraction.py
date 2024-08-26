@@ -5,7 +5,10 @@ import duckdb
 
 from robotoff import settings
 from robotoff.batch import BatchJobType
+from robotoff.utils import get_logger
 
+
+LOGGER = get_logger(__name__)
 
 BATCH_JOB_TYPE_TO_QUERY_FILE_PATH = {
     BatchJobType.ingredients_spellcheck: settings.BATCH_JOB_CONFIG_DIR / "sql/spellcheck.sql",
@@ -63,6 +66,7 @@ class BatchExtraction:
                 "The SQL query should contain the string 'DATASET_PATH' to replace it with the dataset path."
             )
         query = query.replace("DATASET_PATH", dataset_path)
+        LOGGER.debug(f"Query used to extract batch from dataset: {query}")
         return query
 
     @classmethod
