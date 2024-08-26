@@ -87,10 +87,8 @@ from robotoff.utils.text import get_tag
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 from robotoff.workers.tasks import download_product_dataset_job
 from robotoff.batch import (
-    BatchJobType, 
-    GoogleBatchJob,
-    GoogleBatchJobConfig,
-    BatchExtraction,
+    BatchJobType,
+    launch_batch_job,
     GoogleStorageBucketForBatchJob,
     generate_predictions_from_batch,
 
@@ -1771,23 +1769,17 @@ class BatchJobLaunchResource:
         try:
             job_type = BatchJobType[job_type_str]
         except KeyError: 
-            raise falcon.HTTPBadRequest(description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}")
-
-        # Batch extraction
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            BatchExtraction.extract_from_dataset(
-                job_type=job_type,
-                output_dir=tmp_dir,
+            raise falcon.HTTPBadRequest(
+                description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
             )
-            if not BatchExtraction.extracted_file_path:
-                raise ValueError("The extracted file was not found.")
-            bucket_handler = GoogleStorageBucketForBatchJob.from_job_type(job_type)
-            bucket_handler.upload_file(file_path=BatchExtraction.extracted_file_path)
-
-        # Launch batch job
-        batch_job_config = GoogleBatchJobConfig.init(job_type=job_type)
-        batch_job = GoogleBatchJob.launch_job(batch_job_config=batch_job_config)
-        resp.media = {"batch_job_details": batch_job}
+        # Batch extraction can take some time, so we queue it
+        enqueue_job(
+            launch_batch_job,
+            queue=low_queue,
+            job_type=job_type,
+            job_kwargs={"timeout": "10m"},
+        )
+        logger.info("Batch job %s queued", job_type)
 
 
 class BatchJobImportResource:
@@ -1804,7 +1796,7 @@ class BatchJobImportResource:
 
         bucket_handler = GoogleStorageBucketForBatchJob.from_job_type(job_type)
         predictions = generate_predictions_from_batch(
-            bucket_handler.download_file, 
+            bucket_handler.download_file(), 
             job_type
         )
         with db:

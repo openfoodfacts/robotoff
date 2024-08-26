@@ -49,7 +49,7 @@ def main():
     LOGGER.info(f"Loading data from GCS: {args.data_bucket}/{args.pre_data_suffix}")
     data = load_gcs(bucket_name=args.data_bucket, suffix=args.pre_data_suffix)
     LOGGER.info(f"Feature in uploaded data: {data.columns}")
-    if not all(feature in FEATURES_VALIDATION for feature in data.columns):
+    if not all(feature in data.columns for feature in FEATURES_VALIDATION):
         raise ValueError(f"Data should contain the following features: {FEATURES_VALIDATION}. Current features: {data.columns}")
 
     instructions = [prepare_instruction(text) for text in data["text"]]

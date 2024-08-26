@@ -157,7 +157,7 @@ class GoogleBatchJob(BatchJob):
         :rtype: batch_v1.Job
 
         Returns:
-            A job object representing the job created.
+            Batch job information.
         """
 
         client = batch_v1.BatchServiceClient()
