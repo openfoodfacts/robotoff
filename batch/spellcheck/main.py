@@ -2,6 +2,7 @@ import argparse
 import tempfile
 import logging
 import sys
+import requests
 from typing import List
 
 import pandas as pd
@@ -77,6 +78,10 @@ def main():
             bucket_name=args.data_bucket, 
             suffix=args.post_data_suffix
         )
+    
+    LOGGER.info("Request Robotoff API batch import endpoint.")
+    run_robotoff_endpoint_batch_import()
+
     LOGGER.info("Batch processing job completed.")
 
 
@@ -147,6 +152,21 @@ def upload_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
     bucket = client.get_bucket(bucket_name)
     blob = bucket.blob(suffix)
     blob.upload_from_filename(filename=file_path)
+
+
+def run_robotoff_endpoint_batch_import():
+    """Run Robotoff api endpoint to import batch data into tables. 
+    """
+    url = "https://robotoff.openfoodfacts.org/api/v1/batch/import"
+    data = {"job_type": "ingredients_spellcheck"}
+
+    try:
+        response = requests.post(url, data=data)
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(e)
+
+    LOGGER.info(f"Import batch Robotoff API endpoint succesfully requested: {response.text}")
+
 
 if __name__ == "__main__":
     main()

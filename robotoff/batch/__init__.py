@@ -11,8 +11,7 @@ from .extraction import (
 from .buckets import (
     GoogleStorageBucketForBatchJob,
 )
-from .importer import generate_predictions_from_batch
-
+from .importer import import_batch_predictions
 from robotoff.utils import get_logger
 
 
@@ -37,9 +36,9 @@ def launch_batch_job(job_type: BatchJobType) -> None:
         # Upload the extracted file to the bucket
         bucket_handler = GoogleStorageBucketForBatchJob.from_job_type(job_type)
         bucket_handler.upload_file(file_path=BatchExtraction.extracted_file_path)
-        LOGGER.debug(f"File uploaded to the bucket {bucket_handler.bucket}")
+        LOGGER.debug(f"File uploaded to the bucket {bucket_handler.bucket}/{bucket_handler.suffix_preprocess}")
 
     # Launch batch job
     batch_job_config = GoogleBatchJobConfig.init(job_type=job_type)
     batch_job = GoogleBatchJob.launch_job(batch_job_config=batch_job_config)
-    LOGGER.info(f"Batch job succesfully launched. Batch job name: {batch_job.name}")
+    LOGGER.info(f"Batch job succesfully launched. Batch job name: {batch_job.name}.")
