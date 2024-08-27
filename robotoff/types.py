@@ -359,39 +359,8 @@ LogoLabelType = tuple[str, Optional[str]]
 
 InsightAnnotation = Literal[-1, 0, 1, 2]
 
-
-
-
-
 @enum.unique
-class Lang(str, enum.Enum):
-    english = "en"
-    french = "fr"
-    german = "de"
-    spanish = "es"
-    italian = "it"
-    portuguese = "pt"
-    dutch = "nl"
-    polish = "pl"
-    russian = "ru"
-    japanese = "ja"
-    chinese = "zh"
-    arabic = "ar"
-    turkish = "tr"
-    vietnamese = "vi"
-    thai = "th"
-    korean = "ko"
-    ukrainian = "uk"
-    indonesian = "id"
-    hungarian = "hu"
-    greek = "el"
-    romanian = "ro"
-    danish = "da"
-    swedish = "sv"
-    norwegian = "no"
-    finnish = "fi"
-    bulgarian = "bg"
-    czech = "cs"
-    slovak = "sk"
-    croatian = "hr"
-    
+class BatchJobType(enum.Enum):
+    """Each job type correspond to a task that will be executed in the batch job.
+    """
+    ingredients_spellcheck = "ingredients-spellcheck"
