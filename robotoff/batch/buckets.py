@@ -1,5 +1,4 @@
-import io
-
+import pandas as pd
 from robotoff.utils.buckets import GoogleStorageBucket
 from robotoff.batch import BatchJobType
 
@@ -62,7 +61,7 @@ class GoogleStorageBucketForBatchJob(GoogleStorageBucket):
             suffix=self.suffix_preprocess,
         )
 
-    def download_file(self) -> io.BufferedReader:
+    def download_file(self) -> pd.DataFrame:
         """Download file from bucket
         """
         return self.download_gcs(

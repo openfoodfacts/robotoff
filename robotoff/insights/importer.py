@@ -1475,7 +1475,7 @@ class NutritionImageImporter(InsightImporter):
         return results
 
 
-class IngredientsSpellcheckImporter(InsightImporter):
+class IngredientSpellcheckImporter(InsightImporter):
 
     @staticmethod
     def get_type() -> InsightType:
@@ -1492,9 +1492,9 @@ class IngredientsSpellcheckImporter(InsightImporter):
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        # No reason to have different candidates for now
-        candidate = predictions[0]
-        yield ProductInsight(**candidate.to_dict())
+        # Only one prediction
+        for candidate in predictions:
+            yield ProductInsight(**candidate.to_dict())
     
     @classmethod
     def is_conflicting_insight(
@@ -1502,7 +1502,7 @@ class IngredientsSpellcheckImporter(InsightImporter):
         candidate: ProductInsight, 
         reference: ProductInsight
     ) -> bool:
-        candidate.value == reference.value
+        candidate.value_tag == reference.value_tag
 
 class PackagingElementTaxonomyException(Exception):
     pass
@@ -1839,6 +1839,7 @@ IMPORTERS: list[Type] = [
     PackagingImporter,
     UPCImageImporter,
     NutritionImageImporter,
+    IngredientSpellcheckImporter,
 ]
 
 

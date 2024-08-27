@@ -82,6 +82,7 @@ google-cloud-batch = "^0.17.26"
 duckdb = "1.0.0"
 google-cloud-storage = "<2.18.2"
 pandas = "^2.2.2"
+pyarrow = "^17.0.0"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = ">=1.14,<2.9"
