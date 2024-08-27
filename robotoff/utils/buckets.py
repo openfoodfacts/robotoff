@@ -1,14 +1,12 @@
-import io
-from typing import Any
-
+import pandas as pd
 from google.cloud import storage
 
 
 class GoogleStorageBucket:
 
     @staticmethod
-    def download_gcs(bucket_name: str, suffix: str) -> io.BufferedReader:
-        """Download file from Google Storage Bucket.
+    def download_gcs(bucket_name: str, suffix: str) -> pd.DataFrame:
+        """Download parquet file from Google Storage Bucket.
 
         :param bucket_name: Bucket name
         :type bucket_name: str
@@ -21,7 +19,7 @@ class GoogleStorageBucket:
         bucket = client.get_bucket(bucket_name)
         blob = bucket.blob(suffix)
         with blob.open("rb") as f:
-            return f
+            return pd.read_parquet(f)
 
 
     @staticmethod

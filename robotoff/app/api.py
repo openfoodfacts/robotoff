@@ -89,9 +89,7 @@ from robotoff.workers.tasks import download_product_dataset_job
 from robotoff.batch import (
     BatchJobType,
     launch_batch_job,
-    GoogleStorageBucketForBatchJob,
-    generate_predictions_from_batch,
-
+    import_batch_predictions,
 )
 
 logger = get_logger()
@@ -1779,28 +1777,26 @@ class BatchJobLaunchResource:
             job_type=job_type,
             job_kwargs={"timeout": "10m"},
         )
-        logger.info("Batch job %s queued", job_type)
+        logger.info("Batch job launch %s has been queued.", job_type)
 
 
 class BatchJobImportResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         job_type_str: str = req.get_param("job_type", required=True)
 
-        from robotoff.insights.importer import import_insights
         try:
             job_type = BatchJobType[job_type_str]
         except KeyError: 
             raise falcon.HTTPBadRequest(
                 description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
             )
-
-        bucket_handler = GoogleStorageBucketForBatchJob.from_job_type(job_type)
-        predictions = generate_predictions_from_batch(
-            bucket_handler.download_file(), 
-            job_type
+        enqueue_job(
+            import_batch_predictions,
+            job_type=job_type,
+            queue=low_queue,
+            job_kwargs={"timeout": "10m"},
         )
-        with db:
-            import_insights(predictions=predictions, server_type="off")
+        logger.info("Batch import %s has been queued.", job_type)
 
 
 def custom_handle_uncaught_exception(
@@ -1871,3 +1867,4 @@ api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
 api.add_route("/robots.txt", RobotsTxtResource())
 api.add_route("/api/v1/batch/launch", BatchJobLaunchResource())
+api.add_route("/api/v1/batch/import", BatchJobImportResource())
