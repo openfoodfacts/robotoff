@@ -5,14 +5,11 @@ import duckdb
 
 from robotoff import settings
 from robotoff.batch import BatchJobType
+from robotoff.batch.types import BATCH_JOB_TYPE_TO_QUERY_FILE_PATH
 from robotoff.utils import get_logger
 
 
 LOGGER = get_logger(__name__)
-
-BATCH_JOB_TYPE_TO_QUERY_FILE_PATH = {
-    BatchJobType.ingredients_spellcheck: settings.BATCH_JOB_CONFIG_DIR / "sql/spellcheck.sql",
-}
 
 
 class BatchExtraction:
