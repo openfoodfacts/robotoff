@@ -1,15 +1,8 @@
 import pandas as pd
+
 from robotoff.utils.buckets import GoogleStorageBucket
 from robotoff.batch import BatchJobType
-
-
-BATCH_JOB_TYPE_TO_BUCKET = {
-    BatchJobType.ingredients_spellcheck: {
-        "bucket": "robotoff-spellcheck", 
-        "suffix_preprocess": "data/preprocessed_data.parquet",
-        "suffix_postprocess": "data/postprocessed_data.parquet",
-    },
-}
+from robotoff.batch.types import BATCH_JOB_TYPE_TO_BUCKET
 
 
 class GoogleStorageBucketForBatchJob(GoogleStorageBucket):

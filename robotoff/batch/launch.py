@@ -1,6 +1,5 @@
 import abc
 from typing import List, Optional
-import enum
 import yaml
 import datetime
 import re
@@ -9,19 +8,8 @@ from google.cloud import batch_v1
 from pydantic import BaseModel, Field, ConfigDict
 
 from robotoff import settings
-
-
-@enum.unique
-class BatchJobType(enum.Enum):
-    """Each job type correspond to a task that will be executed in the batch job."""
-
-    ingredients_spellcheck = "ingredients-spellcheck"
-
-
-# Paths batch job config files
-BATCH_JOB_TYPE_TO_CONFIG_PATH = {
-    BatchJobType.ingredients_spellcheck: settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml",
-}
+from robotoff.types import BatchJobType
+from robotoff.batch.types import BATCH_JOB_TYPE_TO_CONFIG_PATH
 
 
 class GoogleBatchJobConfig(BaseModel):
