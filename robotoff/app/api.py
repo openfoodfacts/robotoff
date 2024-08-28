@@ -1760,26 +1760,6 @@ class RobotsTxtResource:
         resp.status = falcon.HTTP_200
 
 
-class BatchJobLaunchResource:
-    def on_post(self, req: falcon.Request, resp: falcon.Response):
-        job_type_str: str = req.get_param("job_type", required=True)
-        
-        try:
-            job_type = BatchJobType[job_type_str]
-        except KeyError: 
-            raise falcon.HTTPBadRequest(
-                description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
-            )
-        # Batch extraction can take some time, so we queue it
-        enqueue_job(
-            launch_batch_job,
-            queue=low_queue,
-            job_type=job_type,
-            job_kwargs={"timeout": "10m"},
-        )
-        logger.info("Batch job launch %s has been queued.", job_type)
-
-
 class BatchJobImportResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         job_type_str: str = req.get_param("job_type", required=True)
@@ -1866,5 +1846,4 @@ api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
 api.add_route("/robots.txt", RobotsTxtResource())
-api.add_route("/api/v1/batch/launch", BatchJobLaunchResource())
 api.add_route("/api/v1/batch/import", BatchJobImportResource())

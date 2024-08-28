@@ -998,5 +998,22 @@ def create_migration(
         router.create(name, auto=auto)
 
 
+@app.command()
+def launch_batch_job(
+    job_type: str = typer.Argument(..., help="Type of job to launch. Ex: 'ingredients_spellcheck'"),
+) -> None:
+    """Launch a batch job."""
+    from robotoff.batch import launch_batch_job
+    from robotoff.utils import get_logger
+    from robotoff.types import BatchJobType
+
+    if job_type not in BatchJobType.__members__:
+        raise ValueError(f"Invalid job type: {job_type}. Must be one of those: {[job.name for job in BatchJobType]}")
+    
+    get_logger()
+    job_type = BatchJobType[job_type]
+    launch_batch_job(job_type)
+
+
 def main() -> None:
     app()
