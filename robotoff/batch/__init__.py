@@ -79,8 +79,8 @@ def _generate_predictions_from_batch(
 ) -> List[Prediction]:
     """From a file imported from google storage, generate predictions depending on the job type.
 
-    :param f: Readable object. Should be a parquet file.
-    :type f: io.BufferedReader
+    :param df: Post-processed dataset
+    :type df: pd.DataFrame
     :param job_type: Batch job type.
     :type job_type: BatchJobType
     :rtype: Iterable[Prediction]
