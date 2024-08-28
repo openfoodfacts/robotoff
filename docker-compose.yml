@@ -60,6 +60,7 @@ x-robotoff-base-env:
   NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
   GOOGLE_APPLICATION_CREDENTIALS: /opt/credentials/google/application_default_credentials.json
   GOOGLE_CLOUD_PROJECT: "robotoff"
+  BATCH_JOB_KEY: # Secure Batch job import with a token key 
   
 x-robotoff-worker-base:
   &robotoff-worker

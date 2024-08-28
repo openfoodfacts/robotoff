@@ -1,8 +1,13 @@
+import os
 from base64 import b64decode
 from urllib.parse import unquote
 
 
 class BasicAuthDecodeError(Exception):
+    pass
+
+
+class APITokenError(Exception):
     pass
 
 
@@ -39,3 +44,18 @@ def basic_decode(encoded_str: str) -> tuple[str, str]:
         raise BasicAuthDecodeError()
 
     return unquote(username), unquote(password)
+
+
+def validate_token(token: str, ref_token_name: str) -> bool:
+    """Validate token.
+
+    :param token: Authentification token
+    :type token: str
+    :param api_token_name: Validation token, stored in environment variables.
+    :type api_token_name: str
+    :rtype: bool
+    """
+    api_token = os.getenv(ref_token_name.upper())
+    if not api_token:
+        raise APITokenError("API token not set in environment variables.")
+    return token == api_token
