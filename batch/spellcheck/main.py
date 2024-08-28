@@ -1,3 +1,4 @@
+import os
 import argparse
 import tempfile
 import logging
@@ -78,7 +79,7 @@ def main():
             bucket_name=args.data_bucket, 
             suffix=args.post_data_suffix
         )
-    
+
     LOGGER.info("Request Robotoff API batch import endpoint.")
     run_robotoff_endpoint_batch_import()
 
@@ -159,14 +160,20 @@ def run_robotoff_endpoint_batch_import():
     """
     url = "https://robotoff.openfoodfacts.org/api/v1/batch/import"
     data = {"job_type": "ingredients_spellcheck"}
-
+    headers = {
+        "Authorization": f"Bearer {os.getenv("BATCH_JOB_KEY")}",
+        "Content-Type": "application/json"
+    }
     try:
-        response = requests.post(url, data=data)
+        response = requests.post(
+            url,
+            data=data,
+            headers=headers,
+        )
+        LOGGER.info(f"Import batch Robotoff API endpoint succesfully requested: {response.text}")
     except requests.exceptions.RequestException as e:
         raise SystemExit(e)
-
-    LOGGER.info(f"Import batch Robotoff API endpoint succesfully requested: {response.text}")
-
+    
 
 if __name__ == "__main__":
     main()
