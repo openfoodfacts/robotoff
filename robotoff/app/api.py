@@ -25,7 +25,11 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
 from robotoff.app import schema
-from robotoff.app.auth import BasicAuthDecodeError, basic_decode
+from robotoff.app.auth import (
+    BasicAuthDecodeError, 
+    basic_decode, 
+    validate_token,
+)
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
@@ -300,6 +304,29 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     return OFFAuthentication(
         session_cookie=session_cookie, username=username, password=password
     )
+
+
+def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
+    """Parse and validate authentification token from request.
+
+    :param req: Request.
+    :type req: falcon.Request
+    :param ref_token_name: Secret environment variable name. 
+    :type ref_token_name: str
+    :return: Token valid or not.
+    :rtype: bool
+    """
+    auth_header = req.get_header("Authorization", required=True)
+    
+    scheme, token = auth_header.split()
+    if scheme.lower() != 'bearer':
+        raise falcon.HTTPUnauthorized('Invalid authentication scheme.')
+
+    is_token_valid = validate_token(token, ref_token_name)
+    if not is_token_valid:
+        raise falcon.HTTPUnauthorized('Invalid token.')
+    else:
+        return True
 
 
 def device_id_from_request(req: falcon.Request) -> str:
@@ -1770,12 +1797,16 @@ class BatchJobImportResource:
             raise falcon.HTTPBadRequest(
                 description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
             )
-        enqueue_job(
-            import_batch_predictions,
-            job_type=job_type,
-            queue=low_queue,
-            job_kwargs={"timeout": "10m"},
-        )
+        # We secure the endpoint
+        if parse_valid_token(req, "batch_job_key"):
+            enqueue_job(
+                import_batch_predictions,
+                job_type=job_type,
+                queue=low_queue,
+                job_kwargs={"timeout": "10m"},
+            )
+        else:
+            raise falcon.HTTPForbidden(description="Invalid batch_job_key. Be sure to indicate the authentification key in the request.")
         logger.info("Batch import %s has been queued.", job_type)
 
 
