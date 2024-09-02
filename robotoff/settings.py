@@ -359,4 +359,4 @@ TESTS_DISKCACHE_DIR = CACHE_DIR / "diskcache_tests_assets"
 CROP_ALLOWED_DOMAINS = os.environ.get("CROP_ALLOWED_DOMAINS", "").split(",")
 
 # Batch jobs
-GOOGLE_PROJECT_NAME= "robotoff"
+GOOGLE_PROJECT_NAME = "robotoff"

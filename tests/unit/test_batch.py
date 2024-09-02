@@ -1,16 +1,18 @@
 import os
-import pytest
 import tempfile
 from pathlib import Path
 
+import pytest
+
+from robotoff import settings
 from robotoff.batch import GoogleBatchJobConfig
 from robotoff.batch.extraction import extract_from_dataset
-from robotoff import settings
-
 
 DIR = Path(__file__).parent
 SPELLCHECK_QUERY_FILE_PATH = settings.BATCH_JOB_CONFIG_DIR / "sql/spellcheck.sql"
-SPELLCHECK_BATCH_JOB_CONFIG_PATH = settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
+SPELLCHECK_BATCH_JOB_CONFIG_PATH = (
+    settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
+)
 
 
 @pytest.mark.parametrize(
@@ -29,11 +31,10 @@ def test_batch_job_config_file(inputs):
     "query_file_path",
     [
         SPELLCHECK_QUERY_FILE_PATH,
-    ]
+    ],
 )
 def test_batch_extraction(query_file_path):
-    """Test extraction of a batch of data from the dataset depending on the job type.
-    """
+    """Test extraction of a batch of data from the dataset depending on the job type."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         file_path = os.path.join(tmp_dir, "data.parquet")
         extract_from_dataset(

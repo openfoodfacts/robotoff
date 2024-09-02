@@ -5,7 +5,6 @@ import duckdb
 from robotoff import settings
 from robotoff.utils import get_logger
 
-
 logger = get_logger(__name__)
 
 
@@ -30,7 +29,6 @@ def extract_from_dataset(
     logger.debug(f"Batch data succesfully extracted and saved at {output_file_path}")
 
 
-
 def _load_query(query_file_path: Path, dataset_path: Path) -> str:
     """Load the SQL query from a corresponding file.
 
@@ -49,6 +47,7 @@ def _load_query(query_file_path: Path, dataset_path: Path) -> str:
     logger.debug(f"Query used to extract batch from dataset: {query}")
     return query
 
+
 def _extract_and_save_batch_data(query: str, output_file_path: str) -> None:
     """Query and save the data.
 
@@ -57,8 +56,4 @@ def _extract_and_save_batch_data(query: str, output_file_path: str) -> None:
     :param output_file_path: Path to save the extracted data.
     :type output_file_path: str
     """
-    (
-        duckdb
-        .sql(query)
-        .write_parquet(output_file_path)
-    )
+    (duckdb.sql(query).write_parquet(output_file_path))
