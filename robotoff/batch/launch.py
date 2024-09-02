@@ -1,15 +1,13 @@
-import abc
 from typing import List, Optional
 import yaml
 import datetime
 import re
+from pathlib import Path
 
 from google.cloud import batch_v1
 from pydantic import BaseModel, Field, ConfigDict
 
 from robotoff import settings
-from robotoff.types import BatchJobType
-from robotoff.batch.types import BATCH_JOB_TYPE_TO_CONFIG_PATH
 
 
 class GoogleBatchJobConfig(BaseModel):
@@ -88,7 +86,7 @@ class GoogleBatchJobConfig(BaseModel):
     )
 
     @classmethod
-    def init(cls, job_type: BatchJobType):
+    def init(cls, job_name: str, config_path: Path) -> "GoogleBatchJobConfig":
         """Initialize the class with the configuration file corresponding to the job type.
 
         :param job_type: Batch job type.
@@ -96,110 +94,88 @@ class GoogleBatchJobConfig(BaseModel):
         """
         # Batch job name should respect a specific pattern, or returns an error
         pattern = "^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
-        if not re.match(pattern, job_type.value):
-            raise ValueError(f"Job name should respect the pattern: {pattern}. Current job name: {job_type.value}")
+        if not re.match(pattern, job_name):
+            raise ValueError(f"Job name should respect the pattern: {pattern}. Current job name: {job_name}")
         
         # Generate unique id for the job
         unique_job_name = (
-            job_type.value + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            job_name + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         )
         # Load config file from job_type
-        config_path = BATCH_JOB_TYPE_TO_CONFIG_PATH[job_type]
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         return cls(job_name=unique_job_name, **config)
 
 
-class BatchJob(abc.ABC):
-    """Abstract class to launch and manage batch jobs: Google, AWS, Azure, Triton..."""
+def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
+    """This method creates a Batch Job on GCP.
 
-    @staticmethod
-    @abc.abstractmethod
-    def launch_job() -> str:
-        """Launch batch job."""
-        pass
+    Sources:
+    * https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch/create
+    * https://cloud.google.com/python/docs/reference/batch/latest/google.cloud.batch_v1.types
+    
+    :param google_batch_launch_config: Config to run a job on Google Batch.
+    :type google_batch_launch_config: GoogleBatchLaunchConfig
+    :param batch_job_config: Config to run a specific job on Google Batch.
+    :type batch_job_config: BatchJobConfig
+    :return: Batch job information.
 
-
-class GoogleBatchJob(BatchJob):
-    """GCP Batch class. It uses the Google Cloud Batch API to launch and manage jobs.
-
-    More information on:
-    https://cloud.google.com/batch/docs/get-started
+    Returns:
+        Batch job information.
     """
 
-    @staticmethod
-    def launch_job(
-        batch_job_config: GoogleBatchJobConfig,
-    ) -> batch_v1.Job:
-        """This method creates a Batch Job on GCP.
+    client = batch_v1.BatchServiceClient()
 
-        Sources:
-        * https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch/create
-        * https://cloud.google.com/python/docs/reference/batch/latest/google.cloud.batch_v1.types
-        
-        :param google_batch_launch_config: Config to run a job on Google Batch.
-        :type google_batch_launch_config: GoogleBatchLaunchConfig
-        :param batch_job_config: Config to run a specific job on Google Batch.
-        :type batch_job_config: BatchJobConfig
-        :return: Batch job information.
-        :rtype: batch_v1.Job
+    # Define what will be done as part of the job.
+    runnable = batch_v1.Runnable()
+    runnable.container = batch_v1.Runnable.Container()
+    runnable.container.image_uri = batch_job_config.container_image_uri
+    runnable.container.entrypoint = batch_job_config.entrypoint
+    runnable.container.commands = batch_job_config.commands
 
-        Returns:
-            Batch job information.
-        """
+    # Jobs can be divided into tasks. In this case, we have only one task.
+    task = batch_v1.TaskSpec()
+    task.runnables = [runnable]
 
-        client = batch_v1.BatchServiceClient()
+    # We can specify what resources are requested by each task.
+    resources = batch_v1.ComputeResource()
+    resources.cpu_milli = batch_job_config.cpu_milli
+    resources.memory_mib = batch_job_config.memory_mib
+    resources.boot_disk_mib = batch_job_config.boot_disk_mib
+    task.compute_resource = resources
 
-        # Define what will be done as part of the job.
-        runnable = batch_v1.Runnable()
-        runnable.container = batch_v1.Runnable.Container()
-        runnable.container.image_uri = batch_job_config.container_image_uri
-        runnable.container.entrypoint = batch_job_config.entrypoint
-        runnable.container.commands = batch_job_config.commands
+    task.max_retry_count = batch_job_config.max_retry_count
+    task.max_run_duration = batch_job_config.max_run_duration
 
-        # Jobs can be divided into tasks. In this case, we have only one task.
-        task = batch_v1.TaskSpec()
-        task.runnables = [runnable]
+    # Tasks are grouped inside a job using TaskGroups.
+    group = batch_v1.TaskGroup()
+    group.task_count = batch_job_config.task_count
+    group.task_spec = task
 
-        # We can specify what resources are requested by each task.
-        resources = batch_v1.ComputeResource()
-        resources.cpu_milli = batch_job_config.cpu_milli
-        resources.memory_mib = batch_job_config.memory_mib
-        resources.boot_disk_mib = batch_job_config.boot_disk_mib
-        task.compute_resource = resources
+    # Policies are used to define on what kind of virtual machines the tasks will run on.
+    policy = batch_v1.AllocationPolicy.InstancePolicy()
+    policy.machine_type = batch_job_config.machine_type
+    instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
+    instances.install_gpu_drivers = batch_job_config.install_gpu_drivers
+    instances.policy = policy
+    allocation_policy = batch_v1.AllocationPolicy()
+    allocation_policy.instances = [instances]
 
-        task.max_retry_count = batch_job_config.max_retry_count
-        task.max_run_duration = batch_job_config.max_run_duration
+    accelerator = batch_v1.AllocationPolicy.Accelerator()
+    accelerator.type_ = batch_job_config.accelerators_type
+    accelerator.count = batch_job_config.accelerators_count
 
-        # Tasks are grouped inside a job using TaskGroups.
-        group = batch_v1.TaskGroup()
-        group.task_count = batch_job_config.task_count
-        group.task_spec = task
+    job = batch_v1.Job()
+    job.task_groups = [group]
+    job.allocation_policy = allocation_policy
+    # We use Cloud Logging as it's an out of the box available option
+    job.logs_policy = batch_v1.LogsPolicy()
+    job.logs_policy.destination = batch_v1.LogsPolicy.Destination.CLOUD_LOGGING
 
-        # Policies are used to define on what kind of virtual machines the tasks will run on.
-        policy = batch_v1.AllocationPolicy.InstancePolicy()
-        policy.machine_type = batch_job_config.machine_type
-        instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
-        instances.install_gpu_drivers = batch_job_config.install_gpu_drivers
-        instances.policy = policy
-        allocation_policy = batch_v1.AllocationPolicy()
-        allocation_policy.instances = [instances]
+    create_request = batch_v1.CreateJobRequest()
+    create_request.job = job
+    create_request.job_id = batch_job_config.job_name
+    # The job's parent is the region in which the job will run
+    create_request.parent = f"projects/{settings.GOOGLE_PROJECT_NAME}/locations/{batch_job_config.location}"
 
-        accelerator = batch_v1.AllocationPolicy.Accelerator()
-        accelerator.type_ = batch_job_config.accelerators_type
-        accelerator.count = batch_job_config.accelerators_count
-
-        job = batch_v1.Job()
-        job.task_groups = [group]
-        job.allocation_policy = allocation_policy
-        # We use Cloud Logging as it's an out of the box available option
-        job.logs_policy = batch_v1.LogsPolicy()
-        job.logs_policy.destination = batch_v1.LogsPolicy.Destination.CLOUD_LOGGING
-
-        create_request = batch_v1.CreateJobRequest()
-        create_request.job = job
-        create_request.job_id = batch_job_config.job_name
-        # The job's parent is the region in which the job will run
-        create_request.parent = f"projects/{settings.GOOGLE_PROJECT_NAME}/locations/{batch_job_config.location}"
-
-        return client.create_job(create_request)
+    return client.create_job(create_request)

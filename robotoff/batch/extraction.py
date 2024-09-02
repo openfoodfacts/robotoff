@@ -1,82 +1,64 @@
-import os
 from pathlib import Path
 
 import duckdb
 
 from robotoff import settings
-from robotoff.batch import BatchJobType
-from robotoff.batch.types import BATCH_JOB_TYPE_TO_QUERY_FILE_PATH
 from robotoff.utils import get_logger
 
 
-LOGGER = get_logger(__name__)
+logger = get_logger(__name__)
 
 
-class BatchExtraction:
-    """Handle batch extraction from the dataset.
-    Extraction varies regarding the batch job.
+def extract_from_dataset(
+    query_file_path: Path,
+    output_file_path: str,
+    dataset_path: Path = settings.JSONL_DATASET_PATH,
+) -> None:
+    """Using SQL queries, extract data from the dataset and save it as a parquet file.
+
+    :param query_file_path: Path to the SQL file relative to the job.
+    :type query_file_path: Path
+    :param output_file_path: Path to save the extracted data.
+    :type output_file_path: str
+    :param dataset_path: Compressed jsonl database, defaults to settings.JSONL_DATASET_PATH
+    :type dataset_path: Path, optional
     """
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Dataset path {str(dataset_path)} not found.")
+    query = _load_query(query_file_path=query_file_path, dataset_path=dataset_path)
+    _extract_and_save_batch_data(query=query, output_file_path=output_file_path)
+    logger.debug(f"Batch data succesfully extracted and saved at {output_file_path}")
 
-    file_name: str = "batch.parquet"
-    extracted_file_path: str = None
 
-    @classmethod
-    def extract_from_dataset(
-        cls, 
-        job_type: BatchJobType,
-        output_dir: str, 
-        dataset_path: str = str(settings.JSONL_DATASET_PATH), 
-    ) -> None:
-        """Using SQL queries, extract data from the dataset and save it as a parquet file.
 
-        :param job_type: Batch job type.
-        :type job_type: BatchJobType
-        :param output_dir: Directory to save the extracted data as a parquet file.
-        :type output_dir: str
-        :param dataset_path: Path to the jsonl.gz dataset.
-        :type dataset_path: Path, optional. Default to settings.JSONL_DATASET_PATH. Mainly used for testing.
-        """
-        if not isinstance(dataset_path, str):
-            raise ValueError(f"The dataset path should be a string. Current type {type(dataset_path)}")
-        
-        query_file_path = BATCH_JOB_TYPE_TO_QUERY_FILE_PATH[job_type]
-        query = cls._load_query(query_file_path=query_file_path, dataset_path=dataset_path)
-        cls._extract_and_save_batch_data(query=query, output_dir=output_dir)
-        # We save the file path for later usage in the pipeline
-        cls.extracted_file_path = os.path.join(output_dir, cls.file_name)
+def _load_query(query_file_path: Path, dataset_path: Path) -> str:
+    """Load the SQL query from a corresponding file.
 
-    @staticmethod
-    def _load_query(query_file_path: Path, dataset_path: str) -> str:
-        """Load the SQL query from a corresponding file.
-
-        :param query_file_path: File path containing the SQL query.
-        :type query_file_path: Path
-        :param dataset_path: Path to the jsonl.gz dataset.
-        :type dataset_path: Path   
-        :raises ValueError: In case the Dataset path is not found in the SQL query.
-        :return: the SQL/DuckDB query.
-        :rtype: str
-        """
-        query = query_file_path.read_text()
-        if "DATASET_PATH" not in query:
-            raise ValueError(
-                "The SQL query should contain the string 'DATASET_PATH' to replace it with the dataset path."
-            )
-        query = query.replace("DATASET_PATH", dataset_path)
-        LOGGER.debug(f"Query used to extract batch from dataset: {query}")
-        return query
-
-    @classmethod
-    def _extract_and_save_batch_data(cls, query: str, output_dir: str) -> None:
-        """Query and save the data.
-
-        :param query: DuckDB/SQL query.
-        :type query: str
-        :param output_dir: Extracted data directory
-        :type output_dir: str
-        """
-        (
-            duckdb
-            .sql(query)
-            .write_parquet(os.path.join(output_dir, cls.file_name))
+    :param query_file_path: Path to the SQL file relative to the job.
+    :type query_file_path: Path
+    :param dataset_path: Path to the dataset.
+    :type dataset_path: Path
+    :return: SQL query.
+    """
+    query = query_file_path.read_text()
+    if "DATASET_PATH" not in query:
+        raise ValueError(
+            "The SQL query should contain the string 'DATASET_PATH' to replace it with the dataset path."
         )
+    query = query.replace("DATASET_PATH", str(dataset_path))
+    logger.debug(f"Query used to extract batch from dataset: {query}")
+    return query
+
+def _extract_and_save_batch_data(query: str, output_file_path: str) -> None:
+    """Query and save the data.
+
+    :param query: SQL query.
+    :type query: str
+    :param output_file_path: Path to save the extracted data.
+    :type output_file_path: str
+    """
+    (
+        duckdb
+        .sql(query)
+        .write_parquet(output_file_path)
+    )

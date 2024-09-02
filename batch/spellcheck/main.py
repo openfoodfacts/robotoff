@@ -11,7 +11,7 @@ from vllm import LLM, SamplingParams
 from google.cloud import storage
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -45,12 +45,12 @@ def main():
 
     We use vLLM to process the batch optimaly. The model is loaded from the Open Food Facts Hugging Face model repository.  
     """
-    LOGGER.info("Starting batch processing job.")
+    logger.info("Starting batch processing job.")
     args = parse()
 
-    LOGGER.info(f"Loading data from GCS: {args.data_bucket}/{args.pre_data_suffix}")
+    logger.info(f"Loading data from GCS: {args.data_bucket}/{args.pre_data_suffix}")
     data = load_gcs(bucket_name=args.data_bucket, suffix=args.pre_data_suffix)
-    LOGGER.info(f"Feature in uploaded data: {data.columns}")
+    logger.info(f"Feature in uploaded data: {data.columns}")
     if not all(feature in data.columns for feature in FEATURES_VALIDATION):
         raise ValueError(f"Data should contain the following features: {FEATURES_VALIDATION}. Current features: {data.columns}")
 
@@ -66,10 +66,10 @@ def main():
         max_tokens=args.max_tokens
     )
 
-    LOGGER.info(f"Starting batch inference:\n {llm}.\n\nSampling parameters: {sampling_params}")
+    logger.info(f"Starting batch inference:\n {llm}.\n\nSampling parameters: {sampling_params}")
     data["correction"] = batch_inference(instructions, llm=llm, sampling_params=sampling_params)
 
-    LOGGER.info(f"Uploading data to GCS: {args.data_bucket}/{args.post_data_suffix}")
+    logger.info(f"Uploading data to GCS: {args.data_bucket}/{args.post_data_suffix}")
     # Save DataFrame as Parquet to a temporary file
     with tempfile.NamedTemporaryFile(delete=True, suffix='.parquet') as temp_file:
         data.to_parquet(temp_file.name)
@@ -80,10 +80,10 @@ def main():
             suffix=args.post_data_suffix
         )
 
-    LOGGER.info("Request Robotoff API batch import endpoint.")
+    logger.info("Request Robotoff API batch import endpoint.")
     run_robotoff_endpoint_batch_import()
 
-    LOGGER.info("Batch processing job completed.")
+    logger.info("Batch processing job completed.")
 
 
 def prepare_instruction(text: str) -> str:
@@ -170,7 +170,7 @@ def run_robotoff_endpoint_batch_import():
             data=data,
             headers=headers,
         )
-        LOGGER.info(f"Import batch Robotoff API endpoint succesfully requested: {response.text}")
+        logger.info(f"Import batch Robotoff API endpoint succesfully requested: {response.text}")
     except requests.exceptions.RequestException as e:
         raise SystemExit(e)
     

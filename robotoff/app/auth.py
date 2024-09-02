@@ -53,7 +53,6 @@ def validate_token(token: str, ref_token_name: str) -> bool:
     :type token: str
     :param api_token_name: Validation token, stored in environment variables.
     :type api_token_name: str
-    :rtype: bool
     """
     api_token = os.getenv(ref_token_name.upper())
     if not api_token:

@@ -26,7 +26,8 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import (
-    BasicAuthDecodeError, 
+    BasicAuthDecodeError,
+    APITokenError, 
     basic_decode, 
     validate_token,
 )
@@ -92,7 +93,6 @@ from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 from robotoff.workers.tasks import download_product_dataset_job
 from robotoff.batch import (
     BatchJobType,
-    launch_batch_job,
     import_batch_predictions,
 )
 
@@ -314,14 +314,15 @@ def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
     :param ref_token_name: Secret environment variable name. 
     :type ref_token_name: str
     :return: Token valid or not.
-    :rtype: bool
     """
     auth_header = req.get_header("Authorization", required=True)
-    
-    scheme, token = auth_header.split()
-    if scheme.lower() != 'bearer':
-        raise falcon.HTTPUnauthorized('Invalid authentication scheme.')
 
+    try:
+        scheme, token = auth_header.split()
+    except APITokenError:
+        raise falcon.HTTPUnauthorized("Invalid authentication scheme.")
+    if scheme.lower() != 'bearer':
+        raise falcon.HTTPUnauthorized("Invalid authentication scheme: 'Bearer Token' expected.")
     is_token_valid = validate_token(token, ref_token_name)
     if not is_token_valid:
         raise falcon.HTTPUnauthorized('Invalid token.')
@@ -1778,14 +1779,6 @@ class LogoAnnotationCollection:
         resp.media = response
 
 
-class RobotsTxtResource:
-    def on_get(self, req: falcon.Request, resp: falcon.Response):
-        # Disallow completely indexation: otherwise web crawlers send millions
-        # of requests to Robotoff (420k requests/day by Google alone)
-        resp.body = "User-agent: *\nDisallow: /\n"
-        resp.content_type = falcon.MEDIA_TEXT
-        resp.status = falcon.HTTP_200
-
 
 class BatchJobImportResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
@@ -1803,11 +1796,22 @@ class BatchJobImportResource:
                 import_batch_predictions,
                 job_type=job_type,
                 queue=low_queue,
-                job_kwargs={"timeout": "10m"},
+                job_kwargs={"timeout": "30m"},
             )
         else:
-            raise falcon.HTTPForbidden(description="Invalid batch_job_key. Be sure to indicate the authentification key in the request.")
+            raise falcon.HTTPForbidden(
+                description="Invalid batch_job_key. Be sure to indicate the authentification key in the request."
+            )
         logger.info("Batch import %s has been queued.", job_type)
+
+        
+class RobotsTxtResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        # Disallow completely indexation: otherwise web crawlers send millions
+        # of requests to Robotoff (420k requests/day by Google alone)
+        resp.body = "User-agent: *\nDisallow: /\n"
+        resp.content_type = falcon.MEDIA_TEXT
+        resp.status = falcon.HTTP_200
 
 
 def custom_handle_uncaught_exception(
@@ -1876,5 +1880,5 @@ api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
-api.add_route("/robots.txt", RobotsTxtResource())
 api.add_route("/api/v1/batch/import", BatchJobImportResource())
+api.add_route("/robots.txt", RobotsTxtResource())
