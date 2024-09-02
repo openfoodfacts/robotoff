@@ -1,17 +1,18 @@
-from typing import List, Optional
-import yaml
 import datetime
 import re
 from pathlib import Path
+from typing import List, Optional
 
+import yaml
 from google.cloud import batch_v1
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from robotoff import settings
 
 
 class GoogleBatchJobConfig(BaseModel):
     """Batch job configuration class."""
+
     # By default, extra fields are just ignored. We raise an error in case of extra fields.
     model_config: ConfigDict = {"extra": "forbid"}
 
@@ -95,8 +96,10 @@ class GoogleBatchJobConfig(BaseModel):
         # Batch job name should respect a specific pattern, or returns an error
         pattern = "^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
         if not re.match(pattern, job_name):
-            raise ValueError(f"Job name should respect the pattern: {pattern}. Current job name: {job_name}")
-        
+            raise ValueError(
+                f"Job name should respect the pattern: {pattern}. Current job name: {job_name}"
+            )
+
         # Generate unique id for the job
         unique_job_name = (
             job_name + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -113,7 +116,7 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     Sources:
     * https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch/create
     * https://cloud.google.com/python/docs/reference/batch/latest/google.cloud.batch_v1.types
-    
+
     :param google_batch_launch_config: Config to run a job on Google Batch.
     :type google_batch_launch_config: GoogleBatchLaunchConfig
     :param batch_job_config: Config to run a specific job on Google Batch.
@@ -176,6 +179,8 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     create_request.job = job
     create_request.job_id = batch_job_config.job_name
     # The job's parent is the region in which the job will run
-    create_request.parent = f"projects/{settings.GOOGLE_PROJECT_NAME}/locations/{batch_job_config.location}"
+    create_request.parent = (
+        f"projects/{settings.GOOGLE_PROJECT_NAME}/locations/{batch_job_config.location}"
+    )
 
     return client.create_job(create_request)

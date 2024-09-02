@@ -359,8 +359,9 @@ LogoLabelType = tuple[str, Optional[str]]
 
 InsightAnnotation = Literal[-1, 0, 1, 2]
 
+
 @enum.unique
 class BatchJobType(enum.Enum):
-    """Each job type correspond to a task that will be executed in the batch job.
-    """
+    """Each job type correspond to a task that will be executed in the batch job."""
+
     ingredients_spellcheck = "ingredients-spellcheck"

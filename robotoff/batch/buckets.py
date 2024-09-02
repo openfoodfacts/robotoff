@@ -32,8 +32,10 @@ def fetch_dataframe_from_gcs(bucket_name: str, suffix: str) -> pd.DataFrame:
     bucket = client.get_bucket(bucket_name)
     blob = bucket.blob(suffix)
     with blob.open("rb") as f:
-        try: 
+        try:
             df = pd.read_parquet(f)
         except Exception as e:
-            raise ValueError(f"Could not read parquet file from {bucket_name}/{suffix}. Error: {e}")
+            raise ValueError(
+                f"Could not read parquet file from {bucket_name}/{suffix}. Error: {e}"
+            )
         return df
