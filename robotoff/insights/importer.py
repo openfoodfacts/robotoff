@@ -1480,7 +1480,7 @@ class IngredientSpellcheckImporter(InsightImporter):
     @staticmethod
     def get_type() -> InsightType:
         return InsightType.ingredient_spellcheck
-    
+
     @classmethod
     def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.ingredient_spellcheck}
@@ -1495,14 +1495,13 @@ class IngredientSpellcheckImporter(InsightImporter):
         # Only one prediction
         for candidate in predictions:
             yield ProductInsight(**candidate.to_dict())
-    
+
     @classmethod
     def is_conflicting_insight(
-        cls, 
-        candidate: ProductInsight, 
-        reference: ProductInsight
+        cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         candidate.value_tag == reference.value_tag
+
 
 class PackagingElementTaxonomyException(Exception):
     pass

@@ -26,9 +26,9 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 from robotoff import settings
 from robotoff.app import schema
 from robotoff.app.auth import (
+    APITokenError,
     BasicAuthDecodeError,
-    APITokenError, 
-    basic_decode, 
+    basic_decode,
     validate_token,
 )
 from robotoff.app.core import (
@@ -45,6 +45,7 @@ from robotoff.app.core import (
     validate_params,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
+from robotoff.batch import BatchJobType, import_batch_predictions
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -91,10 +92,6 @@ from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 from robotoff.workers.tasks import download_product_dataset_job
-from robotoff.batch import (
-    BatchJobType,
-    import_batch_predictions,
-)
 
 logger = get_logger()
 
@@ -311,7 +308,7 @@ def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
 
     :param req: Request.
     :type req: falcon.Request
-    :param ref_token_name: Secret environment variable name. 
+    :param ref_token_name: Secret environment variable name.
     :type ref_token_name: str
     :return: Token valid or not.
     """
@@ -321,11 +318,13 @@ def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
         scheme, token = auth_header.split()
     except APITokenError:
         raise falcon.HTTPUnauthorized("Invalid authentication scheme.")
-    if scheme.lower() != 'bearer':
-        raise falcon.HTTPUnauthorized("Invalid authentication scheme: 'Bearer Token' expected.")
+    if scheme.lower() != "bearer":
+        raise falcon.HTTPUnauthorized(
+            "Invalid authentication scheme: 'Bearer Token' expected."
+        )
     is_token_valid = validate_token(token, ref_token_name)
     if not is_token_valid:
-        raise falcon.HTTPUnauthorized('Invalid token.')
+        raise falcon.HTTPUnauthorized("Invalid token.")
     else:
         return True
 
@@ -1779,14 +1778,13 @@ class LogoAnnotationCollection:
         resp.media = response
 
 
-
 class BatchJobImportResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         job_type_str: str = req.get_param("job_type", required=True)
 
         try:
             job_type = BatchJobType[job_type_str]
-        except KeyError: 
+        except KeyError:
             raise falcon.HTTPBadRequest(
                 description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
             )
@@ -1804,7 +1802,7 @@ class BatchJobImportResource:
             )
         logger.info("Batch import %s has been queued.", job_type)
 
-        
+
 class RobotsTxtResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         # Disallow completely indexation: otherwise web crawlers send millions

@@ -1000,16 +1000,20 @@ def create_migration(
 
 @app.command()
 def launch_batch_job(
-    job_type: str = typer.Argument(..., help="Type of job to launch. Ex: 'ingredients_spellcheck'"),
+    job_type: str = typer.Argument(
+        ..., help="Type of job to launch. Ex: 'ingredients_spellcheck'"
+    ),
 ) -> None:
     """Launch a batch job."""
     from robotoff.batch import launch_batch_job as _launch_batch_job
-    from robotoff.utils import get_logger
     from robotoff.types import BatchJobType
+    from robotoff.utils import get_logger
 
     if job_type not in BatchJobType.__members__:
-        raise ValueError(f"Invalid job type: {job_type}. Must be one of those: {[job.name for job in BatchJobType]}")
-    
+        raise ValueError(
+            f"Invalid job type: {job_type}. Must be one of those: {[job.name for job in BatchJobType]}"
+        )
+
     get_logger()
     job_type = BatchJobType[job_type]
     _launch_batch_job(job_type)
