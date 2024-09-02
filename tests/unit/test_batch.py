@@ -1,43 +1,43 @@
+import os
 import pytest
 import tempfile
 from pathlib import Path
 
-from robotoff.batch import (
-    GoogleBatchJobConfig,
-    BatchJobType,
-    BatchExtraction,
-)
+from robotoff.batch import GoogleBatchJobConfig
+from robotoff.batch.extraction import extract_from_dataset
+from robotoff import settings
 
 
 DIR = Path(__file__).parent
-JOB_TYPES = [
-    "ingredients_spellcheck",
-]
+SPELLCHECK_QUERY_FILE_PATH = settings.BATCH_JOB_CONFIG_DIR / "sql/spellcheck.sql"
+SPELLCHECK_BATCH_JOB_CONFIG_PATH = settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
 
 
-# Add future job types here for testing.
 @pytest.mark.parametrize(
-    "job_type_str",
-    JOB_TYPES,
+    "inputs",
+    [
+        ("ingredients-spellcheck", SPELLCHECK_BATCH_JOB_CONFIG_PATH),
+    ],
 )
-def test_batch_job_config_file(job_type_str):
+def test_batch_job_config_file(inputs):
     "Test indirectly the batch job config file by validating with the Pydantic class model."
-    job_type = BatchJobType[job_type_str]
-    GoogleBatchJobConfig.init(job_type)
+    job_name, config_path = inputs
+    GoogleBatchJobConfig.init(job_name, config_path)
 
 
-# Add future job types here for testing.
 @pytest.mark.parametrize(
-    "job_type_str",
-    JOB_TYPES,
+    "query_file_path",
+    [
+        SPELLCHECK_QUERY_FILE_PATH,
+    ]
 )
-def test_batch_extraction(job_type_str):
+def test_batch_extraction(query_file_path):
     """Test extraction of a batch of data from the dataset depending on the job type.
     """
-    job_type_str = BatchJobType[job_type_str]
     with tempfile.TemporaryDirectory() as tmp_dir:
-        BatchExtraction.extract_from_dataset(
-            job_type=job_type_str,
-            output_dir=tmp_dir,
-            dataset_path=str(DIR / "data/dataset_sample.jsonl.gz"),
+        file_path = os.path.join(tmp_dir, "data.parquet")
+        extract_from_dataset(
+            output_file_path=file_path,
+            query_file_path=SPELLCHECK_QUERY_FILE_PATH,
+            dataset_path=DIR / "data/dataset_sample.jsonl.gz",
         )

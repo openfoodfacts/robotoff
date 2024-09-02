@@ -1,63 +1,39 @@
 import pandas as pd
-
-from robotoff.utils.buckets import GoogleStorageBucket
-from robotoff.batch import BatchJobType
-from robotoff.batch.types import BATCH_JOB_TYPE_TO_BUCKET
+from google.cloud import storage
 
 
-class GoogleStorageBucketForBatchJob(GoogleStorageBucket):
-    """Class to handle the Google Storage bucket for depending on the batch job.
+def upload_file_to_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
+    """Upload file to Google Storage Bucket.
 
-    :param bucket: Bucket name
-    :type bucket: str
-    :param suffix_preprocess: Path inside the bucket before batch processing.
-    :type suffix_preprocess: str
-    :param suffix_postprocess: Path inside the bucket after batch processing.
-    :type suffix_postprocess: str
+    :param file_path: File where the data is stored
+    :type file_path: str
+    :param bucket_name: Bucket name in GCP storage
+    :type bucket_name: str
+    :param suffix: Path inside the bucket
+    :type suffix: str
     """
+    client = storage.Client()
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(suffix)
+    blob.upload_from_filename(filename=file_path)
 
-    def __init__(
-        self,
-        bucket: str,
-        suffix_preprocess: str,
-        suffix_postprocess: str,
-    ) -> None:
-        self.bucket = bucket
-        self.suffix_preprocess = suffix_preprocess
-        self.suffix_postprocess = suffix_postprocess
-    
-    @classmethod
-    def from_job_type(cls, job_type: BatchJobType) -> "GoogleStorageBucketForBatchJob":
-        """Initialize the class with the bucket and suffix names corresponding to the batch job type.
-        Used to adapt bucket upload and download during the batch job process.
 
-        :param job_type: Batch job type. 
-        :type job_type: BatchJobType
-        :return: Instantiated class.
-        :rtype: GoogleStorageBucketForBatchJob
-        """
+def fetch_dataframe_from_gcs(bucket_name: str, suffix: str) -> pd.DataFrame:
+    """Download parquet file from Google Storage Bucket.
+
+
+    :param bucket_name: Bucket name in GCP storage
+    :type bucket_name: str
+    :param suffix: Path inside the bucket. Should lead to a parquet file.
+    :type suffix: str
+    :return: Dataframe
+    """
+    client = storage.Client()
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(suffix)
+    with blob.open("rb") as f:
         try: 
-            bucket_dict = BATCH_JOB_TYPE_TO_BUCKET[job_type]
-        except KeyError:
-            raise ValueError(f"Batch job type {job_type} not found in the configuration. Expected {BATCH_JOB_TYPE_TO_BUCKET}.")
-        return cls(**bucket_dict)
-
-    def upload_file(self, file_path: str):
-        """Upload file to the bucket.
-
-        :param file_path: File path to upload.
-        :type file_path: str
-        """
-        self.upload_gcs(
-            file_path=file_path,
-            bucket_name=self.bucket,
-            suffix=self.suffix_preprocess,
-        )
-
-    def download_file(self) -> pd.DataFrame:
-        """Download file from bucket
-        """
-        return self.download_gcs(
-            bucket_name=self.bucket,
-            suffix=self.suffix_postprocess,
-        )
+            df = pd.read_parquet(f)
+        except Exception as e:
+            raise ValueError(f"Could not read parquet file from {bucket_name}/{suffix}. Error: {e}")
+        return df
