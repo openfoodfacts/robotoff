@@ -14,26 +14,30 @@ SPELLCHECK_BATCH_JOB_CONFIG_PATH = (
     settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
 )
 
+os.environ["KEY"] = "value"
+
 
 @pytest.mark.parametrize(
     "inputs",
     [
-        ("ingredients-spellcheck", SPELLCHECK_BATCH_JOB_CONFIG_PATH),
+        (
+            "ingredients-spellcheck", 
+            SPELLCHECK_BATCH_JOB_CONFIG_PATH, 
+            ["KEY"]
+        ),
     ],
 )
 def test_batch_job_config_file(inputs):
     "Test indirectly the batch job config file by validating with the Pydantic class model."
-    job_name, config_path = inputs
-    GoogleBatchJobConfig.init(job_name, config_path)
+    job_name, config_path, env_names = inputs
+    GoogleBatchJobConfig.init(
+        job_name=job_name,
+        config_path=config_path,
+        env_names=env_names,
+    )
 
 
-@pytest.mark.parametrize(
-    "query_file_path",
-    [
-        SPELLCHECK_QUERY_FILE_PATH,
-    ],
-)
-def test_batch_extraction(query_file_path):
+def test_batch_extraction():
     """Test extraction of a batch of data from the dataset depending on the job type."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         file_path = os.path.join(tmp_dir, "data.parquet")

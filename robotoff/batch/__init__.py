@@ -44,7 +44,9 @@ def launch_spellcheck_batch_job() -> None:
     )
     BUCKET_NAME = "robotoff-spellcheck"
     SUFFIX_PREPROCESS = "data/preprocessed_data.parquet"
+    ENV_NAMES = ["BATCH_JOB_KEY"]
 
+    logger.info("Extract batch from dataset.")
     # Extract data from dataset
     with tempfile.TemporaryDirectory() as tmp_dir:
         file_path = os.path.join(tmp_dir, "batch_data.parquet")
@@ -58,10 +60,13 @@ def launch_spellcheck_batch_job() -> None:
 
     # Launch batch job
     batch_job_config = GoogleBatchJobConfig.init(
-        job_name=JOB_NAME, config_path=BATCH_JOB_CONFIG_PATH
+        job_name=JOB_NAME,
+        config_path=BATCH_JOB_CONFIG_PATH,
+        env_names=ENV_NAMES,
     )
+    logger.info("Batch job config: %s", batch_job_config)
     batch_job = launch_job(batch_job_config=batch_job_config)
-    logger.info(f"Batch job succesfully launched. Batch job name: {batch_job.name}.")
+    logger.info("Batch job succesfully launched. Batch job %s", batch_job)
 
 
 def import_spellcheck_batch_predictions() -> None:
@@ -74,9 +79,7 @@ def import_spellcheck_batch_predictions() -> None:
     PREDICTOR = "fine-tuned-mistral-7b"
     SERVER_TYPE = ServerType.off
 
-    df = fetch_dataframe_from_gcs(
-        bucket_name=BUCKET_NAME, suffix=SUFFIX_POSTPROCESS
-    )
+    df = fetch_dataframe_from_gcs(bucket_name=BUCKET_NAME, suffix=SUFFIX_POSTPROCESS)
     logger.debug(
         f"Batch data downloaded from bucket {BUCKET_NAME}/{SUFFIX_POSTPROCESS}"
     )
