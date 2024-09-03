@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.50.4](https://github.com/openfoodfacts/robotoff/compare/v1.50.3...v1.50.4) (2024-09-03)
+
+
+### Bug Fixes
+
+* fix product weight detection bug ([fe7e758](https://github.com/openfoodfacts/robotoff/commit/fe7e75814bbbce42e6d6ee86e73102d58c5eff1b))
+* only run nutrition table detection for food type ([c019df9](https://github.com/openfoodfacts/robotoff/commit/c019df94b99c7260308b9aeb54d43b685668a57a))
+* remove Hacendado store ([e946444](https://github.com/openfoodfacts/robotoff/commit/e946444ee1dabd67b4269d18fafa7639fbc2bac9))
+* remove unused class ([22fae32](https://github.com/openfoodfacts/robotoff/commit/22fae32f798240bdfecaf04f0a7adfd08fa41d23))
+
+
+### Technical
+
+* add tmp volume for ES ([6225bcb](https://github.com/openfoodfacts/robotoff/commit/6225bcb02273aa72f40caa0d837676cd03ccd31f))
+* add volume for /tmp ([15130d2](https://github.com/openfoodfacts/robotoff/commit/15130d21747592f816360928f93f5a5e4db84569))
+* **deps:** bump sentry-sdk from 1.14.0 to 2.8.0 ([f991bf5](https://github.com/openfoodfacts/robotoff/commit/f991bf536300660613c97f43b294b50a7740f5f0))
+* improve robotoff documentation ([b9365a7](https://github.com/openfoodfacts/robotoff/commit/b9365a7cb9c91e25ca0eb2688c95b15506fac2c4))
+* make api depends on elasticsearch in docker-compose.yml ([bf99ca8](https://github.com/openfoodfacts/robotoff/commit/bf99ca8f75b1adc8b0fa2f6032cc1e68992220d9))
+
 ## [1.50.3](https://github.com/openfoodfacts/robotoff/compare/v1.50.2...v1.50.3) (2024-08-21)
 
 
