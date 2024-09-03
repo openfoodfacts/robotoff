@@ -161,7 +161,7 @@ def run_robotoff_endpoint_batch_import():
     url = "https://robotoff.openfoodfacts.org/api/v1/batch/import"
     data = {"job_type": "ingredients_spellcheck"}
     headers = {
-        "Authorization": f"Bearer {os.getenv("BATCH_JOB_KEY")}",
+        "Authorization": f"Bearer {os.getenv('BATCH_JOB_KEY')}",
         "Content-Type": "application/json"
     }
     try:
