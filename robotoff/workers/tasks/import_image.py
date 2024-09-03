@@ -148,13 +148,15 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
         image_url=image_url,
         ocr_url=ocr_url,
     )
-    enqueue_job(
-        run_nutrition_table_object_detection,
-        get_high_queue(product_id),
-        job_kwargs={"result_ttl": 0},
-        product_id=product_id,
-        image_url=image_url,
-    )
+
+    if product_id.server_type.is_food():
+        enqueue_job(
+            run_nutrition_table_object_detection,
+            get_high_queue(product_id),
+            job_kwargs={"result_ttl": 0},
+            product_id=product_id,
+            image_url=image_url,
+        )
 
     # Run UPC detection to detect if the image is dominated by a UPC (and thus
     # should not be a product selected image)
