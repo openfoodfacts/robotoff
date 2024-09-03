@@ -7,10 +7,6 @@ class BasicAuthDecodeError(Exception):
     pass
 
 
-class APITokenError(Exception):
-    pass
-
-
 def basic_decode(encoded_str: str) -> tuple[str, str]:
     """Decode an encrypted HTTP basic authentication string. Returns a tuple of
     the form (username, password), and raises a BasicAuthDecodeError exception
@@ -56,5 +52,5 @@ def validate_token(token: str, ref_token_name: str) -> bool:
     """
     api_token = os.getenv(ref_token_name.upper())
     if not api_token:
-        raise APITokenError("API token not set in environment variables.")
+        raise ValueError("API token not set in environment variables.")
     return token == api_token
