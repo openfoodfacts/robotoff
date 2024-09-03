@@ -1484,7 +1484,7 @@ class IngredientSpellcheckImporter(InsightImporter):
     @classmethod
     def get_required_prediction_types(cls) -> set[PredictionType]:
         return {PredictionType.ingredient_spellcheck}
-
+    
     @classmethod
     def generate_candidates(
         cls,
@@ -1492,16 +1492,50 @@ class IngredientSpellcheckImporter(InsightImporter):
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        # Only one prediction
-        for candidate in predictions:
-            yield ProductInsight(**candidate.to_dict())
+        yield from (
+            ProductInsight(**prediction.to_dict())
+            for prediction in predictions
+            if cls._keep_prediction(prediction, product_id)
+        )
 
     @classmethod
     def is_conflicting_insight(
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
+        # Same language
         candidate.value_tag == reference.value_tag
 
+    @classmethod
+    def _keep_prediction(
+        cls,
+        prediction: Prediction, 
+        product_id: ProductIdentifier
+    ) -> bool:
+        conditions = [
+            prediction.data["original"] != prediction.data["correction"],
+            cls._has_changed(prediction, product_id),
+        ]
+        return all(conditions)
+    
+    @staticmethod
+    def _has_changed(
+        prediction: Prediction,
+        product_id: ProductIdentifier
+    ) -> bool:
+        """Check if the lists of ingredients has changed since the last insight."""
+        if not ProductInsight.select().where(
+            ProductInsight.barcode == product_id.barcode,
+            ProductInsight.server_type == product_id.server_type.name,
+        ).exists():
+            return True
+        else:
+            return ProductInsight.select().where(
+                ProductInsight.barcode == product_id.barcode,
+                ProductInsight.server_type == product_id.server_type.name,
+                ProductInsight.type == InsightType.ingredient_spellcheck,
+                ProductInsight.data["original"] != prediction.data["original"],
+            ).exists()
+        
 
 class PackagingElementTaxonomyException(Exception):
     pass
