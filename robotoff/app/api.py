@@ -25,11 +25,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
 from robotoff.app import schema
-from robotoff.app.auth import (
-    BasicAuthDecodeError,
-    basic_decode,
-    validate_token,
-)
+from robotoff.app.auth import BasicAuthDecodeError, basic_decode, validate_token
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
@@ -79,13 +75,13 @@ from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
+    BatchJobType,
     InsightType,
     JSONType,
     NeuralCategoryClassifierModel,
     PredictionType,
     ProductIdentifier,
     ServerType,
-    BatchJobType,
 )
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore

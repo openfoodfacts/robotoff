@@ -1,7 +1,8 @@
 import datetime
+import os
 import re
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import yaml
 from google.cloud import batch_v1
@@ -85,13 +86,26 @@ class GoogleBatchJobConfig(BaseModel):
         default=True,
         description="Required if GPUs.",
     )
+    env_variables: Dict[str, str] = Field(
+        description="Environment variables to pass during the batch job.",
+        default_factory=dict,
+    )
 
     @classmethod
-    def init(cls, job_name: str, config_path: Path) -> "GoogleBatchJobConfig":
+    def init(
+        cls,
+        job_name: str,
+        config_path: Path,
+        env_names: Optional[Iterable[str]] = None,
+    ) -> "GoogleBatchJobConfig":
         """Initialize the class with the configuration file corresponding to the job type.
 
-        :param job_type: Batch job type.
-        :type job_type: BatchJobType
+        :param job_name: Name of the job.
+        :type job_name: str
+        :param config_path: Path to the configuration file.
+        :type config_path: Path
+        :param env_variables: List of environment variables to add to the job, defaults to None.
+        :type env_variables: Optional[Iterable[str]], optional
         """
         # Batch job name should respect a specific pattern, or returns an error
         pattern = "^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
@@ -104,10 +118,17 @@ class GoogleBatchJobConfig(BaseModel):
         unique_job_name = (
             job_name + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         )
+
+        # Environment variables
+        if not env_names:
+            env_variables = {}
+        else:
+            env_variables = {var_name: os.getenv(var_name) for var_name in env_names}
+
         # Load config file from job_type
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
-        return cls(job_name=unique_job_name, **config)
+        return cls(job_name=unique_job_name, env_variables=env_variables, **config)
 
 
 def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
@@ -139,6 +160,11 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     # Jobs can be divided into tasks. In this case, we have only one task.
     task = batch_v1.TaskSpec()
     task.runnables = [runnable]
+
+    # Environment variables.
+    envable = batch_v1.Environment()
+    envable.variables = batch_job_config.env_variables
+    task.environment = envable
 
     # We can specify what resources are requested by each task.
     resources = batch_v1.ComputeResource()
