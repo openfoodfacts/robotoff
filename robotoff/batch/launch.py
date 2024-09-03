@@ -147,7 +147,8 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     Returns:
         Batch job information.
     """
-
+    # https://cloud.google.com/iam/docs/service-account-overview
+    # batch_v1.BatchServiceClient.from_service_account_info(info=json.loads(os.getenv("GOOGLE_CREDENTIALS")))
     client = batch_v1.BatchServiceClient()
 
     # Define what will be done as part of the job.
