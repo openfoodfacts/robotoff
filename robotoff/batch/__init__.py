@@ -75,7 +75,7 @@ def import_spellcheck_batch_predictions() -> None:
     SERVER_TYPE = ServerType.off
 
     df = fetch_dataframe_from_gcs(
-        bucket_name=BUCKET_NAME, suffix_postprocess=SUFFIX_POSTPROCESS
+        bucket_name=BUCKET_NAME, suffix=SUFFIX_POSTPROCESS
     )
     logger.debug(
         f"Batch data downloaded from bucket {BUCKET_NAME}/{SUFFIX_POSTPROCESS}"
