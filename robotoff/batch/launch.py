@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import re
 from pathlib import Path
@@ -9,6 +10,25 @@ from google.cloud import batch_v1
 from pydantic import BaseModel, ConfigDict, Field
 
 from robotoff import settings
+from robotoff.utils import get_logger
+
+logger = get_logger(__name__)
+
+
+def check_google_credentials() -> None:
+    """Create google credentials from variable if doesn't exist"""
+    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if not credentials_path:
+        raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set")
+    if not os.path.exists(credentials_path):
+        logger.info(
+            "No google credentials found at %s. Creating  credentials from GOOGLE_CREDENTIALS.",
+            credentials_path,
+        )
+        os.makedirs(os.path.dirname(credentials_path), exist_ok=True)
+        credentials = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
+        with open(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), "w") as f:
+            json.dump(credentials, f, indent=4)
 
 
 class GoogleBatchJobConfig(BaseModel):
@@ -147,8 +167,6 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     Returns:
         Batch job information.
     """
-    # https://cloud.google.com/iam/docs/service-account-overview
-    # batch_v1.BatchServiceClient.from_service_account_info(info=json.loads(os.getenv("GOOGLE_CREDENTIALS")))
     client = batch_v1.BatchServiceClient()
 
     # Define what will be done as part of the job.

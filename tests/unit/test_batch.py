@@ -20,11 +20,7 @@ os.environ["KEY"] = "value"
 @pytest.mark.parametrize(
     "inputs",
     [
-        (
-            "ingredients-spellcheck", 
-            SPELLCHECK_BATCH_JOB_CONFIG_PATH, 
-            ["KEY"]
-        ),
+        ("ingredients-spellcheck", SPELLCHECK_BATCH_JOB_CONFIG_PATH, ["KEY"]),
     ],
 )
 def test_batch_job_config_file(inputs):
