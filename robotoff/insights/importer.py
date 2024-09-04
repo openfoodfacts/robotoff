@@ -1503,7 +1503,7 @@ class IngredientSpellcheckImporter(InsightImporter):
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         # Same language
-        candidate.value_tag == reference.value_tag
+        return candidate.value_tag == reference.value_tag
 
     @classmethod
     def _keep_prediction(
