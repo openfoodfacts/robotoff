@@ -1,3 +1,4 @@
+import datetime
 import os
 import tempfile
 
@@ -9,7 +10,7 @@ from robotoff.utils import get_logger
 
 from .buckets import fetch_dataframe_from_gcs, upload_file_to_gcs
 from .extraction import extract_from_dataset
-from .launch import GoogleBatchJobConfig, launch_job
+from .launch import GoogleBatchJobConfig, check_google_credentials, launch_job
 
 logger = get_logger(__name__)
 
@@ -46,6 +47,8 @@ def launch_spellcheck_batch_job() -> None:
     SUFFIX_PREPROCESS = "data/preprocessed_data.parquet"
     ENV_NAMES = ["BATCH_JOB_KEY"]
 
+    check_google_credentials()
+
     logger.info("Extract batch from dataset.")
     # Extract data from dataset
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -75,9 +78,14 @@ def import_spellcheck_batch_predictions() -> None:
     BUCKET_NAME = "robotoff-spellcheck"
     SUFFIX_POSTPROCESS = "data/postprocessed_data.parquet"
     PREDICTION_TYPE = PredictionType.ingredient_spellcheck
-    PREDICTOR_VERSION = "1"  # TODO: shard HF model version instead of manual change?
+    # We increment to allow import_insights to create a new version
+    PREDICTOR_VERSION = (
+        "batch-job" + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    )
     PREDICTOR = "fine-tuned-mistral-7b"
     SERVER_TYPE = ServerType.off
+
+    check_google_credentials()
 
     df = fetch_dataframe_from_gcs(bucket_name=BUCKET_NAME, suffix=SUFFIX_POSTPROCESS)
     logger.debug(
