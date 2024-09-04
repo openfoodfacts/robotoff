@@ -80,7 +80,7 @@ def import_spellcheck_batch_predictions() -> None:
     PREDICTION_TYPE = PredictionType.ingredient_spellcheck
     # We increment to allow import_insights to create a new version
     PREDICTOR_VERSION = (
-        "batch-job" + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        "llm-v1" + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     )
     PREDICTOR = "fine-tuned-mistral-7b"
     SERVER_TYPE = ServerType.off
