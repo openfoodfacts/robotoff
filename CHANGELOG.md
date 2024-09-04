@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.50.5](https://github.com/openfoodfacts/robotoff/compare/v1.50.4...v1.50.5) (2024-09-04)
+
+
+### Technical
+
+* **deps-dev:** bump cryptography from 43.0.0 to 43.0.1 ([0ad0c56](https://github.com/openfoodfacts/robotoff/commit/0ad0c56fb3044c2847573c7de49de6fea616b48d))
+* update SSH_PROXY_USERNAME for prod deployment ([34e6aef](https://github.com/openfoodfacts/robotoff/commit/34e6aef1139d469a9a2ad4af1430198b33f86130))
+
 ## [1.50.4](https://github.com/openfoodfacts/robotoff/compare/v1.50.3...v1.50.4) (2024-09-03)
 
 
