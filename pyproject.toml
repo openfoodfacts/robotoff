@@ -38,7 +38,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "robotoff"
-version = "1.50.3"
+version = "1.50.4"
 description = "Real-time and batch prediction service for Open Food Facts."
 authors = ["Open Food Facts Team"]
 license = "GNU Affero General Public License v3"
@@ -85,7 +85,7 @@ pandas = "~2.2.2"
 pyarrow = "~17.0.0"
 
 [tool.poetry.dependencies.sentry-sdk]
-version = "~1.14.0"
+version = ">=1.14,<2.9"
 extras = ["falcon"]
 
 [tool.poetry.dev-dependencies]

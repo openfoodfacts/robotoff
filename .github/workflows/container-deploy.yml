@@ -43,8 +43,7 @@ jobs:
         # This is the OSM proxy server, that does have an ipv4 address
         echo "SSH_PROXY_HOST=45.147.209.254" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
-        # We use 'raphael' user as we don't have an off user yet on the proxy machine
-        echo "SSH_PROXY_USERNAME=raphael" >> $GITHUB_ENV
+        echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
         echo "SSH_PROTOCOL=tcp" >> $GITHUB_ENV
         echo "SSH_HOST=10.3.0.200" >> $GITHUB_ENV
         echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV

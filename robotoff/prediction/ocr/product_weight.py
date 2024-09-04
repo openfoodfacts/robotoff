@@ -94,7 +94,23 @@ def is_valid_weight(weight_value: str) -> bool:
     return True
 
 
-def is_extreme_weight(normalized_value: float, unit: str) -> bool:
+def is_extreme_weight(
+    normalized_value: float, unit: str, count: int | None = None
+) -> bool:
+    """Return True if the weight is extreme, i.e is likely wrongly detected.
+
+    If considered extreme, a prediction won't be generated.
+
+    :param normalized_value: the normalized weight value
+    :param unit: the normalized weight unit
+    :param count: the number of items in the pack, if any
+    :return: True if the weight is extreme, False otherwise
+    """
+    if count is not None and int(count) > 20:
+        # More than 20 items in a pack is quite unlikely for
+        # a consumer product
+        return True
+
     if unit == "g":
         # weights above 10 kg
         return normalized_value >= 10000 or normalized_value <= 10
@@ -200,7 +216,7 @@ def process_multi_packaging(match) -> Optional[dict]:
     normalized_value, normalized_unit = normalize_weight(value, unit)
 
     # Check that the weight is not extreme
-    if is_extreme_weight(normalized_value, normalized_unit):
+    if is_extreme_weight(normalized_value, normalized_unit, count):
         return None
 
     text = f"{count} x {value} {unit}"

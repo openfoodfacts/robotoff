@@ -717,7 +717,3 @@ def annotate(
         auth=auth,
         is_vote=is_vote,
     )
-
-
-class InvalidInsight(Exception):
-    pass

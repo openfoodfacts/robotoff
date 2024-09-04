@@ -83,6 +83,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - elasticsearch
 
   update-listener:
     <<: *robotoff-base

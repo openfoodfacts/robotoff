@@ -92,22 +92,23 @@ def test_is_valid_weight(value: str, is_valid: bool):
 
 
 @pytest.mark.parametrize(
-    "value,unit,expected",
+    "value,unit,count,expected",
     [
-        (10000, "g", True),
-        (10000, "ml", True),
-        (9999, "ml", False),
-        (9999, "g", False),
-        (100, "g", False),
-        (100, "ml", False),
-        (10, "ml", True),
-        (3, "ml", True),
-        (10, "g", True),
-        (2, "g", True),
+        (10000, "g", None, True),
+        (10000, "ml", None, True),
+        (9999, "ml", None, False),
+        (9999, "g", None, False),
+        (100, "g", None, False),
+        (100, "ml", None, False),
+        (10, "ml", None, True),
+        (3, "ml", None, True),
+        (10, "g", None, True),
+        (2, "g", None, True),
+        (200, "g", 21, True),
     ],
 )
-def test_is_extreme_weight(value: float, unit: str, expected: bool):
-    assert is_extreme_weight(value, unit) is expected
+def test_is_extreme_weight(value: float, unit: str, count: int | None, expected: bool):
+    assert is_extreme_weight(value, unit, count) is expected
 
 
 @pytest.mark.parametrize(
