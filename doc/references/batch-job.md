@@ -53,6 +53,7 @@ The container registry represents the core of the batch job. It contains the req
 Docker images are maintained independently of the Robotoff micro-service [^dockerfile]. Each directory contains the files with their `Dockerfile`. Once built, the Docker image is pushed manually using the Make command written in the Makefile, such as `deploy-spellcheck`.
 
 The container needs to be accessible from the batch job once launched. Can be used as registry:
+
 * Google Artifact Registry within the project `Robotoff`,
 * Docker hub,
 * Public GitHub repository, such as [Robotoff](https://github.com/openfoodfacts/robotoff/tree/main).
