@@ -7,7 +7,7 @@ from typing import Dict, Iterable, List, Optional
 
 import yaml
 from google.cloud import batch_v1
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from robotoff import settings
 from robotoff.utils import get_logger
@@ -16,26 +16,21 @@ logger = get_logger(__name__)
 
 
 def check_google_credentials() -> None:
-    """Create google credentials from variable if doesn't exist"""
-    credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    if not credentials_path:
-        raise ValueError("GOOGLE_APPLICATION_CREDENTIALS is not set")
-    if not os.path.exists(credentials_path):
+    """Create google credentials from variable if doesn't exist."""
+    credentials_path = settings.PROJECT_DIR / "credentials/google/credentials.json"
+    if not credentials_path.is_file():
         logger.info(
-            "No google credentials found at %s. Creating  credentials from GOOGLE_CREDENTIALS.",
+            "No google credentials found at %s. Creating credentials from GOOGLE_CREDENTIALS.",
             credentials_path,
         )
-        os.makedirs(os.path.dirname(credentials_path), exist_ok=True)
-        credentials = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
-        with open(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"), "w") as f:
+        credentials_path.parent.mkdir(parents=True, exist_ok=True)
+        credentials = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+        with open(credentials_path, "w") as f:
             json.dump(credentials, f, indent=4)
 
 
 class GoogleBatchJobConfig(BaseModel):
     """Batch job configuration class."""
-
-    # By default, extra fields are just ignored. We raise an error in case of extra fields.
-    model_config: ConfigDict = {"extra": "forbid"}
 
     job_name: str = Field(
         description="The name of the job. It needs to be unique amongst exisiting batch job names.",
@@ -118,14 +113,13 @@ class GoogleBatchJobConfig(BaseModel):
         config_path: Path,
         env_names: Optional[Iterable[str]] = None,
     ) -> "GoogleBatchJobConfig":
-        """Initialize the class with the configuration file corresponding to the job type.
+        """Initialize the class with the configuration file corresponding to the job
+        type.
 
         :param job_name: Name of the job.
-        :type job_name: str
         :param config_path: Path to the configuration file.
-        :type config_path: Path
-        :param env_variables: List of environment variables to add to the job, defaults to None.
-        :type env_variables: Optional[Iterable[str]], optional
+        :param env_variables: List of environment variables to add to the job, defaults
+            to None.
         """
         # Batch job name should respect a specific pattern, or returns an error
         pattern = "^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
@@ -143,7 +137,7 @@ class GoogleBatchJobConfig(BaseModel):
         if not env_names:
             env_variables = {}
         else:
-            env_variables = {var_name: os.getenv(var_name) for var_name in env_names}
+            env_variables = {var_name: os.environ[var_name] for var_name in env_names}
 
         # Load config file from job_type
         with open(config_path, "r") as f:
@@ -156,12 +150,10 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
 
     Sources:
     * https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch/create
-    * https://cloud.google.com/python/docs/reference/batch/latest/google.cloud.batch_v1.types
+    * https://cloud.google.com/python/docs/reference/batch/latest/google.cloud.batch_v1.types  # noqa
 
     :param google_batch_launch_config: Config to run a job on Google Batch.
-    :type google_batch_launch_config: GoogleBatchLaunchConfig
     :param batch_job_config: Config to run a specific job on Google Batch.
-    :type batch_job_config: BatchJobConfig
     :return: Batch job information.
 
     Returns:
@@ -173,7 +165,7 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     runnable = batch_v1.Runnable()
     runnable.container = batch_v1.Runnable.Container()
     runnable.container.image_uri = batch_job_config.container_image_uri
-    runnable.container.entrypoint = batch_job_config.entrypoint
+    runnable.container.entrypoint = batch_job_config.entrypoint  # type: ignore
     runnable.container.commands = batch_job_config.commands
 
     # Jobs can be divided into tasks. In this case, we have only one task.
@@ -189,18 +181,19 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     resources = batch_v1.ComputeResource()
     resources.cpu_milli = batch_job_config.cpu_milli
     resources.memory_mib = batch_job_config.memory_mib
-    resources.boot_disk_mib = batch_job_config.boot_disk_mib
+    resources.boot_disk_mib = batch_job_config.boot_disk_mib  # type: ignore
     task.compute_resource = resources
 
     task.max_retry_count = batch_job_config.max_retry_count
-    task.max_run_duration = batch_job_config.max_run_duration
+    task.max_run_duration = batch_job_config.max_run_duration  # type: ignore
 
     # Tasks are grouped inside a job using TaskGroups.
     group = batch_v1.TaskGroup()
-    group.task_count = batch_job_config.task_count
+    group.task_count = batch_job_config.task_count  # type: ignore
     group.task_spec = task
 
-    # Policies are used to define on what kind of virtual machines the tasks will run on.
+    # Policies are used to define on what kind of virtual machines the tasks will run
+    # on.
     policy = batch_v1.AllocationPolicy.InstancePolicy()
     policy.machine_type = batch_job_config.machine_type
     instances = batch_v1.AllocationPolicy.InstancePolicyOrTemplate()
@@ -218,7 +211,7 @@ def launch_job(batch_job_config: GoogleBatchJobConfig) -> batch_v1.Job:
     job.allocation_policy = allocation_policy
     # We use Cloud Logging as it's an out of the box available option
     job.logs_policy = batch_v1.LogsPolicy()
-    job.logs_policy.destination = batch_v1.LogsPolicy.Destination.CLOUD_LOGGING
+    job.logs_policy.destination = batch_v1.LogsPolicy.Destination.CLOUD_LOGGING  # type: ignore
 
     create_request = batch_v1.CreateJobRequest()
     create_request.job = job

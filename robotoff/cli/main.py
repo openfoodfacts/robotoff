@@ -1015,8 +1015,7 @@ def launch_batch_job(
         )
 
     get_logger()
-    job_type = BatchJobType[job_type]
-    _launch_batch_job(job_type)
+    _launch_batch_job(BatchJobType[job_type])
 
 
 def main() -> None:

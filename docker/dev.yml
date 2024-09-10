@@ -14,6 +14,7 @@ x-robotoff-dev: &robotoff-dev
       - ./pyproject.toml:/opt/robotoff/pyproject.toml
       - ./poetry.toml:/opt/robotoff/poetry.toml
       - ./poetry.lock:/opt/robotoff/poetry.lock
+      - ./.flake8:/opt/robotoff/.flake8
       # make tests available
       - ./tests:/opt/robotoff/tests
       - ./.cov:/opt/robotoff/.cov

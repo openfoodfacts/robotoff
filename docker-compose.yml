@@ -5,7 +5,6 @@ x-robotoff-base-volumes:
   - ./datasets:/opt/robotoff/datasets
   - ./models:/opt/robotoff/models
   - robotoff_tmp:/tmp
-  - ./credentials:/opt/credentials
 
 x-robotoff-base:
   &robotoff-base
@@ -55,8 +54,6 @@ x-robotoff-base-env:
   IMAGE_MODERATION_SERVICE_URL:
   CROP_ALLOWED_DOMAINS:
   NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
-  GOOGLE_APPLICATION_CREDENTIALS: /opt/robotoff/credentials/google/credentials.json
-  GOOGLE_CLOUD_PROJECT: "robotoff"
   GOOGLE_CREDENTIALS: # JSON credentials pasted as environment variable
   BATCH_JOB_KEY: # Secure Batch job import with a token key 
   

@@ -24,7 +24,8 @@ os.environ["KEY"] = "value"
     ],
 )
 def test_batch_job_config_file(inputs):
-    "Test indirectly the batch job config file by validating with the Pydantic class model."
+    """Test indirectly the batch job config file by validating with the Pydantic class
+    model."""
     job_name, config_path, env_names = inputs
     GoogleBatchJobConfig.init(
         job_name=job_name,

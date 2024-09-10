@@ -1,16 +1,13 @@
 import pandas as pd
-from google.cloud import storage
+from google.cloud import storage  # type: ignore
 
 
 def upload_file_to_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
     """Upload file to Google Storage Bucket.
 
     :param file_path: File where the data is stored
-    :type file_path: str
     :param bucket_name: Bucket name in GCP storage
-    :type bucket_name: str
     :param suffix: Path inside the bucket
-    :type suffix: str
     """
     client = storage.Client()
     bucket = client.get_bucket(bucket_name)
@@ -23,9 +20,7 @@ def fetch_dataframe_from_gcs(bucket_name: str, suffix: str) -> pd.DataFrame:
 
 
     :param bucket_name: Bucket name in GCP storage
-    :type bucket_name: str
     :param suffix: Path inside the bucket. Should lead to a parquet file.
-    :type suffix: str
     :return: Dataframe
     """
     client = storage.Client()
