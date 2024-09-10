@@ -4,4 +4,4 @@ max-line-length = 88
 exclude = .git,__pycache__,build,dist,*_pb2.py,.venv
 per-file-ignores =
     robotoff/cli/main.py:B008
-max-doc-length = 79
+max-doc-length = 88

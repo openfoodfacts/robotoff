@@ -1509,13 +1509,16 @@ class IngredientSpellcheckImporter(InsightImporter):
     def _keep_prediction(
         cls, prediction: Prediction, product: Optional[Product]
     ) -> bool:
-        conditions = [
+        return (
             # Spellcheck didn't correct
-            prediction.data["original"] != prediction.data["correction"],
-            # Modification of the original ingredients between two dataset dumps (24-hour period)
-            product is None or prediction.data["original"] != product.ingredients_text,
-        ]
-        return all(conditions)
+            prediction.data["original"] != prediction.data["correction"]
+            # Modification of the original ingredients between two dataset dumps
+            # (24-hour period)
+            and (
+                product is None
+                or prediction.data["original"] != product.ingredients_text
+            )
+        )
 
 
 class PackagingElementTaxonomyException(Exception):

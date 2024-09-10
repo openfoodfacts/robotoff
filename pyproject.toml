@@ -119,6 +119,7 @@ rq-dashboard = "~0.6.1"
 
 [tool.poetry.group.dev.dependencies]
 types-pytz = "^2024.1.0.20240417"
+types-pyyaml = "^6.0.12.20240808"
 
 [tool.poetry.scripts]
 robotoff-cli = 'robotoff.cli.main:main'

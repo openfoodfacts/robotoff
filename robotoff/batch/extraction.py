@@ -19,7 +19,8 @@ def extract_from_dataset(
     :type query_file_path: Path
     :param output_file_path: Path to save the extracted data.
     :type output_file_path: str
-    :param dataset_path: Compressed jsonl database, defaults to settings.JSONL_DATASET_PATH
+    :param dataset_path: Compressed jsonl database, defaults to
+        settings.JSONL_DATASET_PATH
     :type dataset_path: Path, optional
     """
     if not dataset_path.exists():
