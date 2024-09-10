@@ -173,6 +173,9 @@ jobs:
           echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=${{ env.ROBOTOFF_POSTGRES_SHARED_BUFFERS }}" >> .env
           echo "ROBOTOFF_POSTGRES_WORK_MEM=${{ env.ROBOTOFF_POSTGRES_WORK_MEM }}" >> .env
 
+          # Google Cloud credentials
+          echo "GOOGLE_CREDENTIALS=${{ secrets.GOOGLE_CREDENTIALS }}" >> .env
+
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
