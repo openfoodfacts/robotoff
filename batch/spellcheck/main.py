@@ -185,7 +185,7 @@ def upload_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
     blob.upload_from_filename(filename=file_path)
 
 
-def run_robotoff_endpoint_batch_import(batch_dir: str):
+def run_robotoff_endpoint_batch_import(batch_dir: str) -> None:
     """Run Robotoff api endpoint to import batch data into tables."""
     if "WEBHOOK_URL" not in os.environ or "BATCH_JOB_KEY" not in os.environ:
         logger.error(
@@ -195,10 +195,7 @@ def run_robotoff_endpoint_batch_import(batch_dir: str):
 
     url = os.environ["WEBHOOK_URL"]
     data = {"job_type": "ingredients_spellcheck", "batch_dir": batch_dir}
-    headers = {
-        "Authorization": f"Bearer {os.environ['BATCH_JOB_KEY']}",
-        "Content-Type": "application/json",
-    }
+    headers = {"Authorization": f"Bearer {os.environ['BATCH_JOB_KEY']}"}
     try:
         response = requests.post(
             url,
