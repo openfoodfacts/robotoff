@@ -1512,11 +1512,15 @@ class IngredientSpellcheckImporter(InsightImporter):
         return (
             # Spellcheck didn't correct
             prediction.data["original"] != prediction.data["correction"]
-            # Modification of the original ingredients between two dataset dumps
-            # (24-hour period)
             and (
                 product is None
-                or prediction.data["original"] != product.ingredients_text
+                or (
+                    # Only keep the prediction if the original ingredient is different
+                    # from the current ingredient list
+                    prediction.data["original"] == product.ingredients_text
+                    # Only keep the prediction if it's for the product main language
+                    and prediction.value_tag == product.lang
+                )
             )
         )
 
