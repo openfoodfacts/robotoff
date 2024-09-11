@@ -1,5 +1,57 @@
 # Changelog
 
+## [1.51.0](https://github.com/openfoodfacts/robotoff/compare/v1.50.5...v1.51.0) (2024-09-11)
+
+
+### Features
+
+* :ambulance: Changes ([b8dcd5a](https://github.com/openfoodfacts/robotoff/commit/b8dcd5a9ac781ab33d9743b4cdbe439ca3500e77))
+* :ambulance: Credential + Importer ([53752d5](https://github.com/openfoodfacts/robotoff/commit/53752d5c63cdd13276d4f9235dbf6553b81bfcd3))
+* :ambulance: Credentials + Importer + Test ([3e2f5e3](https://github.com/openfoodfacts/robotoff/commit/3e2f5e38117eeb759cfab1c1e814435532d78a2b))
+* :art: Add key during request by the batch job ([fd7c587](https://github.com/openfoodfacts/robotoff/commit/fd7c5879699568d26f35124dcab8677a82862a60))
+* :bug: Forgot a return ([a1de5d9](https://github.com/openfoodfacts/robotoff/commit/a1de5d9b24ac6f847d677241d916217c55a65b31))
+* :lock: Secure Batch Data Import endpoint with a token key ([360f2e4](https://github.com/openfoodfacts/robotoff/commit/360f2e4dc69bc7bfdb3adfab6c8b7c8a5f479be3))
+* :sparkles: Change batch job launch from api endpoint to CLI ([93c1232](https://github.com/openfoodfacts/robotoff/commit/93c12320a21f2a199af34c79fabb01e4123481a9))
+* :sparkles: Implemenation reviews ([c76df4d](https://github.com/openfoodfacts/robotoff/commit/c76df4dd8d39cdf3bb807257a84c61b2728090c7))
+* :sparkles: Restructure code ([b7a44c4](https://github.com/openfoodfacts/robotoff/commit/b7a44c46b76b2c17cae741d430c97b453b351123))
+* allow to specify parameters when launching spellcheck job ([de050fc](https://github.com/openfoodfacts/robotoff/commit/de050fc61c2091572cd4929fcfd204a416ec44d3))
+* **batch - spellcheck:** :zap: API endpoint batch/launch ok: Batch extraction with DuckDB and launch on GCP ([a417fdf](https://github.com/openfoodfacts/robotoff/commit/a417fdf9e6996da34f7827d3b07a49edc9cfa146))
+* **batch - spellcheck:** :zap: From predictions to insights ([74c3828](https://github.com/openfoodfacts/robotoff/commit/74c382871c2f6ba12171d5f5a001e5d94df5b22d))
+* **batch - spellcheck:** :zap: Integrate batch data from job into Robotoff sql tables ([bdb8733](https://github.com/openfoodfacts/robotoff/commit/bdb8733522937b115e548064da362c5138cfe5e6))
+* **Batch job - Spellcheck:** :zap: ([531f3b5](https://github.com/openfoodfacts/robotoff/commit/531f3b521c554616e17d3ae555f8a49a0d2b4e19))
+* **batch-spellcheck:** :zap: Batch extraction from database before Batch processing operational ([baf1f1d](https://github.com/openfoodfacts/robotoff/commit/baf1f1d10a4176baea4e8d24071825b34f0e613a))
+
+
+### Bug Fixes
+
+* :art: Change predictor version to also track... the predictor version ([9800591](https://github.com/openfoodfacts/robotoff/commit/98005911499cc0e0ebc87751d2f91e7bfa80fb30))
+* :bug: Fixed bug & Better error handling with Falcon ([e87857c](https://github.com/openfoodfacts/robotoff/commit/e87857c8c842e371fcd7d43638653d48352aaafa))
+* add batch_dir as param in /batch/import route ([36f02fb](https://github.com/openfoodfacts/robotoff/commit/36f02fb03ec01c3cb26cec6e64a5ae7df4ef1976))
+* add log message in import_spellcheck_batch_predictions ([2329201](https://github.com/openfoodfacts/robotoff/commit/23292014ca6d4cd45d42f1f458ac635ccccf07be))
+* **batch-spellcheck:** :lipstick: Fix Spellcheck Batch job file name for Dockerfile ENTRYPOINT ([7a17edc](https://github.com/openfoodfacts/robotoff/commit/7a17edc99fdcff0ac2084b832e3cab665914dbc0))
+* fix bug in spellcheck insights import ([db73aea](https://github.com/openfoodfacts/robotoff/commit/db73aea8a6c1a5943dd8e6f2bd6156ae564c78d6))
+* fix issues with duckdb command + unit test ([cbe250f](https://github.com/openfoodfacts/robotoff/commit/cbe250fb60ea38e361ba563050f59fc5ab1cb6e1))
+* fix mypy and flake8 issues ([ac7907d](https://github.com/openfoodfacts/robotoff/commit/ac7907d14f63e1b7934e3688c8e4f98f591cda22))
+* improve naming of batch jobs bucket files ([242f950](https://github.com/openfoodfacts/robotoff/commit/242f9507380e123dc74e96442e239bf96613cfaa))
+* improve spellcheck Dockerfile ([235ed4b](https://github.com/openfoodfacts/robotoff/commit/235ed4b58564959ee8a6cd47387127665eaea5e8))
+* pass GOOGLE_CREDENTIALS envvar as base64 encoded string ([6be2367](https://github.com/openfoodfacts/robotoff/commit/6be2367e5f7f7a37b18cfb67c23dfed8152207de))
+* provide webhook URL as envvar in spellcheck batch job ([3897d65](https://github.com/openfoodfacts/robotoff/commit/3897d65269bbbd1fd441669e942b0d135e36ccc4))
+* update content-type in batch job robotoff webhook call ([368ee12](https://github.com/openfoodfacts/robotoff/commit/368ee122e4d1fbe69470dc9239491631ebcc98e9))
+* update spellcheck batch script ([374a829](https://github.com/openfoodfacts/robotoff/commit/374a829043bb1cda16b8497e266a56b828a046bf))
+
+
+### Technical
+
+* :memo: Add batch/import api endpoint to doc ([be563e3](https://github.com/openfoodfacts/robotoff/commit/be563e3d3af11b319e7113335d6cc3e72aa29581))
+* :memo: Because perfection ([3ea91d2](https://github.com/openfoodfacts/robotoff/commit/3ea91d205adbdb8b160420aad00c47314c6427f7))
+* :sparkles: Black on spellcheck script ([8f84146](https://github.com/openfoodfacts/robotoff/commit/8f84146f0df1fd3323246ed4092363e2d766a041))
+* :sparkles: make lint ([2ff7345](https://github.com/openfoodfacts/robotoff/commit/2ff73453623bac61b91ab9255bd891eba1f2c97d))
+* add GOOGLE_APPLICATION_CREDENTIALS envvar ([f93fc9f](https://github.com/openfoodfacts/robotoff/commit/f93fc9fb587e97b29f498b561ac5689190d9b37f))
+* add GOOGLE_CREDENTIALS during deployment ([b18e613](https://github.com/openfoodfacts/robotoff/commit/b18e613dd05c703f9bf53d60aff7f125424e4b4b))
+* **batch-spellcheck:** :green_heart: Fix some bugs: batch-extraction & batch-launch ([c8758e1](https://github.com/openfoodfacts/robotoff/commit/c8758e1239600ac53ae862d6cca2a9eac60a8288))
+* remove CodeQL analysis ([1c0946d](https://github.com/openfoodfacts/robotoff/commit/1c0946dc6031df60c2c54e6ff897198fe9bc7a1c))
+* remove Sonar Cloud analysis ([4997a01](https://github.com/openfoodfacts/robotoff/commit/4997a013d66dabc36334312fea2ceb240aefe33c))
+
 ## [1.50.5](https://github.com/openfoodfacts/robotoff/compare/v1.50.4...v1.50.5) (2024-09-04)
 
 
