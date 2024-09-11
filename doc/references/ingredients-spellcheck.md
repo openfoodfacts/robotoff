@@ -1,8 +1,8 @@
 # Ingredients Spellcheck
 
-A key element of Open Food Facts database is the parsing of the product ingredients. These lists of ingredients either come from contributors' annotations or from OCR-extracted text from packaging pictures.
+A key element of the Open Food Facts database is the parsing of the product ingredients. These lists of ingredients either come from contributors' annotations or from OCR-extracted text from packaging pictures.
 
-However, text typos or wrong OCR-extraction lead to ingredients not recognized by the Product Opener service. Check more about this process in the [wiki](https://wiki.openfoodfacts.org/Ingredients_Extraction_and_Analysis).
+However, text typos or wrong OCR-extraction lead to ingredients not recognized by the Product Opener service. Check about this process in the [wiki](https://wiki.openfoodfacts.org/Ingredients_Extraction_and_Analysis).
 
 For this reason, the Ingredients Spellcheck was developed to be implemented to solve this issue and improve the ingredient parsing quality. 
 
