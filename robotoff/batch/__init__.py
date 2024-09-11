@@ -79,12 +79,14 @@ def launch_spellcheck_batch_job(
 ) -> None:
     """Launch spellcheck batch job."""
     # Init
-    JOB_NAME = "ingredients-spellcheck"
-    BATCH_JOB_CONFIG_PATH = (
+    job_name = "ingredients-spellcheck"
+    batch_job_config_path = (
         settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
     )
-    BUCKET_NAME = "robotoff-spellcheck"
-    SUFFIX_PREPROCESS = "data/preprocessed_data.parquet"
+    bucket_name = "robotoff-batch"
+    input_file_dir = f"{job_name}/{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{settings._get_tld()}"
+    input_file_path = f"{input_file_dir}/preprocessed_data.parquet"
+    output_file_path = f"{input_file_dir}/postprocessed_data.parquet"
 
     check_google_credentials()
 
@@ -100,17 +102,20 @@ def launch_spellcheck_batch_job(
         )
         # Upload the extracted file to the bucket
         upload_file_to_gcs(
-            file_path=file_path, bucket_name=BUCKET_NAME, suffix=SUFFIX_PREPROCESS
+            file_path=file_path, bucket_name=bucket_name, suffix=input_file_path
         )
-        logger.debug(f"File uploaded to the bucket {BUCKET_NAME}/{SUFFIX_PREPROCESS}")
+        logger.debug("File uploaded to the bucket %s/%s", bucket_name, input_file_path)
 
     # Launch batch job
     batch_job_config = GoogleBatchJobConfig.init(
-        job_name=JOB_NAME,
-        config_path=BATCH_JOB_CONFIG_PATH,
+        job_name=job_name,
+        config_path=batch_job_config_path,
         env_variables={
+            "BUCKET_NAME": bucket_name,
             "BATCH_JOB_KEY": os.environ["BATCH_JOB_KEY"],
             "WEBHOOK_URL": f"{settings.BaseURLProvider.robotoff()}/api/v1/batch/import",
+            "INPUT_FILE_PATH": input_file_path,
+            "OUTPUT_FILE_PATH": output_file_path,
         },
     )
     logger.info("Batch job config: %s", batch_job_config)

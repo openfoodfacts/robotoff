@@ -18,7 +18,6 @@ def upload_file_to_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
 def fetch_dataframe_from_gcs(bucket_name: str, suffix: str) -> pd.DataFrame:
     """Download parquet file from Google Storage Bucket.
 
-
     :param bucket_name: Bucket name in GCP storage
     :param suffix: Path inside the bucket. Should lead to a parquet file.
     :return: Dataframe

@@ -24,21 +24,6 @@ def parse() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Spellcheck module.")
     parser.add_argument(
-        "--data_bucket", type=str, default="robotoff-spellcheck", help="Bucket name."
-    )
-    parser.add_argument(
-        "--pre_data_suffix",
-        type=str,
-        default="data/preprocessed_data.parquet",
-        help="Dataset suffix containing the data to be processed.",
-    )
-    parser.add_argument(
-        "--post_data_suffix",
-        type=str,
-        default="data/postprocessed_data.parquet",
-        help="Dataset suffix containing the processed data.",
-    )
-    parser.add_argument(
         "--model_path",
         default="openfoodfacts/spellcheck-mistral-7b",
         type=str,
@@ -84,8 +69,15 @@ def main():
     logger.info("Starting batch processing job.")
     args = parse()
 
-    logger.info(f"Loading data from GCS: {args.data_bucket}/{args.pre_data_suffix}")
-    data = load_gcs(bucket_name=args.data_bucket, suffix=args.pre_data_suffix)
+    bucket_name = os.environ["BUCKET_NAME"]
+    input_file_path = os.environ["INPUT_FILE_PATH"]
+    output_file_path = os.environ["OUTPUT_FILE_PATH"]
+    logger.info(
+        "Loading data from GCS: %s/%s",
+        bucket_name,
+        input_file_path,
+    )
+    data = load_gcs(bucket_name=bucket_name, suffix=input_file_path)
     logger.info(f"Feature in uploaded data: {data.columns}")
     if not all(feature in data.columns for feature in FEATURES_VALIDATION):
         raise ValueError(
@@ -108,14 +100,12 @@ def main():
         instructions, llm=llm, sampling_params=sampling_params
     )
 
-    logger.info(f"Uploading data to GCS: {args.data_bucket}/{args.post_data_suffix}")
+    logger.info("Uploading data to GCS: %s/%s", bucket_name, output_file_path)
     # Save DataFrame as Parquet to a temporary file
     with tempfile.NamedTemporaryFile(delete=True, suffix=".parquet") as temp_file:
         data.to_parquet(temp_file.name)
         temp_file_name = temp_file.name
-        upload_gcs(
-            temp_file_name, bucket_name=args.data_bucket, suffix=args.post_data_suffix
-        )
+        upload_gcs(temp_file_name, bucket_name=bucket_name, suffix=output_file_path)
 
     logger.info("Request Robotoff API batch import endpoint.")
     run_robotoff_endpoint_batch_import()
