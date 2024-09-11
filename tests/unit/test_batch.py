@@ -5,11 +5,9 @@ from pathlib import Path
 import pytest
 
 from robotoff import settings
-from robotoff.batch import GoogleBatchJobConfig
-from robotoff.batch.extraction import extract_from_dataset
+from robotoff.batch import GoogleBatchJobConfig, extract_from_dataset
 
 DIR = Path(__file__).parent
-SPELLCHECK_QUERY_FILE_PATH = settings.BATCH_JOB_CONFIG_DIR / "sql/spellcheck.sql"
 SPELLCHECK_BATCH_JOB_CONFIG_PATH = (
     settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
 )
@@ -37,6 +35,5 @@ def test_batch_extraction():
         file_path = os.path.join(tmp_dir, "data.parquet")
         extract_from_dataset(
             output_file_path=file_path,
-            query_file_path=SPELLCHECK_QUERY_FILE_PATH,
             dataset_path=DIR / "data/dataset_sample.jsonl.gz",
         )

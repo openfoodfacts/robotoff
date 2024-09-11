@@ -152,7 +152,7 @@ def extract_from_dataset(
         lang,
         popularity_key,
         (CAST(unknown_ingredients_n AS FLOAT) / CAST(ingredients_n AS FLOAT)) AS fraction
-        FROM read_ndjson({dataset_path}, ignore_errors=True)
+        FROM read_ndjson('{dataset_path}', ignore_errors=True)
         WHERE ingredients_text NOT LIKE ''
         AND fraction > {min_fraction_known} AND fraction <= {max_fraction_known}
         ORDER BY popularity_key DESC
