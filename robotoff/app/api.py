@@ -1777,6 +1777,7 @@ class LogoAnnotationCollection:
 class BatchJobImportResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         job_type_str: str = req.get_param("job_type", required=True)
+        batch_dir: str = req.get_param("batch_dir", required=True)
 
         try:
             job_type = BatchJobType[job_type_str]
@@ -1789,6 +1790,7 @@ class BatchJobImportResource:
             enqueue_job(
                 import_batch_predictions,
                 job_type=job_type,
+                batch_dir=batch_dir,
                 queue=low_queue,
                 job_kwargs={"timeout": "30m"},
             )

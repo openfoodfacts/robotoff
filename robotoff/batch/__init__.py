@@ -19,34 +19,27 @@ from .launch import GoogleBatchJobConfig, launch_job
 logger = get_logger(__name__)
 
 
-def import_batch_predictions(job_type: BatchJobType) -> None:
+def import_batch_predictions(job_type: BatchJobType, batch_dir: str) -> None:
     """Import batch predictions once the job finished.
     Need to be updated if different batch jobs are added.
     """
     if job_type is BatchJobType.ingredients_spellcheck:
-        import_spellcheck_batch_predictions()
+        import_spellcheck_batch_predictions(batch_dir)
     else:
         raise NotImplementedError(f"Batch job type {job_type} not implemented.")
 
 
-def import_spellcheck_batch_predictions() -> None:
+def import_spellcheck_batch_predictions(batch_dir: str) -> None:
     """Import spellcheck predictions from remote storage."""
     # Init
-    BUCKET_NAME = "robotoff-spellcheck"
-    SUFFIX_POSTPROCESS = "data/postprocessed_data.parquet"
-    PREDICTION_TYPE = PredictionType.ingredient_spellcheck
-    # We increment to allow import_insights to create a new version
-    PREDICTOR_VERSION = (
-        "llm-v1" + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    )
-    PREDICTOR = "fine-tuned-mistral-7b"
-    SERVER_TYPE = ServerType.off
+    bucket_name = "robotoff-batch"
+    processed_file_path = f"{batch_dir}/postprocessed_data.parquet"
 
     check_google_credentials()
 
-    df = fetch_dataframe_from_gcs(bucket_name=BUCKET_NAME, suffix=SUFFIX_POSTPROCESS)
+    df = fetch_dataframe_from_gcs(bucket_name=bucket_name, suffix=processed_file_path)
     logger.debug(
-        "Batch data downloaded from bucket %s/%s", BUCKET_NAME, SUFFIX_POSTPROCESS
+        "Batch data downloaded from bucket %s/%s", bucket_name, processed_file_path
     )
     logger.info("Number of rows in the batch data: %s", len(df))
 
@@ -55,19 +48,21 @@ def import_spellcheck_batch_predictions() -> None:
     for _, row in df.iterrows():
         predictions.append(
             Prediction(
-                type=PREDICTION_TYPE,
+                type=PredictionType.ingredient_spellcheck,
                 data={"original": row["text"], "correction": row["correction"]},
                 value_tag=row["lang"],
                 barcode=row["code"],
-                predictor_version=PREDICTOR_VERSION,
-                predictor=PREDICTOR,
+                # We increment to allow import_insights to create a new version
+                predictor_version="llm-v1-"
+                + datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                predictor="fine-tuned-mistral-7b",
                 automatic_processing=False,
             )
         )
     # Store predictions and insights
     with db:
         import_results = import_insights(
-            predictions=predictions, server_type=SERVER_TYPE
+            predictions=predictions, server_type=ServerType.off
         )
     logger.info("Batch import results: %s", import_results)
 
