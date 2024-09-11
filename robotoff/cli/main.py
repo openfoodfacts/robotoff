@@ -999,23 +999,24 @@ def create_migration(
 
 
 @app.command()
-def launch_batch_job(
-    job_type: str = typer.Argument(
-        ..., help="Type of job to launch. Ex: 'ingredients_spellcheck'"
-    ),
+def launch_spellcheck_batch_job(
+    min_fraction_known: float = 0,
+    max_fraction_known: float = 0.4,
+    limit: int = 10_000,
 ) -> None:
-    """Launch a batch job."""
-    from robotoff.batch import launch_batch_job as _launch_batch_job
-    from robotoff.types import BatchJobType
+    """Launch a spellcheck batch job."""
+
+    from robotoff.batch import (
+        launch_spellcheck_batch_job as _launch_spellcheck_batch_job,
+    )
     from robotoff.utils import get_logger
 
-    if job_type not in BatchJobType.__members__:
-        raise ValueError(
-            f"Invalid job type: {job_type}. Must be one of those: {[job.name for job in BatchJobType]}"
-        )
-
     get_logger()
-    _launch_batch_job(BatchJobType[job_type])
+    _launch_spellcheck_batch_job(
+        min_fraction_known=min_fraction_known,
+        max_fraction_known=max_fraction_known,
+        limit=limit,
+    )
 
 
 def main() -> None:

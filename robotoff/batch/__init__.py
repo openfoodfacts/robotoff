@@ -1,6 +1,11 @@
+import base64
 import datetime
+import json
 import os
 import tempfile
+from pathlib import Path
+
+import duckdb
 
 from robotoff import settings
 from robotoff.insights.importer import import_insights
@@ -9,20 +14,9 @@ from robotoff.types import BatchJobType, Prediction, PredictionType, ServerType
 from robotoff.utils import get_logger
 
 from .buckets import fetch_dataframe_from_gcs, upload_file_to_gcs
-from .extraction import extract_from_dataset
-from .launch import GoogleBatchJobConfig, check_google_credentials, launch_job
+from .launch import GoogleBatchJobConfig, launch_job
 
 logger = get_logger(__name__)
-
-
-def launch_batch_job(job_type: BatchJobType) -> None:
-    """Launch a batch job.
-    Need to be updated if different batch jobs are added.
-    """
-    if job_type is BatchJobType.ingredients_spellcheck:
-        launch_spellcheck_batch_job()
-    else:
-        raise NotImplementedError(f"Batch job type {job_type} not implemented.")
 
 
 def import_batch_predictions(job_type: BatchJobType) -> None:
@@ -33,45 +27,6 @@ def import_batch_predictions(job_type: BatchJobType) -> None:
         import_spellcheck_batch_predictions()
     else:
         raise NotImplementedError(f"Batch job type {job_type} not implemented.")
-
-
-def launch_spellcheck_batch_job() -> None:
-    """Launch spellcheck batch job."""
-    # Init
-    JOB_NAME = "ingredients-spellcheck"
-    QUERY_FILE_PATH = settings.BATCH_JOB_CONFIG_DIR / "sql/spellcheck.sql"
-    BATCH_JOB_CONFIG_PATH = (
-        settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
-    )
-    BUCKET_NAME = "robotoff-spellcheck"
-    SUFFIX_PREPROCESS = "data/preprocessed_data.parquet"
-
-    check_google_credentials()
-
-    logger.info("Extract batch from dataset.")
-    # Extract data from dataset
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        file_path = os.path.join(tmp_dir, "batch_data.parquet")
-        extract_from_dataset(QUERY_FILE_PATH, file_path)
-
-        # Upload the extracted file to the bucket
-        upload_file_to_gcs(
-            file_path=file_path, bucket_name=BUCKET_NAME, suffix=SUFFIX_PREPROCESS
-        )
-        logger.debug(f"File uploaded to the bucket {BUCKET_NAME}/{SUFFIX_PREPROCESS}")
-
-    # Launch batch job
-    batch_job_config = GoogleBatchJobConfig.init(
-        job_name=JOB_NAME,
-        config_path=BATCH_JOB_CONFIG_PATH,
-        env_variables={
-            "BATCH_JOB_KEY": os.environ["BATCH_JOB_KEY"],
-            "WEBHOOK_URL": f"{settings.BaseURLProvider.robotoff()}/api/v1/batch/import",
-        },
-    )
-    logger.info("Batch job config: %s", batch_job_config)
-    batch_job = launch_job(batch_job_config=batch_job_config)
-    logger.info("Batch job succesfully launched. Batch job %s", batch_job)
 
 
 def import_spellcheck_batch_predictions() -> None:
@@ -115,3 +70,103 @@ def import_spellcheck_batch_predictions() -> None:
             predictions=predictions, server_type=SERVER_TYPE
         )
     logger.info("Batch import results: %s", import_results)
+
+
+def launch_spellcheck_batch_job(
+    min_fraction_known: float = 0,
+    max_fraction_known: float = 0.4,
+    limit: int = 10_000,
+) -> None:
+    """Launch spellcheck batch job."""
+    # Init
+    JOB_NAME = "ingredients-spellcheck"
+    BATCH_JOB_CONFIG_PATH = (
+        settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
+    )
+    BUCKET_NAME = "robotoff-spellcheck"
+    SUFFIX_PREPROCESS = "data/preprocessed_data.parquet"
+
+    check_google_credentials()
+
+    logger.info("Extract batch from dataset.")
+    # Extract data from dataset
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        file_path = os.path.join(tmp_dir, "batch_data.parquet")
+        extract_from_dataset(
+            file_path,
+            min_fraction_known=min_fraction_known,
+            max_fraction_known=max_fraction_known,
+            limit=limit,
+        )
+        # Upload the extracted file to the bucket
+        upload_file_to_gcs(
+            file_path=file_path, bucket_name=BUCKET_NAME, suffix=SUFFIX_PREPROCESS
+        )
+        logger.debug(f"File uploaded to the bucket {BUCKET_NAME}/{SUFFIX_PREPROCESS}")
+
+    # Launch batch job
+    batch_job_config = GoogleBatchJobConfig.init(
+        job_name=JOB_NAME,
+        config_path=BATCH_JOB_CONFIG_PATH,
+        env_variables={
+            "BATCH_JOB_KEY": os.environ["BATCH_JOB_KEY"],
+            "WEBHOOK_URL": f"{settings.BaseURLProvider.robotoff()}/api/v1/batch/import",
+        },
+    )
+    logger.info("Batch job config: %s", batch_job_config)
+    batch_job = launch_job(batch_job_config=batch_job_config)
+    logger.info("Batch job succesfully launched. Batch job %s", batch_job)
+
+
+def extract_from_dataset(
+    output_file_path: str,
+    dataset_path: Path = settings.JSONL_DATASET_PATH,
+    min_fraction_known: float = 0,
+    max_fraction_known: float = 0.4,
+    limit: int = 10_000,
+) -> None:
+    """Using SQL queries, extract data from the JSONL dataset and save it as a parquet
+    file.
+
+    :param output_file_path: Path to save the extracted data.
+    :param dataset_path: Compressed jsonl database, defaults to
+        settings.JSONL_DATASET_PATH
+    :param min_fraction_known: Select products min fraction of known ingredients above
+        this, defaults to 0
+    :param max_fraction_known: Select products max fraction of known ingredients below
+        this, defaults to 0.4
+    :param limit: Maximal number of products to extract, defaults to 10_000
+    """
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Dataset path {str(dataset_path)} not found.")
+
+    query = f"""SELECT
+        code,
+        ingredients_text AS text,
+        product_name,
+        lang,
+        popularity_key,
+        (CAST(unknown_ingredients_n AS FLOAT) / CAST(ingredients_n AS FLOAT)) AS fraction
+        FROM read_ndjson({dataset_path}, ignore_errors=True)
+        WHERE ingredients_text NOT LIKE ''
+        AND fraction > {min_fraction_known} AND fraction <= {max_fraction_known}
+        ORDER BY popularity_key DESC
+        LIMIT {limit};"""
+    logger.debug(f"Query used to extract batch from dataset: {query}")
+    duckdb.sql(query).write_parquet(output_file_path)
+    logger.debug(f"Batch data succesfully extracted and saved at {output_file_path}")
+
+
+def check_google_credentials() -> None:
+    """Create google credentials from variable if doesn't exist."""
+    credentials_path = settings.PROJECT_DIR / "credentials/google/credentials.json"
+    if not credentials_path.is_file():
+        logger.info(
+            "No google credentials found at %s. Creating credentials from GOOGLE_CREDENTIALS.",
+            credentials_path,
+        )
+        credentials_path.parent.mkdir(parents=True, exist_ok=True)
+        credentials_base64 = os.environ["GOOGLE_CREDENTIALS"]
+        credentials = json.loads(base64.b64decode(credentials_base64).decode("utf-8"))
+        with open(credentials_path, "w") as f:
+            json.dump(credentials, f, indent=4)

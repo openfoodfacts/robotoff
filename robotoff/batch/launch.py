@@ -1,7 +1,4 @@
-import base64
 import datetime
-import json
-import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -14,21 +11,6 @@ from robotoff import settings
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
-
-
-def check_google_credentials() -> None:
-    """Create google credentials from variable if doesn't exist."""
-    credentials_path = settings.PROJECT_DIR / "credentials/google/credentials.json"
-    if not credentials_path.is_file():
-        logger.info(
-            "No google credentials found at %s. Creating credentials from GOOGLE_CREDENTIALS.",
-            credentials_path,
-        )
-        credentials_path.parent.mkdir(parents=True, exist_ok=True)
-        credentials_base64 = os.environ["GOOGLE_CREDENTIALS"]
-        credentials = json.loads(base64.b64decode(credentials_base64).decode("utf-8"))
-        with open(credentials_path, "w") as f:
-            json.dump(credentials, f, indent=4)
 
 
 class GoogleBatchJobConfig(BaseModel):
