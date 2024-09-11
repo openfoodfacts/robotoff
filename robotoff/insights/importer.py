@@ -1475,6 +1475,52 @@ class NutritionImageImporter(InsightImporter):
         return results
 
 
+class IngredientSpellcheckImporter(InsightImporter):
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.ingredient_spellcheck
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_spellcheck}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        yield from (
+            ProductInsight(**prediction.to_dict())
+            for prediction in predictions
+            if cls._keep_prediction(prediction=prediction, product=product)
+        )
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Same language
+        return candidate.value_tag == reference.value_tag
+
+    @classmethod
+    def _keep_prediction(
+        cls, prediction: Prediction, product: Optional[Product]
+    ) -> bool:
+        return (
+            # Spellcheck didn't correct
+            prediction.data["original"] != prediction.data["correction"]
+            # Modification of the original ingredients between two dataset dumps
+            # (24-hour period)
+            and (
+                product is None
+                or prediction.data["original"] != product.ingredients_text
+            )
+        )
+
+
 class PackagingElementTaxonomyException(Exception):
     pass
 
@@ -1810,6 +1856,7 @@ IMPORTERS: list[Type] = [
     PackagingImporter,
     UPCImageImporter,
     NutritionImageImporter,
+    IngredientSpellcheckImporter,
 ]
 
 

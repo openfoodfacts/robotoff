@@ -133,6 +133,7 @@ JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 2_800_000
+BATCH_JOB_CONFIG_DIR = PROJECT_DIR / "robotoff/batch/configs"
 
 # Products JSONL
 
@@ -356,3 +357,6 @@ TESTS_DISKCACHE_DIR = CACHE_DIR / "diskcache_tests_assets"
 
 # Domains allowed to be used as image sources while cropping
 CROP_ALLOWED_DOMAINS = os.environ.get("CROP_ALLOWED_DOMAINS", "").split(",")
+
+# Batch jobs
+GOOGLE_PROJECT_NAME = "robotoff"

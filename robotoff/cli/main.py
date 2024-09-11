@@ -998,5 +998,26 @@ def create_migration(
         router.create(name, auto=auto)
 
 
+@app.command()
+def launch_spellcheck_batch_job(
+    min_fraction_known: float = 0,
+    max_fraction_known: float = 0.4,
+    limit: int = 10_000,
+) -> None:
+    """Launch a spellcheck batch job."""
+
+    from robotoff.batch import (
+        launch_spellcheck_batch_job as _launch_spellcheck_batch_job,
+    )
+    from robotoff.utils import get_logger
+
+    get_logger()
+    _launch_spellcheck_batch_job(
+        min_fraction_known=min_fraction_known,
+        max_fraction_known=max_fraction_known,
+        limit=limit,
+    )
+
+
 def main() -> None:
     app()

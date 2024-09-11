@@ -25,7 +25,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
 from robotoff.app import schema
-from robotoff.app.auth import BasicAuthDecodeError, basic_decode
+from robotoff.app.auth import BasicAuthDecodeError, basic_decode, validate_token
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
@@ -40,6 +40,7 @@ from robotoff.app.core import (
     validate_params,
 )
 from robotoff.app.middleware import DBConnectionMiddleware
+from robotoff.batch import import_batch_predictions
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -74,6 +75,7 @@ from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
 from robotoff.products import get_image_id, get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
+    BatchJobType,
     InsightType,
     JSONType,
     NeuralCategoryClassifierModel,
@@ -295,6 +297,32 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     return OFFAuthentication(
         session_cookie=session_cookie, username=username, password=password
     )
+
+
+def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
+    """Parse and validate authentification token from request.
+
+    :param req: Request.
+    :type req: falcon.Request
+    :param ref_token_name: Secret environment variable name.
+    :type ref_token_name: str
+    :return: Token valid or not.
+    """
+    auth_header = req.get_header("Authorization", required=True)
+
+    try:
+        scheme, token = auth_header.strip().split()
+        if scheme.lower() != "bearer":
+            raise falcon.HTTPUnauthorized(
+                "Invalid authentication scheme: 'Bearer Token' expected."
+            )
+        is_token_valid = validate_token(token, ref_token_name)
+        if not is_token_valid:
+            raise falcon.HTTPUnauthorized("Invalid token.")
+        else:
+            return True
+    except ValueError:
+        raise falcon.HTTPUnauthorized("Invalid authentication scheme.")
 
 
 def device_id_from_request(req: falcon.Request) -> str:
@@ -1746,6 +1774,32 @@ class LogoAnnotationCollection:
         resp.media = response
 
 
+class BatchJobImportResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        job_type_str: str = req.get_param("job_type", required=True)
+        batch_dir: str = req.get_param("batch_dir", required=True)
+
+        try:
+            job_type = BatchJobType[job_type_str]
+        except KeyError:
+            raise falcon.HTTPBadRequest(
+                description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
+            )
+        # We secure the endpoint.
+        if parse_valid_token(req, "batch_job_key"):
+            enqueue_job(
+                import_batch_predictions,
+                job_type=job_type,
+                batch_dir=batch_dir,
+                queue=low_queue,
+                job_kwargs={"timeout": "30m"},
+            )
+        logger.info("Batch import %s has been queued.", job_type)
+
+        resp.media = {"status": "Request successful. Importing processed data."}
+        resp.status = falcon.HTTP_200
+
+
 class RobotsTxtResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         # Disallow completely indexation: otherwise web crawlers send millions
@@ -1821,4 +1875,5 @@ api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
+api.add_route("/api/v1/batch/import", BatchJobImportResource())
 api.add_route("/robots.txt", RobotsTxtResource())

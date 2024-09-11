@@ -38,7 +38,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "robotoff"
-version = "1.50.4"
+version = "1.50.5"
 description = "Real-time and batch prediction service for Open Food Facts."
 authors = ["Open Food Facts Team"]
 license = "GNU Affero General Public License v3"
@@ -58,7 +58,7 @@ jsonschema = "~4.4.0"
 orjson = ">=3.8.2,<3.10.0"
 Pillow = ">=9.3,<10.4"
 numpy = "~1.26.4"
-protobuf = "~3.19.0"
+protobuf = "~3.20.3"
 Pint = "0.22"
 APScheduler = "~3.10.1"
 more-itertools = "~8.9.0"
@@ -78,6 +78,11 @@ openfoodfacts = "1.1.1"
 imagehash = "~4.3.1"
 peewee-migrate = "~1.12.2"
 diskcache = "~5.6.3"
+google-cloud-batch = "~0.17.26"
+duckdb = "~1.0.0"
+google-cloud-storage = "~2.14.0"
+pandas = "~2.2.2"
+pyarrow = "~17.0.0"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = ">=1.14,<2.9"
@@ -114,6 +119,7 @@ rq-dashboard = "~0.6.1"
 
 [tool.poetry.group.dev.dependencies]
 types-pytz = "^2024.1.0.20240417"
+types-pyyaml = "^6.0.12.20240808"
 
 [tool.poetry.scripts]
 robotoff-cli = 'robotoff.cli.main:main'

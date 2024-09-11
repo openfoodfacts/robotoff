@@ -1105,6 +1105,28 @@ paths:
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
 
+  /batch/import:
+    post:
+      tags:
+        - Batch Job
+      summary: Import batch processed data to the Robotoff database.
+      security:
+        - batch_job_key: []
+      description:
+        Trigger import of the batch processed data to the Robotoff database. A `BATCH_JOB_KEY` is expected in the authorization header.
+        This endpoint is mainly used by the batch job once the job is finished.
+      parameters:
+        - $ref: "#/components/parameters/job_type"
+      responses:
+        "200":
+          description: Data successfully imported.
+          content:
+            application/json:
+              status:
+                type: string
+                description: Request successful. Importing processed data.
+        "400":
+          description: "An HTTP 400 is returned if the authentification key is invalid or if the job_type is not supported."
 
 components:
   schemas:
@@ -1391,6 +1413,21 @@ components:
       schema:
         type: integer
         example: 5410041040807
+    job_type:
+      name: job_type
+      in: query
+      required: true
+      description: The type of batch job launched.
+      schema:
+        type: string
+        enum:
+          - ingredients_spellcheck
+
+  securitySchemes:
+    batch_job_key:
+      type: http
+      scheme: bearer
+ 
 tags:
   - name: Questions
   - name: Insights

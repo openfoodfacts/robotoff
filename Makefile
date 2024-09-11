@@ -18,6 +18,11 @@ DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
 DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test COMMON_NET_NAME=po_test docker compose --env-file=${ENV_FILE}
 ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
 
+# Spellcheck
+SPELLCHECK_IMAGE_NAME = spellcheck-batch-vllm
+SPELLCHECK_TAG = latest
+SPELLCHECK_REGISTRY = europe-west9-docker.pkg.dev/robotoff/gcf-artifacts
+
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
 .PHONY: *
@@ -290,4 +295,17 @@ create-migration: guard-args
 
 # create network if not exists
 create-po-default-network:
-	docker network create po_default || true  
+	docker network create po_default || true 
+
+# Spellcheck
+build-spellcheck:
+	docker build -f batch/spellcheck/Dockerfile -t $(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG) batch/spellcheck
+
+# Push the image to the registry
+push-spellcheck:
+	docker tag $(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG) $(SPELLCHECK_REGISTRY)/$(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG)
+	docker push $(SPELLCHECK_REGISTRY)/$(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG)
+
+# Build and push in one command
+deploy-spellcheck: 
+	build-spellcheck push-spellcheck

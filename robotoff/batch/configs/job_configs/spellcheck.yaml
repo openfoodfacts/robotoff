@@ -1,0 +1,13 @@
+container_image_uri: "europe-west9-docker.pkg.dev/robotoff/gcf-artifacts/spellcheck-batch-vllm"
+cpu_milli: 1000
+memory_mib: 32000
+boot_disk_mib: 100000
+max_retry_count: 1
+max_run_duration: "54000s" # 15 hours
+task_count: "1"
+parallelism: "1"
+machine_type: "g2-standard-8"
+accelerators_type: "nvidia-l4"
+accelerators_count: "1"
+install_gpu_drivers: true
+location: "europe-west4"

@@ -417,6 +417,7 @@ class Product:
         "image_ids",
         "packagings",
         "lang",
+        "ingredients_text",
     )
 
     def __init__(self, product: JSONType):
@@ -439,6 +440,7 @@ class Product:
             else list(key for key in self.images.keys() if key.isdigit())
         )
         self.lang: Optional[str] = product.get("lang")
+        self.ingredients_text: Optional[str] = product.get("ingredients_text")
 
     @staticmethod
     def get_fields():
@@ -454,6 +456,8 @@ class Product:
             "stores_tags",
             "unique_scans_n",
             "images",
+            "lang",
+            "ingredients_text",
         }
 
 
