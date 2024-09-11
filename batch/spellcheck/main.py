@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import tempfile
+from pathlib import Path
 from typing import List
 
 import pandas as pd
@@ -10,7 +11,7 @@ import requests
 from google.cloud import storage
 from vllm import LLM, SamplingParams
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -107,8 +108,11 @@ def main():
         temp_file_name = temp_file.name
         upload_gcs(temp_file_name, bucket_name=bucket_name, suffix=output_file_path)
 
-    logger.info("Request Robotoff API batch import endpoint.")
-    run_robotoff_endpoint_batch_import()
+    batch_dir = str(Path(output_file_path).parent)
+    logger.info(
+        "Request Robotoff API batch import endpoint with batch_dir: %s", batch_dir
+    )
+    run_robotoff_endpoint_batch_import(batch_dir)
 
     logger.info("Batch processing job completed.")
 
@@ -181,7 +185,7 @@ def upload_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
     blob.upload_from_filename(filename=file_path)
 
 
-def run_robotoff_endpoint_batch_import():
+def run_robotoff_endpoint_batch_import(batch_dir: str):
     """Run Robotoff api endpoint to import batch data into tables."""
     if "WEBHOOK_URL" not in os.environ or "BATCH_JOB_KEY" not in os.environ:
         logger.error(
@@ -190,7 +194,7 @@ def run_robotoff_endpoint_batch_import():
         return
 
     url = os.environ["WEBHOOK_URL"]
-    data = {"job_type": "ingredients_spellcheck"}
+    data = {"job_type": "ingredients_spellcheck", "batch_dir": batch_dir}
     headers = {
         "Authorization": f"Bearer {os.environ['BATCH_JOB_KEY']}",
         "Content-Type": "application/json",
