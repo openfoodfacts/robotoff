@@ -10,7 +10,7 @@ For this reason, the Ingredients Spellcheck was developed to be implemented to s
 
 Mistral-7B-Base was [fine-tuned](#training-pipeline) on lists of ingredients extracted from the Open Food Facts database. This [dataset](https://huggingface.co/datasets/openfoodfacts/spellcheck-dataset) was synthetically generated using closed-source LLMs (GPT-3.5-Turbo) and manually reviewed with Argilla, an open-source annotation tool.
 
-The current model (v1) beats all other closed-source LLMs in term of Precison and Recall on our [benchmark](https://huggingface.co/datasets/openfoodfacts/spellcheck-benchmark). A custom [evaluation algorithm](#evaluation-algorithm) as created to correctly estimate the Spellcheck performances.
+The current model (v1) shows the best performances over the closed-source LLMs on our [benchmark](https://huggingface.co/datasets/openfoodfacts/spellcheck-benchmark). A custom [evaluation algorithm](#evaluation-algorithm) was created to correctly estimate the Spellcheck performances.
 
 
 | Model | Correction Precision | Correction Recall | Correction F1
@@ -25,11 +25,11 @@ The model is integrated into Robotoff in [Batch Inference](batch-job) using Goog
 
 ## Evaluation algorithm
 
-Our solution is very specific: correct errors in list of ingredients to enable the Ingredients Parser to accurately identify the composition of each product. 
+Our solution is very specific: correct errors in list of ingredients to enable the [Ingredients Parser](https://wiki.openfoodfacts.org/Ingredients_Extraction_and_Analysis) to accurately identify the composition of each product. 
 
-However, since the corrections are later added to the database, we need to ensure the model doesn't correct an ingredient, or any other character, by mistake. In other words, we need to reduce the number of False Positives while increasing the overall Recall.
+However, since the corrections are later added to the database, we need to ensure the model doesn't correct an ingredient by mistake. In other words, we minimize the number of False Positives while maximizing the overall Recall.
 
-Traditional evaluation metrics, such as [ROUGE](https://en.wikipedia.org/wiki/ROUGE_(metric)), [BLEU](https://en.wikipedia.org/wiki/BLEU), or [METEOR](https://en.wikipedia.org/wiki/METEOR) fall short in assessing the quality of the spellcheck process. They don't provide a detailed analysis of how many words were correctly rectified versus those that weren't...
+Traditional evaluation metrics, such as [ROUGE](https://en.wikipedia.org/wiki/ROUGE_(metric)), [BLEU](https://en.wikipedia.org/wiki/BLEU), or [METEOR](https://en.wikipedia.org/wiki/METEOR) fall short in assessing the quality of the spellcheck process. They don't provide a detailed analysis about how many words were correctly rectified versus those that weren't...
 
 Therefore, we developed an algorithm that takes 3 inputs: the original, the reference, and the prediction of a  list of ingredients.
 
@@ -40,7 +40,7 @@ Reference:      "The cat is on the fridge."
 Prediction:     "Th big cat is in the fridge."
 ```
 
-We transform each text into a sequence of tokens and perform a [sequence alignment method](https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm) to align identical tokens between respectfully original-reference pairs, and prediction-reference pairs. We assign 1 or 0 whether the tokens is modified.
+We transform each text into a sequence of tokens and perform a [sequence alignment method](https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm) to align identical tokens between respectively original-reference, and prediction-reference. We assign 1 or 0 whether the tokens is modified.
 
 By comparing these 2 pairs of sequences, we calculate the number of True Positives (TP), False Positives (FP), and True Negatives (TN). Therefore, the overall Precision and Recall.
 
@@ -65,17 +65,17 @@ It was also used to create the [benchmark](https://huggingface.co/datasets/openf
 
 The model is accessible on [Hugging Face](https://huggingface.co/openfoodfacts/spellcheck-mistral-7b), along its [demo](https://huggingface.co/spaces/jeremyarancio/ingredients-spellcheck).
 
-A text *instruction* is provided to the model during the training and inference, which you can find in the same model repository. 
+A text *instruction* is provided to the model during the training and inference, which you can find in the same model repository.
 
 ## Training pipeline
 
-The model training consists in a succession of steps, each one requiring different resources allocations, such as GPUs in the cloud, data validation and logging. For this reason, we decided to orchestrate the training using [Metaflow](https://metaflow.org/), an orchestrator designed for Data science and Machine Learning projects. 
+The model training consists in a succession of steps, each one requiring different resources allocations, such as cloud GPUs, data validation and logging. For this reason, we decided to orchestrate the training using [Metaflow](https://metaflow.org/), an orchestrator designed for Data science and Machine Learning projects. 
 
 The training pipeline[^dags] is composed as follow:
 
-* Configurations and hyperparameters are imported to the pipeline from config yaml files.
+* Configurations and hyperparameters are imported to the pipeline from config yaml files[^configs].
 * The training job is launched in the cloud using [AWS Sagemaker](https://aws.amazon.com/sagemaker/). The `spellcheck/src/` package, containing the different modules, is imported as well as the training script[^training-script]. Once the job done, the model artifact is stored in AWS S3 bucket (private). All training details are tracked in the [Experiment Tracker Comet ML](https://www.comet.com/jeremyarancio/spellcheck/view/WzBvzCs36VdE6MIbytKEI2ePH/experiments).
-* The fine-tuned model is then evaluated on the benchmark using the [custom evaluation algorithm](#evaluation-algorithm). [vLLM](https://github.com/vllm-project/vllm) is used for LLMs to accelerate the evaluation step. *Currently, this process is handled manually, but further work is needed to fully integrate it into the pipeline.*
+* The fine-tuned model is then evaluated on the benchmark using the [custom evaluation algorithm](#evaluation-algorithm). [vLLM](https://github.com/vllm-project/vllm) is used to accelerate the evaluation. *Currently, this process is handled manually, but further work is needed to fully integrate it into the pipeline.*
 * The predictions against the benchmark, also stored in AWS S3, are sent to Argilla for human-evaluation[^argilla-modules] under an unique ID: the *experiment key*. 
 
 ![Human-evaluation with Argilla](../assets/argilla.png)
@@ -98,6 +98,7 @@ Once the model is selected, the inference script with its dependencies are conta
 
 [^evaluation-algo]: see `spellcheck/src/spellcheck/evaluation/evaluator`
 [^dags]: see `scripts/dags`
+[^configs]: see `spellcheck/config/training`
 [^training-script]: see `spellcheck/scripts/training`
 [^argilla-modules]: see `spellcheck/src/spellcheck/argilla`
 [^spellcheck-inference]: see `robotoff/batch/spellcheck`
