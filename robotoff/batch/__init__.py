@@ -91,8 +91,9 @@ def import_spellcheck_batch_predictions() -> None:
 
     df = fetch_dataframe_from_gcs(bucket_name=BUCKET_NAME, suffix=SUFFIX_POSTPROCESS)
     logger.debug(
-        f"Batch data downloaded from bucket {BUCKET_NAME}/{SUFFIX_POSTPROCESS}"
+        "Batch data downloaded from bucket %s/%s", BUCKET_NAME, SUFFIX_POSTPROCESS
     )
+    logger.info("Number of rows in the batch data: %s", len(df))
 
     # Generate predictions
     predictions = []
