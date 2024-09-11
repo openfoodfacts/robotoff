@@ -176,6 +176,9 @@ jobs:
           # Google Cloud credentials
           echo "GOOGLE_CREDENTIALS=${{ secrets.GOOGLE_CREDENTIALS }}" >> .env
 
+          # Secret key to secure batch job import
+          echo "BATCH_JOB_KEY=${{ secrets.BATCH_JOB_KEY }}" >> .env
+
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master

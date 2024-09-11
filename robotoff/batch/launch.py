@@ -1,3 +1,4 @@
+import base64
 import datetime
 import json
 import os
@@ -24,7 +25,8 @@ def check_google_credentials() -> None:
             credentials_path,
         )
         credentials_path.parent.mkdir(parents=True, exist_ok=True)
-        credentials = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+        credentials_base64 = os.environ["GOOGLE_CREDENTIALS"]
+        credentials = json.loads(base64.b64decode(credentials_base64).decode("utf-8"))
         with open(credentials_path, "w") as f:
             json.dump(credentials, f, indent=4)
 
