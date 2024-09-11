@@ -14,23 +14,20 @@ SPELLCHECK_BATCH_JOB_CONFIG_PATH = (
     settings.BATCH_JOB_CONFIG_DIR / "job_configs/spellcheck.yaml"
 )
 
-os.environ["KEY"] = "value"
-
 
 @pytest.mark.parametrize(
-    "inputs",
+    "job_name,config_path,env_variables",
     [
-        ("ingredients-spellcheck", SPELLCHECK_BATCH_JOB_CONFIG_PATH, ["KEY"]),
+        ("ingredients-spellcheck", SPELLCHECK_BATCH_JOB_CONFIG_PATH, {"KEY": "value"}),
     ],
 )
-def test_batch_job_config_file(inputs):
+def test_batch_job_config_file(job_name, config_path, env_variables):
     """Test indirectly the batch job config file by validating with the Pydantic class
     model."""
-    job_name, config_path, env_names = inputs
     GoogleBatchJobConfig.init(
         job_name=job_name,
         config_path=config_path,
-        env_names=env_names,
+        env_variables=env_variables,
     )
 
 

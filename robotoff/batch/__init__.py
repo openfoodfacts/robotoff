@@ -45,7 +45,6 @@ def launch_spellcheck_batch_job() -> None:
     )
     BUCKET_NAME = "robotoff-spellcheck"
     SUFFIX_PREPROCESS = "data/preprocessed_data.parquet"
-    ENV_NAMES = ["BATCH_JOB_KEY"]
 
     check_google_credentials()
 
@@ -65,7 +64,10 @@ def launch_spellcheck_batch_job() -> None:
     batch_job_config = GoogleBatchJobConfig.init(
         job_name=JOB_NAME,
         config_path=BATCH_JOB_CONFIG_PATH,
-        env_names=ENV_NAMES,
+        env_variables={
+            "BATCH_JOB_KEY": os.environ["BATCH_JOB_KEY"],
+            "WEBHOOK_URL": f"{settings.BaseURLProvider.robotoff()}/api/v1/batch/import",
+        },
     )
     logger.info("Batch job config: %s", batch_job_config)
     batch_job = launch_job(batch_job_config=batch_job_config)

@@ -3,7 +3,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 import yaml
 from google.cloud import batch_v1
@@ -111,14 +111,14 @@ class GoogleBatchJobConfig(BaseModel):
         cls,
         job_name: str,
         config_path: Path,
-        env_names: Optional[Iterable[str]] = None,
+        env_variables: dict[str, str] | None = None,
     ) -> "GoogleBatchJobConfig":
         """Initialize the class with the configuration file corresponding to the job
         type.
 
         :param job_name: Name of the job.
         :param config_path: Path to the configuration file.
-        :param env_variables: List of environment variables to add to the job, defaults
+        :param env_variables: dict of environment variables to add to the job, defaults
             to None.
         """
         # Batch job name should respect a specific pattern, or returns an error
@@ -133,12 +133,7 @@ class GoogleBatchJobConfig(BaseModel):
             job_name + "-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         )
 
-        # Environment variables
-        if not env_names:
-            env_variables = {}
-        else:
-            env_variables = {var_name: os.environ[var_name] for var_name in env_names}
-
+        env_variables = env_variables or {}
         # Load config file from job_type
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)

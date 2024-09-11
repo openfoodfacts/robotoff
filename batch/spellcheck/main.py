@@ -1,15 +1,14 @@
-import os
 import argparse
-import tempfile
 import logging
+import os
 import sys
-import requests
+import tempfile
 from typing import List
 
 import pandas as pd
-from vllm import LLM, SamplingParams
+import requests
 from google.cloud import storage
-
+from vllm import LLM, SamplingParams
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -75,10 +74,12 @@ def parse() -> argparse.Namespace:
 def main():
     """Batch processing job.
 
-    Original lists of ingredients are stored in a gs bucket before being loaded then processed by the model.
-    The corrected lists of ingredients are then stored back in gs.
+    Original lists of ingredients are stored in a gs bucket before being loaded then
+    processed by the model. The corrected lists of ingredients are then stored back in
+    gs.
 
-    We use vLLM to process the batch optimaly. The model is loaded from the Open Food Facts Hugging Face model repository.
+    We use vLLM to process the batch optimaly. The model is loaded from the Open Food
+    Facts Hugging Face model repository.
     """
     logger.info("Starting batch processing job.")
     args = parse()
@@ -102,9 +103,7 @@ def main():
         temperature=args.temperature, max_tokens=args.max_tokens
     )
 
-    logger.info(
-        f"Starting batch inference:\n {llm}.\n\nSampling parameters: {sampling_params}"
-    )
+    logger.info(f"Starting batch inference, sampling parameters: {sampling_params}")
     data["correction"] = batch_inference(
         instructions, llm=llm, sampling_params=sampling_params
     )
@@ -194,10 +193,16 @@ def upload_gcs(file_path: str, bucket_name: str, suffix: str) -> None:
 
 def run_robotoff_endpoint_batch_import():
     """Run Robotoff api endpoint to import batch data into tables."""
-    url = "https://robotoff.openfoodfacts.org/api/v1/batch/import"
+    if "WEBHOOK_URL" not in os.environ or "BATCH_JOB_KEY" not in os.environ:
+        logger.error(
+            "WEBHOOK_URL and/or BATCH_JOB_KEY environment variable is missing."
+        )
+        return
+
+    url = os.environ["WEBHOOK_URL"]
     data = {"job_type": "ingredients_spellcheck"}
     headers = {
-        "Authorization": f"Bearer {os.getenv('BATCH_JOB_KEY')}",
+        "Authorization": f"Bearer {os.environ['BATCH_JOB_KEY']}",
         "Content-Type": "application/json",
     }
     try:
