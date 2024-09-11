@@ -94,7 +94,7 @@ dataset  = load_dataset(
 
 ## Integration with Batch Job
 
-Once the model is selected, the inference script with its dependencies are containerized in a Docker Image[^spellcheck-inference] before being pushed to the Image Registry[^makefile] (currently Google Artifact Registry). The image is then used within the [batch job pipeline](batch-job), defined by the batch job type `ingredients-spellcheck`.
+Once the model is selected, the inference script with its dependencies are containerized in a Docker Image[^spellcheck-inference] before being pushed to the Image Registry[^makefile] (currently Google Artifact Registry). The image is then used within the [batch job pipeline](../references/batch-job.md), defined by the batch job type `ingredients-spellcheck`.
 
 [^evaluation-algo]: see `spellcheck/src/spellcheck/evaluation/evaluator`
 [^dags]: see `scripts/dags`
