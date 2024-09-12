@@ -288,18 +288,13 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
     return bool(updated_fields)
 
 
-def _download_product_dataset():
-    logger.info("Downloading new version of product dataset")
-
-    if has_dataset_changed():
-        fetch_dataset()
-
-
 # this job does no use database
 def _update_data():
     """Refreshes the PO product dump data."""
+    logger.info("Downloading new version of product dataset")
     try:
-        _download_product_dataset()
+        if has_dataset_changed():
+            fetch_dataset()
     except requests.exceptions.RequestException:
         logger.exception("Exception during product dataset refresh")
 
@@ -341,7 +336,7 @@ def run():
     scheduler.add_job(save_insight_metrics, "cron", day="*", hour=1, max_instances=1)
 
     # This job refreshes data needed to generate insights.
-    scheduler.add_job(_update_data, "cron", day="*", hour="8", max_instances=1)
+    scheduler.add_job(_update_data, "cron", day="*", hour="15", max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO
     # dump by:
@@ -352,7 +347,7 @@ def run():
         refresh_insights,
         "cron",
         day="*",
-        hour="15",
+        hour="16",
         max_instances=1,
     )
 
