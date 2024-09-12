@@ -45,6 +45,9 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
 
     # Generate predictions
     predictions = []
+    # We increment to allow import_insights to create a new version
+    predictor_version = "llm-v1-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
     for _, row in df.iterrows():
         predictions.append(
             Prediction(
@@ -52,9 +55,7 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
                 data={"original": row["text"], "correction": row["correction"]},
                 value_tag=row["lang"],
                 barcode=row["code"],
-                # We increment to allow import_insights to create a new version
-                predictor_version="llm-v1-"
-                + datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+                predictor_version=predictor_version,
                 predictor="fine-tuned-mistral-7b",
                 automatic_processing=False,
             )
