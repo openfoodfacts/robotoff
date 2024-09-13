@@ -182,6 +182,7 @@ def predict_batch(
             "input_ids": batch_encoding.input_ids[idx],
             "offset_mapping": batch_encoding.offset_mapping[idx],
             "special_tokens_mask": batch_encoding.special_tokens_mask[idx],
+            "word_ids": batch_encoding.word_ids(idx),
         }
         pipeline_output = pipeline.postprocess(model_outputs, aggregation_strategy)
 
