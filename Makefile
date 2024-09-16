@@ -143,7 +143,7 @@ dl-ingredient-detection-model:
 	cd models/triton; \
     dir=ingredient-ner/1/model.onnx; \
 	mkdir -p $${dir}; \
-	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/pytorch-ingredient-detection-1.0/onnx.tar.gz > $${dir}/onnx.tar.gz; \
+	wget -cO - https://huggingface.co/openfoodfacts/ingredient-detection/resolve/main/onnx.tar.gz > $${dir}/onnx.tar.gz; \
 	cd $${dir}; \
 	tar -xzvf onnx.tar.gz --strip-component=1; \
 	rm onnx.tar.gz
