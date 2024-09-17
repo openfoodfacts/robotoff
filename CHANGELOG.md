@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.52.0](https://github.com/openfoodfacts/robotoff/compare/v1.51.0...v1.52.0) (2024-09-17)
+
+
+### Features
+
+* update ingredient detection model ([459f6f4](https://github.com/openfoodfacts/robotoff/commit/459f6f4689b5e0d5aa0d29a191d8b3fc92af013d))
+
+
+### Bug Fixes
+
+* bump ingredient detection model version ([dfa2614](https://github.com/openfoodfacts/robotoff/commit/dfa2614f8a81cd2326c83dc332054453a4417e4e))
+* fix entity aggregation bug for NER detection ([5f2b94c](https://github.com/openfoodfacts/robotoff/commit/5f2b94ce67ecc4f697cb194ff2bad702980b9102))
+* use datetime.now(timezone.utc) instead of utcnow() ([2203ecf](https://github.com/openfoodfacts/robotoff/commit/2203ecfaa4d8803f7a07709ca1203b805e8d12d5))
+* use the same predictor_version for all spellcheck predictions ([857fea1](https://github.com/openfoodfacts/robotoff/commit/857fea1e891b238b7e04b605338090eae1755f43))
+* wait for Product Opener to generate the dump before downloading it ([6eae9d5](https://github.com/openfoodfacts/robotoff/commit/6eae9d591f06eacaa9ea9ca11ceaf6fdc20bc665))
+
 ## [1.51.0](https://github.com/openfoodfacts/robotoff/compare/v1.50.5...v1.51.0) (2024-09-11)
 
 
