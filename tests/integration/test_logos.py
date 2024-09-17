@@ -60,13 +60,13 @@ def test_generate_insights_from_annotated_logos_job(peewee_db, monkeypatch, mock
             username=username,
         )
 
-    start = datetime.datetime.now(datetime.timezone.utc)
+    start = datetime.datetime.now()
     generate_insights_from_annotated_logos_job(
         [ann.id],
         OFFAuthentication(username=username, password=username),
         server_type=DEFAULT_SERVER_TYPE,
     )
-    end = datetime.datetime.now(datetime.timezone.utc)
+    end = datetime.datetime.now()
     # we generate a prediction
 
     with peewee_db:
