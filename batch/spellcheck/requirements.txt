@@ -1,2 +1,2 @@
-vllm==0.5.4
+vllm==0.5.5
 google-cloud-storage==2.18.0
