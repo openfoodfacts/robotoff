@@ -38,7 +38,7 @@ def insert_batch(
     model_version: str,
     server_type: ServerType,
 ) -> int:
-    timestamp = datetime.datetime.utcnow()
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
     logger.info("Loading seen set...")
     seen_set = get_seen_set(server_type)
     logger.info("Seen set loaded")

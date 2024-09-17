@@ -200,7 +200,7 @@ def save_nearest_neighbors(
             logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             }
             updated.append(logo_embedding.logo)
 

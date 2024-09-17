@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+import datetime
 from typing import Any
 
 import falcon.testing
@@ -145,7 +145,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
             annotation_type=None,
         )
     mocker.patch("robotoff.app.api.enqueue_job", return_value=None)
-    start = datetime.utcnow()
+    start = datetime.datetime.now(datetime.timezone.utc)
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
         json={
@@ -154,7 +154,7 @@ def test_logo_annotation_brand(client, peewee_db, monkeypatch, mocker, fake_taxo
         },
         headers=_AUTH_HEADER,
     )
-    end = datetime.utcnow()
+    end = datetime.datetime.now(datetime.timezone.utc)
     assert result.status_code == 200
     assert result.json == {"annotated": 1}
 
@@ -180,7 +180,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
             barcode=barcode, source_image=source_image, annotation_type=None
         )
     mocker.patch("robotoff.app.api.enqueue_job", return_value=None)
-    start = datetime.utcnow()
+    start = datetime.datetime.now(datetime.timezone.utc)
     result = client.simulate_post(
         "/api/v1/images/logos/annotate",
         json={
@@ -191,7 +191,7 @@ def test_logo_annotation_label(client, peewee_db, monkeypatch, fake_taxonomy, mo
         },
         headers=_AUTH_HEADER,
     )
-    end = datetime.utcnow()
+    end = datetime.datetime.now(datetime.timezone.utc)
     assert result.status_code == 200
     assert result.json == {"annotated": 1}
     with peewee_db:

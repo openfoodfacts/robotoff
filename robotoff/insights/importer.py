@@ -382,7 +382,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         It calls the `generate_candidates` method, specific to each insight
         type (and implemented in sub-classes).
         """
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
 
         product = product_store[product_id]
         references = get_existing_insight(cls.get_type(), product_id)
@@ -1776,7 +1776,7 @@ def import_product_predictions(
     :return: a (imported, deleted) tuple: the number of predictions imported
         and deleted in DB.
     """
-    timestamp = datetime.datetime.utcnow()
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
 
     deleted = 0
     if delete_previous_versions:

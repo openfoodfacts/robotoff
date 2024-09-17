@@ -47,7 +47,8 @@ def process_insights() -> None:
             .where(
                 ProductInsight.annotation.is_null(),
                 ProductInsight.process_after.is_null(False),
-                ProductInsight.process_after <= datetime.datetime.utcnow(),
+                ProductInsight.process_after
+                <= datetime.datetime.now(datetime.timezone.utc),
             )
             .iterator()
         ):
@@ -99,7 +100,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
     # Only OFF is currently supported
     server_type = ServerType.off
 
-    datetime_threshold = datetime.datetime.utcnow().replace(
+    datetime_threshold = datetime.datetime.now(datetime.timezone.utc).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
     dataset_datetime = datetime.datetime.fromtimestamp(

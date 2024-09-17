@@ -795,7 +795,7 @@ class ImagePredictionImporterResource:
     @jsonschema.validate(schema.IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         server_type = get_server_type_from_req(req)
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
         inserts = []
         media = req.get_media()
 
@@ -1077,7 +1077,7 @@ class ImageLogoDetailResource:
                 annotated_logos = update_logo_annotations(
                     [(type_, value, logo)],
                     username=auth.get_username() or "unknown",
-                    completed_at=datetime.datetime.utcnow(),
+                    completed_at=datetime.datetime.now(datetime.timezone.utc),
                 )
                 server_type = ServerType[logo.image_prediction.image.server_type]
                 generate_insights_from_annotated_logos(
@@ -1151,7 +1151,7 @@ class ImageLogoAnnotateResource:
             )
         server_type = get_server_type_from_req(req)
         annotations = media["annotations"]
-        completed_at = datetime.datetime.utcnow()
+        completed_at = datetime.datetime.now(datetime.timezone.utc)
         annotation_logos = []
 
         with db.atomic():
@@ -1209,7 +1209,7 @@ class ImageLogoUpdateResource:
 
         auth = parse_auth(req)
         username = None if auth is None else auth.get_username()
-        completed_at = datetime.datetime.utcnow()
+        completed_at = datetime.datetime.now(datetime.timezone.utc)
 
         target_value_tag = get_tag(target_value)
         source_value_tag = get_tag(source_value)

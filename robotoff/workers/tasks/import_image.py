@@ -340,7 +340,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
                     "class": prediction_class.value,
                 },
                 max_confidence=None,
-                timestamp=datetime.datetime.utcnow(),
+                timestamp=datetime.datetime.now(datetime.timezone.utc),
             )
 
         # no prediction neccessary if the image is not a UPC Image
@@ -684,7 +684,7 @@ def extract_ingredients_job(
             model_name=ingredient_list.MODEL_NAME,
             model_version=ingredient_list.MODEL_VERSION,
             data=ingredient_prediction_data,
-            timestamp=datetime.datetime.utcnow(),
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
             max_confidence=(
                 max(entity.score for entity in entities) if entities else None
             ),

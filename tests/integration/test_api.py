@@ -1,6 +1,6 @@
 import base64
+import datetime
 import uuid
-from datetime import datetime
 
 import pytest
 import requests
@@ -568,7 +568,7 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
     # we still have the vote, but we also have an authenticated validation
     assert insight.items() > {"username": "a", "n_votes": 1, "annotation": 1}.items()
     assert insight.get("completed_at") is not None
-    assert insight.get("completed_at") <= datetime.utcnow()
+    assert insight.get("completed_at") <= datetime.datetime.now(datetime.timezone.utc)
     # update was done
     add_category.assert_called_once_with(
         DEFAULT_PRODUCT_ID,

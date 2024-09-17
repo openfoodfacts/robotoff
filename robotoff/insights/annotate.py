@@ -165,7 +165,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 
         insight.username = username
         insight.annotation = annotation
-        insight.completed_at = datetime.datetime.utcnow()
+        insight.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
         if annotation in (1, 2) and update:
             # Save insight before processing the annotation

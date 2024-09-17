@@ -564,7 +564,7 @@ class TestInsightImporter:
                             "images": {
                                 "8": {
                                     "uploaded_t": (
-                                        datetime.datetime.utcnow()
+                                        datetime.datetime.now(datetime.timezone.utc)
                                         - datetime.timedelta(days=600)
                                     ).timestamp()
                                 }
