@@ -22,7 +22,7 @@ INGREDIENT_NER_MODEL_DIR = settings.TRITON_MODELS_DIR / "ingredient-ner/1/model.
 INGREDIENT_ID2LABEL = {0: "O", 1: "B-ING", 2: "I-ING"}
 
 MODEL_NAME = "ingredient-detection"
-MODEL_VERSION = "ingredient-detection-1.0"
+MODEL_VERSION = "ingredient-detection-1.1"
 
 
 @dataclasses.dataclass
