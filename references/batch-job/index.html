@@ -14,7 +14,7 @@
     
     
       
-        <title>Interactions with Product Opener - Robotoff</title>
+        <title>Google Batch Job - Robotoff</title>
       
     
     
@@ -61,7 +61,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#interactions-with-product-opener" class="md-skip">
+        <a href="#google-batch-job" class="md-skip">
           Skip to content
         </a>
       
@@ -91,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Interactions with Product Opener
+              Google Batch Job
             
           </span>
         </div>
@@ -385,12 +385,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
       
       <label class="md-nav__link" for="__nav_4">
         Technical reference
@@ -406,11 +408,133 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../references/batch-job/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Google Batch Job
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Google Batch Job
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    Architecture
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-launch-job" class="md-nav__link">
+    1. Launch job
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-config-files" class="md-nav__link">
+    2. Config files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-the-container-registry" class="md-nav__link">
+    3. The container registry
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-batch-job" class="md-nav__link">
+    4. Batch job
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-storage" class="md-nav__link">
+    5. Storage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-import-processed-data" class="md-nav__link">
+    6. Import processed data
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roles" class="md-nav__link">
+    Roles
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-notes" class="md-nav__link">
+    Additional notes
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    Links
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trials-and-errors-notes" class="md-nav__link">
+    Trials and errors notes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -420,7 +544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../references/ingredients-spellcheck/" class="md-nav__link">
+      <a href="../ingredients-spellcheck/" class="md-nav__link">
         Ingredients Spellcheck
       </a>
     </li>
@@ -432,7 +556,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../references/logos-ANN/" class="md-nav__link">
+      <a href="../logos-ANN/" class="md-nav__link">
         Logo-ANN
       </a>
     </li>
@@ -444,7 +568,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../references/models/" class="md-nav__link">
+      <a href="../models/" class="md-nav__link">
         Models
       </a>
     </li>
@@ -456,7 +580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../references/package/" class="md-nav__link">
+      <a href="../package/" class="md-nav__link">
         Package reference
       </a>
     </li>
@@ -489,7 +613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../references/predictions/nutrition-table/" class="md-nav__link">
+      <a href="../predictions/nutrition-table/" class="md-nav__link">
         Nutrition table
       </a>
     </li>
@@ -514,14 +638,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
       <label class="md-nav__link" for="__nav_5">
         Some explanations
@@ -539,7 +661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../category-prediction/" class="md-nav__link">
+      <a href="../../explanations/category-prediction/" class="md-nav__link">
         Category Prediction
       </a>
     </li>
@@ -551,7 +673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../db-migrations/" class="md-nav__link">
+      <a href="../../explanations/db-migrations/" class="md-nav__link">
         Database migrations
       </a>
     </li>
@@ -561,85 +683,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Interactions with Product Opener
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../explanations/interactions-product-opener/" class="md-nav__link">
         Interactions with Product Opener
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#redis-notification" class="md-nav__link">
-    Redis notification
-  </a>
-  
-    <nav class="md-nav" aria-label="Redis notification">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#product-update" class="md-nav__link">
-    Product update
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#image-uploaded" class="md-nav__link">
-    Image uploaded
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mongodb-interaction" class="md-nav__link">
-    MongoDB interaction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#product-opener-api" class="md-nav__link">
-    Product Opener API
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -649,7 +697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../predictions/" class="md-nav__link">
+      <a href="../../explanations/predictions/" class="md-nav__link">
         Predictions and insights
       </a>
     </li>
@@ -661,7 +709,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../questions/" class="md-nav__link">
+      <a href="../../explanations/questions/" class="md-nav__link">
         Question format proposal
       </a>
     </li>
@@ -673,7 +721,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../triton/" class="md-nav__link">
+      <a href="../../explanations/triton/" class="md-nav__link">
         Triton
       </a>
     </li>
@@ -856,23 +904,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#redis-notification" class="md-nav__link">
-    Redis notification
+  <a href="#architecture" class="md-nav__link">
+    Architecture
   </a>
   
-    <nav class="md-nav" aria-label="Redis notification">
+    <nav class="md-nav" aria-label="Architecture">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#product-update" class="md-nav__link">
-    Product update
+  <a href="#1-launch-job" class="md-nav__link">
+    1. Launch job
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#image-uploaded" class="md-nav__link">
-    Image uploaded
+  <a href="#2-config-files" class="md-nav__link">
+    2. Config files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-the-container-registry" class="md-nav__link">
+    3. The container registry
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-batch-job" class="md-nav__link">
+    4. Batch job
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-storage" class="md-nav__link">
+    5. Storage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-import-processed-data" class="md-nav__link">
+    6. Import processed data
   </a>
   
 </li>
@@ -883,16 +959,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mongodb-interaction" class="md-nav__link">
-    MongoDB interaction
+  <a href="#roles" class="md-nav__link">
+    Roles
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#product-opener-api" class="md-nav__link">
-    Product Opener API
+  <a href="#additional-notes" class="md-nav__link">
+    Additional notes
   </a>
+  
+    <nav class="md-nav" aria-label="Additional notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    Links
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trials-and-errors-notes" class="md-nav__link">
+    Trials and errors notes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -908,76 +1004,107 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/doc/explanations/interactions-product-opener.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/doc/references/batch-job.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="interactions-with-product-opener">Interactions with Product Opener</h1>
-<p>Robotoff mainly interacts with Product Opener (Open Food Facts backend service) through three means:</p>
+                <h1 id="google-batch-job">Google Batch Job</h1>
+<p>Robotoff primarily provides models to Open Food Facts with real-time inference using Nvidia Triton Inference on CPUs. </p>
+<p>However, this approach presents two major gaps:</p>
 <ul>
-<li>it receives updates through Redis when a product is created/modified/deleted or when an image is uploaded</li>
-<li>it has a direct read/write access to the underlying MongoDB that powers Open Food Facts</li>
-<li>it calls Product Opener API to update/delete products and images and to fetch some information</li>
+<li>Challenges in processing large volumes of products during extended job runs</li>
+<li>Limited access to larger computing resources, such as GPUs or multi-CPU setups</li>
 </ul>
-<h2 id="redis-notification">Redis notification</h2>
-<h3 id="product-update">Product update</h3>
-<p>A new event is published on the <code>product_updates_off</code> Redis stream whenever a product is updated or deleted. This event contains the following fields:</p>
+<p>To fill these gaps, we integrated a batch job feature into Robotoff, leveraging the capabilities of Google Cloud Platform.</p>
+<h2 id="architecture">Architecture</h2>
+<p><img alt="Robotoff Architecture" src="../../assets/batch_job_robotoff.svg" /></p>
+<p>The batch job pipeline is structured as follow:</p>
+<h3 id="1-launch-job">1. Launch job</h3>
+<p>The role of this command is to prepare and launch the job in the cloud. The launch depends on the type of job to perform, such as <code>ingredients-spellcheck</code>. Therefore, it takes as parameter <code>job_type</code>. </p>
+<p>Depending on the job type, the command will be responsible of:</p>
 <ul>
-<li><code>code</code>: the barcode of the product</li>
-<li><code>action</code>: the action performed, either <code>updated</code> or <code>deleted</code>. Image upload uses the <code>updated</code> action.</li>
-<li><code>flavor</code>: the flavor (<code>off</code>, <code>obf</code>, <code>opff</code>, <code>off_pro</code>)</li>
-<li><code>user_id</code>: the user ID that performed the action</li>
-<li><code>comment</code>: the user comment associated with the action</li>
-<li><code>diffs</code>: the differences between the old and new product data</li>
-<li><code>product_type</code>: the product type (<code>food</code>, <code>petfood</code>, <code>beauty</code>,...)</li>
+<li>Generate the google credentials from the production environment variables, </li>
+<li>Extracting, preparing and storing the data to process,</li>
+<li>Query the config file relative to the job and validate it using <a href="https://docs.pydantic.dev/latest/">Pydantic</a>,</li>
+<li>Launch the google batch job.</li>
 </ul>
-<p>After receiving an <code>updated</code> event, Robotoff does the following <sup id="fnref:product_update"><a class="footnote-ref" href="#fn:product_update">1</a></sup>:</p>
+<p>The command can be found as a Command <code>launch_batch_job</code> in the CLI directory<sup id="fnref:launch_batch_job_cli"><a class="footnote-ref" href="#fn:launch_batch_job_cli">1</a></sup>.</p>
+<h3 id="2-config-files">2. Config files</h3>
+<p>The configuration file define the resources and setup allocated to the google batch job. Each batch job requires an unique configuration, stored as a YAML file<sup id="fnref:config_files"><a class="footnote-ref" href="#fn:config_files">2</a></sup>. It contains:</p>
 <ul>
-<li>predict categories and import category predictions/insights</li>
-<li>generate and import predictions/insights from product name (regex/flashtext-based)</li>
-<li>refresh all insights for this product (i.e: import all predictions again, and update insight table accordingly)</li>
+<li>The resources location,</li>
+<li>The type and number of resources allocated,</li>
+<li>The maximal run duration,</li>
+<li>The number of tasks in parallele,</li>
+<li>The number of retries, ...</li>
 </ul>
-<h3 id="image-uploaded">Image uploaded</h3>
-<p>Uploaded images trigger an <code>updated</code> event, with the following diffs:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;uploaded_images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;add&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>with <code>1</code> being the ID of the uploaded image.</p>
-<p>After receiving this event, Robotoff does the following <sup id="fnref:image_import"><a class="footnote-ref" href="#fn:image_import">2</a></sup>:</p>
+<p>When initiating a job, the configuration is validated using the <a href="https://docs.pydantic.dev/latest/">Pydantic</a> library. This process serves two purposes:</p>
 <ul>
-<li>save the image metadata in the <code>Image</code> DB table</li>
-<li>import insights from the image</li>
-<li>run logo detection pipeline on the image</li>
+<li>Prevents errors that could potentially cause the pipeline to fail,</li>
+<li>Safeguards against the allocation of unnecessarily expensive resources.</li>
 </ul>
-<p>Insight import includes the following steps:</p>
+<p>For more information about Google Batch Job configuration, check the <a href="https://cloud.google.com/batch/docs/reference/rest/v1/projects.locations.jobs">official documentation</a>.</p>
+<h3 id="3-the-container-registry">3. The container registry</h3>
+<p>The container registry represents the core of the batch job. It contains the required dependencies and algorithms.</p>
+<p>Docker images are maintained independently of the Robotoff micro-service <sup id="fnref:dockerfile"><a class="footnote-ref" href="#fn:dockerfile">3</a></sup>. Each directory contains the files with their <code>Dockerfile</code>. Once built, the Docker image is pushed manually using the Make command written in the Makefile, such as <code>deploy-spellcheck</code>.</p>
+<p>The container needs to be accessible from the batch job once launched. Can be used as registry:</p>
 <ul>
-<li>extract and import regex/flashtext predictions and insights from the image OCR</li>
-<li>run the nutriscore object detection model, if the "NUTRISCORE" string was detected in the OCR text. This is to avoid wasting compute resources and preventing false positive results.</li>
-<li>run logo detection pipeline: detect logos using the object detection models, generate embeddings from logo crops and index them in the Elasticsearch ANN index.</li>
+<li>Google Artifact Registry within the project <code>Robotoff</code>,</li>
+<li>Docker hub,</li>
+<li>Public GitHub repository, such as <a href="https://github.com/openfoodfacts/robotoff/tree/main">Robotoff</a>.</li>
 </ul>
-<h2 id="mongodb-interaction">MongoDB interaction</h2>
-<p>Robotoff often needs to access the latest information about product. As the API is sometimes unresponsive, Robotoff has a direct access to the MongoDB. It is used to fetch the product data in the <code>products</code> collection.</p>
-<p>Robotoff also has a write access, that allows it to add facets dynamically. This process is done every night; only the <code>en:missing-nutrition-facts-fibers-present-on-photos</code> quality facet is currently added by Robotoff.</p>
-<h2 id="product-opener-api">Product Opener API</h2>
-<p>Robotoff also interacts directly with Product Opener through it's API. Everytime an insight is annotated (<code>annotation=1</code>), either manually or automatically, Robotoff calls Product Opener API to perform the associated action (update the product, delete an image,...).</p>
-<p>Robotoff also depends on static resources from Product Opener:</p>
+<h3 id="4-batch-job">4. Batch job</h3>
+<p>Once launched, the batch job goes throught different stages: SCHEDULED, QUEUED, RUNNING, SUCCEEDED, or FAILED. Each batch job is identified as the job type name associated with the launch <code>datetime</code>.</p>
+<p>During the run, all logs are stored in the Batch Job logs file.</p>
+<p>The list of batch jobs are located in the <a href="https://console.cloud.google.com/batch/jobs?referrer=search&amp;project=robotoff">Robotoff Google Batch Job</a>.</p>
+<h3 id="5-storage">5. Storage</h3>
+<p>If the batch job requires to import or export data, we use a storage feature such as Google Storage as an interface between Robotoff and the job running in the cloud.</p>
+<p>If Google Storage is used, Google credentials are necessary on the Robotoff side. On the other side, since the Batch Job utilizes the default <a href="https://cloud.google.com/iam/docs/service-account-overview">service account</a> associated with the project <code>Robotoff</code>, no additional setup is required.</p>
+<h3 id="6-import-processed-data">6. Import processed data</h3>
+<p>Once the job is successfully finished, the Robotoff API endpoint is queried from the job run through with an HTTP request.</p>
+<p>The role of this endpoint is to load the data processed by the batch job and import the new <em>predictions</em> to the Robotoff database. Check this <a href="../../explanations/predictions/">page</a> to understand the process Robotoff used to transform raw <em>Predictions</em> into <em>Insights</em>.</p>
+<p>Since this endpoint has only the vocation of importing the batch job results, it is secured with a <code>BATCH_JOB_KEY</code> from external requests. This secured endpoint follows a <a href="https://swagger.io/docs/specification/authentication/bearer-authentication/">Bearer Authentication</a>. The key is set as an environment variable in Robotoff and is defined as batch environment variable during a job launch.</p>
+<p>Each batch job has its own method to import, or not, the results of the batch job.</p>
+<h2 id="roles">Roles</h2>
+<p>To launch a batch job and import its results, the following roles needs to be set up:</p>
 <ul>
-<li>taxonomy files (ex: <code>https://static.openfoodfacts.org/data/taxonomies/categories.full.json</code>) which are downloaded and cached in RAM</li>
-<li>the JSONL dump: <code>https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz</code>. This is used to scan the entire database and update predictions/insights without having to do a full MongoDB scan.</li>
-<li>images/OCR files</li>
+<li><strong>Artifact Registry Editor</strong>: to push Docker Image to the project image registry</li>
+<li><strong>Batch Job Editor</strong></li>
+<li><strong>Service Account User</strong></li>
+<li><strong>Storage Admin</strong></li>
+</ul>
+<p>For production, it is preferable to create a custom <em>Service account</em> with these roles.</p>
+<h2 id="additional-notes">Additional notes</h2>
+<h3 id="links">Links</h3>
+<p>Check the official Google Batch Job documentation:</p>
+<ul>
+<li><a href="https://cloud.google.com/batch/docs/get-started">Batch Job</a>,</li>
+<li><a href="https://cloud.google.com/python/docs/reference/batch/latest">Google Batch Job Python API</a>,</li>
+<li><a href="https://github.com/GoogleCloudPlatform/python-docs-samples/tree/main/batch">Batch job with Python examples</a>,</li>
+</ul>
+<h3 id="trials-and-errors-notes">Trials and errors notes</h3>
+<ul>
+<li>Netherland (europe-west4) has GPUs (A100, L4)</li>
+<li>Add custom storage capacity to host the heavy docker image (~24GB) by adding <code>BootDisk</code></li>
+<li>1000 products processed: 1:30min (g2-instance-with 8) (overall batch job: 3:25min):</li>
+<li>L4: g2-instance-8 hourly cost: $0.896306 ==&gt; ~ 0.05$ to process batch of 1000</li>
+<li>A100: a2-highgpu-1g: $3.748064</li>
+<li>A100/Cuda doesn't support FP8</li>
+<li>A100 has less availability than L4: need to wait for batch job (can be long) or switch to us-east location</li>
+<li>Don't forget to enable <strong>Batch &amp; Storage API</strong> if used without gcloud (<a href="https://cloud.google.com/batch/docs/get-started#project-prerequisites">link</a>)</li>
 </ul>
 <div class="footnote">
 <hr />
 <ol>
-<li id="fn:product_update">
-<p>see <code>update_insights_job</code> function in <code>robotoff.workers.tasks.product_updated</code>&#160;<a class="footnote-backref" href="#fnref:product_update" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<li id="fn:launch_batch_job_cli">
+<p>see <code>./robotoff/cli/main.py</code>&#160;<a class="footnote-backref" href="#fnref:launch_batch_job_cli" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
-<li id="fn:image_import">
-<p>see <code>run_import_image_job</code> function in <code>robotoff.workers.tasks.import_image</code>&#160;<a class="footnote-backref" href="#fnref:image_import" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+<li id="fn:config_files">
+<p>see <code>./robotoff/batch/configs/job_configs</code>&#160;<a class="footnote-backref" href="#fnref:config_files" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:dockerfile">
+<p>see <code>./batch/</code>&#160;<a class="footnote-backref" href="#fnref:dockerfile" title="Jump back to footnote 3 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
@@ -1000,7 +1127,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../db-migrations/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Database migrations" rel="prev">
+        <a href="../../how-to-guides/deployment/maintenance/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Services maintenance" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1009,20 +1136,20 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Database migrations
+              Services maintenance
             </div>
           </div>
         </a>
       
       
         
-        <a href="../predictions/" class="md-footer__link md-footer__link--next" aria-label="Next: Predictions and insights" rel="next">
+        <a href="../ingredients-spellcheck/" class="md-footer__link md-footer__link--next" aria-label="Next: Ingredients Spellcheck" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Predictions and insights
+              Ingredients Spellcheck
             </div>
           </div>
           <div class="md-footer__button md-icon">
