@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.52.1](https://github.com/openfoodfacts/robotoff/compare/v1.52.0...v1.52.1) (2024-09-18)
+
+
+### Technical
+
+* :memo: Batch Job - Spellcheck documentation ([#1408](https://github.com/openfoodfacts/robotoff/issues/1408)) ([2748324](https://github.com/openfoodfacts/robotoff/commit/2748324b40aab6f5c11d31e03d24ac31de93e1af))
+* **deps:** bump vllm from 0.5.4 to 0.5.5 in /batch/spellcheck ([9a09729](https://github.com/openfoodfacts/robotoff/commit/9a09729406c92947633cf3d0157904839533dc46))
+
 ## [1.52.0](https://github.com/openfoodfacts/robotoff/compare/v1.51.0...v1.52.0) (2024-09-17)
 
 
