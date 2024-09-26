@@ -4,7 +4,7 @@ from peewee_migrate import Migrator
 
 def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
     migrator.sql(
-        "CREATE INDEX CONCURRENTLY IF NOT EXISTS logo_annotation_server_type ON logo_annotation (server_type)"
+        "CREATE INDEX IF NOT EXISTS logo_annotation_server_type ON logo_annotation (server_type)"
     )
 
 
