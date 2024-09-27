@@ -68,7 +68,7 @@ from robotoff.off import (
     generate_json_ocr_url,
     get_barcode_from_url,
 )
-from robotoff.prediction import ingredient_list
+from robotoff.prediction import image_classifier, ingredient_list
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.langid import predict_lang
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
@@ -76,6 +76,7 @@ from robotoff.products import get_image_id, get_product, get_product_dataset_eta
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
     BatchJobType,
+    ImageClassificationModel,
     InsightType,
     JSONType,
     NeuralCategoryClassifierModel,
@@ -858,14 +859,17 @@ class ImagePredictorResource:
         image_url = req.get_param("image_url", required=True)
         models: list[str] = req.get_param_as_list("models", required=True)
 
-        available_models = ObjectDetectionModelRegistry.get_available_models()
+        available_object_detection_models = (
+            ObjectDetectionModelRegistry.get_available_models()
+        )
+        available_clf_models = list(ImageClassificationModel.__members__.keys())
+        available_models = available_object_detection_models + available_clf_models
 
         for model_name in models:
             if model_name not in available_models:
                 raise falcon.HTTPBadRequest(
                     "invalid_model",
-                    "unknown model {}, available models: {}"
-                    "".format(model_name, ", ".join(available_models)),
+                    f"unknown model {model_name}, available models: {', '.join(available_models)}",
                 )
 
         output_image = req.get_param_as_bool("output_image")
@@ -873,12 +877,18 @@ class ImagePredictorResource:
         if output_image is None:
             output_image = False
 
-        if output_image and len(models) != 1:
-            raise falcon.HTTPBadRequest(
-                "invalid_request",
-                "a single model must be specified with the `models` parameter "
-                "when `output_image` is True",
-            )
+        if output_image:
+            if len(models) != 1:
+                raise falcon.HTTPBadRequest(
+                    "invalid_request",
+                    "a single model must be specified with the `models` parameter "
+                    "when `output_image` is True",
+                )
+            if models[0] not in available_object_detection_models:
+                raise falcon.HTTPBadRequest(
+                    "invalid_request",
+                    f"model {models[0]} does not support image output",
+                )
 
         image = get_image_from_url(
             image_url, session=http_session, error_raise=False, use_cache=True
@@ -890,15 +900,26 @@ class ImagePredictorResource:
         predictions = {}
 
         for model_name in models:
-            model = ObjectDetectionModelRegistry.get(model_name)
-            result = model.detect_from_image(image, output_image=output_image)
+            if model_name in available_object_detection_models:
+                model = ObjectDetectionModelRegistry.get(model_name)
+                result = model.detect_from_image(image, output_image=output_image)
 
-            if output_image:
-                boxed_image = cast(Image.Image, result.boxed_image)
-                image_response(boxed_image, resp)
-                return
+                if output_image:
+                    boxed_image = cast(Image.Image, result.boxed_image)
+                    image_response(boxed_image, resp)
+                    return
+                else:
+                    predictions[model_name] = result.to_json()
             else:
-                predictions[model_name] = result.to_json()
+                model_enum = ImageClassificationModel[model_name]
+                classifier = image_classifier.ImageClassifier(
+                    model_enum.name,
+                    label_names=image_classifier.LABEL_NAMES[model_enum],
+                )
+                predictions[model_name] = [
+                    {"label": label, "score": score}
+                    for label, score in classifier.predict(image)
+                ]
 
         resp.media = {"predictions": predictions}
 

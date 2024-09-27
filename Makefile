@@ -17,6 +17,8 @@ HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
 DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test COMMON_NET_NAME=po_test docker compose --env-file=${ENV_FILE}
 ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
+# Use bash shell for variable substitution
+SHELL := /bin/bash
 
 # Spellcheck
 SPELLCHECK_IMAGE_NAME = spellcheck-batch-vllm
@@ -147,6 +149,17 @@ dl-ingredient-detection-model:
 	cd $${dir}; \
 	tar -xzvf onnx.tar.gz --strip-component=1; \
 	rm onnx.tar.gz
+
+dl-image-clf-models:
+	@echo "⏬ Downloading image classification model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+	for asset_name in 'price-proof-classification'; \
+		do \
+			dir=$${asset_name//-/_}/1; \
+			mkdir -p $${dir}; \
+			wget -cO - https://huggingface.co/openfoodfacts/$${asset_name}/resolve/main/weights/best.onnx > $${dir}/model.onnx; \
+	done;
 
 init-elasticsearch:
 	@echo "Initializing elasticsearch indices"
