@@ -7,11 +7,11 @@
 services:
   triton:
     restart: $RESTART_POLICY
-    image: nvcr.io/nvidia/tritonserver:24.01-py3
+    image: nvcr.io/nvidia/tritonserver:24.08-py3
     ports:
-     - ${TRITON_EXPOSE_HTTP:-8000}:8000
-     - ${TRITON_EXPOSE_GRPC:-8001}:8001
-     - ${TRITON_EXPOSE_METRICS:-8002}:8002
+      - ${TRITON_EXPOSE_HTTP:-8000}:8000
+      - ${TRITON_EXPOSE_GRPC:-8001}:8001
+      - ${TRITON_EXPOSE_METRICS:-8002}:8002
     volumes:
       - ${TRITON_MODELS_DIR:-../models/triton}:/models
     # We need to add nvidia_entrypoint.sh for the GPU to be correctly detected

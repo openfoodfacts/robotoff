@@ -35,6 +35,10 @@ class ObjectDetectionModel(enum.Enum):
         return "universal-logo-detector"
 
 
+class ImageClassificationModel(str, enum.Enum):
+    price_proof_classification = enum.auto()
+
+
 @enum.unique
 class NeuralCategoryClassifierModel(enum.Enum):
     keras_image_embeddings_3_0 = "keras-image-embeddings-3.0"
