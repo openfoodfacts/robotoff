@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.53.0](https://github.com/openfoodfacts/robotoff/compare/v1.52.1...v1.53.0) (2024-10-01)
+
+
+### Features
+
+* Add image classifier models ([#1421](https://github.com/openfoodfacts/robotoff/issues/1421)) ([bd369da](https://github.com/openfoodfacts/robotoff/commit/bd369dac2f1e80229965ec95ae7f54a19ddb7e91))
+
+
+### Bug Fixes
+
+* don't create index concurrently in migration ([96d3374](https://github.com/openfoodfacts/robotoff/commit/96d33744074c149aeb169d60d7e58e6dcb8ecc87))
+* remove old object detection models ([#1423](https://github.com/openfoodfacts/robotoff/issues/1423)) ([4d22142](https://github.com/openfoodfacts/robotoff/commit/4d221427490859c8f8fc8995ff00f0d9dd9b0035))
+* remove scripts/ocr/run_ocr.py ([2d8fbaf](https://github.com/openfoodfacts/robotoff/commit/2d8fbaffa1f86792e25d58e3b4ef95dd1d71ef1d))
+
 ## [1.52.1](https://github.com/openfoodfacts/robotoff/compare/v1.52.0...v1.52.1) (2024-09-18)
 
 
