@@ -111,7 +111,7 @@ class ImagePredictionFactory(PeeweeModelFactory):
         model = ImagePrediction
 
     type = "object_detection"
-    model_name = "universal-logo-detector"
+    model_name = "universal_logo_detector"
     model_version = "tf-universal-logo-detector-1.0"
     data = {
         "objects": [

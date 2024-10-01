@@ -77,7 +77,7 @@ def run_object_detection_model(
     """
     if (
         existing_image_prediction := ImagePrediction.get_or_none(
-            image=image_model, model_name=model_name.get_type()
+            image=image_model, model_name=model_name.name
         )
     ) is not None:
         if return_null_if_exist:
@@ -85,7 +85,7 @@ def run_object_detection_model(
         return existing_image_prediction
 
     timestamp = datetime.datetime.now(datetime.timezone.utc)
-    results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
+    results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
         image, output_image=False, triton_uri=triton_uri, threshold=threshold
     )
     data = results.to_json()
@@ -93,7 +93,7 @@ def run_object_detection_model(
     return ImagePrediction.create(
         image=image_model,
         type="object_detection",
-        model_name=model_name.get_type(),
+        model_name=model_name.name,
         model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
         data={"objects": data},
         timestamp=timestamp,

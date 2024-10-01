@@ -541,9 +541,9 @@ def run_object_detection_model(
 
     if model_name == ObjectDetectionModel.universal_logo_detector:
         func: Callable = run_logo_object_detection
-    elif model_name == ObjectDetectionModel.nutrition_table_yolo:
+    elif model_name == ObjectDetectionModel.nutrition_table:
         func = run_nutrition_table_object_detection
-    elif model_name == ObjectDetectionModel.nutriscore_yolo:
+    elif model_name == ObjectDetectionModel.nutriscore:
         func = run_nutriscore_object_detection
     else:
         raise ValueError(f"unsupported model: {model_name}")
@@ -568,7 +568,7 @@ def run_object_detection_model(
                     JOIN.LEFT_OUTER,
                     on=(
                         (ImagePrediction.image_id == ImageModel.id)
-                        & (ImagePrediction.model_name == model_name.value)
+                        & (ImagePrediction.model_name == model_name.name)
                     ),
                 )
                 .where(
