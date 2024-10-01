@@ -13,7 +13,7 @@ logger = get_logger()
 
 
 DATA_PATH = settings.DATASET_DIR / "logos-paperspace.jsonl.gz"
-MODEL_NAME = "universal-logo-detector"
+MODEL_NAME = "universal_logo_detector"
 MODEL_VERSION = "tf-universal-logo-detector-1.0"
 TYPE = "object_detection"
 SERVER_TYPE = ServerType.off

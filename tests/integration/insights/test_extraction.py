@@ -71,7 +71,7 @@ def test_run_object_detection_model(mocker, image_model, model_name, label_names
     )
     assert isinstance(image_prediction, ImagePrediction)
     assert image_prediction.type == "object_detection"
-    assert image_prediction.model_name == model_name.value
+    assert image_prediction.model_name == model_name.name
     assert image_prediction.data == {
         "objects": [
             {"bounding_box": (1, 2, 3, 4), "score": 0.8, "label": label_names[1]}

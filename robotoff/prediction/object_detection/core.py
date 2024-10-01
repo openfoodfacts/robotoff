@@ -21,10 +21,8 @@ LABEL_NAMES_FILENAME = "labels.txt"
 
 
 OBJECT_DETECTION_MODEL_VERSION = {
-    ObjectDetectionModel.nutriscore: "tf-nutriscore-1.0",
-    ObjectDetectionModel.nutriscore_yolo: "yolo-nutriscore-1.0",
-    ObjectDetectionModel.nutrition_table: "tf-nutrition-table-1.0",
-    ObjectDetectionModel.nutrition_table_yolo: "yolo-nutrition-table-1.0",
+    ObjectDetectionModel.nutriscore: "yolo-nutriscore-1.0",
+    ObjectDetectionModel.nutrition_table: "yolo-nutrition-table-1.0",
     ObjectDetectionModel.universal_logo_detector: "tf-universal-logo-detector-1.0",
 }
 
@@ -383,45 +381,43 @@ class RemoteModel:
 
 
 class ObjectDetectionModelRegistry:
-    models: dict[str, RemoteModel] = {}
+    models: dict[ObjectDetectionModel, RemoteModel] = {}
     _loaded = False
-
-    @classmethod
-    def get_available_models(cls) -> list[str]:
-        cls.load_all()
-        return list(cls.models.keys())
 
     @classmethod
     def load_all(cls):
         if cls._loaded:
             return
         for model in ObjectDetectionModel:
-            model_name = model.value
-            file_path = settings.TRITON_MODELS_DIR / model_name
-            if file_path.is_dir():
-                logger.info("Model %s found", model_name)
-                cls.models[model_name] = cls.load(model_name, file_path)
-            else:
-                logger.info("Missing model: %s", model_name)
+            model_dir = settings.TRITON_MODELS_DIR / model.name
+            if not model_dir.exists():
+                logger.warning("Model directory %s does not exist", model_dir)
+                continue
+            cls.models[model] = cls.load(model, model_dir)
         cls._loaded = True
 
     @classmethod
-    def load(cls, name: str, model_dir: pathlib.Path) -> RemoteModel:
-        # To keep compatibility with the old models, we temporarily use the
-        # model name as a heuristic to determine the backend
+    def load(cls, model: ObjectDetectionModel, model_dir: pathlib.Path) -> RemoteModel:
+        # To keep compatibility with the old models, we temporarily specify
+        # here the backend to use for each model (Tensorflow Object Detection or YOLO).
         # Tensorflow Object Detection models are going to be phased out in
         # favor of YOLO models
-        backend = "yolo" if "yolo" in name else "tf"
+        backend = (
+            "yolo"
+            if model
+            in (ObjectDetectionModel.nutriscore, ObjectDetectionModel.nutrition_table)
+            else "tf"
+        )
         label_names = list(text_file_iter(model_dir / LABEL_NAMES_FILENAME))
 
         if backend == "tf":
             label_names.insert(0, "NULL")
 
-        model = RemoteModel(name, label_names, backend=backend)
-        cls.models[name] = model
-        return model
+        remote_model = RemoteModel(model.name, label_names, backend=backend)
+        cls.models[model] = remote_model
+        return remote_model
 
     @classmethod
-    def get(cls, name: str) -> RemoteModel:
+    def get(cls, model: ObjectDetectionModel) -> RemoteModel:
         cls.load_all()
-        return cls.models[name]
+        return cls.models[model]

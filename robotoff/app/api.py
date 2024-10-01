@@ -80,6 +80,7 @@ from robotoff.types import (
     InsightType,
     JSONType,
     NeuralCategoryClassifierModel,
+    ObjectDetectionModel,
     PredictionType,
     ProductIdentifier,
     ServerType,
@@ -859,8 +860,8 @@ class ImagePredictorResource:
         image_url = req.get_param("image_url", required=True)
         models: list[str] = req.get_param_as_list("models", required=True)
 
-        available_object_detection_models = (
-            ObjectDetectionModelRegistry.get_available_models()
+        available_object_detection_models = list(
+            ObjectDetectionModel.__members__.keys()
         )
         available_clf_models = list(ImageClassificationModel.__members__.keys())
         available_models = available_object_detection_models + available_clf_models
@@ -901,7 +902,9 @@ class ImagePredictorResource:
 
         for model_name in models:
             if model_name in available_object_detection_models:
-                model = ObjectDetectionModelRegistry.get(model_name)
+                model = ObjectDetectionModelRegistry.get(
+                    ObjectDetectionModel[model_name]
+                )
                 result = model.detect_from_image(image, output_image=output_image)
 
                 if output_image:

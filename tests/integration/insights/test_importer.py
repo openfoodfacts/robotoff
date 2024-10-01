@@ -52,8 +52,8 @@ class TestNutritionImageImporter:
         return ImagePredictionFactory(
             image=image,
             data={"objects": objects},
-            model_name="nutrition-table",
-            model_version="tf-nutrition-table-1.0",
+            model_name="nutrition_table",
+            model_version="yolo-nutrition-table-1.0",
             max_confidence=max_confidence,
         )
 
