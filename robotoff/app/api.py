@@ -750,18 +750,6 @@ class UpdateDatasetResource:
         }
 
 
-class ImageImporterResource:
-    """DEPRECATED
-    Robotoff used to be notified of new image from Product Opener using
-    webhooks, it now relies on Redis stream using the update-listener service.
-    """
-
-    def on_post(self, req: falcon.Request, resp: falcon.Response):
-        resp.media = {
-            "status": "scheduled",
-        }
-
-
 class ImageCropResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         image_url = req.get_param("image_url", required=True)
@@ -1329,18 +1317,6 @@ def check_server_domain(server_domain: str):
         )
 
 
-class WebhookProductResource:
-    """DEPRECATED
-    Robotoff used to be notified of product updates from Product Opener using
-    webhooks, it now relies on Redis stream using the update-listener service.
-    """
-
-    def on_post(self, req: falcon.Request, resp: falcon.Response):
-        resp.media = {
-            "status": "scheduled",
-        }
-
-
 def question_insight_type_sort_func(insight: ProductInsight) -> int:
     """Function to sort questions on a specific product by priority.
 
@@ -1874,9 +1850,7 @@ api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource
 api.add_route("/api/v1/predict/lang", LanguagePredictorResource())
 api.add_route("/api/v1/predict/lang/product", ProductLanguagePredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
-api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images", ImageCollection())
-api.add_route("/api/v1/images/import", ImageImporterResource())
 api.add_route("/api/v1/images/crop", ImageCropResource())
 api.add_route("/api/v1/image_predictions", ImagePredictionResource())
 api.add_route("/api/v1/image_predictions/import", ImagePredictionImporterResource())
