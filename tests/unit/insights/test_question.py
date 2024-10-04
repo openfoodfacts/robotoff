@@ -169,7 +169,7 @@ def test_category_question_formatter(
         "insight_id": str(insight.id),
         "insight_type": InsightType.category.name,
         "server_type": ServerType.off.name,
-        "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
+        "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/front_fr.10.400.jpg",
     }
 
 
@@ -221,7 +221,7 @@ def test_label_question_formatter(
         "insight_id": str(insight.id),
         "insight_type": InsightType.label.name,
         "server_type": ServerType.off.name,
-        "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/1.400.jpg",
+        "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/1.400.jpg",
     }
 
     if ref_image_url is not None:
