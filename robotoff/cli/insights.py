@@ -8,10 +8,10 @@ import _io
 import dacite
 import orjson
 import tqdm
+from openfoodfacts.images import extract_barcode_from_path
 from openfoodfacts.ocr import OCRResult
 
 from robotoff.insights.extraction import DEFAULT_OCR_PREDICTION_TYPES
-from robotoff.off import get_barcode_from_path
 from robotoff.prediction.ocr import extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
@@ -83,7 +83,7 @@ def generate_from_ocr_archive(
         if source_image is None:
             continue
 
-        barcode: Optional[str] = get_barcode_from_path(source_image)
+        barcode = extract_barcode_from_path(source_image)
 
         if barcode is None:
             logger.warning("cannot extract barcode from source: %s", source_image)

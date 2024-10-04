@@ -527,10 +527,11 @@ def run_object_detection_model(
     from urllib.parse import urlparse
 
     import tqdm
+    from openfoodfacts.images import extract_barcode_from_url
     from peewee import JOIN
 
     from robotoff.models import ImageModel, ImagePrediction, db
-    from robotoff.off import generate_image_url, get_barcode_from_url
+    from robotoff.off import generate_image_url
     from robotoff.utils import text_file_iter
     from robotoff.workers.queues import enqueue_job, low_queue
     from robotoff.workers.tasks.import_image import (
@@ -588,7 +589,7 @@ def run_object_detection_model(
 
     if typer.confirm(f"{len(image_urls)} jobs are going to be launched, confirm?"):
         for image_url in tqdm.tqdm(image_urls, desc="image"):
-            barcode = get_barcode_from_url(image_url)
+            barcode = extract_barcode_from_url(image_url)
             if barcode is None:
                 raise RuntimeError()
             enqueue_job(

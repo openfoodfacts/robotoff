@@ -80,23 +80,6 @@ def get_source_from_url(ocr_url: str) -> str:
     return url_path
 
 
-def get_barcode_from_url(url: str) -> Optional[str]:
-    url_path = urlparse(url).path
-    return get_barcode_from_path(url_path)
-
-
-def get_barcode_from_path(path: str) -> Optional[str]:
-    barcode = ""
-
-    for parent in Path(path).parents:
-        if parent.name.isdigit():
-            barcode = parent.name + barcode
-        else:
-            break
-
-    return barcode or None
-
-
 def _generate_file_path(product_id: ProductIdentifier, image_id: str, suffix: str):
     splitted_barcode = split_barcode(product_id.barcode)
     return f"/{'/'.join(splitted_barcode)}/{image_id}{suffix}"
