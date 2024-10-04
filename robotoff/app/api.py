@@ -18,6 +18,7 @@ import peewee
 import requests
 from falcon.media.validators import jsonschema
 from openfoodfacts import OCRResult
+from openfoodfacts.images import extract_barcode_from_url
 from openfoodfacts.ocr import OCRParsingException, OCRResultGenerationException
 from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from PIL import Image
@@ -62,12 +63,7 @@ from robotoff.models import (
     batch_insert,
     db,
 )
-from robotoff.off import (
-    OFFAuthentication,
-    generate_image_path,
-    generate_json_ocr_url,
-    get_barcode_from_url,
-)
+from robotoff.off import OFFAuthentication, generate_image_path, generate_json_ocr_url
 from robotoff.prediction import image_classifier, ingredient_list
 from robotoff.prediction.category import predict_category
 from robotoff.prediction.langid import predict_lang
@@ -543,7 +539,7 @@ class OCRPredictionPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
         server_type = get_server_type_from_req(req)
-        barcode = get_barcode_from_url(ocr_url)
+        barcode = extract_barcode_from_url(ocr_url)
         prediction_types = req.get_param_as_list(
             "prediction_types",
             default=DEFAULT_OCR_PREDICTION_TYPES,
