@@ -119,9 +119,8 @@ def generate_json_ocr_url(product_id: ProductIdentifier, image_id: str) -> str:
     :param image_id: the image ID (ex: `1`, `2`,...)
     :return: the generated image URL
     """
-    return (
-        settings.BaseURLProvider.static(product_id.server_type)
-        + f"/images/products{generate_json_ocr_path(product_id, image_id)}"
+    return settings.BaseURLProvider.image_url(
+        product_id.server_type, generate_json_ocr_path(product_id, image_id)
     )
 
 

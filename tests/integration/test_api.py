@@ -76,7 +76,7 @@ def test_random_question(client, mocker):
                 "insight_id": insight_id,
                 "insight_type": "category",
                 "server_type": "off",
-                "source_image_url": "https://images.openfoodfacts.net/images/products/1/ingredients_fr.51.400.jpg",
+                "source_image_url": "https://images.openfoodfacts.net/images/products/000/000/000/0001/ingredients_fr.51.400.jpg",
             }
         ],
         "status": "found",
