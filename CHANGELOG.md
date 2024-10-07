@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.53.1](https://github.com/openfoodfacts/robotoff/compare/v1.53.0...v1.53.1) (2024-10-07)
+
+
+### Bug Fixes
+
+* add new nutrient mention for portuguese ([#1425](https://github.com/openfoodfacts/robotoff/issues/1425)) ([49df155](https://github.com/openfoodfacts/robotoff/commit/49df1555df905906be9ce6c1648efcf94b9c7659))
+* remove legacy routes ([#1424](https://github.com/openfoodfacts/robotoff/issues/1424)) ([c53617d](https://github.com/openfoodfacts/robotoff/commit/c53617d4f85ac62e622b15ecc259b08e4593e132))
+* use images.openfoodfacts.org to fetch OCR files ([59fa01f](https://github.com/openfoodfacts/robotoff/commit/59fa01f2751343c0c5c84071dc3cfb33d6561991))
+* use new barcode normalization ([65e16dd](https://github.com/openfoodfacts/robotoff/commit/65e16dd4497e97799d689d3e64c08d206cea4a90))
+
 ## [1.53.0](https://github.com/openfoodfacts/robotoff/compare/v1.52.1...v1.53.0) (2024-10-01)
 
 
