@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.53.2](https://github.com/openfoodfacts/robotoff/compare/v1.53.1...v1.53.2) (2024-10-08)
+
+
+### Bug Fixes
+
+* add script to normalize barcodes in DB ([4adeb6b](https://github.com/openfoodfacts/robotoff/commit/4adeb6b7e03daa29f5e611c3ae8704d8e11f9320))
+* fix normalize script ([24db8fb](https://github.com/openfoodfacts/robotoff/commit/24db8fbb32ce2d390d704d4299a9f3768a0badcf))
+* normalize barcode in all API routes ([7ca87de](https://github.com/openfoodfacts/robotoff/commit/7ca87ded248c4847a79e35fe6c4d18067cf25718))
+* use ReditUpdate.product_type ([963eabb](https://github.com/openfoodfacts/robotoff/commit/963eabb14479278d90a21c7bc34cca23ef187604))
+
 ## [1.53.1](https://github.com/openfoodfacts/robotoff/compare/v1.53.0...v1.53.1) (2024-10-07)
 
 
