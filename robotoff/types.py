@@ -198,6 +198,19 @@ class ServerType(str, enum.Enum):
             return "pro.openfoodfacts"
 
     @classmethod
+    def from_product_type(cls, product_type: str) -> "ServerType":
+        """Get the `ServerType` associated with a product type."""
+        if product_type == "food":
+            return cls.off
+        elif product_type == "beauty":
+            return cls.obf
+        elif product_type == "petfood":
+            return cls.opff
+        elif product_type == "product":
+            return cls.opf
+        raise ValueError(f"no ServerType matched for product_type {product_type}")
+
+    @classmethod
     def get_from_server_domain(cls, server_domain: str) -> "ServerType":
         """Get the `ServerType` associated with a `server_domain`."""
         subdomain, base_domain, tld = server_domain.rsplit(".", maxsplit=2)
