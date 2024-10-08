@@ -1020,5 +1020,124 @@ def launch_spellcheck_batch_job(
     )
 
 
+@app.command()
+def launch_normalize_barcode_job():
+    from openfoodfacts.images import generate_image_path
+    from peewee import fn
+
+    from robotoff.models import ImageModel, Prediction, ProductInsight, db
+    from robotoff.off import normalize_barcode
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    logger.info("Starting barcode normalization job")
+
+    with db.connection_context():
+        updated = 0
+        min_id = 0
+        max_id = Prediction.select(fn.MAX(Prediction.id)).scalar()
+        with db.atomic() as tsx:
+            while min_id < max_id:
+                prediction = None
+                for prediction in (
+                    Prediction.select()
+                    .where(Prediction.id >= min_id)
+                    .order_by(Prediction.id.asc())
+                    .limit(10_000)
+                ):
+                    barcode = normalize_barcode(prediction.barcode)
+                    source_image = (
+                        generate_image_path(
+                            prediction.barcode, Path(prediction.source_image).stem
+                        )
+                        if prediction.source_image
+                        else None
+                    )
+                    is_updated = (barcode != prediction.barcode) or (
+                        source_image != prediction.source_image
+                    )
+                    if is_updated:
+                        prediction.barcode = barcode
+                        prediction.source_image = source_image
+                        prediction.save()
+                        updated += 1
+
+                tsx.commit()
+                logger.info("Current ID: %s, Updated %d predictions", min_id, updated)
+                if prediction is not None:
+                    min_id = prediction.id
+                else:
+                    break
+
+            logger.info("Updated %d predictions", updated)
+
+        updated = 0
+        min_id = ProductInsight.select(fn.MIN(ProductInsight.timestamp)).scalar()
+        max_id = ProductInsight.select(fn.MAX(ProductInsight.timestamp)).scalar()
+        with db.atomic() as tsx:
+            while min_id < max_id:
+                insight = None
+                for insight in (
+                    ProductInsight.select()
+                    .where(ProductInsight.timestamp >= min_id)
+                    .order_by(ProductInsight.timestamp.asc())
+                    .limit(10_000)
+                ):
+                    barcode = normalize_barcode(insight.barcode)
+                    source_image = generate_image_path(
+                        insight.barcode, Path(insight.source_image).stem
+                    )
+                    is_updated = (barcode != insight.barcode) or (
+                        source_image != insight.source_image
+                    )
+                    if is_updated:
+                        insight.barcode = barcode
+                        insight.source_image = source_image
+                        insight.save()
+                        updated += 1
+
+                tsx.commit()
+                logger.info("Current ID: %s, Updated %d insights", min_id, updated)
+                if insight is not None:
+                    min_id = insight.timestamp
+                else:
+                    break
+
+            logger.info("Updated %d insights", updated)
+
+        updated = 0
+        min_id = ImageModel.select(fn.MIN(ImageModel.id)).scalar()
+        max_id = ImageModel.select(fn.MAX(ImageModel.id)).scalar()
+        with db.atomic() as tsx:
+            while min_id < max_id:
+                image = None
+                for image in (
+                    ImageModel.select()
+                    .where(ImageModel.id >= min_id)
+                    .order_by(ImageModel.id.asc())
+                    .limit(10_000)
+                ):
+                    barcode = normalize_barcode(image.barcode)
+                    source_image = generate_image_path(
+                        image.barcode, Path(image.source_image).stem
+                    )
+                    is_updated = (barcode != image.barcode) or (
+                        source_image != image.source_image
+                    )
+                    if is_updated:
+                        image.barcode = barcode
+                        image.source_image = source_image
+                        image.save()
+                        updated += 1
+
+                tsx.commit()
+                logger.info("Current ID: %s, Updated %d images", min_id, updated)
+                if image is not None:
+                    min_id = image.id
+                else:
+                    break
+            logger.info("Updated %d images", updated)
+
+
 def main() -> None:
     app()

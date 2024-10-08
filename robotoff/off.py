@@ -148,6 +148,25 @@ def is_valid_image(product_id: ProductIdentifier, image_id: str) -> bool:
     return image_id in images
 
 
+def normalize_barcode(barcode: str) -> str:
+    """Normalize the barcode.
+
+    First, we remove leading zeros, then we pad the barcode with zeros to
+    reach 8 digits.
+
+    If the barcode is longer than 8 digits, we pad it to 13 digits.
+
+    :param barcode: the barcode to normalize
+    :return: the normalized barcode
+    """
+    barcode = barcode.lstrip("0").zfill(8)
+
+    if len(barcode) > 8:
+        barcode = barcode.zfill(13)
+
+    return barcode
+
+
 def off_credentials() -> dict[str, str]:
     return {"user_id": settings._off_user, "password": settings._off_password}
 
