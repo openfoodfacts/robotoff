@@ -1027,11 +1027,11 @@ def launch_normalize_barcode_job(
     launch_insight: bool = True,
     launch_image: bool = True,
 ) -> None:
+    from openfoodfacts.barcode import normalize_barcode
     from openfoodfacts.images import generate_image_path
     from peewee import fn
 
     from robotoff.models import ImageModel, Prediction, ProductInsight, db
-    from robotoff.off import normalize_barcode
     from robotoff.utils import get_logger
 
     logger = get_logger()
