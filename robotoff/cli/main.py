@@ -1068,15 +1068,15 @@ def launch_normalize_barcode_job(
                             prediction.save()
                             updated += 1
 
-                        tsx.commit()
-                        logger.info(
-                            "Current ID: %s, Updated %d predictions", min_id, updated
-                        )
-                        if prediction is not None:
-                            min_id = prediction.id
-                        else:
-                            break
-                    logger.info("Updated %d predictions", updated)
+                    tsx.commit()
+                    logger.info(
+                        "Current ID: %s, Updated %d predictions", min_id, updated
+                    )
+                    if prediction is not None:
+                        min_id = prediction.id
+                    else:
+                        break
+                logger.info("Updated %d predictions", updated)
 
         if launch_insight:
             updated = 0
