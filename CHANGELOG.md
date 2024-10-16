@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.53.3](https://github.com/openfoodfacts/robotoff/compare/v1.53.2...v1.53.3) (2024-10-16)
+
+
+### Bug Fixes
+
+* add mg as possible unit for salt ([463a1f1](https://github.com/openfoodfacts/robotoff/commit/463a1f153a75aff401dfcc4f03bbd1a57937f3ab))
+* bump openfoodfacts python dependency ([560c596](https://github.com/openfoodfacts/robotoff/commit/560c59670eb02d33fc6416c646bfe763595273e0))
+* fix launch normalize barcode job ([65bdacb](https://github.com/openfoodfacts/robotoff/commit/65bdacbda9158fc6f80e1c5d946a6501e4746bb2))
+* remove incorrect parameter when calling CLIPImageProcessor ([340a8e0](https://github.com/openfoodfacts/robotoff/commit/340a8e0d4bc1898aae8eb95db9a1fcdee2e6d22f))
+
 ## [1.53.2](https://github.com/openfoodfacts/robotoff/compare/v1.53.1...v1.53.2) (2024-10-08)
 
 
