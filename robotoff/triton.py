@@ -39,7 +39,7 @@ def get_triton_inference_stub(
 
 def generate_clip_embedding_request(images: list[Image.Image]):
     processor = CLIPImageProcessor()
-    inputs = processor(images=images, return_tensors="np", padding=True).pixel_values
+    inputs = processor(images=images, return_tensors="np").pixel_values
     request = service_pb2.ModelInferRequest()
     request.model_name = "clip"
 
