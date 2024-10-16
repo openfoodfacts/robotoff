@@ -124,7 +124,7 @@ NUTRIENT_UNITS: dict[str, list[str]] = {
     "sugar": ["g"],
     "carbohydrate": ["g"],
     "protein": ["g"],
-    "salt": ["g"],
+    "salt": ["g", "mg"],
     "fiber": ["g"],
 }
 
