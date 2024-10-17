@@ -90,8 +90,14 @@ def process_updates_since(
 
 def process_redis_update(redis_update: RedisUpdate):
     logger.debug("New update: %s", redis_update)
+
+    if redis_update.product_type is None:
+        logger.warning("Product type is null, skipping")
+        return
+
     action = redis_update.action
-    product_id = ProductIdentifier(redis_update.code, ServerType[redis_update.flavor])
+    server_type = ServerType.from_product_type(redis_update.product_type)
+    product_id = ProductIdentifier(redis_update.code, server_type)
     if action == "deleted":
         logger.info("Product %s has been deleted", redis_update.code)
         enqueue_job(
@@ -108,16 +114,17 @@ def process_redis_update(redis_update: RedisUpdate):
             environment = (
                 Environment.org if settings._get_tld() == "org" else Environment.net
             )
+            flavor = Flavor[server_type.name]
             image_url = generate_image_url(
                 redis_update.code,
                 image_id,
-                flavor=Flavor[redis_update.flavor],
+                flavor=flavor,
                 environment=environment,
             )
             ocr_url = generate_json_ocr_url(
                 redis_update.code,
                 image_id,
-                flavor=Flavor[redis_update.flavor],
+                flavor=flavor,
                 environment=environment,
             )
             enqueue_job(
