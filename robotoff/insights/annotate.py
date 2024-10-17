@@ -19,12 +19,12 @@ from robotoff.off import (
     add_label_tag,
     add_packaging,
     add_store,
+    save_ingredients,
     select_rotate_image,
     unselect_image,
     update_emb_codes,
     update_expiration_date,
     update_quantity,
-    save_ingredients,
 )
 from robotoff.products import get_image_id, get_product
 from robotoff.types import InsightAnnotation, InsightType, JSONType
@@ -104,7 +104,7 @@ FAILED_UPDATE_RESULT = AnnotationResult(
 INVALID_DATA = AnnotationResult(
     status_code=AnnotationStatus.error_invalid_data.value,
     status=AnnotationStatus.error_invalid_data.name,
-    description="The data schema is invalid."
+    description="The data schema is invalid.",
 )
 
 
@@ -676,7 +676,7 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
     @classmethod
     def is_data_required(cls) -> bool:
         return True
-    
+
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     @classmethod
@@ -697,7 +697,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
             json_data["annotation"] = annotation
             insight.data = json_data
             insight.save()
-        
+
         ingredient_text = data.get("annotation") if data else insight.data["correction"]
         save_ingredients(
             product_id=insight.get_product_id(),
@@ -705,10 +705,10 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
             lang=insight.value_tag,
             insight_id=insight.id,
             auth=auth,
-            is_vote=is_vote
+            is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
-    
+
 
 ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.packager_code.name: PackagerCodeAnnotator,
