@@ -1,6 +1,14 @@
+from unittest.mock import Mock
+
 import pytest
 
-from robotoff.insights.annotate import AnnotationResult, CategoryAnnotator
+from robotoff.insights.annotate import (
+    UPDATED_ANNOTATION_RESULT,
+    INVALID_DATA,
+    AnnotationResult,
+    CategoryAnnotator,
+    IngredientSpellcheckAnnotator,
+)
 from robotoff.models import ProductInsight
 
 from ..models_utils import ProductInsightFactory, clean_db
@@ -92,3 +100,63 @@ class TestCategoryAnnotator:
             status="error_invalid_data",
             description="`data` is invalid, expected a single `value_tag` string field with the category tag",
         )
+
+
+class TestIngredientSpellcheckAnnotator:
+
+    @pytest.fixture
+    def mock_save_ingredients(self, mocker) -> Mock:
+        return mocker.patch("robotoff.insights.annotate.save_ingredients")
+
+    @pytest.fixture
+    def spellcheck_insight(self):
+        return ProductInsightFactory(
+            type="ingredient_spellcheck",
+            data={
+                "original": "List of ingredient",
+                "correction": "List fo ingredients",
+            },
+        )
+
+    def test_process_annotation(
+        self,
+        mock_save_ingredients: Mock,
+        spellcheck_insight: ProductInsightFactory,
+    ):
+        user_data = {"annotation": "List of ingredients"}
+        annotation_result = IngredientSpellcheckAnnotator.process_annotation(
+            insight=spellcheck_insight,
+            data=user_data,
+        )
+        assert annotation_result == UPDATED_ANNOTATION_RESULT
+        assert "annotation" in spellcheck_insight.data
+        mock_save_ingredients.assert_called()
+
+    @pytest.mark.parametrize(
+        "user_data",
+        [{}, {"annotation": "List of ingredients", "wrong_key": "wrong_item"}],
+    )
+    def test_process_annotation_invalid_data(
+        self,
+        user_data: dict,
+        mock_save_ingredients: Mock,
+        spellcheck_insight: ProductInsightFactory,
+    ):
+        annotation_result = IngredientSpellcheckAnnotator.process_annotation(
+            insight=spellcheck_insight,
+            data=user_data,
+        )
+        assert annotation_result == INVALID_DATA
+        mock_save_ingredients.assert_not_called()
+
+    def test_process_annotate_no_user_data(
+        self,
+        mock_save_ingredients: Mock,
+        spellcheck_insight: ProductInsightFactory,
+    ):
+        annotation_result = IngredientSpellcheckAnnotator.process_annotation(
+            insight=spellcheck_insight,
+        )
+        assert annotation_result == UPDATED_ANNOTATION_RESULT
+        assert "annotation" not in spellcheck_insight.data
+        mock_save_ingredients.assert_called()

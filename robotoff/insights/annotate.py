@@ -19,6 +19,7 @@ from robotoff.off import (
     add_label_tag,
     add_packaging,
     add_store,
+    save_ingredients,
     select_rotate_image,
     unselect_image,
     update_emb_codes,
@@ -98,6 +99,12 @@ FAILED_UPDATE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_failed_update.value,
     status=AnnotationStatus.error_failed_update.name,
     description="Open Food Facts update failed",
+)
+
+INVALID_DATA = AnnotationResult(
+    status_code=AnnotationStatus.error_invalid_data.value,
+    status=AnnotationStatus.error_invalid_data.name,
+    description="The data schema is invalid.",
 )
 
 
@@ -671,6 +678,38 @@ class NutritionTableStructureAnnotator(InsightAnnotator):
         return True
 
 
+class IngredientSpellcheckAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        # Possibility for the annotator to change the spellcheck correction if data is provided
+        if data is not None:
+            annotation = data.get("annotation")
+            if not annotation or len(data) > 1:
+                return INVALID_DATA
+            # We add the new annotation to the Insight.
+            json_data = insight.data
+            json_data["annotation"] = annotation
+            insight.data = json_data
+            insight.save()
+
+        ingredient_text = data.get("annotation") if data else insight.data["correction"]
+        save_ingredients(
+            product_id=insight.get_product_id(),
+            ingredient_text=ingredient_text,
+            lang=insight.value_tag,
+            insight_id=insight.id,
+            auth=auth,
+            is_vote=is_vote,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+
 ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.packager_code.name: PackagerCodeAnnotator,
     InsightType.label.name: LabelAnnotator,
@@ -683,6 +722,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.nutrition_image.name: NutritionImageAnnotator,
     InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator,
     InsightType.is_upc_image.name: UPCImageAnnotator,
+    InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
 }
 
 

@@ -329,7 +329,7 @@ paths:
         The annotation is an integer that can take 4 values: `0`, `1`, `2`, `-1`. `0` means the insight is incorrect
         (so it won't be applied), `1` means it is correct (so it will be applied) and `-1` means the insight
         won't be returned to the user (_skip_). `2` is used when user submit some data to the annotate endpoint 
-        (for example in some cases of category annotation).
+        (for example in some cases of category annotation or ingredients spellcheck).
         
         We use the voting mecanism system to remember which insight to skip for a user (authenticated or not).
       requestBody:
@@ -344,11 +344,12 @@ paths:
                   description: ID of the insight
                 annotation:
                   type: integer
-                  description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for _skip_"
+                  description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for _skip_, 2 to accept and add data"
                   enum:
                     - 0
                     - 1
                     - -1
+                    - 2
                 update:
                   type: integer
                   description: "Send the update to Openfoodfacts if `update=1`, don't send the update otherwise. This parameter is useful if the update is performed client-side"
@@ -356,6 +357,10 @@ paths:
                   enum:
                     - 0
                     - 1
+                data:
+                  type: object
+                  description: "Additional data provided by the user as key-value pairs"
+
               required:
                 - "insight_id"
                 - "annotation"
