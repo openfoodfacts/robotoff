@@ -688,9 +688,9 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         is_vote: bool = False,
     ) -> AnnotationResult:
         # Possibility for the annotator to change the spellcheck correction if data is provided
-        if data:
+        if data is not None:
             annotation = data.get("annotation")
-            if not annotation and len(data) > 1:
+            if not annotation or len(data) > 1:
                 return INVALID_DATA
             # We add the new annotation to the Insight.
             json_data = insight.data
