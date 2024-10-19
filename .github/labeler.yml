@@ -116,3 +116,13 @@ legacy:
 📚 Documentation:
 - changed-files:
   - any-glob-to-any-file: ['*.MD']
+
+spellcheck:
+- changed-files:
+  - any-glob-to-any-file: 'batch/​spellcheck'
+  - any-glob-to-any-file: 'batch/​spellcheck/​main.py'
+  - any-glob-to-any-file: 'batch/​spellcheck/​README.md'
+  - any-glob-to-any-file: 'batch/​spellcheck/​Dockerfile'
+  - any-glob-to-any-file: 'batch/​spellcheck/​requirements.txt'
+  - any-glob-to-any-file: 'robotoff/​batch/​configs/​job_configs/​spellcheck.yaml'
+  - any-glob-to-any-file: 'doc/​references/​ingredients-spellcheck.md'
