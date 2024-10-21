@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.54.0](https://github.com/openfoodfacts/robotoff/compare/v1.53.3...v1.54.0) (2024-10-21)
+
+
+### Features
+
+* Add spellcheck annotate ([#1434](https://github.com/openfoodfacts/robotoff/issues/1434)) ([f9a60dc](https://github.com/openfoodfacts/robotoff/commit/f9a60dc0a0c96da93fef17b470440af7f6798951))
+
 ## [1.53.3](https://github.com/openfoodfacts/robotoff/compare/v1.53.2...v1.53.3) (2024-10-16)
 
 
