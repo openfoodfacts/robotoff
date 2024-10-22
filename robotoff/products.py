@@ -418,6 +418,7 @@ class Product:
         "packagings",
         "lang",
         "ingredients_text",
+        "nutriments",
     )
 
     def __init__(self, product: JSONType):
@@ -441,6 +442,7 @@ class Product:
         )
         self.lang: Optional[str] = product.get("lang")
         self.ingredients_text: Optional[str] = product.get("ingredients_text")
+        self.nutriments: JSONType = product.get("nutriments") or {}
 
     @staticmethod
     def get_fields():
@@ -458,6 +460,7 @@ class Product:
             "images",
             "lang",
             "ingredients_text",
+            "nutriments",
         }
 
 

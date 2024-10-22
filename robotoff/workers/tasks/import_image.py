@@ -32,13 +32,12 @@ from robotoff.models import (
     ImagePrediction,
     LogoAnnotation,
     LogoEmbedding,
-    Prediction,
     db,
     with_db,
 )
 from robotoff.notifier import NotifierFactory
 from robotoff.off import generate_image_url, get_source_from_url, parse_ingredients
-from robotoff.prediction import ingredient_list
+from robotoff.prediction import ingredient_list, nutrition_extraction
 from robotoff.prediction.upc_image import UPCImageType, find_image_is_upc
 from robotoff.products import get_product_store
 from robotoff.taxonomy import get_taxonomy
@@ -50,6 +49,7 @@ from robotoff.triton import (
 from robotoff.types import (
     JSONType,
     ObjectDetectionModel,
+    Prediction,
     PredictionType,
     ProductIdentifier,
     ServerType,
@@ -135,6 +135,14 @@ def run_import_image_job(product_id: ProductIdentifier, image_url: str, ocr_url:
             # the number of ingredient list (~1s per ingredient list)
             job_kwargs={"result_ttl": 0, "timeout": "2m"},
             product_id=product_id,
+            ocr_url=ocr_url,
+        )
+        enqueue_job(
+            extract_nutrition_job,
+            get_high_queue(product_id),
+            job_kwargs={"result_ttl": 0, "timeout": "2m"},
+            product_id=product_id,
+            image_url=image_url,
             ocr_url=ocr_url,
         )
     # We make sure there are no concurrent insight processing by sending
@@ -779,3 +787,107 @@ def add_ingredient_in_taxonomy_field(
             known_ingredients_n += known_sub_ingredients_n
 
     return ingredients_n, known_ingredients_n
+
+
+@with_db
+def extract_nutrition_job(
+    product_id: ProductIdentifier,
+    image_url: str,
+    ocr_url: str,
+    triton_uri: str | None = None,
+) -> None:
+    """Extract nutrition information from an image OCR, and save the prediction
+    in the DB.
+
+    :param product_id: The identifier of the product to extract nutrition
+        information for.
+    :param image_url: The URL of the image to extract nutrition information
+        from.
+    :param ocr_url: The URL of the OCR JSON file
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used.
+    """
+    logger.info("Running nutrition extraction for %s, image %s", product_id, image_url)
+    source_image = get_source_from_url(image_url)
+
+    with db:
+        image_model = ImageModel.get_or_none(
+            source_image=source_image, server_type=product_id.server_type.name
+        )
+
+        if not image_model:
+            logger.info("Missing image in DB for image %s", source_image)
+            return
+
+        # Stop the job here if the image has already been processed
+        if (
+            ImagePrediction.get_or_none(
+                image=image_model, model_name=nutrition_extraction.MODEL_NAME
+            )
+        ) is not None:
+            return
+
+        image = get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=True
+        )
+
+        if image is None:
+            logger.info("Error while downloading image %s", image_url)
+            return
+
+        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
+
+        if ocr_result is None:
+            logger.info("Error while downloading OCR JSON %s", ocr_url)
+            return
+
+        output = nutrition_extraction.predict(image, ocr_result, triton_uri=triton_uri)
+
+        if output is None:
+            data: JSONType = {"error": "missing_text"}
+            max_confidence = None
+        else:
+            max_confidence = max(
+                entity["score"] for entity in output.entities.aggregated
+            )
+            data = {
+                "nutrients": {
+                    entity: dataclasses.asdict(nutrient)
+                    for entity, nutrient in output.nutrients.items()
+                },
+                "entities": dataclasses.asdict(output.entities),
+            }
+        logger.info("create image prediction (nutrition extraction) from %s", ocr_url)
+        ImagePrediction.create(
+            image=image_model,
+            type="nutrition_extraction",
+            model_name=nutrition_extraction.MODEL_NAME,
+            model_version=nutrition_extraction.MODEL_VERSION,
+            data=data,
+            timestamp=datetime.datetime.now(datetime.timezone.utc),
+            max_confidence=max_confidence,
+        )
+
+        if max_confidence is not None:
+            # Only keep 'postprocessed' entities, as they are the most
+            # relevant for the user
+            prediction_data = {
+                "nutrients": data["nutrients"],
+                "entities": {"postprocessed": data["entities"]["postprocessed"]},
+            }
+            prediction = Prediction(
+                barcode=product_id.barcode,
+                type=PredictionType.nutrient_extraction,
+                # value and value_tag are None, all data is in data field
+                value_tag=None,
+                value=None,
+                automatic_processing=False,
+                predictor=nutrition_extraction.MODEL_NAME,
+                predictor_version=nutrition_extraction.MODEL_VERSION,
+                data=prediction_data,
+                confidence=None,
+                server_type=product_id.server_type,
+                source_image=source_image,
+            )
+            imported = import_insights([prediction], server_type=product_id.server_type)
+            logger.info(imported)

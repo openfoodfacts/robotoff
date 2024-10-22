@@ -83,6 +83,8 @@ duckdb = "~1.0.0"
 google-cloud-storage = "~2.14.0"
 pandas = "~2.2.2"
 pyarrow = "~17.0.0"
+# Used for CLI pretty print
+rich = "~13.9.2"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = ">=1.14,<2.9"

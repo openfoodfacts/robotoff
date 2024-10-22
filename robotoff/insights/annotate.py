@@ -660,24 +660,6 @@ class NutritionImageAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
-class NutritionTableStructureAnnotator(InsightAnnotator):
-    @classmethod
-    def process_annotation(
-        cls,
-        insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
-        is_vote: bool = False,
-    ) -> AnnotationResult:
-        insight.data["annotation"] = data
-        insight.save()
-        return SAVED_ANNOTATION_RESULT
-
-    @classmethod
-    def is_data_required(cls) -> bool:
-        return True
-
-
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     @classmethod
     def process_annotation(
@@ -687,7 +669,8 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         auth: Optional[OFFAuthentication] = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
-        # Possibility for the annotator to change the spellcheck correction if data is provided
+        # Possibility for the annotator to change the spellcheck correction if data is
+        # provided
         if data is not None:
             annotation = data.get("annotation")
             if not annotation or len(data) > 1:
@@ -720,7 +703,6 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.store.name: StoreAnnotator,
     InsightType.packaging.name: PackagingAnnotator,
     InsightType.nutrition_image.name: NutritionImageAnnotator,
-    InsightType.nutrition_table_structure.name: NutritionTableStructureAnnotator,
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
 }
