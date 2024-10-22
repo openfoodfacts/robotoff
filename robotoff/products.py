@@ -12,6 +12,8 @@ from typing import Iterable, Iterator, Optional, Union
 
 import requests
 from pymongo import MongoClient
+import duckdb
+import datasets
 
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
@@ -569,3 +571,38 @@ def get_product(
     :return: the product as a dict or None if it was not found
     """
     return get_product_store(product_id.server_type).get_product(product_id, projection)
+
+
+def convert_jsonl_to_parquet(
+    output_file_path: str,
+    dataset_path: Path = settings.JSONL_DATASET_PATH,
+    query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
+):
+    logger.debug("Start JSONL to Parquet conversion process.")
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Dataset path {str(dataset_path)} not found.")
+    try:
+        query = query_path.read_text().replace("{dataset_path}", str(dataset_path))
+    except duckdb.InvalidInputException as e:
+        logger.error(e)
+    duckdb.sql(query).write_parquet(output_file_path)
+    logger.info("JSONL successfully converted into Parquet file.")
+
+
+def push_data_to_hf(
+    data_path: Path,
+    repo_id: str,
+    revision: str,
+    config_name: str,
+    commit_message: str,
+) -> None:
+    datasets.Dataset.from_parquet(
+        data_path,
+        streaming=True,
+    ).push_to_hub(
+        repo_id=repo_id,
+        revision=revision,
+        config_name=config_name,
+        commit_message=commit_message,
+    )
+    logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")

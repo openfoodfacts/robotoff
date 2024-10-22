@@ -1155,5 +1155,35 @@ def launch_normalize_barcode_job(
                 logger.info("Updated %d images", updated)
 
 
+@app.command()
+def push_jsonl_to_hf(
+    repo_id: str = "openfoodfacts/product-database",
+    revision: str = "main",
+    config_name: str = "default",
+    commit_message: str = "Database updated.",
+):
+    """Clean and convert the JSONL database before pushing to HF."""
+    import os
+    import tempfile
+
+    from robotoff.products import convert_jsonl_to_parquet, push_data_to_hf
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        file_path = os.path.join(
+            tmp_dir,
+        )
+        convert_jsonl_to_parquet(output_file_path=file_path)
+        push_data_to_hf(
+            data_path=file_path,
+            repo_id=repo_id,
+            revision=revision,
+            config_name=config_name,
+            commit_message=commit_message,
+        )
+        logger.info(f"JSONL dataset pushed to HF at {repo_id}")
+
+
 def main() -> None:
     app()
