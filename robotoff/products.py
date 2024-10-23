@@ -578,35 +578,35 @@ def convert_jsonl_to_parquet(
     dataset_path: Path = settings.JSONL_DATASET_PATH,
     query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
 ):
-    logger.debug("Start JSONL to Parquet conversion process.")
+    """Convert the JSONL file into parquet using DuckDB"""
+    logger.info("Start JSONL to Parquet conversion process.")
     if not dataset_path.exists() or not query_path.exists():
         raise FileNotFoundError(
             f"{str(dataset_path)} or {str(query_path)} was not found."
         )
+    query = (
+        query_path.read_text()
+        .replace("{dataset_path}", str(dataset_path))
+        .replace("{output_path}", output_file_path)
+    )
     try:
-        query = query_path.read_text().replace("{dataset_path}", str(dataset_path))
-    except duckdb.InvalidInputException as e:
+        duckdb.sql(query)
+    except duckdb.Error as e:
         logger.error(e)
-    duckdb.sql(query).write_parquet(output_file_path)
     logger.info("JSONL successfully converted into Parquet file.")
 
 
 def push_data_to_hf(
-    data_path: Path,
+    data_path: str,
     repo_id: str,
     revision: str,
-    config_name: str,
     commit_message: str,
 ) -> None:
-    if not data_path.exists():
-        raise FileNotFoundError(f"Data is missing: {str(data_path)}")
-    datasets.Dataset.from_parquet(
-        data_path,
-        streaming=True,
-    ).push_to_hub(
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Data is missing: {data_path}")
+    datasets.Dataset.from_parquet(data_path).push_to_hub(
         repo_id=repo_id,
         revision=revision,
-        config_name=config_name,
         commit_message=commit_message,
     )
     logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")

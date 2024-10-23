@@ -1159,29 +1159,42 @@ def launch_normalize_barcode_job(
 def push_jsonl_to_hf(
     repo_id: str = "openfoodfacts/product-database",
     revision: str = "main",
-    config_name: str = "default",
     commit_message: str = "Database updated.",
 ):
-    """Clean and convert the JSONL database before pushing to HF."""
+    """Clean and convert the JSONL database before pushing to HF.
+    """
     import os
     import tempfile
 
     from robotoff.products import convert_jsonl_to_parquet, push_data_to_hf
+    from robotoff.workers.queues import enqueue_job, low_queue 
     from robotoff.utils import get_logger
+    import logging
 
-    logger = get_logger()
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        file_path = os.path.join(tmp_dir, "converted_data.parquet")
-        convert_jsonl_to_parquet(output_file_path=file_path)
-        push_data_to_hf(
-            data_path=file_path,
-            repo_id=repo_id,
-            revision=revision,
-            config_name=config_name,
-            commit_message=commit_message,
-        )
+    def _push_jsonl_to_hf(
+        repo_id, revision, commit_message,
+    ):
+        logger = get_logger(level=logging.INFO)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = os.path.join(tmp_dir, "converted_data.parquet")
+            convert_jsonl_to_parquet(output_file_path=file_path)
+            push_data_to_hf(
+                data_path=file_path,
+                repo_id=repo_id,
+                revision=revision,
+                commit_message=commit_message,
+            )
         logger.info(f"JSONL dataset pushed to HF at {repo_id}")
 
+    enqueue_job(
+        _push_jsonl_to_hf,
+        queue=low_queue,
+        job_kwargs={"timeout": "30m"},
+        repo_id=repo_id,
+        revision=revision,
+        commit_message=commit_message,
+    )
+    
 
 def main() -> None:
     app()

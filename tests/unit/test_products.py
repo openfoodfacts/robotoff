@@ -69,12 +69,10 @@ class TestConvertJSONLToParquet:
         """
         # Mock the DuckDB SQL query and parquet writing
         mock_duckdb_sql = mocker.patch("duckdb.sql")
-        mock_duckdb_write_parquet = mock_duckdb_sql.return_value.write_parquet
         with tempfile.TemporaryDirectory() as tmp_dir:
             output_file_path = os.path.join(tmp_dir, "test_converted.parquet")
             convert_jsonl_to_parquet(output_file_path=output_file_path)
         mock_duckdb_sql.assert_called_once()
-        mock_duckdb_write_parquet.assert_called_once_with(output_file_path)
 
     def test_convert_jsonl_to_parquet_data_missing(self):
         non_existing_path = Path("non/existing/dataset/path")
