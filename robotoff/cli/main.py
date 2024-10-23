@@ -1171,9 +1171,7 @@ def push_jsonl_to_hf(
 
     logger = get_logger()
     with tempfile.TemporaryDirectory() as tmp_dir:
-        file_path = os.path.join(
-            tmp_dir,
-        )
+        file_path = os.path.join(tmp_dir, "converted_data.parquet")
         convert_jsonl_to_parquet(output_file_path=file_path)
         push_data_to_hf(
             data_path=file_path,

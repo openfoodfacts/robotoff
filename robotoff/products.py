@@ -10,11 +10,11 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
+import duckdb
 import requests
 from pymongo import MongoClient
-import duckdb
-import datasets
 
+import datasets
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
@@ -579,8 +579,10 @@ def convert_jsonl_to_parquet(
     query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
 ):
     logger.debug("Start JSONL to Parquet conversion process.")
-    if not dataset_path.exists():
-        raise FileNotFoundError(f"Dataset path {str(dataset_path)} not found.")
+    if not dataset_path.exists() or not query_path.exists():
+        raise FileNotFoundError(
+            f"{str(dataset_path)} or {str(query_path)} was not found."
+        )
     try:
         query = query_path.read_text().replace("{dataset_path}", str(dataset_path))
     except duckdb.InvalidInputException as e:
@@ -596,6 +598,8 @@ def push_data_to_hf(
     config_name: str,
     commit_message: str,
 ) -> None:
+    if not data_path.exists():
+        raise FileNotFoundError(f"Data is missing: {str(data_path)}")
     datasets.Dataset.from_parquet(
         data_path,
         streaming=True,

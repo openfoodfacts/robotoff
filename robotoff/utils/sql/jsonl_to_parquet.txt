@@ -1,3 +1,5 @@
+SET threads to 4;
+SET preserve_insertion_order = false;
 SELECT
     id,
     nova_group_error,
@@ -103,4 +105,4 @@ SELECT
     grades
     scores
     emb_code
-FROM read_ndjson('{dataset_path}', ignore_errors=True)
+FROM read_ndjson('{dataset_path}', ignore_errors=True);
