@@ -1,4 +1,3 @@
-.timer on
 SET threads to 4;
 SET preserve_insertion_order = false;
 COPY ( 
