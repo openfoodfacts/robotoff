@@ -3,8 +3,8 @@ from unittest.mock import Mock
 import pytest
 
 from robotoff.insights.annotate import (
-    UPDATED_ANNOTATION_RESULT,
     INVALID_DATA,
+    UPDATED_ANNOTATION_RESULT,
     AnnotationResult,
     CategoryAnnotator,
     IngredientSpellcheckAnnotator,
