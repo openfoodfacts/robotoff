@@ -1524,6 +1524,37 @@ class IngredientSpellcheckImporter(InsightImporter):
         )
 
 
+class NutrientExtractionImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.nutrient_extraction
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.nutrient_extraction}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        if product is not None and product.nutriments:
+            # Don't generate candidates if the product already has nutrients
+            return
+
+        for prediction in predictions:
+            yield ProductInsight(**prediction.to_dict())
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Only one insight per product
+        return True
+
+
 class PackagingElementTaxonomyException(Exception):
     pass
 
@@ -1860,6 +1891,7 @@ IMPORTERS: list[Type] = [
     UPCImageImporter,
     NutritionImageImporter,
     IngredientSpellcheckImporter,
+    NutrientExtractionImporter,
 ]
 
 

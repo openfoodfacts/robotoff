@@ -159,3 +159,19 @@ def serialize_byte_tensor(input_tensor):
         flattened = b"".join(flattened_ls)
         return flattened
     return None
+
+
+def add_triton_infer_input_tensor(request, name: str, data: np.ndarray, datatype: str):
+    """Create and add an input tensor to a Triton gRPC Inference request.
+
+    :param request: the Triton Inference request
+    :param name: the name of the input tensor
+    :param data: the input tensor data
+    :param datatype: the datatype of the input tensor (e.g. "FP32")
+    """
+    input_tensor = service_pb2.ModelInferRequest().InferInputTensor()
+    input_tensor.name = name
+    input_tensor.datatype = datatype
+    input_tensor.shape.extend(data.shape)
+    request.inputs.extend([input_tensor])
+    request.raw_input_contents.extend([data.tobytes()])

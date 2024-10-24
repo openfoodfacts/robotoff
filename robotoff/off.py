@@ -68,8 +68,16 @@ class OFFAuthentication:
         return None
 
 
-def get_source_from_url(ocr_url: str) -> str:
-    url_path = urlparse(ocr_url).path
+def get_source_from_url(url: str) -> str:
+    """Get the `source_image` field from an image or OCR URL.
+
+    It's the path of the image or OCR JSON file, but without the `/images/products`
+    prefix. It always ends with `.jpg`, whather it's an image or an OCR JSON file.
+
+    :param url: the URL of the image or OCR JSON file
+    :return: the source image path
+    """
+    url_path = urlparse(url).path
 
     if url_path.startswith("/images/products"):
         url_path = url_path[len("/images/products") :]
