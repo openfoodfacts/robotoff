@@ -1546,16 +1546,21 @@ class NutrientExtractionImporter(InsightImporter):
             and product.nutriments
             # If we delete all nutrient values, these computed values are still
             # present. We therefore ignore these keys.
-            and set(
-                key
-                for key in product.nutriments.keys()
-                if not (
-                    key.startswith("carbon-footprint-from-known-ingredients")
-                    or key.startswith(
-                        "fruits-vegetables-legumes-estimate-from-ingredients"
+            and bool(
+                set(
+                    key
+                    for key in product.nutriments.keys()
+                    if not (
+                        key.startswith("carbon-footprint-from-known-ingredients")
+                        or key.startswith(
+                            "fruits-vegetables-legumes-estimate-from-ingredients"
+                        )
+                        or key.startswith(
+                            "fruits-vegetables-nuts-estimate-from-ingredients"
+                        )
+                        or key.startswith("nova-group")
+                        or key.startswith("nutrition-score-fr")
                     )
-                    or key.startswith("nova-group")
-                    or key.startswith("nutrition-score-fr")
                 )
             )
         ):
