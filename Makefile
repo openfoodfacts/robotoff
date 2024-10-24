@@ -3,7 +3,7 @@
 # nice way to have our .env in environment for use in makefile
 # see https://lithic.tech/blog/2020-05/makefile-dot-env
 # Note: this will mask environment variable as opposed to docker-compose priority
-# yet most developper should'nt bump into this
+# yet most developper shouldn't bump into this
 ifneq (,$(wildcard ./.env))
     -include .env
     -include .envrc
@@ -161,6 +161,13 @@ dl-image-clf-models:
 			wget -cO - https://huggingface.co/openfoodfacts/$${asset_name}/resolve/main/weights/best.onnx > $${dir}/model.onnx; \
 	done;
 
+
+dl-nutrition-extractor-model:
+	@echo "⏬ Downloading nutrition extractor model files …"
+	${DOCKER_COMPOSE} run --rm --no-deps api huggingface-cli download openfoodfacts/nutrition-extractor --include 'onnx/*' --local-dir models/triton/nutrition_extractor/1/; \
+	cd models/triton/nutrition_extractor/1/; \
+	mv onnx model.onnx;
+
 init-elasticsearch:
 	@echo "Initializing elasticsearch indices"
 	${DOCKER_COMPOSE} up -d elasticsearch 2>&1
@@ -235,6 +242,14 @@ integration-tests:
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
 	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	( ${DOCKER_COMPOSE_TEST} down -v || true )
+
+ml-tests: 
+	@echo "🥫 Running ML tests …"
+	${DOCKER_COMPOSE_TEST} up -d triton
+	@echo "Sleeping for 30s, waiting for triton to be ready..."
+	@sleep 30
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv tests/ml ${args}
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings

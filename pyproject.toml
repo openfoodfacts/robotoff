@@ -84,6 +84,7 @@ google-cloud-storage = "~2.14.0"
 pandas = "~2.2.2"
 pyarrow = "~17.0.0"
 datasets = "~3.0.2"
+rich = "~13.9.2"  # Used for CLI pretty print
 
 [tool.poetry.dependencies.sentry-sdk]
 version = ">=1.14,<2.9"

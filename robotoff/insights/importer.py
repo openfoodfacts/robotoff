@@ -1524,6 +1524,59 @@ class IngredientSpellcheckImporter(InsightImporter):
         )
 
 
+class NutrientExtractionImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.nutrient_extraction
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.nutrient_extraction}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Product | None,
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        # Don't generate candidates if the product already has nutrients
+        if (
+            product is not None
+            and product.nutriments
+            # If we delete all nutrient values, these computed values are still
+            # present. We therefore ignore these keys.
+            and bool(
+                set(
+                    key
+                    for key in product.nutriments.keys()
+                    if not (
+                        key.startswith("carbon-footprint-from-known-ingredients")
+                        or key.startswith(
+                            "fruits-vegetables-legumes-estimate-from-ingredients"
+                        )
+                        or key.startswith(
+                            "fruits-vegetables-nuts-estimate-from-ingredients"
+                        )
+                        or key.startswith("nova-group")
+                        or key.startswith("nutrition-score-fr")
+                    )
+                )
+            )
+        ):
+            return
+
+        for prediction in predictions:
+            yield ProductInsight(**prediction.to_dict())
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Only one insight per product
+        return True
+
+
 class PackagingElementTaxonomyException(Exception):
     pass
 
@@ -1860,6 +1913,7 @@ IMPORTERS: list[Type] = [
     UPCImageImporter,
     NutritionImageImporter,
     IngredientSpellcheckImporter,
+    NutrientExtractionImporter,
 ]
 
 

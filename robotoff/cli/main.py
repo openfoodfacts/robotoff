@@ -93,12 +93,19 @@ def create_redis_update(
 
     get_logger()
     client = get_redis_client()
+    flavor_to_product_type = {
+        "off": "food",
+        "obf": "beauty",
+        "opff": "petfood",
+        "opf": "product",
+    }
     event = {
         "code": barcode,
         "flavor": flavor,
         "user_id": user_id,
         "action": action,
         "comment": comment,
+        "product_type": flavor_to_product_type[flavor],
     }
 
     diffs: JSONType
@@ -600,6 +607,45 @@ def run_object_detection_model(
                 image_url=image_url,
                 triton_uri=triton_uri,
             )
+
+
+@app.command()
+def run_nutrition_extraction(
+    image_url: str = typer.Argument(
+        ..., help="URL of the image to run nutrition extraction on"
+    ),
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
+) -> None:
+    """Run nutrition extraction on a product image.
+
+    The image URL should be an Open Food Facts image URL, e.g.
+    https://images.openfoodfacts.org/images/products/327/408/000/5003/3.jpg
+
+    The OCR JSON is expected to be available at the same URL with a `.json`
+    extension, e.g.
+    https://images.openfoodfacts.org/images/products/327/408/000/5003/3.json
+
+    Prediction is printed to stdout.
+    """
+    from typing import cast
+
+    from openfoodfacts.ocr import OCRResult
+    from PIL import Image
+    from rich import print as pprint
+
+    from robotoff.images import get_image_from_url
+    from robotoff.prediction.nutrition_extraction import predict
+
+    image = cast(Image.Image, get_image_from_url(image_url))
+    ocr_result = cast(OCRResult, OCRResult.from_url(image_url.replace(".jpg", ".json")))
+    prediction = predict(image, ocr_result, triton_uri=triton_uri)
+    if prediction is not None:
+        pprint(prediction)
+    else:
+        pprint("No prediction")
 
 
 @app.command()
