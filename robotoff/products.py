@@ -10,9 +10,11 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
+import duckdb
 import requests
 from pymongo import MongoClient
 
+import datasets
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
@@ -572,3 +574,49 @@ def get_product(
     :return: the product as a dict or None if it was not found
     """
     return get_product_store(product_id.server_type).get_product(product_id, projection)
+
+
+def convert_jsonl_to_parquet(
+    output_file_path: str,
+    dataset_path: Path = settings.JSONL_DATASET_PATH,
+    query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
+) -> None:
+    logger.info("Start JSONL to Parquet conversion process.")
+    if not dataset_path.exists() or not query_path.exists():
+        raise FileNotFoundError(
+            f"{str(dataset_path)} or {str(query_path)} was not found."
+        )
+    query = (
+        query_path.read_text()
+        .replace("{dataset_path}", str(dataset_path))
+        .replace("{output_path}", output_file_path)
+    )
+    try:
+        duckdb.sql(query)
+    except duckdb.Error as e:
+        logger.error(f"Error executing query: {query}\nError message: {e}")
+        raise
+    logger.info("JSONL successfully converted into Parquet file.")
+
+
+def push_data_to_hf(
+    data_path: str,
+    repo_id: str,
+    revision: str,
+    split: str,
+    commit_message: str,
+) -> None:
+    logger.info(f"Start pushing data to Hugging Face at {repo_id}")
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Data is missing: {data_path}")
+    if os.path.splitext(data_path)[-1] != ".parquet":
+        raise ValueError(
+            f"A parquet file is expected. Got {os.path.splitext(data_path)[-1]} instead."
+        )
+    datasets.Dataset.from_parquet(data_path).push_to_hub(
+        repo_id=repo_id,
+        revision=revision,
+        commit_message=commit_message,
+        split=split,
+    )
+    logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")
