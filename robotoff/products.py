@@ -577,8 +577,7 @@ def convert_jsonl_to_parquet(
     output_file_path: str,
     dataset_path: Path = settings.JSONL_DATASET_PATH,
     query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
-):
-    """Convert the JSONL file into parquet using DuckDB"""
+) -> None:
     logger.info("Start JSONL to Parquet conversion process.")
     if not dataset_path.exists() or not query_path.exists():
         raise FileNotFoundError(
@@ -592,7 +591,8 @@ def convert_jsonl_to_parquet(
     try:
         duckdb.sql(query)
     except duckdb.Error as e:
-        logger.error(e)
+        logger.error(f"Error executing query: {query}\nError message: {e}")
+        raise
     logger.info("JSONL successfully converted into Parquet file.")
 
 
@@ -602,8 +602,13 @@ def push_data_to_hf(
     revision: str,
     commit_message: str,
 ) -> None:
+    logger.info(f"Start pushing data to Hugging Face at {repo_id}")
     if not os.path.exists(data_path):
         raise FileNotFoundError(f"Data is missing: {data_path}")
+    if os.path.splitext(data_path)[-1] != ".parquet":
+        raise ValueError(
+            f"A parquet file is expected. Got {os.path.splitext(data_path)[-1]} instead."
+        )
     datasets.Dataset.from_parquet(data_path).push_to_hub(
         repo_id=repo_id,
         revision=revision,

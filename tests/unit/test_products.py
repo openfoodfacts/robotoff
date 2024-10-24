@@ -7,11 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from robotoff.products import (
-    convert_jsonl_to_parquet,
-    is_special_image,
-    is_valid_image,
-)
+from robotoff.products import convert_jsonl_to_parquet, is_special_image, is_valid_image
 from robotoff.settings import TEST_DATA_DIR
 from robotoff.types import JSONType
 
