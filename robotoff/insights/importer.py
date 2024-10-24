@@ -1536,12 +1536,29 @@ class NutrientExtractionImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        if product is not None and product.nutriments:
-            # Don't generate candidates if the product already has nutrients
+        # Don't generate candidates if the product already has nutrients
+        if (
+            product is not None
+            and product.nutriments
+            # If we delete all nutrient values, these computed values are still
+            # present. We therefore ignore these keys.
+            and set(
+                key
+                for key in product.nutriments.keys()
+                if not (
+                    key.startswith("carbon-footprint-from-known-ingredients")
+                    or key.startswith(
+                        "fruits-vegetables-legumes-estimate-from-ingredients"
+                    )
+                    or key.startswith("nova-group")
+                    or key.startswith("nutrition-score-fr")
+                )
+            )
+        ):
             return
 
         for prediction in predictions:
