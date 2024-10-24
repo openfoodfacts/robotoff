@@ -3,7 +3,7 @@
 # nice way to have our .env in environment for use in makefile
 # see https://lithic.tech/blog/2020-05/makefile-dot-env
 # Note: this will mask environment variable as opposed to docker-compose priority
-# yet most developper should'nt bump into this
+# yet most developper shouldn't bump into this
 ifneq (,$(wildcard ./.env))
     -include .env
     -include .envrc
@@ -160,6 +160,13 @@ dl-image-clf-models:
 			mkdir -p $${dir}; \
 			wget -cO - https://huggingface.co/openfoodfacts/$${asset_name}/resolve/main/weights/best.onnx > $${dir}/model.onnx; \
 	done;
+
+
+dl-nutrition-extractor-model:
+	@echo "⏬ Downloading nutrition extractor model files …"
+	${DOCKER_COMPOSE} run --rm --no-deps api huggingface-cli download openfoodfacts/nutrition-extractor --include 'onnx/*' --local-dir models/triton/nutrition_extractor/1/; \
+	cd models/triton/nutrition_extractor/1/; \
+	mv onnx model.onnx;
 
 init-elasticsearch:
 	@echo "Initializing elasticsearch indices"
