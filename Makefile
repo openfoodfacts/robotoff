@@ -237,6 +237,14 @@ integration-tests:
 	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
+ml-tests: 
+	@echo "🥫 Running ML tests …"
+	${DOCKER_COMPOSE_TEST} up -d triton
+	@echo "Sleeping for 30s, waiting for triton to be ready..."
+	@sleep 30
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv tests/ml ${args}
+	( ${DOCKER_COMPOSE_TEST} down -v || true )
+
 # interactive testings
 # usage: make pytest args='test/unit/my-test.py --pdb'
 pytest: guard-args
