@@ -1159,23 +1159,19 @@ def launch_normalize_barcode_job(
 def push_jsonl_to_hf(
     repo_id: str = "openfoodfacts/product-database",
     revision: str = "main",
+    split: str = "main",
     commit_message: str = "Database updated.",
 ):
     """Clean and convert the JSONL database before pushing to HF."""
+    from robotoff.products import push_jsonl_to_hf as _push_jsonl_to_hf
     from robotoff.utils.logger import get_logger
-    from robotoff.workers.queues import enqueue_job, low_queue
-    from robotoff.workers.tasks import push_jsonl_to_hf as _push_jsonl_to_hf
 
     logger = get_logger()
-    enqueue_job(
-        _push_jsonl_to_hf,
-        queue=low_queue,
-        job_kwargs={"timeout": "60m"},  # Pushing data to HF takes roughly 30m
-        repo_id=repo_id,
-        revision=revision,
-        commit_message=commit_message,
+    logger.info("Start command: convert JSON to Parquet to HF.")
+    _push_jsonl_to_hf(
+        repo_id=repo_id, revision=revision, commit_message=commit_message, split=split
     )
-    logger.info("Job queued.")
+    logger.info("JSONL to Parquet to HF process succesfully finished.")
 
 
 def main() -> None:

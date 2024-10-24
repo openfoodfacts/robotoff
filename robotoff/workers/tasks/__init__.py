@@ -1,14 +1,6 @@
-import os
-import tempfile
-
 from robotoff.insights.importer import refresh_insights
 from robotoff.models import Prediction, ProductInsight, with_db
-from robotoff.products import (
-    convert_jsonl_to_parquet,
-    fetch_dataset,
-    has_dataset_changed,
-    push_data_to_hf,
-)
+from robotoff.products import fetch_dataset, has_dataset_changed
 from robotoff.types import ProductIdentifier
 from robotoff.utils import get_logger
 
@@ -67,24 +59,3 @@ def refresh_insights_job(product_ids: list[ProductIdentifier]):
         import_results = refresh_insights(product_id)
         for import_result in import_results:
             logger.info(import_result)
-
-
-def push_jsonl_to_hf(repo_id: str, revision: str, commit_message: str) -> None:
-    """Convert and push to HF the JSONL dump located in Robotoff.
-
-    :param repo_id: Hugging Face repository name ('openfoodfacts/product-database'),
-    :type repo_id: str
-    :param revision: HF repo branch name,
-    :type revision: str
-    :param commit_message: Commit message
-    :type commit_message: str
-    """
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        file_path = os.path.join(tmp_dir, "converted_data.parquet")
-        convert_jsonl_to_parquet(output_file_path=file_path)
-        push_data_to_hf(
-            data_path=file_path,
-            repo_id=repo_id,
-            revision=revision,
-            commit_message=commit_message,
-        )
