@@ -1161,17 +1161,33 @@ def push_jsonl_to_hf(
     revision: str = "main",
     split: str = "main",
     commit_message: str = "Database updated.",
+    output_path: Optional[str] = None,
 ):
-    """Clean and convert the JSONL database before pushing to HF."""
-    from robotoff.products import push_jsonl_to_hf as _push_jsonl_to_hf
+    """Clean and convert the JSONL database before pushing to HF.
+    Possibility to only convert the database locally by indicating an `output_path`.
+    """
+    import os
+    import tempfile
+
+    from robotoff.products import convert_jsonl_to_parquet, push_data_to_hf
     from robotoff.utils.logger import get_logger
 
     logger = get_logger()
-    logger.info("Start command: convert JSON to Parquet to HF.")
-    _push_jsonl_to_hf(
-        repo_id=repo_id, revision=revision, commit_message=commit_message, split=split
-    )
-    logger.info("JSONL to Parquet to HF process succesfully finished.")
+    logger.info("Start command: convert JSONL to Parquet (to HF).")
+    if output_path:
+        convert_jsonl_to_parquet(output_file_path=output_path)
+    else:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = os.path.join(tmp_dir, "converted_data.parquet")
+            convert_jsonl_to_parquet(output_file_path=file_path)
+            push_data_to_hf(
+                data_path=file_path,
+                repo_id=repo_id,
+                revision=revision,
+                commit_message=commit_message,
+                split=split,
+            )
+    logger.info("JSONL to Parquet succesfully finished.")
 
 
 def main() -> None:

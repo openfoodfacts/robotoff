@@ -573,31 +573,6 @@ def get_product(
     return get_product_store(product_id.server_type).get_product(product_id, projection)
 
 
-def push_jsonl_to_hf(
-    repo_id: str, revision: str, commit_message: str, split: str
-) -> None:
-    """Convert and push to HF the JSONL dump located in Robotoff.
-
-    :param repo_id: Hugging Face repository name ('openfoodfacts/product-database'),
-    :type repo_id: str
-    :param revision: HF repo branch name,
-    :type revision: str
-    :param commit_message: Commit message,
-    :type commit_message: str
-    :param split: Dataset split,
-    :type split: str
-    """
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        file_path = os.path.join(tmp_dir, "converted_data.parquet")
-        convert_jsonl_to_parquet(output_file_path=file_path)
-        push_data_to_hf(
-            data_path=file_path,
-            repo_id=repo_id,
-            revision=revision,
-            commit_message=commit_message,
-        )
-
-
 def convert_jsonl_to_parquet(
     output_file_path: str,
     dataset_path: Path = settings.JSONL_DATASET_PATH,
@@ -625,6 +600,7 @@ def push_data_to_hf(
     data_path: str,
     repo_id: str,
     revision: str,
+    split: str,
     commit_message: str,
 ) -> None:
     logger.info(f"Start pushing data to Hugging Face at {repo_id}")
@@ -638,5 +614,6 @@ def push_data_to_hf(
         repo_id=repo_id,
         revision=revision,
         commit_message=commit_message,
+        split=split,
     )
     logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")
