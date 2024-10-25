@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.54.1](https://github.com/openfoodfacts/robotoff/compare/v1.54.0...v1.54.1) (2024-10-25)
+
+
+### Bug Fixes
+
+* fix issue with max() call on empty sequence ([5410b30](https://github.com/openfoodfacts/robotoff/commit/5410b30ba8cf26f98ea6cd53e9522659c5cc5bf8))
+
 ## [1.54.0](https://github.com/openfoodfacts/robotoff/compare/v1.53.3...v1.54.0) (2024-10-25)
 
 
