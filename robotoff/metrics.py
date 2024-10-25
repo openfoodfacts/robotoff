@@ -122,7 +122,7 @@ def save_facet_metrics():
         try:
             count = get_product_count(server_type, country_tag)
         except Exception:
-            logger.exception()
+            logger.exception("Error during product count retrieval for %s", country_tag)
             count = None
 
         for url_path in URL_PATHS:
