@@ -842,14 +842,15 @@ def extract_nutrition_job(
             return
 
         output = nutrition_extraction.predict(image, ocr_result, triton_uri=triton_uri)
+        max_confidence = None
 
         if output is None:
             data: JSONType = {"error": "missing_text"}
-            max_confidence = None
         else:
-            max_confidence = max(
-                entity["score"] for entity in output.entities.aggregated
-            )
+            if output.entities.aggregated:
+                max_confidence = max(
+                    entity["score"] for entity in output.entities.aggregated
+                )
             data = {
                 "nutrients": {
                     entity: dataclasses.asdict(nutrient)
