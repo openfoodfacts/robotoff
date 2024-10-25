@@ -1129,7 +1129,7 @@ class UPCImageImporter(InsightImporter):
                     image_data["imgid"]
                     for key, image_data in product.images.items()
                     # only look for non-raw images here (=selected images)
-                    if not key.isdigit()
+                    if not key.isdigit() and "imgid" in image_data
                 ):
                     # We check that at least one selected image has the image
                     # ID as reference before creating the insight
