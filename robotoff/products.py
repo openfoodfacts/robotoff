@@ -13,8 +13,8 @@ from typing import Iterable, Iterator, Optional, Union
 import duckdb
 import requests
 from pymongo import MongoClient
+from huggingface_hub import HfApi
 
-import datasets
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
@@ -603,7 +603,6 @@ def push_data_to_hf(
     data_path: str,
     repo_id: str,
     revision: str,
-    split: str,
     commit_message: str,
 ) -> None:
     logger.info(f"Start pushing data to Hugging Face at {repo_id}")
@@ -613,10 +612,13 @@ def push_data_to_hf(
         raise ValueError(
             f"A parquet file is expected. Got {os.path.splitext(data_path)[-1]} instead."
         )
-    datasets.Dataset.from_parquet(data_path).push_to_hub(
+    # We use the HF_Hub api since it gives us way more flexibility than push_to_hub()
+    HfApi().upload_file(
+        path_or_fileobj=data_path,
         repo_id=repo_id,
         revision=revision,
+        repo_type="dataset",
+        path_in_repo="products.parquet",
         commit_message=commit_message,
-        split=split,
-    )
+    ) 
     logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")

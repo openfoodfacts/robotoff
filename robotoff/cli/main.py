@@ -1205,7 +1205,6 @@ def launch_normalize_barcode_job(
 def push_jsonl_to_hf(
     repo_id: str = "openfoodfacts/product-database",
     revision: str = "main",
-    split: str = "main",
     commit_message: str = "Database updated.",
     output_path: Optional[str] = None,
 ):
@@ -1231,7 +1230,6 @@ def push_jsonl_to_hf(
                 repo_id=repo_id,
                 revision=revision,
                 commit_message=commit_message,
-                split=split,
             )
     logger.info("JSONL to Parquet succesfully finished.")
 

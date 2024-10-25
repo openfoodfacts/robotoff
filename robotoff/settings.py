@@ -362,4 +362,4 @@ CROP_ALLOWED_DOMAINS = os.environ.get("CROP_ALLOWED_DOMAINS", "").split(",")
 GOOGLE_PROJECT_NAME = "robotoff"
 
 # SQL queries paths
-JSONL_TO_PARQUET_SQL_QUERY = PROJECT_DIR / "robotoff/utils/sql/jsonl_to_parquet.txt"
+JSONL_TO_PARQUET_SQL_QUERY = PROJECT_DIR / "robotoff/utils/sql/jsonl_to_parquet.sql"

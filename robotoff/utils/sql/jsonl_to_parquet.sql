@@ -41,6 +41,7 @@ COPY (
         ingredients_n,
         ingredients_text_with_allergens,
         ingredients_text,
+        COLUMNS('ingredients_text_\w{2}$'),
         ingredients_with_specified_percent_n,
         ingredients_with_unspecified_percent_n,
         ciqual_food_name_tags,
@@ -119,5 +120,5 @@ COPY (
         with_non_nutritive_sweeteners,
         with_sweeteners,
     FROM read_ndjson('{dataset_path}', ignore_errors=True)
-) TO '{output_path}' (FORMAT PARQUET)
+) TO '{output_path}' (FORMAT PARQUET, PER_THREAD_OUTPUT TRUE)
 ;
