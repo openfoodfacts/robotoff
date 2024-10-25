@@ -439,12 +439,15 @@ def postprocess_aggregated_entities(
                 logger.warning("Could not extract nutrient value from %s", words_str)
                 is_valid = False
 
-        # Reformat the nutrient name so that it matches Open Food Facts format
-        # Ex: "ENERGY_KCAL_100G" -> "energy-kcal_100g"
-        entity_label = entity["entity"].lower()
-        entity_base, entity_per = entity_label.rsplit("_", 1)
-        entity_base = entity_base.replace("_", "-")
-        entity_label = f"{entity_base}_{entity_per}"
+        if entity["entity"] == "SERVING_SIZE":
+            entity_label = "serving_size"
+        else:
+            # Reformat the nutrient name so that it matches Open Food Facts format
+            # Ex: "ENERGY_KCAL_100G" -> "energy-kcal_100g"
+            entity_label = entity["entity"].lower()
+            entity_base, entity_per = entity_label.rsplit("_", 1)
+            entity_base = entity_base.replace("_", "-")
+            entity_label = f"{entity_base}_{entity_per}"
         postprocessed_entity = {
             "entity": entity_label,
             "text": words_str,

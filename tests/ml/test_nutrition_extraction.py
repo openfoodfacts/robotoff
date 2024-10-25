@@ -91,7 +91,7 @@ def test_predict(
         output_filename = output_url.split("/")[-1]
 
         with (output_dir / output_filename).open("wt") as f:
-            json.dump(dataclasses.asdict(result), f)
+            json.dump(dataclasses.asdict(result), f, indent=4)
     elif is_output_available:
         r = get_asset_from_url(output_url)
         assert r is not None
