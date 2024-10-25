@@ -1540,33 +1540,17 @@ class NutrientExtractionImporter(InsightImporter):
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        # Don't generate candidates if the product already has nutrients
-        if (
-            product is not None
-            and product.nutriments
-            # If we delete all nutrient values, these computed values are still
-            # present. We therefore ignore these keys.
-            and bool(
-                set(
-                    key
-                    for key in product.nutriments.keys()
-                    if not (
-                        key.startswith("carbon-footprint-from-known-ingredients")
-                        or key.startswith(
-                            "fruits-vegetables-legumes-estimate-from-ingredients"
-                        )
-                        or key.startswith(
-                            "fruits-vegetables-nuts-estimate-from-ingredients"
-                        )
-                        or key.startswith("nova-group")
-                        or key.startswith("nutrition-score-fr")
-                    )
-                )
-            )
-        ):
-            return
-
         for prediction in predictions:
+            if product is not None and product.nutriments:
+                current_keys = set(key for key in product.nutriments.keys())
+                prediction_keys = set(prediction.data["nutrients"].keys())
+
+                # If the prediction brings a nutrient value that is missing in
+                # the product, we generate an insight, otherwise we
+                # skip it
+                if not len(prediction_keys - current_keys):
+                    continue
+
             yield ProductInsight(**prediction.to_dict())
 
     @classmethod

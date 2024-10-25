@@ -19,7 +19,7 @@ class TestProcessAggregatedEntities:
         ]
         expected_output = [
             {
-                "entity": "energy_kcal_100g",
+                "entity": "energy-kcal_100g",
                 "text": "525 kcal",
                 "value": "525",
                 "unit": "kcal",
@@ -56,7 +56,7 @@ class TestProcessAggregatedEntities:
         ]
         expected_output = [
             {
-                "entity": "energy_kcal_100g",
+                "entity": "energy-kcal_100g",
                 "text": "525 kcal",
                 "value": "525",
                 "unit": "kcal",
@@ -69,7 +69,7 @@ class TestProcessAggregatedEntities:
                 "invalid_reason": "multiple_entities",
             },
             {
-                "entity": "energy_kcal_100g",
+                "entity": "energy-kcal_100g",
                 "text": "126 kcal",
                 "value": "126",
                 "unit": "kcal",
@@ -87,7 +87,7 @@ class TestProcessAggregatedEntities:
     def test_postprocess_aggregated_entities_no_value(self):
         aggregated_entities = [
             {
-                "entity": "FAT_SERVING",
+                "entity": "SATURATED_FAT_SERVING",
                 "words": ["fat"],
                 "score": 0.85,
                 "start": 0,
@@ -98,7 +98,7 @@ class TestProcessAggregatedEntities:
         ]
         expected_output = [
             {
-                "entity": "fat_serving",
+                "entity": "saturated-fat_serving",
                 "text": "fat",
                 "value": None,
                 "unit": None,
@@ -219,7 +219,7 @@ class TestProcessAggregatedEntities:
         ]
         expected_output = [
             {
-                "entity": "energy_kj_100g",
+                "entity": "energy-kj_100g",
                 "text": "525",
                 "value": "525",
                 "unit": "kj",
@@ -231,7 +231,7 @@ class TestProcessAggregatedEntities:
                 "valid": True,
             },
             {
-                "entity": "energy_kcal_100g",
+                "entity": "energy-kcal_100g",
                 "text": "126 kcal",
                 "value": "126",
                 "unit": "kcal",

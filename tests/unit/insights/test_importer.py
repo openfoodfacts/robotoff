@@ -10,6 +10,7 @@ from robotoff.insights.importer import (
     ExpirationDateImporter,
     InsightImporter,
     LabelInsightImporter,
+    NutrientExtractionImporter,
     NutritionImageImporter,
     PackagerCodeInsightImporter,
     PackagingImporter,
@@ -1529,6 +1530,150 @@ class TestNutritionImageImporter:
             )
             == []
         )
+
+
+class TestNutrientExtractionImporter:
+    def test_generate_candidates_no_nutrient(self):
+        product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
+        data = {
+            "nutrients": {
+                "energy-kj_100g": {
+                    "entity": "energy-kj_100g",
+                    "value": "100",
+                    "unit": "kj",
+                    "text": "100 kj",
+                    "start": 0,
+                    "end": 1,
+                    "char_start": 0,
+                    "char_end": 6,
+                }
+            }
+        }
+        predictions = [
+            Prediction(
+                type=PredictionType.nutrient_extraction,
+                data=data,
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+                predictor="nutrition_extractor",
+                predictor_version="nutrition_extractor-1.0",
+                automatic_processing=False,
+            )
+        ]
+        candidates = list(
+            NutrientExtractionImporter.generate_candidates(
+                product, predictions, DEFAULT_PRODUCT_ID
+            )
+        )
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        assert candidate.type == "nutrient_extraction"
+        assert candidate.barcode == DEFAULT_BARCODE
+        assert candidate.type == InsightType.nutrient_extraction.name
+        assert candidate.value_tag is None
+        assert candidate.data == data
+        assert candidate.source_image == DEFAULT_SOURCE_IMAGE
+        assert candidate.automatic_processing is False
+        assert candidate.predictor == "nutrition_extractor"
+        assert candidate.predictor_version == "nutrition_extractor-1.0"
+
+    def test_generate_candidates_no_new_nutrient(self):
+        product = Product(
+            {
+                "code": DEFAULT_BARCODE,
+                "nutriments": {
+                    "energy-kj_100g": "100",
+                    "energy-kj_unit": "kJ",
+                    "fat_100g": "10",
+                    "fat_unit": "g",
+                },
+            }
+        )
+        data = {
+            "nutrients": {
+                "energy-kj_100g": {
+                    "entity": "energy-kj_100g",
+                    "value": "100",
+                    "unit": "kj",
+                    "text": "100 kj",
+                    "start": 0,
+                    "end": 2,
+                    "char_start": 0,
+                    "char_end": 6,
+                }
+            }
+        }
+        predictions = [
+            Prediction(
+                type=PredictionType.nutrient_extraction,
+                data=data,
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+                predictor="nutrition_extractor",
+                predictor_version="nutrition_extractor-1.0",
+                automatic_processing=False,
+            )
+        ]
+        candidates = list(
+            NutrientExtractionImporter.generate_candidates(
+                product, predictions, DEFAULT_PRODUCT_ID
+            )
+        )
+        assert len(candidates) == 0
+
+    def test_generate_candidates_new_nutrient(self):
+        product = Product(
+            {
+                "code": DEFAULT_BARCODE,
+                "nutriments": {
+                    "energy-kj_100g": "100",
+                    "energy-kj_unit": "kJ",
+                    "fat_100g": "10",
+                    "fat_unit": "g",
+                },
+            }
+        )
+        data = {
+            "nutrients": {
+                "energy-kj_100g": {
+                    "entity": "energy-kj_100g",
+                    "value": "100",
+                    "unit": "kj",
+                    "text": "100 kj",
+                    "start": 0,
+                    "end": 2,
+                    "char_start": 0,
+                    "char_end": 6,
+                },
+                "saturated-fat_100g": {
+                    "entity": "saturated-fat_100g",
+                    "value": "5",
+                    "unit": "g",
+                    "text": "5 g",
+                    "start": 3,
+                    "end": 4,
+                    "char_start": 7,
+                    "char_end": 10,
+                },
+            }
+        }
+        predictions = [
+            Prediction(
+                type=PredictionType.nutrient_extraction,
+                data=data,
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+                predictor="nutrition_extractor",
+                predictor_version="nutrition_extractor-1.0",
+                automatic_processing=False,
+            )
+        ]
+        candidates = list(
+            NutrientExtractionImporter.generate_candidates(
+                product, predictions, DEFAULT_PRODUCT_ID
+            )
+        )
+        assert len(candidates) == 1
 
 
 class TestImportInsightsForProducts:
