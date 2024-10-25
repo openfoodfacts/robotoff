@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.54.0](https://github.com/openfoodfacts/robotoff/compare/v1.53.3...v1.54.0) (2024-10-25)
+
+
+### Features
+
+* add nutrient extractor ([#1437](https://github.com/openfoodfacts/robotoff/issues/1437)) ([9ae5ff7](https://github.com/openfoodfacts/robotoff/commit/9ae5ff722103602889318257a16909e2478de101))
+* Add spellcheck annotate ([#1434](https://github.com/openfoodfacts/robotoff/issues/1434)) ([f9a60dc](https://github.com/openfoodfacts/robotoff/commit/f9a60dc0a0c96da93fef17b470440af7f6798951))
+
+
+### Bug Fixes
+
+* fix nutrient insight importer ([0e4aff3](https://github.com/openfoodfacts/robotoff/commit/0e4aff3bb83807194ab163334ced75d4d72fe5dd))
+* fix NutrientExtractionImporter ([b533199](https://github.com/openfoodfacts/robotoff/commit/b533199ea248c824110182cbe5f536c8d5f86dfb))
+* fix nutrition extraction insight generation ([#1438](https://github.com/openfoodfacts/robotoff/issues/1438)) ([cfdfb07](https://github.com/openfoodfacts/robotoff/commit/cfdfb0763b49be7a2d45bccf54173fec1029c0ba))
+
 ## [1.53.3](https://github.com/openfoodfacts/robotoff/compare/v1.53.2...v1.53.3) (2024-10-16)
 
 
