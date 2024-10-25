@@ -12,8 +12,8 @@ from typing import Iterable, Iterator, Optional, Union
 
 import duckdb
 import requests
-from pymongo import MongoClient
 from huggingface_hub import HfApi
+from pymongo import MongoClient
 
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
@@ -620,5 +620,5 @@ def push_data_to_hf(
         repo_type="dataset",
         path_in_repo="products.parquet",
         commit_message=commit_message,
-    ) 
+    )
     logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")
