@@ -120,5 +120,5 @@ COPY (
         with_non_nutritive_sweeteners,
         with_sweeteners,
     FROM read_ndjson('{dataset_path}', ignore_errors=True)
-) TO '{output_path}' (FORMAT PARQUET, PER_THREAD_OUTPUT TRUE)
+) TO '{output_path}' (FORMAT PARQUET)
 ;
