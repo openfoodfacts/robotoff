@@ -138,6 +138,10 @@ def preprocess(
     words = []
     char_offsets = []
     bboxes = []
+
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+
     width, height = image.size
     for page in ocr_result.full_text_annotation.pages:
         for block in page.blocks:
