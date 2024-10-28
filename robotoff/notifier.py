@@ -193,7 +193,17 @@ class ImageModerationNotifier(NotifierInterface):
             ):
                 reason = "human"
             elif prediction_subtype == "text" and prediction_label == "beauty":
-                reason = "beauty"
+                # Don't send beauty text detection to moderation service for
+                # now
+                continue
+
+            if "label" in prediction.data:
+                if prediction_subtype == "text":
+                    comment = f"Robotoff detection: '{prediction.data['text']}' ({prediction.data['label']})"
+                else:
+                    comment = f"Robotoff detection: {prediction.data['label']}"
+            else:
+                comment = "Robotoff detection"
 
             data = {
                 "barcode": product_id.barcode,
@@ -205,9 +215,7 @@ class ImageModerationNotifier(NotifierInterface):
                 "image_id": image_id,
                 "flavor": product_id.server_type.value,
                 "reason": reason,
-                "comment": json.dumps(
-                    {k: v for k, v in prediction.data.items() if k != "likelihood"}
-                ),
+                "comment": comment,
             }
             try:
                 logger.info("Notifying image %s to moderation service", image_url)
@@ -228,7 +236,6 @@ class SlackNotifier(NotifierInterface):
 
     # Slack channel IDs.
     ROBOTOFF_ALERT_CHANNEL = "CGKPALRCG"  # robotoff-alerts-annotations
-    ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL = "GGMRWLEF2"  # moderation-off-alerts-private
 
     BASE_URL = "https://slack.com/api"
     POST_MESSAGE_URL = BASE_URL + "/chat.postMessage"
@@ -240,44 +247,6 @@ class SlackNotifier(NotifierInterface):
     def __init__(self, slack_token: str):
         """Should not be called directly, use the NotifierFactory instead."""
         self.slack_token = slack_token
-
-    def notify_image_flag(
-        self,
-        predictions: list[Prediction],
-        source_image: str,
-        product_id: ProductIdentifier,
-    ):
-        """Sends alerts to Slack channels for flagged images."""
-        if not predictions:
-            return
-
-        text = ""
-        slack_channel = self.ROBOTOFF_PRIVATE_IMAGE_ALERT_CHANNEL
-
-        for flagged in predictions:
-            flag_type = flagged.data["type"]
-            label = flagged.data["label"]
-
-            if not _sensitive_image(flag_type, label):
-                continue
-
-            if flag_type in ("safe_search_annotation", "label_annotation"):
-                likelihood = flagged.data["likelihood"]
-                text += f"type: {flag_type}\nlabel: *{label}*, score: {likelihood}\n"
-            else:
-                match_text = flagged.data["text"]
-                text += f"type: {flag_type}\nlabel: *{label}*, match: {match_text}\n"
-
-        if text:
-            edit_url = f"{settings.BaseURLProvider.world(product_id.server_type)}/cgi/product.pl?type=edit&code={product_id.barcode}"
-            image_url = settings.BaseURLProvider.image_url(
-                product_id.server_type, source_image
-            )
-
-            full_text = f"{text}\n <{image_url}|Image> -- <{edit_url}|*Edit*>"
-            message = _slack_message_block(full_text, with_image=image_url)
-
-            self._post_message(message, slack_channel, **self.COLLAPSE_LINKS_PARAMS)
 
     def notify_automatic_processing(self, insight: ProductInsight):
         server_type = ServerType[insight.server_type]
