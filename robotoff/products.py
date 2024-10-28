@@ -10,7 +10,9 @@ import tempfile
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
+import duckdb
 import requests
+from huggingface_hub import HfApi
 from pymongo import MongoClient
 
 from robotoff import settings
@@ -572,3 +574,51 @@ def get_product(
     :return: the product as a dict or None if it was not found
     """
     return get_product_store(product_id.server_type).get_product(product_id, projection)
+
+
+def convert_jsonl_to_parquet(
+    output_file_path: str,
+    dataset_path: Path = settings.JSONL_DATASET_PATH,
+    query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
+) -> None:
+    logger.info("Start JSONL to Parquet conversion process.")
+    if not dataset_path.exists() or not query_path.exists():
+        raise FileNotFoundError(
+            f"{str(dataset_path)} or {str(query_path)} was not found."
+        )
+    query = (
+        query_path.read_text()
+        .replace("{dataset_path}", str(dataset_path))
+        .replace("{output_path}", output_file_path)
+    )
+    try:
+        duckdb.sql(query)
+    except duckdb.Error as e:
+        logger.error(f"Error executing query: {query}\nError message: {e}")
+        raise
+    logger.info("JSONL successfully converted into Parquet file.")
+
+
+def push_data_to_hf(
+    data_path: str,
+    repo_id: str,
+    revision: str,
+    commit_message: str,
+) -> None:
+    logger.info(f"Start pushing data to Hugging Face at {repo_id}")
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Data is missing: {data_path}")
+    if os.path.splitext(data_path)[-1] != ".parquet":
+        raise ValueError(
+            f"A parquet file is expected. Got {os.path.splitext(data_path)[-1]} instead."
+        )
+    # We use the HF_Hub api since it gives us way more flexibility than push_to_hub()
+    HfApi().upload_file(
+        path_or_fileobj=data_path,
+        repo_id=repo_id,
+        revision=revision,
+        repo_type="dataset",
+        path_in_repo="products.parquet",
+        commit_message=commit_message,
+    )
+    logger.info(f"Data succesfully pushed to Hugging Face at {repo_id}")
