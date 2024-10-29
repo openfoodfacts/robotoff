@@ -601,9 +601,9 @@ def convert_jsonl_to_parquet(
 
 def push_data_to_hf(
     data_path: str,
-    repo_id: str,
-    revision: str,
-    commit_message: str,
+    repo_id: str = "openfoodfacts/product-database",
+    revision: str = "main",
+    commit_message: str = "Database updated",
 ) -> None:
     logger.info(f"Start pushing data to Hugging Face at {repo_id}")
     if not os.path.exists(data_path):

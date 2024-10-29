@@ -1205,7 +1205,7 @@ def launch_normalize_barcode_job(
 def push_jsonl_to_hf(
     repo_id: str = "openfoodfacts/product-database",
     revision: str = "main",
-    commit_message: str = "Database updated.",
+    commit_message: str = "Database updated",
     output_path: Optional[str] = None,
 ):
     """Clean and convert the JSONL database before pushing to HF.
