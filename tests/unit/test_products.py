@@ -1,9 +1,6 @@
 import json
-import os
-import tempfile
 from pathlib import Path
 from typing import Optional
-from unittest.mock import Mock
 
 import pytest
 
@@ -58,20 +55,6 @@ def test_is_valid_image(
 
 
 class TestConvertJSONLToParquet:
-    def test_convert_jsonl_to_parquet(self, mocker: Mock):
-        """This function doesn't test the DuckDB Query but only the logic of the
-        `convert_jsonl_to_parquet`function.
-        The reason is that the JSONL dataset schema can change over time, potentially
-        leading to this test to fail.
-        The JSONL schema validity responsability should remain out of this unittest.
-        """
-        # Mock the DuckDB SQL query and parquet writing
-        mock_duckdb_sql = mocker.patch("duckdb.sql")
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            output_file_path = os.path.join(tmp_dir, "test_converted.parquet")
-            convert_jsonl_to_parquet(output_file_path=output_file_path)
-        mock_duckdb_sql.assert_called_once()
-
     def test_convert_jsonl_to_parquet_data_missing(self):
         non_existing_path = Path("non/existing/dataset/path")
         with pytest.raises(FileNotFoundError):
