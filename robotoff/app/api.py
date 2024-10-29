@@ -209,6 +209,12 @@ class InsightCollection:
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
         countries: Optional[list[Country]] = get_countries_from_req(req)
+        order_by: Optional[str] = req.get_param("order_by")
+
+        if order_by not in ("random", "popularity", None):
+            raise falcon.HTTPBadRequest(
+                description=f"invalid `order_by` value: {order_by}"
+            )
 
         if keep_types:
             # Limit the number of types to prevent slow SQL queries
@@ -229,6 +235,7 @@ class InsightCollection:
             annotation=annotation,
             barcode=barcode,
             predictor=predictor,
+            order_by=order_by,
         )
 
         offset: int = (page - 1) * count
