@@ -1,5 +1,6 @@
 import datetime
 import os
+import tempfile
 import uuid
 from typing import Iterable
 
@@ -23,9 +24,11 @@ from robotoff.metrics import (
 from robotoff.models import Prediction, ProductInsight, db
 from robotoff.products import (
     Product,
+    convert_jsonl_to_parquet,
     fetch_dataset,
     get_min_product_store,
     has_dataset_changed,
+    push_data_to_hf,
 )
 from robotoff.types import InsightType, ServerType
 from robotoff.utils import get_logger
@@ -290,14 +293,33 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
 
 
 # this job does no use database
-def _update_data():
-    """Refreshes the PO product dump data."""
+def _update_data() -> None:
+    """Download the latest version of the Product Opener product JSONL dump,
+    convert it to Parquet format and push it to Hugging Face Hub.
+
+    Conversion to Parquet is only performed if the envvar ENABLE_HF_PUSH is
+    set to 1.
+    """
     logger.info("Downloading new version of product dataset")
+    ds_changed = False
     try:
-        if has_dataset_changed():
+        if ds_changed := has_dataset_changed():
             fetch_dataset()
     except requests.exceptions.RequestException:
         logger.exception("Exception during product dataset refresh")
+        return
+
+    if not settings.ENABLE_HF_PUSH:
+        logger.info("HF push is disabled, skipping Parquet conversion")
+
+    if ds_changed:
+        logger.info("Starting conversion of JSONL to Parquet (to HF)")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = os.path.join(tmp_dir, "converted_data.parquet")
+            convert_jsonl_to_parquet(output_file_path=file_path)
+            push_data_to_hf(data_path=file_path)
+    else:
+        logger.info("No changes in product dataset, skipping Parquet conversion")
 
 
 def transform_insight_iter(insights_iter: Iterable[dict]):
