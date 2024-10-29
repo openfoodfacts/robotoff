@@ -176,6 +176,9 @@ jobs:
           # Google Cloud credentials
           echo "GOOGLE_CREDENTIALS=${{ secrets.GOOGLE_CREDENTIALS }}" >> .env
 
+          # Token to push dataset to Hugging Face
+          echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> .env
+
           # Secret key to secure batch job import
           echo "BATCH_JOB_KEY=${{ secrets.BATCH_JOB_KEY }}" >> .env
 
