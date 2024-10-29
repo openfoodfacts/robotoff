@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.56.0](https://github.com/openfoodfacts/robotoff/compare/v1.55.0...v1.56.0) (2024-10-29)
+
+
+### Features
+
+* schedule Hugging Face Parquet dataset push every day ([7e525c1](https://github.com/openfoodfacts/robotoff/commit/7e525c194187f5ee0f5a3d5f9d23021ec5322e1b))
+
+
+### Technical
+
+* **deps-dev:** bump werkzeug from 3.0.4 to 3.0.6 ([64f5dbc](https://github.com/openfoodfacts/robotoff/commit/64f5dbca0df31be599994e3f8d67f78fa83fc693))
+
 ## [1.55.0](https://github.com/openfoodfacts/robotoff/compare/v1.54.1...v1.55.0) (2024-10-29)
 
 
