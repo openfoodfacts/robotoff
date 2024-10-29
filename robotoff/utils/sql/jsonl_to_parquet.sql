@@ -3,7 +3,6 @@ SET preserve_insertion_order = false;
 COPY ( 
     SELECT
         code,
-        abbreviated_product_name,
         additives_n,
         additives_tags,
         allergens_from_ingredients,
@@ -97,7 +96,6 @@ COPY (
         obsolete_since_date,
         obsolete,
         origins_tags,
-        owners_tags,
         packaging_recycling_tags,
         packaging_shapes_tags,
         packaging_tags,
