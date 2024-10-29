@@ -59,8 +59,10 @@ def test_is_valid_image(
 
 class TestConvertJSONLToParquet:
     def test_convert_jsonl_to_parquet(self, mocker: Mock):
-        """This function doesn't test the DuckDB Query but only the logic of the `convert_jsonl_to_parquet`function.
-        The reason is that the JSONL dataset schema can change over time, potentially leading to this test to fail.
+        """This function doesn't test the DuckDB Query but only the logic of the
+        `convert_jsonl_to_parquet`function.
+        The reason is that the JSONL dataset schema can change over time, potentially
+        leading to this test to fail.
         The JSONL schema validity responsability should remain out of this unittest.
         """
         # Mock the DuckDB SQL query and parquet writing
