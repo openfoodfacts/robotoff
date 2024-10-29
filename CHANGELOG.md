@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.55.0](https://github.com/openfoodfacts/robotoff/compare/v1.54.1...v1.55.0) (2024-10-29)
+
+
+### Features
+
+* :zap: Add CLI command to convert and push JSONL to Huggingface ([#1436](https://github.com/openfoodfacts/robotoff/issues/1436)) ([d68a231](https://github.com/openfoodfacts/robotoff/commit/d68a2319e73d6cb2463869de25984d7025b359bc))
+* improve Slack & nutripatrol notifiers ([ef0f861](https://github.com/openfoodfacts/robotoff/commit/ef0f861fb0d7d17c1b05960586226c2bf391fba1))
+
+
+### Bug Fixes
+
+* add order_by parameter to /api/v1/insights route ([2dcf4a7](https://github.com/openfoodfacts/robotoff/commit/2dcf4a77503412f77492cb664d7f227421538a7c))
+* convert image to RGB before nutrition extraction ([#1448](https://github.com/openfoodfacts/robotoff/issues/1448)) ([96401ef](https://github.com/openfoodfacts/robotoff/commit/96401ef94dced4242956f7269ddf3c7b8a5a851f))
+* fix KeyError exception in UPCImageImporter ([#1443](https://github.com/openfoodfacts/robotoff/issues/1443)) ([022a788](https://github.com/openfoodfacts/robotoff/commit/022a7882432da2a15bd56411a7635a1732e8955b)), closes [#1442](https://github.com/openfoodfacts/robotoff/issues/1442)
+* fix wrong call to logger.exception ([#1441](https://github.com/openfoodfacts/robotoff/issues/1441)) ([750eea9](https://github.com/openfoodfacts/robotoff/commit/750eea99ee60562d9d6ac21705b1d7d5306e6e68)), closes [#1440](https://github.com/openfoodfacts/robotoff/issues/1440)
+* remove columns in output parquet files ([d8534fe](https://github.com/openfoodfacts/robotoff/commit/d8534fe13534e776c09421bf097797d944fc0a06))
+* update fields fetched to generate parquet file ([4f57419](https://github.com/openfoodfacts/robotoff/commit/4f57419e0b460aee73ed96d1b3d436ed01d1fa4b))
+
+
+### Technical
+
+* add /api/v1/insights endpoint to documentation ([f5b1de4](https://github.com/openfoodfacts/robotoff/commit/f5b1de43a77b27ccc99ab19836cab53647073b71))
+* add HF_TOKEN to .env ([73019bb](https://github.com/openfoodfacts/robotoff/commit/73019bbb5b9caf76ba931080636ee0e63ae6be28))
+* reformat test_products.py ([11e0199](https://github.com/openfoodfacts/robotoff/commit/11e0199c35ce71a728cab0f847dca5f62812c327))
+
 ## [1.54.1](https://github.com/openfoodfacts/robotoff/compare/v1.54.0...v1.54.1) (2024-10-25)
 
 
