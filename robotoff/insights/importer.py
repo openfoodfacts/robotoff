@@ -1002,26 +1002,26 @@ class BrandInsightImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(item: Prediction | ProductInsight) -> bool:
-        """Return True if the Prediction or ProductInsight is valid:
-
-        - we check for 'taxonomy' predictor whether the brand is excluded
-        - we check that the brand is compatible with the barcode
-          range
+        """Return True if the Prediction or ProductInsight is valid.
+        For 'taxonomy' and 'curated-list' predictors, we check that the brand
+        is not in the blacklist and that it is compatible with the barcode
+        range.
 
         :param item: a Prediction or a ProductInsight
+        :return: True if the item is valid
         """
-        if item.predictor == "universal-logo-detector" and "username" in item.data:
-            # Don't perform barcode range check and for logos detected
-            # using universal-logo-detector model and annotated manually
-            return True
+        if item.predictor in ("taxonomy", "curated-list"):
+            brand_blacklist = get_brand_blacklist()
+            if item.value_tag in brand_blacklist:
+                return False
 
-        brand_blacklist = get_brand_blacklist()
-        if item.predictor == "taxonomy" and item.value_tag in brand_blacklist:
-            return False
+            return BrandInsightImporter.is_in_barcode_range(
+                item.barcode, item.value_tag  # type: ignore
+            )
 
-        return BrandInsightImporter.is_in_barcode_range(
-            item.barcode, item.value_tag  # type: ignore
-        )
+        # Don't perform barcode range check and for other predictors
+        # (universal-logo-detector, google-cloud-vision)
+        return True
 
     @classmethod
     def generate_candidates(

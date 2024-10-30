@@ -1168,6 +1168,70 @@ class TestBrandInsightInsightImporter:
             ProductInsight(value_tag="tag1"), ProductInsight(value_tag="tag2")
         )
 
+    def test_is_prediction_valid(self):
+        base_values = {
+            "type": PredictionType.brand,
+            "value_tag": "carrefour",
+        }
+        assert (
+            BrandInsightImporter.is_prediction_valid(
+                Prediction(
+                    barcode="3560070880973",  # This is a Carrefour product
+                    predictor="curated-list",
+                    **base_values,
+                )
+            )
+            is True
+        )
+        assert (
+            BrandInsightImporter.is_prediction_valid(
+                Prediction(
+                    barcode="3510070880973",  # This is *not* a Carrefour product
+                    predictor="curated-list",
+                    **base_values,
+                )
+            )
+            is False
+        )
+        # We don't check for barcode range if the predictor is not curated-list or
+        # taxonomy
+        assert (
+            BrandInsightImporter.is_prediction_valid(
+                Prediction(
+                    barcode="3510070880973",  # This is *not* a Carrefour product
+                    predictor="google-cloud-vision",
+                    **base_values,
+                )
+            )
+            is True
+        )
+        # We only check the inclusion of the brand in the blacklist if the predictor
+        # is not curated-list or taxonomy
+        assert (
+            BrandInsightImporter.is_prediction_valid(
+                Prediction(
+                    barcode="3510070880973",
+                    predictor="google-cloud-vision",
+                    type=PredictionType.brand,
+                    value_tag="asia",  # This brand is in the blacklist
+                )
+            )
+            is True
+        )
+        # We check the inclusion of the brand in the blacklist if the predictor is
+        # curated-list or taxonomy
+        assert (
+            BrandInsightImporter.is_prediction_valid(
+                Prediction(
+                    barcode="3510070880973",
+                    predictor="taxonomy",
+                    type=PredictionType.brand,
+                    value_tag="asia",  # This brand is in the blacklist
+                )
+            )
+            is False
+        )
+
 
 class TestStoreInsightImporter:
     def test_get_type(self):
