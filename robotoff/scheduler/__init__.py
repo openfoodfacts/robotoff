@@ -311,6 +311,7 @@ def _update_data() -> None:
 
     if not settings.ENABLE_HF_PUSH:
         logger.info("HF push is disabled, skipping Parquet conversion")
+        return
 
     if ds_changed:
         logger.info("Starting conversion of JSONL to Parquet (to HF)")
