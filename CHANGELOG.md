@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.56.1](https://github.com/openfoodfacts/robotoff/compare/v1.56.0...v1.56.1) (2024-11-05)
+
+
+### Bug Fixes
+
+* fix barcode filtering ([9d081a5](https://github.com/openfoodfacts/robotoff/commit/9d081a5c1fbc84250814d13b02ff49e4b2b5f43f))
+* fix Parquet dataset push to Hub ([#1458](https://github.com/openfoodfacts/robotoff/issues/1458)) ([87e0fce](https://github.com/openfoodfacts/robotoff/commit/87e0fce87f1740eabe978c1d46950aeb9dc81866))
+
 ## [1.56.0](https://github.com/openfoodfacts/robotoff/compare/v1.55.0...v1.56.0) (2024-10-29)
 
 
