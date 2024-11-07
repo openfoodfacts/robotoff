@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.56.2](https://github.com/openfoodfacts/robotoff/compare/v1.56.1...v1.56.2) (2024-11-07)
+
+
+### Technical
+
+* increase memory limit for scheduler ([#1461](https://github.com/openfoodfacts/robotoff/issues/1461)) ([e698510](https://github.com/openfoodfacts/robotoff/commit/e698510c3af64e288d9cd2f2d913e68b25a4393a))
+* remove useless file ([192f3e6](https://github.com/openfoodfacts/robotoff/commit/192f3e6c70c6bef8bdc939e61fee5f390b81d87f))
+
 ## [1.56.1](https://github.com/openfoodfacts/robotoff/compare/v1.56.0...v1.56.1) (2024-11-05)
 
 
