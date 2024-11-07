@@ -122,7 +122,7 @@ services:
     <<: *robotoff-base
     environment: *robotoff-base-env
     command: python -m robotoff run-scheduler
-    mem_limit: 4g
+    mem_limit: 6g
 
   postgres:
     restart: $RESTART_POLICY
