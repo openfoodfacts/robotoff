@@ -139,7 +139,7 @@ services:
     mem_limit: 20g
     shm_size: 1g
     ports:
-      - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"
+      - "${POSTGRES_EXPOSE:-127.0.0.1:5501}:5432"
 
   redis:
     restart: $RESTART_POLICY
@@ -150,7 +150,7 @@ services:
       REDIS_ARGS: --save 60 1000 --appendonly yes
     mem_limit: 4g
     ports:
-      - "${REDIS_EXPOSE:-127.0.0.1:6379}:6379"
+      - "${REDIS_EXPOSE:-127.0.0.1:5502}:6379"
 
   elasticsearch:
     restart: $RESTART_POLICY
