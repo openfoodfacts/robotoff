@@ -18,6 +18,7 @@ from pymongo import MongoClient
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
+from robotoff.utils import export
 
 logger = get_logger(__name__)
 
@@ -592,9 +593,15 @@ def convert_jsonl_to_parquet(
         .replace("{output_path}", output_file_path)
     )
     try:
-        duckdb.sql(query)
+        logger.info("Query the JSONL using DuckDB.")
+        arrow_batches = duckdb.sql(query).fetch_arrow_reader(batch_size=100000)
+        logger.info("Post-process extracted data using Arrow")
+        # arrow_batches = export.postprocess_arrow_batches(arrow_batches)
+        logger.info("Write post-processed data into Parquet.")
+        export.sink_to_parquet(output_file_path, batches=arrow_batches)
+        
     except duckdb.Error as e:
-        logger.error(f"Error executing query: {query}\nError message: {e}")
+        logger.error("Error executing query: %s\nError message: %s", query, e)
         raise
     logger.info("JSONL successfully converted into Parquet file.")
 
