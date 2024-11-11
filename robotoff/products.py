@@ -582,27 +582,32 @@ def convert_jsonl_to_parquet(
     dataset_path: Path = settings.JSONL_DATASET_PATH,
     query_path: Path = settings.JSONL_TO_PARQUET_SQL_QUERY,
 ) -> None:
+    from pyarrow import ArrowException
     logger.info("Start JSONL to Parquet conversion process.")
     if not dataset_path.exists() or not query_path.exists():
         raise FileNotFoundError(
             f"{str(dataset_path)} or {str(query_path)} was not found."
         )
-    query = (
-        query_path.read_text()
-        .replace("{dataset_path}", str(dataset_path))
-        .replace("{output_path}", output_file_path)
-    )
-    try:
-        logger.info("Query the JSONL using DuckDB.")
-        arrow_batches = duckdb.sql(query).fetch_arrow_reader(batch_size=100000)
-        logger.info("Post-process extracted data using Arrow")
-        # arrow_batches = export.postprocess_arrow_batches(arrow_batches)
-        logger.info("Write post-processed data into Parquet.")
-        export.sink_to_parquet(output_file_path, batches=arrow_batches)
-        
-    except duckdb.Error as e:
-        logger.error("Error executing query: %s\nError message: %s", query, e)
-        raise
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        try:
+            tmp_parquet_path = os.path.join(tmp_dir, "temp.parquet")
+            query = (
+                query_path.read_text()
+                .replace("{dataset_path}", str(dataset_path))
+                .replace("{output_path}", tmp_parquet_path)
+            )
+            logger.info("Query the JSONL using DuckDB.")
+            duckdb.sql(query)
+            # logger.info("Post-process extracted data using Arrow")
+            # arrow_batches = export.load_parquet()
+            logger.info("Write post-processed data into Parquet.")
+            export.sink_to_parquet(tmp_parquet_path, output_file_path)
+        except duckdb.Error as e:   
+            logger.error("Error executing query: %s\nError message: %s", query, e)
+            raise
+        except ArrowException as e:
+            logger.error(e)
+            raise
     logger.info("JSONL successfully converted into Parquet file.")
 
 

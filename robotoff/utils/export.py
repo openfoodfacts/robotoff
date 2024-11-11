@@ -1,11 +1,8 @@
 "Functions to postprocess the database conversion into Parquet."
-
 import json
-from typing import Iterator
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 
 ################
 # Schemas
@@ -41,28 +38,35 @@ _dict_schema = pa.struct(
 
 IMAGES_DATATYPE = pa.list_(_dict_schema)
 
+SCHEMAS = {
+    "images": IMAGES_DATATYPE
+}
+
+
 
 ################
 # Functions
 ################
-def sink_to_parquet(path: str, batches: pa.RecordBatchReader):
-    schema = batches.schema
-    schema = schema.remove(schema.get_field_index("images"))
-    schema = schema.append(pa.field("images", IMAGES_DATATYPE))
-    with pq.ParquetWriter(path, schema=schema) as writer:
-        for batch in batches:
-            batch = batches.read_next_batch()
+def sink_to_parquet(parquet_path: str, output_path: str):
+    parquet_file = pq.ParquetFile(parquet_path) 
+    updated_schema = update_schema(parquet_file.schema.to_arrow_schema())
+    with pq.ParquetWriter(output_path, schema=updated_schema) as writer:
+        for batch in parquet_file.iter_batches(batch_size=1000):
             batch = _postprocess_arrow_batch(batch)
-            # batch = _postprocess_arrow_batch(batch)
             writer.write_batch(batch)
 
 
-def postprocess_arrow_batches(batches: pa.RecordBatchReader) -> pa.RecordBatchReader:
-
-    return pa.RecordBatchReader.from_batches(
-        schema=batches.schema,
-        batches=[_postprocess_arrow_batch(batch) for batch in batches]
-    )
+# def postprocess_arrow_batches(batches: pa.RecordBatchReader) -> pa.RecordBatchReader:
+#     schema = _udpate_schema_by_field(
+#         schema=batches.schema,
+#         field_name="images",
+#         field_datatype=IMAGES_DATATYPE,
+#     )
+#     batches = [_postprocess_arrow_batch(batch) for batch in batches]
+#     return pa.RecordBatchReader.from_batches(
+#         schema=schema,
+#         batches=batches,
+#     )
 
 
 def _postprocess_arrow_batch(batch: pa.RecordBatch) -> pa.RecordBatch:
@@ -114,3 +118,19 @@ def _postprocess_images(
     images_array = pa.array(postprocessed_images, type=datatype)
     batch = batch.set_column(1, "images", images_array)
     return batch
+
+
+def update_schema(schema: pa.Schema) -> pa.Schema:
+    for field_name, field_datatype in SCHEMAS.items():
+        schema = _udpate_schema_by_field(schema=schema, field_name=field_name, field_datatype=field_datatype)
+    return schema
+
+
+def _udpate_schema_by_field(schema: pa.Schema, field_name: str, field_datatype: pa.DataType) -> pa.schema:
+    field_index = schema.get_field_index(field_name)
+    schema = schema.remove(field_index)
+    schema = schema.insert(
+        field_index,
+        pa.field(field_name, field_datatype)
+    )
+    return schema
