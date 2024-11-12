@@ -83,24 +83,24 @@ def _postprocess_images(batch: pa.RecordBatch, datatype: pa.DataType = IMAGES_DA
             postprocessed_images.append(
                 [
                     {
-                        "key": key,
+                        "key": str(key),
                         "imgid": str(value.get("imgid", "unknown")),
                         "sizes": {
                             "100": {
-                                "h": value.get("sizes", {}).get("100", {}).get("h", 0),
-                                "w": value.get("sizes", {}).get("100", {}).get("w", 0),
+                                "h": int(value.get("sizes", {}).get("100", {}).get("h", 0) or 0), # (or 0) because "h" or "w" can be none, leading to an error with int
+                                "w": int(value.get("sizes", {}).get("100", {}).get("w", 0) or 0),
                             },
                             "200": {
-                                "h": value.get("sizes", {}).get("200", {}).get("h", 0),
-                                "w": value.get("sizes", {}).get("200", {}).get("w", 0),
+                                "h": int(value.get("sizes", {}).get("200", {}).get("h", 0) or 0),
+                                "w": int(value.get("sizes", {}).get("200", {}).get("w", 0) or 0),
                             },
                             "400": {
-                                "h": value.get("sizes", {}).get("400", {}).get("h", 0),
-                                "w": value.get("sizes", {}).get("400", {}).get("w", 0),
+                                "h": int(value.get("sizes", {}).get("400", {}).get("h", 0) or 0),
+                                "w": int(value.get("sizes", {}).get("400", {}).get("w", 0) or 0),
                             },
                             "full": {
-                                "h": value.get("sizes", {}).get("full", {}).get("h", 0),
-                                "w": value.get("sizes", {}).get("full", {}).get("w", 0),
+                                "h": int(value.get("sizes", {}).get("full", {}).get("h", 0) or 0),
+                                "w": int(value.get("sizes", {}).get("full", {}).get("w", 0) or 0),
                             },
                         },
                         "uploaded_t": str(value.get("uploaded_t", "unknown")),
