@@ -45,7 +45,6 @@ COPY(
         ingredients_text_with_allergens,
         ingredients_text,
         COLUMNS('ingredients_text_\w{2}$'),
-        -- All columns containing ingredients_text_..
         ingredients_with_specified_percent_n,
         ingredients_with_unspecified_percent_n,
         ciqual_food_name_tags,
