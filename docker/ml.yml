@@ -3,9 +3,9 @@ services:
     restart: $RESTART_POLICY
     image: nvcr.io/nvidia/tritonserver:24.08-py3
     ports:
-      - ${TRITON_EXPOSE_HTTP:-8000}:8000
-      - ${TRITON_EXPOSE_GRPC:-8001}:8001
-      - ${TRITON_EXPOSE_METRICS:-8002}:8002
+      - ${TRITON_EXPOSE_HTTP:-5003}:8000
+      - ${TRITON_EXPOSE_GRPC:-5004}:8001
+      - ${TRITON_EXPOSE_METRICS:-5005}:8002
     volumes:
       - ${TRITON_MODELS_DIR:-../models/triton}:/models
     # We use explicit model control mode to be able to load/unload model dynamically
@@ -19,8 +19,6 @@ services:
   fasttext:
     restart: $RESTART_POLICY
     image: messense/fasttext-serving
-    ports:
-      - ${FASTTEXT_EXPOSE:-8020}:8000
     volumes:
       - ${FASTTEXT_MODEL_DIR:-../models}:/models
     entrypoint: "fasttext-serving --model=/models/lid.176.bin --port 8000 --address 0.0.0.0"
