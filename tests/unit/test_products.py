@@ -1,10 +1,9 @@
 import json
-from pathlib import Path
 from typing import Optional
 
 import pytest
 
-from robotoff.products import convert_jsonl_to_parquet, is_special_image, is_valid_image
+from robotoff.products import is_special_image, is_valid_image
 from robotoff.settings import TEST_DATA_DIR
 from robotoff.types import JSONType
 
@@ -52,14 +51,3 @@ def test_is_valid_image(
     output: bool,
 ):
     assert is_valid_image(images, image_path) is output
-
-
-class TestConvertJSONLToParquet:
-    def test_convert_jsonl_to_parquet_data_missing(self):
-        non_existing_path = Path("non/existing/dataset/path")
-        with pytest.raises(FileNotFoundError):
-            convert_jsonl_to_parquet(
-                output_file_path="any_path",
-                dataset_path=non_existing_path,
-                query_path=non_existing_path,
-            )
