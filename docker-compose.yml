@@ -58,8 +58,6 @@ x-robotoff-base-env:
   GOOGLE_APPLICATION_CREDENTIALS: /opt/robotoff/credentials/google/credentials.json
   GOOGLE_CREDENTIALS: # JSON credentials pasted as environment variable
   BATCH_JOB_KEY: # Secure Batch job import with a token key 
-  HF_TOKEN: # Hugging Face token
-  ENABLE_HF_PUSH: # Enable Hugging Face dataset push (0 or 1, disabled by default)
   
 x-robotoff-worker-base:
   &robotoff-worker
