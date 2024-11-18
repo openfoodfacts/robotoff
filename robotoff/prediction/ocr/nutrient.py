@@ -25,7 +25,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("valeurs? [ée]nerg[ée]tiques?", ["fr"]),
         ("energy", ["en"]),
         ("calories", ["fr", "en"]),
-        ("energia", ["es", "it", "pt"]),
+        ("energia", ["es", "it", "pt", "hu"]),
         ("valor energ[ée]tico", ["es"]),
         ("energi", ["da"]),
     ],
@@ -42,8 +42,12 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("[aá]cidos grasos saturados", ["es"]),
         ("dos quais saturados", ["pt"]),
         ("mættede fedtsyrer", ["da"]),
+        ("amelyb[őö]l? telített zs[íi]rsavak", ["hu"]),
     ],
-    "trans_fat": [("mati[èe]res? grasses? trans", ["fr"]), ("trans fat", ["en"])],
+    "trans_fat": [
+        ("mati[èe]res? grasses? trans", ["fr"]),
+        ("trans fat", ["en"]),
+    ],
     "fat": [
         ("mati[èe]res? grasses?", ["fr"]),
         ("graisses?", ["fr"]),
@@ -55,6 +59,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("grassi", ["it"]),
         ("l[íi]pidos", ["es", "pt"]),
         ("fedt", ["da"]),
+        ("zs[íi]r", ["hu"]),
     ],
     "sugar": [
         ("sucres?", ["fr"]),
@@ -64,6 +69,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("zucker", ["de"]),
         ("az[úu]cares", ["es"]),
         ("sukkerarter", ["da"]),
+        ("amelyb[őö]l? cukrok", ["hu"]),
     ],
     "carbohydrate": [
         ("total carbohydrate", ["en"]),
@@ -75,6 +81,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("kohlenhydrate", ["de"]),
         ("hidratos de carbono", ["es", "pt"]),
         ("kulhydrat", ["da"]),
+        ("szénhidrát", ["hu"]),
     ],
     "protein": [
         ("prot[ée]ines?", ["fr"]),
@@ -82,6 +89,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("eiwitten", ["nl"]),
         ("eiweiß", ["de"]),
         ("prote[íi]nas", ["es", "pt"]),
+        ("fehérje", ["hu"]),
     ],
     "salt": [
         ("sel", ["fr"]),
@@ -90,6 +98,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("salz", ["de"]),
         ("sale", ["it"]),
         ("sal", ["es", "pt"]),
+        ("só", ["hu"]),
     ],
     "fiber": [
         ("fibres?", ["en", "fr", "it"]),
@@ -99,6 +108,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("ballaststoffe", ["de"]),
         ("fibra(?: alimentaria)?", ["es"]),
         ("kostfibre", ["da"]),
+        ("rost", ["hu"]),
     ],
     "nutrition_values": [
         ("informations? nutritionnelles?(?: moyennes?)?", ["fr"]),
@@ -112,6 +122,8 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("gemiddelde waarden per", ["nl"]),
         ("nutritionele informatie", ["nl"]),
         ("(er)?næringsindhold", ["da"]),
+        ("átlagos tápérték(?:tartalom)?", ["hu"]),
+        ("tápérték adatok", ["hu"]),
     ],
 }
 
