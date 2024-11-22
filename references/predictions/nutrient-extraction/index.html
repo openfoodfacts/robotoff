@@ -997,7 +997,7 @@ As the model requires token text and position as input, an OCR must be performed
 <p>Random images selected as nutrition images were picked for annotation. Using the list of labels above, more than 3500 images were manually annotated. To learn more about the dataset, have a look at the description of the dataset on <a href="https://huggingface.co/datasets/openfoodfacts/nutrient-detection-layout">Hugging Face</a>.</p>
 <h2 id="robotoff-integration">Robotoff integration</h2>
 <h3 id="pre-processing-inference-and-post-processing">Pre-processing, inference and post-processing</h3>
-<p>The model was exported to ONNX and is served by Triton server. The model integration in Robotoff can be found in <code>robotoff.prediction.nutrition_extraction</code> module. The <code>predict</code> function <sup id="fnref:predict_function"><a class="footnote-ref" href="#fn:predict_function">3</a></sup> takes as input the image (as a Pillow Image) and the Google Cloud Vision OCR result (as a <code>OCRResult</code> object).</p>
+<p>The model was exported to ONNX and is served by Triton server. The model integration in Robotoff can be found in <code>robotoff.prediction.nutrition_extraction</code> module. The <code>predict</code> function <sup id="fnref:predict_function"><a class="footnote-ref" href="#fn:predict_function">2</a></sup> takes as input the image (as a Pillow Image) and the Google Cloud Vision OCR result (as a <code>OCRResult</code> object).</p>
 <p>When extracting nutrient information from an image, we perform the following steps:</p>
 <ul>
 <li>extract the words and their coordinates from the OCR result</li>
@@ -1031,7 +1031,7 @@ As the model requires token text and position as input, an OCR must be performed
 <li><code>valid</code>: whether the extracted entity is valid. We consider an entity invalid if we couldn't extract nutrient value from the <code>text</code> field, or if there are more than one entity for a single nutrient. For example, two <code>proteins_100g</code> entities are both considered invalid, but one <code>proteins_100g</code> and one <code>proteins_serving</code> are considered valid.</li>
 </ul>
 <h3 id="integration">Integration</h3>
-<p>For every new uploaded image, the model is run on this image <sup id="fnref:extract_nutrition_job"><a class="footnote-ref" href="#fn:extract_nutrition_job">2</a></sup>. As for all computer vision models, we save the model prediction in the <code>image_prediction</code> table.
+<p>For every new uploaded image, the model is run on this image <sup id="fnref:extract_nutrition_job"><a class="footnote-ref" href="#fn:extract_nutrition_job">3</a></sup>. As for all computer vision models, we save the model prediction in the <code>image_prediction</code> table.
 If some entities were detected, we create a <code>Prediction</code> in DB using the usual import mechanism <sup id="fnref:import_mechanism"><a class="footnote-ref" href="#fn:import_mechanism">4</a></sup>, under the type <code>nutrient_extraction</code>.</p>
 <p>We only create an insight if we detected at least one nutrient value that is not in the product nutrients <sup id="fnref:nutrient_extraction_import"><a class="footnote-ref" href="#fn:nutrient_extraction_import">5</a></sup>.</p>
 <div class="footnote">
@@ -1040,11 +1040,11 @@ If some entities were detected, we create a <code>Prediction</code> in DB using 
 <li id="fn:other_nutrient_detection">
 <p>Using a fixed set of classes is not the best approach when we have many classes. It however allows us to use LayoutLM architecture, which is very performant for this task, even when the nutrition table is hard to read due to packaging deformations or alterations. To detect the long-tail of nutrients, approaches using graph-based approach, where we would map a nutrient mention to its value, could be explored in the future.&#160;<a class="footnote-backref" href="#fnref:other_nutrient_detection" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
-<li id="fn:extract_nutrition_job">
-<p>See function <code>robotoff.workers.tasks.import_image.extract_nutrition_job</code>&#160;<a class="footnote-backref" href="#fnref:extract_nutrition_job" title="Jump back to footnote 2 in the text">&#8617;</a></p>
-</li>
 <li id="fn:predict_function">
-<p>In <code>robotoff.prediction.nutrition_extraction</code> module&#160;<a class="footnote-backref" href="#fnref:predict_function" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+<p>In <code>robotoff.prediction.nutrition_extraction</code> module&#160;<a class="footnote-backref" href="#fnref:predict_function" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:extract_nutrition_job">
+<p>See function <code>robotoff.workers.tasks.import_image.extract_nutrition_job</code>&#160;<a class="footnote-backref" href="#fnref:extract_nutrition_job" title="Jump back to footnote 3 in the text">&#8617;</a></p>
 </li>
 <li id="fn:import_mechanism">
 <p>See <a href="../../../explanations/predictions/">this page</a> for more details&#160;<a class="footnote-backref" href="#fnref:import_mechanism" title="Jump back to footnote 4 in the text">&#8617;</a></p>
