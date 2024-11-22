@@ -141,4 +141,4 @@ We only create an insight if we detected at least one nutrient value that is not
 
 [^import_mechanism]: See [this page](../../explanations/predictions.md) for more details 
 
-[^nutrient_extraction_import] See `NutrientExtractionImporter.generate_candidates` for implementation
+[^nutrient_extraction_import]: See `NutrientExtractionImporter.generate_candidates` for implementation
