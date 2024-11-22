@@ -287,6 +287,11 @@ def gather_pre_entities(
         label_id = label_ids[idx]
         score = float(scores[idx, label_id])
         label = id2label[label_id]
+        # As the entities are very short (< 3 tokens most of the time) and as
+        # two entities with the same label are in practice never adjacent,
+        # we simplify the schema by ignoring the B- and I- prefix.
+        # It simplifies processing and makes it more robust against model
+        # prefix mis-predictions.
         entity = label.split("-", maxsplit=1)[-1]
 
         pre_entity = {
