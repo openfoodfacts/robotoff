@@ -1,6 +1,6 @@
-# Nutrition table
+# Nutrition photo selection
 
-Every product should have a photo selected for nutrition table if nutrition facts are visible on the packaging. For multilingual products, we only want a nutrition table to be selected for the main language of the product to avoid unnecessary image duplication, except in the rare cases where we have distinct table for different languages.
+Every product should have a nutrition photo selected if nutrition facts are visible on the packaging. For multilingual products, we only want a nutrition table to be selected for the main language of the product to avoid unnecessary image duplication, except in the rare cases where we have distinct table for different languages.
 
 We detect nutrition tables using a mix of string matching (*regex*) [^nutrient_mention_insight] and machine learning detections. We use `nutrient_mention` insights to fetch all nutrient mentions, in all supported languages:
 
