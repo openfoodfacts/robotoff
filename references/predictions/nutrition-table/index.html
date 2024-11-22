@@ -14,7 +14,7 @@
     
     
       
-        <title>Nutrition table - Robotoff</title>
+        <title>Nutrition photo selection - Robotoff</title>
       
     
     
@@ -61,7 +61,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#nutrition-table" class="md-skip">
+        <a href="#nutrition-photo-selection" class="md-skip">
           Skip to content
         </a>
       
@@ -91,7 +91,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Nutrition table
+              Nutrition photo selection
             
           </span>
         </div>
@@ -491,6 +491,18 @@
             
   
   
+  
+    <li class="md-nav__item">
+      <a href="../nutrient-extraction/" class="md-nav__link">
+        Nutrition extraction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
     
   
   
@@ -503,7 +515,7 @@
       
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Nutrition table
+        Nutrition photo selection
       </a>
       
     </li>
@@ -802,8 +814,8 @@
                   </a>
                 
                 
-                <h1 id="nutrition-table">Nutrition table</h1>
-<p>Every product should have a photo selected for nutrition table if nutrition facts are visible on the packaging. For multilingual products, we only want a nutrition table to be selected for the main language of the product to avoid unnecessary image duplication, except in the rare cases where we have distinct table for different languages.</p>
+                <h1 id="nutrition-photo-selection">Nutrition photo selection</h1>
+<p>Every product should have a nutrition photo selected if nutrition facts are visible on the packaging. For multilingual products, we only want a nutrition table to be selected for the main language of the product to avoid unnecessary image duplication, except in the rare cases where we have distinct table for different languages.</p>
 <p>We detect nutrition tables using a mix of string matching (<em>regex</em>) <sup id="fnref:nutrient_mention_insight"><a class="footnote-ref" href="#fn:nutrient_mention_insight">1</a></sup> and machine learning detections. We use <code>nutrient_mention</code> insights to fetch all nutrient mentions, in all supported languages:</p>
 <ul>
 <li>nutrient names ("sugar", "carbohydrates", "nutritional information", "energy",...)</li>
@@ -853,7 +865,7 @@ Note that we generate candidates using the most recent images first (images are 
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../../package/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Package reference" rel="prev">
+        <a href="../nutrient-extraction/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Nutrition extraction" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -862,7 +874,7 @@ Note that we generate candidates using the most recent images first (images are 
               <span class="md-footer__direction">
                 Previous
               </span>
-              Package reference
+              Nutrition extraction
             </div>
           </div>
         </a>
