@@ -135,9 +135,9 @@ We only create an insight if we detected at least one nutrient value that is not
 
 [^other_nutrient_detection]: Using a fixed set of classes is not the best approach when we have many classes. It however allows us to use LayoutLM architecture, which is very performant for this task, even when the nutrition table is hard to read due to packaging deformations or alterations. To detect the long-tail of nutrients, approaches using graph-based approach, where we would map a nutrient mention to its value, could be explored in the future.
 
-[^extract_nutrition_job]: See function `robotoff.workers.tasks.import_image.extract_nutrition_job`
-
 [^predict_function]: In `robotoff.prediction.nutrition_extraction` module
+
+[^extract_nutrition_job]: See function `robotoff.workers.tasks.import_image.extract_nutrition_job`
 
 [^import_mechanism]: See [this page](../../explanations/predictions.md) for more details 
 
