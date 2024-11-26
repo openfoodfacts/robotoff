@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.56.3](https://github.com/openfoodfacts/robotoff/compare/v1.56.2...v1.56.3) (2024-11-23)
+
+
+### Bug Fixes
+
+* remove dataset push to HF ([#1465](https://github.com/openfoodfacts/robotoff/issues/1465)) ([40ecbb2](https://github.com/openfoodfacts/robotoff/commit/40ecbb28a39257c857fbb363d4bb577b8e329c6f))
+* restart gunicorn workers every 50 requests ([#1469](https://github.com/openfoodfacts/robotoff/issues/1469)) ([642583c](https://github.com/openfoodfacts/robotoff/commit/642583c9d76df8a8f4e7caf5db782901901db0e8))
+* use Robotoff attributed ports for ML services ([#1464](https://github.com/openfoodfacts/robotoff/issues/1464)) ([dd016d9](https://github.com/openfoodfacts/robotoff/commit/dd016d9d8ce8ed98854acfafb865b64bbe913717))
+
+
+### Technical
+
+* add documentation about the nutrition extraction model ([#1468](https://github.com/openfoodfacts/robotoff/issues/1468)) ([26bc881](https://github.com/openfoodfacts/robotoff/commit/26bc881c72df9e8b243d3c4d4a7fa8b1480c0eb5))
+* fix markdown syntax ([1d68bc9](https://github.com/openfoodfacts/robotoff/commit/1d68bc9f36e079eaac71580eef82fb6c32554e57))
+* fix syntax error ([d46052f](https://github.com/openfoodfacts/robotoff/commit/d46052fbbf4f716774d8d02ff9aedf508178b4bb))
+* remove legacy settings for container deploy ([9117d68](https://github.com/openfoodfacts/robotoff/commit/9117d6820d41e752c50c47a35a86aeb7b36f6eb9))
+* use port numbers in Robotoff attributed range ([#1463](https://github.com/openfoodfacts/robotoff/issues/1463)) ([6a99eba](https://github.com/openfoodfacts/robotoff/commit/6a99ebadb0bac4767164a68c51cedc54fba132eb))
+
 ## [1.56.2](https://github.com/openfoodfacts/robotoff/compare/v1.56.1...v1.56.2) (2024-11-07)
 
 
