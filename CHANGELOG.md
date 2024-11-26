@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.4](https://github.com/openfoodfacts/robotoff/compare/v1.56.3...v1.56.4) (2024-11-26)
+
+
+### Bug Fixes
+
+* increase max_requests to 500 ([b942c16](https://github.com/openfoodfacts/robotoff/commit/b942c16f4916f0a0d65b3e20f8ad7bbf24a10d72))
+
 ## [1.56.3](https://github.com/openfoodfacts/robotoff/compare/v1.56.2...v1.56.3) (2024-11-23)
 
 
