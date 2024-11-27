@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.5](https://github.com/openfoodfacts/robotoff/compare/v1.56.4...v1.56.5) (2024-11-27)
+
+
+### Bug Fixes
+
+* revert max_requests limit on gunicorn ([fbd9554](https://github.com/openfoodfacts/robotoff/commit/fbd9554257f56ca6a09cb840e0c1a176e00097dd))
+
 ## [1.56.4](https://github.com/openfoodfacts/robotoff/compare/v1.56.3...v1.56.4) (2024-11-26)
 
 
