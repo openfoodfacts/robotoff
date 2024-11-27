@@ -9,7 +9,7 @@ worker_connections = 1000
 # Default to True (production) if not specified
 preload_app = bool(os.environ.get("GUNICORN_PRELOAD_APP", True))
 timeout = 60
-# Limit the impact of caching on RAM use by restarting workers
+# (Disabled for now) Limit the impact of caching on RAM use by restarting workers
 # every 500 requests
-max_requests = 500
-max_requests_jitter = 50
+# max_requests = 500
+# max_requests_jitter = 50
