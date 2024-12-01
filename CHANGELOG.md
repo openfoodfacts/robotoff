@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.56.6](https://github.com/openfoodfacts/robotoff/compare/v1.56.5...v1.56.6) (2024-12-01)
+
+
+### Bug Fixes
+
+* fix Robotoff port numbers ([b7d95c3](https://github.com/openfoodfacts/robotoff/commit/b7d95c3551e6c5c9435ce0bea43ce52d83b8b29a))
+
 ## [1.56.5](https://github.com/openfoodfacts/robotoff/compare/v1.56.4...v1.56.5) (2024-11-27)
 
 
