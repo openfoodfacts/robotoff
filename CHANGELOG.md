@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.57.1](https://github.com/openfoodfacts/robotoff/compare/v1.57.0...v1.57.1) (2024-12-03)
+
+
+### Bug Fixes
+
+* add campaign for NutrientExtraction insights ([4d8d752](https://github.com/openfoodfacts/robotoff/commit/4d8d752329ffaa6b254e7fe26c00648184dd6f16))
+* improve refresh-insights command ([262479a](https://github.com/openfoodfacts/robotoff/commit/262479a9ed7baa4df3767a1d27add4c3ccf99fd2))
+
 ## [1.57.0](https://github.com/openfoodfacts/robotoff/compare/v1.56.6...v1.57.0) (2024-12-03)
 
 
