@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.0](https://github.com/openfoodfacts/robotoff/compare/v1.56.6...v1.57.0) (2024-12-03)
+
+
+### Features
+
+* add nutrition annotation ([#1473](https://github.com/openfoodfacts/robotoff/issues/1473)) ([cbe570e](https://github.com/openfoodfacts/robotoff/commit/cbe570ea893cfd4acd67443a326eb2e05cc6981a))
+
 ## [1.56.6](https://github.com/openfoodfacts/robotoff/compare/v1.56.5...v1.56.6) (2024-12-01)
 
 
