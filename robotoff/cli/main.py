@@ -363,7 +363,7 @@ def refresh_insights(
                 where_clauses.append(PredictionModel.type == prediction_type.name)
             product_ids = [
                 ProductIdentifier(barcode, server_type)
-                for barcode in PredictionModel.select(
+                for (barcode,) in PredictionModel.select(
                     fn.Distinct(PredictionModel.barcode)
                 )
                 .where(*where_clauses)
