@@ -11,7 +11,7 @@ from openfoodfacts.images import split_barcode
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
-from robotoff.types import JSONType, ProductIdentifier, ServerType
+from robotoff.types import JSONType, NutrientData, ProductIdentifier, ServerType
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -432,6 +432,34 @@ def save_ingredients(
         "comment": comment,
         ingredient_key: ingredient_text,
     }
+    update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
+
+
+def save_nutrients(
+    product_id: ProductIdentifier,
+    nutrient_data: NutrientData,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
+    is_vote: bool = False,
+    **kwargs,
+):
+    """Save nutrient information for a product."""
+    comment = generate_edit_comment(
+        "Update nutrient values", is_vote, auth is None, insight_id
+    )
+    params = {
+        "code": product_id.barcode,
+        "comment": comment,
+        "nutrition_data_per": nutrient_data.nutrition_data_per,
+    }
+    if nutrient_data.serving_size:
+        params["serving_size"] = nutrient_data.serving_size
+
+    for nutrient_name, nutrient_value in nutrient_data.nutrients.items():
+        if nutrient_value.unit:
+            params[f"nutriment_{nutrient_name}"] = nutrient_value.value
+            params[f"nutriment_{nutrient_name}_unit"] = nutrient_value.unit
+
     update_product(params, server_type=product_id.server_type, auth=auth, **kwargs)
 
 
