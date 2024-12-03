@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.2](https://github.com/openfoodfacts/robotoff/compare/v1.57.1...v1.57.2) (2024-12-03)
+
+
+### Bug Fixes
+
+* fix refresh-insights command ([0752727](https://github.com/openfoodfacts/robotoff/commit/07527275baf2f81e6d04e28c931ff2938a957bc7))
+
 ## [1.57.1](https://github.com/openfoodfacts/robotoff/compare/v1.57.0...v1.57.1) (2024-12-03)
 
 
