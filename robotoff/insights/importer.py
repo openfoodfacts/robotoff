@@ -1540,9 +1540,17 @@ class NutrientExtractionImporter(InsightImporter):
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
+        if product and product.nutrition_data_prepared_per:
+            # Don't generate candidates if the product has nutrition
+            # information per prepared product, as the model doesn't
+            # handle this case
+            return
+
         for prediction in predictions:
             if product is not None and product.nutriments:
-                current_keys = set(key for key in product.nutriments.keys())
+                current_keys = set(product.nutriments.keys())
+                if product.serving_size:
+                    current_keys.add("serving_size")
                 prediction_keys = set(prediction.data["nutrients"].keys())
 
                 # If the prediction brings a nutrient value that is missing in
@@ -1559,6 +1567,31 @@ class NutrientExtractionImporter(InsightImporter):
     ) -> bool:
         # Only one insight per product
         return True
+
+    @classmethod
+    def add_optional_fields(cls, insight: ProductInsight, product: Product | None):
+        """Add campaigns for the `nutrient_extraction` insight.
+
+        We always add one of the following campaigns:
+        - missing-nutrition: the product has no nutrition information
+        - incomplete-nutrition: the product has some nutrition information but the
+            prediction brings new nutrient values
+        """
+        if not product:
+            # We cannot know whether the product has incomplete or missing nutrition
+            # Stop here
+            return
+
+        campaigns: list[str] = []
+        if set(product.nutriments.keys()):
+            # The product already has some nutrient values, so we add it to the
+            # `incomplete-nutrition` campaign. Robotoff clients will be able to
+            # ask for incomplete nutrition insights only if they need to by
+            # specifying this campaign in the request.
+            campaigns.append("incomplete-nutrition")
+        else:
+            campaigns.append("missing-nutrition")
+        insight.campaign = campaigns
 
 
 class PackagingElementTaxonomyException(Exception):
