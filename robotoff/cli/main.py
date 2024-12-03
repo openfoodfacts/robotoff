@@ -319,6 +319,11 @@ def refresh_insights(
         None,
         help="Refresh a specific product. If not provided, all products are updated",
     ),
+    prediction_type: Optional[PredictionType] = typer.Option(
+        None,
+        help="Type of the prediction to refresh, if any. This option is only "
+        "used when --barcode is not used.",
+    ),
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
     ),
@@ -353,12 +358,15 @@ def refresh_insights(
     else:
         logger.info("Launching insight refresh on full database")
         with db:
+            where_clauses = [PredictionModel.server_type == server_type.name]
+            if prediction_type is not None:
+                where_clauses.append(PredictionModel.type == prediction_type.name)
             product_ids = [
                 ProductIdentifier(barcode, server_type)
-                for (barcode, server_type) in PredictionModel.select(
+                for barcode in PredictionModel.select(
                     fn.Distinct(PredictionModel.barcode)
                 )
-                .where(PredictionModel.server_type == server_type.name)
+                .where(*where_clauses)
                 .tuples()
             ]
 
