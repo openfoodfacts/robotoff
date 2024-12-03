@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Type
 
+from pydantic import ValidationError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import HTTPError, SSLError, Timeout
 
@@ -20,6 +21,7 @@ from robotoff.off import (
     add_packaging,
     add_store,
     save_ingredients,
+    save_nutrients,
     select_rotate_image,
     unselect_image,
     update_emb_codes,
@@ -27,7 +29,7 @@ from robotoff.off import (
     update_quantity,
 )
 from robotoff.products import get_image_id, get_product
-from robotoff.types import InsightAnnotation, InsightType, JSONType
+from robotoff.types import InsightAnnotation, InsightType, JSONType, NutrientData
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -53,6 +55,7 @@ class AnnotationStatus(Enum):
     error_failed_update = 10
     error_invalid_data = 11
     user_input_updated = 12
+    cannot_vote = 13
 
 
 SAVED_ANNOTATION_RESULT = AnnotationResult(
@@ -105,6 +108,11 @@ INVALID_DATA = AnnotationResult(
     status_code=AnnotationStatus.error_invalid_data.value,
     status=AnnotationStatus.error_invalid_data.name,
     description="The data schema is invalid.",
+)
+CANNOT_VOTE_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.cannot_vote.value,
+    status=AnnotationStatus.cannot_vote.name,
+    description="The voting mechanism is not compatible with this insight type, please authenticate.",
 )
 
 
@@ -693,6 +701,90 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         return UPDATED_ANNOTATION_RESULT
 
 
+NUTRIENT_DEFAULT_UNIT = {
+    "energy-kcal": "kcal",
+    "energy-kj": "kJ",
+    "proteins": "g",
+    "carbohydrates": "g",
+    "sugars": "g",
+    "added-sugars": "g",
+    "fat": "g",
+    "saturated-fat": "g",
+    "trans-fat": "g",
+    "fiber": "g",
+    "salt": "g",
+    "iron": "mg",
+    "sodium": "mg",
+    "calcium": "mg",
+    "potassium": "mg",
+    "cholesterol": "mg",
+    "vitamin-d": "µg",
+}
+
+
+class NutrientExtractionAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: dict | None = None,
+        auth: OFFAuthentication | None = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        if is_vote:
+            return CANNOT_VOTE_RESULT
+
+        # The annotator can change the nutrient values to fix the model errors
+        if data is not None:
+            try:
+                validated_nutrients = cls.validate_data(data)
+            except ValidationError as e:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description=str(e),
+                )
+            # We override the predicted nutrient values by the ones submitted by the
+            # user
+            insight.data["annotation"] = validated_nutrients.model_dump()
+            insight.data["was_updated"] = True
+            insight.save()
+        else:
+            validated_nutrients = NutrientData.model_validate(insight.data)
+            for nutrient_name, nutrient_value in validated_nutrients.nutrients.items():
+                if (
+                    nutrient_value.unit is None
+                    and nutrient_name in NUTRIENT_DEFAULT_UNIT
+                ):
+                    nutrient_value.unit = NUTRIENT_DEFAULT_UNIT[nutrient_name]
+
+            insight.data["annotation"] = validated_nutrients.model_dump()
+            insight.data["was_updated"] = False
+            insight.save()
+
+        save_nutrients(
+            product_id=insight.get_product_id(),
+            nutrient_data=validated_nutrients,
+            insight_id=insight.id,
+            auth=auth,
+            is_vote=is_vote,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+    @classmethod
+    def validate_data(cls, data: JSONType) -> NutrientData:
+        """Validate the `data` field submitted by the client.
+
+        :params data: the data submitted by the client
+        :return: the validated data
+
+        :raises ValidationError: if the data is invalid
+        """
+        if "nutrients" not in data:
+            raise ValidationError("missing 'nutrients' field")
+        return NutrientData.model_validate(data)
+
+
 ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.packager_code.name: PackagerCodeAnnotator,
     InsightType.label.name: LabelAnnotator,
@@ -705,6 +797,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.nutrition_image.name: NutritionImageAnnotator,
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
+    InsightType.nutrient_extraction: NutrientExtractionAnnotator,
 }
 
 

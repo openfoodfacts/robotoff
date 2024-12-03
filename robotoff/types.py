@@ -2,7 +2,10 @@ import dataclasses
 import datetime
 import enum
 import uuid
-from typing import Any, Literal, Optional
+from collections import Counter
+from typing import Any, Literal, Optional, Self
+
+from pydantic import BaseModel, model_validator
 
 #: A precise expectation of what mappings looks like in json.
 #: (dict where keys are always of type `str`).
@@ -360,3 +363,62 @@ class BatchJobType(enum.Enum):
     """Each job type correspond to a task that will be executed in the batch job."""
 
     ingredients_spellcheck = "ingredients-spellcheck"
+
+
+class NutrientSingleValue(BaseModel):
+    value: str
+    unit: str | None = None
+
+
+class NutrientData(BaseModel):
+    nutrients: dict[str, NutrientSingleValue]
+    serving_size: str | None = None
+    nutrition_data_per: Literal["100g", "serving"] | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def move_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "nutrients" in data:
+            if "serving_size" in data["nutrients"]:
+                # In the input data, `serving_size` is a key of the `nutrients`
+                # while on Product Opener, it's a different field. We move it
+                # to the root of the dict to be compliant with Product Opener
+                # API.
+                serving_size = data["nutrients"].pop("serving_size")
+                if isinstance(serving_size, dict):
+                    data["serving_size"] = serving_size["value"]
+                else:
+                    data["serving_size"] = serving_size
+        return data
+
+    @model_validator(mode="after")
+    def validate_nutrients(self) -> Self:
+        if len(self.nutrients) == 0:
+            raise ValueError("at least one nutrient is required")
+
+        # We expect all nutrient keys to be in the format `{nutrient_name}_{unit}`
+        # where `unit` is either `100g` or `serving`.
+        if not all("_" in k for k in self.nutrients):
+            raise ValueError("each nutrient key must end with '_100g' or '_serving'")
+
+        # We select the as `nutrition_data_per` the most common value between `100g`
+        # and `serving`.
+        # When the data is submitted by the client, we expect all nutrient keys to
+        # have the same unit (either `100g` or `serving`).
+        # When the annotation is performed directly from the insight (without user
+        # update or validation), we select the most common key.
+        nutrition_data_per_count = Counter(
+            key.rsplit("_", maxsplit=1)[1] for key in self.nutrients.keys()
+        )
+        if set(nutrition_data_per_count.keys()).difference({"100g", "serving"}):
+            # Some keys are not ending with '_100g' or '_serving'
+            raise ValueError("each nutrient key must end with '_100g' or '_serving'")
+
+        # Select the most common nutrition data per
+        self.nutrition_data_per = nutrition_data_per_count.most_common(1)[0][0]  # type: ignore
+        self.nutrients = {
+            k.rsplit("_", maxsplit=1)[0]: v
+            for k, v in self.nutrients.items()
+            if k.endswith(self.nutrition_data_per)  # type: ignore
+        }
+        return self
