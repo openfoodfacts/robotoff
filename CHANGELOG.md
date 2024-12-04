@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.5](https://github.com/openfoodfacts/robotoff/compare/v1.57.4...v1.57.5) (2024-12-04)
+
+
+### Bug Fixes
+
+* add new CLI command to rerun image import for all images ([#1482](https://github.com/openfoodfacts/robotoff/issues/1482)) ([98a1374](https://github.com/openfoodfacts/robotoff/commit/98a13742e62b0b4653559e3c02fadbbb6a39e335))
+
 ## [1.57.4](https://github.com/openfoodfacts/robotoff/compare/v1.57.3...v1.57.4) (2024-12-04)
 
 
