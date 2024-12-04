@@ -208,8 +208,9 @@ class InsightCollection:
         brands = req.get_param_as_list("brands") or None
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
-        countries: Optional[list[Country]] = get_countries_from_req(req)
-        order_by: Optional[str] = req.get_param("order_by")
+        countries: list[Country] | None = get_countries_from_req(req)
+        order_by: str | None = req.get_param("order_by")
+        campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
 
         if order_by not in ("random", "popularity", None):
             raise falcon.HTTPBadRequest(
@@ -236,6 +237,7 @@ class InsightCollection:
             barcode=barcode,
             predictor=predictor,
             order_by=order_by,
+            campaigns=campaigns,
         )
 
         offset: int = (page - 1) * count
