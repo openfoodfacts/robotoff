@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.4](https://github.com/openfoodfacts/robotoff/compare/v1.57.3...v1.57.4) (2024-12-04)
+
+
+### Bug Fixes
+
+* improve nutrition extraction ([#1479](https://github.com/openfoodfacts/robotoff/issues/1479)) ([730c132](https://github.com/openfoodfacts/robotoff/commit/730c13272d8c9412afd5905f6b790a3b3e01b457))
+
 ## [1.57.3](https://github.com/openfoodfacts/robotoff/compare/v1.57.2...v1.57.3) (2024-12-04)
 
 
