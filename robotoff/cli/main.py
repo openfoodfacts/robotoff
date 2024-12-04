@@ -5,6 +5,7 @@ from typing import Optional
 import typer
 
 from robotoff.types import (
+    ImportImageFlag,
     ObjectDetectionModel,
     PredictionType,
     ProductIdentifier,
@@ -615,6 +616,41 @@ def run_object_detection_model(
                 image_url=image_url,
                 triton_uri=triton_uri,
             )
+
+
+@app.command()
+def rerun_import_all_images(
+    server_type: Optional[ServerType] = typer.Option(
+        None, help="Server type of the product"
+    ),
+    limit: Optional[int] = typer.Option(
+        None, help="the maximum number of images to process, defaults to None (all)"
+    ),
+    flags: list[ImportImageFlag] = typer.Option(
+        None, help="Flags to use for image import"
+    ),
+):
+    """Rerun full image import on all images in DB.
+
+    This includes launching all ML models and insight extraction from the image and
+    associated OCR. To control which tasks are rerun, use the --flags option.
+    """
+    from robotoff.workers.tasks.import_image import (
+        rerun_import_all_images as _rerun_import_all_images,
+    )
+
+    flags_ = flags or None
+    count = _rerun_import_all_images(
+        limit=limit, server_type=server_type, flags=flags_, return_count=True
+    )
+    message = (
+        f"rerunning full image import on {count} images, confirm?"
+        if flags_ is None
+        else f"running following tasks ({', '.join(flag.name for flag in flags_)}) on {count} images, confirm?"
+    )
+    if typer.confirm(message):
+        _rerun_import_all_images(limit=limit, server_type=server_type, flags=flags_)
+    typer.echo("The task was successfully scheduled.")
 
 
 @app.command()

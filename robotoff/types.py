@@ -422,3 +422,12 @@ class NutrientData(BaseModel):
             if k.endswith(self.nutrition_data_per)  # type: ignore
         }
         return self
+
+
+class ImportImageFlag(str, enum.Enum):
+    add_image_fingerprint = "add_image_fingerprint"
+    import_insights_from_image = "import_insights_from_image"
+    extract_ingredients = "extract_ingredients"
+    extract_nutrition = "extract_nutrition"
+    run_logo_object_detection = "run_logo_object_detection"
+    run_nutrition_table_object_detection = "run_nutrition_table_object_detection"
