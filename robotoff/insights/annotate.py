@@ -744,6 +744,7 @@ class NutrientExtractionAnnotator(InsightAnnotator):
                     status=AnnotationStatus.error_invalid_data.name,
                     description=str(e),
                 )
+            validated_nutrients = cls.add_default_unit(validated_nutrients)
             # We override the predicted nutrient values by the ones submitted by the
             # user
             insight.data["annotation"] = validated_nutrients.model_dump()
@@ -751,12 +752,7 @@ class NutrientExtractionAnnotator(InsightAnnotator):
             insight.save()
         else:
             validated_nutrients = NutrientData.model_validate(insight.data)
-            for nutrient_name, nutrient_value in validated_nutrients.nutrients.items():
-                if (
-                    nutrient_value.unit is None
-                    and nutrient_name in NUTRIENT_DEFAULT_UNIT
-                ):
-                    nutrient_value.unit = NUTRIENT_DEFAULT_UNIT[nutrient_name]
+            validated_nutrients = cls.add_default_unit(validated_nutrients)
 
             insight.data["annotation"] = validated_nutrients.model_dump()
             insight.data["was_updated"] = False
@@ -770,6 +766,14 @@ class NutrientExtractionAnnotator(InsightAnnotator):
             is_vote=is_vote,
         )
         return UPDATED_ANNOTATION_RESULT
+
+    @classmethod
+    def add_default_unit(cls, validated_nutrients: NutrientData) -> NutrientData:
+        """Add default units to the nutrient values if unit is missing."""
+        for nutrient_name, nutrient_value in validated_nutrients.nutrients.items():
+            if nutrient_value.unit is None and nutrient_name in NUTRIENT_DEFAULT_UNIT:
+                nutrient_value.unit = NUTRIENT_DEFAULT_UNIT[nutrient_name]
+        return validated_nutrients
 
     @classmethod
     def validate_data(cls, data: JSONType) -> NutrientData:

@@ -1686,12 +1686,12 @@ class TestNutrientExtractionImporter:
         )
         assert len(candidates) == 0
 
-    def test_generate_candidates_nutrition_data_prepared_per(self):
+    def test_generate_candidates_nutrition_data_prepared(self):
         product = Product(
             {
                 "code": DEFAULT_BARCODE,
                 "nutriments": {},
-                "nutrition_data_prepared_per": "100g",
+                "nutrition_data_prepared": "on",
             }
         )
         data = {
@@ -1780,6 +1780,103 @@ class TestNutrientExtractionImporter:
             )
         )
         assert len(candidates) == 1
+
+    @pytest.mark.parametrize(
+        "nutriments,nutrition_data_per,serving_size,nutrients_keys,expected_output",
+        [
+            # We keep the prediction if th
+            (None, None, None, ["energy-kj_100g"], True),
+            # We bring fat which is missing, so we keep the prediction
+            (
+                {
+                    "energy-kj": 100,
+                    "energy-kj_100g": 100,
+                    "energy-kj_value": 100,
+                    "energy-kj_unit": "kJ",
+                    "fat": 10,
+                    "fat_100g": 10,
+                    "fat_unit": "g",
+                },
+                "100g",
+                None,
+                ["energy-kj_100g", "sugars_100g"],
+                True,
+            ),
+            # The nutrition is per 100g, and we don't bring any new value for 100g, so
+            # we discard the prediction
+            (
+                {
+                    "energy-kj": 100,
+                    "energy-kj_100g": 100,
+                    "energy-kj_value": 100,
+                    "energy-kj_unit": "kJ",
+                    "fat": 10,
+                    "fat_100g": 10,
+                    "fat_unit": "g",
+                },
+                "100g",
+                None,
+                ["energy-kj_100g", "energy-kj_serving"],
+                False,
+            ),
+            # Same thing as above but for serving
+            (
+                {
+                    "energy-kj": 100,
+                    "energy-kj_serving": 100,
+                    "energy-kj_value": 100,
+                    "energy-kj_unit": "kJ",
+                    "fat": 10,
+                    "fat_serving": 10,
+                    "fat_unit": "g",
+                },
+                "serving",
+                "100 g",
+                ["energy-kj_100g", "energy-kj_serving", "fat_serving"],
+                False,
+            ),
+            # Here we keep the prediction as serving_size is missing
+            (
+                {
+                    "energy-kj": 100,
+                    "energy-kj_serving": 100,
+                    "energy-kj_value": 100,
+                    "energy-kj_unit": "kJ",
+                    "fat": 10,
+                    "fat_serving": 10,
+                    "fat_unit": "g",
+                },
+                "serving",
+                None,
+                ["energy-kj_100g", "energy-kj_serving", "serving_size"],
+                True,
+            ),
+        ],
+    )
+    def test_keep_prediction(
+        self,
+        nutriments: JSONType | None,
+        nutrition_data_per: str | None,
+        serving_size: str | None,
+        nutrients_keys: list[str],
+        expected_output: bool,
+    ):
+        if nutriments is None:
+            product = None
+        else:
+            assert nutrition_data_per is not None
+            product = Product(
+                {
+                    "code": DEFAULT_BARCODE,
+                    "nutriments": nutriments,
+                    "nutrition_data_per": nutrition_data_per,
+                    "serving_size": serving_size,
+                }
+            )
+        assert (
+            NutrientExtractionImporter.keep_prediction(product, nutrients_keys)
+            == expected_output
+        )
 
     def test_add_optional_fields(self):
         product_missing = Product(
