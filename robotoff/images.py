@@ -146,11 +146,16 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
         save_image(product_id, source_image, image_url, images, use_cache=True)
 
 
-def add_image_fingerprint(image_model: ImageModel):
+def add_image_fingerprint(image_model: ImageModel, overwrite: bool = False) -> None:
     """Update image in DB to add the image fingerprint.
 
     :param image_model: the image model to update
+    :param overwrite: whether to overwrite the existing fingerprint
     """
+    if not overwrite and image_model.fingerprint is not None:
+        logger.debug("image %s already has a fingerprint, skipping", image_model.id)
+        return
+
     image_url = image_model.get_image_url()
     image = get_image_from_url(
         image_url, error_raise=False, session=http_session, use_cache=True
