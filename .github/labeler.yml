@@ -127,7 +127,7 @@ spellcheck:
   - any-glob-to-any-file: 'robotoff/​batch/​configs/​job_configs/​spellcheck.yaml'
   - any-glob-to-any-file: 'doc/​references/​ingredients-spellcheck.md'
 
-nutrition extraction:
+nutrition prediction:
 - changed-files:
   - any-glob-to-any-file: 'robotoff/prediction/nutrition_extraction.py'
   - any-glob-to-any-file: 'tests/unit/prediction/test_nutrition_extraction.py'
