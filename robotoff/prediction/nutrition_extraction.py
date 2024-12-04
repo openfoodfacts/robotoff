@@ -371,13 +371,6 @@ def aggregate_entities(pre_entities: list[JSONType]) -> list[JSONType]:
     return entities
 
 
-# We match "O" to handle the case where the OCR engine failed to
-# recognize correctly "0" (zero) and uses "O" (letter O) instead
-NUTRIENT_VALUE_REGEX = re.compile(
-    r"((?:[0-9]+[,.]?[0-9]*)|O) ?(g|mg|µg|mcg|kj|kcal)?", re.I
-)
-
-
 def postprocess_aggregated_entities(
     aggregated_entities: list[JSONType],
 ) -> list[JSONType]:
@@ -394,81 +387,18 @@ def postprocess_aggregated_entities(
 
     The field `words` is removed from the aggregated entities.
 
-    Some additional postprocessing steps are also done to handle specific cases:
+    Some additional postprocessing steps are also performed to try to fix specific
+    errors:
 
     - The OCR engine can split incorrectly tokens for energy nutrients
     - The OCR engine can fail to detect the word corresponding to the unit after the
       value
+    - The OCR mistakenly detected the 'g' unit as a '9'
     """
     postprocessed_entities = []
 
     for entity in aggregated_entities:
-        words = [word.strip().strip("()/") for word in entity["words"]]
-        if entity["entity"].startswith("ENERGY_"):
-            # Due to incorrect token split by the OCR, the unit (kcal or kj) can be
-            # attached to the next token.
-            # Ex: "525 kJ/126 kcal" is often tokenized into ["525", "kJ/"126", "kcal"]
-            # We handle this case here.
-            if len(words[0]) > 3 and words[0][:3].lower() == "kj/":
-                words[0] = words[0][3:]
-
-        words_str = " ".join(words)
-        value = None
-        unit = None
-        is_valid = True
-
-        if entity["entity"] == "SERVING_SIZE":
-            value = words_str
-        elif words_str in ("trace", "traces"):
-            value = "traces"
-        else:
-            match = NUTRIENT_VALUE_REGEX.search(words_str)
-            if match:
-                value = match.group(1).replace(",", ".")
-
-                if value == "O":
-                    # The OCR engine failed to recognize correctly "0" (zero) and uses
-                    # "O" (letter O) instead
-                    value = "0"
-                unit = match.group(2)
-                # Unit can be none if the OCR engine didn't detect the unit after the
-                # value as a word
-                if unit is None:
-                    if entity["entity"].startswith("ENERGY_"):
-                        # Due to incorrect splitting by OCR engine, we don't necessarily
-                        # have a unit for energy, but as the entity can only have a
-                        # single unit (kcal or kJ), we infer the unit from the entity
-                        # name
-                        unit = entity["entity"].split("_")[1].lower()
-                else:
-                    unit = unit.lower()
-                    if unit == "mcg":
-                        unit = "µg"
-            else:
-                logger.warning("Could not extract nutrient value from %s", words_str)
-                is_valid = False
-
-        if entity["entity"] == "SERVING_SIZE":
-            entity_label = "serving_size"
-        else:
-            # Reformat the nutrient name so that it matches Open Food Facts format
-            # Ex: "ENERGY_KCAL_100G" -> "energy-kcal_100g"
-            entity_label = entity["entity"].lower()
-            entity_base, entity_per = entity_label.rsplit("_", 1)
-            entity_base = entity_base.replace("_", "-")
-            entity_label = f"{entity_base}_{entity_per}"
-        postprocessed_entity = {
-            "entity": entity_label,
-            "text": words_str,
-            "value": value,
-            "unit": unit,
-            "score": entity["score"],
-            "start": entity["start"],
-            "end": entity["end"],
-            "char_start": entity["char_start"],
-            "char_end": entity["char_end"],
-            "valid": is_valid,
-        }
+        postprocessed_entity = postprocess_aggregated_entities_single(entity)
         postprocessed_entities.append(postprocessed_entity)
 
     entity_type_multiple = set(
@@ -484,6 +414,162 @@ def postprocess_aggregated_entities(
             postprocessed_entity["invalid_reason"] = "multiple_entities"
 
     return postprocessed_entities
+
+
+def postprocess_aggregated_entities_single(entity: JSONType) -> JSONType:
+    """Postprocess a single aggregated entity and return an entity with the extracted
+    information. This is the first step in the postprocessing of aggregated entities.
+
+    For each aggregated entity, we return the following fields:
+
+    - `value`: the nutrient value (string, ex: "12.5")
+    - `unit`: the nutrient unit (string, ex: "g")
+    - `valid`: a boolean indicating whether the entity is valid or not
+    - `text`: the text of the entity
+
+    The field `words` is removed from the aggregated entities.
+
+    Some additional postprocessing steps are also performed to try to fix specific
+    errors:
+
+    - The OCR engine can split incorrectly tokens for energy nutrients
+    - The OCR engine can fail to detect the word corresponding to the unit after the
+      value
+    - The OCR mistakenly detected the 'g' unit as a '9'
+    """
+    words = [word.strip().strip("()/") for word in entity["words"]]
+    entity_label = entity["entity"].lower()
+
+    if entity_label == "serving_size":
+        entity_base = None
+        entity_per = None
+        full_entity_label = entity_label
+    else:
+        # Reformat the nutrient name so that it matches Open Food Facts format
+        # Ex: "ENERGY_KCAL_100G" -> "energy-kcal_100g"
+        entity_base, entity_per = entity_label.rsplit("_", 1)
+        entity_base = entity_base.replace("_", "-")
+        full_entity_label = f"{entity_base}_{entity_per}"
+
+    if entity_label.startswith("energy_"):
+        # Due to incorrect token split by the OCR, the unit (kcal or kj) can be
+        # attached to the next token.
+        # Ex: "525 kJ/126 kcal" is often tokenized into ["525", "kJ/"126", "kcal"]
+        # We handle this case here.
+        if len(words[0]) > 3 and words[0][:3].lower() == "kj/":
+            words[0] = words[0][3:]
+
+    words_str = " ".join(words)
+    value = None
+    unit = None
+    is_valid = True
+
+    if entity_label == "serving_size":
+        value = words_str
+    elif words_str in ("trace", "traces"):
+        value = "traces"
+    else:
+        value, unit, is_valid = match_nutrient_value(words_str, entity_label)
+
+    return {
+        "entity": full_entity_label,
+        "text": words_str,
+        "value": value,
+        "unit": unit,
+        "score": entity["score"],
+        "start": entity["start"],
+        "end": entity["end"],
+        "char_start": entity["char_start"],
+        "char_end": entity["char_end"],
+        "valid": is_valid,
+    }
+
+
+# We match "O" to handle the case where the OCR engine failed to
+# recognize correctly "0" (zero) and uses "O" (letter O) instead
+NUTRIENT_VALUE_REGEX = re.compile(
+    r"(< ?)?((?:[0-9]+[,.]?[0-9]*)|O) ?(g|mg|µg|mcg|kj|kcal)?", re.I
+)
+
+
+def match_nutrient_value(
+    words_str: str, entity_label: str
+) -> tuple[str | None, str | None, bool]:
+    """From an entity label and the words forming the entity, extract the nutrient
+    value, the unit and a boolean indicating whether the entity is valid or not.
+
+    The function returns a tuple containing the following elements:
+
+    - `value`: the nutrient value (string, ex: "12.5")
+    - `unit`: the nutrient unit (string, ex: "g")
+    - `is_valid`: a boolean indicating whether the entity is valid or not
+
+    In case we could not extract the nutrient value, the function returns `None` for the
+    value and the unit and `False` for the validity.
+    Otherwise, the value is never null but the unit can be null if the OCR engine didn't
+    detect the unit after the value.
+
+    :param words_str: the words forming the entity
+    :param entity_label: the entity label
+    :return: a tuple containing the value, the unit and a boolean indicating whether the
+        entity is valid or not
+    """
+    match = NUTRIENT_VALUE_REGEX.search(words_str)
+
+    if not match:
+        logger.warning("Could not extract nutrient value from %s", words_str)
+        return None, None, False
+
+    prefix = match.group(1)
+    value = match.group(2).replace(",", ".")
+
+    if prefix is not None:
+        prefix = prefix.strip()
+        value = f"{prefix} {value}"
+
+    if value == "O":
+        # The OCR engine failed to recognize correctly "0" (zero) and uses
+        # "O" (letter O) instead
+        value = "0"
+    unit = match.group(3)
+    # Unit can be none if the OCR engine didn't detect the unit after the
+    # value as a word
+    if unit is None:
+        if entity_label.startswith("energy_"):
+            # Due to incorrect splitting by OCR engine, we don't necessarily
+            # have a unit for energy, but as the entity can only have a
+            # single unit (kcal or kJ), we infer the unit from the entity
+            # name
+            # `entity_label` is in the form "energy_kcal_100g", so we can
+            # extract the unit from the 2nd part (index 1) of the entity name
+            unit = entity_label.split("_")[1].lower()
+        if (
+            any(
+                entity_label.startswith(target)
+                for target in (
+                    "proteins",
+                    "sugars",
+                    "added-sugars",
+                    "carbohydrates",
+                    "fat",
+                    "saturated-fat",
+                    "fiber",
+                    "salt",
+                    "trans-fat",
+                )
+            )
+            and value.endswith("9")
+            and "." in value
+            and not value.endswith(".9")
+        ):
+            unit = "g"
+            value = value[:-1]
+    else:
+        unit = unit.lower()
+        if unit == "mcg":
+            unit = "µg"
+
+    return value, unit, True
 
 
 @functools.cache
