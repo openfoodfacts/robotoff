@@ -419,7 +419,8 @@ class Product:
         "lang",
         "ingredients_text",
         "nutriments",
-        "nutrition_data_prepared_per",
+        "nutrition_data_per",
+        "nutrition_data_prepared",
         "serving_size",
     )
 
@@ -445,8 +446,9 @@ class Product:
         self.lang: Optional[str] = product.get("lang")
         self.ingredients_text: Optional[str] = product.get("ingredients_text")
         self.nutriments: JSONType = product.get("nutriments") or {}
-        self.nutrition_data_prepared_per: str | None = product.get(
-            "nutrition_data_prepared_per"
+        self.nutrition_data_per: str | None = product.get("nutrition_data_per")
+        self.nutrition_data_prepared: bool = (
+            product.get("nutrition_data_prepared") == "on"
         )
         self.serving_size: str | None = product.get("serving_size")
 
@@ -467,7 +469,8 @@ class Product:
             "lang",
             "ingredients_text",
             "nutriments",
-            "nutrition_data_prepared_per",
+            "nutrition_data_per",
+            "nutrition_data_prepared",
             "serving_size",
         }
 
