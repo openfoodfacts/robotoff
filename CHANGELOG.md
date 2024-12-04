@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.57.3](https://github.com/openfoodfacts/robotoff/compare/v1.57.2...v1.57.3) (2024-12-04)
+
+
+### Bug Fixes
+
+* allow to filter insights by campaign ([#1477](https://github.com/openfoodfacts/robotoff/issues/1477)) ([8079258](https://github.com/openfoodfacts/robotoff/commit/807925874d0869748f268f3f155e72d995c7cee8))
+
 ## [1.57.2](https://github.com/openfoodfacts/robotoff/compare/v1.57.1...v1.57.2) (2024-12-03)
 
 
