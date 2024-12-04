@@ -1686,12 +1686,12 @@ class TestNutrientExtractionImporter:
         )
         assert len(candidates) == 0
 
-    def test_generate_candidates_nutrition_data_prepared_per(self):
+    def test_generate_candidates_nutrition_data_prepared(self):
         product = Product(
             {
                 "code": DEFAULT_BARCODE,
                 "nutriments": {},
-                "nutrition_data_prepared_per": "100g",
+                "nutrition_data_prepared": "on",
             }
         )
         data = {
