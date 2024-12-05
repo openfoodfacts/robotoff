@@ -4,6 +4,7 @@ from robotoff.prediction.nutrition_extraction import (
     aggregate_entities,
     match_nutrient_value,
     postprocess_aggregated_entities,
+    postprocess_aggregated_entities_single,
 )
 
 
@@ -392,8 +393,64 @@ class TestAggregateEntities:
         ("25.9", "iron_100g", ("25.9", None, True)),
         ("O g", "salt_100g", ("0", "g", True)),
         ("O", "salt_100g", ("0", None, True)),
+        ("0,19", "saturated_fat_100g", ("0.1", "g", True)),
     ],
 )
 def test_match_nutrient_value(words_str: str, entity_label: str, expected_output):
 
     assert match_nutrient_value(words_str, entity_label) == expected_output
+
+
+@pytest.mark.parametrize(
+    "aggregated_entity,expected_output",
+    [
+        (
+            {
+                "end": 90,
+                "score": 0.9985358715057373,
+                "start": 89,
+                "words": ["0,19\n"],
+                "entity": "SATURATED_FAT_100G",
+                "char_end": 459,
+                "char_start": 454,
+            },
+            {
+                "char_end": 459,
+                "char_start": 454,
+                "end": 90,
+                "entity": "saturated-fat_100g",
+                "score": 0.9985358715057373,
+                "start": 89,
+                "text": "0,19",
+                "unit": "g",
+                "valid": True,
+                "value": "0.1",
+            },
+        ),
+        (
+            {
+                "end": 92,
+                "score": 0.9985358715057373,
+                "start": 90,
+                "words": ["42.5 9"],
+                "entity": "SERVING_SIZE",
+                "char_end": 460,
+                "char_start": 454,
+            },
+            {
+                "char_end": 460,
+                "char_start": 454,
+                "end": 92,
+                "entity": "serving_size",
+                "score": 0.9985358715057373,
+                "start": 90,
+                "text": "42.5 9",
+                "unit": None,
+                "valid": True,
+                "value": "42.5 g",
+            },
+        ),
+    ],
+)
+def test_postprocess_aggregated_entities_single(aggregated_entity, expected_output):
+    assert postprocess_aggregated_entities_single(aggregated_entity) == expected_output
