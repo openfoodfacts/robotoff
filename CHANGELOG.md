@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.58.0](https://github.com/openfoodfacts/robotoff/compare/v1.57.5...v1.58.0) (2024-12-05)
+
+
+### Features
+
+* Improve nutrition extraction ([#1484](https://github.com/openfoodfacts/robotoff/issues/1484)) ([2430741](https://github.com/openfoodfacts/robotoff/commit/2430741adad4f3d552d247d1a98afb9c4522b021))
+
+
+### Technical
+
+* New Crowdin translations to review and merge ([#1338](https://github.com/openfoodfacts/robotoff/issues/1338)) ([e310700](https://github.com/openfoodfacts/robotoff/commit/e3107009c098bf1327a31de130a32d09c9e9682f))
+
 ## [1.57.5](https://github.com/openfoodfacts/robotoff/compare/v1.57.4...v1.57.5) (2024-12-04)
 
 
