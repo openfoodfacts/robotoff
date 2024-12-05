@@ -17,25 +17,25 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "Èske pwodwi a fè pati kategori sa a?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "Èske pwodwi a gen etikèt sa a?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "Èske pwodwi a fè pati mak sa a?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Èske pwa sa a se menm ak pwa ki ekri sou pwodwi a?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Èske imaj sa a se yon imaj nitrisyon pou lang sa a?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Èske pwodwi a gen eleman anbalaj sa a?"
 

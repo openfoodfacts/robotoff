@@ -37,5 +37,5 @@ msgstr "Är den här bilden en näringsbild för det här språket?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Har produkten detta förpackningselement?"
 
