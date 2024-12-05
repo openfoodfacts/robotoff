@@ -416,6 +416,9 @@ def postprocess_aggregated_entities(
     return postprocessed_entities
 
 
+SERVING_SIZE_MISSING_G = re.compile(r"([0-9]+[,.]?[0-9]*)\s*9")
+
+
 def postprocess_aggregated_entities_single(entity: JSONType) -> JSONType:
     """Postprocess a single aggregated entity and return an entity with the extracted
     information. This is the first step in the postprocessing of aggregated entities.
@@ -466,6 +469,11 @@ def postprocess_aggregated_entities_single(entity: JSONType) -> JSONType:
 
     if entity_label == "serving_size":
         value = words_str
+        # Sometimes the unit 'g' in the `serving_size is detected as a '9'
+        # In such cases, we replace the '9' with 'g'
+        match = SERVING_SIZE_MISSING_G.match(value)
+        if match:
+            value = f"{match.group(1)} g"
     elif words_str in ("trace", "traces"):
         value = "traces"
     else:
@@ -549,13 +557,15 @@ def match_nutrient_value(
                 for target in (
                     "proteins",
                     "sugars",
-                    "added-sugars",
                     "carbohydrates",
                     "fat",
-                    "saturated-fat",
                     "fiber",
                     "salt",
-                    "trans-fat",
+                    # we use "_" here as separator as '-' is only used in
+                    # Product Opener, the label names are all separated by '_'
+                    "saturated_fat",
+                    "added_sugars",
+                    "trans_fat",
                 )
             )
             and value.endswith("9")
