@@ -134,15 +134,19 @@ def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
         )
 
 
-def _get_skip_voted_on(
-    auth: Optional[OFFAuthentication], device_id: str
-) -> SkipVotedOn:
-    """Helper function for constructing SkipVotedOn objects based on request
-    params."""
+def _get_skip_voted_on(auth: OFFAuthentication | None, device_id: str) -> SkipVotedOn:
+    """Create a SkipVotedOn object based on request params.
+    This object is used to determine if the user has already voted on the insight.
+
+    If the user is not authenticated, the device_id (either an ID sent by the client or
+    the IP address as fallback) is used.
+
+    If the user is authenticated, the username is used.
+    """
     if not auth:
         return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
 
-    username: Optional[str] = auth.get_username()
+    username: str | None = auth.get_username()
     if not username:
         return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
 
@@ -225,6 +229,12 @@ class InsightCollection:
             # Limit the number of brands to prevent slow SQL queries
             brands = brands[:10]
 
+        device_id = device_id_from_request(req)
+        auth: OFFAuthentication | None = parse_auth(req)
+        avoid_voted_on = _get_skip_voted_on(auth, device_id)
+        # Counting the number of insights that match the vote
+        # criteria can be very costly, so we limit the count to 100
+        max_count = 100
         get_insights_ = functools.partial(
             get_insights,
             server_type=server_type,
@@ -238,6 +248,8 @@ class InsightCollection:
             predictor=predictor,
             order_by=order_by,
             campaigns=campaigns,
+            avoid_voted_on=avoid_voted_on,
+            max_count=max_count,
         )
 
         offset: int = (page - 1) * count
@@ -1476,8 +1488,7 @@ def get_questions_resource_on_get(
     avoid_voted_on = _get_skip_voted_on(auth, device_id)
     # Counting the number of insights that match the vote
     # criteria can be very costly, so we limit the count to 100
-    # if avoid_voted_on is not None
-    max_count = 100 if avoid_voted_on is not None else None
+    max_count = 100
     get_insights_ = functools.partial(
         get_insights,
         server_type=server_type,

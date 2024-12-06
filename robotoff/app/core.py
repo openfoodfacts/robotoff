@@ -121,6 +121,8 @@ def get_insights(
         defaults to None. If provided, the count will be limited to this
         value. It allows to dramatically speed up the count query.
         If not provided, an exact count will be returned.
+    :param max_count: an upper bound on the number of insights to return when
+        asking for the count (`count=True`), defaults to None (no limit).
     :param avoid_voted_on: a SkipVotedOn used to remove results insights the
         user previously ignored, defaults to None
     :param group_by_value_tag: if True, group results by value_tag, defaults
