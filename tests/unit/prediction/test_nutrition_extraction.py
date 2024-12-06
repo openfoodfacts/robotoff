@@ -393,7 +393,13 @@ class TestAggregateEntities:
         ("25.9", "iron_100g", ("25.9", None, True)),
         ("O g", "salt_100g", ("0", "g", True)),
         ("O", "salt_100g", ("0", None, True)),
-        ("0,19", "saturated_fat_100g", ("0.1", "g", True)),
+        # Missing unit and value ends with '9' or '8'
+        ("0.19", "saturated_fat_100g", ("0.1", "g", True)),
+        ("0,18", "saturated_fat_100g", ("0.1", "g", True)),
+        ("08", "saturated_fat_100g", ("0", "g", True)),
+        ("09", "salt_100g", ("0", "g", True)),
+        # Missing unit but value does not end with '8' or '9'
+        ("091", "proteins_100g", ("091", None, True)),
     ],
 )
 def test_match_nutrient_value(words_str: str, entity_label: str, expected_output):

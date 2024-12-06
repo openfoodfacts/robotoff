@@ -551,26 +551,25 @@ def match_nutrient_value(
             # `entity_label` is in the form "energy_kcal_100g", so we can
             # extract the unit from the 2nd part (index 1) of the entity name
             unit = entity_label.split("_")[1].lower()
-        if (
-            any(
-                entity_label.startswith(target)
-                for target in (
-                    "proteins",
-                    "sugars",
-                    "carbohydrates",
-                    "fat",
-                    "fiber",
-                    "salt",
-                    # we use "_" here as separator as '-' is only used in
-                    # Product Opener, the label names are all separated by '_'
-                    "saturated_fat",
-                    "added_sugars",
-                    "trans_fat",
-                )
+        if any(
+            entity_label.startswith(target)
+            for target in (
+                "proteins",
+                "sugars",
+                "carbohydrates",
+                "fat",
+                "fiber",
+                "salt",
+                # we use "_" here as separator as '-' is only used in
+                # Product Opener, the label names are all separated by '_'
+                "saturated_fat",
+                "added_sugars",
+                "trans_fat",
             )
-            and value.endswith("9")
-            and "." in value
-            and not value.endswith(".9")
+        ) and (
+            value in ("08", "09")
+            or (value.endswith("8") and "." in value and not value.endswith(".8"))
+            or (value.endswith("9") and "." in value and not value.endswith(".9"))
         ):
             unit = "g"
             value = value[:-1]
