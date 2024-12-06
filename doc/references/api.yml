@@ -530,6 +530,12 @@ paths:
           schema:
             type: string
             example: universal-logo-detector
+        - name: image_id
+          description: filter by image ID. It should be a digit (raw images only), otherwise no result will be returned.
+          in: query
+          schema:
+            type: string
+            example: 1
         - name: type
           description: filter by type of the image predictor model
           in: query

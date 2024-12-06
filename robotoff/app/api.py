@@ -835,17 +835,19 @@ class ImagePredictionResource:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         with_logo: bool | None = req.get_param_as_bool("with_logo", default=None)
-        model_name: Optional[str] = req.get_param("model_name")
-        type_: Optional[str] = req.get_param("type")
-        model_version: Optional[str] = req.get_param("model_version")
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
-        min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
+        model_name: str | None = req.get_param("model_name")
+        type_: str | None = req.get_param("type")
+        model_version: str | None = req.get_param("model_version")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        image_id: str | None = req.get_param("image_id")
+        min_confidence: float | None = req.get_param_as_float("min_confidence")
         server_type = get_server_type_from_req(req)
 
         get_image_predictions_ = functools.partial(
             get_image_predictions,
             with_logo=with_logo,
             barcode=barcode,
+            image_id=image_id,
             type=type_,
             server_type=server_type,
             model_name=model_name,
