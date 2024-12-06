@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.59.0](https://github.com/openfoodfacts/robotoff/compare/v1.58.0...v1.59.0) (2024-12-06)
+
+
+### Features
+
+* improve /image_predictions route ([#1489](https://github.com/openfoodfacts/robotoff/issues/1489)) ([63add1f](https://github.com/openfoodfacts/robotoff/commit/63add1f300623d3c9a55a8a2e4b68796add3ba7a))
+
+
+### Bug Fixes
+
+* **nutrisight:** improve extraction postprocessing ([#1486](https://github.com/openfoodfacts/robotoff/issues/1486)) ([4137468](https://github.com/openfoodfacts/robotoff/commit/41374686ec409788787009e1e40acd22ba27306f))
+* support votes on GET /api/v1/insights route ([#1488](https://github.com/openfoodfacts/robotoff/issues/1488)) ([33645a6](https://github.com/openfoodfacts/robotoff/commit/33645a63ab7c01275df45695cd44f59db137b3e6))
+
 ## [1.58.0](https://github.com/openfoodfacts/robotoff/compare/v1.57.5...v1.58.0) (2024-12-05)
 
 
