@@ -303,20 +303,24 @@ def get_predictions(
 
 def get_image_predictions(
     server_type: ServerType,
-    with_logo: Optional[bool] = False,
-    barcode: Optional[str] = None,
-    type: Optional[str] = None,
-    model_name: Optional[str] = None,
-    model_version: Optional[str] = None,
-    min_confidence: Optional[float] = None,
-    offset: Optional[int] = None,
+    with_logo: bool | None = False,
+    barcode: str | None = None,
+    type: str | None = None,
+    model_name: str | None = None,
+    model_version: str | None = None,
+    min_confidence: float | None = None,
+    image_id: str | None = None,
+    offset: int | None = None,
     count: bool = False,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ) -> Iterable[ImagePrediction]:
     query = ImagePrediction.select()
 
     query = query.switch(ImagePrediction).join(ImageModel)
     where_clauses = [ImagePrediction.image.server_type == server_type.name]
+
+    if image_id is not None:
+        where_clauses.append(ImagePrediction.image.image_id == image_id)
 
     if barcode is not None:
         where_clauses.append(ImagePrediction.image.barcode == barcode)
