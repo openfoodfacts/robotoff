@@ -834,7 +834,7 @@ class ImagePredictionResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
+        with_logo: bool | None = req.get_param_as_bool("with_logo", default=None)
         model_name: Optional[str] = req.get_param("model_name")
         type_: Optional[str] = req.get_param("type")
         model_version: Optional[str] = req.get_param("model_version")

@@ -516,27 +516,26 @@ paths:
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/barcode_query_filter"
         - name: with_logo
-          description: if True, only return image predictions that have associated logos (only valid for universal-logo-detector image predictions)
+          description: if True, only return image predictions that have associated logos
+            (only valid for universal-logo-detector image predictions). If false, only return image predictions that have no associated logos.
+            Otherwise, return all image predictions.
           in: query
           schema:
             type: boolean
-            default: false
+            default: null
+            nullable: true
         - name: model_name
           description: filter by name of the image predictor model
           in: query
           schema:
             type: string
-            enum:
-              - universal-logo-detector
-              - nutrition-table
-              - nutriscore
+            example: universal-logo-detector
         - name: type
-          description: filter by type of the image predictor model, currently only 'object_detection'
+          description: filter by type of the image predictor model
           in: query
           schema:
             type: string
-            enum:
-              - 'object_detection'
+            example: object_detection
         - name: model_version
           description: filter by model version value
           in: query
