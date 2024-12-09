@@ -535,7 +535,7 @@ def match_nutrient_value(
         prefix = prefix.strip()
         value = f"{prefix} {value}"
 
-    if value == "O":
+    if value in ("O", "o"):
         # The OCR engine failed to recognize correctly "0" (zero) and uses
         # "O" (letter O) instead
         value = "0"
