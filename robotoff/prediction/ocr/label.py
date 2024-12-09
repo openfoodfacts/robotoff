@@ -13,6 +13,7 @@ from openfoodfacts.ocr import (
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 from .utils import generate_keyword_processor
@@ -280,3 +281,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                 )
 
     return predictions
+
+
+function_cache_register.register(get_logo_annotation_labels)
+function_cache_register.register(generate_label_keyword_processor)

@@ -19,6 +19,7 @@ from robotoff.triton import (
     get_triton_inference_stub,
 )
 from robotoff.types import JSONType
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -679,3 +680,7 @@ def build_triton_request(
     add_triton_infer_input_tensor(request, "pixel_values", pixel_values, "FP32")
 
     return request
+
+
+function_cache_register.register(get_processor)
+function_cache_register.register(get_id2label)

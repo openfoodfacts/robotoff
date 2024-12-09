@@ -10,6 +10,7 @@ import numpy as np
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy
 from robotoff.types import JSONType
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 from .text_utils import fold, get_tag
@@ -44,19 +45,6 @@ def get_ingredient_processor():
     return build_ingredient_processor(
         ingredient_taxonomy, add_synonym_combinations=True
     )
-
-
-def clear_ingredient_processing_cache():
-    """Clear all ingredient processing cache:
-
-    - Ingredient processor
-    - Model ingredient taxonomy
-
-    As these resources are memory-hungry, it should be cleared from memory if
-    not used anymore.
-    """
-    get_ingredient_taxonomy.cache_clear()
-    get_ingredient_processor.cache_clear()
 
 
 def generate_inputs_dict(
@@ -339,3 +327,7 @@ def extract_ingredient_from_text(
     """
     text = fold(text.lower())
     return processor.extract_keywords(text, span_info=True)
+
+
+function_cache_register.register(get_ingredient_taxonomy)
+function_cache_register.register(get_ingredient_processor)

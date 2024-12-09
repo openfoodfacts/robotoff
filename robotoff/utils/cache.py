@@ -47,3 +47,31 @@ def cache_http_request(
         disk_cache.set(key, r.content, expire=cache_expire, tag=tag)
 
     return content_bytes
+
+
+class FunctionCacheRegister:
+    """A class that register all functions that are cached with `functools.cache`,
+    `functools.lru_cache` or `cachetools.func.*` functions."""
+
+    def __init__(self):
+        self.cache = {}
+
+    def register(self, func: Callable) -> None:
+        """Register a function to be cached."""
+        if func.__name__ in self.cache:
+            raise ValueError(f"Function {func.__name__} is already registered.")
+
+        self.cache[func.__name__] = func
+
+    def clear(self, func_name: str) -> None:
+        """Clear the cache of a function."""
+        if func_name in self.cache:
+            self.cache[func_name].cache_clear()
+
+    def clear_all(self) -> None:
+        """Clear the cache of all functions."""
+        for func_name in self.cache:
+            self.cache[func_name].cache_clear()
+
+
+function_cache_register = FunctionCacheRegister()

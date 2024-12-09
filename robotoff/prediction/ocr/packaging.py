@@ -12,6 +12,7 @@ from robotoff.prediction.ocr.grammar import (
 from robotoff.taxonomy import TaxonomyType
 from robotoff.types import PackagingElementProperty, Prediction, PredictionType
 from robotoff.utils import get_logger, load_json
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import strip_consecutive_spaces
 
 logger = get_logger(__name__)
@@ -237,3 +238,7 @@ def find_packaging(content: Union[OCRResult, str]) -> list[Prediction]:
         return predictions
 
     return []
+
+
+function_cache_register.register(load_grammar)
+function_cache_register.register(load_taxonomy_map)

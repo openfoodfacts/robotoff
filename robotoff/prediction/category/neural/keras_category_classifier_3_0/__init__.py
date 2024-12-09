@@ -17,12 +17,12 @@ from robotoff.triton import (
 )
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
 from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils.cache import function_cache_register
 
 from .preprocessing import (
     IMAGE_EMBEDDING_DIM,
     MAX_IMAGE_EMBEDDING,
     NUTRIMENT_NAMES,
-    clear_ingredient_processing_cache,
     generate_inputs_dict,
 )
 
@@ -325,7 +325,8 @@ def predict(
             break
 
     if clear_cache:
-        clear_ingredient_processing_cache()
+        function_cache_register.clear("get_ingredient_taxonomy")
+        function_cache_register.clear("get_ingredient_processor")
 
     return category_predictions, debug
 

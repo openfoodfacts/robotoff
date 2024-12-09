@@ -1,11 +1,12 @@
 import datetime
+import functools
 import itertools
 import operator
 from typing import Optional
 
-import cachetools
 import elasticsearch
 import numpy as np
+from cachetools.func import ttl_cache
 from elasticsearch.helpers import bulk as elasticsearch_bulk
 from elasticsearch.helpers import scan as elasticsearch_scan
 from more_itertools import chunked
@@ -34,6 +35,7 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_logger
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
@@ -106,7 +108,7 @@ def filter_logos(
     return filtered
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
     logger.debug("Loading logo confidence thresholds from DB...")
     thresholds = {}
@@ -245,7 +247,8 @@ def knn_search(
     return []
 
 
-@cachetools.cached(cachetools.TTLCache(maxsize=1, ttl=3600))  # 1h
+# ttl: 1h
+@ttl_cache(maxsize=1, ttl=3600)
 def get_logo_annotations() -> dict[int, LogoLabelType]:
     logger.debug("Loading logo annotations from DB...")
     annotations: dict[int, LogoLabelType] = {}
@@ -634,3 +637,7 @@ def refresh_nearest_neighbors(
                 )
 
     logger.info("refresh of logo nearest neighbors finished")
+
+
+function_cache_register.register(get_logo_confidence_thresholds)
+function_cache_register.register(get_logo_annotations)

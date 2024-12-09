@@ -7,6 +7,7 @@ from robotoff import settings
 from robotoff.brands import get_brand_blacklist, keep_brand_from_taxonomy
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor, get_tag
 
 from .utils import generate_keyword_processor
@@ -135,3 +136,8 @@ def find_brands(content: Union[OCRResult, str]) -> list[Prediction]:
         predictions += extract_brands_google_cloud_vision(content)
 
     return predictions
+
+
+function_cache_register.register(get_logo_annotation_brands)
+function_cache_register.register(get_taxonomy_brand_processor)
+function_cache_register.register(get_brand_processor)
