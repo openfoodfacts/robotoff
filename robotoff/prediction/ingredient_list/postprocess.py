@@ -4,6 +4,7 @@ import re
 from lark import Discard, Lark, Transformer
 
 from robotoff import settings
+from robotoff.utils.cache import function_cache_register
 
 ASTERISK_SYMBOL = r"((\* ?=?|\(¹\)|\") ?)"
 FROM_ORGANIC_FARMING_FR = r"issus? de l'agriculture (biologique|bio|durable)"
@@ -140,3 +141,6 @@ def detect_trace_mention(text: str, end_idx: int) -> int:
 
     end_idx += end_idx_offset
     return end_idx
+
+
+function_cache_register.register(load_trace_grammar)

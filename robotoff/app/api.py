@@ -41,7 +41,7 @@ from robotoff.app.core import (
     update_logo_annotations,
     validate_params,
 )
-from robotoff.app.middleware import DBConnectionMiddleware
+from robotoff.app.middleware import CacheClearMiddleware, DBConnectionMiddleware
 from robotoff.batch import import_batch_predictions
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.extraction import (
@@ -1849,6 +1849,8 @@ api = falcon.App(
     middleware=[
         falcon.CORSMiddleware(allow_origins="*", allow_credentials="*"),
         DBConnectionMiddleware(),
+        # Clear cache after the request, to keep RAM usage low
+        CacheClearMiddleware(),
     ],
 )
 

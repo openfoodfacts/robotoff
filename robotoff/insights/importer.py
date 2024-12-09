@@ -45,6 +45,7 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import function_cache_register
 
 logger = get_logger(__name__)
 
@@ -2166,3 +2167,6 @@ def get_product_predictions(
         where_clauses.append(PredictionModel.type.in_(prediction_types))
 
     yield from PredictionModel.select().where(*where_clauses).dicts().iterator()
+
+
+function_cache_register.register(get_authorized_labels)

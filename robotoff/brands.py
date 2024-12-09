@@ -14,6 +14,7 @@ from robotoff.utils import (
     load_json,
     text_file_iter,
 )
+from robotoff.utils.cache import function_cache_register
 
 logger = get_logger(__name__)
 
@@ -165,6 +166,9 @@ def load_resources():
     get_brand_prefix()
     get_brand_blacklist()
 
+
+function_cache_register.register(get_brand_prefix)
+function_cache_register.register(get_brand_blacklist)
 
 if __name__ == "__main__":
     blacklisted_brands = get_brand_blacklist()

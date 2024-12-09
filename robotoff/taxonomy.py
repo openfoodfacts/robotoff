@@ -1,13 +1,14 @@
 import collections
 from typing import Optional
 
-import cachetools
+from cachetools.func import ttl_cache
 from openfoodfacts.taxonomy import Taxonomy
 from openfoodfacts.taxonomy import get_taxonomy as _get_taxonomy
 from openfoodfacts.types import TaxonomyType
 
 from robotoff import settings
 from robotoff.utils import get_logger
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import get_tag
 
 logger = get_logger(__name__)
@@ -39,7 +40,8 @@ def generate_category_hierarchy(
     return categories_hierarchy_list
 
 
-@cachetools.cached(cache=cachetools.TTLCache(maxsize=100, ttl=12 * 60 * 60))  # 12h
+# ttl: 12h
+@ttl_cache(maxsize=100, ttl=12 * 60 * 60)
 def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Taxonomy:
     """Return the taxonomy of type `taxonomy_type`.
 
@@ -73,7 +75,8 @@ def is_prefixed_value(value: str) -> bool:
     return len(value) > 3 and value[2] == ":"
 
 
-@cachetools.cached(cachetools.TTLCache(maxsize=2, ttl=43200))  # 12h TTL
+# ttl: 12h
+@ttl_cache(maxsize=2, ttl=12 * 60 * 60)
 def get_taxonomy_mapping(taxonomy_type: str) -> dict[str, str]:
     """Return for label type a mapping of prefixed taxonomy values in all
     languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
@@ -121,3 +124,7 @@ def load_resources():
 
     for taxonomy_type in (TaxonomyType.brand, TaxonomyType.label):
         get_taxonomy_mapping(taxonomy_type.name)
+
+
+function_cache_register.register(get_taxonomy)
+function_cache_register.register(get_taxonomy_mapping)

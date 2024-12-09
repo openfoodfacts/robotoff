@@ -6,6 +6,7 @@ from openfoodfacts.ocr import OCRResult, SafeSearchAnnotationLikelihood, get_tex
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 # Increase version ID when introducing breaking change: changes for which we
@@ -133,3 +134,6 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
             break
 
     return predictions
+
+
+function_cache_register.register(generate_image_flag_keyword_processor)

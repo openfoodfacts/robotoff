@@ -13,6 +13,7 @@ from robotoff.prediction.ingredient_list.postprocess import detect_additional_me
 from robotoff.prediction.langid import LanguagePrediction, predict_lang_batch
 from robotoff.triton import GRPCInferenceServiceStub, get_triton_inference_stub
 from robotoff.utils import http_session
+from robotoff.utils.cache import function_cache_register
 
 from .transformers_pipeline import AggregationStrategy, TokenClassificationPipeline
 
@@ -300,3 +301,6 @@ def build_triton_request(
     request.raw_input_contents.extend([attention_mask.tobytes()])
 
     return request
+
+
+function_cache_register.register(get_tokenizer)

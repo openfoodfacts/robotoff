@@ -13,6 +13,7 @@ from openfoodfacts.ocr import (
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
+from robotoff.utils.cache import function_cache_register
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
@@ -102,3 +103,8 @@ def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
                 break
 
     return results
+
+
+function_cache_register.register(get_sorted_stores)
+function_cache_register.register(get_store_ocr_regex)
+function_cache_register.register(get_notify_stores)
