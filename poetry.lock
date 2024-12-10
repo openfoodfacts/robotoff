@@ -2183,19 +2183,19 @@ files = [
 ]
 
 [[package]]
-name = "opencv-contrib-python-headless"
+name = "opencv-python-headless"
 version = "4.10.0.84"
 description = "Wrapper package for OpenCV python bindings."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "opencv-contrib-python-headless-4.10.0.84.tar.gz", hash = "sha256:6351250db97e1f91f31afdec2436afb1c89594e3da02851e0f01e20ea16bbd9e"},
-    {file = "opencv_contrib_python_headless-4.10.0.84-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:be91c6c81e839613c6f3b15755bf71789839289d0e3440fab093e0708516ffcf"},
-    {file = "opencv_contrib_python_headless-4.10.0.84-cp37-abi3-macosx_12_0_x86_64.whl", hash = "sha256:252df47a7e1da280cef26ee0ecc1799841015ce3718214634bb15bc22d4cb308"},
-    {file = "opencv_contrib_python_headless-4.10.0.84-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:77eb20ee077ac0955704d391c00639df6063cb67cb62606c07b97d8b635feff6"},
-    {file = "opencv_contrib_python_headless-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89c16eb5f888aee7bf664106e12c423705d29d1b094876b66aa4e33d4e8ec905"},
-    {file = "opencv_contrib_python_headless-4.10.0.84-cp37-abi3-win32.whl", hash = "sha256:7581d7ffb7fff953436797dca2dfc5e70e100f721ea18ab84ebf11417ea21d0c"},
-    {file = "opencv_contrib_python_headless-4.10.0.84-cp37-abi3-win_amd64.whl", hash = "sha256:660ded6b77b07f875f56065016677bbb6a3abca13903b9320164691a46474a7d"},
+    {file = "opencv-python-headless-4.10.0.84.tar.gz", hash = "sha256:f2017c6101d7c2ef8d7bc3b414c37ff7f54d64413a1847d89970b6b7069b4e1a"},
+    {file = "opencv_python_headless-4.10.0.84-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:a4f4bcb07d8f8a7704d9c8564c224c8b064c63f430e95b61ac0bffaa374d330e"},
+    {file = "opencv_python_headless-4.10.0.84-cp37-abi3-macosx_12_0_x86_64.whl", hash = "sha256:5ae454ebac0eb0a0b932e3406370aaf4212e6a3fdb5038cc86c7aea15a6851da"},
+    {file = "opencv_python_headless-4.10.0.84-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:46071015ff9ab40fccd8a163da0ee14ce9846349f06c6c8c0f2870856ffa45db"},
+    {file = "opencv_python_headless-4.10.0.84-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:377d08a7e48a1405b5e84afcbe4798464ce7ee17081c1c23619c8b398ff18295"},
+    {file = "opencv_python_headless-4.10.0.84-cp37-abi3-win32.whl", hash = "sha256:9092404b65458ed87ce932f613ffbb1106ed2c843577501e5768912360fc50ec"},
+    {file = "opencv_python_headless-4.10.0.84-cp37-abi3-win_amd64.whl", hash = "sha256:afcf28bd1209dd58810d33defb622b325d3cbe49dcd7a43a902982c33e5fad05"},
 ]
 
 [package.dependencies]
@@ -2206,13 +2206,13 @@ numpy = [
 
 [[package]]
 name = "openfoodfacts"
-version = "1.1.5"
+version = "2.3.4"
 description = "Official Python SDK of Open Food Facts"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "openfoodfacts-1.1.5-py3-none-any.whl", hash = "sha256:5fa86ebc88090f53f8f1c938470a885edd44fa1e58c14a825e8b0ef2a98c9652"},
-    {file = "openfoodfacts-1.1.5.tar.gz", hash = "sha256:ea05d2f4acaf684ea0590754b0110a7c2d2686225add593fd405c0b6da9bae70"},
+    {file = "openfoodfacts-2.3.4-py3-none-any.whl", hash = "sha256:81d029ba0a7c31d883401408b97102f597d40c78a197efcfdcc0e14c024cbb12"},
+    {file = "openfoodfacts-2.3.4.tar.gz", hash = "sha256:5bb88e05eb6cb554251fcc3a36216438dd68e1415d79047b1a6ed43587e9b2b7"},
 ]
 
 [package.dependencies]
@@ -2221,7 +2221,8 @@ requests = ">=2.20.0"
 tqdm = ">=4.0.0,<5.0.0"
 
 [package.extras]
-pillow = ["Pillow (>=9.3,<10.4)"]
+ml = ["Pillow (>=9.3,<11)", "opencv-python-headless (>4.0.0,<5.0.0)", "tritonclient[grpc] (>2.0.0,<3.0.0)"]
+pillow = ["Pillow (>=9.3,<11)"]
 redis = ["redis[hiredis] (>=5.1.0,<5.2.0)"]
 
 [[package]]
@@ -4654,4 +4655,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c24e974e990052b282c69f6081fa5d00d77852a1b041390739fd11937c19cf5a"
+content-hash = "b9d2783882888459efadaf2c5c410baf14628ef19bc9a6c6af54eccdfef536f8"

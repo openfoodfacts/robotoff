@@ -12,10 +12,11 @@ from pydantic import BaseModel, model_validator
 JSONType = dict[str, Any]
 
 
-class ObjectDetectionModel(enum.Enum):
+class ObjectDetectionModel(str, enum.Enum):
     nutriscore = "nutriscore"
-    universal_logo_detector = "universal-logo-detector"
-    nutrition_table = "nutrition-table"
+    universal_logo_detector = "universal_logo_detector"
+    nutrition_table = "nutrition_table"
+    price_tag_detection = "price_tag_detection"
 
 
 class ImageClassificationModel(str, enum.Enum):

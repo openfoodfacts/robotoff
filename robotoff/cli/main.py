@@ -925,7 +925,7 @@ def import_logos(
     """
     from robotoff.cli import logos
     from robotoff.models import db
-    from robotoff.prediction.object_detection import OBJECT_DETECTION_MODEL_VERSION
+    from robotoff.prediction.object_detection import MODELS_CONFIG
     from robotoff.utils import get_logger
 
     logger = get_logger()
@@ -935,9 +935,7 @@ def import_logos(
         imported = logos.import_logos(
             data_path,
             ObjectDetectionModel.universal_logo_detector.value,
-            OBJECT_DETECTION_MODEL_VERSION[
-                ObjectDetectionModel.universal_logo_detector
-            ],
+            MODELS_CONFIG[ObjectDetectionModel.universal_logo_detector].model_version,
             batch_size,
             server_type,
         )

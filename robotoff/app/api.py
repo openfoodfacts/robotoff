@@ -875,6 +875,7 @@ class ImagePredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         image_url = req.get_param("image_url", required=True)
         models: list[str] = req.get_param_as_list("models", required=True)
+        threshold: float = req.get_param_as_float("threshold", default=0.5)
 
         available_object_detection_models = list(
             ObjectDetectionModel.__members__.keys()
@@ -921,14 +922,16 @@ class ImagePredictorResource:
                 model = ObjectDetectionModelRegistry.get(
                     ObjectDetectionModel[model_name]
                 )
-                result = model.detect_from_image(image, output_image=output_image)
+                result = model.detect_from_image(
+                    image, output_image=output_image, threshold=threshold
+                )
 
                 if output_image:
                     boxed_image = cast(Image.Image, result.boxed_image)
                     image_response(boxed_image, resp)
                     return
                 else:
-                    predictions[model_name] = result.to_json()
+                    predictions[model_name] = result.to_list()
             else:
                 model_enum = ImageClassificationModel[model_name]
                 classifier = image_classifier.ImageClassifier(
