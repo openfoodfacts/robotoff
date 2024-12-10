@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.59.1](https://github.com/openfoodfacts/robotoff/compare/v1.59.0...v1.59.1) (2024-12-10)
+
+
+### Bug Fixes
+
+* improve nutrition post-processing ([#1490](https://github.com/openfoodfacts/robotoff/issues/1490)) ([946c73b](https://github.com/openfoodfacts/robotoff/commit/946c73bcca63af0ace67779e817aca0504030f29))
+* improve resources caching ([#1492](https://github.com/openfoodfacts/robotoff/issues/1492)) ([bb72dce](https://github.com/openfoodfacts/robotoff/commit/bb72dcedb196fb1040da3aa6fda5138c0f9e99d0))
+
+
+### Technical
+
+* use openfoodfacts.ml for object detection ([#1493](https://github.com/openfoodfacts/robotoff/issues/1493)) ([54843be](https://github.com/openfoodfacts/robotoff/commit/54843bec061113a3aeec675a72cc6e4873baa989))
+
 ## [1.59.0](https://github.com/openfoodfacts/robotoff/compare/v1.58.0...v1.59.0) (2024-12-06)
 
 
