@@ -200,6 +200,9 @@ REDIS_UPDATE_PORT = os.environ.get("REDIS_UPDATE_PORT", 6379)
 
 # Name of the Redis stream where Product Opener publishes product updates
 REDIS_STREAM_NAME = os.environ.get("REDIS_STREAM_NAME", "product_updates_off")
+REDIS_LATEST_ID_KEY = os.environ.get(
+    "REDIS_LATEST_ID_KEY", "robotoff:product_updates:latest_id"
+)
 
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
