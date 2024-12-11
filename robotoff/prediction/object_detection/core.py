@@ -129,7 +129,6 @@ class RemoteModel:
     def detect_from_image_tf(
         self,
         image: Image.Image,
-        output_image: bool = False,
         triton_uri: str | None = None,
         threshold: float = 0.5,
     ) -> ObjectDetectionResult:
@@ -139,8 +138,6 @@ class RemoteModel:
         API.
 
         :param image: the input Pillow image
-        :param output_image: if True, the image with boxes and labels is
-            returned in the result
         :param triton_uri: URI of the Triton Inference Server, defaults to
             None. If not provided, the default value from settings is used.
         :threshold: the minimum score for a detection to be considered,
@@ -218,10 +215,6 @@ class RemoteModel:
             detection_scores=detection_scores,
             label_names=self.config.label_names,
         )
-
-        if output_image:
-            add_boxes_and_labels(image_array, result)
-
         return result
 
     def detect_from_image_yolo(
@@ -267,9 +260,7 @@ class RemoteModel:
         :return: the detection result
         """
         if self.config.backend == "tf":
-            result = self.detect_from_image_tf(
-                image, output_image, triton_uri, threshold
-            )
+            result = self.detect_from_image_tf(image, triton_uri, threshold)
 
         elif self.config.backend == "yolo":
             result = self.detect_from_image_yolo(
