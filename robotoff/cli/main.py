@@ -59,12 +59,19 @@ def process_updates_since(
     )
 ):
     """Process all updates since a given datetime."""
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
-    from robotoff.workers.update_listener import process_updates_since
+    from robotoff.workers.update_listener import UpdateListener, get_redis_client
 
     logger = get_logger()
     logger.info("Processing Redis updates since %s", since)
-    process_updates_since(since)
+    redis_client = get_redis_client()
+    update_listener = UpdateListener(
+        redis_client=redis_client,
+        redis_stream_name=settings.REDIS_STREAM_NAME,
+        redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
+    )
+    update_listener.process_updates_since(since)
 
 
 @app.command()
