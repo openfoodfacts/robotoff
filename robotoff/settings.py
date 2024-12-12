@@ -299,10 +299,7 @@ BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json.gz"
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
-_triton_host = os.environ.get("TRITON_HOST", "localhost")
-_triton_grpc_port = os.environ.get("TRITON_PORT", "8001")
-TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
-
+TRITON_URI = os.environ.get("TRITON_URI", "triton:8001")
 TRITON_MODELS_DIR = PROJECT_DIR / "models/triton"
 
 _fasttext_host = os.environ.get("FASTTEXT_HOST", "fasttext")
