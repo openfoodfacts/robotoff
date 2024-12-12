@@ -835,16 +835,31 @@ class CategoryImporter(InsightImporter):
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        candidates = [
-            prediction
-            for prediction in predictions
-            if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
-        ]
         taxonomy = get_taxonomy(InsightType.category.name)
+        selected_candidates = []
+        for prediction in predictions:
+            if prediction.value_tag is None:
+                logger.warning(
+                    "Unexpected None `value_tag` (prediction: %s)", prediction
+                )
+                continue
+            else:
+                prediction.value_tag = match_taxonomized_value(
+                    prediction.value_tag, TaxonomyType.category.name
+                )
+                if prediction.value_tag is None:
+                    logger.warning(f"Could not match {prediction.value_tag} (category)")
+                    continue
+                elif not cls.is_prediction_valid(product, prediction.value_tag):
+                    continue
+                else:
+                    selected_candidates.append(prediction)
 
         yield from (
             ProductInsight(**candidate.to_dict())
-            for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
+            for candidate in select_deepest_taxonomized_candidates(
+                selected_candidates, taxonomy
+            )
         )
 
     @staticmethod
