@@ -65,6 +65,7 @@ def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Ta
     return _get_taxonomy(
         taxonomy_type_enum,
         force_download=False,
+        download_newer=True,
         cache_dir=settings.DATA_DIR / "taxonomies",
     )
 
