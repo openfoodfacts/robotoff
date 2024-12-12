@@ -191,7 +191,7 @@ volumes:
 networks:
   default:
 
-  # this is the network shared with product opener
+  # this is the network shared with product opener, it's only used in staging (and locally)
   common_net:
     name: ${COMMON_NET_NAME}
     external: true
