@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.59.2](https://github.com/openfoodfacts/robotoff/compare/v1.59.1...v1.59.2) (2024-12-12)
+
+
+### Bug Fixes
+
+* fix the absence of matching synonyms during category insight import ([#1497](https://github.com/openfoodfacts/robotoff/issues/1497)) ([66c5322](https://github.com/openfoodfacts/robotoff/commit/66c532215ae9a0f689631b3e5431b248b2da23c3))
+* remove output_image parameter in detect_from_image_tf ([#1494](https://github.com/openfoodfacts/robotoff/issues/1494)) ([5e43dab](https://github.com/openfoodfacts/robotoff/commit/5e43dabe68391c34bd15343790fca9a2568e26b9))
+* use Python SDK update listener ([#1496](https://github.com/openfoodfacts/robotoff/issues/1496)) ([fb60549](https://github.com/openfoodfacts/robotoff/commit/fb60549e1243351bae08b92d526168b0613459e9))
+
+
+### Technical
+
+* add comments ([fb6c5dc](https://github.com/openfoodfacts/robotoff/commit/fb6c5dc36bf58d0eb99cdbdb266b7e624318368e))
+* allow to specify triton URI as one envvar ([abcc2e5](https://github.com/openfoodfacts/robotoff/commit/abcc2e5a83aa40d1d422c99e846727a9cd0ed75b))
+
 ## [1.59.1](https://github.com/openfoodfacts/robotoff/compare/v1.59.0...v1.59.1) (2024-12-10)
 
 
