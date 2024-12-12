@@ -137,6 +137,7 @@ jobs:
           echo "REDIS_HOST=redis.robotoff_default" >> .env
           echo "REDIS_UPDATE_HOST=${{ env.REDIS_UPDATE_HOST }}" >> .env
           echo "REDIS_UPDATE_PORT=6379" >> .env
+          echo "REDIS_STREAM_NAME=product_updates" >> .env
           # We use local PostgreSQL instance with `robotoff_default` network,
           # so that there is no possibility of conflict with PO PostgreSQL instance.
           echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
