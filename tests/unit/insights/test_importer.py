@@ -928,6 +928,13 @@ class TestCategoryImporter:
             ),
             (
                 [
+                    Prediction(PredictionType.category, value_tag="en:shelled-almonds"),
+                ],
+                Product({"code": DEFAULT_BARCODE, "categories_tags": []}),
+                ["en:almonds-shelled"],
+            ),
+            (
+                [
                     Prediction(
                         PredictionType.category, value_tag="en:non-existing-tag"
                     ),
