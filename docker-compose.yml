@@ -169,6 +169,7 @@ services:
     mem_limit: 15g
     volumes:
       - es-data:/usr/share/elasticsearch/data
+      - es-logs:/usr/share/elasticsearch/logs
       - elasticsearch_tmp:/tmp
 
 volumes:
@@ -176,6 +177,8 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
   es-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
+  es-logs:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-logs
   redis-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
   backup:
