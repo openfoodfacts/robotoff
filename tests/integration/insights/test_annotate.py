@@ -170,7 +170,7 @@ class TestIngredientSpellcheckAnnotator:
         mock_save_ingredients.assert_called()
 
     class TestNutrientExtractionAnnotator:
-        SOURCE_IMAGE = "/872/032/603/7888/1.jpg"
+        SOURCE_IMAGE = "/872/032/603/7888/2.jpg"
 
         @pytest.fixture
         def mock_select_rotate_image(self, mocker) -> Mock:
@@ -199,7 +199,7 @@ class TestIngredientSpellcheckAnnotator:
             mock_select_rotate_image: Mock,
             nutrient_extraction_insight: ProductInsightFactory,
         ):
-            product: JSONType = {"images": {"1": {}}, "lang": "fr"}
+            product: JSONType = {"images": {"2": {}}, "lang": "fr"}
             NutrientExtractionAnnotator.select_nutrition_image(
                 insight=nutrient_extraction_insight,
                 product=product,
@@ -213,8 +213,8 @@ class TestIngredientSpellcheckAnnotator:
         ):
             product: JSONType = {
                 "images": {
-                    "1": {"sizes": {"full": {"w": 1000, "h": 2000}}},
-                    "nutrition_fr": {},
+                    "2": {"sizes": {"full": {"w": 1000, "h": 2000}}},
+                    "nutrition_fr": {"imgid": "2"},
                 },
                 "lang": "fr",
             }
@@ -230,7 +230,7 @@ class TestIngredientSpellcheckAnnotator:
             nutrient_extraction_insight: ProductInsightFactory,
         ):
             product = {
-                "images": {"1": {"sizes": {"full": {"w": 1000, "h": 2000}}}},
+                "images": {"2": {"sizes": {"full": {"w": 1000, "h": 2000}}}},
                 "lang": "fr",
             }
             NutrientExtractionAnnotator.select_nutrition_image(
@@ -239,7 +239,35 @@ class TestIngredientSpellcheckAnnotator:
             )
             mock_select_rotate_image.assert_called_once_with(
                 product_id=nutrient_extraction_insight.get_product_id(),
-                image_id="1",
+                image_id="2",
+                image_key="nutrition_fr",
+                rotate=None,
+                crop_bounding_box=None,
+                auth=None,
+                is_vote=False,
+                insight_id=nutrient_extraction_insight.id,
+            )
+
+        def test_select_nutrition_image_override_nutrition_image(
+            self,
+            mock_select_rotate_image: Mock,
+            nutrient_extraction_insight: ProductInsightFactory,
+        ):
+            product = {
+                "images": {
+                    "2": {"sizes": {"full": {"w": 1000, "h": 2000}}},
+                    # image 1 already selected, should be overridden
+                    "nutrition_fr": {"imgid": "1"},
+                },
+                "lang": "fr",
+            }
+            NutrientExtractionAnnotator.select_nutrition_image(
+                insight=nutrient_extraction_insight,
+                product=product,
+            )
+            mock_select_rotate_image.assert_called_once_with(
+                product_id=nutrient_extraction_insight.get_product_id(),
+                image_id="2",
                 image_key="nutrition_fr",
                 rotate=None,
                 crop_bounding_box=None,
@@ -254,7 +282,7 @@ class TestIngredientSpellcheckAnnotator:
             nutrient_extraction_insight: ProductInsightFactory,
         ):
             product = {
-                "images": {"1": {"sizes": {"full": {"w": 1000, "h": 2000}}}},
+                "images": {"2": {"sizes": {"full": {"w": 1000, "h": 2000}}}},
                 "lang": "fr",
             }
             rotation_data = {"rotation": 90}
@@ -289,7 +317,7 @@ class TestIngredientSpellcheckAnnotator:
             )
             mock_select_rotate_image.assert_called_once_with(
                 product_id=nutrient_extraction_insight.get_product_id(),
-                image_id="1",
+                image_id="2",
                 image_key="nutrition_fr",
                 rotate=rotation_data["rotation"],
                 crop_bounding_box=(
