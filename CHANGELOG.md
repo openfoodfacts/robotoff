@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.60.0](https://github.com/openfoodfacts/robotoff/compare/v1.59.2...v1.60.0) (2024-12-20)
+
+
+### Features
+
+* Improve annotation process for `nutrition_extraction` insight ([#1501](https://github.com/openfoodfacts/robotoff/issues/1501)) ([6030833](https://github.com/openfoodfacts/robotoff/commit/60308337201cfe485e7fb5e642662ccb8adf0fd8))
+
+
+### Technical
+
+* change default name for redis stream ([cc23950](https://github.com/openfoodfacts/robotoff/commit/cc239501c2af96f5869596018561329d3d27f3bd))
+* create temp volume for es logs ([5268911](https://github.com/openfoodfacts/robotoff/commit/5268911a117859505eec128a6b739b81867d788d))
+* increase allowed memory for Triton ([#1498](https://github.com/openfoodfacts/robotoff/issues/1498)) ([0c52a59](https://github.com/openfoodfacts/robotoff/commit/0c52a59d96effa5a2fb918cfeb67e801edbb0a63))
+
 ## [1.59.2](https://github.com/openfoodfacts/robotoff/compare/v1.59.1...v1.59.2) (2024-12-12)
 
 
