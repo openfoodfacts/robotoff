@@ -211,7 +211,13 @@ class TestIngredientSpellcheckAnnotator:
             mock_select_rotate_image: Mock,
             nutrient_extraction_insight: ProductInsightFactory,
         ):
-            product: JSONType = {"images": {"1": {}, "nutrition_fr": {}}, "lang": "fr"}
+            product: JSONType = {
+                "images": {
+                    "1": {"sizes": {"full": {"w": 1000, "h": 2000}}},
+                    "nutrition_fr": {},
+                },
+                "lang": "fr",
+            }
             NutrientExtractionAnnotator.select_nutrition_image(
                 insight=nutrient_extraction_insight,
                 product=product,
