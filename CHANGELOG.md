@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.61.0](https://github.com/openfoodfacts/robotoff/compare/v1.60.1...v1.61.0) (2024-12-20)
+
+
+### Features
+
+* add lang pred in spellcheck insights ([#1504](https://github.com/openfoodfacts/robotoff/issues/1504)) ([c921e8a](https://github.com/openfoodfacts/robotoff/commit/c921e8a2d9439543e0523554fa9f6a5d61ad5658))
+
 ## [1.60.1](https://github.com/openfoodfacts/robotoff/compare/v1.60.0...v1.60.1) (2024-12-20)
 
 
