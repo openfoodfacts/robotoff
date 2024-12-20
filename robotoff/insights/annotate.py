@@ -28,6 +28,7 @@ from robotoff.off import (
     update_expiration_date,
     update_quantity,
 )
+from robotoff.prediction.utils import get_image_rotation, get_nutrition_table_prediction
 from robotoff.products import get_image_id, get_product
 from robotoff.types import InsightAnnotation, InsightType, JSONType, NutrientData
 from robotoff.utils import get_logger
@@ -734,6 +735,7 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         if is_vote:
             return CANNOT_VOTE_RESULT
 
+        insight_updated = False
         # The annotator can change the nutrient values to fix the model errors
         if data is not None:
             try:
@@ -749,22 +751,32 @@ class NutrientExtractionAnnotator(InsightAnnotator):
             # user
             insight.data["annotation"] = validated_nutrients.model_dump()
             insight.data["was_updated"] = True
-            insight.save()
+            insight_updated = True
         else:
             validated_nutrients = NutrientData.model_validate(insight.data)
             validated_nutrients = cls.add_default_unit(validated_nutrients)
 
             insight.data["annotation"] = validated_nutrients.model_dump()
             insight.data["was_updated"] = False
+            insight_updated = True
+
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["code", "images", "lang"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        if insight_updated:
             insight.save()
 
         save_nutrients(
-            product_id=insight.get_product_id(),
+            product_id=product_id,
             nutrient_data=validated_nutrients,
             insight_id=insight.id,
             auth=auth,
             is_vote=is_vote,
         )
+        cls.select_nutrition_image(insight, product, auth)
         return UPDATED_ANNOTATION_RESULT
 
     @classmethod
@@ -787,6 +799,80 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         if "nutrients" not in data:
             raise ValidationError("missing 'nutrients' field")
         return NutrientData.model_validate(data)
+
+    @classmethod
+    def select_nutrition_image(
+        cls,
+        insight: ProductInsight,
+        product: JSONType,
+        auth: OFFAuthentication | None = None,
+    ) -> None:
+        """If the insight is validated, select the source image as nutrition image.
+
+        We fetch the image orientation from the `predictions` table and the prediction
+        of the nutrition table detector from the `image_predictions` table to know the
+        rotation angle and the bounding box of the nutrition table.
+        If any of these predictions are missing, we just select the image without any
+        rotation or crop bounding box.
+
+        :param insight: the original `nutrient_extraction` insight
+        :param product: the product data
+        :param auth: the user authentication data
+        """
+
+        if insight.source_image is None:
+            return None
+
+        image_id = get_image_id(insight.source_image)
+        images = product.get("images", {})
+        image_meta: JSONType | None = images.get(image_id)
+
+        if not image_id or not image_meta:
+            return None
+
+        # Use the language of the product. This field should always be available,
+        # but we provide a default value just in case.
+        lang = product.get("lang", "en")
+        image_key = f"nutrition_{lang}"
+        # We don't want to select the nutrition image if one has already been
+        # selected
+        if image_key in images:
+            return None
+
+        rotation = get_image_rotation(insight.source_image)
+
+        nutrition_table_detections = get_nutrition_table_prediction(
+            insight.source_image, threshold=0.5
+        )
+        bounding_box = None
+        # Only crop according to the model predicted bounding box if there is exactly
+        # one nutrition table detected
+        if nutrition_table_detections and len(nutrition_table_detections) == 1:
+            bounding_box = nutrition_table_detections[0]["bounding_box"]
+
+        crop_bounding_box: tuple[float, float, float, float] | None = None
+        if bounding_box:
+            rotation = rotation or 0
+            # convert crop bounding box to the format expected by Product
+            # Opener
+            image_size = image_meta["sizes"]["full"]
+            width = image_size["w"]
+            height = image_size["h"]
+            crop_bounding_box = convert_crop_bounding_box(
+                bounding_box, width, height, rotation
+            )
+
+        product_id = insight.get_product_id()
+        select_rotate_image(
+            product_id=product_id,
+            image_id=image_id,
+            image_key=image_key,
+            rotate=rotation,
+            crop_bounding_box=crop_bounding_box,
+            auth=auth,
+            is_vote=False,
+            insight_id=insight.id,
+        )
 
 
 ANNOTATOR_MAPPING: dict[str, Type] = {

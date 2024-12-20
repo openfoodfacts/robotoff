@@ -75,6 +75,11 @@ class PredictionFactory(PeeweeModelFactory):
     predictor_version: Optional[str] = None
     confidence: Optional[float] = None
     server_type: str = "off"
+    source_image = factory.LazyAttribute(
+        lambda o: generate_image_path(
+            ProductIdentifier(o.barcode, ServerType[o.server_type]), "1"
+        )
+    )
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):
