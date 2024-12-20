@@ -10,6 +10,7 @@ import duckdb
 from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.models import db
+from robotoff.prediction.langid import predict_lang
 from robotoff.types import BatchJobType, Prediction, PredictionType, ServerType
 from robotoff.utils import get_logger
 
@@ -49,10 +50,19 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
     predictor_version = "llm-v1-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
     for _, row in df.iterrows():
+        lang_predictions = predict_lang(row["text"], k=1)
+        lang, lang_confidence = lang_predictions[0].lang, (
+            lang_predictions[0].confidence if lang_predictions else None
+        )
         predictions.append(
             Prediction(
                 type=PredictionType.ingredient_spellcheck,
-                data={"original": row["text"], "correction": row["correction"]},
+                data={
+                    "original": row["text"],
+                    "correction": row["correction"],
+                    "lang": lang,
+                    "lang_confidence": lang_confidence,
+                },
                 value_tag=row["lang"],
                 barcode=row["code"],
                 predictor_version=predictor_version,
