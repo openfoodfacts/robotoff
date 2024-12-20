@@ -834,9 +834,9 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         # but we provide a default value just in case.
         lang = product.get("lang", "en")
         image_key = f"nutrition_{lang}"
-        # We don't want to select the nutrition image if one has already been
-        # selected
-        if image_key in images:
+        # We don't want to select the nutrition image if the image is already
+        # selected as nutrition image for the main language
+        if image_key in images and images[image_key]["imgid"] == image_id:
             return None
 
         rotation = get_image_rotation(insight.source_image)
