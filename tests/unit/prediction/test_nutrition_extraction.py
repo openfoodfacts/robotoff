@@ -401,10 +401,12 @@ class TestAggregateEntities:
         ("09", "salt_100g", ("0", "g", True)),
         # Missing unit but value does not end with '8' or '9'
         ("091", "proteins_100g", ("091", None, True)),
+        ("219", "proteins_100g", ("21", "g", True)),
+        ("318", "carbohydrates_100g", ("31", "g", True)),
+        ("105", "proteins_100g", ("105", None, True)),
     ],
 )
 def test_match_nutrient_value(words_str: str, entity_label: str, expected_output):
-
     assert match_nutrient_value(words_str, entity_label) == expected_output
 
 
