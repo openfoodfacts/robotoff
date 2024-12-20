@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.60.1](https://github.com/openfoodfacts/robotoff/compare/v1.60.0...v1.60.1) (2024-12-20)
+
+
+### Bug Fixes
+
+* **nutrisight:** allow to override nutrition image ([#1502](https://github.com/openfoodfacts/robotoff/issues/1502)) ([a53485c](https://github.com/openfoodfacts/robotoff/commit/a53485cae4a49e707a015d4e7d038bf4eea907e8))
+
 ## [1.60.0](https://github.com/openfoodfacts/robotoff/compare/v1.59.2...v1.60.0) (2024-12-20)
 
 
