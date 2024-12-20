@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+from openfoodfacts.types import JSONType
 
 from robotoff.insights.annotate import (
     INVALID_DATA,
@@ -8,10 +9,18 @@ from robotoff.insights.annotate import (
     AnnotationResult,
     CategoryAnnotator,
     IngredientSpellcheckAnnotator,
+    NutrientExtractionAnnotator,
 )
 from robotoff.models import ProductInsight
+from robotoff.types import ObjectDetectionModel, PredictionType
 
-from ..models_utils import ProductInsightFactory, clean_db
+from ..models_utils import (
+    ImageModelFactory,
+    ImagePredictionFactory,
+    PredictionFactory,
+    ProductInsightFactory,
+    clean_db,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -103,7 +112,6 @@ class TestCategoryAnnotator:
 
 
 class TestIngredientSpellcheckAnnotator:
-
     @pytest.fixture
     def mock_save_ingredients(self, mocker) -> Mock:
         return mocker.patch("robotoff.insights.annotate.save_ingredients")
@@ -160,3 +168,137 @@ class TestIngredientSpellcheckAnnotator:
         assert annotation_result == UPDATED_ANNOTATION_RESULT
         assert "annotation" not in spellcheck_insight.data
         mock_save_ingredients.assert_called()
+
+    class TestNutrientExtractionAnnotator:
+        SOURCE_IMAGE = "/872/032/603/7888/1.jpg"
+
+        @pytest.fixture
+        def mock_select_rotate_image(self, mocker) -> Mock:
+            return mocker.patch("robotoff.insights.annotate.select_rotate_image")
+
+        @pytest.fixture
+        def nutrient_extraction_insight(self):
+            return ProductInsightFactory(
+                type="nutrient_extraction", source_image=self.SOURCE_IMAGE
+            )
+
+        def test_select_nutrition_image_no_image_id(
+            self,
+            mock_select_rotate_image: Mock,
+            nutrient_extraction_insight: ProductInsightFactory,
+        ):
+            product: JSONType = {"images": {}, "lang": "fr"}
+            NutrientExtractionAnnotator.select_nutrition_image(
+                insight=nutrient_extraction_insight,
+                product=product,
+            )
+            mock_select_rotate_image.assert_not_called()
+
+        def test_select_nutrition_image_no_image_meta(
+            self,
+            mock_select_rotate_image: Mock,
+            nutrient_extraction_insight: ProductInsightFactory,
+        ):
+            product: JSONType = {"images": {"1": {}}, "lang": "fr"}
+            NutrientExtractionAnnotator.select_nutrition_image(
+                insight=nutrient_extraction_insight,
+                product=product,
+            )
+            mock_select_rotate_image.assert_not_called()
+
+        def test_select_nutrition_image_already_selected(
+            self,
+            mock_select_rotate_image: Mock,
+            nutrient_extraction_insight: ProductInsightFactory,
+        ):
+            product: JSONType = {
+                "images": {
+                    "1": {"sizes": {"full": {"w": 1000, "h": 2000}}},
+                    "nutrition_fr": {},
+                },
+                "lang": "fr",
+            }
+            NutrientExtractionAnnotator.select_nutrition_image(
+                insight=nutrient_extraction_insight,
+                product=product,
+            )
+            mock_select_rotate_image.assert_not_called()
+
+        def test_select_nutrition_image(
+            self,
+            mock_select_rotate_image: Mock,
+            nutrient_extraction_insight: ProductInsightFactory,
+        ):
+            product = {
+                "images": {"1": {"sizes": {"full": {"w": 1000, "h": 2000}}}},
+                "lang": "fr",
+            }
+            NutrientExtractionAnnotator.select_nutrition_image(
+                insight=nutrient_extraction_insight,
+                product=product,
+            )
+            mock_select_rotate_image.assert_called_once_with(
+                product_id=nutrient_extraction_insight.get_product_id(),
+                image_id="1",
+                image_key="nutrition_fr",
+                rotate=None,
+                crop_bounding_box=None,
+                auth=None,
+                is_vote=False,
+                insight_id=nutrient_extraction_insight.id,
+            )
+
+        def test_select_nutrition_image_with_rotation_and_nutrition_table_detection(
+            self,
+            mock_select_rotate_image: Mock,
+            nutrient_extraction_insight: ProductInsightFactory,
+        ):
+            product = {
+                "images": {"1": {"sizes": {"full": {"w": 1000, "h": 2000}}}},
+                "lang": "fr",
+            }
+            rotation_data = {"rotation": 90}
+            PredictionFactory(
+                type=PredictionType.image_orientation,
+                data=rotation_data,
+                source_image=self.SOURCE_IMAGE,
+            )
+            image_model = ImageModelFactory(source_image=self.SOURCE_IMAGE)
+            detection_data = {
+                "objects": [
+                    {
+                        "label": "nutrition-table",
+                        "score": 0.550762104988098,
+                        "bounding_box": [
+                            0.06199073791503906,
+                            0.20298996567726135,
+                            0.4177824556827545,
+                            0.9909706115722656,
+                        ],
+                    },
+                ]
+            }
+            ImagePredictionFactory(
+                model_name=ObjectDetectionModel.nutrition_table.name,
+                data=detection_data,
+                image=image_model,
+            )
+            NutrientExtractionAnnotator.select_nutrition_image(
+                insight=nutrient_extraction_insight,
+                product=product,
+            )
+            mock_select_rotate_image.assert_called_once_with(
+                product_id=nutrient_extraction_insight.get_product_id(),
+                image_id="1",
+                image_key="nutrition_fr",
+                rotate=rotation_data["rotation"],
+                crop_bounding_box=(
+                    202.98996567726135,
+                    1164.435088634491,
+                    990.9706115722656,
+                    1876.0185241699219,
+                ),
+                auth=None,
+                is_vote=False,
+                insight_id=nutrient_extraction_insight.id,
+            )

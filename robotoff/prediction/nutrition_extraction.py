@@ -569,6 +569,11 @@ def match_nutrient_value(
             )
         ) and (
             value in ("08", "09")
+            or (
+                len(value) > 2
+                and "." not in value
+                and (value.endswith("8") or (value.endswith("9")))
+            )
             or (value.endswith("8") and "." in value and not value.endswith(".8"))
             or (value.endswith("9") and "." in value and not value.endswith(".9"))
         ):

@@ -25,6 +25,7 @@ def _set_up_and_tear_down(peewee_db):
             value_tag="en:salmons",
             automatic_processing=False,
             predictor="matcher",
+            predictor_version="matcher_v1",
         )
         ProductInsightFactory(
             id=insight_id1,
@@ -32,6 +33,7 @@ def _set_up_and_tear_down(peewee_db):
             type="category",
             value_tag="en:salmons",
             predictor="matcher",
+            predictor_version="matcher_v1",
         )
         # Run the test case.
         yield
@@ -50,6 +52,7 @@ def matcher_prediction(category):
         },
         automatic_processing=False,
         predictor="matcher",
+        predictor_version="matcher_v1",
     )
 
 
@@ -61,6 +64,7 @@ def neural_prediction(category, confidence=0.7, auto=False):
         data={"lang": "xx"},
         automatic_processing=auto,
         predictor="neural",
+        predictor_version="neural_v1",
         confidence=confidence,
     )
 
@@ -72,7 +76,7 @@ class TestCategoryImporter:
     """
 
     def fake_product_store(self):
-        return {DEFAULT_PRODUCT_ID: Product({"categories_tags": ["en:fish"]})}
+        return {DEFAULT_PRODUCT_ID: Product({"categories_tags": ["en:fishes"]})}
 
     def _run_import(self, predictions, product_store=None):
         if product_store is None:
@@ -85,16 +89,33 @@ class TestCategoryImporter:
         "predictions",
         [
             # category already on product
-            [matcher_prediction("en:fish")],
-            [neural_prediction("en:fish")],
+            [matcher_prediction("en:fishes")],
+            [neural_prediction("en:fishes")],
+        ],
+    )
+    def test_import_one_insight_to_delete(self, predictions):
+        """Test when there is an import with a value already present in the product,
+        the insight should be deleted."""
+        original_insights = ProductInsight.select()
+        assert len(original_insights) == 1
+        import_result = self._run_import(predictions)
+        assert import_result.created_insights_count() == 0
+        assert import_result.updated_insights_count() == 0
+        assert import_result.deleted_insights_count() == 1
+        insights = list(ProductInsight.select())
+        assert len(insights) == 0
+
+    @pytest.mark.parametrize(
+        "predictions",
+        [
             # category already in insights
             [matcher_prediction("en:salmons")],
             [neural_prediction("en:salmons")],
             # both
             [
-                matcher_prediction("en:fish"),
+                matcher_prediction("en:fishes"),
                 matcher_prediction("en:salmons"),
-                neural_prediction("en:fish"),
+                neural_prediction("en:fishes"),
                 neural_prediction("en:salmons"),
             ],
         ],

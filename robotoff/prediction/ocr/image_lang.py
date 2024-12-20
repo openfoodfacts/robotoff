@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, TypedDict, Union
 
 from openfoodfacts.ocr import OCRResult
 
@@ -7,6 +7,11 @@ from robotoff.types import Prediction, PredictionType
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
+
+
+class ImageLangDataType(TypedDict):
+    count: dict[str, int]
+    percent: dict[str, float]
 
 
 def get_image_lang(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
