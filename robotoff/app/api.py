@@ -949,6 +949,9 @@ class ImagePredictorResource:
 def image_response(image: Image.Image, resp: falcon.Response) -> None:
     resp.content_type = "image/jpeg"
     fp = io.BytesIO()
+    # JPEG doesn't support RGBA, so we convert to RGB if needed
+    if image.mode != "RGB":
+        image = image.convert("RGB")
     image.save(fp, "JPEG")
     stream_len = fp.tell()
     fp.seek(0)
