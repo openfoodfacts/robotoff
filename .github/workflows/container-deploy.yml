@@ -33,7 +33,7 @@ jobs:
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
         echo "INFLUXDB_PORT=8087" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
-        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
     - name: Set various variable for production deployment
@@ -53,7 +53,7 @@ jobs:
         echo "INFLUXDB_HOST=10.3.0.101" >> $GITHUB_ENV
         echo "INFLUXDB_PORT=8086" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
-        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
     - name: Wait for container build workflow
