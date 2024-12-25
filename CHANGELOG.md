@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.61.0](https://github.com/openfoodfacts/robotoff/compare/v1.60.1...v1.61.0) (2024-12-25)
+
+
+### Features
+
+* add lang pred in spellcheck insights ([#1504](https://github.com/openfoodfacts/robotoff/issues/1504)) ([c921e8a](https://github.com/openfoodfacts/robotoff/commit/c921e8a2d9439543e0523554fa9f6a5d61ad5658))
+
+
+### Bug Fixes
+
+* allow prices.openfoodfacts.org/net for image cropping ([da3fbc5](https://github.com/openfoodfacts/robotoff/commit/da3fbc55bfcf6de73683839f47816776889cd462))
+* convert image to RGB after cropping if needed ([77ce5a4](https://github.com/openfoodfacts/robotoff/commit/77ce5a49e48a07b06e8200ab9bcc4bda9f463b34))
+
 ## [1.60.1](https://github.com/openfoodfacts/robotoff/compare/v1.60.0...v1.60.1) (2024-12-20)
 
 
