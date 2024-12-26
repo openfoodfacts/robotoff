@@ -68,3 +68,13 @@ def unload_model(model_name: str):
     typer.echo("Done.")
     typer.echo("**Current models (after) **")
     list_models()
+
+
+@app.command()
+def download_models():
+    """Download all models."""
+    from robotoff import triton
+    from robotoff.utils import get_logger
+
+    get_logger()
+    triton.download_models()
