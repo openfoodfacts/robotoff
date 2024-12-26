@@ -25,10 +25,10 @@ from robotoff.utils.logger import get_logger
 logger = get_logger(__name__)
 
 MODEL_NAME = "nutrition_extractor"
-MODEL_VERSION = f"{MODEL_NAME}-1.0"
+MODEL_VERSION = f"{MODEL_NAME}-2.0"
 
 # The tokenizer assets are stored in the model directory
-MODEL_DIR = settings.TRITON_MODELS_DIR / f"{MODEL_NAME}/1/model.onnx"
+MODEL_DIR = settings.TRITON_MODELS_DIR / f"{MODEL_NAME}/2/model.onnx"
 
 
 @dataclasses.dataclass
