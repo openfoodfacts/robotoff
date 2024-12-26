@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.62.0](https://github.com/openfoodfacts/robotoff/compare/v1.61.0...v1.62.0) (2024-12-26)
+
+
+### Features
+
+* Add triton CLI commands ([#1510](https://github.com/openfoodfacts/robotoff/issues/1510)) ([bc7a506](https://github.com/openfoodfacts/robotoff/commit/bc7a506eef4c595e26fa045509401c9d0f6ec63d))
+
+
+### Bug Fixes
+
+* use low-priority queue for image import rerun ([#1508](https://github.com/openfoodfacts/robotoff/issues/1508)) ([585df70](https://github.com/openfoodfacts/robotoff/commit/585df7030482a55db242d947e3a45fba18f650be))
+
+
+### Technical
+
+* **deps-dev:** bump jinja2 from 3.1.4 to 3.1.5 ([#1507](https://github.com/openfoodfacts/robotoff/issues/1507)) ([aa5f296](https://github.com/openfoodfacts/robotoff/commit/aa5f296f8be27ac141f95442d4dbe2dd799f0659))
+
 ## [1.61.0](https://github.com/openfoodfacts/robotoff/compare/v1.60.1...v1.61.0) (2024-12-25)
 
 
