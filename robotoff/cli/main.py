@@ -670,6 +670,9 @@ def run_nutrition_extraction(
         None,
         help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
     ),
+    model_version: Optional[str] = typer.Option(
+        None, help="Version of the model to use, defaults to the latest"
+    ),
 ) -> None:
     """Run nutrition extraction on a product image.
 
@@ -693,7 +696,9 @@ def run_nutrition_extraction(
 
     image = cast(Image.Image, get_image_from_url(image_url))
     ocr_result = cast(OCRResult, OCRResult.from_url(image_url.replace(".jpg", ".json")))
-    prediction = predict(image, ocr_result, triton_uri=triton_uri)
+    prediction = predict(
+        image, ocr_result, model_version=model_version, triton_uri=triton_uri
+    )
     if prediction is not None:
         pprint(prediction)
     else:
