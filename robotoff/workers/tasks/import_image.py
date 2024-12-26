@@ -120,6 +120,9 @@ def rerun_import_all_images(
             image_url=image_url,
             ocr_url=ocr_url,
             flags=flags,
+            # Use the low queue for rerun, as it's not as important as the
+            # real-time updates from Redis
+            use_high_queue=False,
         )
     return None
 
@@ -201,6 +204,7 @@ def run_import_image(
     image_url: str,
     ocr_url: str,
     flags: list[ImportImageFlag] | None = None,
+    use_high_queue: bool = True,
 ) -> None:
     """Launch all extraction tasks on an image.
 
@@ -214,9 +218,13 @@ def run_import_image(
     :param image_url: the URL of the image to import
     :param ocr_url: the URL of the OCR JSON file
     :param flags: the list of flags to run, defaults to None (all)
+    param use_high_queue: if True, use the high priority queue for most important
+        tasks. If False, always use the low priority queue. Defaults to True.
     """
     if flags is None:
         flags = [flag for flag in ImportImageFlag]
+
+    high_queue = get_high_queue(product_id) if use_high_queue else low_queue
 
     if ImportImageFlag.add_image_fingerprint in flags:
         # Compute image fingerprint, this job is low priority
@@ -233,7 +241,7 @@ def run_import_image(
             # than OFF (OBF, OPF,...)
             enqueue_job(
                 import_insights_from_image,
-                get_high_queue(product_id),
+                high_queue,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
                 image_url=image_url,
@@ -245,7 +253,7 @@ def run_import_image(
             # trained on non-food products
             enqueue_job(
                 extract_ingredients_job,
-                get_high_queue(product_id),
+                high_queue,
                 # We add a higher timeout, as we request Product Opener to
                 # parse ingredient list, which may take a while depending on
                 # the number of ingredient list (~1s per ingredient list)
@@ -257,7 +265,7 @@ def run_import_image(
         if ImportImageFlag.extract_nutrition in flags:
             enqueue_job(
                 extract_nutrition_job,
-                get_high_queue(product_id),
+                high_queue,
                 job_kwargs={"result_ttl": 0, "timeout": "2m"},
                 product_id=product_id,
                 image_url=image_url,
@@ -270,7 +278,7 @@ def run_import_image(
         # barcode. See `get_high_queue` documentation for more details.
         enqueue_job(
             run_logo_object_detection,
-            get_high_queue(product_id),
+            high_queue,
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             image_url=image_url,
@@ -282,7 +290,7 @@ def run_import_image(
             # Run object detection model that detects nutrition tables
             enqueue_job(
                 run_nutrition_table_object_detection,
-                get_high_queue(product_id),
+                high_queue,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
                 image_url=image_url,
@@ -294,7 +302,7 @@ def run_import_image(
     # Unit tests are failing, we need to fix them before re-enabling this task
     # enqueue_job(
     #     run_upc_detection,
-    #     get_high_queue(product_id),
+    #     high_queue,
     #     job_kwargs={"result_ttl": 0},
     #     product_id=product_id,
     #     image_url=image_url,
