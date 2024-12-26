@@ -4,6 +4,7 @@ from typing import Optional
 
 import typer
 
+from robotoff.cli.triton import app as triton_app
 from robotoff.types import (
     ImportImageFlag,
     ObjectDetectionModel,
@@ -1248,6 +1249,9 @@ def launch_normalize_barcode_job(
                     else:
                         break
                 logger.info("Updated %d images", updated)
+
+
+app.add_typer(triton_app, name="triton")
 
 
 def main() -> None:
