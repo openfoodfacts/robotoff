@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.63.0](https://github.com/openfoodfacts/robotoff/compare/v1.62.0...v1.63.0) (2024-12-26)
+
+
+### Features
+
+* Upgrade nutrition extractor model ([#1511](https://github.com/openfoodfacts/robotoff/issues/1511)) ([4f13fbb](https://github.com/openfoodfacts/robotoff/commit/4f13fbb56e86670f1ad4a1fbf3db2397273c54dc))
+
+
+### Bug Fixes
+
+* **nutrisight:** fix model dir ([125250d](https://github.com/openfoodfacts/robotoff/commit/125250d41b6b2bd67bac51c1b15157f990db8696))
+
 ## [1.62.0](https://github.com/openfoodfacts/robotoff/compare/v1.61.0...v1.62.0) (2024-12-26)
 
 
