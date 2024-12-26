@@ -60,7 +60,7 @@ class NutritionExtractionPrediction:
 def predict(
     image: Image.Image,
     ocr_result: OCRResult,
-    model_version: str = "1",
+    model_version: str | None = None,
     triton_uri: str | None = None,
 ) -> NutritionExtractionPrediction | None:
     """Predict the nutrient values from an image and an OCR result.
@@ -77,7 +77,7 @@ def predict(
 
     :param image: the *original* image (not resized)
     :param ocr_result: the OCR result
-    :param model_version: the version of the model to use, defaults to "1"
+    :param model_version: the version of the model to use, defaults to None (latest)
     :param triton_uri: the URI of the Triton Inference Server, if not provided, the
         default value from settings is used
     :return: a `NutritionExtractionPrediction` object
@@ -619,7 +619,7 @@ def send_infer_request(
     pixel_values: np.ndarray,
     model_name: str,
     triton_stub: GRPCInferenceServiceStub,
-    model_version: str = "1",
+    model_version: str | None = None,
 ) -> np.ndarray:
     """Send a NER infer request to the Triton inference server.
 
@@ -634,7 +634,7 @@ def send_infer_request(
     :param pixel_values: pixel values of the image, generated using the
         transformers tokenizer.
     :param model_name: the name of the model to use
-    :param model_version: version of the model model to use, defaults to "1"
+    :param model_version: version of the model model to use, defaults to None (latest).
     :return: the predicted logits
     """
     request = build_triton_request(
@@ -660,7 +660,7 @@ def build_triton_request(
     bbox: np.ndarray,
     pixel_values: np.ndarray,
     model_name: str,
-    model_version: str = "1",
+    model_version: str | None = None,
 ):
     """Build a Triton ModelInferRequest gRPC request for LayoutLMv3 models.
 
@@ -672,12 +672,14 @@ def build_triton_request(
     :param pixel_values: pixel values of the image, generated using the
         transformers tokenizer.
     :param model_name: the name of the model to use.
-    :param model_version: version of the model model to use, defaults to "1".
+    :param model_version: version of the model model to use, defaults to None (latest).
     :return: the gRPC ModelInferRequest
     """
     request = service_pb2.ModelInferRequest()
     request.model_name = model_name
-    request.model_version = model_version
+
+    if model_version:
+        request.model_version = model_version
 
     add_triton_infer_input_tensor(request, "input_ids", input_ids, "INT64")
     add_triton_infer_input_tensor(request, "attention_mask", attention_mask, "INT64")
