@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.63.2](https://github.com/openfoodfacts/robotoff/compare/v1.63.1...v1.63.2) (2024-12-27)
+
+
+### Bug Fixes
+
+* improve batch import ([906c8b9](https://github.com/openfoodfacts/robotoff/commit/906c8b9913721b8ad38c0d367325fcbe4b029e2d))
+
 ## [1.63.1](https://github.com/openfoodfacts/robotoff/compare/v1.63.0...v1.63.1) (2024-12-27)
 
 
