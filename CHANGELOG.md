@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.63.1](https://github.com/openfoodfacts/robotoff/compare/v1.63.0...v1.63.1) (2024-12-27)
+
+
+### Bug Fixes
+
+* add CLI command to import batch job predictions ([16c3239](https://github.com/openfoodfacts/robotoff/commit/16c3239abb74be59e7d91f71df6256c054d5d807))
+
 ## [1.63.0](https://github.com/openfoodfacts/robotoff/compare/v1.62.0...v1.63.0) (2024-12-26)
 
 
