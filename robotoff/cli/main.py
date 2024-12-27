@@ -1122,6 +1122,20 @@ def launch_spellcheck_batch_job(
 
 
 @app.command()
+def import_batch_job_predictions(batch_dir: str) -> None:
+    """Import predictions from batch job.
+
+    Currently, only ingredients spellcheck predictions are supported.
+    """
+    from robotoff.batch import BatchJobType, import_batch_predictions
+    from robotoff.utils.logger import get_logger
+
+    get_logger()
+
+    import_batch_predictions(BatchJobType.ingredients_spellcheck, batch_dir)
+
+
+@app.command()
 def launch_normalize_barcode_job(
     batch_size: int = 100_000,
     launch_prediction: bool = True,
