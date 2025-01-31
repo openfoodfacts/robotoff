@@ -116,6 +116,39 @@ CANNOT_VOTE_RESULT = AnnotationResult(
     description="The voting mechanism is not compatible with this insight type, please authenticate.",
 )
 
+from PIL import Image
+from importer import ImageOrientationImporter
+
+class ImageOrientationAnnotator:
+    @staticmethod
+    def rotate_image(image_path, rotation_angle):
+        """
+        Rotate the image by the specified angle.
+        :param image_path: Path to the image file.
+        :param rotation_angle: Angle to rotate (clockwise).
+        """
+        try:
+            with Image.open(image_path) as img:
+                rotated_img = img.rotate(-rotation_angle, expand=True)  # PIL rotates counterclockwise by default
+                rotated_img.save(image_path)  # Save back to the same file
+                print(f"Image rotated by {rotation_angle}° and saved.")
+        except Exception as e:
+            print(f"Error rotating image: {e}")
+
+    def annotate(self, image_path, prediction_data):
+        """
+        Process image orientation and rotate if needed.
+        :param image_path: Path to the image file.
+        :param prediction_data: JSON string containing image orientation predictions.
+        """
+        # Pass prediction.data from your DB query here
+        importer = ImageOrientationImporter(prediction_data)  # Pass the prediction data from DB
+        insight = importer.get_insight()
+
+        if insight["needs_rotation"]:
+            self.rotate_image(image_path, insight["rotation_angle"])
+
+
 
 class InsightAnnotator(metaclass=abc.ABCMeta):
     @classmethod
