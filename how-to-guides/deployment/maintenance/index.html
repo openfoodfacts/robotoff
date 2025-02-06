@@ -408,6 +408,26 @@
     Monitor
   </a>
   
+    <nav class="md-nav" aria-label="Monitor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#see-logs" class="md-nav__link">
+    See logs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-number-of-tasks-in-queues" class="md-nav__link">
+    See number of tasks in queues
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -861,6 +881,26 @@
     Monitor
   </a>
   
+    <nav class="md-nav" aria-label="Monitor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#see-logs" class="md-nav__link">
+    See logs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#see-number-of-tasks-in-queues" class="md-nav__link">
+    See number of tasks in queues
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -911,6 +951,7 @@
 <p>Or <code>make up</code> when you refresh the product (it will re-build and run <code>docker compose up -d</code>).</p>
 <p>Take the time to become a bit familiar with docker-compose if it's your first use.</p>
 <h2 id="monitor">Monitor</h2>
+<h3 id="see-logs">See logs</h3>
 <p>To display the logs of the container, <code>docker compose logs [service-name]</code>.
 (without service-name, you got all logs).</p>
 <p>Two options are often used: <code>-f</code> to follow output and <code>--tail n</code> to only display last n lines.</p>
@@ -925,6 +966,13 @@ robotoff_worker_low_1     /bin/sh -c /docker-entrypo ...   Up
 robotoff_worker_high_1     /bin/sh -c /docker-entrypo ...   Up
 ...                              
 </code></pre></div>
+<h3 id="see-number-of-tasks-in-queues">See number of tasks in queues</h3>
+<p>If you want to monitor how much job robotoff has to do (how behind it is),
+you can run the <code>rq</code> command to get status:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--no-deps<span class="w"> </span>worker_1<span class="w"> </span>rq<span class="w"> </span>info
+</code></pre></div>
+<p>This may help you understand why robotoff insight are not visible immediately on products.</p>
+<p>See also <a href="https://python-rq.org/docs/monitoring/">rq monitoring documentation</a> for more commands and informations.</p>
 <h2 id="database-backup-and-restore">Database backup and restore</h2>
 <p>To backup the PostgreSQL database, run the following command:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-i<span class="w"> </span>robotoff_postgres_1<span class="w"> </span>pg_dump<span class="w"> </span>--schema<span class="w"> </span>public<span class="w"> </span>-F<span class="w"> </span>c<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>postgres<span class="w"> </span><span class="p">|</span><span class="w"> </span>gzip<span class="w"> </span>&gt;<span class="w"> </span>robotoff_postgres_<span class="k">$(</span>date<span class="w"> </span>+%Y-%m-%d<span class="k">)</span>.dump
