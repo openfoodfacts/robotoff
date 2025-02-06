@@ -257,6 +257,50 @@ def select_deepest_taxonomized_candidates(
     ]
 
 
+
+import json
+
+class ImageOrientationImporter:
+    def __init__(self, prediction_data):
+        """
+        Initialize the importer with prediction data.
+        :param prediction_data: JSON string containing image orientation predictions.
+        """
+        self.prediction = json.loads(prediction_data)  # Parse the JSON string into a dictionary
+    
+    def needs_rotation(self):
+        """
+        Check if the image needs rotation based on orientation confidence.
+        :return: (bool, int) - Whether the image needs rotation and the rotation angle.
+        """
+        count = self.prediction.get("count", {})
+        orientation = self.prediction.get("orientation", "up")
+        rotation = self.prediction.get("rotation", 0)
+        
+        if orientation == "up":
+            return False, 0  # No rotation needed
+        
+        total_words = sum(count.values())
+        dominant_orientation_count = count.get(orientation, 0)
+        confidence = dominant_orientation_count / total_words if total_words > 0 else 0
+        
+        if confidence >= 0.95:
+            return True, rotation  # Rotation needed if confidence is >= 95%
+        
+        return False, 0  # Not confident enough to rotate
+
+    def get_insight(self):
+        """
+        Generate an insight for image rotation.
+        :return: Dictionary with rotation insight.
+        """
+        needs_rotation, rotation_angle = self.needs_rotation()
+        return {
+            "needs_rotation": needs_rotation,
+            "rotation_angle": rotation_angle,
+        }
+
+
 class InsightImporter(metaclass=abc.ABCMeta):
     """Abstract class for all insight importers."""
 
