@@ -37,8 +37,7 @@ class UpdateListener(BaseUpdateListener):
         product_id = ProductIdentifier(redis_update.code, server_type)
 
         # Check if the update was triggered by scanbot or specific mass update accounts
-        is_scanbot_or_mass_update = redis_update.triggered_by in ["scanbot", "mass_update_account_1", "mass_update_account_2"]
-
+        is_scanbot_or_mass_update = redis_update.user_id in ["scanbot", "update_all_products"]
         # Select queue based on triggering actor
         selected_queue = get_low_queue(product_id) if is_scanbot_or_mass_update else get_high_queue(product_id)
 
