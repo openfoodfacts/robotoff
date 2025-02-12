@@ -69,7 +69,7 @@ cachetools = "~5.5.0"
 tritonclient = {extras = ["grpc"], version = "2.38.0"}
 rq = "~1.11.1"
 python-redis-lock = "~4.0.0"
-transformers = "~4.44.2"
+transformers = ">=4.44.2,<4.49.0"
 lark = "~1.1.4"
 h5py = "~3.8.0"
 opencv-python-headless = "~4.10.0.84"
