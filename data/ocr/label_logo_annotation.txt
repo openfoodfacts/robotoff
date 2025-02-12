@@ -1,3 +1,102 @@
+1% for the Planet||en:1-for-the-planet
+AB||fr:agriculture-biologique
+Agricoltura Biologica||en:organic
+agricultura ecologica||en:organic
+Agricultura Ecologica||en:organic
+agriculture biologique||fr:agriculture-biologique
+Agriculture Biologique||fr:agriculture-biologique
+aop||fr:aop
+Australian Made||en:australian-made
+australian made||en:australian-made
+Bien Se Nourrir||fr:bien-se-nourrir
+Bio Siegel||de:bio-siegel
+bio suisse||en:bio-suisse
+bio||en:organic
+Biogarantie||en:biogarantie
+biogarantie||en:biogarantie
+Biologische Producten||en:organic
+canada organic||en:canada-organic
+certified vegan||en:vegan
+cosmebio||fr:cosmebio
+Demeter||en:demeter
+demeter||en:demeter
+dlg tele||de:dlg
+DLG||de:dlg
+DLG||de:dlg
+Dolphin Safe||en:dolphin-safe
+dop vettoriale||en:dop
+dop||en:dop
+ecocert||en:ecocert
+ECOCERT||en:ecocert
+europees biologisch keurmerk||en:eu-organic
+fair trade||en:fairtrade
+Fairtrade Fortnight 2012||en:fairtrade
+fairtrade||en:fairtrade
+Femme Enceinte||en:not-advised-for-pregnant-women
+Forest Stewardship Council||en:fsc
+Forest Stewardship Council||en:fsc
+FSC Mixed Sources||en:fsc
+fsc||en:fsc
+FSC||en:fsc
+German Agricultural Society||de:dlg
+gluten free||en:gluten-free
+grønt punkt||en:green-point
+igp vettoriale||en:pgi
+IGP||en:pgi
+igp||en:pgi
+kosher||en:kosher
+label ab||fr:ab-agriculture-biologique
+label rouge vectoriel||en:label-rouge
+Label Rouge||en:label-rouge
+label rouge||en:label-rouge
+lapin de france||fr:lapin-de-france
+Le Porc Français||fr:le-porc-français
+made in france||en:made-in-france
+made in italy||en:made-in-italy
+made in luxembourg||en:made-in-luxembourg
+marine stewardship council||en:marine-stewardship-council
+Marine Stewardship Council||en:marine-stewardship-council
+max havelaar||en:max-havelaar
+MSC||en:marine-stewardship-council
+nature et progrès||fr:nature-et-progres
+non gmo project||en:non-gmo-project
+not tested on animals||en:not-tested-on-animals
+Numero Vert||fr:produit-comportant-un-numero-vert
+Ohne Gentechnik||en:without-gmos
+Organic certification||en:organic
+Organic farming||en:organic
+organico||en:organic
+PEFC||en:pefc
+pegi 12||en:pegi
+Pensez Au Tri||fr:pensez-au-tri
+produit de montagne||fr:produit-de-montagne
+produit en bretagne||en:produced-in-bretagne
+Produit en Bretagne||en:produced-in-bretagne
+rainforest alliance||en:rainforest-alliance
+Rainforest Alliance||en:rainforest-alliance
+rspo||en:rspo
+Saveur de L Année||fr:saveur-de-l-annee
+Saveur en or||fr:saveur-en-or
+sin gluten vectorial||en:without-gluten
+Soil Association||en:soil-association
+spécialité traditionnelle garantie||fr:specialite-traditionnelle-garantie
+suisse garantie||en:suisse-garantie
+terracycle||en:terracycle
+tetra pak||en:tetra-pak
+Tetra Pak||en:tetra-pak
+tidyman||en:tidyman
+Triman Vectoriel||en:triman
+triman||en:triman
+usda organic||en:usda-organic
+USDA Organic||en:usda-organic
+UTZ Certified||en:utz
+UTZ||en:utz
+vegan||en:vegan
+vegetarismus||en:vegetarian
+VPF||en:vpf
+WWF Brasil||en:wwf
+wwf||en:wwf
+rspca assured||en:rspca-assured
 igp||en:pgi
 label ab||fr:ab-agriculture-biologique
 label rouge vectoriel||fr:label-rouge
