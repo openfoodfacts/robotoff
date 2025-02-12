@@ -7,7 +7,12 @@ from redis import Redis
 from robotoff import settings
 from robotoff.types import ProductIdentifier, ServerType
 from robotoff.utils.logger import get_logger
-from robotoff.workers.queues import enqueue_in_job, enqueue_job, get_high_queue, get_low_queue
+from robotoff.workers.queues import (
+    enqueue_in_job,
+    enqueue_job,
+    get_high_queue,
+    get_low_queue,
+)
 from robotoff.workers.tasks import delete_product_insights_job
 from robotoff.workers.tasks.import_image import run_import_image_job
 from robotoff.workers.tasks.product_updated import update_insights_job
@@ -37,9 +42,14 @@ class UpdateListener(BaseUpdateListener):
         product_id = ProductIdentifier(redis_update.code, server_type)
 
         # Check if the update was triggered by scanbot or specific mass update accounts
-        is_scanbot_or_mass_update = redis_update.user_id in ["scanbot", "update_all_products"]
+        is_scanbot_or_mass_update = redis_update.user_id in [
+            "scanbot",
+            "update_all_products",
+        ]
         # Select queue based on triggering actor
-        selected_queue = get_low_queue(product_id) if is_scanbot_or_mass_update else get_high_queue(product_id)
+        selected_queue = (
+            get_low_queue() if is_scanbot_or_mass_update else get_high_queue(product_id)
+        )
 
         if action == "deleted":
             logger.info("Product %s has been deleted", redis_update.code)

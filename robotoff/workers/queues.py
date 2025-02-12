@@ -56,7 +56,6 @@ def get_high_queue(product_id: Optional[ProductIdentifier] = None) -> Queue:
     return high_queues[queue_idx]
 
 
-
 def get_low_queue() -> Queue:
     """Return the low-priority queue."""
     return low_queue
