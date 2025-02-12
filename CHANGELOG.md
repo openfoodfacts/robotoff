@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.64.0](https://github.com/openfoodfacts/robotoff/compare/v1.63.2...v1.64.0) (2025-02-12)
+
+
+### Features
+
+* low queue for mass updates ([#1526](https://github.com/openfoodfacts/robotoff/issues/1526)) ([41fe437](https://github.com/openfoodfacts/robotoff/commit/41fe43739edc5eaa4a204a5d4a66aad4e6abda2f))
+* Update maintenance how to ([9249361](https://github.com/openfoodfacts/robotoff/commit/9249361be7306bc3f9275a6f4854a9d6c6f1bcb6))
+
 ## [1.63.2](https://github.com/openfoodfacts/robotoff/compare/v1.63.1...v1.63.2) (2024-12-27)
 
 
