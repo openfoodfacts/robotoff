@@ -37,5 +37,5 @@ msgstr "क्या यह छवि इस भाषा के लिए nutri
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "क्या उत्पाद में यह पैकेजिंग तत्व है?"
 
