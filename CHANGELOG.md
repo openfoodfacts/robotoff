@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.64.1](https://github.com/openfoodfacts/robotoff/compare/v1.64.0...v1.64.1) (2025-02-26)
+
+
+### Bug Fixes
+
+* larger timeout on logo search ([c456807](https://github.com/openfoodfacts/robotoff/commit/c456807446e542bf597ac56cf28fe2a03e44d2bf))
+
+
+### Technical
+
+* Revert larger timeout on logo search ([a51fc4b](https://github.com/openfoodfacts/robotoff/commit/a51fc4b791768ee3c8431b32c70c938a16b34e38))
+
 ## [1.64.0](https://github.com/openfoodfacts/robotoff/compare/v1.63.2...v1.64.0) (2025-02-12)
 
 
