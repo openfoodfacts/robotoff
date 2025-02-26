@@ -239,7 +239,12 @@ def knn_search(
         knn_body["filter"] = {"term": {"server_type": server_type.name}}
 
     results = client.search(
-        index=ElasticSearchIndex.logo, knn=knn_body, source=False, size=k + 1
+        index=ElasticSearchIndex.logo,
+        knn=knn_body,
+        source=False,
+        size=k + 1,
+        # this can be a long request
+        timeout=20,
     )
     if hits := results["hits"]["hits"]:
         return [(int(hit["_id"]), 1.0 - hit["_score"]) for hit in hits]
