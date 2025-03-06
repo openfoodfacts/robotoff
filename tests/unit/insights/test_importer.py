@@ -780,7 +780,7 @@ class TestLabelInsightImporter:
     def test_is_parent_label(self, label, to_check_labels, expected, mocker):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("label", offline=True),
+            return_value=get_taxonomy(TaxonomyType.label.name, offline=True),
         )
         assert LabelInsightImporter.is_parent_label(label, to_check_labels) is expected
 
@@ -875,7 +875,7 @@ class TestLabelInsightImporter:
     def test_generate_candidates(self, predictions, product, expected, mocker):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("label", offline=True),
+            return_value=get_taxonomy(TaxonomyType.label.name, offline=True),
         )
         candidates = list(
             LabelInsightImporter.generate_candidates(product, predictions, None)
@@ -909,7 +909,7 @@ class TestCategoryImporter:
     def test_is_parent_category(self, category, to_check_categories, expected, mocker):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
+            return_value=get_taxonomy(TaxonomyType.category.name, offline=True),
         )
         assert (
             CategoryImporter.is_parent_category(category, to_check_categories)
@@ -928,7 +928,7 @@ class TestCategoryImporter:
             ),
             (
                 [
-                    Prediction(PredictionType.category, value_tag="en:shelled-almonds"),
+                    Prediction(PredictionType.category, value_tag="en:almonds-shelled"),
                 ],
                 Product({"code": DEFAULT_BARCODE, "categories_tags": []}),
                 ["en:almonds-shelled"],
@@ -976,6 +976,10 @@ class TestCategoryImporter:
             "robotoff.insights.importer.get_taxonomy",
             return_value=category_taxonomy,
         )
+        mocker.patch(
+            "robotoff.taxonomy.get_taxonomy",
+            return_value=category_taxonomy,
+        )
         candidates = list(
             CategoryImporter.generate_candidates(product, predictions, None)
         )
@@ -1005,7 +1009,7 @@ class TestCategoryImporter:
     ):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
+            return_value=get_taxonomy(TaxonomyType.category.name, offline=True),
         )
         insight = ProductInsight(value_tag=value_tag)
         CategoryImporter.add_optional_fields(

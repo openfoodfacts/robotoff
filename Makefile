@@ -235,7 +235,7 @@ unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit ${args}
 
 integration-tests:
 	@echo "🥫 Running integration tests …"
