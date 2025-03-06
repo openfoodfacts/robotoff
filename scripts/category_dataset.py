@@ -23,7 +23,7 @@ from sklearn.model_selection import train_test_split
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
-from robotoff.taxonomy import get_taxonomy
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import JSONType
 from robotoff.utils import dump_jsonl, get_logger
 
@@ -120,11 +120,11 @@ def run(lang: Optional[str] = None):
 
     os.makedirs(WRITE_PATH, exist_ok=True)
 
-    category_taxonomy = get_taxonomy("category")
+    category_taxonomy = get_taxonomy(TaxonomyType.category.name)
     with open(WRITE_PATH / "categories.full.json", "w") as f:
         json.dump(category_taxonomy.to_dict(), f)
 
-    ingredient_taxonomy = get_taxonomy("ingredient")
+    ingredient_taxonomy = get_taxonomy(TaxonomyType.ingredient.name)
     with open(WRITE_PATH / "ingredients.full.json", "w") as f:
         json.dump(ingredient_taxonomy.to_dict(), f)
 
