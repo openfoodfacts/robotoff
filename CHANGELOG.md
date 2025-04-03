@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.64.2](https://github.com/openfoodfacts/robotoff/compare/v1.64.1...v1.64.2) (2025-04-03)
+
+
+### Bug Fixes
+
+* upgrade openfoodfacts sdk to fix bug with brands taxonomies ([#1536](https://github.com/openfoodfacts/robotoff/issues/1536)) ([8efa90a](https://github.com/openfoodfacts/robotoff/commit/8efa90a3bbf3e3e184916e83cc9684602aea687e))
+
 ## [1.64.1](https://github.com/openfoodfacts/robotoff/compare/v1.64.0...v1.64.1) (2025-03-06)
 
 
