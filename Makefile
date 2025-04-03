@@ -231,6 +231,10 @@ i18n-compile:
 # Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
 	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker_1 -c "cd i18n && . compile.sh"
 
+update_poetry_lock:
+	@echo "🥫  Updating poetry.lock"
+	${DOCKER_COMPOSE} run --rm --no-deps api poetry lock --no-update
+
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
