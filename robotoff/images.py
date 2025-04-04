@@ -203,6 +203,11 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
     :param image_ids: a list of image IDs to delete.
       Each image ID must be a digit.
     """
+
+    if not product_id.barcode:
+        logger.warning("Cannot delete images: empty barcode provided")
+        return
+
     server_type = product_id.server_type.name
     # Perform batching as we don't know the number of images to delete
     updated_models = []
