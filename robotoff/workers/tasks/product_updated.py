@@ -30,6 +30,11 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
     """
     logger.info("Running `update_insights` for %s", product_id)
 
+    # Add check for empty barcode
+    if not product_id.barcode:
+        logger.info("Empty barcode received, skipping product update")
+        return
+
     try:
         with Lock(
             name=f"robotoff:product_update_job:{product_id.server_type.name}:{product_id.barcode}",
