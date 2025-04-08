@@ -10,4 +10,9 @@ updates:
       prefix: "chore"
       include: "scope"
 
-    open-pull-requests-limit: 30
+    open-pull-requests-limit: 1
+
+    groups:
+      all-actions:
+        patterns:
+          - "*"
