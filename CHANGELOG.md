@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.64.3](https://github.com/openfoodfacts/robotoff/compare/v1.64.2...v1.64.3) (2025-04-08)
+
+
+### Technical
+
+* add dependabot configuration ([#1540](https://github.com/openfoodfacts/robotoff/issues/1540)) ([e7cde2b](https://github.com/openfoodfacts/robotoff/commit/e7cde2b4e0de762c9521ec5fa09d040011c573cc))
+
 ## [1.64.2](https://github.com/openfoodfacts/robotoff/compare/v1.64.1...v1.64.2) (2025-04-03)
 
 
