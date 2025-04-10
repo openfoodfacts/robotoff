@@ -14,8 +14,7 @@
   <img height="48" src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg">
 </picture>
 
-**Robotoff** is a service managing potential Open Food Facts updates (also known as _insights_) and predictions (which can then be combined to generate an insight).
-These insights include a growing set of facts, including:
+**Robotoff** is a service that generates predictions from product data such as images, text, and metadata. These predictions can individually or collectively be refined into actionable suggestions known as insights. Insights serve as potential updates to the Open Food Facts database, either automatically applied when highly confident or validated manually by human annotators. These insights cover a growing set of product facts, including:	
 
 - the product category, weight, brand, packager codes and expiration date
 - some of its labels
