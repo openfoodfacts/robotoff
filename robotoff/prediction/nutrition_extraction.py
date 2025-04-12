@@ -42,6 +42,7 @@ class NutrientPrediction:
     end: int
     char_start: int
     char_end: int
+    bounding_box_absolute: tuple[int, int, int, int] | None = None
 
 
 @dataclasses.dataclass
@@ -55,6 +56,7 @@ class NutritionEntities:
 class NutritionExtractionPrediction:
     nutrients: dict[str, NutrientPrediction]
     entities: NutritionEntities
+    bounding_box: tuple[int, int, int, int] | None = None
 
 
 def predict(
@@ -71,6 +73,7 @@ def predict(
     - `nutrients`: a dictionary mapping nutrient names to `NutrientPrediction` objects
     - `entities`: a `NutritionEntities` object containing the raw, aggregated and
         postprocessed entities
+    - `bounding_box`: the overall bounding box of the nutrition area
 
     If the OCR result does not contain any text annotation, the function returns
     `None`.
@@ -179,6 +182,24 @@ def preprocess(
     return words, char_offsets, bboxes, batch_encoding
 
 
+def compute_bounding_box(words_with_bbox):
+    """Compute the bounding box for a list of words with their bounding boxes.
+
+    :param words_with_bbox: List of dictionaries containing words with their bounding
+                          boxes (each having x, y, width, height)
+    :return: A dictionary with x_min, y_min, x_max, y_max coordinates
+    """
+    if not words_with_bbox:
+        return None
+
+    x_min = min(word["x"] for word in words_with_bbox)
+    y_min = min(word["y"] for word in words_with_bbox)
+    x_max = max(word["x"] + word["width"] for word in words_with_bbox)
+    y_max = max(word["y"] + word["height"] for word in words_with_bbox)
+
+    return {"x_min": x_min, "y_min": y_min, "x_max": x_max, "y_max": y_max}
+
+
 def postprocess(
     logits: np.ndarray,
     words: list[str],
@@ -194,6 +215,8 @@ def postprocess(
     - `nutrients`: a dictionary mapping nutrient names to `NutrientPrediction` objects
     - `entities`: a `NutritionEntities` object containing the raw, aggregated and
         postprocessed entities
+    - `bounding_box`: a tuple of 4 integers representing the bounding box of all
+        detected nutrients (y_min, x_min, y_max, x_max)
 
     :param logits: the predicted logits
     :param words: the words corresponding to the input
@@ -207,19 +230,52 @@ def postprocess(
     )
     aggregated_entities = aggregate_entities(pre_entities)
     postprocessed_entities = postprocess_aggregated_entities(aggregated_entities)
-    return NutritionExtractionPrediction(
-        nutrients={
-            entity["entity"]: NutrientPrediction(
-                **{k: v for k, v in entity.items() if k != "valid"}
+
+    # Extract valid nutrients with bounding box information
+    valid_nutrients = {
+        entity["entity"]: NutrientPrediction(
+            **{k: v for k, v in entity.items() if k != "valid"}
+        )
+        for entity in postprocessed_entities
+        if entity["valid"]
+    }
+
+    # Collect the words with their bounding boxes for all detected nutrients
+    words_with_bbox = []
+    for entity in postprocessed_entities:
+        if entity["valid"] and "bounding_box_absolute" in entity:
+            # Convert bounding_box_absolute (y_min, x_min, y_max, x_max) to
+            # the format needed by compute_bounding_box (x, y, width, height)
+            y_min, x_min, y_max, x_max = entity["bounding_box_absolute"]
+            words_with_bbox.append(
+                {
+                    "x": x_min,
+                    "y": y_min,
+                    "width": x_max - x_min,
+                    "height": y_max - y_min,
+                }
             )
-            for entity in postprocessed_entities
-            if entity["valid"]
-        },
+
+    # Calculate the overall bounding box using the expected format
+    bbox_dict = compute_bounding_box(words_with_bbox)
+    bounding_box = None
+    if bbox_dict:
+        # Convert back to the format used in the NutritionExtractionPrediction
+        bounding_box = (
+            bbox_dict["y_min"],  # y_min
+            bbox_dict["x_min"],  # x_min
+            bbox_dict["y_max"],  # y_max
+            bbox_dict["x_max"],  # x_max
+        )
+
+    return NutritionExtractionPrediction(
+        nutrients=valid_nutrients,
         entities=NutritionEntities(
             raw=pre_entities,
             aggregated=aggregated_entities,
             postprocessed=postprocessed_entities,
         ),
+        bounding_box=bounding_box,
     )
 
 

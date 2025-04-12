@@ -295,3 +295,20 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
         deleted_embeddings_total,
         deleted_logos_total,
     )
+
+
+def crop_nutrition_image(image_path: str, bounding_box: dict) -> Image.Image:
+    """Crop an image using the nutrition bounding box.
+
+    :param image_path: Path to the image file to crop
+    :param bounding_box: Dictionary with x_min, y_min, x_max, y_max coordinates
+    :return: Cropped image
+    """
+    img = Image.open(image_path)
+    crop_box = (
+        bounding_box["x_min"],
+        bounding_box["y_min"],
+        bounding_box["x_max"],
+        bounding_box["y_max"],
+    )
+    return img.crop(crop_box)

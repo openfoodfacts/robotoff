@@ -747,6 +747,11 @@ class NutrientExtractionAnnotator(InsightAnnotator):
                     description=str(e),
                 )
             validated_nutrients = cls.add_default_unit(validated_nutrients)
+
+            # Save custom bounding box if provided in the validation data
+            if "bounding_box" in data:
+                insight.bounding_box = data["bounding_box"]
+
             # We override the predicted nutrient values by the ones submitted by the
             # user
             insight.data["annotation"] = validated_nutrients.model_dump()
@@ -841,14 +846,22 @@ class NutrientExtractionAnnotator(InsightAnnotator):
 
         rotation = get_image_rotation(insight.source_image)
 
-        nutrition_table_detections = get_nutrition_table_prediction(
-            insight.source_image, threshold=0.5
-        )
+        # Use bounding box from insight if available
         bounding_box = None
-        # Only crop according to the model predicted bounding box if there is exactly
-        # one nutrition table detected
-        if nutrition_table_detections and len(nutrition_table_detections) == 1:
-            bounding_box = nutrition_table_detections[0]["bounding_box"]
+        if insight.bounding_box is not None:
+            # Convert from database format to the format expected by
+            # convert_crop_bounding_box
+            bb = insight.bounding_box
+            bounding_box = (bb["y_min"], bb["x_min"], bb["y_max"], bb["x_max"])
+        else:
+            # If no bounding box in insight, use nutrition table detector
+            nutrition_table_detections = get_nutrition_table_prediction(
+                insight.source_image, threshold=0.5
+            )
+            # Only crop according to the model predicted bounding box if there is
+            # exactly one nutrition table detected
+            if nutrition_table_detections and len(nutrition_table_detections) == 1:
+                bounding_box = nutrition_table_detections[0]["bounding_box"]
 
         crop_bounding_box: tuple[float, float, float, float] | None = None
         if bounding_box:

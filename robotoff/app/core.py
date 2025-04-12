@@ -370,6 +370,7 @@ def save_annotation(
     data: Optional[dict] = None,
     auth: Optional[OFFAuthentication] = None,
     trusted_annotator: bool = False,
+    bounding_box: Optional[dict] = None,
 ) -> AnnotationResult:
     """Saves annotation either by using a single response as ground truth or
     by using several responses.
@@ -394,8 +395,9 @@ def save_annotation(
     :param auth: User authentication data, it is expected to be None if
         `trusted_annotator=False` (=anonymous vote)
     :param trusted_annotator: Defines whether the given annotation comes from
-    an authoritative source (e.g. a trusted user), ot whether the annotation
-    should be subject to the voting system.
+      an authoritative source (e.g. a trusted user), ot whether the annotation
+      should be subject to the voting system.
+    :param bounding_box: Optional bounding box coordinates for nutrition insights
     """
     try:
         insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
@@ -407,6 +409,10 @@ def save_annotation(
 
     if insight.annotation is not None:
         return ALREADY_ANNOTATED_RESULT
+
+    # Update bounding box if provided
+    if bounding_box is not None and trusted_annotator:
+        insight.bounding_box = bounding_box
 
     # We use AnnotationVote mechanism to save annotation = -1 (ignore) for
     # authenticated users, so that it's not returned again to the user

@@ -372,8 +372,28 @@ class AnnotateInsightResource:
         )
 
         update = req.get_param_as_bool("update", default=True)
-        # This field is only needed for nutritional table structure insights.
+        # This field is only needed for nutritional table structure insights
+        # or nutrient extraction insights.
         data: JSONType | None = req.get_param_as_json("data")
+
+        # Check if user is providing a new bounding box
+        bounding_box = req.get_param_as_json("bounding_box")
+
+        # Validate bounding box format if provided
+        if bounding_box is not None:
+            required_keys = ["y_min", "x_min", "y_max", "x_max"]
+            if not all(key in bounding_box for key in required_keys):
+                raise falcon.HTTPBadRequest(
+                    description=f"bounding_box must contain all of: {', '.join(required_keys)}"
+                )
+            # Validate that coordinates make sense
+            if (
+                bounding_box["y_min"] >= bounding_box["y_max"]
+                or bounding_box["x_min"] >= bounding_box["x_max"]
+            ):
+                raise falcon.HTTPBadRequest(
+                    description="Invalid bounding box coordinates: min values must be less than max values"
+                )
 
         if annotation == 2:
             if data is None:
@@ -410,6 +430,7 @@ class AnnotateInsightResource:
             insight_id,
         )
 
+        # If bounding box is provided, we'll pass it separately
         annotation_result = save_annotation(
             insight_id,
             annotation,
@@ -418,6 +439,7 @@ class AnnotateInsightResource:
             auth=auth,
             device_id=device_id,
             trusted_annotator=trusted_annotator,
+            bounding_box=bounding_box,
         )
 
         resp.media = {
@@ -1851,6 +1873,80 @@ def custom_handle_uncaught_exception(
     raise falcon.HTTPInternalServerError(description=str(ex))
 
 
+class NutritionImageCropResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Return a cropped nutrition image using the bounding box information.
+
+        This endpoint can be used to get cropped nutrition images for visualization
+        during validation or for display purposes.
+        """
+        image_url = req.get_param("image_url", required=True)
+
+        # Get bounding box directly from parameters or from insight
+        bounding_box = req.get_param_as_json("bounding_box")
+        insight_id = req.get_param_as_uuid("insight_id")
+
+        if bounding_box is None and insight_id is None:
+            raise falcon.HTTPBadRequest(
+                description="Either bounding_box or insight_id must be provided"
+            )
+
+        if bounding_box is not None and insight_id is not None:
+            raise falcon.HTTPBadRequest(
+                description="Only one of bounding_box or insight_id should be provided"
+            )
+
+        # Get bounding box from insight if insight_id is provided
+        if insight_id is not None:
+            try:
+                insight = ProductInsight.get_by_id(insight_id)
+                if insight.bounding_box is None:
+                    raise falcon.HTTPBadRequest(
+                        description=f"No bounding box found for insight {insight_id}"
+                    )
+                bounding_box = insight.bounding_box
+            except ProductInsight.DoesNotExist:
+                raise falcon.HTTPNotFound(
+                    description=f"Insight with ID {insight_id} not found"
+                )
+
+        # Validate bounding box format
+        required_keys = ["x_min", "y_min", "x_max", "y_max"]
+        if not all(key in bounding_box for key in required_keys):
+            raise falcon.HTTPBadRequest(
+                description=f"bounding_box must contain all of: {', '.join(required_keys)}"
+            )
+
+        try:
+            # Download the image
+            response = requests.get(image_url, stream=True)
+            response.raise_for_status()
+
+            # Create a temporary file for the image
+            with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
+                # Save the image to the temporary file
+                for chunk in response.iter_content(chunk_size=8192):
+                    tmp_file.write(chunk)
+                tmp_file.flush()
+
+                # Crop the image using the bounding box
+                from robotoff.images import crop_nutrition_image
+
+                cropped_image = crop_nutrition_image(tmp_file.name, bounding_box)
+
+                # Serve the cropped image
+                image_response(cropped_image, resp)
+
+        except requests.exceptions.RequestException as e:
+            raise falcon.HTTPBadRequest(
+                description=f"Error downloading image: {str(e)}"
+            )
+        except Exception as e:
+            raise falcon.HTTPInternalServerError(
+                description=f"Error cropping image: {str(e)}"
+            )
+
+
 api = falcon.App(
     middleware=[
         falcon.CORSMiddleware(allow_origins="*", allow_credentials="*"),
@@ -1888,6 +1984,7 @@ api.add_route("/api/v1/predict/lang/product", ProductLanguagePredictorResource()
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
 api.add_route("/api/v1/images", ImageCollection())
 api.add_route("/api/v1/images/crop", ImageCropResource())
+api.add_route("/api/v1/images/nutrition/crop", NutritionImageCropResource())
 api.add_route("/api/v1/image_predictions", ImagePredictionResource())
 api.add_route("/api/v1/image_predictions/import", ImagePredictionImporterResource())
 api.add_route("/api/v1/images/predict", ImagePredictorResource())
