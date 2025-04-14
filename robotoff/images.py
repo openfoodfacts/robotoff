@@ -204,8 +204,8 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
       Each image ID must be a digit.
     """
 
-    if not product_id.barcode:
-        logger.warning("Cannot delete images: empty barcode provided")
+    if not product_id.is_valid():
+        logger.warning("Could not delete images, invalid product identifier")
         return
 
     server_type = product_id.server_type.name

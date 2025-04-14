@@ -283,6 +283,9 @@ class ProductIdentifier:
     def __hash__(self) -> int:
         return hash((self.barcode, self.server_type))
 
+    def is_valid(self) -> bool:
+        return bool(self.barcode and self.server_type)
+
 
 @enum.unique
 class ElasticSearchIndex(str, enum.Enum):

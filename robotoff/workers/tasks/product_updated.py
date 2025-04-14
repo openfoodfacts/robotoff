@@ -30,9 +30,9 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
     """
     logger.info("Running `update_insights` for %s", product_id)
 
-    # Add check for empty barcode
-    if not product_id.barcode:
-        logger.info("Empty barcode received, skipping product update")
+    # Check for valid product identifier
+    if not product_id.is_valid():
+        logger.info("Invalid product identifier received, skipping product update")
         return
 
     try:
