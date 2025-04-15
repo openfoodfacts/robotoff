@@ -215,6 +215,9 @@ class InsightCollection:
         countries: list[Country] | None = get_countries_from_req(req)
         order_by: str | None = req.get_param("order_by")
         campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
+        language_codes: list[str] | None = (
+            req.get_param_as_list("language_codes") or None
+        )
 
         if order_by not in ("random", "popularity", None):
             raise falcon.HTTPBadRequest(
@@ -250,6 +253,7 @@ class InsightCollection:
             campaigns=campaigns,
             avoid_voted_on=avoid_voted_on,
             max_count=max_count,
+            language_codes=language_codes,
         )
 
         offset: int = (page - 1) * count
