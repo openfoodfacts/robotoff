@@ -1564,7 +1564,25 @@ class NutrientExtractionImporter(InsightImporter):
 
         for prediction in predictions:
             if cls.keep_prediction(product, list(prediction.data["nutrients"].keys())):
-                yield ProductInsight(**prediction.to_dict())
+                # Create dictionary from prediction
+                prediction_data = prediction.to_dict()
+
+                # Store bounding box directly in the insight model field
+                bounding_box = None
+                if "bounding_box" in prediction.data:
+                    # Convert tuple to dictionary format expected by the database
+                    y_min, x_min, y_max, x_max = prediction.data["bounding_box"]
+                    bounding_box = {
+                        "y_min": y_min,
+                        "x_min": x_min,
+                        "y_max": y_max,
+                        "x_max": x_max,
+                    }
+
+                # Create the insight with the bounding box field
+                insight = ProductInsight(**prediction_data)
+                insight.bounding_box = bounding_box
+                yield insight
 
     @staticmethod
     def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:
