@@ -136,6 +136,7 @@ def get_insights(
         to None
     :param language_codes: only keep insights that have `data.lang` in this
         list of language codes, defaults to None
+        It is used to filter lang of ingredient_spellcheck
     :return: the return value is either:
         - an iterable of ProductInsight objects or dict (if `as_dict=True`)
         - the number of products (if `count=True`)
