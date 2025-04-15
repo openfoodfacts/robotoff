@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.65.0](https://github.com/openfoodfacts/robotoff/compare/v1.64.2...v1.65.0) (2025-04-15)
+
+
+### Features
+
+* add `language_codes` filter in insights ([#1547](https://github.com/openfoodfacts/robotoff/issues/1547)) ([9f4507d](https://github.com/openfoodfacts/robotoff/commit/9f4507dce9c496d2502089f8d467dba3620f0bab))
+
+
+### Bug Fixes
+
+* add barcode validation to image deletion and product update processes ([#1541](https://github.com/openfoodfacts/robotoff/issues/1541)) ([bd8c081](https://github.com/openfoodfacts/robotoff/commit/bd8c0819ecef99fe66b8c6ddd5edcc6171d9c8e1)), closes [#1445](https://github.com/openfoodfacts/robotoff/issues/1445)
+
+
+### Technical
+
+* add dependabot configuration ([#1540](https://github.com/openfoodfacts/robotoff/issues/1540)) ([e7cde2b](https://github.com/openfoodfacts/robotoff/commit/e7cde2b4e0de762c9521ec5fa09d040011c573cc))
+
 ## [1.64.2](https://github.com/openfoodfacts/robotoff/compare/v1.64.1...v1.64.2) (2025-04-03)
 
 
