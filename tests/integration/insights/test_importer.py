@@ -1,11 +1,22 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from robotoff.insights.importer import (
+    ImageOrientationImporter,
     NutritionImageImporter,
+    import_insights_for_products,
     import_product_predictions,
 )
 from robotoff.models import Prediction as PredictionModel
-from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
+from robotoff.models import ProductInsight
+from robotoff.types import (
+    InsightType,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+    ServerType,
+)
 
 from ..models_utils import (
     ImageModelFactory,
@@ -103,6 +114,74 @@ class TestNutritionImageImporter:
                 },
             ]
         }
+
+
+class TestImageOrientationImporter:
+    def test_generate_candidates_right_orientation(self, mocker):
+        prediction = MagicMock()
+        prediction.type = PredictionType.image_orientation
+        prediction.barcode = "3017620425035"
+        prediction.server_type = ServerType.off
+        prediction.source_image = "/366/180/90/1.jpg"
+        prediction.data = {
+            "orientation": "right",
+            "rotation": 90,
+            "count": {"up": 5, "right": 95, "left": 0, "down": 0},
+        }
+
+        product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(None, [prediction], product_id)
+        )
+
+        assert len(candidates) == 1
+        insight = candidates[0]
+        assert insight.type == InsightType.image_orientation
+        assert insight.value == "90"
+        assert insight.data["orientation"] == "right"
+        assert insight.data["rotation"] == 90
+        assert insight.data["orientation_fraction"] == 95 / 100
+
+    def test_no_candidates_for_upright_image(self, mocker):
+        prediction = MagicMock()
+        prediction.type = PredictionType.image_orientation
+        prediction.barcode = "3017620425035"
+        prediction.server_type = ServerType.off
+        prediction.source_image = "/366/180/90/2.jpg"
+        prediction.data = {
+            "orientation": "up",
+            "rotation": 0,
+            "count": {"up": 100, "right": 0, "left": 0, "down": 0},
+        }
+
+        product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(None, [prediction], product_id)
+        )
+
+        assert len(candidates) == 0
+
+    def test_no_candidates_for_low_confidence(self, mocker):
+        prediction = MagicMock()
+        prediction.type = PredictionType.image_orientation
+        prediction.barcode = "3017620425035"
+        prediction.server_type = ServerType.off
+        prediction.source_image = "/366/180/90/3.jpg"
+        prediction.data = {
+            "orientation": "right",
+            "rotation": 90,
+            "count": {"up": 40, "right": 60, "left": 0, "down": 0},
+        }
+
+        product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(None, [prediction], product_id)
+        )
+
+        assert len(candidates) == 0
 
 
 def test_import_product_predictions():

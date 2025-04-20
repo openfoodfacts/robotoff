@@ -1,4 +1,5 @@
 from unittest.mock import Mock
+from uuid import uuid4
 
 import pytest
 from openfoodfacts.types import JSONType
@@ -8,11 +9,19 @@ from robotoff.insights.annotate import (
     UPDATED_ANNOTATION_RESULT,
     AnnotationResult,
     CategoryAnnotator,
+    ImageOrientationAnnotator,
     IngredientSpellcheckAnnotator,
     NutrientExtractionAnnotator,
 )
 from robotoff.models import ProductInsight
-from robotoff.types import ObjectDetectionModel, PredictionType
+from robotoff.off import OFFAuthentication
+from robotoff.types import (
+    InsightType,
+    ObjectDetectionModel,
+    PredictionType,
+    ProductIdentifier,
+    ServerType,
+)
 
 from ..models_utils import (
     ImageModelFactory,
@@ -109,6 +118,69 @@ class TestCategoryAnnotator:
             status="error_invalid_data",
             description="`data` is invalid, expected a single `value_tag` string field with the category tag",
         )
+
+
+class TestImageOrientationAnnotation:
+    def test_rotate_image(self, peewee_db, mocker):
+        mock_select_rotate_image = mocker.patch(
+            "robotoff.insights.annotate.select_rotate_image"
+        )
+
+        insight = ProductInsight.create(
+            id=str(uuid4()),
+            type=InsightType.image_orientation.name,
+            barcode="3017620425035",
+            source_image="/366/180/90/2.jpg",
+            data={"rotation": 90, "orientation": "right", "orientation_fraction": 0.95},
+            value="90",
+            server_type=ServerType.off.name,
+            n_votes=0,
+            countries=[],
+            brands=[],
+            process_after=None,
+            timestamp=None,
+            unique_scans_n=0,
+        )
+
+        auth = OFFAuthentication("test_user", "test_password")
+        result = ImageOrientationAnnotator.process_annotation(
+            insight=insight, auth=auth
+        )
+
+        assert result.status == "updated"
+
+        mock_select_rotate_image.assert_called_once_with(
+            product_id=ProductIdentifier("3017620425035", ServerType.off),
+            image_id="2",
+            image_key="2",
+            rotate=90,
+            crop_bounding_box=None,
+            auth=auth,
+            is_vote=False,
+            insight_id=insight.id,
+        )
+
+    def test_error_invalid_image(self, peewee_db, mocker):
+        insight = ProductInsight.create(
+            id=str(uuid4()),
+            type=InsightType.image_orientation.name,
+            barcode="3017620425035",
+            source_image="/366/180/90/2.jpg",
+            data={"rotation": 90, "orientation": "right", "orientation_fraction": 0.95},
+            value="90",
+            server_type=ServerType.off.name,
+            n_votes=0,
+            countries=[],
+            brands=[],
+            process_after=None,
+            timestamp=None,
+            unique_scans_n=0,
+        )
+
+        result = ImageOrientationAnnotator.process_annotation(insight)
+
+        assert result.status == "error_invalid_image"
+        assert result.description == "the image is invalid"
 
 
 class TestIngredientSpellcheckAnnotator:

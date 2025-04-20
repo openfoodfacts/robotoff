@@ -221,6 +221,66 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         return False
 
 
+class ImageOrientationAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        """Process annotation by rotating the image.
+
+        Args:
+            insight: The insight to process
+            data: Additional data for the annotation
+            auth: Authentication information
+            is_vote: Whether this is a vote
+
+        Returns:
+            AnnotationResult indicating success or failure
+        """
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["code", "images"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        image_id = get_image_id(insight.source_image or "")
+        images = product.get("images", {})
+        image_meta: Optional[JSONType] = images.get(image_id)
+
+        if not image_id or not image_meta:
+            return AnnotationResult(
+                status_code=AnnotationStatus.error_invalid_image.value,
+                status=AnnotationStatus.error_invalid_image.name,
+                description="the image is invalid",
+            )
+
+        rotation = insight.data.get("rotation")
+        if rotation is None:
+            return AnnotationResult(
+                status_code=AnnotationStatus.error_invalid_data.value,
+                status=AnnotationStatus.error_invalid_data.name,
+                description="rotation angle is missing in insight data",
+            )
+
+        # Apply rotation to the image
+        select_rotate_image(
+            product_id=product_id,
+            image_id=image_id,
+            image_key=image_id,
+            rotate=rotation,
+            crop_bounding_box=None,
+            auth=auth,
+            is_vote=is_vote,
+            insight_id=insight.id,
+        )
+
+        return UPDATED_ANNOTATION_RESULT
+
+
 class PackagerCodeAnnotator(InsightAnnotator):
     @classmethod
     def process_annotation(
@@ -888,6 +948,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     InsightType.nutrient_extraction: NutrientExtractionAnnotator,
+    InsightType.image_orientation.name: ImageOrientationAnnotator,
 }
 
 

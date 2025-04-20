@@ -8,6 +8,7 @@ from robotoff.insights.importer import (
     BrandInsightImporter,
     CategoryImporter,
     ExpirationDateImporter,
+    ImageOrientationImporter,
     InsightImporter,
     LabelInsightImporter,
     NutrientExtractionImporter,
@@ -683,6 +684,95 @@ class TestInsightImporter:
         assert len(import_result.insight_deleted_ids) == 1
         batch_insert_mock.assert_called_once()
         product_insight_delete_mock.assert_called_once()
+
+
+class TestImageOrientationImporter:
+    def test_get_type(self):
+        assert ImageOrientationImporter.get_type() == InsightType.image_orientation
+
+    def test_get_required_prediction_types(self):
+        assert ImageOrientationImporter.get_required_prediction_types() == {
+            PredictionType.image_orientation
+        }
+
+    def test_is_conflicting_insight(self):
+        assert ImageOrientationImporter.is_conflicting_insight(
+            ProductInsight(source_image="source1"),
+            ProductInsight(source_image="source1"),
+        )
+        assert not ImageOrientationImporter.is_conflicting_insight(
+            ProductInsight(source_image="source1"),
+            ProductInsight(source_image="source2"),
+        )
+
+    def test_generate_candidates(self):
+        right_oriented_prediction = Prediction(
+            type=PredictionType.image_orientation,
+            data={
+                "count": {"up": 2, "right": 38, "left": 0, "down": 0},
+                "rotation": 270,
+                "orientation": "right",
+            },
+            barcode=DEFAULT_BARCODE,
+            server_type=DEFAULT_SERVER_TYPE,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                None, [right_oriented_prediction], DEFAULT_PRODUCT_ID
+            )
+        )
+
+        assert len(candidates) == 1
+        insight = candidates[0]
+        assert insight.type == InsightType.image_orientation
+        assert insight.value == "270"
+        assert insight.source_image == DEFAULT_SOURCE_IMAGE
+        assert insight.data["rotation"] == 270
+        assert insight.data["orientation"] == "right"
+        assert insight.data["orientation_fraction"] == 38 / 40
+        assert insight.automatic_processing is True
+
+        up_oriented_prediction = Prediction(
+            type=PredictionType.image_orientation,
+            data={
+                "count": {"up": 40, "right": 0, "left": 0, "down": 0},
+                "rotation": 0,
+                "orientation": "up",
+            },
+            barcode=DEFAULT_BARCODE,
+            server_type=DEFAULT_SERVER_TYPE,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                None, [up_oriented_prediction], DEFAULT_PRODUCT_ID
+            )
+        )
+
+        assert len(candidates) == 0
+
+        low_confidence_prediction = Prediction(
+            type=PredictionType.image_orientation,
+            data={
+                "count": {"up": 10, "right": 10, "left": 0, "down": 0},
+                "rotation": 270,
+                "orientation": "right",
+            },
+            barcode=DEFAULT_BARCODE,
+            server_type=DEFAULT_SERVER_TYPE,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                None, [low_confidence_prediction], DEFAULT_PRODUCT_ID
+            )
+        )
+
+        assert len(candidates) == 0
 
 
 class TestPackagerCodeInsightImporter:
@@ -1998,16 +2088,16 @@ class TestImportInsightsForProducts:
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
-            return_value=ProductInsightImportResult(
-                [], [], [], DEFAULT_PRODUCT_ID, InsightType.image_orientation
-            ),
+            side_effect=ValueError("unexpected prediction type: 'image_orientation'"),
         )
+
         product_store = FakeProductStore()
         import_results = import_insights_for_products(
-            {DEFAULT_BARCODE: {PredictionType.image_orientation}},
+            {DEFAULT_BARCODE: {PredictionType.category}},
             product_store=product_store,
             server_type=DEFAULT_SERVER_TYPE,
         )
+
         assert len(import_results) == 0
-        assert not get_product_predictions_mock.called
-        assert not import_insights_mock.called
+        get_product_predictions_mock.assert_called_once()
+        import_insights_mock.assert_not_called()
