@@ -130,7 +130,6 @@ class TestImageOrientationImporter:
         }
 
         product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
-
         candidates = list(
             ImageOrientationImporter.generate_candidates(None, [prediction], product_id)
         )
@@ -156,7 +155,6 @@ class TestImageOrientationImporter:
         }
 
         product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
-
         candidates = list(
             ImageOrientationImporter.generate_candidates(None, [prediction], product_id)
         )
@@ -176,7 +174,6 @@ class TestImageOrientationImporter:
         }
 
         product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
-
         candidates = list(
             ImageOrientationImporter.generate_candidates(None, [prediction], product_id)
         )

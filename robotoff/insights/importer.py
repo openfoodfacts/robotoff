@@ -2142,7 +2142,6 @@ def import_insights_for_products(
 
         # Create ProductIdentifier with server_type
         product_id = ProductIdentifier(barcode, current_server_type)
-
         for insight_type in InsightType:
             importers = []
             for importer_cls in IMPORTERS:
@@ -2151,12 +2150,6 @@ def import_insights_for_products(
 
             if not importers:
                 continue
-
-            if len(importers) > 1:
-                logger.warning(
-                    "Ignoring multiple importers for insight type '%s'",
-                    insight_type.name,
-                )
 
             importer = importers[0]
             required_prediction_types = importer.get_required_prediction_types()
