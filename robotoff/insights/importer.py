@@ -2115,7 +2115,6 @@ def import_insights_for_products(
     :param server_type: optional server_type for predictions
     :return: a list of ProductInsightImportResult
     """
-    # Use server_type with get_product_store
     current_server_type = server_type or ServerType.off
     if product_store is None:
         product_store = get_product_store(current_server_type)
@@ -2145,7 +2144,6 @@ def import_insights_for_products(
         product_id = ProductIdentifier(barcode, current_server_type)
 
         for insight_type in InsightType:
-            # Find importers for each InsightType
             importers = []
             for importer_cls in IMPORTERS:
                 if importer_cls.get_type() == insight_type:
@@ -2163,16 +2161,13 @@ def import_insights_for_products(
             importer = importers[0]
             required_prediction_types = importer.get_required_prediction_types()
 
-            # Check if the required prediction types are a subset of the requested ones
             if not required_prediction_types.issubset(requested_prediction_types):
                 continue
 
-            # Filter predictions to only include those with matching types
             filtered_predictions = []
             for prediction_dict in predictions:
                 prediction_type = PredictionType(prediction_dict["type"])
                 if prediction_type in required_prediction_types:
-                    # Create a Prediction object
                     prediction = Prediction(
                         type=prediction_type,
                         barcode=prediction_dict["barcode"],
@@ -2191,7 +2186,6 @@ def import_insights_for_products(
                     )
                     filtered_predictions.append(prediction)
 
-            # Skip if no matching predictions found
             if not filtered_predictions:
                 continue
 
