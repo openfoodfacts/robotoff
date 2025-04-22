@@ -2106,7 +2106,7 @@ def import_insights_for_products(
     product_store: Optional[DBProductStore] = None,
     server_type: Optional[ServerType] = None,
 ) -> list[ProductInsightImportResult]:
-    """Import Insights from Predictions for the specified product barcodes.
+    """Import insights from Predictions for the specified product barcodes.
 
     :param prediction_types_by_barcode: dict where each key is a product barcode
         associated with a list of PredictionType
@@ -2127,23 +2127,13 @@ def import_insights_for_products(
             continue
 
         # Get predictions from the database
-        predictions_list = []
-        if server_type is not None:
-            predictions_list = list(
-                get_product_predictions(
-                    [barcode],
-                    server_type=server_type,
-                    prediction_types=[pt.name for pt in requested_prediction_types],
-                )
+        predictions_list = list(
+            get_product_predictions(
+                [barcode],
+                server_type=current_server_type,
+                prediction_types=[pt.name for pt in requested_prediction_types],
             )
-        else:
-            predictions_list = list(
-                get_product_predictions(
-                    [barcode],
-                    server_type=current_server_type,
-                    prediction_types=[pt.name for pt in requested_prediction_types],
-                )
-            )
+        )
 
         if not predictions_list:
             continue
