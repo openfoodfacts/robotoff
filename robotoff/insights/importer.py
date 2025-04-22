@@ -2126,22 +2126,31 @@ def import_insights_for_products(
         if not barcode or not isinstance(barcode, str):
             continue
 
+        # Get predictions from the database
+        predictions_list = []
         if server_type is not None:
-            predictions = get_product_predictions(
-                barcode,
-                prediction_types=requested_prediction_types,
-                server_type=server_type,
+            predictions_list = list(
+                get_product_predictions(
+                    [barcode],
+                    server_type=server_type,
+                    prediction_types=[pt.name for pt in requested_prediction_types],
+                )
             )
         else:
-            predictions = get_product_predictions(
-                barcode, prediction_types=requested_prediction_types
+            predictions_list = list(
+                get_product_predictions(
+                    [barcode],
+                    server_type=current_server_type,
+                    prediction_types=[pt.name for pt in requested_prediction_types],
+                )
             )
 
-        if not predictions:
+        if not predictions_list:
             continue
 
         # Create ProductIdentifier with server_type
         product_id = ProductIdentifier(barcode, current_server_type)
+
         for insight_type in InsightType:
             importers = []
             for importer_cls in IMPORTERS:
@@ -2158,26 +2167,33 @@ def import_insights_for_products(
                 continue
 
             filtered_predictions = []
-            for prediction_dict in predictions:
-                prediction_type = PredictionType(prediction_dict["type"])
-                if prediction_type in required_prediction_types:
-                    prediction = Prediction(
-                        type=prediction_type,
-                        barcode=prediction_dict["barcode"],
-                        data=prediction_dict.get("data", {}),
-                        value=prediction_dict.get("value"),
-                        value_tag=prediction_dict.get("value_tag"),
-                        automatic_processing=prediction_dict.get(
-                            "automatic_processing"
-                        ),
-                        predictor=prediction_dict.get("predictor"),
-                        predictor_version=prediction_dict.get("predictor_version"),
-                        source_image=prediction_dict.get("source_image"),
-                        server_type=current_server_type,
-                        timestamp=prediction_dict.get("timestamp"),
-                        confidence=prediction_dict.get("confidence"),
+            for prediction_dict in predictions_list:
+                try:
+                    prediction_type = PredictionType(prediction_dict["type"])
+                    if prediction_type in required_prediction_types:
+                        prediction = Prediction(
+                            id=prediction_dict.get("id"),
+                            type=prediction_type,
+                            barcode=prediction_dict["barcode"],
+                            data=prediction_dict.get("data", {}),
+                            value=prediction_dict.get("value"),
+                            value_tag=prediction_dict.get("value_tag"),
+                            automatic_processing=prediction_dict.get(
+                                "automatic_processing"
+                            ),
+                            predictor=prediction_dict.get("predictor"),
+                            predictor_version=prediction_dict.get("predictor_version"),
+                            source_image=prediction_dict.get("source_image"),
+                            server_type=current_server_type,
+                            timestamp=prediction_dict.get("timestamp"),
+                            confidence=prediction_dict.get("confidence"),
+                        )
+                        filtered_predictions.append(prediction)
+                except (ValueError, KeyError) as e:
+                    logger.warning(
+                        f"Error processing prediction for barcode {barcode}: {e}"
                     )
-                    filtered_predictions.append(prediction)
+                    continue
 
             if not filtered_predictions:
                 continue
