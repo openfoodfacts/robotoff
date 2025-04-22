@@ -5,11 +5,9 @@ import pytest
 from robotoff.insights.importer import (
     ImageOrientationImporter,
     NutritionImageImporter,
-    import_insights_for_products,
     import_product_predictions,
 )
 from robotoff.models import Prediction as PredictionModel
-from robotoff.models import ProductInsight
 from robotoff.types import (
     InsightType,
     Prediction,

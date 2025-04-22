@@ -14,7 +14,6 @@ from robotoff.insights.annotate import (
     NutrientExtractionAnnotator,
 )
 from robotoff.models import ProductInsight
-from robotoff.off import OFFAuthentication
 from robotoff.types import (
     InsightType,
     ObjectDetectionModel,
@@ -142,10 +141,7 @@ class TestImageOrientationAnnotation:
             unique_scans_n=0,
         )
 
-        auth = OFFAuthentication("test_user", "test_password")
-        result = ImageOrientationAnnotator.process_annotation(
-            insight=insight, auth=auth
-        )
+        result = ImageOrientationAnnotator.process_annotation(insight=insight)
 
         assert result.status == "updated"
 
@@ -155,7 +151,6 @@ class TestImageOrientationAnnotation:
             image_key="2",
             rotate=90,
             crop_bounding_box=None,
-            auth=auth,
             is_vote=False,
             insight_id=insight.id,
         )
