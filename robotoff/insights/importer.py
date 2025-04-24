@@ -2106,7 +2106,7 @@ def import_insights_for_products(
     product_store: Optional[DBProductStore] = None,
     server_type: Optional[ServerType] = None,
 ) -> list[ProductInsightImportResult]:
-    """Import insights from Predictions for the specified product barcodes.
+    """Re-compute insights for products with new predictions.
 
     :param prediction_types_by_barcode: dict where each key is a product barcode
         associated with a list of PredictionType
