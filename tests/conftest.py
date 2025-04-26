@@ -1,5 +1,4 @@
-"""Database tests tools
-"""
+"""Database tests tools"""
 
 import pytest
 

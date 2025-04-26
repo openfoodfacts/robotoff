@@ -15,7 +15,7 @@ from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
 high_queues = [
-    Queue(f"robotoff-high-{i+1}", connection=redis_conn)
+    Queue(f"robotoff-high-{i + 1}", connection=redis_conn)
     for i in range(settings.NUM_RQ_WORKERS)
 ]
 low_queue = Queue("robotoff-low", connection=redis_conn)
