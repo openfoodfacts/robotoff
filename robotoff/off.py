@@ -68,6 +68,45 @@ class OFFAuthentication:
         return None
 
 
+def upload_image(
+    product_id: ProductIdentifier,
+    image_path: str,
+    auth: Optional[OFFAuthentication] = None,
+) -> Optional[str]:
+    if auth is None:
+        logger.warning("Cannot upload image without authentication")
+        return None
+
+    url = "https://world.openfoodfacts.org/cgi/product_image_upload.pl"
+
+    with open(image_path, "rb") as img_file:
+        files = {
+            "imgupload_front": (Path(image_path).name, img_file, "image/jpeg"),
+        }
+        data = {
+            "code": product_id.barcode,
+            "imagefield": "front",
+        }
+
+        if auth.username and auth.password:
+            data["user_id"] = auth.username
+            data["password"] = auth.password
+
+        response = requests.post(url, files=files, data=data)
+        response.raise_for_status()
+
+        # Parse response to extract image ID
+        # Response format varies, but we can look for image ID patterns
+        match = re.search(r"image/([0-9]+)", response.text)
+        if match:
+            return match.group(1)
+
+        logger.error(
+            f"Couldn't extract image ID from response: {response.text[:200]}..."
+        )
+        return None
+
+
 def get_source_from_url(url: str) -> str:
     """Get the `source_image` field from an image or OCR URL.
 

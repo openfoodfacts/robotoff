@@ -24,7 +24,6 @@ from robotoff.products import (
     get_product_store,
     is_valid_image,
 )
-from robotoff.redis import Lock, LockedResourceException
 from robotoff.taxonomy import (
     Taxonomy,
     TaxonomyType,
@@ -723,9 +722,9 @@ class ImageOrientationImporter(InsightImporter):
     ) -> Iterator[ProductInsight]:
         """Generate insights for image orientation predictions.
 
-        Only generate insights when:
-        1. Orientation is not "up" (image is not correctly oriented)
-        2. The fraction of words with predicted orientation is >= MIN_ORIENTATION_FRACTION
+        Only if:
+        1. Orientation is not "up" (image misoriented)
+        2. Fraction of words with predicted orientation >= MIN_ORIENTATION_FRACTION
         """
         for prediction in predictions:
             if not prediction.data:
@@ -2103,17 +2102,17 @@ def import_insights(
 
 def import_insights_for_products(
     prediction_types_by_barcode: dict[str, set[PredictionType]],
-    product_store: Optional[DBProductStore] = None,
-    server_type: Optional[ServerType] = None,
+    product_store: DBProductStore,
+    server_type: ServerType,
 ) -> list[ProductInsightImportResult]:
     """Re-compute insights for products with new predictions.
 
-    :param prediction_types_by_barcode: dict where each key is a product barcode
-        associated with a list of PredictionType
-    :param product_store: product store to use, if not provided the default
-        global store is used
-    :param server_type: optional server_type for predictions
-    :return: a list of ProductInsightImportResult
+    :param prediction_types_by_barcode: a dict that associates each barcode
+        with a set of prediction type that were updated
+    :param product_store: The product store to use
+    :param server_type: the server type (project) of the product
+
+    :return: Number of imported insights
     """
     current_server_type = server_type or ServerType.off
     if product_store is None:
