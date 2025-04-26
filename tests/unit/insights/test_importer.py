@@ -2093,13 +2093,12 @@ class TestImportInsightsForProducts:
             side_effect=ValueError("unexpected prediction type: 'image_orientation'"),
         )
 
-        product_store = FakeProductStore()
         import_results = import_insights_for_products(
             {DEFAULT_BARCODE: {PredictionType.category}},
-            product_store=product_store,
+            product_store=FakeProductStore(),
             server_type=DEFAULT_SERVER_TYPE,
         )
 
-        assert len(import_results) == 0
+        import_insights_mock.assert_called_once()
         get_product_predictions_mock.assert_called_once()
-        import_insights_mock.assert_not_called()
+        assert import_results == []
