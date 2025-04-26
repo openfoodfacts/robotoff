@@ -2106,7 +2106,16 @@ def import_insights_for_products(
     product_store: DBProductStore,
     server_type: ServerType,
 ) -> list[ProductInsightImportResult]:
-    import_results = []  # Initialize an empty list to collect results
+    """Re-compute insights for products with new predictions.
+
+    :param prediction_types_by_barcode: a dict that associates each barcode
+        with a set of prediction type that were updated
+    :param product_store: The product store to use
+    :param server_type: the server type (project) of the product
+
+    :return: Number of imported insights
+    """
+    import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
         input_prediction_types = importer.get_input_prediction_types()
