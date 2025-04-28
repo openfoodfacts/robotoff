@@ -82,7 +82,7 @@ def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[Optional[str],
 
 
 def ocr_iter(
-    source: Union[str, TextIO, pathlib.Path]
+    source: Union[str, TextIO, pathlib.Path],
 ) -> Iterable[tuple[Optional[str], dict]]:
     if isinstance(source, pathlib.Path):
         items = jsonl_iter(source)

@@ -1,5 +1,4 @@
-"""Peewee migrations -- 004_drop_logo_annotation_nearest_neighbors_index.py.
-"""
+"""Peewee migrations -- 004_drop_logo_annotation_nearest_neighbors_index.py."""
 
 import peewee as pw
 from peewee_migrate import Migrator
