@@ -21,7 +21,7 @@ The current model (v1) shows the best performances over the closed-source LLMs o
 | Claude3-Sonnet-3.5 | 0.178 | **0.810** | 0.292 |
 | **Our model** | **0.664** | 0.630 | **0.647** |
 
-The model is integrated into Robotoff in [Batch Inference](batch-job) using Google Batch Job.
+The model is integrated into Robotoff in [Batch Inference](batch-job.md) using Google Batch Job.
 
 ## Evaluation algorithm
 
