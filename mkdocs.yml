@@ -10,7 +10,10 @@ site_dir: gh_pages
 
 theme:
   name: material
-
+  features:
+    - content.action.edit
+  logo: https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg
+  favicon: https://static.openfoodfacts.org/images/logos/off-logo-favicon-light.png
 markdown_extensions:
   - footnotes
   - mdx_truly_sane_lists
