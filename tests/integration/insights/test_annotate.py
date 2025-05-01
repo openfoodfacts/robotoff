@@ -7,12 +7,14 @@ from robotoff.insights.annotate import (
     INVALID_DATA,
     UPDATED_ANNOTATION_RESULT,
     AnnotationResult,
+    AnnotationStatus,
     CategoryAnnotator,
+    ImageOrientationAnnotator,
     IngredientSpellcheckAnnotator,
     NutrientExtractionAnnotator,
 )
 from robotoff.models import ProductInsight
-from robotoff.types import ObjectDetectionModel, PredictionType
+from robotoff.types import InsightType, ObjectDetectionModel, PredictionType
 
 from ..models_utils import (
     ImageModelFactory,
@@ -109,6 +111,108 @@ class TestCategoryAnnotator:
             status="error_invalid_data",
             description="`data` is invalid, expected a single `value_tag` string field with the category tag",
         )
+
+
+class TestImageOrientationAnnotation:
+    def test_rotate_image(self, peewee_db, mocker):
+        mock_product = {
+            "code": "1234567890123",
+            "images": {"1": {"uploaded_t": "1234567890"}, "front_fr": {"imgid": "1"}},
+        }
+        mock_get_product = mocker.patch(
+            "robotoff.insights.annotate.get_product", return_value=mock_product
+        )
+
+        mock_response = mocker.MagicMock()
+        mock_response.content = b"dummy_image_data"
+        mock_get = mocker.patch("requests.get", return_value=mock_response)
+
+        mock_image = mocker.MagicMock()
+        mock_image.__enter__.return_value = mock_image
+        mock_rotated = mocker.MagicMock()
+        mock_image.rotate.return_value = mock_rotated
+        mock_image_open = mocker.patch("PIL.Image.open", return_value=mock_image)
+
+        mock_temp_file = mocker.MagicMock()
+        mock_temp_file.name = "/tmp/dummy_temp_file.jpg"
+        mock_temp_file.__enter__.return_value = mock_temp_file
+        mock_named_temp_file = mocker.patch(
+            "tempfile.NamedTemporaryFile", return_value=mock_temp_file
+        )
+
+        mock_unlink = mocker.patch("os.unlink")
+        mock_upload = mocker.patch(
+            "robotoff.insights.annotate.upload_image", return_value="10"
+        )
+        mock_select_rotate = mocker.patch(
+            "robotoff.insights.annotate.select_rotate_image"
+        )
+
+        insight = ProductInsightFactory(
+            type=InsightType.image_orientation.name,
+            source_image="/123/456/789/1234/1.jpg",
+            data={"rotation": 90, "orientation": "right"},
+        )
+
+        result = ImageOrientationAnnotator().annotate(insight=insight, annotation=1)
+        assert result.status_code == AnnotationStatus.updated.value
+
+        mock_get_product.assert_called_once()
+        mock_get.assert_called_once()
+        assert "images.openfoodfacts.org" in mock_get.call_args[0][0]
+
+        mock_image_open.assert_called_once()
+        mock_image.rotate.assert_called_once_with(-90, expand=True)
+
+        mock_named_temp_file.assert_called_once()
+        mock_unlink.assert_called_once_with("/tmp/dummy_temp_file.jpg")
+
+        mock_upload.assert_called_once()
+        mock_select_rotate.assert_called_once()
+        assert mock_select_rotate.call_args[1]["image_key"] == "front_fr"
+        assert mock_select_rotate.call_args[1]["image_id"] == "10"
+
+    def test_error_invalid_image(self, peewee_db, mocker):
+        mock_product = {
+            "code": "1234567890123",
+            "images": {
+                "2": {"uploaded_t": "1234567890"},
+            },
+        }
+        mock_get_product = mocker.patch(
+            "robotoff.insights.annotate.get_product", return_value=mock_product
+        )
+
+        insight = ProductInsightFactory(
+            type=InsightType.image_orientation.name,
+            source_image="/123/456/789/1234/1.jpg",
+            data={"rotation": 90, "orientation": "right"},
+        )
+
+        result = ImageOrientationAnnotator().annotate(insight=insight, annotation=1)
+        assert mock_get_product.called
+        assert result.status_code == AnnotationStatus.error_invalid_image.value
+
+    def test_error_missing_rotation(self, peewee_db, mocker):
+        mock_product = {
+            "code": "1234567890123",
+            "images": {
+                "1": {"uploaded_t": "1234567890"},
+            },
+        }
+        mock_get_product = mocker.patch(
+            "robotoff.insights.annotate.get_product", return_value=mock_product
+        )
+
+        insight = ProductInsightFactory(
+            type=InsightType.image_orientation.name,
+            source_image="/123/456/789/1234/1.jpg",
+            data={"orientation": "right"},  # Missing rotation
+        )
+
+        result = ImageOrientationAnnotator().annotate(insight=insight, annotation=1)
+        assert mock_get_product.called
+        assert result.status_code == AnnotationStatus.error_invalid_data.value
 
 
 class TestIngredientSpellcheckAnnotator:

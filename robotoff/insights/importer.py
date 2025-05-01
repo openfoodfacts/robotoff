@@ -685,6 +685,91 @@ class InsightImporter(metaclass=abc.ABCMeta):
         pass
 
 
+class ImageOrientationImporter(InsightImporter):
+    """Import insights for image orientation.
+
+    This importer generates insights for images that need to be rotated when:
+    1. The orientation is not "up" (image is not already correctly oriented)
+    2. At least 95% of detected words have the same orientation
+    """
+
+    # Minimum fraction of words with the predicted orientation
+    # to consider the prediction valid
+    MIN_ORIENTATION_FRACTION = 0.95
+
+    # Version ID for the predictor
+    PREDICTOR_VERSION = "1"
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.image_orientation
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.image_orientation}
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        return candidate.source_image == reference.source_image
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        """Generate insights for image orientation predictions.
+
+        Only if:
+        1. Orientation is not "up" (image misoriented)
+        2. Fraction of words with predicted orientation >= MIN_ORIENTATION_FRACTION
+        """
+        for prediction in predictions:
+            if not prediction.data:
+                continue
+
+            orientation_data = prediction.data
+            orientation = orientation_data.get("orientation")
+
+            if orientation is None:
+                continue
+
+            if orientation == "up":
+                continue
+
+            # calculate the fraction of words with the predicted orientation
+            count = orientation_data.get("count", {})
+            total_words = sum(count.values())
+
+            if total_words == 0:
+                continue
+
+            orientation_count = count.get(orientation, 0)
+            orientation_fraction = orientation_count / total_words
+
+            # only generate insight if we're confident enough
+            if orientation_fraction >= cls.MIN_ORIENTATION_FRACTION:
+                yield ProductInsight(
+                    type=cls.get_type(),
+                    barcode=prediction.barcode,
+                    source_image=prediction.source_image,
+                    data={
+                        "rotation": orientation_data.get("rotation"),
+                        "orientation": orientation,
+                        "orientation_fraction": orientation_fraction,
+                    },
+                    value=str(orientation_data.get("rotation")),
+                    value_tag=None,
+                    automatic_processing=True,
+                    predictor=prediction.predictor,
+                    predictor_version=cls.PREDICTOR_VERSION,
+                    server_type=prediction.server_type,
+                )
+
+
 class PackagerCodeInsightImporter(InsightImporter):
     @staticmethod
     def get_type() -> InsightType:
@@ -1984,6 +2069,7 @@ IMPORTERS: list[Type] = [
     NutritionImageImporter,
     IngredientSpellcheckImporter,
     NutrientExtractionImporter,
+    ImageOrientationImporter,
 ]
 
 
@@ -2057,18 +2143,24 @@ def import_insights_for_products(
                         expire=300,
                         timeout=10,
                     ):
-                        result = importer.import_insights(
-                            product_id,
-                            list(product_predictions),
-                            product_store,
-                        )
-                        import_results.append(result)
+                        try:
+                            result = importer.import_insights(
+                                product_id,
+                                list(product_predictions),
+                                product_store,
+                            )
+                            if result:  # Make sure we only append non-None results
+                                import_results.append(result)
+                        except ValueError as e:
+                            logger.warning(
+                                "Error importing insights for %s: %s", product_id, e
+                            )
                 except LockedResourceException:
                     logger.info(
                         "Couldn't acquire insight import lock, skipping insight import for %s",
                         product_id,
                     )
-                    continue
+
     return import_results
 
 

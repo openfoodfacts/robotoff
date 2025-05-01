@@ -1,11 +1,18 @@
 import pytest
 
 from robotoff.insights.importer import (
+    ImageOrientationImporter,
     NutritionImageImporter,
     import_product_predictions,
 )
 from robotoff.models import Prediction as PredictionModel
-from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
+from robotoff.types import (
+    InsightType,
+    Prediction,
+    PredictionType,
+    ProductIdentifier,
+    ServerType,
+)
 
 from ..models_utils import (
     ImageModelFactory,
@@ -103,6 +110,98 @@ class TestNutritionImageImporter:
                 },
             ]
         }
+
+
+class TestImageOrientationImporter:
+    def test_generate_candidates_right_orientation(self, mocker):
+        prediction_data = {
+            "orientation": "right",
+            "rotation": 270,
+            "count": {"up": 4, "right": 96},
+        }
+
+        prediction = Prediction(
+            barcode="1234567890123",
+            type=PredictionType.image_orientation,
+            source_image="/123/456/789/1234/1.jpg",
+            server_type=ServerType.off,
+            data=prediction_data,
+            value_tag=None,
+        )
+
+        # Generate candidates
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product=None,
+                predictions=[prediction],
+                product_id=ProductIdentifier("1234567890123", ServerType.off),
+            )
+        )
+
+        # Check we have one candidate
+        assert len(candidates) == 1
+        candidate = candidates[0]
+
+        # Check candidate properties
+        assert candidate.type == InsightType.image_orientation.name
+        assert candidate.barcode == "1234567890123"
+        assert candidate.source_image == "/123/456/789/1234/1.jpg"
+        assert candidate.data["rotation"] == 270
+        assert candidate.data["orientation"] == "right"
+        assert candidate.data["orientation_fraction"] == 96 / 100
+        assert candidate.automatic_processing is True
+
+    def test_no_candidates_for_upright_image(self, mocker):
+        prediction_data = {
+            "orientation": "up",
+            "rotation": 0,
+            "count": {"up": 96, "right": 4},
+        }
+
+        prediction = Prediction(
+            barcode="1234567890123",
+            type=PredictionType.image_orientation,
+            source_image="/123/456/789/1234/1.jpg",
+            server_type=ServerType.off,
+            data=prediction_data,
+            value_tag=None,
+        )
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product=None,
+                predictions=[prediction],
+                product_id=ProductIdentifier("1234567890123", ServerType.off),
+            )
+        )
+
+        assert len(candidates) == 0
+
+    def test_no_candidates_for_low_confidence(self, mocker):
+        prediction_data = {
+            "orientation": "right",
+            "rotation": 270,
+            "count": {"up": 20, "right": 80},  # only 80% confidence, below threshold
+        }
+
+        prediction = Prediction(
+            barcode="1234567890123",
+            type=PredictionType.image_orientation,
+            source_image="/123/456/789/1234/1.jpg",
+            server_type=ServerType.off,
+            data=prediction_data,
+            value_tag=None,
+        )
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product=None,
+                predictions=[prediction],
+                product_id=ProductIdentifier("1234567890123", ServerType.off),
+            )
+        )
+
+        assert len(candidates) == 0
 
 
 def test_import_product_predictions():

@@ -3,10 +3,16 @@
 
 import abc
 import datetime
+import io
+import os
+import tempfile
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Type
+from urllib.parse import urljoin
 
+import requests
+from PIL import Image
 from pydantic import ValidationError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import HTTPError, SSLError, Timeout
@@ -27,6 +33,7 @@ from robotoff.off import (
     update_emb_codes,
     update_expiration_date,
     update_quantity,
+    upload_image,
 )
 from robotoff.prediction.utils import get_image_rotation, get_nutrition_table_prediction
 from robotoff.products import get_image_id, get_product
@@ -219,6 +226,99 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     @classmethod
     def is_data_required(cls) -> bool:
         return False
+
+
+class ImageOrientationAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        """Annotate the image orientation of a product."""
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["code", "images"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        image_id = get_image_id(insight.source_image or "")
+        images = product.get("images", {})
+        image_meta = images.get(image_id)
+
+        if not image_id or not image_meta:
+            return AnnotationResult(
+                status_code=AnnotationStatus.error_invalid_image.value,
+                status=AnnotationStatus.error_invalid_image.name,
+                description="the image is invalid",
+            )
+
+        rotation = insight.data.get("rotation")
+        if rotation is None:
+            return AnnotationResult(
+                status_code=AnnotationStatus.error_invalid_data.value,
+                status=AnnotationStatus.error_invalid_data.name,
+                description="rotation angle is missing in insight data",
+            )
+
+        selected_keys = []
+        images_dict: dict[str, dict] = images
+        for key, data in images_dict.items():
+            if not key.isdigit() and data.get("imgid") == image_id:
+                selected_keys.append(key)
+
+        # Rotate and upload the image using Pillow
+        try:
+            base_url = "https://images.openfoodfacts.org/images/products"
+            image_path = insight.source_image.lstrip("/")
+            image_url = urljoin(base_url, image_path)
+
+            response = requests.get(image_url)
+            response.raise_for_status()
+
+            with Image.open(io.BytesIO(response.content)) as img:
+                rotated_img = img.rotate(
+                    -rotation, expand=True
+                )  # PIL rotates counter-clockwise
+
+                with tempfile.NamedTemporaryFile(
+                    suffix=".jpg", delete=False
+                ) as tmp_file:
+                    rotated_img.save(tmp_file, format="JPEG")
+                    tmp_filename = tmp_file.name
+
+            new_image_id = upload_image(
+                product_id=product_id,
+                image_path=tmp_filename,
+                auth=auth,
+            )
+
+            os.unlink(tmp_filename)
+
+            if selected_keys and new_image_id:
+                for key in selected_keys:
+                    select_rotate_image(
+                        product_id=product_id,
+                        image_id=new_image_id,
+                        image_key=key,
+                        rotate=0,  # Already rotated
+                        crop_bounding_box=None,
+                        auth=auth,
+                        is_vote=is_vote,
+                        insight_id=insight.id,
+                    )
+
+            return UPDATED_ANNOTATION_RESULT
+
+        except Exception as e:
+            logger.error(f"Error rotating image: {e}", exc_info=True)
+            return AnnotationResult(
+                status_code=AnnotationStatus.error_failed_update.value,
+                status=AnnotationStatus.error_failed_update.name,
+                description=f"Failed to rotate and upload image: {str(e)}",
+            )
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
@@ -888,6 +988,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     InsightType.nutrient_extraction: NutrientExtractionAnnotator,
+    InsightType.image_orientation.name: ImageOrientationAnnotator,
 }
 
 
