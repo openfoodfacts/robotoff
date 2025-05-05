@@ -37,7 +37,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Regenerate Poetry lockfile
-        run: poetry lock --no-update
+        run: poetry lock
 
       - name: Load cached venv
         id: cached-poetry-dependencies
