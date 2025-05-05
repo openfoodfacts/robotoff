@@ -16,7 +16,7 @@ on:
       - main
 
 env:
-  PYTHON_VERSION: 3.11
+  PYTHON_VERSION: 3.12
 
 jobs:
   publish-docs:
@@ -35,6 +35,9 @@ jobs:
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
+
+      - name: Regenerate Poetry lockfile
+        run: poetry lock --no-update
 
       - name: Load cached venv
         id: cached-poetry-dependencies
