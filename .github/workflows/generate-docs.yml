@@ -36,15 +36,12 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Regenerate Poetry lockfile
-        run: poetry lock
-
       - name: Load cached venv
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         run: poetry install
