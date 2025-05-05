@@ -15,12 +15,12 @@ on:
     branches:
       - main
 
+env:
+  PYTHON_VERSION: 3.12
+
 jobs:
   publish-docs:
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        python-version: [3.11]
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
       - name: Setup Python version
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
         uses: snok/install-poetry@v1.3
@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         run: poetry install
