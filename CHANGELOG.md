@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.65.1](https://github.com/openfoodfacts/robotoff/compare/v1.65.0...v1.65.1) (2025-05-07)
+
+
+### Bug Fixes
+
+* failing code quality tests ([#1556](https://github.com/openfoodfacts/robotoff/issues/1556)) ([2ccdd77](https://github.com/openfoodfacts/robotoff/commit/2ccdd77cf728eeadb9ee0f5272e284694363740f))
+
+
+### Technical
+
+* clarify Robotoff intro paragraph in README ([#1538](https://github.com/openfoodfacts/robotoff/issues/1538)) ([c6b3fd9](https://github.com/openfoodfacts/robotoff/commit/c6b3fd99554ea162903377272fc6d9da6e1be596))
+* fix test annotate + test nutrients JSON ([#1561](https://github.com/openfoodfacts/robotoff/issues/1561)) ([1678921](https://github.com/openfoodfacts/robotoff/commit/16789218a5293db675e1f68f07ca1b5a461b9af4))
+* Regenerate poetry.lock after pyproject.toml changes ([#1555](https://github.com/openfoodfacts/robotoff/issues/1555)) ([4472af1](https://github.com/openfoodfacts/robotoff/commit/4472af1e33b49c876978fba26871773c8fd10d10))
+* updated ubuntu version pinning and some minor errors related to deployment ([#1558](https://github.com/openfoodfacts/robotoff/issues/1558)) ([fcd09a0](https://github.com/openfoodfacts/robotoff/commit/fcd09a0e16b694b05bfc00125277c90f8c8a8593))
+
 ## [1.65.0](https://github.com/openfoodfacts/robotoff/compare/v1.64.2...v1.65.0) (2025-04-15)
 
 
