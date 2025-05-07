@@ -169,6 +169,7 @@ class TestIngredientSpellcheckAnnotator:
         assert "annotation" not in spellcheck_insight.data
         mock_save_ingredients.assert_called()
 
+
 class TestNutrientExtractionAnnotator:
     SOURCE_IMAGE = "/872/032/603/7888/2.jpg"
 
