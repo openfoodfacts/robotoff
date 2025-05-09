@@ -146,9 +146,37 @@ class TestImageOrientationImporter:
         return _factory
 
     def test_import_image_orientation_prediction(self, prediction_factory, peewee_db):
+        # Original implementation - this doesn't work because the factory
+        # directly creates the record in the database, so import_product_predictions
+        # finds it as existing and doesn't import it.
+        """
         prediction = prediction_factory()
 
-        # Import the prediction
+        imported, deleted = import_product_predictions(
+            prediction.barcode, prediction.server_type, [prediction]
+        )
+        """
+
+        # TEMPORARY FIX: Create a factory prediction to get values, but delete it
+        # and create a new Prediction object that isn't in the database yet
+        factory_prediction = prediction_factory()
+
+        # Get the data from the factory prediction
+        pred_data = {
+            "barcode": factory_prediction.barcode,
+            "server_type": factory_prediction.server_type,
+            "type": factory_prediction.type,
+            "source_image": factory_prediction.source_image,
+            "data": factory_prediction.data,
+            "value_tag": factory_prediction.value_tag,
+        }
+
+        # Delete the factory-created record from the database
+        factory_prediction.delete_instance()
+
+        # Create a new Prediction object that isn't in the database
+        prediction = Prediction(**pred_data)
+
         imported, deleted = import_product_predictions(
             prediction.barcode, prediction.server_type, [prediction]
         )
