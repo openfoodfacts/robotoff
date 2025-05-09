@@ -105,6 +105,68 @@ class TestNutritionImageImporter:
         }
 
 
+class TestImageOrientationImporter:
+    @pytest.fixture
+    def image_model_factory(self):
+        def _factory(barcode="1234567890123", image_id="1", server_type=ServerType.off):
+            return ImageModelFactory(
+                barcode=barcode,
+                image_id=image_id,
+                server_type=server_type,
+                source_image=f"/source/image/path/{image_id}.jpg",
+            )
+
+        return _factory
+
+    @pytest.fixture
+    def prediction_factory(self):
+        def _factory(
+            barcode="1234567890123",
+            source_image="/source/image/path/1.jpg",
+            orientation="right",
+            rotation=270,
+            count=None,
+            server_type=ServerType.off,
+        ):
+            if count is None:
+                count = {"up": 1, "right": 19}
+
+            return PredictionFactory(
+                type=PredictionType.image_orientation,
+                barcode=barcode,
+                source_image=source_image,
+                data={
+                    "orientation": orientation,
+                    "rotation": rotation,
+                    "count": count,
+                },
+                server_type=server_type,
+            )
+
+        return _factory
+
+    def test_import_image_orientation_prediction(self, prediction_factory, peewee_db):
+        prediction = prediction_factory()
+
+        # Import the prediction
+        imported, deleted = import_product_predictions(
+            prediction.barcode, prediction.server_type, [prediction]
+        )
+
+        assert imported == 1
+        assert deleted == 0
+
+        # Verify prediction was stored in database
+        db_prediction = PredictionModel.get(
+            PredictionModel.barcode == prediction.barcode,
+            PredictionModel.type == PredictionType.image_orientation,
+        )
+
+        assert db_prediction.data["orientation"] == "right"
+        assert db_prediction.data["rotation"] == 270
+        assert db_prediction.data["count"]["right"] == 19
+
+
 def test_import_product_predictions():
     new_predictor_version = "2"
     old_predictor_version = None

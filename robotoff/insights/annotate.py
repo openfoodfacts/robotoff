@@ -875,6 +875,116 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         )
 
 
+class ImageOrientationAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        """Process image orientation annotation and rotate the selected image
+        if necessary.
+
+        :param insight: the image orientation insight
+        :param data: additional data sent by the client, defaults to None
+        :param auth: authentication data
+        :param is_vote: True if the annotation was triggered by an anonymous
+            vote, defaults to False
+        :return: annotation result
+        """
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["images"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        if insight.source_image is None:
+            logger.warning(
+                "Missing source_image in image orientation insight: %s", insight.id
+            )
+            return INVALID_DATA
+
+        image_id = get_image_id(insight.source_image)
+
+        if image_id is None:
+            logger.warning(
+                "Invalid image ID for image orientation insight: %s, %s",
+                image_id,
+                insight.id,
+            )
+            return INVALID_DATA
+
+        rotation = insight.data.get("rotation")
+
+        if rotation is None or rotation == 0:
+            logger.warning(
+                "Missing or zero rotation angle in image orientation insight: %s",
+                insight.id,
+            )
+            return INVALID_DATA
+
+        # We'll check if the image is a selected image by iterating through
+        # the product images looking for keys that indicate selected images
+        is_selected = False
+        selected_key = None
+        for key, image_data in product["images"].items():
+            if key.startswith(("front", "ingredients", "nutrition", "packaging")):
+                if image_data.get("imgid") == image_id:
+                    is_selected = True
+                    selected_key = key
+                    break
+
+        if not is_selected or selected_key is None:
+            logger.info(
+                "Image %s is not a selected image, not applying rotation", image_id
+            )
+            return ALREADY_ANNOTATED_RESULT
+
+        image_data = product["images"][selected_key]
+
+        # Extract current crop information if it exists
+        crop_bounding_box = None
+        if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
+            # Get the full image size
+            size = image_data.get("sizes", {}).get("full", {})
+            height = size.get("h")
+            width = size.get("w")
+
+            if height and width:
+                # Get current coordinates
+                x1, y1 = float(image_data["x1"]), float(image_data["y1"])
+                x2, y2 = float(image_data["x2"]), float(image_data["y2"])
+
+                # Convert to relative coordinates if they're not already (0-1 range)
+                if x1 > 1 or y1 > 1 or x2 > 1 or y2 > 1:
+                    x1 /= width
+                    y1 /= height
+                    x2 /= width
+                    y2 /= height
+
+                # Based on the rotation, we need to adjust the coordinates
+                crop_bounding_box = (y1, x1, y2, x2)
+
+        # Call the Product Opener API to rotate the image
+        try:
+            select_rotate_image(
+                product_id=product_id,
+                image_id=image_id,
+                image_key=selected_key,
+                rotate=rotation,
+                crop_bounding_box=crop_bounding_box,
+                auth=auth,
+                is_vote=is_vote,
+                insight_id=insight.id,
+            )
+            return UPDATED_ANNOTATION_RESULT
+        except Exception as e:
+            logger.error("Error while rotating image %s: %s", image_id, str(e))
+            return INVALID_DATA
+
+
 ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.packager_code.name: PackagerCodeAnnotator,
     InsightType.label.name: LabelAnnotator,
@@ -888,6 +998,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     InsightType.nutrient_extraction: NutrientExtractionAnnotator,
+    InsightType.image_orientation.name: ImageOrientationAnnotator,
 }
 
 

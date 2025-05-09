@@ -1826,6 +1826,70 @@ class PackagingImporter(InsightImporter):
             yield ProductInsight(**prediction.to_dict())
 
 
+class ImageOrientationImporter(InsightImporter):
+    """Importer for image orientation insights.
+
+    This insight type predicts the orientation of selected images and suggests
+    rotations to make them correctly oriented if needed.
+    """
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.image_orientation
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.image_orientation}
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Two insights conflict if they refer to the same image
+        return candidate.source_image == reference.source_image
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        # Skip if product check is disabled or no predictions are available
+        if not product or not predictions:
+            return
+
+        for prediction in predictions:
+            orientation_data = prediction.data
+            orientation = orientation_data.get("orientation")
+            rotation = orientation_data.get("rotation")
+            count = orientation_data.get("count", {})
+
+            if orientation == "up" or rotation == 0:
+                continue
+
+            # Calculate confidence as fraction of words with predicted orientation
+            total_words = sum(count.values())
+            if total_words == 0:
+                continue
+
+            confidence = count.get(orientation, 0) / total_words
+
+            if prediction.source_image:
+                image_id = get_image_id(prediction.source_image)
+
+                # Filter for selected images only with high confidence
+                if (
+                    image_id
+                    and is_selected_image(product.images, image_id)
+                    and confidence >= 0.95
+                ):
+                    insight = ProductInsight(**prediction.to_dict())
+                    insight.automatic_processing = True
+                    insight.data["confidence"] = confidence
+                    yield insight
+
+
 def is_valid_product_prediction(
     prediction: Prediction, product: Optional[Product] = None
 ) -> bool:
@@ -1984,6 +2048,7 @@ IMPORTERS: list[Type] = [
     NutritionImageImporter,
     IngredientSpellcheckImporter,
     NutrientExtractionImporter,
+    ImageOrientationImporter,
 ]
 
 
