@@ -1885,8 +1885,8 @@ class ImageOrientationImporter(InsightImporter):
                     and confidence >= 0.95
                 ):
                     insight = ProductInsight(**prediction.to_dict())
-                    insight.automatic_processing = True
-                    insight.data["confidence"] = confidence
+                    insight.automatic_processing = False
+                    insight.confidence = confidence
                     yield insight
 
 
