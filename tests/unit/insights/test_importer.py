@@ -4,10 +4,12 @@ from typing import Any, Iterator, Optional
 
 import pytest
 
+from robotoff.insights.annotate import rotate_bounding_box
 from robotoff.insights.importer import (
     BrandInsightImporter,
     CategoryImporter,
     ExpirationDateImporter,
+    ImageOrientationImporter,
     InsightImporter,
     LabelInsightImporter,
     NutrientExtractionImporter,
@@ -2019,22 +2021,16 @@ class TestImportInsightsForProducts:
 
 
 def test_image_orientation_get_type():
-    from robotoff.insights.importer import ImageOrientationImporter
-
     assert ImageOrientationImporter.get_type() == InsightType.image_orientation
 
 
 def test_image_orientation_get_required_prediction_types():
-    from robotoff.insights.importer import ImageOrientationImporter
-
     assert ImageOrientationImporter.get_required_prediction_types() == {
         PredictionType.image_orientation
     }
 
 
 def test_image_orientation_is_conflicting_insight():
-    from robotoff.insights.importer import ImageOrientationImporter
-
     candidate = ProductInsight(
         barcode=DEFAULT_BARCODE,
         type=InsightType.image_orientation,
@@ -2084,8 +2080,6 @@ def test_image_orientation_is_conflicting_insight():
 def test_image_orientation_generate_candidates(
     mocker, orientation, rotation, count, selected, expected_candidates
 ):
-    from robotoff.insights.importer import ImageOrientationImporter
-
     # Mock is_selected_image function
     mocker.patch("robotoff.insights.importer.is_selected_image", return_value=selected)
 
@@ -2121,9 +2115,24 @@ def test_image_orientation_generate_candidates(
     # Verify number of candidates
     assert len(candidates) == expected_candidates
 
-    # If candidates were generated, verify their properties
     if expected_candidates > 0:
         candidate = candidates[0]
-        assert candidate.automatic_processing is True
-        assert candidate.data["confidence"] == confidence
+        assert candidate.automatic_processing is False  # Should be False intially
+        assert candidate.confidence == confidence
         assert candidate.data["rotation"] == rotation
+
+
+def test_rotate_bounding_box():
+    bounding_box = (10, 20, 100, 200)
+    width, height = 1000, 800
+    result = rotate_bounding_box(bounding_box, width, height, 0)
+    assert result == (10, 20, 100, 200)
+
+    result = rotate_bounding_box(bounding_box, width, height, 90)
+    assert result == (20, 800 - 100, 200, 800 - 10)
+
+    result = rotate_bounding_box(bounding_box, width, height, 180)
+    assert result == (800 - 100, 1000 - 200, 800 - 10, 1000 - 20)
+
+    result = rotate_bounding_box(bounding_box, width, height, 270)
+    assert result == (1000 - 200, 10, 1000 - 20, 100)
