@@ -576,41 +576,62 @@ def convert_crop_bounding_box(
         x_max * width,
     )
 
+    return rotate_bounding_box(
+        crop_bounding_box,
+        width,
+        height,
+        rotate=rotate,
+    )
+
+
+def rotate_bounding_box(
+    bounding_box: tuple[float, float, float, float],
+    width: int,
+    height: int,
+    rotate: int = 0,
+) -> tuple[float, float, float, float]:
+    """Rotate a bounding box based on the rotation angle.
+
+    :param bounding_box: bounding box coordinates (y_min, x_min, y_max, x_max)
+    :param width: width of the image
+    :param height: height of the image
+    :param rotate: rotation angle (counter-clockwise), defaults to 0
+    :return: the rotated bounding box coordinates
+    """
     if rotate == 90:
         # y_min = old_x_min
         # x_min = old_height - old_y_max
         # y_max = old_x_max
         # x_max = old_height - old_y_min
-        crop_bounding_box = (
-            crop_bounding_box[1],
-            height - crop_bounding_box[2],
-            crop_bounding_box[3],
-            height - crop_bounding_box[0],
+        bounding_box = (
+            bounding_box[1],
+            height - bounding_box[2],
+            bounding_box[3],
+            height - bounding_box[0],
         )
     if rotate == 180:
         # y_min = old_height - old_y_max
         # x_min = old_width - old_x_max
         # y_max = old_height - old_y_min
         # x_max = old_width - old_x_min
-        crop_bounding_box = (
-            height - crop_bounding_box[2],
-            width - crop_bounding_box[3],
-            height - crop_bounding_box[0],
-            width - crop_bounding_box[1],
+        bounding_box = (
+            height - bounding_box[2],
+            width - bounding_box[3],
+            height - bounding_box[0],
+            width - bounding_box[1],
         )
     if rotate == 270:
         # y_min = old_width - old_x_max
         # x_min = old_y_min
         # y_max = old_width - old_x_min
         # x_max = old_y_max
-        crop_bounding_box = (
-            width - crop_bounding_box[3],
-            crop_bounding_box[0],
-            width - crop_bounding_box[1],
-            crop_bounding_box[2],
+        bounding_box = (
+            width - bounding_box[3],
+            bounding_box[0],
+            width - bounding_box[1],
+            bounding_box[2],
         )
-
-    return crop_bounding_box
+    return bounding_box
 
 
 class NutritionImageAnnotator(InsightAnnotator):
@@ -925,64 +946,86 @@ class ImageOrientationAnnotator(InsightAnnotator):
             )
             return INVALID_DATA
 
+        original_image_data = product["images"].get(image_id)
+        if not original_image_data:
+            logger.warning(
+                "Original image %s not found in product images for insight: %s",
+                image_id,
+                insight.id,
+            )
+            return INVALID_DATA
+
+        original_size = original_image_data.get("sizes", {}).get("full", {})
+        original_height = original_size.get("h")
+        original_width = original_size.get("w")
+
+        if not original_height or not original_width:
+            logger.warning(
+                "Could not get original image dimensions for image %s, insight: %s",
+                image_id,
+                insight.id,
+            )
+            return INVALID_DATA
+
         # We'll check if the image is a selected image by iterating through
         # the product images looking for keys that indicate selected images
-        is_selected = False
-        selected_key = None
+        selected_keys = []
         for key, image_data in product["images"].items():
             if key.startswith(("front", "ingredients", "nutrition", "packaging")):
                 if image_data.get("imgid") == image_id:
-                    is_selected = True
-                    selected_key = key
-                    break
+                    selected_keys.append(key)
 
-        if not is_selected or selected_key is None:
+        if not selected_keys:
             logger.info(
                 "Image %s is not a selected image, not applying rotation", image_id
             )
             return ALREADY_ANNOTATED_RESULT
 
-        image_data = product["images"][selected_key]
+        # Process all selected images that use this source image
+        for selected_key in selected_keys:
+            image_data = product["images"][selected_key]
 
-        # Extract current crop information if it exists
-        crop_bounding_box = None
-        if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
-            # Get the full image size
-            size = image_data.get("sizes", {}).get("full", {})
-            height = size.get("h")
-            width = size.get("w")
+            # Extract current crop information if it exists
+            crop_bounding_box = None
+            if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
+                # Check for uncropped images (coordinates = -1)
+                if (
+                    image_data["x1"] == "-1"
+                    and image_data["y1"] == "-1"
+                    and image_data["x2"] == "-1"
+                    and image_data["y2"] == "-1"
+                ):
+                    pass
+                else:
+                    y1 = float(image_data["y1"])
+                    x1 = float(image_data["x1"])
+                    y2 = float(image_data["y2"])
+                    x2 = float(image_data["x2"])
 
-            if height and width:
-                # Get current coordinates
-                x1, y1 = float(image_data["x1"]), float(image_data["y1"])
-                x2, y2 = float(image_data["x2"]), float(image_data["y2"])
+                    crop_bounding_box = rotate_bounding_box(
+                        (y1, x1, y2, x2),
+                        original_width,
+                        original_height,
+                        rotation,
+                    )
 
-                # Convert to relative coordinates if they're not already (0-1 range)
-                if x1 > 1 or y1 > 1 or x2 > 1 or y2 > 1:
-                    x1 /= width
-                    y1 /= height
-                    x2 /= width
-                    y2 /= height
+            # Call the Product Opener API to rotate the image
+            try:
+                select_rotate_image(
+                    product_id=product_id,
+                    image_id=image_id,
+                    image_key=selected_key,
+                    rotate=rotation,
+                    crop_bounding_box=crop_bounding_box,
+                    auth=auth,
+                    is_vote=is_vote,
+                    insight_id=insight.id,
+                )
+            except Exception as e:
+                logger.error("Error while rotating image %s: %s", image_id, str(e))
+                return INVALID_DATA
 
-                # Based on the rotation, we need to adjust the coordinates
-                crop_bounding_box = (y1, x1, y2, x2)
-
-        # Call the Product Opener API to rotate the image
-        try:
-            select_rotate_image(
-                product_id=product_id,
-                image_id=image_id,
-                image_key=selected_key,
-                rotate=rotation,
-                crop_bounding_box=crop_bounding_box,
-                auth=auth,
-                is_vote=is_vote,
-                insight_id=insight.id,
-            )
-            return UPDATED_ANNOTATION_RESULT
-        except Exception as e:
-            logger.error("Error while rotating image %s: %s", image_id, str(e))
-            return INVALID_DATA
+        return UPDATED_ANNOTATION_RESULT
 
 
 ANNOTATOR_MAPPING: dict[str, Type] = {
