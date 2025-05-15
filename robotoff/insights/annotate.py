@@ -576,41 +576,62 @@ def convert_crop_bounding_box(
         x_max * width,
     )
 
+    return rotate_bounding_box(
+        crop_bounding_box,
+        width,
+        height,
+        rotate=rotate,
+    )
+
+
+def rotate_bounding_box(
+    bounding_box: tuple[float, float, float, float],
+    width: int,
+    height: int,
+    rotate: int = 0,
+) -> tuple[float, float, float, float]:
+    """Rotate a bounding box based on the rotation angle.
+
+    :param bounding_box: bounding box coordinates (y_min, x_min, y_max, x_max)
+    :param width: width of the image
+    :param height: height of the image
+    :param rotate: rotation angle (counter-clockwise), defaults to 0
+    :return: the rotated bounding box coordinates
+    """
     if rotate == 90:
         # y_min = old_x_min
         # x_min = old_height - old_y_max
         # y_max = old_x_max
         # x_max = old_height - old_y_min
-        crop_bounding_box = (
-            crop_bounding_box[1],
-            height - crop_bounding_box[2],
-            crop_bounding_box[3],
-            height - crop_bounding_box[0],
+        bounding_box = (
+            bounding_box[1],
+            height - bounding_box[2],
+            bounding_box[3],
+            height - bounding_box[0],
         )
     if rotate == 180:
         # y_min = old_height - old_y_max
         # x_min = old_width - old_x_max
         # y_max = old_height - old_y_min
         # x_max = old_width - old_x_min
-        crop_bounding_box = (
-            height - crop_bounding_box[2],
-            width - crop_bounding_box[3],
-            height - crop_bounding_box[0],
-            width - crop_bounding_box[1],
+        bounding_box = (
+            height - bounding_box[2],
+            width - bounding_box[3],
+            height - bounding_box[0],
+            width - bounding_box[1],
         )
     if rotate == 270:
         # y_min = old_width - old_x_max
         # x_min = old_y_min
         # y_max = old_width - old_x_min
         # x_max = old_y_max
-        crop_bounding_box = (
-            width - crop_bounding_box[3],
-            crop_bounding_box[0],
-            width - crop_bounding_box[1],
-            crop_bounding_box[2],
+        bounding_box = (
+            width - bounding_box[3],
+            bounding_box[0],
+            width - bounding_box[1],
+            bounding_box[2],
         )
-
-    return crop_bounding_box
+    return bounding_box
 
 
 class NutritionImageAnnotator(InsightAnnotator):
@@ -875,6 +896,138 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         )
 
 
+class ImageOrientationAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: Optional[dict] = None,
+        auth: Optional[OFFAuthentication] = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        """Process image orientation annotation and rotate the selected image
+        if necessary.
+
+        :param insight: the image orientation insight
+        :param data: additional data sent by the client, defaults to None
+        :param auth: authentication data
+        :param is_vote: True if the annotation was triggered by an anonymous
+            vote, defaults to False
+        :return: annotation result
+        """
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["images"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        if insight.source_image is None:
+            logger.warning(
+                "Missing source_image in image orientation insight: %s", insight.id
+            )
+            return INVALID_DATA
+
+        image_id = get_image_id(insight.source_image)
+
+        if image_id is None:
+            logger.warning(
+                "Invalid image ID for image orientation insight: %s, %s",
+                image_id,
+                insight.id,
+            )
+            return INVALID_DATA
+
+        rotation = insight.data.get("rotation")
+
+        if rotation is None or rotation == 0:
+            logger.warning(
+                "Missing or zero rotation angle in image orientation insight: %s",
+                insight.id,
+            )
+            return INVALID_DATA
+
+        original_image_data = product["images"].get(image_id)
+        if not original_image_data:
+            logger.warning(
+                "Original image %s not found in product images for insight: %s",
+                image_id,
+                insight.id,
+            )
+            return INVALID_DATA
+
+        original_size = original_image_data.get("sizes", {}).get("full", {})
+        original_height = original_size.get("h")
+        original_width = original_size.get("w")
+
+        if not original_height or not original_width:
+            logger.warning(
+                "Could not get original image dimensions for image %s, insight: %s",
+                image_id,
+                insight.id,
+            )
+            return INVALID_DATA
+
+        # We'll check if the image is a selected image by iterating through
+        # the product images looking for keys that indicate selected images
+        selected_keys = []
+        for key, image_data in product["images"].items():
+            if key.startswith(("front", "ingredients", "nutrition", "packaging")):
+                if image_data.get("imgid") == image_id:
+                    selected_keys.append(key)
+
+        if not selected_keys:
+            logger.info(
+                "Image %s is not a selected image, not applying rotation", image_id
+            )
+            return ALREADY_ANNOTATED_RESULT
+
+        # Process all selected images that use this source image
+        for selected_key in selected_keys:
+            image_data = product["images"][selected_key]
+
+            # Extract current crop information if it exists
+            crop_bounding_box = None
+            if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
+                # Check for uncropped images (coordinates = -1)
+                if (
+                    image_data["x1"] == "-1"
+                    and image_data["y1"] == "-1"
+                    and image_data["x2"] == "-1"
+                    and image_data["y2"] == "-1"
+                ):
+                    pass
+                else:
+                    y1 = float(image_data["y1"])
+                    x1 = float(image_data["x1"])
+                    y2 = float(image_data["y2"])
+                    x2 = float(image_data["x2"])
+
+                    crop_bounding_box = rotate_bounding_box(
+                        (y1, x1, y2, x2),
+                        original_width,
+                        original_height,
+                        rotation,
+                    )
+
+            # Call the Product Opener API to rotate the image
+            try:
+                select_rotate_image(
+                    product_id=product_id,
+                    image_id=image_id,
+                    image_key=selected_key,
+                    rotate=rotation,
+                    crop_bounding_box=crop_bounding_box,
+                    auth=auth,
+                    is_vote=is_vote,
+                    insight_id=insight.id,
+                )
+            except Exception as e:
+                logger.error("Error while rotating image %s: %s", image_id, str(e))
+                return INVALID_DATA
+
+        return UPDATED_ANNOTATION_RESULT
+
+
 ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.packager_code.name: PackagerCodeAnnotator,
     InsightType.label.name: LabelAnnotator,
@@ -888,6 +1041,7 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     InsightType.nutrient_extraction: NutrientExtractionAnnotator,
+    InsightType.image_orientation.name: ImageOrientationAnnotator,
 }
 
 

@@ -1,10 +1,12 @@
 import pytest
 
 from robotoff.insights.importer import (
+    ImageOrientationImporter,
     NutritionImageImporter,
     import_product_predictions,
 )
 from robotoff.models import Prediction as PredictionModel
+from robotoff.products import Product
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
 
 from ..models_utils import (
@@ -103,6 +105,166 @@ class TestNutritionImageImporter:
                 },
             ]
         }
+
+
+class TestImageOrientationImporter:
+    @pytest.fixture
+    def image_model_factory(self):
+        def _factory(barcode="1234567890123", image_id="1", server_type=ServerType.off):
+            return ImageModelFactory(
+                barcode=barcode,
+                image_id=image_id,
+                server_type=server_type,
+                source_image=f"/source/image/path/{image_id}.jpg",
+            )
+
+        return _factory
+
+    @pytest.fixture
+    def prediction_factory(self):
+        def _factory(
+            barcode="1234567890123",
+            source_image="/source/image/path/1.jpg",
+            orientation="right",
+            rotation=270,
+            count=None,
+            server_type=ServerType.off,
+        ):
+            if count is None:
+                count = {"up": 1, "right": 19}
+
+            return PredictionFactory(
+                type=PredictionType.image_orientation,
+                barcode=barcode,
+                source_image=source_image,
+                data={
+                    "orientation": orientation,
+                    "rotation": rotation,
+                    "count": count,
+                },
+                server_type=server_type,
+            )
+
+        return _factory
+
+    def test_import_image_orientation_prediction(self, prediction_factory, peewee_db):
+        factory_prediction = prediction_factory()
+
+        # Get the data from the factory prediction
+        pred_data = {
+            "barcode": factory_prediction.barcode,
+            "server_type": factory_prediction.server_type,
+            "type": factory_prediction.type,
+            "source_image": factory_prediction.source_image,
+            "data": factory_prediction.data,
+            "value_tag": factory_prediction.value_tag,
+        }
+
+        # Delete the factory-created record from the database
+        factory_prediction.delete_instance()
+
+        # Create a new Prediction object that isn't in the database
+        prediction = Prediction(**pred_data)
+
+        imported, deleted = import_product_predictions(
+            prediction.barcode, prediction.server_type, [prediction]
+        )
+
+        assert imported == 1
+        assert deleted == 0
+
+        # Verify prediction was stored in database
+        db_prediction = PredictionModel.get(
+            PredictionModel.barcode == prediction.barcode,
+            PredictionModel.type == PredictionType.image_orientation,
+        )
+
+        assert db_prediction.data["orientation"] == "right"
+        assert db_prediction.data["rotation"] == 270
+        assert db_prediction.data["count"]["right"] == 19
+
+    def test_generate_insight_with_confidence(self, prediction_factory, mocker):
+        factory_prediction = prediction_factory(
+            count={"up": 1, "right": 19}  # 95% confidence for "right"
+        )
+
+        factory_prediction.delete_instance()
+
+        prediction_data = {
+            "barcode": factory_prediction.barcode,
+            "server_type": factory_prediction.server_type,
+            "type": factory_prediction.type,
+            "source_image": factory_prediction.source_image,
+            "data": factory_prediction.data,
+            "value_tag": factory_prediction.value_tag,
+        }
+
+        prediction = Prediction(**prediction_data)
+
+        # Mock the is_selected_image function to return True
+        mocker.patch("robotoff.insights.importer.is_selected_image", return_value=True)
+
+        # Create a product
+        product = Product({"code": prediction.barcode, "images": {"1": {"imgid": "1"}}})
+
+        # Generate candidates
+        product_id = ProductIdentifier(prediction.barcode, prediction.server_type)
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product,
+                [prediction],
+                product_id,
+            )
+        )
+
+        # Verify that one candidate was generated
+        assert len(candidates) == 1
+
+        # Verify properties of the candidate
+        candidate = candidates[0]
+        # Calculate expected confidence
+        total = sum(prediction.data["count"].values())
+        expected_confidence = prediction.data["count"]["right"] / total
+
+        assert candidate.automatic_processing is False
+        assert candidate.confidence == expected_confidence
+        assert candidate.data["rotation"] == 270
+
+    def test_image_orientation_settings(self, prediction_factory, mocker):
+        factory_prediction = prediction_factory(count={"up": 1, "right": 19})
+
+        pred_data = {
+            "barcode": factory_prediction.barcode,
+            "server_type": factory_prediction.server_type,
+            "type": factory_prediction.type,
+            "source_image": factory_prediction.source_image,
+            "data": factory_prediction.data,
+            "value_tag": factory_prediction.value_tag,
+        }
+
+        factory_prediction.delete_instance()
+
+        prediction = Prediction(**pred_data)
+
+        product = Product({"code": prediction.barcode, "images": {"1": {"imgid": "1"}}})
+        mocker.patch("robotoff.insights.importer.is_selected_image", return_value=True)
+
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product,
+                [prediction],
+                ProductIdentifier(
+                    barcode=prediction.barcode, server_type=prediction.server_type
+                ),
+            )
+        )
+
+        assert len(candidates) == 1
+        assert candidates[0].automatic_processing is False
+
+        # Verify confidence is set correctly (right / total words)
+        expected_confidence = 19 / 20
+        assert candidates[0].confidence == expected_confidence
 
 
 def test_import_product_predictions():
