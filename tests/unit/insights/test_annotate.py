@@ -1,6 +1,7 @@
 from robotoff.insights.annotate import (
     NUTRIENT_DEFAULT_UNIT,
     NutrientExtractionAnnotator,
+    rotate_bounding_box,
 )
 from robotoff.types import NutrientData, NutrientSingleValue
 
@@ -58,3 +59,19 @@ class TestNutrientExtractionAnnotator:
         result = NutrientExtractionAnnotator.add_default_unit(nutrient_data)
 
         assert result.nutrients["unknown-nutrient"].unit is None
+
+
+def test_rotate_bounding_box():
+    bounding_box = (10, 20, 100, 200)
+    width, height = 1000, 800
+    result = rotate_bounding_box(bounding_box, width, height, 0)
+    assert result == (10, 20, 100, 200)
+
+    result = rotate_bounding_box(bounding_box, width, height, 90)
+    assert result == (20, 800 - 100, 200, 800 - 10)
+
+    result = rotate_bounding_box(bounding_box, width, height, 180)
+    assert result == (800 - 100, 1000 - 200, 800 - 10, 1000 - 20)
+
+    result = rotate_bounding_box(bounding_box, width, height, 270)
+    assert result == (1000 - 200, 10, 1000 - 20, 100)

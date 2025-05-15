@@ -3,6 +3,7 @@ import datetime
 import functools
 import itertools
 import operator
+import typing
 import uuid
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Optional, Type, Union
@@ -1845,8 +1846,11 @@ class ImageOrientationImporter(InsightImporter):
     def is_conflicting_insight(
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
-        # Two insights conflict if they refer to the same image
-        return candidate.source_image == reference.source_image
+        # Two insights conflict if they refer to the same selected image
+        return (
+            candidate.value == reference.value
+            and candidate.source_image == reference.source_image
+        )
 
     @classmethod
     def generate_candidates(
@@ -1875,16 +1879,22 @@ class ImageOrientationImporter(InsightImporter):
 
             confidence = count.get(orientation, 0) / total_words
 
-            if prediction.source_image:
-                image_id = get_image_id(prediction.source_image)
+            source_image = typing.cast(str, prediction.source_image)
+            image_id = get_image_id(source_image)
 
-                # Filter for selected images only with high confidence
+            # Filter for selected images only with high confidence
+            if not (image_id and confidence >= 0.95):
+                continue
+
+            for key, image_data in product.images.items():
                 if (
-                    image_id
-                    and is_selected_image(product.images, image_id)
-                    and confidence >= 0.95
+                    key.startswith(("front", "ingredients", "nutrition", "packaging"))
+                    and image_data.get("imgid") == image_id
                 ):
-                    insight = ProductInsight(**prediction.to_dict())
+                    # The `value` field represents the key of the selected image
+                    insight_dict = prediction.to_dict()
+                    insight_dict["value"] = key
+                    insight = ProductInsight(**insight_dict)
                     insight.automatic_processing = False
                     insight.confidence = confidence
                     yield insight

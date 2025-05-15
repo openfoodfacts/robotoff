@@ -3,6 +3,7 @@
 
 import abc
 import datetime
+import typing
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Type
@@ -79,6 +80,12 @@ MISSING_PRODUCT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_missing_product.name,
     description="the product could not be found on OFF",
 )
+OUTDATED_DATA_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_updated_product.value,
+    status=AnnotationStatus.error_updated_product.name,
+    description="Robotoff data is out of date with OFF, the update was not sent",
+)
+
 ALREADY_ANNOTATED_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_already_annotated.value,
     status=AnnotationStatus.error_already_annotated.name,
@@ -905,7 +912,7 @@ class ImageOrientationAnnotator(InsightAnnotator):
         auth: Optional[OFFAuthentication] = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
-        """Process image orientation annotation and rotate the selected image
+        """Process image orientation annotation and rotate the selected images
         if necessary.
 
         :param insight: the image orientation insight
@@ -921,39 +928,32 @@ class ImageOrientationAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        if insight.source_image is None:
-            logger.warning(
-                "Missing source_image in image orientation insight: %s", insight.id
-            )
-            return INVALID_DATA
-
-        image_id = get_image_id(insight.source_image)
+        image_id = get_image_id(typing.cast(str, insight.source_image))
 
         if image_id is None:
-            logger.warning(
+            raise ValueError(
                 "Invalid image ID for image orientation insight: %s, %s",
                 image_id,
                 insight.id,
             )
-            return INVALID_DATA
 
         rotation = insight.data.get("rotation")
 
         if rotation is None or rotation == 0:
-            logger.warning(
+            raise ValueError(
                 "Missing or zero rotation angle in image orientation insight: %s",
                 insight.id,
             )
-            return INVALID_DATA
 
-        original_image_data = product["images"].get(image_id)
+        product_images = product.get("images", {})
+        original_image_data = product_images.get(image_id)
         if not original_image_data:
             logger.warning(
                 "Original image %s not found in product images for insight: %s",
                 image_id,
                 insight.id,
             )
-            return INVALID_DATA
+            return OUTDATED_DATA_RESULT
 
         original_size = original_image_data.get("sizes", {}).get("full", {})
         original_height = original_size.get("h")
@@ -965,66 +965,55 @@ class ImageOrientationAnnotator(InsightAnnotator):
                 image_id,
                 insight.id,
             )
-            return INVALID_DATA
+            return OUTDATED_DATA_RESULT
 
-        # We'll check if the image is a selected image by iterating through
-        # the product images looking for keys that indicate selected images
-        selected_keys = []
-        for key, image_data in product["images"].items():
-            if key.startswith(("front", "ingredients", "nutrition", "packaging")):
-                if image_data.get("imgid") == image_id:
-                    selected_keys.append(key)
+        # This is the key of the selected image that we want to rotate
+        selected_key = typing.cast(str, insight.value)
 
-        if not selected_keys:
-            logger.info(
-                "Image %s is not a selected image, not applying rotation", image_id
+        if selected_key not in product_images:
+            logger.warning(
+                "Selected image %s not found in product images for insight: %s",
+                selected_key,
+                insight.id,
             )
-            return ALREADY_ANNOTATED_RESULT
+            return OUTDATED_DATA_RESULT
 
         # Process all selected images that use this source image
-        for selected_key in selected_keys:
-            image_data = product["images"][selected_key]
+        image_data = product_images[selected_key]
 
-            # Extract current crop information if it exists
-            crop_bounding_box = None
-            if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
-                # Check for uncropped images (coordinates = -1)
-                if (
-                    image_data["x1"] == "-1"
-                    and image_data["y1"] == "-1"
-                    and image_data["x2"] == "-1"
-                    and image_data["y2"] == "-1"
-                ):
-                    pass
-                else:
-                    y1 = float(image_data["y1"])
-                    x1 = float(image_data["x1"])
-                    y2 = float(image_data["y2"])
-                    x2 = float(image_data["x2"])
+        # Extract current crop information if it exists
+        crop_bounding_box = None
+        if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
+            # Check for uncropped images (coordinates = -1)
+            if not (
+                image_data["x1"] == "-1"
+                and image_data["y1"] == "-1"
+                and image_data["x2"] == "-1"
+                and image_data["y2"] == "-1"
+            ):
+                y1 = float(image_data["y1"])
+                x1 = float(image_data["x1"])
+                y2 = float(image_data["y2"])
+                x2 = float(image_data["x2"])
 
-                    crop_bounding_box = rotate_bounding_box(
-                        (y1, x1, y2, x2),
-                        original_width,
-                        original_height,
-                        rotation,
-                    )
-
-            # Call the Product Opener API to rotate the image
-            try:
-                select_rotate_image(
-                    product_id=product_id,
-                    image_id=image_id,
-                    image_key=selected_key,
-                    rotate=rotation,
-                    crop_bounding_box=crop_bounding_box,
-                    auth=auth,
-                    is_vote=is_vote,
-                    insight_id=insight.id,
+                crop_bounding_box = rotate_bounding_box(
+                    (y1, x1, y2, x2),
+                    original_width,
+                    original_height,
+                    rotation,
                 )
-            except Exception as e:
-                logger.error("Error while rotating image %s: %s", image_id, str(e))
-                return INVALID_DATA
 
+        # Call the Product Opener API to rotate the image
+        select_rotate_image(
+            product_id=product_id,
+            image_id=image_id,
+            image_key=selected_key,
+            rotate=rotation,
+            crop_bounding_box=crop_bounding_box,
+            auth=auth,
+            is_vote=is_vote,
+            insight_id=insight.id,
+        )
         return UPDATED_ANNOTATION_RESULT
 
 
