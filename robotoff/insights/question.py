@@ -4,7 +4,7 @@ from typing import Optional
 
 from robotoff import settings
 from robotoff.models import ProductInsight
-from robotoff.off import generate_image_url
+from robotoff.off import generate_image_path, generate_image_url
 from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.types import InsightType, JSONType, ProductIdentifier
@@ -121,11 +121,11 @@ class AddBinaryQuestion(Question):
     :param value: the suggested answer to the question
     :param insight: the insight used to generate the question
     :param ref_image_url: the URL of a reference image, used to display the
-    image of the logo for `label` insights, optional
+        image of the logo for `label` insights, optional
     :param source_image_url: the URL of the image from where the insight was
-    extracted from, optional
+        extracted from, optional
     :param value_tag: The `value_tag` that is going to be sent to Product
-    Opener if the insight is validated, optional
+        Opener if the insight is validated, optional
     """
 
     def __init__(
@@ -395,6 +395,30 @@ class UPCImageQuestionFormatter(QuestionFormatter):
             source_image_url = settings.BaseURLProvider.image_url(
                 product_id.server_type, get_display_image(insight.source_image)
             )
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
+class ImageOrientationQuestionFormatter(QuestionFormatter):
+    question = "Is this image rotated with the following orientation?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        server_type = insight.get_product_id().server_type
+
+        image_key = insight.data["image_key"]
+        image_rev = insight.data["image_rev"]
+
+        image_path = generate_image_path(
+            insight.get_product_id(), f"{image_key}.{image_rev}.400"
+        )
+        source_image_url = settings.BaseURLProvider.image_url(server_type, image_path)
 
         return AddBinaryQuestion(
             question=localized_question,

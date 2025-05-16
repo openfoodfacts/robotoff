@@ -205,7 +205,7 @@ class TestImageOrientationImporter:
         product = Product(
             {
                 "code": prediction.barcode,
-                "images": {"1": {"imgid": "1"}, "front_it": {"imgid": "1"}},
+                "images": {"1": {"imgid": "1"}, "front_it": {"imgid": "1", "rev": "3"}},
             }
         )
 
@@ -224,7 +224,8 @@ class TestImageOrientationImporter:
 
         # Verify properties of the candidate
         candidate = candidates[0]
-        assert candidate.value == "front_it"
+        assert candidate.data["image_key"] == "front_it"
+        assert candidate.data["image_rev"] == "3"
         # Calculate expected confidence
         total = sum(prediction.data["count"].values())
         expected_confidence = prediction.data["count"]["right"] / total
@@ -255,9 +256,9 @@ class TestImageOrientationImporter:
                 "images": {
                     "1": {"imgid": "1"},
                     "2": {"imgid": "2"},
-                    "nutrition_fr": {"imgid": "1"},
-                    "front_it": {"imgid": "1"},
-                    "front_en": {"imgid": "2"},
+                    "nutrition_fr": {"imgid": "1", "rev": "2"},
+                    "front_it": {"imgid": "1", "rev": "3"},
+                    "front_en": {"imgid": "2", "rev": "4"},
                 },
             }
         )
@@ -272,13 +273,17 @@ class TestImageOrientationImporter:
         )
 
         assert len(candidates) == 2
-        assert candidates[0].value == "nutrition_fr"
+        assert candidates[0].value_tag == "right"
+        assert candidates[0].data["image_key"] == "nutrition_fr"
+        assert candidates[0].data["image_rev"] == "2"
         assert candidates[0].automatic_processing is False
         # Verify confidence is set correctly (right / total words)
         expected_confidence = 19 / 20
         assert candidates[0].confidence == expected_confidence
 
-        assert candidates[1].value == "front_it"
+        assert candidates[1].value_tag == "right"
+        assert candidates[1].data["image_key"] == "front_it"
+        assert candidates[1].data["image_rev"] == "3"
 
 
 def test_import_product_predictions():
