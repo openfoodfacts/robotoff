@@ -39,3 +39,7 @@ msgstr "Èske imaj sa a se yon imaj nitrisyon pou lang sa a?"
 msgid "Does the product have this packaging element?"
 msgstr "Èske pwodwi a gen eleman anbalaj sa a?"
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image rotated with the following orientation?"
+msgstr "Èske imaj sa a vire avèk oryantasyon sa a?"
+
