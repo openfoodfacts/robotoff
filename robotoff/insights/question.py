@@ -447,6 +447,7 @@ class QuestionFormatterFactory:
         InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
         InsightType.packaging.name: PackagingQuestionFormatter,
         InsightType.is_upc_image.name: UPCImageQuestionFormatter,
+        InsightType.image_orientation.name: ImageOrientationQuestionFormatter,
     }
 
     @classmethod
