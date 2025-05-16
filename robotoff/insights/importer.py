@@ -1888,7 +1888,7 @@ class ImageOrientationImporter(InsightImporter):
 
             for key, image_data in product.images.items():
                 try:
-                    current_angle = int(image_data.get("angle", "0"))
+                    current_angle = int(image_data.get("angle", "0") or 0)
                 except (TypeError, ValueError):
                     logger.warning("Invalid angle in image data: %s", image_data)
                     continue
