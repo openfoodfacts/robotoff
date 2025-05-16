@@ -1848,7 +1848,7 @@ class ImageOrientationImporter(InsightImporter):
     ) -> bool:
         # Two insights conflict if they refer to the same selected image
         return (
-            candidate.value == reference.value
+            candidate.data["image_key"] == reference.data["image_key"]
             and candidate.source_image == reference.source_image
         )
 
@@ -1893,7 +1893,9 @@ class ImageOrientationImporter(InsightImporter):
                 ):
                     # The `value` field represents the key of the selected image
                     insight_dict = prediction.to_dict()
-                    insight_dict["value"] = key
+                    insight_dict["data"]["image_key"] = key
+                    insight_dict["data"]["image_rev"] = image_data["rev"]
+                    insight_dict["value_tag"] = orientation
                     insight = ProductInsight(**insight_dict)
                     insight.automatic_processing = False
                     insight.confidence = confidence

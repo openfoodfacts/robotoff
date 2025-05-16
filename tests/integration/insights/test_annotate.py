@@ -360,10 +360,13 @@ class TestImageOrientationAnnotator:
 
         insight = ProductInsightFactory(
             type="image_orientation",
+            value_tag="right",
             data={
                 "orientation": "right",
                 "rotation": 270,
                 "count": {"up": 1, "right": 19},
+                "image_rev": "10",
+                "image_key": "front_fr",
             },
             source_image="/1.jpg",
         )
@@ -385,10 +388,13 @@ class TestImageOrientationAnnotator:
 
         insight = ProductInsightFactory(
             type="image_orientation",
+            value_tag="right",
             data={
                 "orientation": "right",
                 "rotation": 270,
                 "count": {"up": 1, "right": 19},
+                "image_key": "front_fr",
+                "image_rev": "10",
             },
             source_image="/1.jpg",
         )
@@ -412,6 +418,7 @@ class TestImageOrientationAnnotator:
                     "y1": "200",
                     "x2": "600",
                     "y2": "800",
+                    "rev": "7",
                     "sizes": {"full": {"h": 1000, "w": 800}},
                 },
             }
@@ -427,11 +434,13 @@ class TestImageOrientationAnnotator:
             barcode=barcode,
             server_type=server_type,
             type="image_orientation",
-            value="ingredients_it",
+            value="right",
             data={
                 "orientation": "right",
                 "rotation": 270,
                 "count": {"up": 1, "right": 19},
+                "image_key": "ingredients_it",
+                "image_rev": "7",
             },
             source_image=generate_image_path(product_id, "1"),
         )
@@ -459,20 +468,25 @@ class TestImageOrientationAnnotator:
             insight_id=insight.id,
         )
 
-    def test_uncropped_image_handling(self, mock_get_product, mock_select_rotate_image):
+    @pytest.mark.parametrize(
+        "selected_image_data",
+        [
+            # Uncropped selected images can have "-1" or -1 (string or int) for
+            # coordinates
+            {"imgid": "1", "rev": "2", "x1": "-1", "y1": "-1", "x2": "-1", "y2": "-1"},
+            {"imgid": "1", "rev": "2", "x1": -1, "y1": -1, "x2": -1, "y2": -1},
+        ],
+    )
+    def test_uncropped_image_handling(
+        self, selected_image_data, mock_get_product, mock_select_rotate_image
+    ):
         mock_get_product.return_value = {
             "images": {
                 "1": {
                     "imgid": "1",
                     "sizes": {"full": {"h": 1000, "w": 800}},
                 },
-                "front_en": {
-                    "imgid": "1",
-                    "x1": "-1",  # Uncropped image
-                    "y1": "-1",
-                    "x2": "-1",
-                    "y2": "-1",
-                },
+                "front_en": selected_image_data,
             }
         }
 
@@ -483,11 +497,13 @@ class TestImageOrientationAnnotator:
             barcode=barcode,
             server_type=server_type,
             type="image_orientation",
-            value="front_en",
+            value_tag="right",
             data={
                 "orientation": "right",
                 "rotation": 270,
                 "count": {"up": 1, "right": 19},
+                "image_rev": "2",
+                "image_key": "front_en",
             },
             source_image="/1.jpg",
         )
