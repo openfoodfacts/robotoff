@@ -1887,9 +1887,18 @@ class ImageOrientationImporter(InsightImporter):
                 continue
 
             for key, image_data in product.images.items():
+                try:
+                    current_angle = int(image_data.get("angle", "0"))
+                except (TypeError, ValueError):
+                    logger.warning("Invalid angle in image data: %s", image_data)
+                    continue
                 if (
                     key.startswith(("front", "ingredients", "nutrition", "packaging"))
+                    # the selected image refers to the original image that has an
+                    # incorrect orientation
                     and image_data.get("imgid") == image_id
+                    # the selected image angle is different from the detected one
+                    and current_angle != rotation
                 ):
                     # The `value` field represents the key of the selected image
                     insight_dict = prediction.to_dict()

@@ -2079,7 +2079,10 @@ class TestImageOrientationImporter:
                 "up",
                 0,
                 {"up": 10, "right": 0},
-                {"1": {"imgid": "1"}, "front_en": {"imgid": "1", "rev": "10"}},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
                 True,
                 0,
             ),
@@ -2088,7 +2091,22 @@ class TestImageOrientationImporter:
                 "right",
                 270,
                 {"up": 5, "right": 4},
-                {"1": {"imgid": "1"}, "front_en": {"imgid": "1", "rev": "10"}},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # Image is already rotated - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "270"},
+                },
                 True,
                 0,
             ),
@@ -2101,18 +2119,23 @@ class TestImageOrientationImporter:
                 {
                     "1": {"imgid": "1"},
                     "2": {"imgid": "2"},
-                    "front_en": {"imgid": "2", "rev": "10"},
+                    "front_en": {"imgid": "2", "rev": "10", "angle": "0"},
                 },
                 False,
                 0,
             ),
             # Valid case - should generate candidate
             # (high confidence, selected image, needs rotation)
+            # Missing angle field, but should be interpreted as "0" and generate a
+            # candidate
             (
                 "right",
                 270,
                 {"up": 0, "right": 20},
-                {"1": {"imgid": "1"}, "front_en": {"imgid": "1", "rev": "10"}},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10"},
+                },
                 True,
                 1,
             ),
@@ -2122,7 +2145,10 @@ class TestImageOrientationImporter:
                 "right",
                 270,
                 {"up": 1, "right": 19},
-                {"1": {"imgid": "1"}, "front_en": {"imgid": "1", "rev": "10"}},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
                 True,
                 1,
             ),
@@ -2131,7 +2157,10 @@ class TestImageOrientationImporter:
                 "right",
                 270,
                 {"up": 1, "right": 19, "left": 0},
-                {"1": {"imgid": "1"}, "front_en": {"imgid": "1", "rev": "10"}},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
                 True,
                 1,
             ),
@@ -2140,7 +2169,10 @@ class TestImageOrientationImporter:
                 "right",
                 270,
                 {"up": 2, "right": 18, "left": 0},
-                {"1": {"imgid": "1"}, "front_en": {"imgid": "1", "rev": "10"}},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
                 True,
                 0,
             ),
@@ -2153,10 +2185,10 @@ class TestImageOrientationImporter:
                 {"up": 0, "right": 20},
                 {
                     "1": {"imgid": "1"},
-                    "front_fr": {"imgid": "1", "rev": "10"},
-                    "nutrition_fr": {"imgid": "1", "rev": "10"},
-                    "ingredients_fr": {"imgid": "1", "rev": "10"},
-                    "packaging_fr": {"imgid": "1", "rev": "10"},
+                    "front_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "nutrition_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "ingredients_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "packaging_fr": {"imgid": "1", "rev": "10", "angle": "0"},
                 },
                 True,
                 4,
