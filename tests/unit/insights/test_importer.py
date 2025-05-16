@@ -1900,6 +1900,86 @@ class TestNutrientExtractionImporter:
         product_incomplete = Product(
             {"code": DEFAULT_BARCODE, "nutriments": {"energy-kcal_100g": "100"}}
         )
+
+        data = {
+            "nutrients": {
+                "energy-kj_100g": {
+                    "entity": "energy-kj_100g",
+                    "value": "100",
+                    "unit": "kj",
+                    "text": "100 kj",
+                    "start": 0,
+                    "end": 2,
+                    "char_start": 0,
+                    "char_end": 6,
+                },
+            }
+        }
+        insight = ProductInsight(
+            type=InsightType.nutrient_extraction,
+            data=data,
+            barcode=DEFAULT_BARCODE,
+            source_image=DEFAULT_SOURCE_IMAGE,
+            predictor="nutrition_extractor",
+            predictor_version="nutrition_extractor-1.0",
+            automatic_processing=False,
+        )
+        NutrientExtractionImporter.add_optional_fields(insight, product_missing)
+        assert insight.campaign == ["missing-nutrition"]
+
+        NutrientExtractionImporter.add_optional_fields(insight, product_incomplete)
+        assert insight.campaign == ["incomplete-nutrition"]
+
+    def test_generate_candidates_with_language(self):
+        # Test that language information is added to the data field
+        product = Product({"code": DEFAULT_BARCODE, "nutriments": {}, "lang": "fr"})
+        data = {
+            "nutrients": {
+                "energy-kj_100g": {
+                    "entity": "energy-kj_100g",
+                    "value": "100",
+                    "unit": "kj",
+                    "text": "100 kj",
+                    "start": 0,
+                    "end": 1,
+                    "char_start": 0,
+                    "char_end": 6,
+                }
+            }
+        }
+        predictions = [
+            Prediction(
+                type=PredictionType.nutrient_extraction,
+                data=data,
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+                predictor="nutrition_extractor",
+                predictor_version="nutrition_extractor-1.0",
+                automatic_processing=False,
+            )
+        ]
+        candidates = list(
+            NutrientExtractionImporter.generate_candidates(
+                product, predictions, DEFAULT_PRODUCT_ID
+            )
+        )
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        assert candidate.type == InsightType.nutrient_extraction.name
+        assert "lang" in candidate.data
+        assert candidate.data["lang"] == "fr"
+
+        # Define test products for campaign tests
+        product_missing = Product(
+            {
+                "code": DEFAULT_BARCODE,
+                "nutriments": {},
+            }
+        )
+        product_incomplete = Product(
+            {"code": DEFAULT_BARCODE, "nutriments": {"energy-kcal_100g": "100"}}
+        )
+
         data = {
             "nutrients": {
                 "energy-kj_100g": {

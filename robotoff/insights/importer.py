@@ -1565,7 +1565,23 @@ class NutrientExtractionImporter(InsightImporter):
 
         for prediction in predictions:
             if cls.keep_prediction(product, list(prediction.data["nutrients"].keys())):
-                yield ProductInsight(**prediction.to_dict())
+                # Create a copy of the prediction data to add language information
+                prediction_dict = prediction.to_dict()
+
+                # Add language information to the data field
+                # Use product language if available, otherwise default to "en"
+                lang = None
+                if product and hasattr(product, "lang"):
+                    lang = product.lang
+
+                if lang:
+                    if prediction_dict.get("data") is None:
+                        prediction_dict["data"] = {}
+
+                    # Add lang field to the data
+                    prediction_dict["data"]["lang"] = lang
+
+                yield ProductInsight(**prediction_dict)
 
     @staticmethod
     def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:

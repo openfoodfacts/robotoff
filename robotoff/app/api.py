@@ -174,7 +174,10 @@ class ProductInsightResource:
         insights = [
             insight.to_dict()
             for insight in get_insights(
-                barcode=barcode, server_type=server_type, limit=None
+                barcode=barcode,
+                server_type=server_type,
+                limit=None,
+                language_codes=req.get_param_as_list("language_codes"),
             )
         ]
 
@@ -282,6 +285,7 @@ class RandomInsightResource:
         countries = get_countries_from_req(req)
 
         keep_types = [insight_type] if insight_type else None
+        language_codes: Optional[list[str]] = req.get_param_as_list("language_codes")
         get_insights_ = functools.partial(
             get_insights,
             server_type=server_type,
@@ -290,6 +294,7 @@ class RandomInsightResource:
             value_tag=value_tag,
             order_by="random",
             predictor=predictor,
+            language_codes=language_codes,
         )
 
         insights = [insight.to_dict() for insight in get_insights_(limit=count)]
@@ -1410,6 +1415,7 @@ class ProductQuestionsResource:
                 order_by="n_votes",
                 avoid_voted_on=_get_skip_voted_on(auth, device_id),
                 automatically_processable=False,
+                language_codes=req.get_param_as_list("language_codes"),
             ),
             key=question_insight_type_sort_func,
         )
@@ -1462,6 +1468,7 @@ def get_questions_resource_on_get(
     page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
+    language_codes: Optional[list[str]] = req.get_param_as_list("language_codes")
     keep_types: Optional[list[str]] = req.get_param_as_list(
         "insight_types", required=False
     )
@@ -1515,6 +1522,7 @@ def get_questions_resource_on_get(
         automatically_processable=False,
         campaigns=campaigns,
         predictor=predictor,
+        language_codes=language_codes,
     )
 
     offset: int = (page - 1) * count
@@ -1572,6 +1580,7 @@ class DumpResource:
         annotated = req.get_param_as_bool("annotated", blank_as_true=False)
         value_tag = req.get_param("value_tag")
         count = req.get_param_as_int("count", min_value=0, max_value=10_000)
+        language_codes: Optional[list[str]] = req.get_param_as_list("language_codes")
         server_type = get_server_type_from_req(req)
 
         get_insights_ = functools.partial(
@@ -1581,6 +1590,7 @@ class DumpResource:
             keep_types=keep_types,
             annotated=annotated,
             value_tag=value_tag,
+            language_codes=language_codes,
         )
         insight_count: int = get_insights_(count=True)  # type: ignore
         if insight_count > 10_000 and count is None:
@@ -1709,6 +1719,7 @@ class UnansweredQuestionCollection:
             campaigns = [campaign] if campaign is not None else None
 
         predictor = req.get_param("predictor")
+        language_codes: Optional[list[str]] = req.get_param_as_list("language_codes")
 
         get_insights_ = functools.partial(
             get_insights,
@@ -1721,6 +1732,7 @@ class UnansweredQuestionCollection:
             reserved_barcode=reserved_barcode,
             campaigns=campaigns,
             predictor=predictor,
+            language_codes=language_codes,
         )
 
         offset: int = (page - 1) * count
