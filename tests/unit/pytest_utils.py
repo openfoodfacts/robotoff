@@ -5,7 +5,7 @@ from diskcache import Cache
 from openfoodfacts import OCRResult
 
 from robotoff import settings
-from robotoff.utils.download import cache_asset_from_url, AssetLoadingException
+from robotoff.utils.download import AssetLoadingException, cache_asset_from_url
 
 test_cache = Cache(settings.TESTS_DISKCACHE_DIR)
 
