@@ -5,14 +5,23 @@ from openfoodfacts.types import JSONType
 
 from robotoff.insights.annotate import (
     INVALID_DATA,
+    MISSING_PRODUCT_RESULT,
+    OUTDATED_DATA_RESULT,
     UPDATED_ANNOTATION_RESULT,
     AnnotationResult,
     CategoryAnnotator,
+    ImageOrientationAnnotator,
     IngredientSpellcheckAnnotator,
     NutrientExtractionAnnotator,
 )
 from robotoff.models import ProductInsight
-from robotoff.types import ObjectDetectionModel, PredictionType
+from robotoff.off import generate_image_path
+from robotoff.types import (
+    ObjectDetectionModel,
+    PredictionType,
+    ProductIdentifier,
+    ServerType,
+)
 
 from ..models_utils import (
     ImageModelFactory,
@@ -331,3 +340,179 @@ class TestNutrientExtractionAnnotator:
             is_vote=False,
             insight_id=nutrient_extraction_insight.id,
         )
+
+
+class TestImageOrientationAnnotator:
+    @pytest.fixture
+    def mock_get_product(self, mocker):
+        return mocker.patch("robotoff.insights.annotate.get_product")
+
+    @pytest.fixture
+    def mock_select_rotate_image(self, mocker) -> Mock:
+        return mocker.patch("robotoff.insights.annotate.select_rotate_image")
+
+    @pytest.fixture
+    def mock_rotate_bounding_box(self, mocker) -> Mock:
+        return mocker.patch("robotoff.insights.annotate.rotate_bounding_box")
+
+    def test_process_annotation_missing_product(self, mock_get_product):
+        mock_get_product.return_value = None
+
+        insight = ProductInsightFactory(
+            type="image_orientation",
+            value_tag="right",
+            data={
+                "orientation": "right",
+                "rotation": 270,
+                "count": {"up": 1, "right": 19},
+                "image_rev": "10",
+                "image_key": "front_fr",
+            },
+            source_image="/1.jpg",
+        )
+
+        result = ImageOrientationAnnotator.process_annotation(insight)
+
+        assert result == MISSING_PRODUCT_RESULT
+        mock_get_product.assert_called_once()
+
+    def test_process_annotation_not_selected_image(self, mock_get_product):
+        mock_get_product.return_value = {
+            "images": {
+                "1": {
+                    "imgid": "1",
+                    "sizes": {"full": {"h": 1000, "w": 800}},
+                },  # Not a selected image type (not front, ingredients, etc.)
+            }
+        }
+
+        insight = ProductInsightFactory(
+            type="image_orientation",
+            value_tag="right",
+            data={
+                "orientation": "right",
+                "rotation": 270,
+                "count": {"up": 1, "right": 19},
+                "image_key": "front_fr",
+                "image_rev": "10",
+            },
+            source_image="/1.jpg",
+        )
+
+        result = ImageOrientationAnnotator.process_annotation(insight)
+
+        assert result == OUTDATED_DATA_RESULT
+
+    def test_process_annotation_success_with_absolute_coordinates(
+        self, mock_get_product, mock_select_rotate_image, mock_rotate_bounding_box
+    ):
+        mock_get_product.return_value = {
+            "images": {
+                "1": {
+                    "imgid": "1",
+                    "sizes": {"full": {"h": 1000, "w": 800}},
+                },
+                "ingredients_it": {
+                    "imgid": "1",
+                    "x1": "100",
+                    "y1": "200",
+                    "x2": "600",
+                    "y2": "800",
+                    "rev": "7",
+                    "sizes": {"full": {"h": 1000, "w": 800}},
+                },
+            }
+        }
+
+        mock_rotate_bounding_box.return_value = (300, 200, 700, 500)
+
+        barcode = "1234567890123"
+        server_type = "off"
+        product_id = ProductIdentifier(barcode, ServerType.off)
+
+        insight = ProductInsightFactory(
+            barcode=barcode,
+            server_type=server_type,
+            type="image_orientation",
+            value="right",
+            data={
+                "orientation": "right",
+                "rotation": 270,
+                "count": {"up": 1, "right": 19},
+                "image_key": "ingredients_it",
+                "image_rev": "7",
+            },
+            source_image=generate_image_path(product_id, "1"),
+        )
+
+        result = ImageOrientationAnnotator.process_annotation(insight)
+
+        assert result == UPDATED_ANNOTATION_RESULT
+
+        # Verify rotate_bounding_box was called with absolute coordinates
+        mock_rotate_bounding_box.assert_called_once_with(
+            (200.0, 100.0, 800.0, 600.0),  # y1, x1, y2, x2
+            800,  # width
+            1000,  # height
+            270,  # rotation angle
+        )
+
+        mock_select_rotate_image.assert_called_once_with(
+            product_id=product_id,
+            image_id="1",
+            image_key="ingredients_it",
+            rotate=270,
+            crop_bounding_box=(300, 200, 700, 500),
+            auth=None,
+            is_vote=False,
+            insight_id=insight.id,
+        )
+
+    @pytest.mark.parametrize(
+        "selected_image_data",
+        [
+            # Uncropped selected images can have "-1" or -1 (string or int) for
+            # coordinates
+            {"imgid": "1", "rev": "2", "x1": "-1", "y1": "-1", "x2": "-1", "y2": "-1"},
+            {"imgid": "1", "rev": "2", "x1": -1, "y1": -1, "x2": -1, "y2": -1},
+        ],
+    )
+    def test_uncropped_image_handling(
+        self, selected_image_data, mock_get_product, mock_select_rotate_image
+    ):
+        mock_get_product.return_value = {
+            "images": {
+                "1": {
+                    "imgid": "1",
+                    "sizes": {"full": {"h": 1000, "w": 800}},
+                },
+                "front_en": selected_image_data,
+            }
+        }
+
+        barcode = "1234567890123"
+        server_type = "off"
+
+        insight = ProductInsightFactory(
+            barcode=barcode,
+            server_type=server_type,
+            type="image_orientation",
+            value_tag="right",
+            data={
+                "orientation": "right",
+                "rotation": 270,
+                "count": {"up": 1, "right": 19},
+                "image_rev": "2",
+                "image_key": "front_en",
+            },
+            source_image="/1.jpg",
+        )
+
+        result = ImageOrientationAnnotator.process_annotation(insight)
+
+        assert result == UPDATED_ANNOTATION_RESULT
+
+        # Verify select_rotate_image was called with crop_bounding_box as None
+        mock_select_rotate_image.assert_called_once()
+        _, kwargs = mock_select_rotate_image.call_args
+        assert kwargs["crop_bounding_box"] is None

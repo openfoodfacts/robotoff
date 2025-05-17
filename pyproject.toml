@@ -38,7 +38,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "robotoff"
-version = "1.65.0"
+version = "1.66.1"
 description = "Real-time and batch prediction service for Open Food Facts."
 authors = ["Open Food Facts Team"]
 license = "GNU Affero General Public License v3"
@@ -79,7 +79,7 @@ imagehash = "~4.3.1"
 peewee-migrate = "~1.12.2"
 diskcache = "~5.6.3"
 google-cloud-batch = "~0.17.26"
-duckdb = "~1.0.0"
+duckdb = ">=1.0,<1.2"
 google-cloud-storage = "~2.14.0"
 pandas = "~2.2.2"
 pyarrow = "~17.0.0"
@@ -98,7 +98,7 @@ factory_boy-peewee = "0.0.4"  # This package is archived and not maintained anym
 mypy = "1.10.1"
 pytest = "~7.2.0"
 pytest-mock = "~3.10.0"
-pre-commit = "~2.20.0"
+pre-commit = "~4.2.0"
 toml-sort = "~0.20.1"
 isort = "^6.0.1"
 flake8-bugbear = "~22.10.27"

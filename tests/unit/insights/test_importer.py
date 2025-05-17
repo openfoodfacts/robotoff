@@ -8,6 +8,7 @@ from robotoff.insights.importer import (
     BrandInsightImporter,
     CategoryImporter,
     ExpirationDateImporter,
+    ImageOrientationImporter,
     InsightImporter,
     LabelInsightImporter,
     NutrientExtractionImporter,
@@ -1985,16 +1986,21 @@ class TestImportInsightsForProducts:
         )
 
     def test_import_insights_type_mismatch(self, mocker):
-        prediction_dict = {
-            "barcode": DEFAULT_BARCODE,
-            "type": PredictionType.image_orientation.name,
-            "data": {},
+        # Mock the IMPORTERS list to only include one importer
+        # that doesn't have image_orientation as requirement
+        mock_importer = mocker.MagicMock()
+        mock_importer.get_required_prediction_types.return_value = {
+            PredictionType.category
         }
+        mock_importer.get_input_prediction_types.return_value = {
+            PredictionType.category
+        }
+
+        mocker.patch("robotoff.insights.importer.IMPORTERS", [mock_importer])
+
         get_product_predictions_mock = mocker.patch(
             "robotoff.insights.importer.get_product_predictions",
-            return_value=[
-                prediction_dict,
-            ],
+            return_value=[],
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
@@ -2011,3 +2017,235 @@ class TestImportInsightsForProducts:
         assert len(import_results) == 0
         assert not get_product_predictions_mock.called
         assert not import_insights_mock.called
+
+
+class TestImageOrientationImporter:
+    def test_image_orientation_get_type(self):
+        assert ImageOrientationImporter.get_type() == InsightType.image_orientation
+
+    def test_image_orientation_get_required_prediction_types(self):
+        assert ImageOrientationImporter.get_required_prediction_types() == {
+            PredictionType.image_orientation
+        }
+
+    def test_image_orientation_is_conflicting_insight(self):
+        candidate = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_en"},
+            source_image="/1.jpg",
+        )
+
+        # Conflicting insight (same source_image)
+        reference = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_en"},
+            source_image="/1.jpg",
+        )
+        assert (
+            ImageOrientationImporter.is_conflicting_insight(candidate, reference)
+            is True
+        )
+
+        # Non-conflicting insight (different source_image)
+        reference_2 = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_en"},
+            source_image="/2.jpg",
+        )
+        # Non-conflicting insight (different image key)
+        reference_3 = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_it"},
+            source_image="/1.jpg",
+        )
+        assert (
+            ImageOrientationImporter.is_conflicting_insight(candidate, reference_2)
+            is False
+        )
+        assert (
+            ImageOrientationImporter.is_conflicting_insight(candidate, reference_3)
+            is False
+        )
+
+    @pytest.mark.parametrize(
+        "orientation,rotation,counts,image_data,selected,expected_candidates",
+        [
+            # Upright image - should not generate candidate
+            (
+                "up",
+                0,
+                {"up": 10, "right": 0},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # Low confidence - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 5, "right": 4},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # Image is already rotated - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "270"},
+                },
+                True,
+                0,
+            ),
+            # Not selected image - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 10},
+                # Default source image is "1"
+                {
+                    "1": {"imgid": "1"},
+                    "2": {"imgid": "2"},
+                    "front_en": {"imgid": "2", "rev": "10", "angle": "0"},
+                },
+                False,
+                0,
+            ),
+            # Valid case - should generate candidate
+            # (high confidence, selected image, needs rotation)
+            # Missing angle field, but should be interpreted as "0" and generate a
+            # candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10"},
+                },
+                True,
+                1,
+            ),
+            # Valid case with mixed orientation counts but still high confidence
+            # Most words are oriented right
+            (
+                "right",
+                270,
+                {"up": 1, "right": 19},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                1,
+            ),
+            # Edge case - exactly 95% confidence
+            (
+                "right",
+                270,
+                {"up": 1, "right": 19, "left": 0},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                1,
+            ),
+            # Edge case - just below 95% confidence
+            (
+                "right",
+                270,
+                {"up": 2, "right": 18, "left": 0},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # The same image is selected for multiple keys (nutrition, ingredients,
+            # front,...)
+            # We should generate as many candidates as keys
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "nutrition_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "ingredients_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "packaging_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                4,
+            ),
+        ],
+    )
+    def test_image_orientation_generate_candidates(
+        self,
+        mocker,
+        orientation: str,
+        rotation: int,
+        counts: JSONType,
+        image_data: JSONType,
+        selected: bool,
+        expected_candidates: int,
+    ):
+        # Mock is_selected_image function
+        mocker.patch(
+            "robotoff.insights.importer.is_selected_image", return_value=selected
+        )
+
+        # Calculate confidence for verification if needed
+        total = sum(counts.values())
+        confidence = counts.get(orientation, 0) / total if total > 0 else 0
+
+        # Create prediction with given parameters
+        prediction = Prediction(
+            barcode=DEFAULT_BARCODE,
+            type=PredictionType.image_orientation,
+            data={
+                "orientation": orientation,
+                "rotation": rotation,
+                "count": counts,
+            },
+            server_type=ServerType.off,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        # Create product
+        product = Product({"code": DEFAULT_BARCODE, "images": image_data})
+
+        # Generate candidates
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product,
+                [prediction],
+                DEFAULT_PRODUCT_ID,
+            )
+        )
+
+        # Verify number of candidates
+        assert len(candidates) == expected_candidates
+
+        if expected_candidates > 0:
+            candidate = candidates[0]
+            assert candidate.automatic_processing is False  # Should be False intially
+            assert candidate.confidence == confidence
+            assert candidate.data["rotation"] == rotation
+            assert "image_key" in candidate.data
+            assert "image_rev" in candidate.data
