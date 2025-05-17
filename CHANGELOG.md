@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.66.2](https://github.com/openfoodfacts/robotoff/compare/v1.66.1...v1.66.2) (2025-05-17)
+
+
+### Technical
+
+* **deps-dev:** bump flask from 3.1.0 to 3.1.1 ([#1565](https://github.com/openfoodfacts/robotoff/issues/1565)) ([ab68e1f](https://github.com/openfoodfacts/robotoff/commit/ab68e1fde99ffd90cab325e74e313da2dedc3433))
+* **deps:** bump duckdb from 1.0.0 to 1.1.0 ([#1515](https://github.com/openfoodfacts/robotoff/issues/1515)) ([8c630d2](https://github.com/openfoodfacts/robotoff/commit/8c630d21593e2d449b8681c8967d5f85d9c70aa7))
+* **deps:** bump vllm from 0.5.5 to 0.8.5 in /batch/spellcheck ([#1553](https://github.com/openfoodfacts/robotoff/issues/1553)) ([aaa24ab](https://github.com/openfoodfacts/robotoff/commit/aaa24ab40ef7e069a5caedb6a2a85ff30830773f))
+
 ## [1.66.1](https://github.com/openfoodfacts/robotoff/compare/v1.66.0...v1.66.1) (2025-05-16)
 
 
