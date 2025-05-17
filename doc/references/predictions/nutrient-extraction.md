@@ -125,6 +125,9 @@ Postprocessed entities contain the following fields:
 - `char_start`: the character start index of the entity, with respect to the original OCR JSON
 - `char_end` : the character end index of the entity, with respect to the original OCR JSON
 - `valid`: whether the extracted entity is valid. We consider an entity invalid if we couldn't extract nutrient value from the `text` field, or if there are more than one entity for a single nutrient. For example, two `proteins_100g` entities are both considered invalid, but one `proteins_100g` and one `proteins_serving` are considered valid.
+- `bounding_box_absolute`: the bounding box coordinates of the entity in absolute pixel values (y_min, x_min, y_max, x_max).
+
+In addition to these entity fields, the prediction also includes a `bounding_box` field, which represents the bounding box coordinates for the whole nutrition area calculated from all the entities.
 
 ### Integration
 
@@ -132,6 +135,16 @@ For every new uploaded image, the model is run on this image [^extract_nutrition
 If some entities were detected, we create a `Prediction` in DB using the usual import mechanism [^import_mechanism], under the type `nutrient_extraction`.
 
 We only create an insight if we detected at least one nutrient value that is not in the product nutrients [^nutrient_extraction_import].
+
+### Validation
+
+When validating nutrition extraction insights, users can:
+
+1. Accept or reject the extracted nutrient values
+2. Modify the extracted values if needed
+3. Propose a new bounding box for the nutrition area, which will be used for cropping the image
+
+This bounding box information is stored with the insight data and used for visualization and future image cropping.
 
 [^other_nutrient_detection]: Using a fixed set of classes is not the best approach when we have many classes. It however allows us to use LayoutLM architecture, which is very performant for this task, even when the nutrition table is hard to read due to packaging deformations or alterations. To detect the long-tail of nutrients, approaches using graph-based approach, where we would map a nutrient mention to its value, could be explored in the future.
 
