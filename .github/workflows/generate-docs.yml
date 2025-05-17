@@ -15,33 +15,33 @@ on:
     branches:
       - main
 
+env:
+  PYTHON_VERSION: 3.12
+
 jobs:
   publish-docs:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python-version: [3.11]
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python version
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.3
+        uses: snok/install-poetry@v1.4
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
         run: poetry install
@@ -66,9 +66,9 @@ jobs:
         # we only deploy on push to main
         if: |
           github.event_name == 'push' && github.event.ref == 'refs/heads/main'
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        uses: JamesIves/github-pages-deploy-action@v4.7.3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: gh_pages # The folder the action should deploy.
-          CLEAN: true # Automatically remove deleted files from the deploy branch
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages # The branch the action should deploy to.
+          folder: gh_pages # The folder the action should deploy.
+          clean: true # Automatically remove deleted files from the deploy branch

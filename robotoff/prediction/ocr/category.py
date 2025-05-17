@@ -10,7 +10,7 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff.off import normalize_tag
-from robotoff.taxonomy import get_taxonomy
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import get_logger
 
@@ -29,7 +29,9 @@ def category_taxonomisation(lang, match) -> Optional[str]:
 
     unchecked_category = lang + normalize_tag(match.group("category"))
 
-    checked_category = get_taxonomy("category").nodes.get(unchecked_category)
+    checked_category = get_taxonomy(TaxonomyType.category.name).nodes.get(
+        unchecked_category
+    )
 
     # TODO: We may want to create a utility function in Taxonomy  to match
     # also with synonyms of the category existing in the taxonomy
