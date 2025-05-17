@@ -46,7 +46,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
     data: dict[str, Any] = {}
-    timestamp: datetime = factory.LazyFunction(datetime.utcnow)
+    timestamp: datetime = factory.LazyFunction(datetime.utcnow)  # type: ignore
     countries = ["en:france"]
     brands: list[str] = []
     n_votes = 0

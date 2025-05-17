@@ -3,6 +3,7 @@ import datetime
 import functools
 import itertools
 import operator
+import typing
 import uuid
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Optional, Type, Union
@@ -1826,6 +1827,90 @@ class PackagingImporter(InsightImporter):
             yield ProductInsight(**prediction.to_dict())
 
 
+class ImageOrientationImporter(InsightImporter):
+    """Importer for image orientation insights.
+
+    This insight type predicts the orientation of selected images and suggests
+    rotations to make them correctly oriented if needed.
+    """
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.image_orientation
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.image_orientation}
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Two insights conflict if they refer to the same selected image
+        return (
+            candidate.data["image_key"] == reference.data["image_key"]
+            and candidate.source_image == reference.source_image
+        )
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Optional[Product],
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        # Skip if product check is disabled or no predictions are available
+        if not product or not predictions:
+            return
+
+        for prediction in predictions:
+            orientation_data = prediction.data
+            orientation = orientation_data.get("orientation")
+            rotation = orientation_data.get("rotation")
+            count = orientation_data.get("count", {})
+
+            if orientation == "up" or rotation == 0:
+                continue
+
+            # Calculate confidence as fraction of words with predicted orientation
+            total_words = sum(count.values())
+            if total_words == 0:
+                continue
+
+            confidence = count.get(orientation, 0) / total_words
+
+            source_image = typing.cast(str, prediction.source_image)
+            image_id = get_image_id(source_image)
+
+            # Filter for selected images only with high confidence
+            if not (image_id and confidence >= 0.95):
+                continue
+
+            for key, image_data in product.images.items():
+                try:
+                    current_angle = int(image_data.get("angle", "0") or 0)
+                except (TypeError, ValueError):
+                    logger.warning("Invalid angle in image data: %s", image_data)
+                    continue
+                if (
+                    key.startswith(("front", "ingredients", "nutrition", "packaging"))
+                    # the selected image refers to the original image that has an
+                    # incorrect orientation
+                    and image_data.get("imgid") == image_id
+                    # the selected image angle is different from the detected one
+                    and current_angle != rotation
+                ):
+                    # The `value` field represents the key of the selected image
+                    insight_dict = prediction.to_dict()
+                    insight_dict["data"]["image_key"] = key
+                    insight_dict["data"]["image_rev"] = image_data["rev"]
+                    insight_dict["value_tag"] = orientation
+                    insight = ProductInsight(**insight_dict)
+                    insight.automatic_processing = False
+                    insight.confidence = confidence
+                    yield insight
+
+
 def is_valid_product_prediction(
     prediction: Prediction, product: Optional[Product] = None
 ) -> bool:
@@ -1984,6 +2069,7 @@ IMPORTERS: list[Type] = [
     NutritionImageImporter,
     IngredientSpellcheckImporter,
     NutrientExtractionImporter,
+    ImageOrientationImporter,
 ]
 
 

@@ -30,6 +30,11 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
     """
     logger.info("Running `update_insights` for %s", product_id)
 
+    # Check for valid product identifier
+    if not product_id.is_valid():
+        logger.info("Invalid product identifier received, skipping product update")
+        return
+
     try:
         with Lock(
             name=f"robotoff:product_update_job:{product_id.server_type.name}:{product_id.barcode}",

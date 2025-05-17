@@ -100,6 +100,13 @@ class BaseURLProvider(object):
 
     @staticmethod
     def image_url(server_type: ServerType, image_path: str) -> str:
+        """Generate the URL of an Open Food Facts image.
+
+        :param server_type: The server type (e.g., ServerType.off).
+        :param image_path: The path to the image (e.g.,
+            "/002/604/035/3579/front_en.21.400.jpg").
+        :return: The full URL of the image.
+        """
         prefix = BaseURLProvider._get_url(
             prefix="images", base_domain=server_type.get_base_domain()
         )
