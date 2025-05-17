@@ -1,11 +1,11 @@
 import json
 
+import pytest
 from diskcache import Cache
 from openfoodfacts import OCRResult
 
 from robotoff import settings
 from robotoff.utils.download import cache_asset_from_url, AssetLoadingException
-import pytest
 
 test_cache = Cache(settings.TESTS_DISKCACHE_DIR)
 
