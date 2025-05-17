@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.66.1](https://github.com/openfoodfacts/robotoff/compare/v1.66.0...v1.66.1) (2025-05-16)
+
+
+### Bug Fixes
+
+* don't generate image orientation insights if the image is already ([4f44a39](https://github.com/openfoodfacts/robotoff/commit/4f44a391ab41c7c4f48a0d16fed1f24ee2a6b8be))
+* fix bug in image orientation angle parsing ([56ee8f0](https://github.com/openfoodfacts/robotoff/commit/56ee8f09b4314c4536743d327fa1e150065c5059))
+
+## [1.66.0](https://github.com/openfoodfacts/robotoff/compare/v1.65.0...v1.66.0) (2025-05-16)
+
+
+### Features
+
+* Implement auto-rotation for selected images using Google Cloud Vision predictions ([#1562](https://github.com/openfoodfacts/robotoff/issues/1562)) ([564d7a4](https://github.com/openfoodfacts/robotoff/commit/564d7a40cf99ac0cc4a1dd73058a3f618c8a1dea))
+* improve image orientation insights ([#1567](https://github.com/openfoodfacts/robotoff/issues/1567)) ([5c581b3](https://github.com/openfoodfacts/robotoff/commit/5c581b3bb72447b472455a4ec98ab499a7e94ab2))
+
+
+### Bug Fixes
+
+* add missing question formatter ([5ec6db1](https://github.com/openfoodfacts/robotoff/commit/5ec6db134e0707e53be2a60b4a52aa553bfa2ebc))
+* bump pre-commit hook version ([#1564](https://github.com/openfoodfacts/robotoff/issues/1564)) ([065977a](https://github.com/openfoodfacts/robotoff/commit/065977a85ddf2d5c80664e93416e39df4e574fd6))
+* failing code quality tests ([#1556](https://github.com/openfoodfacts/robotoff/issues/1556)) ([2ccdd77](https://github.com/openfoodfacts/robotoff/commit/2ccdd77cf728eeadb9ee0f5272e284694363740f))
+* improve ImageOrientation importers and annotator ([#1566](https://github.com/openfoodfacts/robotoff/issues/1566)) ([3d160c8](https://github.com/openfoodfacts/robotoff/commit/3d160c8f57ce57f79d2a7f5317ee038818a0e10f))
+
+
+### Technical
+
+* clarify Robotoff intro paragraph in README ([#1538](https://github.com/openfoodfacts/robotoff/issues/1538)) ([c6b3fd9](https://github.com/openfoodfacts/robotoff/commit/c6b3fd99554ea162903377272fc6d9da6e1be596))
+* fix test annotate + test nutrients JSON ([#1561](https://github.com/openfoodfacts/robotoff/issues/1561)) ([1678921](https://github.com/openfoodfacts/robotoff/commit/16789218a5293db675e1f68f07ca1b5a461b9af4))
+* Regenerate poetry.lock after pyproject.toml changes ([#1555](https://github.com/openfoodfacts/robotoff/issues/1555)) ([4472af1](https://github.com/openfoodfacts/robotoff/commit/4472af1e33b49c876978fba26871773c8fd10d10))
+* updated ubuntu version pinning and some minor errors related to deployment ([#1558](https://github.com/openfoodfacts/robotoff/issues/1558)) ([fcd09a0](https://github.com/openfoodfacts/robotoff/commit/fcd09a0e16b694b05bfc00125277c90f8c8a8593))
+
 ## [1.65.0](https://github.com/openfoodfacts/robotoff/compare/v1.64.2...v1.65.0) (2025-04-15)
 
 
