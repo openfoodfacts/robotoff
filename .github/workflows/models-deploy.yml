@@ -29,7 +29,7 @@ jobs:
         if: matrix.env == 'robotoff-ml-org'
         run: |
           echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download
         uses: appleboy/ssh-action@master
         with:
