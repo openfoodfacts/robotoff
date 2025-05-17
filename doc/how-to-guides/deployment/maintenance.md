@@ -34,6 +34,8 @@ Take the time to become a bit familiar with docker-compose if it's your first us
 
 ## Monitor
 
+### See logs
+
 To display the logs of the container, `docker compose logs [service-name]`.
 (without service-name, you got all logs).
 
@@ -52,6 +54,19 @@ robotoff_worker_low_1     /bin/sh -c /docker-entrypo ...   Up
 robotoff_worker_high_1     /bin/sh -c /docker-entrypo ...   Up
 ...                              
 ```
+
+### See number of tasks in queues
+
+If you want to monitor how much job robotoff has to do (how behind it is),
+you can run the `rq` command to get status:
+
+```bash
+docker compose run --rm --no-deps worker_1 rq info
+```
+
+This may help you understand why robotoff insight are not visible immediately on products.
+
+See also [rq monitoring documentation](https://python-rq.org/docs/monitoring/) for more commands and informations.
 
 ## Database backup and restore
 

@@ -4,7 +4,7 @@ from collections import Counter
 import tqdm
 
 from robotoff.products import ProductDataset
-from robotoff.taxonomy import Taxonomy, get_taxonomy
+from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 
 
 def infer_missing_category_tags(
@@ -20,7 +20,7 @@ def infer_missing_category_tags(
 
 
 ds = ProductDataset.load()
-taxonomy = get_taxonomy("category")
+taxonomy = get_taxonomy(TaxonomyType.category.name)
 
 counter: typing.Counter = Counter()
 all_counter: typing.Counter = Counter()

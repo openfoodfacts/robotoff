@@ -15,7 +15,7 @@ from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
 high_queues = [
-    Queue(f"robotoff-high-{i+1}", connection=redis_conn)
+    Queue(f"robotoff-high-{i + 1}", connection=redis_conn)
     for i in range(settings.NUM_RQ_WORKERS)
 ]
 low_queue = Queue("robotoff-low", connection=redis_conn)
@@ -54,6 +54,11 @@ def get_high_queue(product_id: Optional[ProductIdentifier] = None) -> Queue:
     queue_idx = barcode_hash % len(high_queues)
     logger.debug("Selecting queue idx %s for product %s", queue_idx, product_id)
     return high_queues[queue_idx]
+
+
+def get_low_queue() -> Queue:
+    """Return the low-priority queue."""
+    return low_queue
 
 
 def enqueue_in_job(
