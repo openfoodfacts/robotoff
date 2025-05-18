@@ -41,5 +41,5 @@ msgstr "האם למוצר יש את רכיב האריזה הזה?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
-msgstr "האם תמונה זו מסובבת בכיוון הבא?"
+msgstr "האם התמונה הזאת נוטה לכיוון הזה?"
 
