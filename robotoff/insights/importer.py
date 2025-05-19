@@ -1892,6 +1892,10 @@ class ImageOrientationImporter(InsightImporter):
                 except (TypeError, ValueError):
                     logger.warning("Invalid angle in image data: %s", image_data)
                     continue
+
+                if current_angle < 0:
+                    # We store the angle as a positive value in the database
+                    current_angle += 360
                 if (
                     key.startswith(("front", "ingredients", "nutrition", "packaging"))
                     # the selected image refers to the original image that has an
