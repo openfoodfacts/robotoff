@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.66.3](https://github.com/openfoodfacts/robotoff/compare/v1.66.2...v1.66.3) (2025-05-19)
+
+
+### Bug Fixes
+
+* fix bug in annotation of image orientation ([#1574](https://github.com/openfoodfacts/robotoff/issues/1574)) ([a1db080](https://github.com/openfoodfacts/robotoff/commit/a1db080c5a5bb67c91e730502ffb8a71af645981))
+
 ## [1.66.2](https://github.com/openfoodfacts/robotoff/compare/v1.66.1...v1.66.2) (2025-05-19)
 
 
