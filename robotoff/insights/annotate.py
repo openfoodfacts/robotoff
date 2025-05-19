@@ -986,10 +986,10 @@ class ImageOrientationAnnotator(InsightAnnotator):
         if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
             # Check for uncropped images (coordinates = -1)
             if not (
-                image_data["x1"] in ("-1", -1)
-                and image_data["y1"] in ("-1", -1)
-                and image_data["x2"] in ("-1", -1)
-                and image_data["y2"] in ("-1", -1)
+                image_data["x1"] in ("-1", -1, None)
+                and image_data["y1"] in ("-1", -1, None)
+                and image_data["x2"] in ("-1", -1, None)
+                and image_data["y2"] in ("-1", -1, None)
             ):
                 y1 = float(image_data["y1"])
                 x1 = float(image_data["x1"])
