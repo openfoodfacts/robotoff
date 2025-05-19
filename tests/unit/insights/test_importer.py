@@ -2190,6 +2190,19 @@ class TestImageOrientationImporter:
                 True,
                 0,
             ),
+            # Image is already rotated but with a negative angle - should not generate
+            # candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": -90},
+                },
+                True,
+                0,
+            ),
             # Not selected image - should not generate candidate
             (
                 "right",
