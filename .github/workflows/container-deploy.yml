@@ -56,15 +56,15 @@ jobs:
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
-    - name: Wait for container build workflow
-      uses: tomchv/wait-my-workflow@v1.1.0
+    - name: Wait for container build
+      uses: lewagon/wait-on-check-action@v1.3.4
       id: wait-build
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        checkName: build
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
-        intervalSeconds: 10
-        timeoutSeconds: 600 # 10m
+        repo-token:      ${{ secrets.GITHUB_TOKEN }}
+        ref:             ${{ github.event.pull_request.head.sha || github.sha }}
+        check-name:      build
+        wait-interval:   10
+        # timeout-seconds: 600
 
     - name: Do something if build fail
       if: steps.wait-build.outputs.conclusion == 'failure'
