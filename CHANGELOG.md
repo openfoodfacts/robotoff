@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.66.4](https://github.com/openfoodfacts/robotoff/compare/v1.66.3...v1.66.4) (2025-05-21)
+
+
+### Bug Fixes
+
+* support new `images` schema by converting to legacy schema ([#1578](https://github.com/openfoodfacts/robotoff/issues/1578)) ([4d71b3e](https://github.com/openfoodfacts/robotoff/commit/4d71b3e208a57772cb83f0b649008e59c739e930))
+
+## [1.66.3](https://github.com/openfoodfacts/robotoff/compare/v1.66.2...v1.66.3) (2025-05-19)
+
+
+### Bug Fixes
+
+* fix bug in annotation of image orientation ([#1574](https://github.com/openfoodfacts/robotoff/issues/1574)) ([a1db080](https://github.com/openfoodfacts/robotoff/commit/a1db080c5a5bb67c91e730502ffb8a71af645981))
+
+## [1.66.2](https://github.com/openfoodfacts/robotoff/compare/v1.66.1...v1.66.2) (2025-05-19)
+
+
+### Bug Fixes
+
+* **image-rotation:** convert OFF rotation angle to positive value ([#1572](https://github.com/openfoodfacts/robotoff/issues/1572)) ([c3a375e](https://github.com/openfoodfacts/robotoff/commit/c3a375e72439306345803ac825a1e023ecc32f09))
+
 ## [1.66.1](https://github.com/openfoodfacts/robotoff/compare/v1.66.0...v1.66.1) (2025-05-16)
 
 
