@@ -60,10 +60,10 @@ jobs:
       uses: lewagon/wait-on-check-action@v1.3.4
       id: wait-build
       with:
-        repo-token:      ${{ secrets.GITHUB_TOKEN }}
-        ref:             ${{ github.event.pull_request.head.sha || github.sha }}
-        check-name:      build
-        wait-interval:   10
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        check-name: build
+        wait-interval: 10
         # timeout-seconds: 600
 
     - name: Do something if build fail
