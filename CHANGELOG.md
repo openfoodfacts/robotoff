@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.66.4](https://github.com/openfoodfacts/robotoff/compare/v1.66.3...v1.66.4) (2025-05-21)
+
+
+### Bug Fixes
+
+* support new `images` schema by converting to legacy schema ([#1578](https://github.com/openfoodfacts/robotoff/issues/1578)) ([4d71b3e](https://github.com/openfoodfacts/robotoff/commit/4d71b3e208a57772cb83f0b649008e59c739e930))
+
 ## [1.66.3](https://github.com/openfoodfacts/robotoff/compare/v1.66.2...v1.66.3) (2025-05-19)
 
 
