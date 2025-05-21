@@ -7,10 +7,12 @@ import json
 import os
 import shutil
 import tempfile
+import typing
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
 import requests
+from openfoodfacts.images import convert_to_legacy_schema
 from pymongo import MongoClient
 
 from robotoff import settings
@@ -537,8 +539,15 @@ class DBProductStore(ProductStore):
         return len(self.collection.estimated_document_count())
 
     def get_product(
-        self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
-    ) -> Optional[JSONType]:
+        self, product_id: ProductIdentifier, projection: list[str] | None = None
+    ) -> JSONType | None:
+        """Fetch a product from the MongoDB.
+
+        :param product_id: identifier of the product to fetch
+        :param projection: list of fields to retrieve, if not provided all fields
+            are queried
+        :return: the product as a dict or None if it was not found
+        """
         if not settings.ENABLE_MONGODB_ACCESS:
             # if `ENABLE_MONGODB_ACCESS=False`, we don't disable MongoDB
             # access and return None
@@ -546,7 +555,21 @@ class DBProductStore(ProductStore):
         # We use `_id` instead of `code` field, as `_id` contains org ID +
         # barcode for pro platform, which is also the case for
         # `product_id.barcode`
-        return self.collection.find_one({"_id": product_id.barcode}, projection)
+        product = self.collection.find_one({"_id": product_id.barcode}, projection)
+
+        # Convert the `images` field to the legacy schema, until the migration
+        # is done. Once it's done, we can upgrade all Robotoff code to use the new
+        # schema.
+        return self._convert_schema(product)
+
+    @staticmethod
+    def _convert_schema(product: JSONType | None) -> JSONType | None:
+        """Convert the product to the legacy `images` schema if the product
+        is not None and the `images` field is present, otherwise return
+        the product as is."""
+        if product is not None and "images" in product:
+            product["images"] = convert_to_legacy_schema(product["images"])
+        return product
 
     def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
         product = self.get_product(product_id)
@@ -556,9 +579,12 @@ class DBProductStore(ProductStore):
 
         return None
 
-    def iter_product(self, projection: Optional[list[str]] = None):
+    def iter_product(self, projection: list[str] | None = None):
         if self.collection is not None:
-            yield from (Product(p) for p in self.collection.find(projection=projection))
+            yield from (
+                Product(typing.cast(JSONType, self._convert_schema(p)))
+                for p in self.collection.find(projection=projection)
+            )
 
 
 def get_min_product_store(projection: Optional[list[str]] = None) -> MemoryProductStore:
