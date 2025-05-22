@@ -1910,7 +1910,10 @@ class ImageOrientationImporter(InsightImporter):
                     insight_dict["data"]["image_rev"] = image_data["rev"]
                     insight_dict["value_tag"] = orientation
                     insight = ProductInsight(**insight_dict)
-                    insight.automatic_processing = False
+                    # We process automatically the image if we have more than 10 words
+                    # A manual inspection showed that all the false positive cases
+                    # were due to images with very few words
+                    insight.automatic_processing = total_words >= 10
                     insight.confidence = confidence
                     yield insight
 
