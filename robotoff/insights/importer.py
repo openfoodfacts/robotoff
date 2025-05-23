@@ -1563,6 +1563,104 @@ class NutrientExtractionImporter(InsightImporter):
         insight.campaign = campaigns
 
 
+class IngredientDetectionImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.ingredient_detection
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_detection}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Product | None,
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        for prediction in predictions:
+            if cls.keep_prediction(product, prediction):
+                prediction_dict = prediction.to_dict()
+                # Set the priority of the insight candidate, based on the image
+                prediction_dict["data"]["priority"] = cls.get_candidate_priority(
+                    product, prediction
+                )
+                yield ProductInsight(**prediction_dict)
+
+    @staticmethod
+    def get_candidate_priority(
+        product: Product | None,
+        prediction: Prediction,
+    ) -> int:
+        """Return the priority of the insight candidate, to set in data["priority"]
+        field.
+
+        This is used to sort the insights in `sort_candidates` before selection.
+        The priority is defined as follows:
+
+        - 2 (highest priority): the prediction is from a selected ingredient photo
+        - 1: default priority
+        """
+        if product is None:
+            # We don't have access to MongoDB, default priority
+            return 1
+
+        lang = typing.cast(str, prediction.value_tag)
+        nutrition_image_data = product.images.get(f"ingredients_{lang}", None)
+
+        if nutrition_image_data and nutrition_image_data["imgid"] == get_image_id(
+            typing.cast(str, prediction.source_image)
+        ):
+            return 2
+
+        # Default priority
+        return 1
+
+    @staticmethod
+    def keep_prediction(product: Product | None, prediction: Prediction) -> bool:
+        """Return True if the prediction should be kept, False otherwise.
+
+        The prediction should be kept if both of the following conditions apply:
+        - the product has no ingredient information
+        - the fraction of recognized ingredients by Product Opener parser is greater
+          than 60%
+
+        :param product: the product, or None if we don't have access to MongoDB
+        :param prediction: the prediction
+        :return: True if the prediction should be kept, False otherwise
+        """
+        if product is None:
+            # We don't have access to MongoDB, so we generate an insight
+            return True
+
+        # We're sure it's a string and not null
+        predicted_lang = typing.cast(str, prediction.value_tag)
+
+        current_ingredients = product.ingredients_text.get(predicted_lang, None)
+
+        if current_ingredients is not None:
+            # For now, don't create an insight if the product already has
+            # ingredient information for the detected language
+            return False
+
+        if prediction.data["fraction_known_ingredients"] < 0.6:
+            # Less than 60% of the ingredients are recognized, so we don't
+            # create an insight
+            return False
+
+        return True
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # The language of the ingredient detection is saved in the
+        # `value_tag` field, and we only allow one ingredient prediction
+        # per language
+        return candidate.value_tag == reference.value_tag
+
+
 class PackagingElementTaxonomyException(Exception):
     pass
 
@@ -1992,6 +2090,7 @@ IMPORTERS: list[Type] = [
     IngredientSpellcheckImporter,
     NutrientExtractionImporter,
     ImageOrientationImporter,
+    IngredientDetectionImporter,
 ]
 
 
