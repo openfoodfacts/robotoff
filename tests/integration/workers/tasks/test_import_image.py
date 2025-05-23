@@ -77,7 +77,7 @@ def test_extract_ingredients_job(mocker, peewee_db):
     ingredient_list_mocker.predict_from_ocr.return_value = IngredientPredictionOutput(
         entities=entities, text=full_text
     )
-    ingredient_list_mocker.MODEL_NAME = "ingredient-detection"
+    ingredient_list_mocker.MODEL_NAME = "ingredient_detection"
     ingredient_list_mocker.MODEL_VERSION = "ingredient-detection-1.0"
 
     barcode = "1234567890123"
@@ -95,7 +95,7 @@ def test_extract_ingredients_job(mocker, peewee_db):
         )
         parse_ingredients_mocker.assert_called_once_with("water, salt, sugar.", "en")
         image_prediction = ImagePrediction.get_or_none(
-            ImagePrediction.model_name == "ingredient-detection",
+            ImagePrediction.model_name == "ingredient_detection",
             ImagePrediction.image_id == image.id,
         )
         assert image_prediction is not None
@@ -121,7 +121,7 @@ def test_extract_ingredients_job(mocker, peewee_db):
         }
         assert image_prediction.max_confidence == 0.9
         assert image_prediction.type == "ner"
-        assert image_prediction.model_name == "ingredient-detection"
+        assert image_prediction.model_name == "ingredient_detection"
         assert image_prediction.model_version == "ingredient-detection-1.0"
 
 
@@ -150,7 +150,7 @@ def test_extract_ingredients_job_existing_image_prediction(mocker, peewee_db):
     parse_ingredients_mocker = mocker.patch(
         "robotoff.workers.tasks.import_image.parse_ingredients"
     )
-    ingredient_list_mocker.MODEL_NAME = "ingredient-detection"
+    ingredient_list_mocker.MODEL_NAME = "ingredient_detection"
     ingredient_list_mocker.MODEL_VERSION = "ingredient-detection-1.0"
     barcode = "1234567890123"
     ocr_url = "https://images.openfoodfacts.org/images/products/123/456/789/0123/1.json"
@@ -161,7 +161,7 @@ def test_extract_ingredients_job_existing_image_prediction(mocker, peewee_db):
         )
         ImagePredictionFactory(
             image=image,
-            model_name="ingredient-detection",
+            model_name="ingredient_detection",
             model_version="ingredient-detection-1.0",
         )
         extract_ingredients_job(
