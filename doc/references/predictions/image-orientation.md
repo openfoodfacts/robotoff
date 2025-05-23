@@ -8,7 +8,7 @@ The image orientation feature automatically detects and corrects incorrectly ori
 
 2. **Insight Generation**: When text is detected with non-upright orientation (≥95% confidence) in a selected image, an `image_orientation` insight is generated.
 
-3. **Rotation Application**: When the insight is accepted, the selected image is rotated to the correct orientation via the Product Opener API, while preserving any crop bounding boxes.
+3. **Rotation Application**: When the insight is accepted, or if the insight was marked as automatically processable, the selected image is rotated to the correct orientation via the Product Opener API, while preserving any crop bounding boxes.
 
 ## Technical Implementation
 
@@ -20,7 +20,8 @@ The detection uses OCR orientation metadata to identify incorrectly oriented ima
 2. Calculates the confidence as the percentage of text in the dominant non-upright orientation.
 3. Determines the required rotation angle (0, 90, 180, or 270 degrees).
 
-Only images with ≥95% confidence in a consistent non-upright orientation generate insights.
+Only images with ≥95% confidence in a consistent non-upright orientation generate insights. If more than 10 words are detected on the image, **we mark the insight as automatically processable**, which means the rotation will be automatically applied without user confirmation.
+This 10-word threshold is a heuristic is based on manual inspection of the generated insights: almost all false positives were generated from images with less than 10 words.
 
 ### Importer
 
