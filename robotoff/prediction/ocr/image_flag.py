@@ -97,6 +97,7 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
 
     safe_search_annotation = content.get_safe_search_annotation()
     label_annotations = content.get_label_annotations()
+    face_annotations = content.get_face_annotations()
 
     if safe_search_annotation:
         for key in ("adult", "violence"):
@@ -132,6 +133,24 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
                 )
             )
             break
+
+    if face_annotations and len(face_annotations) > 0:
+        face_annotation = max(
+            face_annotations, key=lambda x: getattr(x, "detection_confidence", 0)
+        )
+        if face_annotation.detection_confidence >= 0.6:
+            predictions.append(
+                Prediction(
+                    type=PredictionType.image_flag,
+                    data={
+                        "type": "face_annotation",
+                        "label": "face",
+                        "likelihood": face_annotation.detection_confidence,
+                    },
+                    predictor_version=PREDICTOR_VERSION,
+                    confidence=face_annotation.detection_confidence,
+                )
+            )
 
     return predictions
 
