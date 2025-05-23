@@ -47,6 +47,7 @@ from robotoff.types import (
 )
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import function_cache_register
+from robotoff.utils.image import convert_bounding_box_absolute_to_relative_from_images
 
 logger = get_logger(__name__)
 
@@ -122,56 +123,6 @@ def is_valid_insight_image(image_ids: list[str], source_image: str | None) -> bo
 
     image_id = Path(source_image).stem
     return image_id.isdigit() and image_id in image_ids
-
-
-def convert_bounding_box_absolute_to_relative(
-    bounding_box_absolute: tuple[int, int, int, int],
-    images: dict[str, Any],
-    source_image: str | None,
-) -> tuple[float, float, float, float] | None:
-    """Convert absolute bounding box coordinates to relative ones.
-
-    When detecting patterns using regex or flashtext, we don't know the size of
-    the image, so we cannot compute the relative coordinates of the text
-    bounding box. We perform the conversion during insight import instead.
-
-    Relative coordinates are used as they are more convenient than absolute
-    ones (we can use them on a resized version of the original image).
-
-    :param bounding_box_absolute: absolute coordinates of the bounding box
-    :param images: The image dict as stored in MongoDB.
-    :param source_image: The insight source image, should be the path of the
-    image path or None.
-    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
-        or None if a conversion error occured
-    """
-    if source_image is None:
-        logger.warning(
-            "could not convert absolute coordinate bounding box: "
-            "bounding box was provided (%s) but source image is null",
-            bounding_box_absolute,
-        )
-        return None
-
-    image_id = Path(source_image).stem
-
-    if image_id not in images:
-        logger.info(
-            "could not convert absolute coordinate bounding box: "
-            "image %s not found in product images",
-            image_id,
-        )
-        return None
-
-    size = images[image_id]["sizes"]["full"]
-    height = size["h"]
-    width = size["w"]
-    return (
-        max(0.0, bounding_box_absolute[0] / height),
-        max(0.0, bounding_box_absolute[1] / width),
-        min(1.0, bounding_box_absolute[2] / height),
-        min(1.0, bounding_box_absolute[3] / width),
-    )
 
 
 def get_existing_insight(
@@ -382,7 +333,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             # disabled (product=None), as we don't have image information
             if ("bounding_box_absolute" in candidate.data) and product:
                 candidate.data["bounding_box"] = (
-                    convert_bounding_box_absolute_to_relative(
+                    convert_bounding_box_absolute_to_relative_from_images(
                         candidate.data.pop("bounding_box_absolute"),
                         product.images,
                         candidate.source_image,
