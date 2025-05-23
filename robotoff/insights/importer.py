@@ -367,13 +367,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def sort_predictions(cls, predictions: Iterable[Prediction]) -> list[Prediction]:
         """Sort predictions by priority, using as keys:
+
         - priority, specified by data["priority"], prediction with lowest
-          priority
-        values (high priority) come first - source image upload datetime (most
-        recent first): images IDs are auto-incremented integers, so the most
-        recent images have the highest IDs. Images with `source_image = None`
-        have a lower priority that images with a source image. - predictor,
-        predictions with predictor value have higher priority
+          priority values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+          auto-incremented integers, so the most recent images have the highest IDs.
+          Images with `source_image = None` have a lower priority that images with a
+          source image.
+        - predictor, predictions with predictor value have higher priority
 
         :param predictions: The predictions to sort
         :return: Sorted predictions
@@ -1483,7 +1484,7 @@ class NutrientExtractionImporter(InsightImporter):
 
     @staticmethod
     def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:
-        """Return True if the prediction should be kept, false otherwise.
+        """Return True if the prediction should be kept, False otherwise.
 
         The prediction should be kept if:
         - the product has no nutrition information
@@ -1491,7 +1492,7 @@ class NutrientExtractionImporter(InsightImporter):
 
         :param product: the product
         :param nutrients_keys: the nutrient keys predicted by the model
-        :return: True if the prediction should be kept, false otherwise
+        :return: True if the prediction should be kept, False otherwise
         """
         if product is None or not product.nutriments:
             # We don't have access to MongoDB or the nutriment data is missing
