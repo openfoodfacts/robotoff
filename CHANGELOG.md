@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.67.1](https://github.com/openfoodfacts/robotoff/compare/v1.67.0...v1.67.1) (2025-05-23)
+
+
+### Bug Fixes
+
+* rename ingredient detection model name ([#1589](https://github.com/openfoodfacts/robotoff/issues/1589)) ([7baffc6](https://github.com/openfoodfacts/robotoff/commit/7baffc6c5dcde135c9443ed9ffa7c842d14a65b4))
+
+
+### Documentation
+
+* add for image orientation ([#1584](https://github.com/openfoodfacts/robotoff/issues/1584)) ([051031a](https://github.com/openfoodfacts/robotoff/commit/051031a0ac88228a6b8d71b5ebcaa3a17b2e038a))
+* add more information on image orientation insights ([#1587](https://github.com/openfoodfacts/robotoff/issues/1587)) ([5db66ae](https://github.com/openfoodfacts/robotoff/commit/5db66aedc312a94151d4a3325b258f343b2c831b))
+
 ## [1.67.0](https://github.com/openfoodfacts/robotoff/compare/v1.66.4...v1.67.0) (2025-05-22)
 
 
