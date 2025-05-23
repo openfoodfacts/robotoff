@@ -81,6 +81,7 @@ class OCRResult:
         "logo_annotations",
         "safe_search_annotation",
         "label_annotations",
+        "face_annotations",
     )
 
     def __init__(self, data, lazy=True):
@@ -89,6 +90,7 @@ class OCRResult:
         self.logo_annotations = []
         self.label_annotations = []
         self.safe_search_annotation = None
+        self.face_annotations = []
 
         for text_annotation_data in data.get("textAnnotations", []):
             text_annotation = OCRTextAnnotation(text_annotation_data)
@@ -126,6 +128,10 @@ class OCRResult:
             self.safe_search_annotation = SafeSearchAnnotation(
                 data["safeSearchAnnotation"]
             )
+
+        for face_annotation_data in data.get("faceAnnotations", []):
+            face_annotation = FaceAnnotation(face_annotation_data)
+            self.face_annotations.append(face_annotation)
 
     def get_full_text(self, lowercase=False):
         if self.full_text_annotation is not None:
@@ -193,6 +199,9 @@ class OCRResult:
 
     def get_safe_search_annotation(self):
         return self.safe_search_annotation
+
+    def get_face_annotations(self):
+        return self.face_annotations
 
     @classmethod
     def from_json(cls, data, **kwargs):
@@ -476,6 +485,43 @@ class LabelAnnotation:
         self.id = data.get("mid") or None
         self.score = data["score"]
         self.description = data["description"]
+
+
+class FaceAnnotation:
+    __slots__ = (
+        "detection_confidence",
+        "joy_likelihood",
+        "sorrow_likelihood",
+        "anger_likelihood",
+        "surprise_likelihood",
+        "under_exposed_likelihood",
+        "blurred_likelihood",
+        "headwear_likelihood",
+    )
+
+    def __init__(self, data):
+        self.detection_confidence = data.get("detectionConfidence", 0.0)
+        self.joy_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("joyLikelihood", "UNKNOWN")
+        ]
+        self.sorrow_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("sorrowLikelihood", "UNKNOWN")
+        ]
+        self.anger_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("angerLikelihood", "UNKNOWN")
+        ]
+        self.surprise_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("surpriseLikelihood", "UNKNOWN")
+        ]
+        self.under_exposed_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("underExposedLikelihood", "UNKNOWN")
+        ]
+        self.blurred_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("blurredLikelihood", "UNKNOWN")
+        ]
+        self.headwear_likelihood = SafeSearchAnnotationLikelihood[
+            data.get("headwearLikelihood", "UNKNOWN")
+        ]
 
 
 class SafeSearchAnnotation:
