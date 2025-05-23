@@ -6,7 +6,7 @@ import operator
 import typing
 import uuid
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Optional, Type, Union
+from typing import Any, Iterable, Iterator, Type, Union
 
 from peewee import SQL
 from playhouse.shortcuts import model_to_dict
@@ -105,7 +105,7 @@ def is_recent_image(
     return True
 
 
-def is_valid_insight_image(image_ids: list[str], source_image: Optional[str]):
+def is_valid_insight_image(image_ids: list[str], source_image: str | None) -> bool:
     """Return True if the source image is valid for insight generation,
     i.e. the image ID is a digit and is referenced in `images_ids`.
 
@@ -125,8 +125,8 @@ def is_valid_insight_image(image_ids: list[str], source_image: Optional[str]):
 def convert_bounding_box_absolute_to_relative(
     bounding_box_absolute: tuple[int, int, int, int],
     images: dict[str, Any],
-    source_image: Optional[str],
-) -> Optional[tuple[float, float, float, float]]:
+    source_image: str | None,
+) -> tuple[float, float, float, float] | None:
     """Convert absolute bounding box coordinates to relative ones.
 
     When detecting patterns using regex or flashtext, we don't know the size of
@@ -190,43 +190,6 @@ def is_reserved_barcode(barcode: str) -> bool:
         barcode = barcode[1:]
 
     return barcode.startswith("2")
-
-
-def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight]:
-    """Sort candidates by priority, using as keys:
-
-    - priority, specified by `data["priority"]`, candidate with lowest priority
-      values (high priority) come first
-    - source image upload datetime (most recent first): images IDs are
-      auto-incremented integers, so the most recent images have the highest
-      IDs. Images with `source_image = None` have a lower priority that images
-      with a source image.
-    - automatic processing status: candidates that are automatically
-      processable have higher priority
-
-    This function should be used to make sure most important candidates are
-    looked into first in `get_insight_update`. Note that the sorting keys are a
-    superset of those used in `InsightImporter.sort_predictions`.
-
-    :param candidates: The candidates to sort
-    :return: Sorted candidates
-    """
-    return sorted(
-        candidates,
-        key=lambda candidate: (
-            candidate.data.get("priority", 1),
-            (
-                -int(get_image_id(candidate.source_image) or 0)
-                if candidate.source_image
-                else 0
-            ),
-            # automatically processable insights come first
-            -int(candidate.automatic_processing),
-            # hack to set a higher priority to prediction with a predictor
-            # value
-            candidate.predictor or "z",
-        ),
-    )
 
 
 def select_deepest_taxonomized_candidates(
@@ -481,7 +444,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -519,7 +482,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
         """
-        to_create_or_update: list[tuple[ProductInsight, Optional[ProductInsight]]] = []
+        to_create_or_update: list[tuple[ProductInsight, ProductInsight | None]] = []
         # Keep already annotated insights in DB
         to_keep_ids = set(
             reference.id
@@ -590,22 +553,22 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def sort_candidates(
         cls, candidates: Iterable[ProductInsight]
     ) -> list[ProductInsight]:
-        """Sort candidates by priority, using as keys:
+        """Sort insight candidates by priority, using as keys:
 
         - priority, specified by `data["priority"]`, candidate with lowest
-          priority
-        values (high priority) come first - source image upload datetime (most
-        recent first): images IDs are auto-incremented integers, so the most
-        recent images have the highest IDs. Images with `source_image = None`
-        have a lower priority that images with a source image. - automatic
-        processing status: candidates that are automatically processable have
-        higher priority
+          priority values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+          auto-incremented integers, so the most recent images have the highest IDs.
+          Images with `source_image = None` have a lower priority that images with a
+          source image.
+        - automatic processing status: candidates that are automatically processable
+          have higher priority
 
         This function should be used to make sure most important candidates are
         looked into first in `get_insight_update`. Note that the sorting keys
         are a superset of those used in `InsightImporter.sort_predictions`.
 
-        :param candidates: The candidates to sort
+        :param candidates: The insight candidates to sort
         :return: Sorted candidates
         """
         return sorted(
@@ -644,7 +607,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def add_fields(
         cls,
         insight: ProductInsight,
-        product: Optional[Product],
+        product: Product | None,
         timestamp: datetime.datetime,
     ):
         """Add mandatory insight fields (`id`, `timestamp`,
@@ -674,7 +637,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     @classmethod
     def add_optional_fields(  # noqa: B027
-        cls, insight: ProductInsight, product: Optional[Product]
+        cls, insight: ProductInsight, product: Product | None
     ):
         """Overwrite this method in children classes to add optional fields.
 
@@ -703,7 +666,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(
-        product: Optional[Product],
+        product: Product | None,
         emb_code: str,
     ) -> bool:
         if product is None:
@@ -718,7 +681,7 @@ class PackagerCodeInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -747,7 +710,7 @@ class LabelInsightImporter(InsightImporter):
         )
 
     @staticmethod
-    def is_prediction_valid(product: Optional[Product], tag: str) -> bool:
+    def is_prediction_valid(product: Product | None, tag: str) -> bool:
         if product is None:
             # Predictions are always valid when product check is disabled
             # (product=None)
@@ -772,7 +735,7 @@ class LabelInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -832,7 +795,7 @@ class CategoryImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -865,7 +828,7 @@ class CategoryImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(
-        product: Optional[Product],
+        product: Product | None,
         category: str,
     ) -> bool:
         if product is None:
@@ -882,7 +845,7 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def add_optional_fields(cls, insight: ProductInsight, product: Optional[Product]):
+    def add_optional_fields(cls, insight: ProductInsight, product: Product | None):
         taxonomy = get_taxonomy(InsightType.category.name)
         campaigns = []
         if (
@@ -929,7 +892,7 @@ class ProductWeightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -975,7 +938,7 @@ class ExpirationDateImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1043,7 +1006,7 @@ class BrandInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1083,7 +1046,7 @@ class StoreInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1116,7 +1079,7 @@ class UPCImageImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1256,7 +1219,7 @@ class NutritionImageImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1350,8 +1313,8 @@ class NutritionImageImporter(InsightImporter):
         cls,
         nutrient_mention_prediction: Prediction,
         image_orientation_prediction: Prediction,
-        nutrient_prediction: Optional[Prediction] = None,
-        nutrition_table_predictions: Optional[list[JSONType]] = None,
+        nutrient_prediction: Prediction | None = None,
+        nutrition_table_predictions: list[JSONType] | None = None,
     ) -> Iterator[ProductInsight]:
         """Generate `nutrition_image` candidates for a single image.
 
@@ -1435,7 +1398,7 @@ class NutritionImageImporter(InsightImporter):
     def compute_crop_bounding_box(
         cls,
         nutrient_mention_prediction: Prediction,
-        nutrition_table_predictions: Optional[list[JSONType]] = None,
+        nutrition_table_predictions: list[JSONType] | None = None,
     ):
         """Predict a bounding box that includes the nutritional information.
 
@@ -1504,7 +1467,7 @@ class IngredientSpellcheckImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1522,9 +1485,7 @@ class IngredientSpellcheckImporter(InsightImporter):
         return candidate.value_tag == reference.value_tag
 
     @classmethod
-    def _keep_prediction(
-        cls, prediction: Prediction, product: Optional[Product]
-    ) -> bool:
+    def _keep_prediction(cls, prediction: Prediction, product: Product | None) -> bool:
         return (
             # Spellcheck didn't correct
             prediction.data["original"] != prediction.data["correction"]
@@ -1746,7 +1707,7 @@ class PackagingImporter(InsightImporter):
         return candidate_shape_is_parent_of_ref
 
     @staticmethod
-    def keep_prediction(prediction: Prediction, product: Optional[Product]) -> bool:
+    def keep_prediction(prediction: Prediction, product: Product | None) -> bool:
         """element may contain the following properties:
         - shape
         - recycling
@@ -1814,7 +1775,7 @@ class PackagingImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1855,7 +1816,7 @@ class ImageOrientationImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1919,7 +1880,7 @@ class ImageOrientationImporter(InsightImporter):
 
 
 def is_valid_product_prediction(
-    prediction: Prediction, product: Optional[Product] = None
+    prediction: Prediction, product: Product | None = None
 ) -> bool:
     """Return True if the Prediction is valid and can be imported,
     i.e:
@@ -1956,7 +1917,7 @@ def create_prediction_model(prediction: Prediction, timestamp: datetime.datetime
 
 def _import_product_predictions_sort_fn(
     prediction: Prediction,
-) -> tuple[ServerType, PredictionType, Optional[str], Optional[str]]:
+) -> tuple[ServerType, PredictionType, str | None, str | None]:
     return (
         prediction.server_type,
         prediction.type,
@@ -2083,7 +2044,7 @@ IMPORTERS: list[Type] = [
 def import_insights(
     predictions: Iterable[Prediction],
     server_type: ServerType,
-    product_store: Optional[DBProductStore] = None,
+    product_store: DBProductStore | None = None,
 ) -> InsightImportResult:
     """Import predictions and generate (and import) insights from these
     predictions.
@@ -2213,7 +2174,7 @@ def import_predictions(
 
 def refresh_insights(
     product_id: ProductIdentifier,
-    product_store: Optional[DBProductStore] = None,
+    product_store: DBProductStore | None = None,
 ) -> list[InsightImportResult]:
     """Refresh all insights for specific product.
 
@@ -2255,7 +2216,7 @@ def refresh_insights(
 def get_product_predictions(
     barcodes: list[str],
     server_type: ServerType,
-    prediction_types: Optional[list[str]] = None,
+    prediction_types: list[str] | None = None,
 ) -> Iterator[dict]:
     """Fetch from DB predictions with barcode in `barcodes`.
 
