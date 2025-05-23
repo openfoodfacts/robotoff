@@ -2257,7 +2257,7 @@ class TestImageOrientationImporter:
 
         if expected_candidates > 0:
             candidate = candidates[0]
-            assert candidate.automatic_processing is False  # Should be False intially
+            assert candidate.automatic_processing is (total >= 10)
             assert candidate.confidence == confidence
             assert candidate.data["rotation"] == rotation
             assert "image_key" in candidate.data

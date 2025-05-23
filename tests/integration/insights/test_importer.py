@@ -230,12 +230,15 @@ class TestImageOrientationImporter:
         total = sum(prediction.data["count"].values())
         expected_confidence = prediction.data["count"]["right"] / total
 
-        assert candidate.automatic_processing is False
+        assert candidate.value_tag == "right"
+        # More than 10 words, automatic processing is enabled
+        assert candidate.automatic_processing is True
         assert candidate.confidence == expected_confidence
         assert candidate.data["rotation"] == 270
 
     def test_image_orientation_settings(self, prediction_factory, mocker):
-        factory_prediction = prediction_factory(count={"up": 1, "right": 19})
+        # Less than 10 words, automatic processing is disabled
+        factory_prediction = prediction_factory(count={"right": 7})
 
         pred_data = {
             "barcode": factory_prediction.barcode,
@@ -276,10 +279,11 @@ class TestImageOrientationImporter:
         assert candidates[0].value_tag == "right"
         assert candidates[0].data["image_key"] == "nutrition_fr"
         assert candidates[0].data["image_rev"] == "2"
+        # Verify that the candidate is not automatically processed
+        # as it has less than 10 words
         assert candidates[0].automatic_processing is False
         # Verify confidence is set correctly (right / total words)
-        expected_confidence = 19 / 20
-        assert candidates[0].confidence == expected_confidence
+        assert candidates[0].confidence == 1.0
 
         assert candidates[1].value_tag == "right"
         assert candidates[1].data["image_key"] == "front_it"

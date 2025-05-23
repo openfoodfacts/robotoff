@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.67.0](https://github.com/openfoodfacts/robotoff/compare/v1.66.4...v1.67.0) (2025-05-22)
+
+
+### Features
+
+* apply image rotation insights automatically ([#1582](https://github.com/openfoodfacts/robotoff/issues/1582)) ([c6254c5](https://github.com/openfoodfacts/robotoff/commit/c6254c5c3e50dc30fa23a9794c16ee6fc5bed04e))
+
 ## [1.66.4](https://github.com/openfoodfacts/robotoff/compare/v1.66.3...v1.66.4) (2025-05-21)
 
 
