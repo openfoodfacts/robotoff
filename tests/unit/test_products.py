@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from robotoff.products import DBProductStore, is_special_image, is_valid_image
+from robotoff.products import DBProductStore, Product, is_special_image, is_valid_image
 from robotoff.settings import TEST_DATA_DIR
 from robotoff.types import JSONType, ProductIdentifier, ServerType
 
@@ -227,3 +227,45 @@ class TestDBProductStore:
             assert client[server_type].products.find_one.call_args[0][1] == [
                 "product_name"
             ]
+
+
+class TestProduct:
+    def test_product_creation(self):
+        input_data = {
+            "code": "1234567890",
+            "quantity": "300 g",
+            "images": IMAGES_WITH_LEGACY_SCHEMA,
+            "ingredients_text_fr": "Fusilli, 4 fromages, crème fraîche, lait, eau, sel",
+            "ingredients_text_en": "Fusilli, 4 cheeses, cream, milk, water, salt",
+            "ingredients_text_de": "Fusilli, 4 Käse, Sahne, Milch, Wasser, Salz",
+        }
+        product = Product(input_data)
+        assert product.barcode == input_data["code"]
+        assert product.image_ids == ["1"]
+        assert product.ingredients_text == {
+            "fr": input_data["ingredients_text_fr"],
+            "en": input_data["ingredients_text_en"],
+            "de": input_data["ingredients_text_de"],
+        }
+        assert product.images == IMAGES_WITH_LEGACY_SCHEMA
+        assert Product.get_fields(input_data) == {
+            "ingredients_text_de",
+            "ingredients_text_fr",
+            "ingredients_text_en",
+            "quantity",
+            "code",
+            "images",
+            "brands_tags",
+            "categories_tags",
+            "emb_codes_tags",
+            "countries_tags",
+            "labels_tags",
+            "stores_tags",
+            "nutriments",
+            "nutrition_data_per",
+            "nutrition_data_prepared",
+            "serving_size",
+            "expiration_date",
+            "unique_scans_n",
+            "lang",
+        }
