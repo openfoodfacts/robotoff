@@ -87,14 +87,16 @@ def is_recent_image(
     :param max_timedelta: The maximum interval between the upload datetime of
     the most recent image and the provided image.
     """
-    image_datetime = datetime.datetime.utcfromtimestamp(
-        int(images[image_id]["uploaded_t"])
+    image_datetime = datetime.datetime.fromtimestamp(
+        int(images[image_id]["uploaded_t"]), datetime.timezone.utc
     )
     remaining_datetimes = []
     for key, image_meta in images.items():
         if key.isdigit() and key != image_id:
             remaining_datetimes.append(
-                datetime.datetime.utcfromtimestamp(int(image_meta["uploaded_t"]))
+                datetime.datetime.fromtimestamp(
+                    int(image_meta["uploaded_t"]), datetime.timezone.utc
+                )
             )
 
     for upload_datetime in remaining_datetimes:
