@@ -6,7 +6,7 @@ import datetime
 import typing
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Type
+from typing import Type
 
 from pydantic import ValidationError
 from requests.exceptions import ConnectionError as RequestConnectionError
@@ -41,7 +41,7 @@ logger = get_logger(__name__)
 class AnnotationResult:
     status_code: int
     status: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class AnnotationStatus(Enum):
@@ -131,8 +131,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         annotation: InsightAnnotation,
         update: bool = True,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         """Annotate an insight: save the annotation in DB and send the update
@@ -175,14 +175,14 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         annotation: InsightAnnotation,
         update: bool = True,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         if cls.is_data_required() and data is None:
             return DATA_REQUIRED_RESULT
 
-        username: Optional[str] = None
+        username: str | None = None
         if auth is not None:
             username = auth.get_username()
 
@@ -217,8 +217,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         pass
@@ -233,8 +233,8 @@ class PackagerCodeAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         emb_code: str = insight.value
@@ -281,8 +281,8 @@ class LabelAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -311,8 +311,8 @@ class CategoryAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -367,8 +367,8 @@ class ProductWeightAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -377,7 +377,7 @@ class ProductWeightAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        quantity: Optional[str] = product.get("quantity") or None
+        quantity: str | None = product.get("quantity") or None
 
         if quantity is not None:
             return ALREADY_ANNOTATED_RESULT
@@ -397,8 +397,8 @@ class ExpirationDateAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -427,8 +427,8 @@ class BrandAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -453,8 +453,8 @@ class StoreAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -490,8 +490,8 @@ class UPCImageAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -535,8 +535,8 @@ class PackagingAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -646,8 +646,8 @@ class NutritionImageAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -658,7 +658,7 @@ class NutritionImageAnnotator(InsightAnnotator):
 
         image_id = get_image_id(insight.source_image or "")
         images = product.get("images", {})
-        image_meta: Optional[JSONType] = images.get(image_id)
+        image_meta: JSONType | None = images.get(image_id)
 
         if not image_id or not image_meta:
             return AnnotationResult(
@@ -674,7 +674,7 @@ class NutritionImageAnnotator(InsightAnnotator):
             return ALREADY_ANNOTATED_RESULT
 
         rotation = insight.data.get("rotation", 0)
-        crop_bounding_box: Optional[tuple[float, float, float, float]] = None
+        crop_bounding_box: tuple[float, float, float, float] | None = None
         if "bounding_box" in insight.data:
             # convert crop bounding box to the format expected by Product
             # Opener
@@ -702,8 +702,8 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         # Possibility for the annotator to change the spellcheck correction if data is
@@ -756,7 +756,7 @@ class NutrientExtractionAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: dict | None = None,
+        data: JSONType | None = None,
         auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
@@ -908,8 +908,8 @@ class ImageOrientationAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         """Process image orientation annotation and rotate the selected images
@@ -1038,8 +1038,8 @@ def annotate(
     insight: ProductInsight,
     annotation: InsightAnnotation,
     update: bool = True,
-    data: Optional[dict] = None,
-    auth: Optional[OFFAuthentication] = None,
+    data: JSONType | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
 ) -> AnnotationResult:
     """Annotate an insight: save the annotation in DB and send the update
