@@ -125,6 +125,7 @@ class ImagePredictionFactory(PeeweeModelFactory):
     }
     timestamp = factory.LazyFunction(datetime.utcnow)
     image = factory.SubFactory(ImageModelFactory)
+    max_confidence = 0.9
 
 
 class LogoAnnotationFactory(PeeweeModelFactory):
