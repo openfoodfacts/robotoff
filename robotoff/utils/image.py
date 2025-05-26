@@ -129,9 +129,7 @@ def convert_bounding_box_absolute_to_relative_from_images(
 
     size = images[image_id]["sizes"]["full"]
     return convert_bounding_box_absolute_to_relative(
-        bounding_box_absolute,
-        size["width"],
-        size["height"],
+        bounding_box_absolute, size["w"], size["h"]
     )
 
 
