@@ -53,7 +53,7 @@ jobs:
       # generating openapi documentation
       # we do this after mkdocs to overwrite api.html file
       - name: Generate openapi html with ghcr.io/redocly/redoc/cli:latest
-        run : |
+        run: |
           set -e
           docker run --rm \
             -v $(pwd)/doc/references:/data -v $(pwd)/gh_pages/:/output \
