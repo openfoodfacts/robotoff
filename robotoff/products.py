@@ -448,11 +448,14 @@ class Product:
         self.lang: str | None = product.get("lang")
         ingredients_text: JSONType = {}
         for key in (k for k in product.keys() if k.startswith("ingredients_text")):
+            value = product[key]
+            if not value:
+                continue
             if key == "ingredients_text":
-                ingredients_text["main"] = product[key]
+                ingredients_text["main"] = value
             else:
                 lang = key.split("_")[-1]
-                ingredients_text[lang] = product[key]
+                ingredients_text[lang] = value
         self.ingredients_text: JSONType = ingredients_text
         self.nutriments: JSONType = product.get("nutriments") or {}
         self.nutrition_data_per: str | None = product.get("nutrition_data_per")
