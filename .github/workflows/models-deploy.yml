@@ -40,5 +40,6 @@ jobs:
           proxy_username: ${{ env.SSH_USERNAME }}
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
             cd ${{ env.PROJECT_DIR }}
             make dl-models
