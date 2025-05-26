@@ -1,0 +1,1292 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="icon" href="https://static.openfoodfacts.org/images/logos/off-logo-favicon-light.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-7.2.8">
+    
+    
+      
+        <title>Ingredient detection - Robotoff</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.92558b1b.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
+  
+    
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+      <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ingredient-detection" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Robotoff" class="md-header__button md-logo" aria-label="Robotoff" data-md-component="logo">
+      
+  <img src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Robotoff
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Ingredient detection
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/openfoodfacts/robotoff" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Robotoff" class="md-nav__button md-logo" aria-label="Robotoff" data-md-component="logo">
+      
+  <img src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg" alt="logo">
+
+    </a>
+    Robotoff
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/openfoodfacts/robotoff" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        Robotoff
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      <label class="md-nav__link" for="__nav_2">
+        Get started
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Get started" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Get started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/architecture/" class="md-nav__link">
+        Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/contributing/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../introduction/notifications/" class="md-nav__link">
+        Notifications
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        How-to guides
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="How-to guides" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          How-to guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/add-predictor/" class="md-nav__link">
+        How to add a new model/predictor to Robotoff?
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/test-and-debug/" class="md-nav__link">
+        Test and debug
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      <label class="md-nav__link" for="__nav_3_3">
+        Deployment
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Deployment" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          Deployment
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/deployment/dev-install/" class="md-nav__link">
+        Dev install
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../how-to-guides/deployment/maintenance/" class="md-nav__link">
+        Services maintenance
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      <label class="md-nav__link" for="__nav_4">
+        Technical reference
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Technical reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Technical reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../batch-job/" class="md-nav__link">
+        Google Batch Job
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ingredients-spellcheck/" class="md-nav__link">
+        Ingredients Spellcheck
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../logos-ANN/" class="md-nav__link">
+        Logo-ANN
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/" class="md-nav__link">
+        Models
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../package/" class="md-nav__link">
+        Package reference
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_6" type="checkbox" id="__nav_4_6" checked>
+      
+      <label class="md-nav__link" for="__nav_4_6">
+        Predictions
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Predictions" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_6">
+          <span class="md-nav__icon md-icon"></span>
+          Predictions
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image-orientation/" class="md-nav__link">
+        Image Orientation Detection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Ingredient detection
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Ingredient detection
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dataset" class="md-nav__link">
+    Dataset
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-integration" class="md-nav__link">
+    Robotoff integration
+  </a>
+  
+    <nav class="md-nav" aria-label="Robotoff integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inference-and-post-processing" class="md-nav__link">
+    Inference and post-processing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration" class="md-nav__link">
+    Integration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nutrient-extraction/" class="md-nav__link">
+        Nutrition extraction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nutrition-table/" class="md-nav__link">
+        Nutrition photo selection
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Some explanations
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Some explanations" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Some explanations
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/category-prediction/" class="md-nav__link">
+        Category Prediction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/db-migrations/" class="md-nav__link">
+        Database migrations
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/interactions-product-opener/" class="md-nav__link">
+        Interactions with Product Opener
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/predictions/" class="md-nav__link">
+        Predictions and insights
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/questions/" class="md-nav__link">
+        Question format proposal
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../explanations/triton/" class="md-nav__link">
+        Triton
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Research
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Research" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Research
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_2" type="checkbox" id="__nav_6_2" >
+      
+      <label class="md-nav__link" for="__nav_6_2">
+        Logo detection
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Logo detection" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_2">
+          <span class="md-nav__icon md-icon"></span>
+          Logo detection
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/logo-detection/ann-benchmark/" class="md-nav__link">
+        ANN Benchmark
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/logo-detection/embedding-benchmark/" class="md-nav__link">
+        Benchmark
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3" type="checkbox" id="__nav_6_3" >
+      
+      <label class="md-nav__link" for="__nav_6_3">
+        Nutrition table detection
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Nutrition table detection" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_3">
+          <span class="md-nav__icon md-icon"></span>
+          Nutrition table detection
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/nutrition-table-detection/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../research/nutrition-table-detection/nutrition-tables-annotation-guidelines/" class="md-nav__link">
+        Nutrition Table Annotation Guidelines
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dataset" class="md-nav__link">
+    Dataset
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robotoff-integration" class="md-nav__link">
+    Robotoff integration
+  </a>
+  
+    <nav class="md-nav" aria-label="Robotoff integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#inference-and-post-processing" class="md-nav__link">
+    Inference and post-processing
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration" class="md-nav__link">
+    Integration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/doc/references/predictions/ingredient-detection.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="ingredient-detection">Ingredient detection</h1>
+<p><a href="https://huggingface.co/datasets/openfoodfacts/ingredient-detection">Dataset on Hugging Face</a> - <a href="https://huggingface.co/openfoodfacts/ingredient-detection">Model on Hugging Face</a> - <a href="https://docs.google.com/document/d/1du2iUqgNyEN1RckBIlWnczl9jVl_GeT0jPMx6Dz08_w/edit?usp=sharing">Training notes</a></p>
+<p>We developped a sequence tagging model to automatically extract ingredient lists from photos of product packaging.</p>
+<p>This model solely relies on the text content of the image, and does not require any spatial information. It is trained to detect ingredient lists in a sequence tagging format, where each token (word) is classified as either part of an ingredient list or not. The model uses the IOB format for entity classes. There is a single <code>ÌNG</code> entity class for ingredient lists, and the <code>O</code> class for tokens that are not part of an ingredient list.</p>
+<p>The model was fine-tuned from <a href="https://huggingface.co/FacebookAI/xlm-roberta-large">xlm-roberta-large model</a>.</p>
+<h2 id="dataset">Dataset</h2>
+<p>The model was trained on ~5000 texts extracted from product packaging, that were annotated semi-automatically. Look at <a href="https://huggingface.co/datasets/openfoodfacts/ingredient-detection">the dataset page</a> on Hugging Face for more details.</p>
+<h2 id="robotoff-integration">Robotoff integration</h2>
+<h3 id="inference-and-post-processing">Inference and post-processing</h3>
+<p>The model was exported to ONNX and is served by Triton server. The model integration in Robotoff can be found in the <code>robotoff.prediction.ingredient_list</code> module.</p>
+<p>After the individual token prediction, as often we aggregate the entities by merging the tokens that have the same entity class.</p>
+<p>We detect the language associated by the ingredient list using our language detection model (currently based on fasttext), and parse the ingredient list using the Product Opener ingredient parser. This allows us to know how many ingredients in the ingredient list are recognized (or not) by Open Food Facts.</p>
+<p>We add 7 fields in the image prediction data field:</p>
+<ul>
+<li><code>lang</code>: the prediction of the language identification model
+    - <code>lang</code>: the ISO 639-1 code of the language detected in the ingredient list (ex: <code>fr</code> for French, <code>en</code> for English, <code>de</code> for German, etc.)
+    - <code>confidence</code>: the confidence of the model</li>
+<li><code>ingredients_n</code>: the number of ingredients in the ingredient list</li>
+<li><code>known_ingredients_n</code>: the number of ingredients in the ingredient list that are recognized by Open Food Facts</li>
+<li><code>unknown_ingredients_n</code>: the number of ingredients in the ingredient list that are not recognized by Open Food Facts</li>
+<li><code>fraction_known_ingredients</code>: the fraction of ingredients in the ingredient list that are recognized by Open Food Facts (between 0 and 1)</li>
+<li><code>ingredients</code>: The list of parsed ingredients, as a list of dictionaries with the following fields:<ul>
+<li><code>id</code>: the canonical ingredient ID in Open Food Facts</li>
+<li><code>text</code>: the ingredient text</li>
+<li><code>ìn_taxonomy</code>: True if the ingredient is in the Open Food Facts taxonomy, False otherwise</li>
+<li>other fields returned by the Product Opener ingredient parser API such as <code>vegan</code>, <code>vegetarian</code>, <code>percent_max</code>, <code>percent_min</code>, <code>percent</code>, <code>percent_estimate</code>, <code>ciqual_food_code</code>,...</li>
+</ul>
+</li>
+<li><code>bounding_box</code>: the bounding box of the ingredient list in the image in relative coordinates, as a list of 4 float values (x_min, y_min, x_max, y_max). </li>
+</ul>
+<h3 id="integration">Integration</h3>
+<p>For every new uploaded image, the model is run on this image <sup id="fnref:extract_ingredients_job"><a class="footnote-ref" href="#fn:extract_ingredients_job">1</a></sup>. As for all computer vision models, we save the model prediction in the <code>image_prediction</code> table.
+If some entities (i.e. ingredient lists) are detected, we create a <code>Prediction</code> in DB using the usual import mechanism <sup id="fnref:import_mechanism"><a class="footnote-ref" href="#fn:import_mechanism">2</a></sup>, under the type <code>ingredient_list</code>.</p>
+<p>We only create an insight if the following conditions are met <sup id="fnref:ingredient_detection_import"><a class="footnote-ref" href="#fn:ingredient_detection_import">3</a></sup>:</p>
+<ul>
+<li>there is no ingredient list for the language detected in the extracted ingredient list</li>
+<li>60% or more of the ingredients in the extracted ingredient list are recognized by Open Food Facts as ingredients (using the Product Opener parser)</li>
+</ul>
+<p>The insight has a null <code>value</code> and the detected language as <code>value_tag</code>. An example of the <code>data</code> field is given below:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;entities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">455</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;lang&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;lang&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.69290453</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entier partiellement concentré pasteurisé 81% (origine: France), eau, sucre 6,9%, miel 1,6%, Poids net biscuits poudre 0,66% (farine de blé, sucre, beurre, sel), amidon de maïs, jus de citron concentré, cannelle 0,16%, badiane 280a 0,16%, arôme naturel de cannelle 0,16%, ferments lactiques (dont lait). Peut contenir des traces d&#39;oeuf&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9999919533729553</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;raw_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">423</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ingredients&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr:entier-partiellement-concentre-pasteurise&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entier partiellement concentré pasteurisé&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;origins&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:france&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:water&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eau&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">9.04</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">7.88</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;18066&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">8.46</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:sugar&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sucre&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:honey&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;miel&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;31008&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr:poids-net-biscuits-poudre&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Poids net biscuits poudre&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ingredients&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:wheat-flour&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;farine de blé&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.165</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4125</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:sugar&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sucre&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.33</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.12375</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:butter&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;beurre&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.22</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.061875</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:salt&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sel&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.22</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;11058&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.061875</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">],</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:corn-starch&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;amidon de maïs&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;9510&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.41</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:concentrated-lemon-juice&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;jus de citron concentré&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2028&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.41</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:cinnamon&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cannelle&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr:badiane-280a&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;badiane 280a&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:natural-cinammon-flavouring&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arôme naturel de cannelle&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maybe&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maybe&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:lactic-ferments&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ferments lactiques&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maybe&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ingredients&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:milk&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dont lait&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0800000000000267</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">],</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0800000000000267</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">],</span>
+<span class="w">            </span><span class="nt">&quot;bounding_box&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="mi">1502</span><span class="p">,</span>
+<span class="w">                </span><span class="mi">237</span><span class="p">,</span>
+<span class="w">                </span><span class="mi">1839</span><span class="p">,</span>
+<span class="w">                </span><span class="mi">3831</span>
+<span class="w">            </span><span class="p">],</span>
+<span class="w">            </span><span class="nt">&quot;ingredients_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;known_ingredients_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;unknown_ingredients_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:extract_ingredients_job">
+<p>See function <code>robotoff.workers.tasks.import_image.extract_ingredients_job</code>&#160;<a class="footnote-backref" href="#fnref:extract_ingredients_job" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:import_mechanism">
+<p>See <a href="../../../explanations/predictions/">this page</a> for more details&#160;<a class="footnote-backref" href="#fnref:import_mechanism" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:ingredient_detection_import">
+<p>See <code>IngredientDetectionImporter.generate_candidates</code> for implementation&#160;<a class="footnote-backref" href="#fnref:ingredient_detection_import" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../image-orientation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Image Orientation Detection" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Image Orientation Detection
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../nutrient-extraction/" class="md-footer__link md-footer__link--next" aria-label="Next: Nutrition extraction" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Nutrition extraction
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.action.edit"], "search": "../../../assets/javascripts/workers/search.94ec81fe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.48dfec6c.min.js"></script>
+      
+    
+  </body>
+</html>
