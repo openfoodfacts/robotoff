@@ -58,21 +58,12 @@ jobs:
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
     - name: Wait for container build
       uses: lewagon/wait-on-check-action@v1.3.4
-      id: wait-build
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
         check-name: build
         wait-interval: 10
-        # timeout-seconds: 600
-
-    - name: Do something if build fail
-      if: steps.wait-build.outputs.conclusion == 'failure'
-      run: echo fail && false # fail if build fail
-
-    - name: Do something if build timeout
-      if: steps.wait-build.outputs.conclusion == 'timed_out'
-      run: echo Timeout && false # fail if build time out
+        allowed-conclusions: success
 
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
@@ -83,8 +74,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           # Clone Git repository if not already there
           [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
 
@@ -113,8 +104,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           # Go to repository directory
           cd ${{ matrix.env}}
 
@@ -184,8 +175,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env }}
           make create_external_volumes
 
@@ -202,8 +193,8 @@ jobs:
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env}}
           # Get the latest version (to apply migration next)
           make pull
@@ -223,8 +214,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env}}
           # let api 15s to be up !
           sleep 15s
@@ -245,8 +236,8 @@ jobs:
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env}}
           make health
 
@@ -260,8 +251,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set +e  # Allow cleanup to continue even if some commands fail
           cd ${{ matrix.env }}
           make prune
 
