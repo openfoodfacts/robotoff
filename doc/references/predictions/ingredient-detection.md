@@ -255,3 +255,20 @@ The insight has a null `value` and the detected language as `value_tag`. An exam
 [^import_mechanism]: See [this page](../../explanations/predictions.md) for more details 
 
 [^ingredient_detection_import]: See `IngredientDetectionImporter.generate_candidates` for implementation
+
+
+### Annotation
+
+To annotate the insight, use the usual route `POST https://robotoff.openfoodfacts.org/api/v1/insights/annotate`.
+
+The request body depends on whether the user validates the ingredient list as-it or updates it.
+
+If the user updated the ingredient list (for example if a typo was present), pass `annotation=2` and as `data` a JSON object serialized as a string with the `annotation` field set to the updated ingredient list.
+
+If the user validates the ingredient list as-it, pass `annotation=1` and don't pass the `data` field.
+
+Finally, the user rejects the prediction, pass `annotation=0` and don't pass the `data` field.
+
+If the insight is validated, we select the source image as an ingredient image for the detected language (if needed), with the right
+cropping and image orientation. If the user submitted an updated ingredient list, we select the image without cropping as we don't
+know the correct crop associated with the updated ingredient list.

@@ -238,6 +238,9 @@ class TestProduct:
             "ingredients_text_fr": "Fusilli, 4 fromages, crème fraîche, lait, eau, sel",
             "ingredients_text_en": "Fusilli, 4 cheeses, cream, milk, water, salt",
             "ingredients_text_de": "Fusilli, 4 Käse, Sahne, Milch, Wasser, Salz",
+            # We should not keep the it language in the ingredients_text as it is an
+            # empty string
+            "ingredients_text_it": "",
         }
         product = Product(input_data)
         assert product.barcode == input_data["code"]
@@ -252,6 +255,7 @@ class TestProduct:
             "ingredients_text_de",
             "ingredients_text_fr",
             "ingredients_text_en",
+            "ingredients_text_it",
             "quantity",
             "code",
             "images",
