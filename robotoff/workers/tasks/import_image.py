@@ -856,6 +856,9 @@ def extract_ingredients_job(
         if image_prediction.max_confidence is not None:
             predictions = []
             for entity in ingredient_prediction_data["entities"]:
+                if "ingredients_n" not in entity:
+                    logger.info("Parsing information not present in entity, skipping")
+                    continue
                 entity = copy.deepcopy(entity)
                 value_tag = entity["lang"]["lang"]
                 prediction = Prediction(
@@ -919,25 +922,24 @@ def generate_ingredient_prediction_data(
                 # and add it to the entity data
                 parsed_ingredients = parse_ingredients(entity["text"], lang_id)
             except RuntimeError as e:
-                logger.info(
+                logger.warning(
                     "Error while parsing ingredients, skipping "
                     "to the next ingredient list",
                     exc_info=e,
                 )
-                continue
+            else:
+                ingredients_n, known_ingredients_n = add_ingredient_in_taxonomy_field(
+                    parsed_ingredients, ingredient_taxonomy
+                )
 
-            ingredients_n, known_ingredients_n = add_ingredient_in_taxonomy_field(
-                parsed_ingredients, ingredient_taxonomy
-            )
-
-            # We use the same terminology as Product Opener
-            entity["ingredients_n"] = ingredients_n
-            entity["known_ingredients_n"] = known_ingredients_n
-            entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
-            entity["ingredients"] = parsed_ingredients
-            entity["fraction_known_ingredients"] = (
-                known_ingredients_n / ingredients_n if ingredients_n > 0 else 0
-            )
+                # We use the same terminology as Product Opener
+                entity["ingredients_n"] = ingredients_n
+                entity["known_ingredients_n"] = known_ingredients_n
+                entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
+                entity["ingredients"] = parsed_ingredients
+                entity["fraction_known_ingredients"] = (
+                    known_ingredients_n / ingredients_n if ingredients_n > 0 else 0
+                )
 
         if entity["bounding_box"]:
             # Convert the bounding box to relative coordinates
