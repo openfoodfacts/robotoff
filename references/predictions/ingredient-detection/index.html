@@ -590,6 +590,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#annotation" class="md-nav__link">
+    Annotation
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -939,6 +946,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#annotation" class="md-nav__link">
+    Annotation
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1198,6 +1212,15 @@ If some entities (i.e. ingredient lists) are detected, we create a <code>Predict
 <span class="w">    </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
+<h3 id="annotation">Annotation</h3>
+<p>To annotate the insight, use the usual route <code>POST https://robotoff.openfoodfacts.org/api/v1/insights/annotate</code>.</p>
+<p>The request body depends on whether the user validates the ingredient list as-it or updates it.</p>
+<p>If the user updated the ingredient list (for example if a typo was present), pass <code>annotation=2</code> and as <code>data</code> a JSON object serialized as a string with the <code>annotation</code> field set to the updated ingredient list.</p>
+<p>If the user validates the ingredient list as-it, pass <code>annotation=1</code> and don't pass the <code>data</code> field.</p>
+<p>Finally, the user rejects the prediction, pass <code>annotation=0</code> and don't pass the <code>data</code> field.</p>
+<p>If the insight is validated, we select the source image as an ingredient image for the detected language (if needed), with the right
+cropping and image orientation. If the user submitted an updated ingredient list, we select the image without cropping as we don't
+know the correct crop associated with the updated ingredient list.</p>
 <div class="footnote">
 <hr />
 <ol>
