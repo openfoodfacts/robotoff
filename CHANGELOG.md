@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.68.0](https://github.com/openfoodfacts/robotoff/compare/v1.67.1...v1.68.0) (2025-05-27)
+
+
+### Features
+
+* add first implementation of ingredient_detection insights ([#1595](https://github.com/openfoodfacts/robotoff/issues/1595)) ([4602077](https://github.com/openfoodfacts/robotoff/commit/4602077b75d862f5fd522fc069f5762e64097552))
+* add ingredient detection annotator ([#1598](https://github.com/openfoodfacts/robotoff/issues/1598)) ([31a418c](https://github.com/openfoodfacts/robotoff/commit/31a418c0d88f8c1065d67a66d1e69b2016d0a435))
+
+
+### Bug Fixes
+
+* CI clean-up and changes according to suggestion on Slack ([#1592](https://github.com/openfoodfacts/robotoff/issues/1592)) ([3d73704](https://github.com/openfoodfacts/robotoff/commit/3d737046afe7313f2b0712b857fdc9f67e3e3c1f)), closes [#1580](https://github.com/openfoodfacts/robotoff/issues/1580)
+* fix bug in convert_bounding_box_absolute_to_relative_from_images ([#1597](https://github.com/openfoodfacts/robotoff/issues/1597)) ([fa2931c](https://github.com/openfoodfacts/robotoff/commit/fa2931caf930e0f95390443758e5fe68fb9aa0cf))
+
 ## [1.67.1](https://github.com/openfoodfacts/robotoff/compare/v1.67.0...v1.67.1) (2025-05-23)
 
 
