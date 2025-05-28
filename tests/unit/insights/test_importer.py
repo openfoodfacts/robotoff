@@ -1932,7 +1932,6 @@ class TestNutrientExtractionImporter:
         assert insight.campaign == ["incomplete-nutrition"]
 
     def test_generate_candidates_with_language(self):
-        # Test that language information is added to the data field
         product = Product({"code": DEFAULT_BARCODE, "nutriments": {}, "lang": "fr"})
         data = {
             "nutrients": {
@@ -1967,10 +1966,59 @@ class TestNutrientExtractionImporter:
         assert len(candidates) == 1
         candidate = candidates[0]
         assert candidate.type == InsightType.nutrient_extraction.name
-        assert "lang" in candidate.data
-        assert candidate.data["lang"] == "fr"
+        assert "languages" in candidate.data
+        assert candidate.data["languages"] == ["fr"]
 
-        # Define test products for campaign tests
+    def test_generate_candidates_with_nutrient_languages(self):
+        product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
+        data = {
+            "nutrients": {
+                "energy-kj_100g": {
+                    "entity": "energy-kj_100g",
+                    "value": "100",
+                    "unit": "kj",
+                    "text": "100 kj",
+                    "start": 0,
+                    "end": 1,
+                    "char_start": 0,
+                    "char_end": 6,
+                    "languages": ["en", "fr"],
+                },
+                "protein_100g": {
+                    "entity": "protein_100g",
+                    "value": "10",
+                    "unit": "g",
+                    "text": "Protéines 10 g",
+                    "start": 0,
+                    "end": 1,
+                    "char_start": 0,
+                    "char_end": 15,
+                    "languages": ["fr"],
+                },
+            }
+        }
+        predictions = [
+            Prediction(
+                type=PredictionType.nutrient_extraction,
+                data=data,
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+                predictor="nutrition_extractor",
+                predictor_version="nutrition_extractor-1.0",
+                automatic_processing=False,
+            )
+        ]
+        candidates = list(
+            NutrientExtractionImporter.generate_candidates(
+                product, predictions, DEFAULT_PRODUCT_ID
+            )
+        )
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        assert candidate.type == InsightType.nutrient_extraction.name
+        assert "languages" in candidate.data
+        assert candidate.data["languages"] == ["en", "fr"]
+
         product_missing = Product(
             {
                 "code": DEFAULT_BARCODE,

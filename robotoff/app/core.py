@@ -185,7 +185,11 @@ def get_insights(
         where_clauses.append(ProductInsight.predictor == predictor)
 
     if language_codes is not None:
-        where_clauses.append(ProductInsight.data["lang"].in_(language_codes))
+        # Check both the old "lang" field and the new "languages" array
+        where_clauses.append(
+            (ProductInsight.data["lang"].in_(language_codes))
+            | (fn.array_overlap(ProductInsight.data["languages"], language_codes))
+        )
 
     if avoid_voted_on:
         where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))
