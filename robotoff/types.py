@@ -55,6 +55,7 @@ class PredictionType(str, enum.Enum):
     nutrition_image = "nutrition_image"
     is_upc_image = "is_upc_image"
     nutrient_extraction = "nutrient_extraction"
+    ingredient_detection = "ingredient_detection"
 
 
 @enum.unique
@@ -160,6 +161,8 @@ class InsightType(str, enum.Enum):
 
     # Nutrient values extracted from images
     nutrient_extraction = "nutrient_extraction"
+
+    ingredient_detection = "ingredient_detection"
 
 
 class ServerType(str, enum.Enum):

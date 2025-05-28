@@ -9,6 +9,7 @@ from robotoff.insights.importer import (
     CategoryImporter,
     ExpirationDateImporter,
     ImageOrientationImporter,
+    IngredientDetectionImporter,
     InsightImporter,
     LabelInsightImporter,
     NutrientExtractionImporter,
@@ -2342,3 +2343,182 @@ class TestImageOrientationImporter:
             assert candidate.data["rotation"] == rotation
             assert "image_key" in candidate.data
             assert "image_rev" in candidate.data
+
+
+class TestIngredientDetectionImporter:
+    def test_get_type(self):
+        assert (
+            IngredientDetectionImporter.get_type() == InsightType.ingredient_detection
+        )
+
+    def test_get_required_prediction_types(self):
+        assert IngredientDetectionImporter.get_required_prediction_types() == {
+            PredictionType.ingredient_detection,
+        }
+
+    def test_is_conflicting_insight(self):
+        candidate = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            value_tag="en",
+            type=InsightType.ingredient_detection,
+            data={},
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        # Conflicting insight (same value_tag)
+        reference = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            value_tag="en",
+            type=InsightType.ingredient_detection,
+            data={},
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        assert (
+            IngredientDetectionImporter.is_conflicting_insight(candidate, reference)
+            is True
+        )
+
+        # Non-conflicting insight (different value_tag)
+        reference_2 = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            value_tag="fr",
+            type=InsightType.ingredient_detection,
+            data={},
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        assert (
+            IngredientDetectionImporter.is_conflicting_insight(candidate, reference_2)
+            is False
+        )
+
+    def _get_default_prediction(self):
+        return Prediction(
+            type=PredictionType.ingredient_detection,
+            barcode=DEFAULT_BARCODE,
+            value_tag="en",
+            data={
+                "text": "water, flour, salt",
+                "lang": {"lang": "en", "confidence": 0.85},
+                "score": 0.95,
+                "start": 10,
+                "end": 28,
+                "ingredients_n": 3,
+                "known_ingredients_n": 3,
+                "unknown_ingredients_n": 0,
+                "fraction_known_ingredients": 1.0,
+                "ingredients": [
+                    {"text": "water", "id": "en:water", "in_taxonomy": True},
+                    {"text": "flour", "id": "en:flour", "in_taxonomy": True},
+                    {"text": "salt", "id": "en:salt", "in_taxonomy": True},
+                ],
+            },
+            source_image=DEFAULT_SOURCE_IMAGE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+        )
+
+    def test_keep_prediction(self):
+        prediction = self._get_default_prediction()
+
+        # If the product has no ingredient list, we keep the prediction
+        assert (
+            IngredientDetectionImporter.keep_prediction(
+                Product({"code": DEFAULT_BARCODE}), prediction
+            )
+            is True
+        )
+
+        # If the product already has an ingredient list for the same language,
+        # we discard the prediction
+        assert (
+            IngredientDetectionImporter.keep_prediction(
+                Product(
+                    {"code": DEFAULT_BARCODE, "ingredients_text_en": "water, sugar"}
+                ),
+                prediction,
+            )
+            is False
+        )
+
+        # If the product is None, we keep the prediction
+        assert IngredientDetectionImporter.keep_prediction(None, prediction) is True
+
+        prediction_with_low_confidence = self._get_default_prediction()
+        prediction_with_low_confidence.data["fraction_known_ingredients"] = 0.5
+        # If the fraction of known ingredients is below 0.6, we discard the prediction
+        assert (
+            IngredientDetectionImporter.keep_prediction(
+                Product({"code": DEFAULT_BARCODE}), prediction_with_low_confidence
+            )
+            is False
+        )
+
+    def test_get_candidate_priority(self):
+        prediction = self._get_default_prediction()
+
+        # Product is None, we return the default priority
+        assert IngredientDetectionImporter.get_candidate_priority(None, prediction) == 1
+
+        # The ingredient detection comes from the image that is selected
+        # for the prediction language, so we return the highest priority
+        assert (
+            IngredientDetectionImporter.get_candidate_priority(
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "images": {
+                            "1": {},
+                            "ingredients_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                        },
+                    }
+                ),
+                prediction,
+            )
+            == 2
+        )
+
+        # Otherwise we return the default priority
+        assert (
+            IngredientDetectionImporter.get_candidate_priority(
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "images": {
+                            "1": {},
+                            "ingredients_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                        },
+                    }
+                ),
+                prediction,
+            )
+            == 1
+        )
+
+    def test_generate_candidates(self):
+        prediction = self._get_default_prediction()
+
+        # We generate a candidate for the ingredient detection
+        candidates = list(
+            IngredientDetectionImporter.generate_candidates(
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "images": {
+                            "1": {},
+                            "ingredients_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                        },
+                    }
+                ),
+                [prediction],
+                DEFAULT_PRODUCT_ID,
+            )
+        )
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        assert candidate.type == InsightType.ingredient_detection.name
+        assert candidate.barcode == DEFAULT_BARCODE
+        assert candidate.value_tag == "en"
+        # Priority 2, as the image is selected as ingredient image for the prediction
+        # language
+        assert candidate.data == {"priority": 2, **prediction.data}
+        assert candidate.source_image == DEFAULT_SOURCE_IMAGE
+        assert candidate.server_type == DEFAULT_SERVER_TYPE.name

@@ -1,10 +1,12 @@
 from io import BytesIO
+from pathlib import Path
 
 import numpy as np
 import PIL
 import requests
 from PIL import Image
 
+from robotoff.types import JSONType
 from robotoff.utils.download import (
     AssetLoadingException,
     cache_asset_from_url,
@@ -84,3 +86,69 @@ def get_image_from_url(
         logger.info(error_message)
 
     return None
+
+
+def convert_bounding_box_absolute_to_relative_from_images(
+    bounding_box_absolute: tuple[int, int, int, int],
+    images: JSONType,
+    source_image: str | None,
+) -> tuple[float, float, float, float] | None:
+    """Convert absolute bounding box coordinates to relative ones.
+
+    When detecting patterns using regex or flashtext, we don't know the size of
+    the image, so we cannot compute the relative coordinates of the text
+    bounding box. We perform the conversion during insight import instead.
+
+    Relative coordinates are used as they are more convenient than absolute
+    ones (we can use them on a resized version of the original image).
+
+    :param bounding_box_absolute: absolute coordinates of the bounding box
+    :param images: The image dict as stored in MongoDB.
+    :param source_image: The insight source image, should be the path of the
+    image path or None.
+    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
+        or None if a conversion error occured
+    """
+    if source_image is None:
+        logger.warning(
+            "could not convert absolute coordinate bounding box: "
+            "bounding box was provided (%s) but source image is null",
+            bounding_box_absolute,
+        )
+        return None
+
+    image_id = Path(source_image).stem
+
+    if image_id not in images:
+        logger.info(
+            "could not convert absolute coordinate bounding box: "
+            "image %s not found in product images",
+            image_id,
+        )
+        return None
+
+    size = images[image_id]["sizes"]["full"]
+    return convert_bounding_box_absolute_to_relative(
+        bounding_box_absolute, size["w"], size["h"]
+    )
+
+
+def convert_bounding_box_absolute_to_relative(
+    bounding_box_absolute: tuple[int, int, int, int],
+    width: int,
+    height: int,
+) -> tuple[float, float, float, float]:
+    """Convert absolute bounding box coordinates to relative ones.
+
+    :param bounding_box_absolute: absolute coordinates of the bounding box.
+        The coordinates are in the format (y_min, x_min, y_max, x_max)
+    :param width: The width of the image
+    :param height: The height of the image
+    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
+    """
+    return (
+        max(0.0, bounding_box_absolute[0] / height),
+        max(0.0, bounding_box_absolute[1] / width),
+        min(1.0, bounding_box_absolute[2] / height),
+        min(1.0, bounding_box_absolute[3] / width),
+    )
