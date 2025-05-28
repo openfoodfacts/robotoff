@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.68.1](https://github.com/openfoodfacts/robotoff/compare/v1.68.0...v1.68.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* fix bug in `extract_ingredients_job` function ([#1601](https://github.com/openfoodfacts/robotoff/issues/1601)) ([0a029eb](https://github.com/openfoodfacts/robotoff/commit/0a029eb7eb4bac49fff8c80d9b307f4ef799ca14)), closes [#1600](https://github.com/openfoodfacts/robotoff/issues/1600)
+
 ## [1.68.0](https://github.com/openfoodfacts/robotoff/compare/v1.67.1...v1.68.0) (2025-05-27)
 
 
