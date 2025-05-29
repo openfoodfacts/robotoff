@@ -186,8 +186,6 @@ def get_insights(
         where_clauses.append(ProductInsight.predictor == predictor)
 
     if language_codes is not None:
-        # Only check the "lang" field for now - the languages array handling will be
-        # done by pre-populating the lang field from the languages array in the importer
         where_clauses.append(ProductInsight.data["lang"].in_(language_codes))
 
     if avoid_voted_on:
