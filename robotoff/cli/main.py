@@ -91,12 +91,13 @@ def create_redis_update(
     """Create a new product update event in Redis.
 
     This command is meant for **local development only**. It creates a new
-    product update event in Redis stream `product_updates_off`.
+    product update event in the Redis stream.
     """
     import json
 
     from openfoodfacts.types import JSONType
 
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
     from robotoff.workers.update_listener import get_redis_client
 
@@ -124,7 +125,8 @@ def create_redis_update(
         diffs = {"fields": {"change": ["generic_name", "generic_name_fr"]}}
 
     event["diffs"] = json.dumps(diffs)
-    client.xadd("product_updates_off", event)
+    client.xadd(settings.REDIS_STREAM_NAME, event)
+    typer.echo(f"Event added to Redis stream {settings.REDIS_STREAM_NAME}: {event}")
 
 
 @app.command()

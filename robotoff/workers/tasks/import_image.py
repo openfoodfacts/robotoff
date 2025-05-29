@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import datetime
 from pathlib import Path
@@ -60,7 +61,10 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_image_from_url, get_logger, http_session
-from robotoff.utils.image import convert_image_to_array
+from robotoff.utils.image import (
+    convert_bounding_box_absolute_to_relative,
+    convert_image_to_array,
+)
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 
 logger = get_logger(__name__)
@@ -801,37 +805,87 @@ def extract_ingredients_job(
             logger.info("Missing image in DB for image %s", source_image)
             return
 
-        # Stop the job here if the image has already been processed
         if (
-            ImagePrediction.get_or_none(
+            image_prediction := ImagePrediction.get_or_none(
                 image=image_model, model_name=ingredient_list.MODEL_NAME
             )
         ) is not None:
-            return
+            # Before the addition of the `ingredient_detection` prediction type, the
+            # schema of the data field missed some important fields:
+            # - `fraction_known_ingredients`: the ratio of known ingredients to
+            #   total ingredients
+            # - `bounding_box`: the bounding box of the ingredient list was present
+            #    but was not in relative coordinates
+            # As we have ~500k ingredient detections in the `image_prediction` table,
+            # we don't want to rerun the model because of a schema change. Instead, we
+            # convert the data to the new schema if it is not already done.
+            # This function can be removed once all images are converted (we can
+            # analyze the presence of the `fraction_known_ingredients` field to know
+            # this).
+            if "fraction_known_ingredients" not in image_prediction.data:
+                image_prediction.data = convert_legacy_ingredient_image_prediction_data(
+                    image_prediction.data, image_model.width, image_model.height
+                )
+                image_prediction.save(only=["data"])
+                ingredient_prediction_data = image_prediction.data
+        else:
+            output = ingredient_list.predict_from_ocr(ocr_url, triton_uri=triton_uri)
+            entities: list[
+                ingredient_list.IngredientPredictionAggregatedEntity
+            ] = output.entities  # type: ignore
+            # (we know it's an aggregated entity, so we can ignore the type)
 
-        output = ingredient_list.predict_from_ocr(ocr_url, triton_uri=triton_uri)
-        entities: list[
-            ingredient_list.IngredientPredictionAggregatedEntity
-        ] = output.entities  # type: ignore
-        # (we know it's an aggregated entity, so we can ignore the type)
+            ingredient_prediction_data = generate_ingredient_prediction_data(
+                output, image_model.width, image_model.height
+            )
+            image_prediction = ImagePrediction.create(
+                image=image_model,
+                type="ner",
+                model_name=ingredient_list.MODEL_NAME,
+                model_version=ingredient_list.MODEL_VERSION,
+                data=ingredient_prediction_data,
+                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                max_confidence=(
+                    max(entity.score for entity in entities) if entities else None
+                ),
+            )
+            logger.info(
+                "create image prediction (ingredient detection) from %s", ocr_url
+            )
 
-        ingredient_prediction_data = generate_ingredient_prediction_data(output)
-        ImagePrediction.create(
-            image=image_model,
-            type="ner",
-            model_name=ingredient_list.MODEL_NAME,
-            model_version=ingredient_list.MODEL_VERSION,
-            data=ingredient_prediction_data,
-            timestamp=datetime.datetime.now(datetime.timezone.utc),
-            max_confidence=(
-                max(entity.score for entity in entities) if entities else None
-            ),
-        )
-        logger.info("create image prediction (ingredient detection) from %s", ocr_url)
+        if image_prediction.max_confidence is not None:
+            predictions = []
+            for entity in ingredient_prediction_data["entities"]:
+                if "ingredients_n" not in entity:
+                    logger.info("Parsing information not present in entity, skipping")
+                    continue
+                entity = copy.deepcopy(entity)
+                value_tag = entity["lang"]["lang"]
+                prediction = Prediction(
+                    barcode=product_id.barcode,
+                    type=PredictionType.ingredient_detection,
+                    # We save the language code in the value_tag field
+                    value_tag=value_tag,
+                    value=None,
+                    automatic_processing=False,
+                    predictor=ingredient_list.MODEL_NAME,
+                    predictor_version=ingredient_list.MODEL_VERSION,
+                    data=entity,
+                    # Use the % of recognized ingredients as the confidence score
+                    confidence=entity["fraction_known_ingredients"],
+                    server_type=product_id.server_type,
+                    source_image=source_image,
+                )
+                predictions.append(prediction)
+
+            imported = import_insights(predictions, server_type=product_id.server_type)
+            logger.info(imported)
 
 
 def generate_ingredient_prediction_data(
     ingredient_prediction_output: ingredient_list.IngredientPredictionOutput,
+    image_width: int,
+    image_height: int,
 ) -> JSONType:
     """Generate a JSON-like object from the ingredient prediction output to
     be saved in ImagePrediction data field.
@@ -846,6 +900,11 @@ def generate_ingredient_prediction_data(
         the `in_taxonomy` field added)
 
     :param ingredient_prediction_output: the ingredient prediction output
+    :param image_width: the width of the image, used to convert the
+        bounding box to relative coordinates
+    :param image_height: the height of the image, used to convert the
+        bounding box to relative coordinates
+    :raises RuntimeError: if the ingredient parser fails
     :return: the generated JSON-like object
     """
     ingredient_prediction_data = dataclasses.asdict(ingredient_prediction_output)
@@ -863,24 +922,76 @@ def generate_ingredient_prediction_data(
                 # and add it to the entity data
                 parsed_ingredients = parse_ingredients(entity["text"], lang_id)
             except RuntimeError as e:
-                logger.info(
+                logger.warning(
                     "Error while parsing ingredients, skipping "
                     "to the next ingredient list",
                     exc_info=e,
                 )
-                continue
+            else:
+                ingredients_n, known_ingredients_n = add_ingredient_in_taxonomy_field(
+                    parsed_ingredients, ingredient_taxonomy
+                )
 
-            ingredients_n, known_ingredients_n = add_ingredient_in_taxonomy_field(
-                parsed_ingredients, ingredient_taxonomy
+                # We use the same terminology as Product Opener
+                entity["ingredients_n"] = ingredients_n
+                entity["known_ingredients_n"] = known_ingredients_n
+                entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
+                entity["ingredients"] = parsed_ingredients
+                entity["fraction_known_ingredients"] = (
+                    known_ingredients_n / ingredients_n if ingredients_n > 0 else 0
+                )
+
+        if entity["bounding_box"]:
+            # Convert the bounding box to relative coordinates
+            entity["bounding_box"] = list(
+                convert_bounding_box_absolute_to_relative(
+                    entity["bounding_box"],
+                    width=image_width,
+                    height=image_height,
+                )
             )
-
-            # We use the same terminology as Product Opener
-            entity["ingredients_n"] = ingredients_n
-            entity["known_ingredients_n"] = known_ingredients_n
-            entity["unknown_ingredients_n"] = ingredients_n - known_ingredients_n
-            entity["ingredients"] = parsed_ingredients
-
     return ingredient_prediction_data
+
+
+def convert_legacy_ingredient_image_prediction_data(
+    image_prediction_data: JSONType, image_width: int, image_height: int
+) -> JSONType:
+    """This is a function that is temporarily used to convert the legacy
+    schema for image predictions if type `ingredient_detection` to the new
+    schema.
+
+    The differences are:
+
+    - We now have the `fraction_known_ingredients` field, which is the ratio of
+        known ingredients to total ingredients
+    - The bounding box is now in relative coordinates (0-1) instead of absolute
+        coordinates (in pixels)
+
+    Once all image predictions are converted, this function can be removed.
+
+    :param image_prediction_data: the image prediction data to convert
+    :param image_width: the width of the image, used to convert the
+        bounding box to relative coordinates
+    :param image_height: the height of the image, used to convert the
+        bounding box to relative coordinates
+    """
+    new_data = copy.deepcopy(image_prediction_data)
+    for entity in new_data["entities"]:
+        # Convert the bounding box to relative coordinates
+        if entity["bounding_box"]:
+            entity["bounding_box"] = list(
+                convert_bounding_box_absolute_to_relative(
+                    entity["bounding_box"],
+                    width=image_width,
+                    height=image_height,
+                )
+            )
+        entity["fraction_known_ingredients"] = (
+            entity["known_ingredients_n"] / entity["ingredients_n"]
+            if entity["ingredients_n"] > 0
+            else 0
+        )
+    return new_data
 
 
 def add_ingredient_in_taxonomy_field(

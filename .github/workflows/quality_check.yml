@@ -38,6 +38,7 @@ jobs:
       #----------------------------------------------
       - name: Configure docker
         run: |
+          set -e
           # ensure a new line for .env file might not have it !
           echo "" >> .env
           # align user id

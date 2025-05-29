@@ -47,6 +47,7 @@ from robotoff.types import (
 )
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import function_cache_register
+from robotoff.utils.image import convert_bounding_box_absolute_to_relative_from_images
 
 logger = get_logger(__name__)
 
@@ -122,56 +123,6 @@ def is_valid_insight_image(image_ids: list[str], source_image: str | None) -> bo
 
     image_id = Path(source_image).stem
     return image_id.isdigit() and image_id in image_ids
-
-
-def convert_bounding_box_absolute_to_relative(
-    bounding_box_absolute: tuple[int, int, int, int],
-    images: dict[str, Any],
-    source_image: str | None,
-) -> tuple[float, float, float, float] | None:
-    """Convert absolute bounding box coordinates to relative ones.
-
-    When detecting patterns using regex or flashtext, we don't know the size of
-    the image, so we cannot compute the relative coordinates of the text
-    bounding box. We perform the conversion during insight import instead.
-
-    Relative coordinates are used as they are more convenient than absolute
-    ones (we can use them on a resized version of the original image).
-
-    :param bounding_box_absolute: absolute coordinates of the bounding box
-    :param images: The image dict as stored in MongoDB.
-    :param source_image: The insight source image, should be the path of the
-    image path or None.
-    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
-        or None if a conversion error occured
-    """
-    if source_image is None:
-        logger.warning(
-            "could not convert absolute coordinate bounding box: "
-            "bounding box was provided (%s) but source image is null",
-            bounding_box_absolute,
-        )
-        return None
-
-    image_id = Path(source_image).stem
-
-    if image_id not in images:
-        logger.info(
-            "could not convert absolute coordinate bounding box: "
-            "image %s not found in product images",
-            image_id,
-        )
-        return None
-
-    size = images[image_id]["sizes"]["full"]
-    height = size["h"]
-    width = size["w"]
-    return (
-        max(0.0, bounding_box_absolute[0] / height),
-        max(0.0, bounding_box_absolute[1] / width),
-        min(1.0, bounding_box_absolute[2] / height),
-        min(1.0, bounding_box_absolute[3] / width),
-    )
 
 
 def get_existing_insight(
@@ -382,7 +333,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             # disabled (product=None), as we don't have image information
             if ("bounding_box_absolute" in candidate.data) and product:
                 candidate.data["bounding_box"] = (
-                    convert_bounding_box_absolute_to_relative(
+                    convert_bounding_box_absolute_to_relative_from_images(
                         candidate.data.pop("bounding_box_absolute"),
                         product.images,
                         candidate.source_image,
@@ -416,13 +367,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def sort_predictions(cls, predictions: Iterable[Prediction]) -> list[Prediction]:
         """Sort predictions by priority, using as keys:
+
         - priority, specified by data["priority"], prediction with lowest
-          priority
-        values (high priority) come first - source image upload datetime (most
-        recent first): images IDs are auto-incremented integers, so the most
-        recent images have the highest IDs. Images with `source_image = None`
-        have a lower priority that images with a source image. - predictor,
-        predictions with predictor value have higher priority
+          priority values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+          auto-incremented integers, so the most recent images have the highest IDs.
+          Images with `source_image = None` have a lower priority that images with a
+          source image.
+        - predictor, predictions with predictor value have higher priority
 
         :param predictions: The predictions to sort
         :return: Sorted predictions
@@ -1532,7 +1484,7 @@ class NutrientExtractionImporter(InsightImporter):
 
     @staticmethod
     def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:
-        """Return True if the prediction should be kept, false otherwise.
+        """Return True if the prediction should be kept, False otherwise.
 
         The prediction should be kept if:
         - the product has no nutrition information
@@ -1540,7 +1492,7 @@ class NutrientExtractionImporter(InsightImporter):
 
         :param product: the product
         :param nutrients_keys: the nutrient keys predicted by the model
-        :return: True if the prediction should be kept, false otherwise
+        :return: True if the prediction should be kept, False otherwise
         """
         if product is None or not product.nutriments:
             # We don't have access to MongoDB or the nutriment data is missing
@@ -1609,6 +1561,104 @@ class NutrientExtractionImporter(InsightImporter):
         else:
             campaigns.append("missing-nutrition")
         insight.campaign = campaigns
+
+
+class IngredientDetectionImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.ingredient_detection
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_detection}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Product | None,
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        for prediction in predictions:
+            if cls.keep_prediction(product, prediction):
+                prediction_dict = prediction.to_dict()
+                # Set the priority of the insight candidate, based on the image
+                prediction_dict["data"]["priority"] = cls.get_candidate_priority(
+                    product, prediction
+                )
+                yield ProductInsight(**prediction_dict)
+
+    @staticmethod
+    def get_candidate_priority(
+        product: Product | None,
+        prediction: Prediction,
+    ) -> int:
+        """Return the priority of the insight candidate, to set in data["priority"]
+        field.
+
+        This is used to sort the insights in `sort_candidates` before selection.
+        The priority is defined as follows:
+
+        - 2 (highest priority): the prediction is from a selected ingredient photo
+        - 1: default priority
+        """
+        if product is None:
+            # We don't have access to MongoDB, default priority
+            return 1
+
+        lang = typing.cast(str, prediction.value_tag)
+        nutrition_image_data = product.images.get(f"ingredients_{lang}", None)
+
+        if nutrition_image_data and nutrition_image_data["imgid"] == get_image_id(
+            typing.cast(str, prediction.source_image)
+        ):
+            return 2
+
+        # Default priority
+        return 1
+
+    @staticmethod
+    def keep_prediction(product: Product | None, prediction: Prediction) -> bool:
+        """Return True if the prediction should be kept, False otherwise.
+
+        The prediction should be kept if both of the following conditions apply:
+        - the product has no ingredient information
+        - the fraction of recognized ingredients by Product Opener parser is greater
+          than 60%
+
+        :param product: the product, or None if we don't have access to MongoDB
+        :param prediction: the prediction
+        :return: True if the prediction should be kept, False otherwise
+        """
+        if product is None:
+            # We don't have access to MongoDB, so we generate an insight
+            return True
+
+        # We're sure it's a string and not null
+        predicted_lang = typing.cast(str, prediction.value_tag)
+
+        current_ingredients = product.ingredients_text.get(predicted_lang, None)
+
+        if current_ingredients is not None:
+            # For now, don't create an insight if the product already has
+            # ingredient information for the detected language
+            return False
+
+        if prediction.data["fraction_known_ingredients"] < 0.6:
+            # Less than 60% of the ingredients are recognized, so we don't
+            # create an insight
+            return False
+
+        return True
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # The language of the ingredient detection is saved in the
+        # `value_tag` field, and we only allow one ingredient prediction
+        # per language
+        return candidate.value_tag == reference.value_tag
 
 
 class PackagingElementTaxonomyException(Exception):
@@ -2040,6 +2090,7 @@ IMPORTERS: list[Type] = [
     IngredientSpellcheckImporter,
     NutrientExtractionImporter,
     ImageOrientationImporter,
+    IngredientDetectionImporter,
 ]
 
 
