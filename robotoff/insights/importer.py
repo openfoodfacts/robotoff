@@ -1488,11 +1488,13 @@ class NutrientExtractionImporter(InsightImporter):
                 # Extract languages from nutrient mentions if available
                 languages = cls.extract_languages_from_nutrient_data(prediction.data)
 
-                # If we found languages in the nutrient data, use them
+                # Store the language in data["lang"] for filtering
+                # If we found languages in the nutrient data, use the first one
                 if languages:
+                    prediction_dict["data"]["lang"] = languages[0]
                     prediction_dict["data"]["languages"] = languages
-                # If no languages were found in nutrient data
                 elif product and hasattr(product, "lang") and product.lang:
+                    prediction_dict["data"]["lang"] = product.lang
                     prediction_dict["data"]["languages"] = [product.lang]
 
                 yield ProductInsight(**prediction_dict)

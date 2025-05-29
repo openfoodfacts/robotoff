@@ -36,7 +36,7 @@ def test_filter_by_language_codes():
         server_type=ServerType.off.name,
     )
     insight_multi_lang = ProductInsightFactory(
-        data={"languages": ["fr", "es", "it"]},
+        data={"languages": ["fr", "es", "it"], "lang": "fr"},
         server_type=ServerType.off.name,
     )
 
@@ -47,8 +47,9 @@ def test_filter_by_language_codes():
             language_codes=["fr"],
         )
     )
-    assert len(insights) == 1
-    assert insights[0].id == insight_fr.id
+    assert len(insights) == 2
+    insight_ids = {insight.id for insight in insights}
+    assert insight_ids == {insight_fr.id, insight_multi_lang.id}
 
     # Test filtering by multiple language codes
     insights = list(
@@ -57,9 +58,9 @@ def test_filter_by_language_codes():
             language_codes=["fr", "en"],
         )
     )
-    assert len(insights) == 2
+    assert len(insights) == 3
     insight_ids = {insight.id for insight in insights}
-    assert insight_ids == {insight_fr.id, insight_en.id}
+    assert insight_ids == {insight_fr.id, insight_en.id, insight_multi_lang.id}
 
     # Test filtering by a language code that doesn't exist
     insights = list(
@@ -70,7 +71,6 @@ def test_filter_by_language_codes():
     )
     assert len(insights) == 0
 
-    # Test with languages array - should find insights with fr in the languages array
     insights = list(
         get_insights(
             server_type=ServerType.off,
@@ -81,7 +81,12 @@ def test_filter_by_language_codes():
     insight_ids = {insight.id for insight in insights}
     assert insight_ids == {insight_fr.id, insight_multi_lang.id}
 
-    # Test with languages array - should find insights with es in the languages array
+    insight_es = ProductInsightFactory(
+        data={"lang": "es"},
+        server_type=ServerType.off.name,
+    )
+
+    # Test filtering by a language code that exists in multiple insights
     insights = list(
         get_insights(
             server_type=ServerType.off,
@@ -89,7 +94,7 @@ def test_filter_by_language_codes():
         )
     )
     assert len(insights) == 1
-    assert insights[0].id == insight_multi_lang.id
+    assert insights[0].id == insight_es.id
 
     # Test without language_codes filter (should return all insights)
     insights = list(
@@ -97,7 +102,7 @@ def test_filter_by_language_codes():
             server_type=ServerType.off,
         )
     )
-    assert len(insights) == 5
+    assert len(insights) == 6
     insight_ids = {insight.id for insight in insights}
     assert insight_ids == {
         insight_fr.id,
@@ -105,4 +110,5 @@ def test_filter_by_language_codes():
         insight_de.id,
         insight_no_lang.id,
         insight_multi_lang.id,
+        insight_es.id,
     }

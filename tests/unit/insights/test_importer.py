@@ -1968,6 +1968,8 @@ class TestNutrientExtractionImporter:
         assert candidate.type == InsightType.nutrient_extraction.name
         assert "languages" in candidate.data
         assert candidate.data["languages"] == ["fr"]
+        assert "lang" in candidate.data
+        assert candidate.data["lang"] == "fr"
 
     def test_generate_candidates_with_nutrient_languages(self):
         product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
@@ -2018,6 +2020,10 @@ class TestNutrientExtractionImporter:
         assert candidate.type == InsightType.nutrient_extraction.name
         assert "languages" in candidate.data
         assert candidate.data["languages"] == ["en", "fr"]
+        assert "lang" in candidate.data
+        assert (
+            candidate.data["lang"] == "en"
+        )  # The first language should be used for the lang field
 
         product_missing = Product(
             {

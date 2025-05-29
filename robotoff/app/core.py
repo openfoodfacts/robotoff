@@ -134,9 +134,10 @@ def get_insights(
         defaults to None
     :param predictor: only keep insights that have this predictor, defaults
         to None
-    :param language_codes: only keep insights that have `data.lang` in this
-        list of language codes, defaults to None
-        It is used to filter lang of ingredient_spellcheck
+    :param language_codes: only keep insights that have any language in
+        `data.languages` array or `data.lang` field matching this list of
+        language codes, defaults to None. Used for filtering nutrient extraction
+        insights and ingredient_spellcheck by language
     :return: the return value is either:
         - an iterable of ProductInsight objects or dict (if `as_dict=True`)
         - the number of products (if `count=True`)
@@ -185,11 +186,9 @@ def get_insights(
         where_clauses.append(ProductInsight.predictor == predictor)
 
     if language_codes is not None:
-        # Check both the old "lang" field and the new "languages" array
-        where_clauses.append(
-            (ProductInsight.data["lang"].in_(language_codes))
-            | (fn.array_overlap(ProductInsight.data["languages"], language_codes))
-        )
+        # Only check the "lang" field for now - the languages array handling will be
+        # done by pre-populating the lang field from the languages array in the importer
+        where_clauses.append(ProductInsight.data["lang"].in_(language_codes))
 
     if avoid_voted_on:
         where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))
