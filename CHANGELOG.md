@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.68.2](https://github.com/openfoodfacts/robotoff/compare/v1.68.1...v1.68.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* Fix warning message for non-matching category in taxonomy ([#1604](https://github.com/openfoodfacts/robotoff/issues/1604)) ([1b647aa](https://github.com/openfoodfacts/robotoff/commit/1b647aac409bff10190d773a27d57995495b7744))
+
 ## [1.68.1](https://github.com/openfoodfacts/robotoff/compare/v1.68.0...v1.68.1) (2025-05-28)
 
 
