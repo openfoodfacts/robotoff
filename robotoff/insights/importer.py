@@ -1481,7 +1481,42 @@ class NutrientExtractionImporter(InsightImporter):
 
         for prediction in predictions:
             if cls.keep_prediction(product, list(prediction.data["nutrients"].keys())):
-                yield ProductInsight(**prediction.to_dict())
+                prediction_dict = prediction.to_dict()
+
+                if prediction_dict.get("data") is None:
+                    prediction_dict["data"] = {}
+
+                # Extract languages from nutrient mentions if available
+                languages = cls.extract_languages_from_nutrient_data(prediction.data)
+
+                # Store the language in data["lang"] for filtering
+                # If we found languages in the nutrient data, use the first one
+                if languages:
+                    prediction_dict["data"]["lang"] = languages[0]
+                    prediction_dict["data"]["languages"] = languages
+                elif product and hasattr(product, "lang") and product.lang:
+                    prediction_dict["data"]["lang"] = product.lang
+                    prediction_dict["data"]["languages"] = [product.lang]
+
+                yield ProductInsight(**prediction_dict)
+
+    @staticmethod
+    def extract_languages_from_nutrient_data(data: dict) -> list[str]:
+        """Extract language information from nutrient data.
+
+        Looks at the nutrient mentions to determine which languages are present.
+
+        :param data: The nutrient prediction data
+        :return: A list of detected language codes
+        """
+        languages = set()
+
+        nutrients = data.get("nutrients", {})
+        for nutrient_data in nutrients.values():
+            if "languages" in nutrient_data:
+                languages.update(nutrient_data["languages"])
+
+        return sorted(list(languages)) if languages else []
 
     @staticmethod
     def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:

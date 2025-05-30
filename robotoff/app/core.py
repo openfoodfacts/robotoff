@@ -134,9 +134,10 @@ def get_insights(
         defaults to None
     :param predictor: only keep insights that have this predictor, defaults
         to None
-    :param language_codes: only keep insights that have `data.lang` in this
-        list of language codes, defaults to None
-        It is used to filter lang of ingredient_spellcheck
+    :param language_codes: only keep insights that have any language in
+        `data.languages` array or `data.lang` field matching this list of
+        language codes, defaults to None. Used for filtering nutrient extraction
+        insights and ingredient_spellcheck by language
     :return: the return value is either:
         - an iterable of ProductInsight objects or dict (if `as_dict=True`)
         - the number of products (if `count=True`)
