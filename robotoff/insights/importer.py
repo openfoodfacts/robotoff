@@ -762,11 +762,12 @@ class CategoryImporter(InsightImporter):
                 )
                 continue
             else:
+                original_value_tag = prediction.value_tag
                 prediction.value_tag = match_taxonomized_value(
                     prediction.value_tag, TaxonomyType.category.name
                 )
                 if prediction.value_tag is None:
-                    logger.warning(f"Could not match {prediction.value_tag} (category)")
+                    logger.warning(f"Could not match {original_value_tag} (category)")
                     continue
                 elif not cls.is_prediction_valid(product, prediction.value_tag):
                     continue
