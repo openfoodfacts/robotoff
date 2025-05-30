@@ -134,7 +134,7 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
             )
             break
 
-    if face_annotations and len(face_annotations) > 0:
+    if face_annotations:
         face_annotation = max(
             face_annotations, key=lambda x: getattr(x, "detection_confidence", 0)
         )
