@@ -1,6 +1,6 @@
 # Nutrition extraction
 
-[Dataset on Hugging Face](https://huggingface.co/datasets/openfoodfacts/nutrient-detection-layout) - [Model on Hugging Face](https://huggingface.co/openfoodfacts/nutrition-extractor)
+[Dataset on Hugging Face](https://huggingface.co/datasets/openfoodfacts/nutrient-detection-layout) - [Model on Hugging Face](https://huggingface.co/openfoodfacts/nutrition-extractor) - [Are you looking to integrate it in your app ?](https://openfoodfacts.github.io/robotoff/references/api/#tag/Predict/paths/~1predict~1nutrition/get)
 
 We developped a ML model to automatically extract nutrition information from photos of product packaging where nutrition facts are displayed.
 
