@@ -39,3 +39,7 @@ msgstr "Je tento obrázek výživovým obrázkem pro tento jazyk?"
 msgid "Does the product have this packaging element?"
 msgstr "Má výrobek tento obalový prvek?"
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image rotated with the following orientation?"
+msgstr "Je tento obrázek otočen s následující orientací?"
+

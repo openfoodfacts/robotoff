@@ -39,3 +39,7 @@ msgstr "这个图像是这种语言的营养图像吗？"
 msgid "Does the product have this packaging element?"
 msgstr "产品有这个包装元素吗？"
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image rotated with the following orientation?"
+msgstr "该图像是否按以下方向旋转？"
+
