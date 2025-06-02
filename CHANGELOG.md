@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.69.0](https://github.com/openfoodfacts/robotoff/compare/v1.68.1...v1.69.0) (2025-06-02)
+
+
+### Features
+
+* Implement FaceAnnotation support for image flagging ([#1585](https://github.com/openfoodfacts/robotoff/issues/1585)) ([fe6500a](https://github.com/openfoodfacts/robotoff/commit/fe6500a9e6d5ca70aea0247eafef149dc7c7bfd1)), closes [#1581](https://github.com/openfoodfacts/robotoff/issues/1581)
+
+
+### Bug Fixes
+
+* Fix warning message for non-matching category in taxonomy ([#1604](https://github.com/openfoodfacts/robotoff/issues/1604)) ([1b647aa](https://github.com/openfoodfacts/robotoff/commit/1b647aac409bff10190d773a27d57995495b7744))
+
 ## [1.68.1](https://github.com/openfoodfacts/robotoff/compare/v1.68.0...v1.68.1) (2025-05-28)
 
 
