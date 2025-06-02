@@ -22,19 +22,15 @@ def test_flag_image_with_face_annotation(face_detection_ocr_result):
     ]
 
     assert face_predictions
-    
+
     face_prediction = face_predictions[0]
     expected_prediction = Prediction(
         type=PredictionType.image_flag,
-        data={
-            "label": "face",
-            "type": "face_annotation", 
-            "likelihood": 0.92
-        },
+        data={"label": "face", "type": "face_annotation", "likelihood": 0.92},
         confidence=0.92,
-        predictor_version="1"
+        predictor_version="1",
     )
-    
+
     assert face_prediction.type == expected_prediction.type
     assert face_prediction.data == expected_prediction.data
     assert face_prediction.confidence == expected_prediction.confidence
@@ -57,18 +53,14 @@ def test_flag_image_with_label_annotation_face():
     ]
 
     assert face_predictions
-    
+
     expected_prediction = Prediction(
         type=PredictionType.image_flag,
-        data={
-            "label": "face",
-            "type": "label_annotation",
-            "likelihood": 0.8
-        },
+        data={"label": "face", "type": "label_annotation", "likelihood": 0.8},
         confidence=0.8,
-        predictor_version="1"
+        predictor_version="1",
     )
-    
+
     assert face_predictions[0].type == expected_prediction.type
     assert face_predictions[0].data == expected_prediction.data
     assert face_predictions[0].confidence == expected_prediction.confidence
@@ -101,18 +93,18 @@ def test_flag_image_with_safe_search():
     ]
 
     assert safe_search_predictions
-    
+
     expected_prediction = Prediction(
         type=PredictionType.image_flag,
         data={
             "label": "adult",
             "type": "safe_search_annotation",
-            "likelihood": "VERY_LIKELY"
+            "likelihood": "VERY_LIKELY",
         },
         confidence=None,
-        predictor_version="1"
+        predictor_version="1",
     )
-    
+
     assert safe_search_predictions[0].type == expected_prediction.type
     assert safe_search_predictions[0].data == expected_prediction.data
     assert safe_search_predictions[0].confidence == expected_prediction.confidence
@@ -175,18 +167,14 @@ def test_multiple_faces_highest_confidence():
     ]
 
     assert face_predictions
-    
+
     expected_prediction = Prediction(
         type=PredictionType.image_flag,
-        data={
-            "label": "face",
-            "type": "face_annotation",
-            "likelihood": 0.9
-        },
+        data={"label": "face", "type": "face_annotation", "likelihood": 0.9},
         confidence=0.9,
-        predictor_version="1"
+        predictor_version="1",
     )
-    
+
     assert face_predictions[0].type == expected_prediction.type
     assert face_predictions[0].data == expected_prediction.data
     assert face_predictions[0].confidence == expected_prediction.confidence
