@@ -16,23 +16,23 @@ def _set_up_and_tear_down(peewee_db):
         clean_db()
 
 
-def test_filter_by_language_codes():
+def test_filter_by_lc():
     """Test that insights can be filtered by language_codes."""
     # Create insights with different language codes
     insight_fr = ProductInsightFactory(
-        data={"lang": "fr"},
         server_type=ServerType.off.name,
+        lc=["fr"],
     )
     insight_en = ProductInsightFactory(
-        data={"lang": "en"},
         server_type=ServerType.off.name,
+        lc=["en"],
     )
     insight_de = ProductInsightFactory(
-        data={"lang": "de"},
         server_type=ServerType.off.name,
+        lc=["de"],
     )
     insight_no_lang = ProductInsightFactory(
-        data={},  # No language code
+        # No language code
         server_type=ServerType.off.name,
     )
 
@@ -40,7 +40,7 @@ def test_filter_by_language_codes():
     insights = list(
         get_insights(
             server_type=ServerType.off,
-            language_codes=["fr"],
+            lc=["fr"],
         )
     )
     assert len(insights) == 1
@@ -50,7 +50,7 @@ def test_filter_by_language_codes():
     insights = list(
         get_insights(
             server_type=ServerType.off,
-            language_codes=["fr", "en"],
+            lc=["fr", "en"],
         )
     )
     assert len(insights) == 2
@@ -61,7 +61,7 @@ def test_filter_by_language_codes():
     insights = list(
         get_insights(
             server_type=ServerType.off,
-            language_codes=["es"],
+            lc=["es"],
         )
     )
     assert len(insights) == 0

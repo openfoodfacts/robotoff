@@ -1427,7 +1427,7 @@ class IngredientSpellcheckImporter(InsightImporter):
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         yield from (
-            ProductInsight(**prediction.to_dict())
+            ProductInsight(lc=[prediction.value_tag], **prediction.to_dict())
             for prediction in predictions
             if cls._keep_prediction(prediction=prediction, product=product)
         )
@@ -1587,7 +1587,7 @@ class IngredientDetectionImporter(InsightImporter):
                 prediction_dict["data"]["priority"] = cls.get_candidate_priority(
                     product, prediction
                 )
-                yield ProductInsight(**prediction_dict)
+                yield ProductInsight(lc=[prediction.value_tag], **prediction_dict)
 
     @staticmethod
     def get_candidate_priority(
