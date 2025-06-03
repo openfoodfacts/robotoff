@@ -1,15 +1,16 @@
 from robotoff.insights.annotate import (
     CANNOT_VOTE_RESULT,
-    INVALID_DATA,
     MISSING_PRODUCT_RESULT,
     NUTRIENT_DEFAULT_UNIT,
     UPDATED_ANNOTATION_RESULT,
+    AnnotationResult,
     IngredientDetectionAnnotator,
     NutrientExtractionAnnotator,
     rotate_bounding_box,
 )
 from robotoff.models import ProductInsight
 from robotoff.types import (
+    IngredientDetectionAnnotateBody,
     InsightType,
     JSONType,
     NutrientData,
@@ -118,7 +119,7 @@ class TestIngredientDetectionAnnotator:
             "code": DEFAULT_BARCODE,
         }
         IngredientDetectionAnnotator.select_ingredient_image(
-            insight, product, has_user_annotation=False
+            insight, product, validated_data=None
         )
         assert select_rotate_image.call_count == 0
         assert get_image_rotation.call_count == 0
@@ -147,7 +148,7 @@ class TestIngredientDetectionAnnotator:
             },
         }
         IngredientDetectionAnnotator.select_ingredient_image(
-            insight, product, has_user_annotation=False
+            insight, product, validated_data=None
         )
         assert select_rotate_image.call_count == 1
         assert select_rotate_image.call_args.args == ()
@@ -189,7 +190,7 @@ class TestIngredientDetectionAnnotator:
             },
         }
         IngredientDetectionAnnotator.select_ingredient_image(
-            insight, product, has_user_annotation=False
+            insight, product, validated_data=None
         )
         assert select_rotate_image.call_count == 1
         assert select_rotate_image.call_args.args == ()
@@ -238,10 +239,63 @@ class TestIngredientDetectionAnnotator:
         IngredientDetectionAnnotator.select_ingredient_image(
             insight,
             product,
-            # Set has_user_annotation to True so that no cropping is needed
-            has_user_annotation=True,
+            # Provide a validated_data without bounding box so that no cropping is
+            # done
+            validated_data=IngredientDetectionAnnotateBody(
+                annotation="new ingredient list"
+            ),
         )
         assert select_rotate_image.call_count == 0
+        assert get_image_rotation.call_count == 1
+        assert get_image_rotation.call_args.args == (insight.source_image,)
+
+    def test_select_ingredient_image_with_user_submitted_data(self, mocker):
+        select_rotate_image = mocker.patch(
+            "robotoff.insights.annotate.select_rotate_image"
+        )
+        get_image_rotation = mocker.patch(
+            "robotoff.insights.annotate.get_image_rotation", return_value=180
+        )
+        insight = self._create_product_insight(
+            data={"bounding_box": [0.1, 0.1, 0.5, 0.5]}
+        )
+        product = {
+            "code": DEFAULT_BARCODE,
+            "images": {
+                "1": {
+                    "sizes": {
+                        "full": {
+                            "w": 1000,
+                            "h": 800,
+                        }
+                    }
+                }
+            },
+        }
+        IngredientDetectionAnnotator.select_ingredient_image(
+            insight,
+            product,
+            # Provide a validated_data without bounding box so that no cropping is
+            # done
+            validated_data=IngredientDetectionAnnotateBody(
+                annotation="new ingredient list",
+                rotation=270,
+                bounding_box=[0.2, 0.2, 0.6, 0.6],
+            ),
+        )
+        assert select_rotate_image.call_count == 1
+        assert select_rotate_image.call_args.args == ()
+        assert select_rotate_image.call_args.kwargs == {
+            "product_id": DEFAULT_PRODUCT_ID,
+            "rotate": 270,
+            "is_vote": False,
+            "insight_id": insight.id,
+            "image_key": "ingredients_en",
+            "image_id": "1",
+            "crop_bounding_box": (400.0, 160.0, 800.0, 480),
+            "auth": None,
+        }
+
         assert get_image_rotation.call_count == 1
         assert get_image_rotation.call_args.args == (insight.source_image,)
 
@@ -284,7 +338,7 @@ class TestIngredientDetectionAnnotator:
             {"code": DEFAULT_BARCODE},
         )
         assert select_ingredient_image.call_args.kwargs == {
-            "has_user_annotation": False,
+            "validated_data": None,
             "auth": None,
         }
 
@@ -362,7 +416,13 @@ class TestIngredientDetectionAnnotator:
         annotation_result = IngredientDetectionAnnotator.process_annotation(
             insight, data={"invalid_field": "Test"}, is_vote=False
         )
-        assert annotation_result is INVALID_DATA
+        assert annotation_result == AnnotationResult(
+            status_code=11,
+            status="error_invalid_data",
+            description="1 validation error for IngredientDetectionAnnotateBody\nannotation\n  "
+            "Field required [type=missing, input_value={'invalid_field': 'Test'}, input_type=dict]\n"
+            "    For further information visit https://errors.pydantic.dev/2.11/v/missing",
+        )
 
 
 def test_rotate_bounding_box():
