@@ -1610,6 +1610,13 @@ class TestNutritionImageImporter:
 
 
 class TestNutrientExtractionImporter:
+    def test_get_input_prediction_types(self):
+        assert NutrientExtractionImporter.get_input_prediction_types() == {
+            PredictionType.nutrient_extraction,
+            PredictionType.image_orientation,
+            PredictionType.nutrient_mention,
+        }
+
     def test_generate_candidates_no_nutrient(self):
         product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
         data = {
@@ -1635,7 +1642,27 @@ class TestNutrientExtractionImporter:
                 predictor="nutrition_extractor",
                 predictor_version="nutrition_extractor-1.0",
                 automatic_processing=False,
-            )
+                value_tag=None,
+            ),
+            Prediction(
+                type=PredictionType.nutrient_mention,
+                data={
+                    "mentions": {
+                        "fat": [{"languages": ["it"]}],
+                        "salt": [{"languages": ["fr"]}, {"languages": ["it"]}],
+                        "fiber": [{"languages": ["de"]}],
+                        "protein": [{"languages": ["en", "de"]}],
+                    }
+                },
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+            ),
+            Prediction(
+                type=PredictionType.image_orientation,
+                data={"rotation": 90, "orientation": "right"},
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+            ),
         ]
         candidates = list(
             NutrientExtractionImporter.generate_candidates(
@@ -1648,11 +1675,13 @@ class TestNutrientExtractionImporter:
         assert candidate.barcode == DEFAULT_BARCODE
         assert candidate.type == InsightType.nutrient_extraction.name
         assert candidate.value_tag is None
-        assert candidate.data == data
+        assert candidate.data == {"rotation": 90, **data}
         assert candidate.source_image == DEFAULT_SOURCE_IMAGE
         assert candidate.automatic_processing is False
         assert candidate.predictor == "nutrition_extractor"
         assert candidate.predictor_version == "nutrition_extractor-1.0"
+        assert candidate.lc is not None
+        assert set(candidate.lc) == {"it", "de"}
 
     def test_generate_candidates_no_new_nutrient(self):
         product = Product(
@@ -1929,6 +1958,49 @@ class TestNutrientExtractionImporter:
 
         NutrientExtractionImporter.add_optional_fields(insight, product_incomplete)
         assert insight.campaign == ["incomplete-nutrition"]
+
+    @pytest.mark.parametrize(
+        "nutrient_mention,expected_lc",
+        [
+            # Only one mention, should return single language
+            ({"mentions": {"sugar": [{"raw": "sucre", "languages": ["fr"]}]}}, {"fr"}),
+            # Multiple mentions with same language, should return single language
+            (
+                {
+                    "mentions": {
+                        "sugar": [{"raw": "sucre", "languages": ["fr"]}],
+                        "salt": [{"raw": "sel", "languages": ["fr"]}],
+                    }
+                },
+                {"fr"},
+            ),
+            (
+                {
+                    "mentions": {
+                        "sugar": [
+                            {"raw": "sucre", "languages": ["fr"]},
+                            {"raw": "sugar", "languages": ["en"]},
+                        ],
+                        "salt": [{"raw": "sel", "languages": ["fr"]}],
+                    }
+                },
+                {"fr"},
+            ),
+            (
+                {"mentions": {}},
+                None,
+            ),
+        ],
+    )
+    def test_compute_lc_from_nutrient_mention(self, nutrient_mention, expected_lc):
+        result = NutrientExtractionImporter.compute_lc_from_nutrient_mention(
+            Prediction(data=nutrient_mention, type=PredictionType.nutrient_mention)
+        )
+
+        if result is None:
+            assert result is expected_lc
+        else:
+            assert set(result) == expected_lc
 
 
 class TestImportInsightsForProducts:
@@ -2276,6 +2348,12 @@ class TestIngredientDetectionImporter:
             PredictionType.ingredient_detection,
         }
 
+    def test_get_input_prediction_types(self):
+        assert IngredientDetectionImporter.get_input_prediction_types() == {
+            PredictionType.ingredient_detection,
+            PredictionType.image_orientation,
+        }
+
     def test_is_conflicting_insight(self):
         candidate = ProductInsight(
             barcode=DEFAULT_BARCODE,
@@ -2415,6 +2493,17 @@ class TestIngredientDetectionImporter:
 
     def test_generate_candidates(self):
         prediction = self._get_default_prediction()
+        image_orientation_prediction = Prediction(
+            type=PredictionType.image_orientation,
+            barcode=DEFAULT_BARCODE,
+            data={
+                "orientation": "down",
+                "rotation": 180,
+                "count": {"down": 10, "right": 0},
+            },
+            source_image=DEFAULT_SOURCE_IMAGE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+        )
 
         # We generate a candidate for the ingredient detection
         candidates = list(
@@ -2428,7 +2517,7 @@ class TestIngredientDetectionImporter:
                         },
                     }
                 ),
-                [prediction],
+                [prediction, image_orientation_prediction],
                 DEFAULT_PRODUCT_ID,
             )
         )
@@ -2439,6 +2528,7 @@ class TestIngredientDetectionImporter:
         assert candidate.value_tag == "en"
         # Priority 2, as the image is selected as ingredient image for the prediction
         # language
-        assert candidate.data == {"priority": 2, **prediction.data}
+        assert candidate.data == {"priority": 2, "rotation": 180, **prediction.data}
         assert candidate.source_image == DEFAULT_SOURCE_IMAGE
         assert candidate.server_type == DEFAULT_SERVER_TYPE.name
+        assert candidate.lc == ["en"]

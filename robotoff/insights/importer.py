@@ -5,6 +5,7 @@ import itertools
 import operator
 import typing
 import uuid
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Type, Union
 
@@ -1467,6 +1468,17 @@ class NutrientExtractionImporter(InsightImporter):
         return {PredictionType.nutrient_extraction}
 
     @classmethod
+    def get_input_prediction_types(cls) -> set[PredictionType]:
+        return {
+            # Contains the nutrient values extracted from the image
+            PredictionType.nutrient_extraction,
+            # To add image rotation information to `insight.data`
+            PredictionType.image_orientation,
+            # To add language to `insight.lc`
+            PredictionType.nutrient_mention,
+        }
+
+    @classmethod
     def generate_candidates(
         cls,
         product: Product | None,
@@ -1479,9 +1491,66 @@ class NutrientExtractionImporter(InsightImporter):
             # handle this case
             return
 
+        image_orientation_prediction = next(
+            (p for p in predictions if p.type == PredictionType.image_orientation),
+            None,
+        )
+        nutrient_mention_prediction = next(
+            (p for p in predictions if p.type == PredictionType.nutrient_mention), None
+        )
+        predictions = [
+            p for p in predictions if p.type == PredictionType.nutrient_extraction
+        ]
+
         for prediction in predictions:
             if cls.keep_prediction(product, list(prediction.data["nutrients"].keys())):
-                yield ProductInsight(**prediction.to_dict())
+                insight_dict = prediction.to_dict()
+
+                if image_orientation_prediction is not None:
+                    insight_dict["data"]["rotation"] = (
+                        image_orientation_prediction.data["rotation"]
+                    )
+                if nutrient_mention_prediction is not None:
+                    insight_dict["lc"] = cls.compute_lc_from_nutrient_mention(
+                        nutrient_mention_prediction
+                    )
+
+                yield ProductInsight(**insight_dict)
+
+    @staticmethod
+    def compute_lc_from_nutrient_mention(
+        nutrient_mention_prediction: Prediction,
+    ) -> list[str] | None:
+        """Find the language(s) present on the nutrition table using the
+        `nutrient_mention` prediction.
+
+        This is used to set the `lc` field insight.
+
+        :param nutrient_mention_prediction: the `Prediction` of type
+            `nutrient_mention` for the image
+        :return: a list of languages present on the nutrition table, or None
+            if no language is detected
+        """
+        languages: dict[str, int] = defaultdict(int)
+
+        for mentions in nutrient_mention_prediction.data["mentions"].values():
+            for mention in mentions:
+                for lang in mention["languages"]:
+                    languages[lang] += 1
+
+        # By default, we require at least 2 different nutrient mention in the same
+        # language to consider that this language is present
+        selected_languages = [lang for lang, count in languages.items() if count >= 2]
+
+        if selected_languages:
+            return selected_languages
+        elif languages:
+            return [next(iter(languages.keys()))]
+        else:
+            # No languages detected, return None.
+            # This should not happen, as a `nutrient_mention` prediction
+            # should always have at least one mention (and associated lang)
+            return None
 
     @staticmethod
     def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:
@@ -1574,20 +1643,37 @@ class IngredientDetectionImporter(InsightImporter):
         return {PredictionType.ingredient_detection}
 
     @classmethod
+    def get_input_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_detection, PredictionType.image_orientation}
+
+    @classmethod
     def generate_candidates(
         cls,
         product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
+        image_orientation_prediction = next(
+            (p for p in predictions if p.type == PredictionType.image_orientation),
+            None,
+        )
+        predictions = [
+            p for p in predictions if p.type == PredictionType.ingredient_detection
+        ]
         for prediction in predictions:
             if cls.keep_prediction(product, prediction):
-                prediction_dict = prediction.to_dict()
+                insight_dict = prediction.to_dict()
                 # Set the priority of the insight candidate, based on the image
-                prediction_dict["data"]["priority"] = cls.get_candidate_priority(
+                insight_dict["data"]["priority"] = cls.get_candidate_priority(
                     product, prediction
                 )
-                yield ProductInsight(lc=[prediction.value_tag], **prediction_dict)
+                if image_orientation_prediction is not None:
+                    insight_dict["data"]["rotation"] = (
+                        image_orientation_prediction.data["rotation"]
+                    )
+                # the language of the ingredient list is stored in the `value_tag` field
+                insight_dict["lc"] = [prediction.value_tag]
+                yield ProductInsight(**insight_dict)
 
     @staticmethod
     def get_candidate_priority(
