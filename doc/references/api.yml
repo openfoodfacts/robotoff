@@ -270,7 +270,6 @@ paths:
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/predictor"
-        - $ref: "#/components/parameters/language_codes"
       responses:
         "200":
           description: ""
@@ -292,7 +291,6 @@ paths:
       parameters:
         - $ref: "#/components/parameters/barcode_path"
         - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/language_codes"
       responses:
         "200":
           description: ""
@@ -316,7 +314,7 @@ paths:
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/campaigns"
-        - $ref: "#/components/parameters/language_codes"
+        - $ref: "#/components/parameters/lc"
       responses:
         "200":
           description: ""
@@ -427,7 +425,6 @@ paths:
         - $ref: "#/components/parameters/value_tag"
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/barcode_query_filter"
-        - $ref: "#/components/parameters/language_codes"
         - name: annotated
           description: The annotation status of the insight.
             If not provided, both annotated and non-annotated insights are returned
@@ -1353,8 +1350,8 @@ components:
       schema:
         type: string
         default: en
-    language_codes:
-      name: language_codes
+    lc:
+      name: lc
       in: query
       description: Comma-separated list of language codes to filter insights by language
       schema:

@@ -11,7 +11,7 @@ from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.prediction.langid import LanguagePrediction
-from robotoff.types import PredictionType, ProductIdentifier, ServerType
+from robotoff.types import InsightType, PredictionType, ProductIdentifier, ServerType
 
 from .models_utils import (
     AnnotationVoteFactory,
@@ -45,6 +45,51 @@ def _set_up_and_tear_down(peewee_db):
 @pytest.fixture()
 def client():
     return testing.TestClient(api)
+
+
+def test_get_insights_filter_by_lc(client, mocker, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        ProductInsightFactory(
+            barcode="1",
+            type=InsightType.ingredient_detection,
+            data={},
+            lc=["fr"],
+        )
+        ProductInsightFactory(
+            barcode="2",
+            type=InsightType.ingredient_detection,
+            data={},
+            lc=["fr", "en"],
+        )
+        ProductInsightFactory(
+            barcode="3",
+            type=InsightType.ingredient_detection,
+            data={},
+            lc=["de"],
+        )
+
+    result = client.simulate_get("/api/v1/insights?lc=fr")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 2
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["insights"]] == ["1", "2"]
+
+    result = client.simulate_get("/api/v1/insights?lc=en")
+    data = result.json
+    assert data["count"] == 1
+    assert [q["barcode"] for q in data["insights"]] == ["2"]
+
+    result = client.simulate_get("/api/v1/insights?lc=de")
+    data = result.json
+    assert data["count"] == 1
+    assert [q["barcode"] for q in data["insights"]] == ["3"]
+
+    result = client.simulate_get("/api/v1/insights?lc=it")
+    data = result.json
+    assert data["count"] == 0
+    assert len(data["insights"]) == 0
 
 
 def test_random_question(client, mocker):

@@ -7,7 +7,7 @@ from typing import Iterable
 
 import peewee
 from peewee_migrate import Router
-from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
+from playhouse.postgres_ext import ArrayField, BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
@@ -204,6 +204,21 @@ class ProductInsight(BaseModel):
     # - for OCR-based insights, it's the text that triggered the
     #   creation of the insight
     bounding_box = BinaryJSONField(null=True)
+
+    # `lc` refers to the language(s) associated with the insight.
+    # it is useful for insights where language is important for validation,
+    # such as:
+    # - nutrient_extraction
+    # - ingredient_spellcheck
+    # - ingredient_detection
+    # This field is used in the API to filter insights based on the language
+    # code, e.g. to get all insights in English.
+    lc = ArrayField(
+        peewee.CharField,
+        null=True,
+        help_text="language codes of the insight, if any, e.g. 'en', 'fr', 'de'",
+        index=True,
+    )
 
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
