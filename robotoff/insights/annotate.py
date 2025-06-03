@@ -31,7 +31,13 @@ from robotoff.off import (
 )
 from robotoff.prediction.utils import get_image_rotation, get_nutrition_table_prediction
 from robotoff.products import get_image_id, get_product
-from robotoff.types import InsightAnnotation, InsightType, JSONType, NutrientData
+from robotoff.types import (
+    IngredientDetectionAnnotateBody,
+    InsightAnnotation,
+    InsightType,
+    JSONType,
+    NutrientData,
+)
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -1030,23 +1036,32 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         if is_vote:
             return CANNOT_VOTE_RESULT
 
-        annotation: str | None = None
+        validated_data = None
         if data is not None:
             # the user can provide a custom ingredient list using the `annotation`
             # field in the `data` serialized JSON, in case she or he wants to
             # correct the ingredient list
-            annotation = data.get("annotation")
-            if not annotation or len(data) > 1:
-                return INVALID_DATA
+            try:
+                validated_data = IngredientDetectionAnnotateBody.model_validate(data)
+            except ValidationError as e:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description=str(e),
+                )
             # We add the new annotation to the insight
             json_data = insight.data
-            json_data["annotation"] = annotation
+            json_data["annotation"] = validated_data.annotation
             insight.data = json_data
             insight.save()
 
         # Use the user-provided ingredient list if available, otherwise use the
         # original detected ingredient list
-        ingredient_text: str = annotation or insight.data["text"]
+        ingredient_text: str
+        if validated_data:
+            ingredient_text = validated_data.annotation
+        else:
+            ingredient_text = insight.data["text"]
 
         product_id = insight.get_product_id()
         product = get_product(product_id, ["code", "images"])
@@ -1068,7 +1083,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         cls.select_ingredient_image(
             insight,
             product,
-            has_user_annotation=annotation is not None,
+            validated_data=validated_data,
             auth=auth,
         )
         return UPDATED_ANNOTATION_RESULT
@@ -1078,7 +1093,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         cls,
         insight: ProductInsight,
         product: JSONType,
-        has_user_annotation: bool,
+        validated_data: IngredientDetectionAnnotateBody | None = None,
         auth: OFFAuthentication | None = None,
     ) -> None:
         """If the insight is validated, select the source image as ingredient image.
@@ -1091,8 +1106,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
 
         :param insight: the original `ingredient_detection` insight
         :param product: the product data
-        :param has_user_annotation: True if the user provided a custom ingredient
-            list, in which case we don't perform cropping
+        :param validated_data: the validated `data` sent by the client (optional)
         :param auth: the user authentication data
         """
 
@@ -1107,17 +1121,39 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         if not image_id or not image_meta:
             return None
 
+        # TODO(raphael): we now have a `data["rotation"]` subfield that contains
+        # the rotation angle of the image, so we can use it (once all insights have
+        # been generated again) instead of fetching the rotation angle from the
+        # `predictions` table.
+        # See https://github.com/openfoodfacts/robotoff/pull/1609
         rotation = get_image_rotation(insight.source_image)
         # Use the language associated with the insight to determine the image key.
         image_key = f"ingredients_{insight.value_tag}"
 
         # We don't perform the cropping if the user provided a custom ingredient
-        # list, because the bounding box may not be valid anymore.
-        perform_crop = not has_user_annotation
+        # list without the associated `bounding_box`, as we don't know the
+        # bounding box coordinates in this case.
+        perform_crop = (
+            # We perform the crop if the user didn't submit a custom ingredient list
+            validated_data is None
+            # or if this custom ingredient list comes with a bounding box
+            or validated_data.bounding_box is not None
+        )
 
         # This is the original bounding box that was detected by the
         # ingredient detection model.
         bounding_box = insight.data.get("bounding_box")
+
+        if validated_data:
+            if validated_data.bounding_box is not None:
+                # If the user provided a custom bounding box, we use it instead of the
+                # original bounding box.
+                bounding_box = validated_data.bounding_box
+            if validated_data.rotation is not None:
+                # If the user provided a custom rotation angle, we use it instead of the
+                # original rotation angle.
+                rotation = validated_data.rotation
+
         # This is the bounding box that is sent to Product Opener for cropping.
         crop_bounding_box: tuple[float, float, float, float] | None = None
         if perform_crop and bool(bounding_box):

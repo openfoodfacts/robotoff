@@ -1,6 +1,8 @@
 import json
 
-from robotoff.types import NutrientData
+import pytest
+
+from robotoff.types import IngredientDetectionAnnotateBody, NutrientData
 
 
 class TestNutrientData:
@@ -60,3 +62,36 @@ class TestNutrientData:
         }"""
         )
         NutrientData.model_validate(nutrient_data)
+
+
+class TestIngredientDetectionAnnotateBody:
+    def test_ingredient_detection_annotate_body_valid(self):
+        body = IngredientDetectionAnnotateBody(
+            annotation="ingredient",
+            rotation=180,
+            bounding_box=[0.1, 0.2, 0.5, 0.6],
+        )
+        assert body.annotation == "ingredient"
+        assert body.rotation == 180
+        assert body.bounding_box == [0.1, 0.2, 0.5, 0.6]
+
+    def test_ingredient_detection_annotate_body_invalid_length(self):
+        with pytest.raises(ValueError):
+            IngredientDetectionAnnotateBody(
+                annotation="ingredient",
+                bounding_box=[0.1, 0.2, 0.5],
+            )
+
+    def test_ingredient_detection_annotate_body_invalid_coords(self):
+        with pytest.raises(ValueError):
+            IngredientDetectionAnnotateBody(
+                annotation="ingredient",
+                bounding_box=[0.1, 0.2, 1.5, 0.6],
+            )
+
+    def test_ingredient_detection_annotate_body_invalid_order(self):
+        with pytest.raises(ValueError):
+            IngredientDetectionAnnotateBody(
+                annotation="ingredient",
+                bounding_box=[0.5, 0.2, 0.1, 0.6],
+            )

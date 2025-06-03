@@ -438,3 +438,30 @@ class ImportImageFlag(str, enum.Enum):
     extract_nutrition = "extract_nutrition"
     run_logo_object_detection = "run_logo_object_detection"
     run_nutrition_table_object_detection = "run_nutrition_table_object_detection"
+
+
+class IngredientDetectionAnnotateBody(BaseModel):
+    annotation: str
+    rotation: int | None = None
+    bounding_box: list[float] | None = None
+
+    @model_validator(mode="after")
+    def validate_bounding_box(self) -> Self:
+        if self.bounding_box:
+            if len(self.bounding_box) != 4:
+                raise ValueError("bounding_box must have exactly 4 elements")
+            if not all(0.0 <= coord <= 1.0 for coord in self.bounding_box):
+                raise ValueError("bounding_box coordinates must be between 0.0 and 1.0")
+
+            # Check that the format of the bounding box is correct:
+            # (y_min, x_min, y_max, x_max)
+            if not (
+                self.bounding_box[0] < self.bounding_box[2]
+                and self.bounding_box[1] < self.bounding_box[3]
+            ):
+                raise ValueError(
+                    "bounding_box coordinates must be in the format "
+                    "(y_min, x_min, y_max, x_max)"
+                )
+
+        return self
