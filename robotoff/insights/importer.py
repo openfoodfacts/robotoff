@@ -1535,7 +1535,10 @@ class NutrientExtractionImporter(InsightImporter):
 
         for mentions in nutrient_mention_prediction.data["mentions"].values():
             for mention in mentions:
-                for lang in mention["languages"]:
+                # Some keys such as `nutrient_value` don't have
+                # associated languages, so we have to account for missing
+                # `languages`
+                for lang in mention.get("languages", []):
                     languages[lang] += 1
 
         # By default, we require at least 2 different nutrient mention in the same
