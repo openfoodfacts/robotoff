@@ -107,8 +107,7 @@ class UpdateListener(BaseUpdateListener):
 @backoff.on_exception(
     backoff.expo,
     ConnectionError,
-    max_tries=10,
-    max_time=300,  # 5 minutes
+    max_value=60,  # we wait at most 60 seconds between retries
     jitter=backoff.random_jitter,
     on_backoff=lambda details: logger.error(
         "Redis connection error (attempt %d/%d): %s. Retrying in %.1f seconds...",
