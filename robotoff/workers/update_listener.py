@@ -1,5 +1,6 @@
 import time
 
+import backoff
 from openfoodfacts import Environment, Flavor
 from openfoodfacts.images import generate_image_url, generate_json_ocr_url
 from openfoodfacts.redis import RedisUpdate
@@ -105,18 +106,29 @@ class UpdateListener(BaseUpdateListener):
                 )
 
 
+@backoff.on_exception(
+    backoff.expo,
+    ConnectionError,
+    max_tries=10,
+    max_time=300,  # 5 minutes
+    jitter=backoff.random_jitter,
+    on_backoff=lambda details: logger.error(
+        "Redis connection error (attempt %d/%d): %s. Retrying in %.1f seconds...",
+        details["tries"],
+        10,
+        details["exception"],
+        details["wait"],
+    ),
+    on_giveup=lambda details: logger.critical(
+        "Max retries (%d) reached. Update listener is terminating.", details["tries"]
+    ),
+)
 def run_update_listener():
     """Run the update import daemon.
 
     This daemon listens to the Redis stream containing information about
     product updates and triggers appropriate actions.
     """
-    max_retries = 10
-    initial_delay = 1  # seconds
-    max_delay = 300  # 5 minutes
-
-    retry_count = 0
-
     while True:
         try:
             logger.info("Starting Redis update listener...")
@@ -126,30 +138,7 @@ def run_update_listener():
                 redis_stream_name=settings.REDIS_STREAM_NAME,
                 redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
             )
-            retry_count = 0
             update_listener.run()
-
-        except ConnectionError as e:
-            retry_count += 1
-            delay = min(initial_delay * (2 ** (retry_count - 1)), max_delay)
-
-            logger.error(
-                "Redis connection error (attempt %d/%d): %s. Retrying in %d seconds...",
-                retry_count,
-                max_retries if max_retries > 0 else "∞",
-                str(e),
-                delay,
-            )
-
-            if max_retries > 0 and retry_count >= max_retries:
-                logger.critical(
-                    "Max retries (%d) reached. Update listener is terminating.",
-                    max_retries,
-                )
-                raise
-
-            time.sleep(delay)
-
         except Exception as e:
             logger.critical(
                 "Unexpected error in update listener: %s", str(e), exc_info=True
