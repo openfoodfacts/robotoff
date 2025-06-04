@@ -32,7 +32,8 @@ from robotoff.off import (
 from robotoff.prediction.utils import get_image_rotation, get_nutrition_table_prediction
 from robotoff.products import get_image_id, get_product
 from robotoff.types import (
-    IngredientDetectionAnnotateBody,
+    CategoryAnnotateBody,
+    IngredientAnnotateBody,
     InsightAnnotation,
     InsightType,
     JSONType,
@@ -57,7 +58,6 @@ class AnnotationStatus(Enum):
     error_updated_product = 4
     error_already_annotated = 5
     error_unknown_insight = 6
-    error_missing_data = 7
     error_invalid_image = 8
     vote_saved = 9
     error_failed_update = 10
@@ -102,11 +102,6 @@ UNKNOWN_INSIGHT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_unknown_insight.name,
     description="unknown insight ID",
 )
-DATA_REQUIRED_RESULT = AnnotationResult(
-    status_code=AnnotationStatus.error_missing_data.value,
-    status=AnnotationStatus.error_missing_data.name,
-    description="annotation data is required as JSON in `data` field",
-)
 SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.vote_saved.value,
     status=AnnotationStatus.vote_saved.name,
@@ -116,12 +111,6 @@ FAILED_UPDATE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_failed_update.value,
     status=AnnotationStatus.error_failed_update.name,
     description="Open Food Facts update failed",
-)
-
-INVALID_DATA = AnnotationResult(
-    status_code=AnnotationStatus.error_invalid_data.value,
-    status=AnnotationStatus.error_invalid_data.name,
-    description="The data schema is invalid.",
 )
 CANNOT_VOTE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.cannot_vote.value,
@@ -156,6 +145,29 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             vote, defaults to False
         :return: the result of the annotation process
         """
+        if data is None:
+            if annotation == 2:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description="data must be provided if annotation is 2",
+                )
+        else:
+            if annotation != 2:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description="data can only be provided if annotation is 2",
+                )
+            try:
+                cls.validate_data(data)
+            except ValidationError as e:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description=str(e),
+                )
+
         with db.atomic() as tx:
             try:
                 return cls._annotate(insight, annotation, update, data, auth, is_vote)
@@ -185,9 +197,6 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
-        if cls.is_data_required() and data is None:
-            return DATA_REQUIRED_RESULT
-
         username: str | None = None
         if auth is not None:
             username = auth.get_username()
@@ -230,8 +239,16 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         pass
 
     @classmethod
-    def is_data_required(cls) -> bool:
-        return False
+    @abc.abstractmethod
+    def validate_data(cls, data: JSONType) -> None:
+        """Validate the `data` field submitted by the client.
+
+        This function should raise a ValidationError if the data is invalid.
+
+        :params data: the data submitted by the client
+        :raises ValidationError: if the data is invalid
+        """
+        pass
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
@@ -314,6 +331,10 @@ class LabelAnnotator(InsightAnnotator):
 
 class CategoryAnnotator(InsightAnnotator):
     @classmethod
+    def validate_data(cls, data: JSONType) -> None:
+        CategoryAnnotateBody.model_validate(data)
+
+    @classmethod
     def process_annotation(
         cls,
         insight: ProductInsight,
@@ -333,16 +354,9 @@ class CategoryAnnotator(InsightAnnotator):
         if data is None:
             category_tag = insight.value_tag
         else:
-            value_tag = data.get("value_tag")
-            if isinstance(value_tag, str):
-                user_input = True
-                category_tag = value_tag
-            else:
-                return AnnotationResult(
-                    status_code=AnnotationStatus.error_invalid_data.value,
-                    status=AnnotationStatus.error_invalid_data.name,
-                    description="`data` is invalid, expected a single `value_tag` string field with the category tag",
-                )
+            new_value_tag = data["value_tag"]
+            user_input = True
+            category_tag = new_value_tag
 
         if category_tag in categories_tags:
             return ALREADY_ANNOTATED_RESULT
@@ -350,7 +364,7 @@ class CategoryAnnotator(InsightAnnotator):
         if user_input:
             insight.data["original_value_tag"] = insight.value_tag
             insight.data["user_input"] = True
-            insight.value_tag = value_tag
+            insight.value_tag = new_value_tag
             insight.value = None
             insight.save()
 
@@ -705,6 +719,10 @@ class NutritionImageAnnotator(InsightAnnotator):
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     @classmethod
+    def validate_data(cls, data: JSONType) -> None:
+        IngredientAnnotateBody.model_validate(data)
+
+    @classmethod
     def process_annotation(
         cls,
         insight: ProductInsight,
@@ -715,9 +733,10 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
         # Possibility for the annotator to change the spellcheck correction if data is
         # provided
         if data is not None:
-            annotation = data.get("annotation")
-            if not annotation or len(data) > 1:
-                return INVALID_DATA
+            # TODO(raphael): use the `rotation` and `bounding_box` fields in the data
+            # to rotate the image and crop it to the bounding box
+            validated_data = IngredientAnnotateBody.model_validate(data)
+            annotation = validated_data.annotation
             # We add the new annotation to the Insight.
             json_data = insight.data
             json_data["annotation"] = annotation
@@ -773,14 +792,7 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         insight_updated = False
         # The annotator can change the nutrient values to fix the model errors
         if data is not None:
-            try:
-                validated_nutrients = cls.validate_data(data)
-            except ValidationError as e:
-                return AnnotationResult(
-                    status_code=AnnotationStatus.error_invalid_data.value,
-                    status=AnnotationStatus.error_invalid_data.name,
-                    description=str(e),
-                )
+            validated_nutrients = cls._validate_data(data)
             validated_nutrients = cls.add_default_unit(validated_nutrients)
             # We override the predicted nutrient values by the ones submitted by the
             # user
@@ -823,7 +835,11 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         return validated_nutrients
 
     @classmethod
-    def validate_data(cls, data: JSONType) -> NutrientData:
+    def validate_data(cls, data: JSONType) -> None:
+        cls._validate_data(data)
+
+    @classmethod
+    def _validate_data(cls, data: JSONType) -> NutrientData:
         """Validate the `data` field submitted by the client.
 
         :params data: the data submitted by the client
@@ -1026,6 +1042,10 @@ class ImageOrientationAnnotator(InsightAnnotator):
 
 class IngredientDetectionAnnotator(InsightAnnotator):
     @classmethod
+    def validate_data(cls, data: JSONType) -> None:
+        IngredientAnnotateBody.model_validate(data)
+
+    @classmethod
     def process_annotation(
         cls,
         insight: ProductInsight,
@@ -1041,14 +1061,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
             # the user can provide a custom ingredient list using the `annotation`
             # field in the `data` serialized JSON, in case she or he wants to
             # correct the ingredient list
-            try:
-                validated_data = IngredientDetectionAnnotateBody.model_validate(data)
-            except ValidationError as e:
-                return AnnotationResult(
-                    status_code=AnnotationStatus.error_invalid_data.value,
-                    status=AnnotationStatus.error_invalid_data.name,
-                    description=str(e),
-                )
+            validated_data = IngredientAnnotateBody.model_validate(data)
             # We add the new annotation to the insight
             json_data = insight.data
             json_data["annotation"] = validated_data.annotation
@@ -1093,7 +1106,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         cls,
         insight: ProductInsight,
         product: JSONType,
-        validated_data: IngredientDetectionAnnotateBody | None = None,
+        validated_data: IngredientAnnotateBody | None = None,
         auth: OFFAuthentication | None = None,
     ) -> None:
         """If the insight is validated, select the source image as ingredient image.
