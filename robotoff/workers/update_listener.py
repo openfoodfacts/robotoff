@@ -1,5 +1,3 @@
-import time
-
 import backoff
 from openfoodfacts import Environment, Flavor
 from openfoodfacts.images import generate_image_url, generate_json_ocr_url
