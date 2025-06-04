@@ -113,7 +113,7 @@ def run_update_listener():
     """
     max_retries = 10
     initial_delay = 1  # seconds
-    max_delay = 300  # 5 minutes max delay
+    max_delay = 300  # 5 minutes
 
     retry_count = 0
 
