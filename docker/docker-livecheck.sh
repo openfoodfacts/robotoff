@@ -2,7 +2,7 @@
 
 ENV_FILE="${ENV_FILE:-.env}"
 RET_CODE=0
-for service in `docker compose --env-file=${ENV_FILE} config  --service | tr '\n' ' '`; do 
+for service in `docker compose --env-file=${ENV_FILE} config  --services | tr '\n' ' '`; do 
     found=$(docker compose --env-file=${ENV_FILE} ps -- ${service}|grep  ${service}|grep '\bUp\b')
     if [ -z "$found" ] 
     then
