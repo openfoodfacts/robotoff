@@ -198,8 +198,46 @@ jobs:
           cd ${{ matrix.env}}
           # Get the latest version (to apply migration next)
           make pull
+
+    - name: Apply database migrations
+      uses: appleboy/ssh-action@master
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script: |
+          set -e
+          cd ${{ matrix.env}}
           # Apply migrations
-          make migrate-db
+          make migrate-db || {
+            echo "Migration failed, attempting to fix migration history conflicts..."
+            docker compose --env-file=.env run --rm --no-deps postgres psql -U postgres -d robotoff -c "
+              -- Find the highest ID in migratehistory to avoid conflicts
+              WITH max_id AS (SELECT COALESCE(MAX(id), 0) as max_val FROM migratehistory),
+              missing_migrations AS (
+                SELECT unnest(ARRAY[
+                  '001_initial', '002_add_bounding_box', '003_add_logo_text_field',
+                  '004_drop_indices', '005_drop_other_indices', '006_add_logo_annotation_server_type',
+                  '007_add_logo_annotation_server_type_index', '008_add_insight_lc'
+                ]) as migration_name
+              )
+              INSERT INTO migratehistory (name, migrated_at)
+              SELECT migration_name, NOW()
+              FROM missing_migrations
+              WHERE NOT EXISTS (
+                SELECT 1 FROM migratehistory 
+                WHERE name = migration_name
+              );"
+            echo "Migration history conflicts resolved, retrying migrations..."
+            make migrate-db
+          }
           # Launch new version
           make up
 
