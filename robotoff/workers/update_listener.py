@@ -1,8 +1,10 @@
+import backoff
 from openfoodfacts import Environment, Flavor
 from openfoodfacts.images import generate_image_url, generate_json_ocr_url
 from openfoodfacts.redis import RedisUpdate
 from openfoodfacts.redis import UpdateListener as BaseUpdateListener
 from redis import Redis
+from redis.exceptions import ConnectionError
 
 from robotoff import settings
 from robotoff.types import ProductIdentifier, ServerType
@@ -102,16 +104,39 @@ class UpdateListener(BaseUpdateListener):
                 )
 
 
+@backoff.on_exception(
+    backoff.expo,
+    ConnectionError,
+    max_value=60,  # we wait at most 60 seconds between retries
+    jitter=backoff.random_jitter,
+    on_backoff=lambda details: logger.error(
+        "Redis connection error (attempt %d): %s. Retrying in %.1f seconds...",
+        details["tries"],
+        details["exception"],
+        details["wait"],
+    ),
+    on_giveup=lambda details: logger.critical(
+        "Max retries (%d) reached. Update listener is terminating.", details["tries"]
+    ),
+)
 def run_update_listener():
     """Run the update import daemon.
 
     This daemon listens to the Redis stream containing information about
     product updates and triggers appropriate actions.
     """
-    redis_client = get_redis_client()
-    update_listener = UpdateListener(
-        redis_client=redis_client,
-        redis_stream_name=settings.REDIS_STREAM_NAME,
-        redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
-    )
-    update_listener.run()
+    logger.info("Starting Redis update listener...")
+    while True:
+        try:
+            redis_client = get_redis_client()
+            update_listener = UpdateListener(
+                redis_client=redis_client,
+                redis_stream_name=settings.REDIS_STREAM_NAME,
+                redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
+            )
+            update_listener.run()
+        except Exception as e:
+            logger.critical(
+                "Unexpected error in update listener: %s", str(e), exc_info=True
+            )
+            raise
