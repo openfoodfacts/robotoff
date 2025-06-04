@@ -110,9 +110,8 @@ class UpdateListener(BaseUpdateListener):
     max_value=60,  # we wait at most 60 seconds between retries
     jitter=backoff.random_jitter,
     on_backoff=lambda details: logger.error(
-        "Redis connection error (attempt %d/%d): %s. Retrying in %.1f seconds...",
+        "Redis connection error (attempt %d): %s. Retrying in %.1f seconds...",
         details["tries"],
-        10,
         details["exception"],
         details["wait"],
     ),
