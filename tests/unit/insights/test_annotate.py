@@ -1,16 +1,21 @@
+import pytest
+from pydantic import ValidationError
+
 from robotoff.insights.annotate import (
     CANNOT_VOTE_RESULT,
     MISSING_PRODUCT_RESULT,
     NUTRIENT_DEFAULT_UNIT,
     UPDATED_ANNOTATION_RESULT,
     AnnotationResult,
+    CategoryAnnotator,
     IngredientDetectionAnnotator,
+    IngredientSpellcheckAnnotator,
     NutrientExtractionAnnotator,
     rotate_bounding_box,
 )
 from robotoff.models import ProductInsight
 from robotoff.types import (
-    IngredientDetectionAnnotateBody,
+    IngredientAnnotateBody,
     InsightType,
     JSONType,
     NutrientData,
@@ -241,9 +246,7 @@ class TestIngredientDetectionAnnotator:
             product,
             # Provide a validated_data without bounding box so that no cropping is
             # done
-            validated_data=IngredientDetectionAnnotateBody(
-                annotation="new ingredient list"
-            ),
+            validated_data=IngredientAnnotateBody(annotation="new ingredient list"),
         )
         assert select_rotate_image.call_count == 0
         assert get_image_rotation.call_count == 1
@@ -277,7 +280,7 @@ class TestIngredientDetectionAnnotator:
             product,
             # Provide a validated_data without bounding box so that no cropping is
             # done
-            validated_data=IngredientDetectionAnnotateBody(
+            validated_data=IngredientAnnotateBody(
                 annotation="new ingredient list",
                 rotation=270,
                 bounding_box=[0.2, 0.2, 0.6, 0.6],
@@ -413,15 +416,76 @@ class TestIngredientDetectionAnnotator:
             data={"text": ingredients_text, "bounding_box": [0.1, 0.1, 0.5, 0.5]}
         )
 
-        annotation_result = IngredientDetectionAnnotator.process_annotation(
-            insight, data={"invalid_field": "Test"}, is_vote=False
+        annotation_result = IngredientDetectionAnnotator.annotate(
+            insight, annotation=2, data={"invalid_field": "Test"}, is_vote=False
         )
         assert annotation_result == AnnotationResult(
             status_code=11,
             status="error_invalid_data",
-            description="1 validation error for IngredientDetectionAnnotateBody\nannotation\n  "
-            "Field required [type=missing, input_value={'invalid_field': 'Test'}, input_type=dict]\n"
-            "    For further information visit https://errors.pydantic.dev/2.11/v/missing",
+            description="2 validation errors for IngredientAnnotateBody\nannotation\n  Field required "
+            "[type=missing, input_value={'invalid_field': 'Test'}, input_type=dict]\n    For further "
+            "information visit https://errors.pydantic.dev/2.11/v/missing\ninvalid_field\n  Extra inputs "
+            "are not permitted [type=extra_forbidden, input_value='Test', input_type=str]\n    For further "
+            "information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
+        )
+
+
+class TestIngredientSpellcheckAnnotator:
+    @pytest.mark.parametrize(
+        "user_data",
+        [{}, {"annotation": "List of ingredients", "wrong_key": "wrong_item"}],
+    )
+    def test_validate_data(self, user_data: dict):
+        with pytest.raises(ValidationError):
+            IngredientSpellcheckAnnotator.validate_data(data=user_data)
+
+
+class TestCategoryAnnotator:
+    def test_annotate_without_data_with_annotation_two(self):
+        insight = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.category.name,
+            value_tag="en:cookies",
+        )
+        result = CategoryAnnotator.annotate(insight=insight, annotation=2, data=None)
+        assert result == AnnotationResult(
+            status_code=11,
+            status="error_invalid_data",
+            description="data must be provided if annotation is 2",
+        )
+
+    def test_annotate_data_with_annotation_different_from_two(self):
+        insight = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.category.name,
+            value_tag="en:cookies",
+        )
+        result = CategoryAnnotator.annotate(
+            insight=insight, annotation=1, data={"value_tag": "en:cookies"}
+        )
+        assert result == AnnotationResult(
+            status_code=11,
+            status="error_invalid_data",
+            description="data can only be provided if annotation is 2",
+        )
+
+    def test_annotate_invalid_data(self):
+        insight = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.category.name,
+            value_tag="en:cookies",
+        )
+        result = CategoryAnnotator.annotate(
+            insight=insight, annotation=2, data={"invalid_key": "v"}
+        )
+        assert result == AnnotationResult(
+            status_code=11,
+            status="error_invalid_data",
+            description="2 validation errors for CategoryAnnotateBody\nvalue_tag\n  Field required "
+            "[type=missing, input_value={'invalid_key': 'v'}, input_type=dict]\n    For further "
+            "information visit https://errors.pydantic.dev/2.11/v/missing\ninvalid_key\n  Extra inputs "
+            "are not permitted [type=extra_forbidden, input_value='v', input_type=str]\n    For further "
+            "information visit https://errors.pydantic.dev/2.11/v/extra_forbidden",
         )
 
 
