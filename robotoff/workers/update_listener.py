@@ -139,3 +139,4 @@ def run_update_listener():
             logger.critical(
                 "Unexpected error in update listener: %s", str(e), exc_info=True
             )
+            raise
