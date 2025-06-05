@@ -1572,7 +1572,15 @@ class NutrientExtractionImporter(InsightImporter):
             # completely, so we generate an insight
             return True
 
-        if product.nutrition_data_per not in ("100g", "serving"):
+        nutrition_data_per = product.nutrition_data_per
+
+        if nutrition_data_per == "100ml":
+            # nutrition_data_per can be 100ml even if the nutrient values are
+            # stored as per 100g, see this product for example:
+            # https://world.openfoodfacts.org/api/v2/product/7802900028473?rev=12&fields=nutriments,nutrition_data_per
+            nutrition_data_per = "100g"
+
+        if nutrition_data_per not in ("100g", "serving"):
             raise ValueError(
                 f"Invalid nutrition data per: {product.nutrition_data_per}"
             )
@@ -1583,18 +1591,16 @@ class NutrientExtractionImporter(InsightImporter):
         current_keys = set(
             key
             for key in product.nutriments.keys()
-            if key.endswith(f"_{product.nutrition_data_per}")
+            if key.endswith(f"_{nutrition_data_per}")
         )
 
-        if product.nutrition_data_per == "serving" and product.serving_size:
+        if nutrition_data_per == "serving" and product.serving_size:
             current_keys.add("serving_size")
 
         prediction_keys = set(
-            key
-            for key in nutrients_keys
-            if (key.endswith(f"_{product.nutrition_data_per}"))
+            key for key in nutrients_keys if (key.endswith(f"_{nutrition_data_per}"))
         )
-        if product.nutrition_data_per == "serving" and "serving_size" in nutrients_keys:
+        if nutrition_data_per == "serving" and "serving_size" in nutrients_keys:
             prediction_keys.add("serving_size")
 
         # If the prediction brings a nutrient value that is missing in
