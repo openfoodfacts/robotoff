@@ -2,6 +2,7 @@ import base64
 import datetime
 import uuid
 
+import PIL
 import pytest
 import requests
 from falcon import testing
@@ -11,6 +12,11 @@ from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.prediction.langid import LanguagePrediction
+from robotoff.prediction.nutrition_extraction import (
+    NutrientPrediction,
+    NutritionEntities,
+    NutritionExtractionPrediction,
+)
 from robotoff.types import InsightType, PredictionType, ProductIdentifier, ServerType
 
 from .models_utils import (
@@ -1362,3 +1368,138 @@ def test_predict_product_language(client, peewee_db):
         ],
         "image_ids": [2, 4],
     }
+
+
+class TestNutritionPredictorResource:
+    def test_nutrition_predictor_missing_image_url(self, client):
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "ocr_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json",
+            },
+        )
+        assert result.status_code == 400
+        assert result.json == {
+            "description": 'The "image_url" parameter is required.',
+            "title": "Missing parameter",
+        }
+
+    def test_nutrition_predictor_missing_ocr_url(self, client):
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg",
+            },
+        )
+        assert result.status_code == 400
+        assert result.json == {
+            "description": 'The "ocr_url" parameter is required.',
+            "title": "Missing parameter",
+        }
+
+    def test_nutrition_predictor_invalid_image_url(self, client, mocker):
+        mocker.patch("robotoff.app.api.get_image_from_url", return_value=None)
+        OCRResultMock = mocker.patch("robotoff.app.api.OCRResult")
+        OCRResultMock.from_url.return_value = None
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "INVALID_URL",
+                "ocr_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json",
+            },
+        )
+        assert result.status_code == 200
+        assert result.json == {
+            "error": "download_error",
+            "error_description": "an error occurred while downloading image: INVALID_URL",
+        }
+
+    def test_nutrition_predictor_invalid_ocr_url(self, client, mocker):
+        image = PIL.Image.new("RGB", (100, 100), color="white")
+        mocker.patch("robotoff.app.api.get_image_from_url", return_value=image)
+        OCRResultMock = mocker.patch("robotoff.app.api.OCRResult")
+        OCRResultMock.from_url.return_value = None
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg",
+                "ocr_url": "INVALID_OCR_URL",
+            },
+        )
+        assert result.status_code == 200
+        assert result.json == {
+            "error": "download_error",
+            "error_description": "an error occurred while downloading OCR JSON: INVALID_OCR_URL",
+        }
+
+    def test_nutrition_predictor_successful_request(self, client, mocker):
+        image = PIL.Image.new("RGB", (100, 100), color="white")
+        mocker.patch("robotoff.app.api.get_image_from_url", return_value=image)
+        mocker.patch("robotoff.app.api.OCRResult")
+        raw_entity = {
+            "word": "test",
+            "entity": "B-TEST",
+            "score": 0.99,
+            "index": 0,
+            "char_start": 0,
+            "char_end": 4,
+        }
+        fat_nutrient = {
+            "end": 28,
+            "text": "58,6 g",
+            "unit": "g",
+            "score": 0.999219536781311,
+            "start": 26,
+            "value": "58.6",
+            "entity": "fat_100g",
+            "char_end": 176,
+            "char_start": 169,
+        }
+        salt_nutrient = {
+            "end": 37,
+            "text": "4,8 g",
+            "unit": "g",
+            "score": 0.9993608593940735,
+            "start": 35,
+            "value": "4.8",
+            "entity": "salt_100g",
+            "char_end": 209,
+            "char_start": 203,
+        }
+        mocker.patch(
+            "robotoff.prediction.nutrition_extraction.predict",
+            return_value=NutritionExtractionPrediction(
+                nutrients={
+                    "fat_100g": NutrientPrediction(**fat_nutrient),
+                    "salt_100g": NutrientPrediction(**salt_nutrient),
+                },
+                entities=NutritionEntities(
+                    raw=[raw_entity],
+                    aggregated=[raw_entity],
+                    postprocessed=[raw_entity],
+                ),
+            ),
+        )
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg",
+                "ocr_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json",
+            },
+        )
+        assert result.status_code == 200
+        assert result.json == {
+            "predictions": [
+                {
+                    "entities": {
+                        "raw": [raw_entity],
+                        "aggregated": [raw_entity],
+                        "postprocessed": [raw_entity],
+                    },
+                    "nutrients": {
+                        "fat_100g": fat_nutrient,
+                        "salt_100g": salt_nutrient,
+                    },
+                }
+            ],
+        }
