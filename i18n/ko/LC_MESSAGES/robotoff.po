@@ -39,3 +39,7 @@ msgstr "이 이미지가 이 언어의 영양 이미지입니까?"
 msgid "Does the product have this packaging element?"
 msgstr ""
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image rotated with the following orientation?"
+msgstr "이 이미지는 다음 방향으로 회전되었습니까?"
+
