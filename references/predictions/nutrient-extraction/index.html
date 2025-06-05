@@ -962,7 +962,7 @@
                 
                 
                 <h1 id="nutrition-extraction">Nutrition extraction</h1>
-<p><a href="https://huggingface.co/datasets/openfoodfacts/nutrient-detection-layout">Dataset on Hugging Face</a> - <a href="https://huggingface.co/openfoodfacts/nutrition-extractor">Model on Hugging Face</a> - <a href="https://openfoodfacts.github.io/robotoff/references/api/#tag/Predict/paths/~1predict~1nutrition/get">Are you looking to integrate it in your app ?</a></p>
+<p><a href="https://huggingface.co/datasets/openfoodfacts/nutrient-detection-layout">Dataset on Hugging Face</a> - <a href="https://huggingface.co/openfoodfacts/nutrition-extractor">Model on Hugging Face</a> - <a href="https://openfoodfacts.github.io/robotoff/references/api/#tag/Predict/paths/~1predict~1nutrition/get">Are you looking to integrate it in your app?</a></p>
 <p>We developped a ML model to automatically extract nutrition information from photos of product packaging where nutrition facts are displayed.</p>
 <p>This model detects the most common nutrition values (proteins, salt, energy-kj,...), either for 100g or per serving. We use LayoutLMv3, an architecture used in Document AI to perform various tasks on structured documents (bills, receipts, reports,...). The model expects the input image, the tokens (=words) and the spatial position of each token on the image.
 As the model requires token text and position as input, an OCR must be performed beforehand. We use Google Cloud Vision to extract text content from the image.</p>

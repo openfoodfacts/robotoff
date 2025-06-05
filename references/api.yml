@@ -463,12 +463,7 @@ paths:
       tags:
         - Images
       parameters:
-        - name: image_url
-          in: query
-          example: https://static.openfoodfacts.org/images/products/211/123/200/5508/3.jpg
-          schema:
-            type: string
-            format: uri
+        - $ref: "#/components/parameters/image_url"
         - name: y_min
           in: query
           example: 0.47795143723487854
@@ -895,20 +890,14 @@ paths:
         - Predict
       summary: Extract nutritional information from an image
       description: |
-        We currently only use the OCR text as input, and detect nutrient-value pairs if they are consecutive
-        to each other in the OCR text (ex: "protein: 10.5g, fat: 2.1g").
+        Predict nutritional information from a packaging image using the Nutri-Sight model.
+
+        The model takes an image and the OCR result (as a JSON file) obtained from Google Cloud Vision.
+        For more information about the model, see the
+        [Nutri-Sight documentation](https://openfoodfacts.github.io/robotoff/references/predictions/nutrient-extraction/).
       parameters:
-        - $ref: "#/components/parameters/barcode"
-        - $ref: "#/components/parameters/server_type"
-        - name: image_ids
-          in: query
-          required: false
-          description: |
-            a comma-separated list of IDs of images to extract nutritional information from.
-            If not provided, the 10 most recent images will be used.
-          schema:
-            type: string
-            example: "1,2,5"
+        - $ref: "#/components/parameters/image_url"
+        - $ref: "#/components/parameters/ocr_url"
       responses:
         "200":
           description: the extracted nutritional information
@@ -917,59 +906,35 @@ paths:
               schema:
                 type: object
                 description: |
-                  the extracted nutritional information from provided (or 10 most recent by default) images.
-                  The predictions are ordered, predictions from most recent images come first.
+                  the extracted nutritional information from the model.
                 properties:
                   predictions:
-                    type: object
-                    properties:
-                      nutrients:
-                        type: object
-                        description: |
-                          a dict mapping nutrient name (`energy`, `fat`,...) to a list of dict containing detected nutritional information.
-                          The list contains as many elements as the number of detected values for this nutrient. Each element of the list
-                          has the following fields:
-                            - `raw`: string of the full detected pattern (ex: `Valeur énergétique: 245 kj`)
-                            - `nutrient`: nutrient mention (`energy`, `saturated_fat`,...)
-                            - `value`: nutrient value, should be an number (example: `245`)
-                            - `unit`: nutrient unit associated with the value (one of `kj`, `kcal`, `g`)
-                      predictor_version:
-                        type: string
-                        description: identifier of the version of the predictor used
-                        example: "1"
-                      predictor:
-                        type: string
-                        description: predictor used to generate this prediction
-                        example: "regex"
-                      source_image:
-                        type: string
-                        description: the path of the image the nutrient prediction was generated from
-                    required:
-                      - "nutrients"
-                      - "predictor"
-                      - "predictor_version"
-                      - "source_image"
-                  image_ids:
                     type: array
-                    description: |
-                      list of the IDs of images that were used as input analyzed
-                    items:
-                      type: number
-                  errors:
-                    type: array
-                    description: a list of errors that occured during processing
                     items:
                       type: object
                       properties:
-                        error:
-                          type: string
-                          description: the identifier of the error
-                        error_description:
-                          type: string
-                          description: a full description of the error that occured
-                required:
-                  - "predictions"
-                  - "image_ids"
+                        nutrients:
+                          type: object
+                          description: |
+                            a dictionary mapping nutrient keys in Open Food Facts format (ex: `fat_100g`) to a dictionary
+                            containing the detected nutrient value.
+                        entities:
+                          type: object
+                          properties:
+                            aggregated:
+                              type: array
+                              items:
+                                type: object
+                            postprocessed:
+                              type: array
+                              items:
+                                type: object
+                            raw:
+                              type: array
+                              items:
+                                type: object
+                                
+                        
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
   /predict/ocr_prediction:
@@ -1343,6 +1308,23 @@ components:
             confidence score of the prediction, it is only provided for ML-based predictions. It may be null.
 
   parameters:
+    image_url:
+      name: image_url
+      in: query
+      description: The URL of the input image
+      schema:
+        type: string
+        format: uri
+        example: "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg"
+    ocr_url:
+      name: ocr_url
+      in: query
+      description: The URL of the OCR JSON to use. The OCR must have been extracted using
+        Google Cloud Vision, and be in the JSON format.
+      schema:
+        type: string
+        format: uri
+        example: "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json"
     lang:
       name: lang
       in: query
