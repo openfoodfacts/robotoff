@@ -6,10 +6,12 @@ import tempfile
 from pathlib import Path
 
 import duckdb
+from more_itertools import chunked
 
 from robotoff import settings
 from robotoff.insights.importer import import_insights
 from robotoff.models import db
+from robotoff.prediction.langid import predict_lang
 from robotoff.types import BatchJobType, Prediction, PredictionType, ServerType
 from robotoff.utils import get_logger
 
@@ -43,29 +45,37 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
     )
     logger.info("Number of rows in the batch data: %s", len(df))
 
-    # Generate predictions
-    predictions = []
     # We increment to allow import_insights to create a new version
     predictor_version = "llm-v1-" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
-    for _, row in df.iterrows():
-        predictions.append(
-            Prediction(
-                type=PredictionType.ingredient_spellcheck,
-                data={"original": row["text"], "correction": row["correction"]},
-                value_tag=row["lang"],
-                barcode=row["code"],
-                predictor_version=predictor_version,
-                predictor="fine-tuned-mistral-7b",
-                automatic_processing=False,
+    for batch in chunked((row for _, row in df.iterrows()), 100):
+        predictions = []
+        for row in batch:
+            lang_predictions = predict_lang(row["text"], k=1)
+            lang, lang_confidence = lang_predictions[0].lang, (
+                lang_predictions[0].confidence if lang_predictions else None
             )
-        )
-    # Store predictions and insights
-    with db:
-        import_results = import_insights(
-            predictions=predictions, server_type=ServerType.off
-        )
-    logger.info("Batch import results: %s", import_results)
+            predictions.append(
+                Prediction(
+                    type=PredictionType.ingredient_spellcheck,
+                    data={
+                        "original": row["text"],
+                        "correction": row["correction"],
+                        "lang": lang,
+                        "lang_confidence": lang_confidence,
+                    },
+                    value_tag=row["lang"],
+                    barcode=row["code"],
+                    predictor_version=predictor_version,
+                    predictor="fine-tuned-mistral-7b",
+                    automatic_processing=False,
+                )
+            )
+        # Store predictions and insights
+        with db:
+            import_results = import_insights(
+                predictions=predictions, server_type=ServerType.off
+            )
+        logger.info("Batch import results: %s", import_results)
 
 
 def launch_spellcheck_batch_job(

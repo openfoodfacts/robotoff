@@ -33,7 +33,7 @@ jobs:
         echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
         echo "INFLUXDB_PORT=8087" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
-        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
     - name: Set various variable for production deployment
@@ -53,26 +53,17 @@ jobs:
         echo "INFLUXDB_HOST=10.3.0.101" >> $GITHUB_ENV
         echo "INFLUXDB_PORT=8086" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
-        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
-    - name: Wait for container build workflow
-      uses: tomchv/wait-my-workflow@v1.1.0
-      id: wait-build
+    - name: Wait for container build
+      uses: lewagon/wait-on-check-action@v1.3.4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        checkName: build
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
-        intervalSeconds: 10
-        timeoutSeconds: 600 # 10m
-
-    - name: Do something if build fail
-      if: steps.wait-build.outputs.conclusion == 'failure'
-      run: echo fail && false # fail if build fail
-
-    - name: Do something if build timeout
-      if: steps.wait-build.outputs.conclusion == 'timed_out'
-      run: echo Timeout && false # fail if build time out
+        check-name: build
+        wait-interval: 10
+        allowed-conclusions: success
 
     - name: Checkout git repository
       uses: appleboy/ssh-action@master
@@ -83,8 +74,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           # Clone Git repository if not already there
           [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
 
@@ -113,8 +104,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           # Go to repository directory
           cd ${{ matrix.env}}
 
@@ -137,6 +128,7 @@ jobs:
           echo "REDIS_HOST=redis.robotoff_default" >> .env
           echo "REDIS_UPDATE_HOST=${{ env.REDIS_UPDATE_HOST }}" >> .env
           echo "REDIS_UPDATE_PORT=6379" >> .env
+          echo "REDIS_STREAM_NAME=product_updates" >> .env
           # We use local PostgreSQL instance with `robotoff_default` network,
           # so that there is no possibility of conflict with PO PostgreSQL instance.
           echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
@@ -150,7 +142,7 @@ jobs:
           echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
-          echo "TRITON_HOST=triton" >> .env
+          echo "TRITON_URI=triton:8001" >> .env
           echo "TRITON_MODELS_DIR=./models/triton" >> .env
           echo "FASTTEXT_HOST=fasttext" >> .env
           echo "FASTTEXT_MODEL_DIR=./models" >> .env
@@ -183,8 +175,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env }}
           make create_external_volumes
 
@@ -201,8 +193,8 @@ jobs:
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env}}
           # Get the latest version (to apply migration next)
           make pull
@@ -222,8 +214,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env}}
           # let api 15s to be up !
           sleep 15s
@@ -244,8 +236,8 @@ jobs:
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
         envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-        script_stop: false
         script: |
+          set -e
           cd ${{ matrix.env}}
           make health
 
@@ -259,8 +251,8 @@ jobs:
         proxy_host: ${{ env.SSH_PROXY_HOST }}
         proxy_username: ${{ env.SSH_PROXY_USERNAME }}
         proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script_stop: false
         script: |
+          set +e  # Allow cleanup to continue even if some commands fail
           cd ${{ matrix.env }}
           make prune
 

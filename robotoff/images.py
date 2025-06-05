@@ -85,7 +85,9 @@ def save_image(
             uploaded_t = int(uploaded_t)
 
         if uploaded_t is not None:
-            uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
+            uploaded_at = datetime.datetime.fromtimestamp(
+                uploaded_t, datetime.timezone.utc
+            )
     else:
         uploaded_at = None
         # DB product check is disabled which means we shouldn't rely on having
@@ -203,6 +205,11 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
     :param image_ids: a list of image IDs to delete.
       Each image ID must be a digit.
     """
+
+    if not product_id.is_valid():
+        logger.warning("Could not delete images, invalid product identifier")
+        return
+
     server_type = product_id.server_type.name
     # Perform batching as we don't know the number of images to delete
     updated_models = []

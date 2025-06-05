@@ -46,7 +46,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     barcode = factory.Sequence(lambda n: f"{n:013}")
     type = "category"
     data: dict[str, Any] = {}
-    timestamp: datetime = factory.LazyFunction(datetime.utcnow)
+    timestamp: datetime = factory.LazyFunction(datetime.utcnow)  # type: ignore
     countries = ["en:france"]
     brands: list[str] = []
     n_votes = 0
@@ -59,6 +59,7 @@ class ProductInsightFactory(UuidSequencer, PeeweeModelFactory):
     predictor: Optional[str] = None
     predictor_version: Optional[str] = None
     bounding_box: Optional[list[float]] = None
+    lc: list[str] | None = None
 
 
 class PredictionFactory(PeeweeModelFactory):
@@ -75,6 +76,11 @@ class PredictionFactory(PeeweeModelFactory):
     predictor_version: Optional[str] = None
     confidence: Optional[float] = None
     server_type: str = "off"
+    source_image = factory.LazyAttribute(
+        lambda o: generate_image_path(
+            ProductIdentifier(o.barcode, ServerType[o.server_type]), "1"
+        )
+    )
 
 
 class AnnotationVoteFactory(UuidSequencer, PeeweeModelFactory):
@@ -120,6 +126,7 @@ class ImagePredictionFactory(PeeweeModelFactory):
     }
     timestamp = factory.LazyFunction(datetime.utcnow)
     image = factory.SubFactory(ImageModelFactory)
+    max_confidence = 0.9
 
 
 class LogoAnnotationFactory(PeeweeModelFactory):

@@ -192,6 +192,8 @@ class ImageModerationNotifier(NotifierInterface):
                 and prediction_label in HUMAN_FLAG_LABELS
             ):
                 reason = "human"
+            elif prediction_subtype == "face_annotation":
+                reason = "human"
             elif prediction_subtype == "text" and prediction_label == "beauty":
                 # Don't send beauty text detection to moderation service for
                 # now

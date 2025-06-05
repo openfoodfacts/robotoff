@@ -5,7 +5,7 @@ import uuid
 from collections import Counter
 from typing import Any, Literal, Optional, Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 #: A precise expectation of what mappings looks like in json.
 #: (dict where keys are always of type `str`).
@@ -55,6 +55,7 @@ class PredictionType(str, enum.Enum):
     nutrition_image = "nutrition_image"
     is_upc_image = "is_upc_image"
     nutrient_extraction = "nutrient_extraction"
+    ingredient_detection = "ingredient_detection"
 
 
 @enum.unique
@@ -160,6 +161,8 @@ class InsightType(str, enum.Enum):
 
     # Nutrient values extracted from images
     nutrient_extraction = "nutrient_extraction"
+
+    ingredient_detection = "ingredient_detection"
 
 
 class ServerType(str, enum.Enum):
@@ -282,6 +285,9 @@ class ProductIdentifier:
 
     def __hash__(self) -> int:
         return hash((self.barcode, self.server_type))
+
+    def is_valid(self) -> bool:
+        return bool(self.barcode and self.server_type)
 
 
 @enum.unique
@@ -432,3 +438,36 @@ class ImportImageFlag(str, enum.Enum):
     extract_nutrition = "extract_nutrition"
     run_logo_object_detection = "run_logo_object_detection"
     run_nutrition_table_object_detection = "run_nutrition_table_object_detection"
+
+
+class IngredientAnnotateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    annotation: str
+    rotation: int | None = None
+    bounding_box: list[float] | None = None
+
+    @model_validator(mode="after")
+    def validate_bounding_box(self) -> Self:
+        if self.bounding_box:
+            if len(self.bounding_box) != 4:
+                raise ValueError("bounding_box must have exactly 4 elements")
+            if not all(0.0 <= coord <= 1.0 for coord in self.bounding_box):
+                raise ValueError("bounding_box coordinates must be between 0.0 and 1.0")
+
+            # Check that the format of the bounding box is correct:
+            # (y_min, x_min, y_max, x_max)
+            if not (
+                self.bounding_box[0] < self.bounding_box[2]
+                and self.bounding_box[1] < self.bounding_box[3]
+            ):
+                raise ValueError(
+                    "bounding_box coordinates must be in the format "
+                    "(y_min, x_min, y_max, x_max)"
+                )
+
+        return self
+
+
+class CategoryAnnotateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    value_tag: str

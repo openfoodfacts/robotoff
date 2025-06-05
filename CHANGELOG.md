@@ -1,5 +1,268 @@
 # Changelog
 
+## [1.70.0](https://github.com/openfoodfacts/robotoff/compare/v1.69.0...v1.70.0) (2025-06-04)
+
+
+### Features
+
+* add product_insights.lc field ([#1607](https://github.com/openfoodfacts/robotoff/issues/1607)) ([a28f8c7](https://github.com/openfoodfacts/robotoff/commit/a28f8c7f2a0a94e6ee3a19103655386bb53f99c2))
+* add subfields to `ingredient_detection` and `nutrient_extraction` insights ([#1609](https://github.com/openfoodfacts/robotoff/issues/1609)) ([09a1b99](https://github.com/openfoodfacts/robotoff/commit/09a1b999491e54cb7a995e3683fd71fbde81e4d5))
+* improve extra data processing in Annotator ([#1613](https://github.com/openfoodfacts/robotoff/issues/1613)) ([fdc7f74](https://github.com/openfoodfacts/robotoff/commit/fdc7f742b86c83b8d9f931b639dfde39a310e6dc))
+
+
+### Bug Fixes
+
+* allow user to submit rotation and bounding box when annotating `ingredient_detection` insights ([#1610](https://github.com/openfoodfacts/robotoff/issues/1610)) ([4f15e6a](https://github.com/openfoodfacts/robotoff/commit/4f15e6ab47a5f3fe7604c251e291415d9ec759db))
+* fix issue when computing lc from nutrient mention ([f81eeb9](https://github.com/openfoodfacts/robotoff/commit/f81eeb95b9c22e3df606e925394ac7761e4a23c3))
+
+
+### Documentation
+
+* road to api for nutrient extraction ([#1531](https://github.com/openfoodfacts/robotoff/issues/1531)) ([08e7a00](https://github.com/openfoodfacts/robotoff/commit/08e7a0099fe89a155a62aad3f22d66c2fd6b95d4))
+
+## [1.69.0](https://github.com/openfoodfacts/robotoff/compare/v1.68.1...v1.69.0) (2025-06-02)
+
+
+### Features
+
+* Implement FaceAnnotation support for image flagging ([#1585](https://github.com/openfoodfacts/robotoff/issues/1585)) ([fe6500a](https://github.com/openfoodfacts/robotoff/commit/fe6500a9e6d5ca70aea0247eafef149dc7c7bfd1)), closes [#1581](https://github.com/openfoodfacts/robotoff/issues/1581)
+
+
+### Bug Fixes
+
+* Fix warning message for non-matching category in taxonomy ([#1604](https://github.com/openfoodfacts/robotoff/issues/1604)) ([1b647aa](https://github.com/openfoodfacts/robotoff/commit/1b647aac409bff10190d773a27d57995495b7744))
+
+## [1.68.1](https://github.com/openfoodfacts/robotoff/compare/v1.68.0...v1.68.1) (2025-05-28)
+
+
+### Bug Fixes
+
+* fix bug in `extract_ingredients_job` function ([#1601](https://github.com/openfoodfacts/robotoff/issues/1601)) ([0a029eb](https://github.com/openfoodfacts/robotoff/commit/0a029eb7eb4bac49fff8c80d9b307f4ef799ca14)), closes [#1600](https://github.com/openfoodfacts/robotoff/issues/1600)
+
+## [1.68.0](https://github.com/openfoodfacts/robotoff/compare/v1.67.1...v1.68.0) (2025-05-27)
+
+
+### Features
+
+* add first implementation of ingredient_detection insights ([#1595](https://github.com/openfoodfacts/robotoff/issues/1595)) ([4602077](https://github.com/openfoodfacts/robotoff/commit/4602077b75d862f5fd522fc069f5762e64097552))
+* add ingredient detection annotator ([#1598](https://github.com/openfoodfacts/robotoff/issues/1598)) ([31a418c](https://github.com/openfoodfacts/robotoff/commit/31a418c0d88f8c1065d67a66d1e69b2016d0a435))
+
+
+### Bug Fixes
+
+* CI clean-up and changes according to suggestion on Slack ([#1592](https://github.com/openfoodfacts/robotoff/issues/1592)) ([3d73704](https://github.com/openfoodfacts/robotoff/commit/3d737046afe7313f2b0712b857fdc9f67e3e3c1f)), closes [#1580](https://github.com/openfoodfacts/robotoff/issues/1580)
+* fix bug in convert_bounding_box_absolute_to_relative_from_images ([#1597](https://github.com/openfoodfacts/robotoff/issues/1597)) ([fa2931c](https://github.com/openfoodfacts/robotoff/commit/fa2931caf930e0f95390443758e5fe68fb9aa0cf))
+
+## [1.67.1](https://github.com/openfoodfacts/robotoff/compare/v1.67.0...v1.67.1) (2025-05-23)
+
+
+### Bug Fixes
+
+* rename ingredient detection model name ([#1589](https://github.com/openfoodfacts/robotoff/issues/1589)) ([7baffc6](https://github.com/openfoodfacts/robotoff/commit/7baffc6c5dcde135c9443ed9ffa7c842d14a65b4))
+
+
+### Documentation
+
+* add for image orientation ([#1584](https://github.com/openfoodfacts/robotoff/issues/1584)) ([051031a](https://github.com/openfoodfacts/robotoff/commit/051031a0ac88228a6b8d71b5ebcaa3a17b2e038a))
+* add more information on image orientation insights ([#1587](https://github.com/openfoodfacts/robotoff/issues/1587)) ([5db66ae](https://github.com/openfoodfacts/robotoff/commit/5db66aedc312a94151d4a3325b258f343b2c831b))
+
+## [1.67.0](https://github.com/openfoodfacts/robotoff/compare/v1.66.4...v1.67.0) (2025-05-22)
+
+
+### Features
+
+* apply image rotation insights automatically ([#1582](https://github.com/openfoodfacts/robotoff/issues/1582)) ([c6254c5](https://github.com/openfoodfacts/robotoff/commit/c6254c5c3e50dc30fa23a9794c16ee6fc5bed04e))
+
+## [1.66.4](https://github.com/openfoodfacts/robotoff/compare/v1.66.3...v1.66.4) (2025-05-21)
+
+
+### Bug Fixes
+
+* support new `images` schema by converting to legacy schema ([#1578](https://github.com/openfoodfacts/robotoff/issues/1578)) ([4d71b3e](https://github.com/openfoodfacts/robotoff/commit/4d71b3e208a57772cb83f0b649008e59c739e930))
+
+## [1.66.3](https://github.com/openfoodfacts/robotoff/compare/v1.66.2...v1.66.3) (2025-05-19)
+
+
+### Bug Fixes
+
+* fix bug in annotation of image orientation ([#1574](https://github.com/openfoodfacts/robotoff/issues/1574)) ([a1db080](https://github.com/openfoodfacts/robotoff/commit/a1db080c5a5bb67c91e730502ffb8a71af645981))
+
+## [1.66.2](https://github.com/openfoodfacts/robotoff/compare/v1.66.1...v1.66.2) (2025-05-19)
+
+
+### Bug Fixes
+
+* **image-rotation:** convert OFF rotation angle to positive value ([#1572](https://github.com/openfoodfacts/robotoff/issues/1572)) ([c3a375e](https://github.com/openfoodfacts/robotoff/commit/c3a375e72439306345803ac825a1e023ecc32f09))
+
+## [1.66.1](https://github.com/openfoodfacts/robotoff/compare/v1.66.0...v1.66.1) (2025-05-16)
+
+
+### Bug Fixes
+
+* don't generate image orientation insights if the image is already ([4f44a39](https://github.com/openfoodfacts/robotoff/commit/4f44a391ab41c7c4f48a0d16fed1f24ee2a6b8be))
+* fix bug in image orientation angle parsing ([56ee8f0](https://github.com/openfoodfacts/robotoff/commit/56ee8f09b4314c4536743d327fa1e150065c5059))
+
+## [1.66.0](https://github.com/openfoodfacts/robotoff/compare/v1.65.0...v1.66.0) (2025-05-16)
+
+
+### Features
+
+* Implement auto-rotation for selected images using Google Cloud Vision predictions ([#1562](https://github.com/openfoodfacts/robotoff/issues/1562)) ([564d7a4](https://github.com/openfoodfacts/robotoff/commit/564d7a40cf99ac0cc4a1dd73058a3f618c8a1dea))
+* improve image orientation insights ([#1567](https://github.com/openfoodfacts/robotoff/issues/1567)) ([5c581b3](https://github.com/openfoodfacts/robotoff/commit/5c581b3bb72447b472455a4ec98ab499a7e94ab2))
+
+
+### Bug Fixes
+
+* add missing question formatter ([5ec6db1](https://github.com/openfoodfacts/robotoff/commit/5ec6db134e0707e53be2a60b4a52aa553bfa2ebc))
+* bump pre-commit hook version ([#1564](https://github.com/openfoodfacts/robotoff/issues/1564)) ([065977a](https://github.com/openfoodfacts/robotoff/commit/065977a85ddf2d5c80664e93416e39df4e574fd6))
+* failing code quality tests ([#1556](https://github.com/openfoodfacts/robotoff/issues/1556)) ([2ccdd77](https://github.com/openfoodfacts/robotoff/commit/2ccdd77cf728eeadb9ee0f5272e284694363740f))
+* improve ImageOrientation importers and annotator ([#1566](https://github.com/openfoodfacts/robotoff/issues/1566)) ([3d160c8](https://github.com/openfoodfacts/robotoff/commit/3d160c8f57ce57f79d2a7f5317ee038818a0e10f))
+
+
+### Technical
+
+* clarify Robotoff intro paragraph in README ([#1538](https://github.com/openfoodfacts/robotoff/issues/1538)) ([c6b3fd9](https://github.com/openfoodfacts/robotoff/commit/c6b3fd99554ea162903377272fc6d9da6e1be596))
+* fix test annotate + test nutrients JSON ([#1561](https://github.com/openfoodfacts/robotoff/issues/1561)) ([1678921](https://github.com/openfoodfacts/robotoff/commit/16789218a5293db675e1f68f07ca1b5a461b9af4))
+* Regenerate poetry.lock after pyproject.toml changes ([#1555](https://github.com/openfoodfacts/robotoff/issues/1555)) ([4472af1](https://github.com/openfoodfacts/robotoff/commit/4472af1e33b49c876978fba26871773c8fd10d10))
+* updated ubuntu version pinning and some minor errors related to deployment ([#1558](https://github.com/openfoodfacts/robotoff/issues/1558)) ([fcd09a0](https://github.com/openfoodfacts/robotoff/commit/fcd09a0e16b694b05bfc00125277c90f8c8a8593))
+
+## [1.65.0](https://github.com/openfoodfacts/robotoff/compare/v1.64.2...v1.65.0) (2025-04-15)
+
+
+### Features
+
+* add `language_codes` filter in insights ([#1547](https://github.com/openfoodfacts/robotoff/issues/1547)) ([9f4507d](https://github.com/openfoodfacts/robotoff/commit/9f4507dce9c496d2502089f8d467dba3620f0bab))
+
+
+### Bug Fixes
+
+* add barcode validation to image deletion and product update processes ([#1541](https://github.com/openfoodfacts/robotoff/issues/1541)) ([bd8c081](https://github.com/openfoodfacts/robotoff/commit/bd8c0819ecef99fe66b8c6ddd5edcc6171d9c8e1)), closes [#1445](https://github.com/openfoodfacts/robotoff/issues/1445)
+
+
+### Technical
+
+* add dependabot configuration ([#1540](https://github.com/openfoodfacts/robotoff/issues/1540)) ([e7cde2b](https://github.com/openfoodfacts/robotoff/commit/e7cde2b4e0de762c9521ec5fa09d040011c573cc))
+
+## [1.64.2](https://github.com/openfoodfacts/robotoff/compare/v1.64.1...v1.64.2) (2025-04-03)
+
+
+### Bug Fixes
+
+* upgrade openfoodfacts sdk to fix bug with brands taxonomies ([#1536](https://github.com/openfoodfacts/robotoff/issues/1536)) ([8efa90a](https://github.com/openfoodfacts/robotoff/commit/8efa90a3bbf3e3e184916e83cc9684602aea687e))
+
+## [1.64.1](https://github.com/openfoodfacts/robotoff/compare/v1.64.0...v1.64.1) (2025-03-06)
+
+
+### Bug Fixes
+
+* larger timeout for ES request ([#1529](https://github.com/openfoodfacts/robotoff/issues/1529)) ([205c1fa](https://github.com/openfoodfacts/robotoff/commit/205c1fae2c5a21922eb5f003f5d590046300b1f4))
+* larger timeout on logo search ([c456807](https://github.com/openfoodfacts/robotoff/commit/c456807446e542bf597ac56cf28fe2a03e44d2bf))
+
+
+### Technical
+
+* Revert larger timeout on logo search ([a51fc4b](https://github.com/openfoodfacts/robotoff/commit/a51fc4b791768ee3c8431b32c70c938a16b34e38))
+
+## [1.64.0](https://github.com/openfoodfacts/robotoff/compare/v1.63.2...v1.64.0) (2025-02-12)
+
+
+### Features
+
+* low queue for mass updates ([#1526](https://github.com/openfoodfacts/robotoff/issues/1526)) ([41fe437](https://github.com/openfoodfacts/robotoff/commit/41fe43739edc5eaa4a204a5d4a66aad4e6abda2f))
+* Update maintenance how to ([9249361](https://github.com/openfoodfacts/robotoff/commit/9249361be7306bc3f9275a6f4854a9d6c6f1bcb6))
+
+## [1.63.2](https://github.com/openfoodfacts/robotoff/compare/v1.63.1...v1.63.2) (2024-12-27)
+
+
+### Bug Fixes
+
+* improve batch import ([906c8b9](https://github.com/openfoodfacts/robotoff/commit/906c8b9913721b8ad38c0d367325fcbe4b029e2d))
+
+## [1.63.1](https://github.com/openfoodfacts/robotoff/compare/v1.63.0...v1.63.1) (2024-12-27)
+
+
+### Bug Fixes
+
+* add CLI command to import batch job predictions ([16c3239](https://github.com/openfoodfacts/robotoff/commit/16c3239abb74be59e7d91f71df6256c054d5d807))
+
+## [1.63.0](https://github.com/openfoodfacts/robotoff/compare/v1.62.0...v1.63.0) (2024-12-26)
+
+
+### Features
+
+* Upgrade nutrition extractor model ([#1511](https://github.com/openfoodfacts/robotoff/issues/1511)) ([4f13fbb](https://github.com/openfoodfacts/robotoff/commit/4f13fbb56e86670f1ad4a1fbf3db2397273c54dc))
+
+
+### Bug Fixes
+
+* **nutrisight:** fix model dir ([125250d](https://github.com/openfoodfacts/robotoff/commit/125250d41b6b2bd67bac51c1b15157f990db8696))
+
+## [1.62.0](https://github.com/openfoodfacts/robotoff/compare/v1.61.0...v1.62.0) (2024-12-26)
+
+
+### Features
+
+* Add triton CLI commands ([#1510](https://github.com/openfoodfacts/robotoff/issues/1510)) ([bc7a506](https://github.com/openfoodfacts/robotoff/commit/bc7a506eef4c595e26fa045509401c9d0f6ec63d))
+
+
+### Bug Fixes
+
+* use low-priority queue for image import rerun ([#1508](https://github.com/openfoodfacts/robotoff/issues/1508)) ([585df70](https://github.com/openfoodfacts/robotoff/commit/585df7030482a55db242d947e3a45fba18f650be))
+
+
+### Technical
+
+* **deps-dev:** bump jinja2 from 3.1.4 to 3.1.5 ([#1507](https://github.com/openfoodfacts/robotoff/issues/1507)) ([aa5f296](https://github.com/openfoodfacts/robotoff/commit/aa5f296f8be27ac141f95442d4dbe2dd799f0659))
+
+## [1.61.0](https://github.com/openfoodfacts/robotoff/compare/v1.60.1...v1.61.0) (2024-12-25)
+
+
+### Features
+
+* add lang pred in spellcheck insights ([#1504](https://github.com/openfoodfacts/robotoff/issues/1504)) ([c921e8a](https://github.com/openfoodfacts/robotoff/commit/c921e8a2d9439543e0523554fa9f6a5d61ad5658))
+
+
+### Bug Fixes
+
+* allow prices.openfoodfacts.org/net for image cropping ([da3fbc5](https://github.com/openfoodfacts/robotoff/commit/da3fbc55bfcf6de73683839f47816776889cd462))
+* convert image to RGB after cropping if needed ([77ce5a4](https://github.com/openfoodfacts/robotoff/commit/77ce5a49e48a07b06e8200ab9bcc4bda9f463b34))
+
+## [1.60.1](https://github.com/openfoodfacts/robotoff/compare/v1.60.0...v1.60.1) (2024-12-20)
+
+
+### Bug Fixes
+
+* **nutrisight:** allow to override nutrition image ([#1502](https://github.com/openfoodfacts/robotoff/issues/1502)) ([a53485c](https://github.com/openfoodfacts/robotoff/commit/a53485cae4a49e707a015d4e7d038bf4eea907e8))
+
+## [1.60.0](https://github.com/openfoodfacts/robotoff/compare/v1.59.2...v1.60.0) (2024-12-20)
+
+
+### Features
+
+* Improve annotation process for `nutrition_extraction` insight ([#1501](https://github.com/openfoodfacts/robotoff/issues/1501)) ([6030833](https://github.com/openfoodfacts/robotoff/commit/60308337201cfe485e7fb5e642662ccb8adf0fd8))
+
+
+### Technical
+
+* change default name for redis stream ([cc23950](https://github.com/openfoodfacts/robotoff/commit/cc239501c2af96f5869596018561329d3d27f3bd))
+* create temp volume for es logs ([5268911](https://github.com/openfoodfacts/robotoff/commit/5268911a117859505eec128a6b739b81867d788d))
+* increase allowed memory for Triton ([#1498](https://github.com/openfoodfacts/robotoff/issues/1498)) ([0c52a59](https://github.com/openfoodfacts/robotoff/commit/0c52a59d96effa5a2fb918cfeb67e801edbb0a63))
+
+## [1.59.2](https://github.com/openfoodfacts/robotoff/compare/v1.59.1...v1.59.2) (2024-12-12)
+
+
+### Bug Fixes
+
+* fix the absence of matching synonyms during category insight import ([#1497](https://github.com/openfoodfacts/robotoff/issues/1497)) ([66c5322](https://github.com/openfoodfacts/robotoff/commit/66c532215ae9a0f689631b3e5431b248b2da23c3))
+* remove output_image parameter in detect_from_image_tf ([#1494](https://github.com/openfoodfacts/robotoff/issues/1494)) ([5e43dab](https://github.com/openfoodfacts/robotoff/commit/5e43dabe68391c34bd15343790fca9a2568e26b9))
+* use Python SDK update listener ([#1496](https://github.com/openfoodfacts/robotoff/issues/1496)) ([fb60549](https://github.com/openfoodfacts/robotoff/commit/fb60549e1243351bae08b92d526168b0613459e9))
+
+
+### Technical
+
+* add comments ([fb6c5dc](https://github.com/openfoodfacts/robotoff/commit/fb6c5dc36bf58d0eb99cdbdb266b7e624318368e))
+* allow to specify triton URI as one envvar ([abcc2e5](https://github.com/openfoodfacts/robotoff/commit/abcc2e5a83aa40d1d422c99e846727a9cd0ed75b))
+
 ## [1.59.1](https://github.com/openfoodfacts/robotoff/compare/v1.59.0...v1.59.1) (2024-12-10)
 
 

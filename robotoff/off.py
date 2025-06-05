@@ -1,5 +1,4 @@
-"""Interacting with OFF server to eg. update products or get infos
-"""
+"""Interacting with OFF server to eg. update products or get infos"""
 
 import re
 from pathlib import Path
@@ -414,15 +413,35 @@ def add_packaging(
 def save_ingredients(
     product_id: ProductIdentifier,
     ingredient_text: str,
-    insight_id: Optional[str] = None,
-    lang: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    lang: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
+    base_comment: str | None = None,
     **kwargs,
-):
+) -> None:
+    """Save the ingredients text for a product, by sending a request to
+    Product Opener.
+
+    :param product_id: the product identifier
+    :param ingredient_text: the ingredients text to save
+    :param insight_id: the ID of the insight associated with the change, if any,
+        defaults to None. This is used to generate the edit comment.
+    :param lang: the language of the ingredients text, defaults to None. This is
+        used to determine the language-specific ingredient field to update.
+    :param auth: the authentication data to use for the request, defaults to None.
+    :param is_vote: whether the edit was triggered from an insight vote, defaults
+        to False. This is used to generate the edit comment.
+    :param base_comment: a base comment to use for the edit, defaults to None.
+        By default, it will be set to "Update ingredients".
+    :param kwargs: additional keyword arguments to pass to the update_product
+        function.
+    """
     ingredient_key = "ingredients_text" if lang is None else f"ingredients_text_{lang}"
+
+    base_comment = base_comment or "Update ingredients"
     comment = generate_edit_comment(
-        "Ingredient spellcheck correction",
+        base_comment,
         is_vote=is_vote,
         is_automatic=auth is None,
         insight_id=insight_id,

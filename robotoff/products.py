@@ -7,10 +7,12 @@ import json
 import os
 import shutil
 import tempfile
+import typing
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
 import requests
+from openfoodfacts.images import convert_to_legacy_schema
 from pymongo import MongoClient
 
 from robotoff import settings
@@ -29,7 +31,7 @@ def get_mongo_client() -> MongoClient:
     )
 
 
-def get_image_id(image_path: str) -> Optional[str]:
+def get_image_id(image_path: str) -> str | None:
     """Return the image ID from an image path.
 
     :param image_path: the image path (ex: /322/247/762/7888/2.jpg)
@@ -53,16 +55,16 @@ def is_valid_image(images: JSONType, image_path: str) -> bool:
 
 
 def is_nutrition_image(
-    images: JSONType, image_path: str, lang: Optional[str] = None
+    images: JSONType, image_path: str, lang: str | None = None
 ) -> bool:
     return is_special_image(images, image_path, "nutrition", lang)
 
 
-def has_nutrition_image(images: JSONType, lang: Optional[str] = None) -> bool:
+def has_nutrition_image(images: JSONType, lang: str | None = None) -> bool:
     return has_special_image(images, "nutrition", lang)
 
 
-def has_special_image(images: JSONType, key: str, lang: Optional[str] = None) -> bool:
+def has_special_image(images: JSONType, key: str, lang: str | None = None) -> bool:
     field_name = "{}_".format(key) if lang is None else "{}_{}".format(key, lang)
     for image_key in images:
         if image_key.startswith(field_name):
@@ -72,7 +74,7 @@ def has_special_image(images: JSONType, key: str, lang: Optional[str] = None) ->
 
 
 def is_special_image(
-    images: JSONType, image_path: str, image_type: str, lang: Optional[str] = None
+    images: JSONType, image_path: str, image_type: str, lang: str | None = None
 ) -> bool:
     if not is_valid_image(images, image_path):
         return False
@@ -101,7 +103,7 @@ def minify_product_dataset(dataset_path: Path, output_path: Path):
 
     with gzip.open(output_path, "wt", encoding="utf-8") as output_:
         for item in jsonl_iter_func(dataset_path):
-            available_fields = Product.get_fields()
+            available_fields = Product.get_fields(item)
 
             minified_item = dict(
                 (
@@ -113,7 +115,7 @@ def minify_product_dataset(dataset_path: Path, output_path: Path):
             output_.write(json.dumps(minified_item) + "\n")
 
 
-def get_product_dataset_etag() -> Optional[str]:
+def get_product_dataset_etag() -> str | None:
     if not settings.JSONL_DATASET_ETAG_PATH.is_file():
         return None
 
@@ -425,13 +427,13 @@ class Product:
     )
 
     def __init__(self, product: JSONType):
-        self.barcode: Optional[str] = product.get("code")
+        self.barcode: str | None = product.get("code")
         self.countries_tags: list[str] = product.get("countries_tags") or []
         self.categories_tags: list[str] = product.get("categories_tags") or []
         self.emb_codes_tags: list[str] = product.get("emb_codes_tags") or []
         self.labels_tags: list[str] = product.get("labels_tags") or []
-        self.quantity: Optional[str] = product.get("quantity") or None
-        self.expiration_date: Optional[str] = product.get("expiration_date") or None
+        self.quantity: str | None = product.get("quantity") or None
+        self.expiration_date: str | None = product.get("expiration_date") or None
         self.brands_tags: list[str] = product.get("brands_tags") or []
         self.stores_tags: list[str] = product.get("stores_tags") or []
         self.packagings: list = product.get("packagings") or []
@@ -443,8 +445,18 @@ class Product:
             if "image_ids" in product
             else list(key for key in self.images.keys() if key.isdigit())
         )
-        self.lang: Optional[str] = product.get("lang")
-        self.ingredients_text: Optional[str] = product.get("ingredients_text")
+        self.lang: str | None = product.get("lang")
+        ingredients_text: JSONType = {}
+        for key in (k for k in product.keys() if k.startswith("ingredients_text")):
+            value = product[key]
+            if not value:
+                continue
+            if key == "ingredients_text":
+                ingredients_text["main"] = value
+            else:
+                lang = key.split("_")[-1]
+                ingredients_text[lang] = value
+        self.ingredients_text: JSONType = ingredients_text
         self.nutriments: JSONType = product.get("nutriments") or {}
         self.nutrition_data_per: str | None = product.get("nutrition_data_per")
         self.nutrition_data_prepared: bool = (
@@ -453,7 +465,7 @@ class Product:
         self.serving_size: str | None = product.get("serving_size")
 
     @staticmethod
-    def get_fields():
+    def get_fields(item: JSONType) -> set[str]:
         return {
             "code",
             "countries_tags",
@@ -467,12 +479,11 @@ class Product:
             "unique_scans_n",
             "images",
             "lang",
-            "ingredients_text",
             "nutriments",
             "nutrition_data_per",
             "nutrition_data_prepared",
             "serving_size",
-        }
+        } | set(k for k in item.keys() if k.startswith("ingredients_text"))
 
 
 class ProductStore(metaclass=abc.ABCMeta):
@@ -537,8 +548,15 @@ class DBProductStore(ProductStore):
         return len(self.collection.estimated_document_count())
 
     def get_product(
-        self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
-    ) -> Optional[JSONType]:
+        self, product_id: ProductIdentifier, projection: list[str] | None = None
+    ) -> JSONType | None:
+        """Fetch a product from the MongoDB.
+
+        :param product_id: identifier of the product to fetch
+        :param projection: list of fields to retrieve, if not provided all fields
+            are queried
+        :return: the product as a dict or None if it was not found
+        """
         if not settings.ENABLE_MONGODB_ACCESS:
             # if `ENABLE_MONGODB_ACCESS=False`, we don't disable MongoDB
             # access and return None
@@ -546,7 +564,21 @@ class DBProductStore(ProductStore):
         # We use `_id` instead of `code` field, as `_id` contains org ID +
         # barcode for pro platform, which is also the case for
         # `product_id.barcode`
-        return self.collection.find_one({"_id": product_id.barcode}, projection)
+        product = self.collection.find_one({"_id": product_id.barcode}, projection)
+
+        # Convert the `images` field to the legacy schema, until the migration
+        # is done. Once it's done, we can upgrade all Robotoff code to use the new
+        # schema.
+        return self._convert_schema(product)
+
+    @staticmethod
+    def _convert_schema(product: JSONType | None) -> JSONType | None:
+        """Convert the product to the legacy `images` schema if the product
+        is not None and the `images` field is present, otherwise return
+        the product as is."""
+        if product is not None and "images" in product:
+            product["images"] = convert_to_legacy_schema(product["images"])
+        return product
 
     def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
         product = self.get_product(product_id)
@@ -556,9 +588,12 @@ class DBProductStore(ProductStore):
 
         return None
 
-    def iter_product(self, projection: Optional[list[str]] = None):
+    def iter_product(self, projection: list[str] | None = None):
         if self.collection is not None:
-            yield from (Product(p) for p in self.collection.find(projection=projection))
+            yield from (
+                Product(typing.cast(JSONType, self._convert_schema(p)))
+                for p in self.collection.find(projection=projection)
+            )
 
 
 def get_min_product_store(projection: Optional[list[str]] = None) -> MemoryProductStore:

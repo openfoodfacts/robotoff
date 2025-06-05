@@ -85,6 +85,7 @@ def get_insights(
     automatically_processable: Optional[bool] = None,
     campaigns: Optional[list[str]] = None,
     predictor: Optional[str] = None,
+    lc: Optional[list[str]] = None,
 ) -> Iterable[ProductInsight]:
     """Fetch insights that meet the criteria passed as parameters.
 
@@ -133,6 +134,9 @@ def get_insights(
         defaults to None
     :param predictor: only keep insights that have this predictor, defaults
         to None
+    :param lc: only keep insights that have any `insight.lc` in this
+        list of language codes, defaults to None
+        It is used to filter lang of ingredient_spellcheck
     :return: the return value is either:
         - an iterable of ProductInsight objects or dict (if `as_dict=True`)
         - the number of products (if `count=True`)
@@ -179,6 +183,9 @@ def get_insights(
 
     if predictor is not None:
         where_clauses.append(ProductInsight.predictor == predictor)
+
+    if lc is not None:
+        where_clauses.append(ProductInsight.lc.contains_any(*lc))
 
     if avoid_voted_on:
         where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))

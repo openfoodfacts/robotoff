@@ -6,6 +6,7 @@ from openfoodfacts.images import split_barcode
 
 from robotoff.insights.question import (
     CategoryQuestionFormatter,
+    ImageOrientationQuestionFormatter,
     LabelQuestionFormatter,
     Question,
     generate_selected_images,
@@ -13,7 +14,7 @@ from robotoff.insights.question import (
 )
 from robotoff.models import ProductInsight
 from robotoff.settings import TEST_DATA_DIR
-from robotoff.types import InsightType, ProductIdentifier, ServerType
+from robotoff.types import InsightType, JSONType, ProductIdentifier, ServerType
 from robotoff.utils.i18n import TranslationStore
 
 
@@ -97,8 +98,10 @@ def generate_insight(
     value_tag: Optional[str] = None,
     add_source_image: bool = False,
     server_type: ServerType = ServerType.off,
+    data: JSONType | None = None,
 ) -> ProductInsight:
     barcode = "1111111111"
+    data = data or {}
     return ProductInsight(
         type=insight_type,
         value=value,
@@ -107,6 +110,7 @@ def generate_insight(
         source_image=(
             f"/{'/'.join(split_barcode(barcode))}/1.jpg" if add_source_image else None
         ),
+        data=data,
         server_type=server_type.name,
     )
 
@@ -227,3 +231,28 @@ def test_label_question_formatter(
     if ref_image_url is not None:
         expected_dict["ref_image_url"] = ref_image_url
     assert question.serialize() == expected_dict
+
+
+class TestImageOrientationQuestionFormatter:
+    def test_format_question(self, mocker, translation_store):
+        insight = generate_insight(
+            insight_type=InsightType.image_orientation.name,
+            value_tag="right",
+            add_source_image=True,
+            server_type=ServerType.off,
+            data={"image_key": "front_fr", "image_rev": "10"},
+        )
+        question = ImageOrientationQuestionFormatter(translation_store).format_question(
+            insight, "en"
+        )
+        assert isinstance(question, Question)
+        assert question.serialize() == {
+            "barcode": insight.barcode,
+            "type": "add-binary",
+            "value": "right",
+            "question": "Is this image rotated with the following orientation?",
+            "insight_id": str(insight.id),
+            "insight_type": InsightType.image_orientation.name,
+            "server_type": ServerType.off.name,
+            "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/front_fr.10.400.jpg",
+        }

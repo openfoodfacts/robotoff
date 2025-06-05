@@ -38,7 +38,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "robotoff"
-version = "1.59.1"
+version = "1.70.0"
 description = "Real-time and batch prediction service for Open Food Facts."
 authors = ["Open Food Facts Team"]
 license = "GNU Affero General Public License v3"
@@ -48,7 +48,7 @@ python = "^3.11"
 requests = ">=2.31,<2.33"
 peewee = "~3.17.6"
 psycopg2-binary = "~2.9.1"
-gunicorn = ">=20.1,<22.1"
+gunicorn = ">=20.1,<23.1"
 falcon = "~3.1.3"
 elasticsearch = "~8.5.3"
 pymongo = ">=4.5,<4.7"
@@ -69,36 +69,39 @@ cachetools = "~5.5.0"
 tritonclient = {extras = ["grpc"], version = "2.38.0"}
 rq = "~1.11.1"
 python-redis-lock = "~4.0.0"
-transformers = "~4.44.2"
+transformers = ">=4.44.2,<4.51.0"
 lark = "~1.1.4"
-h5py = "~3.8.0"
+h5py = "~3.13.0"
 opencv-python-headless = "~4.10.0.84"
 toml = "~0.10.2"
-openfoodfacts = "2.3.4"
+openfoodfacts = "2.6.0"
 imagehash = "~4.3.1"
 peewee-migrate = "~1.12.2"
 diskcache = "~5.6.3"
 google-cloud-batch = "~0.17.26"
-duckdb = "~1.0.0"
+duckdb = ">=1.0,<1.2"
 google-cloud-storage = "~2.14.0"
 pandas = "~2.2.2"
 pyarrow = "~17.0.0"
 rich = "~13.9.2"  # Used for CLI pretty print
+backoff = "^2.2.1"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = ">=1.14,<2.9"
 extras = ["falcon"]
 
-[tool.poetry.dev-dependencies]
-flake8 = "4.0.1"
-black = "24.3.0"                                  # If upgrading black, be sure to also update black version in .github/workflows/autoblack.yml and in .pre-commit-config.yaml
+[tool.poetry.group.dev.dependencies]
+types-pytz = "^2024.1.0.20240417"
+types-pyyaml = "^6.0.12.20240808"
+flake8 = "^7.2.0"
+black = "^25.1.0"
 factory_boy-peewee = "0.0.4"  # This package is archived and not maintained anymore but works and is very lightweight.
 mypy = "1.10.1"
 pytest = "~7.2.0"
 pytest-mock = "~3.10.0"
-pre-commit = "~2.20.0"
+pre-commit = "~4.2.0"
 toml-sort = "~0.20.1"
-isort = "~5.13.2"
+isort = "^6.0.1"
 flake8-bugbear = "~22.10.27"
 flake8-github-actions = "~0.1.1"
 pytest-cov = "~4.0.0"
@@ -117,10 +120,6 @@ pytest-httpserver = "^1.0.4"
 types-cachetools = "^5.2.1"
 types-redis = "^4.3.21"
 rq-dashboard = "~0.6.1"
-
-[tool.poetry.group.dev.dependencies]
-types-pytz = "^2024.1.0.20240417"
-types-pyyaml = "^6.0.12.20240808"
 
 [tool.poetry.scripts]
 robotoff-cli = 'robotoff.cli.main:main'

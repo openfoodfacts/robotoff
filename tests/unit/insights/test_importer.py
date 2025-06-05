@@ -8,6 +8,8 @@ from robotoff.insights.importer import (
     BrandInsightImporter,
     CategoryImporter,
     ExpirationDateImporter,
+    ImageOrientationImporter,
+    IngredientDetectionImporter,
     InsightImporter,
     LabelInsightImporter,
     NutrientExtractionImporter,
@@ -780,7 +782,7 @@ class TestLabelInsightImporter:
     def test_is_parent_label(self, label, to_check_labels, expected, mocker):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("label", offline=True),
+            return_value=get_taxonomy(TaxonomyType.label.name, offline=True),
         )
         assert LabelInsightImporter.is_parent_label(label, to_check_labels) is expected
 
@@ -875,7 +877,7 @@ class TestLabelInsightImporter:
     def test_generate_candidates(self, predictions, product, expected, mocker):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("label", offline=True),
+            return_value=get_taxonomy(TaxonomyType.label.name, offline=True),
         )
         candidates = list(
             LabelInsightImporter.generate_candidates(product, predictions, None)
@@ -909,7 +911,7 @@ class TestCategoryImporter:
     def test_is_parent_category(self, category, to_check_categories, expected, mocker):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
+            return_value=get_taxonomy(TaxonomyType.category.name, offline=True),
         )
         assert (
             CategoryImporter.is_parent_category(category, to_check_categories)
@@ -925,6 +927,13 @@ class TestCategoryImporter:
                 ],
                 Product({"code": DEFAULT_BARCODE, "categories_tags": ["en:meats"]}),
                 [],
+            ),
+            (
+                [
+                    Prediction(PredictionType.category, value_tag="en:almonds-shelled"),
+                ],
+                Product({"code": DEFAULT_BARCODE, "categories_tags": []}),
+                ["en:almonds-shelled"],
             ),
             (
                 [
@@ -969,6 +978,10 @@ class TestCategoryImporter:
             "robotoff.insights.importer.get_taxonomy",
             return_value=category_taxonomy,
         )
+        mocker.patch(
+            "robotoff.taxonomy.get_taxonomy",
+            return_value=category_taxonomy,
+        )
         candidates = list(
             CategoryImporter.generate_candidates(product, predictions, None)
         )
@@ -998,7 +1011,7 @@ class TestCategoryImporter:
     ):
         mocker.patch(
             "robotoff.insights.importer.get_taxonomy",
-            return_value=get_taxonomy("category", offline=True),
+            return_value=get_taxonomy(TaxonomyType.category.name, offline=True),
         )
         insight = ProductInsight(value_tag=value_tag)
         CategoryImporter.add_optional_fields(
@@ -1597,6 +1610,13 @@ class TestNutritionImageImporter:
 
 
 class TestNutrientExtractionImporter:
+    def test_get_input_prediction_types(self):
+        assert NutrientExtractionImporter.get_input_prediction_types() == {
+            PredictionType.nutrient_extraction,
+            PredictionType.image_orientation,
+            PredictionType.nutrient_mention,
+        }
+
     def test_generate_candidates_no_nutrient(self):
         product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
         data = {
@@ -1622,7 +1642,27 @@ class TestNutrientExtractionImporter:
                 predictor="nutrition_extractor",
                 predictor_version="nutrition_extractor-1.0",
                 automatic_processing=False,
-            )
+                value_tag=None,
+            ),
+            Prediction(
+                type=PredictionType.nutrient_mention,
+                data={
+                    "mentions": {
+                        "fat": [{"languages": ["it"]}],
+                        "salt": [{"languages": ["fr"]}, {"languages": ["it"]}],
+                        "fiber": [{"languages": ["de"]}],
+                        "protein": [{"languages": ["en", "de"]}],
+                    }
+                },
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+            ),
+            Prediction(
+                type=PredictionType.image_orientation,
+                data={"rotation": 90, "orientation": "right"},
+                barcode=DEFAULT_BARCODE,
+                source_image=DEFAULT_SOURCE_IMAGE,
+            ),
         ]
         candidates = list(
             NutrientExtractionImporter.generate_candidates(
@@ -1635,11 +1675,13 @@ class TestNutrientExtractionImporter:
         assert candidate.barcode == DEFAULT_BARCODE
         assert candidate.type == InsightType.nutrient_extraction.name
         assert candidate.value_tag is None
-        assert candidate.data == data
+        assert candidate.data == {"rotation": 90, **data}
         assert candidate.source_image == DEFAULT_SOURCE_IMAGE
         assert candidate.automatic_processing is False
         assert candidate.predictor == "nutrition_extractor"
         assert candidate.predictor_version == "nutrition_extractor-1.0"
+        assert candidate.lc is not None
+        assert set(candidate.lc) == {"it", "de"}
 
     def test_generate_candidates_no_new_nutrient(self):
         product = Product(
@@ -1917,6 +1959,49 @@ class TestNutrientExtractionImporter:
         NutrientExtractionImporter.add_optional_fields(insight, product_incomplete)
         assert insight.campaign == ["incomplete-nutrition"]
 
+    @pytest.mark.parametrize(
+        "nutrient_mention,expected_lc",
+        [
+            # Only one mention, should return single language
+            ({"mentions": {"sugar": [{"raw": "sucre", "languages": ["fr"]}]}}, {"fr"}),
+            # Multiple mentions with same language, should return single language
+            (
+                {
+                    "mentions": {
+                        "sugar": [{"raw": "sucre", "languages": ["fr"]}],
+                        "salt": [{"raw": "sel", "languages": ["fr"]}],
+                    }
+                },
+                {"fr"},
+            ),
+            (
+                {
+                    "mentions": {
+                        "sugar": [
+                            {"raw": "sucre", "languages": ["fr"]},
+                            {"raw": "sugar", "languages": ["en"]},
+                        ],
+                        "salt": [{"raw": "sel", "languages": ["fr"]}],
+                    }
+                },
+                {"fr"},
+            ),
+            (
+                {"mentions": {}},
+                None,
+            ),
+        ],
+    )
+    def test_compute_lc_from_nutrient_mention(self, nutrient_mention, expected_lc):
+        result = NutrientExtractionImporter.compute_lc_from_nutrient_mention(
+            Prediction(data=nutrient_mention, type=PredictionType.nutrient_mention)
+        )
+
+        if result is None:
+            assert result is expected_lc
+        else:
+            assert set(result) == expected_lc
+
 
 class TestImportInsightsForProducts:
     def test_import_insights_no_element(self, mocker):
@@ -1974,16 +2059,21 @@ class TestImportInsightsForProducts:
         )
 
     def test_import_insights_type_mismatch(self, mocker):
-        prediction_dict = {
-            "barcode": DEFAULT_BARCODE,
-            "type": PredictionType.image_orientation.name,
-            "data": {},
+        # Mock the IMPORTERS list to only include one importer
+        # that doesn't have image_orientation as requirement
+        mock_importer = mocker.MagicMock()
+        mock_importer.get_required_prediction_types.return_value = {
+            PredictionType.category
         }
+        mock_importer.get_input_prediction_types.return_value = {
+            PredictionType.category
+        }
+
+        mocker.patch("robotoff.insights.importer.IMPORTERS", [mock_importer])
+
         get_product_predictions_mock = mocker.patch(
             "robotoff.insights.importer.get_product_predictions",
-            return_value=[
-                prediction_dict,
-            ],
+            return_value=[],
         )
         import_insights_mock = mocker.patch(
             "robotoff.insights.importer.InsightImporter.import_insights",
@@ -2000,3 +2090,445 @@ class TestImportInsightsForProducts:
         assert len(import_results) == 0
         assert not get_product_predictions_mock.called
         assert not import_insights_mock.called
+
+
+class TestImageOrientationImporter:
+    def test_image_orientation_get_type(self):
+        assert ImageOrientationImporter.get_type() == InsightType.image_orientation
+
+    def test_image_orientation_get_required_prediction_types(self):
+        assert ImageOrientationImporter.get_required_prediction_types() == {
+            PredictionType.image_orientation
+        }
+
+    def test_image_orientation_is_conflicting_insight(self):
+        candidate = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_en"},
+            source_image="/1.jpg",
+        )
+
+        # Conflicting insight (same source_image)
+        reference = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_en"},
+            source_image="/1.jpg",
+        )
+        assert (
+            ImageOrientationImporter.is_conflicting_insight(candidate, reference)
+            is True
+        )
+
+        # Non-conflicting insight (different source_image)
+        reference_2 = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_en"},
+            source_image="/2.jpg",
+        )
+        # Non-conflicting insight (different image key)
+        reference_3 = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            type=InsightType.image_orientation,
+            data={"image_key": "front_it"},
+            source_image="/1.jpg",
+        )
+        assert (
+            ImageOrientationImporter.is_conflicting_insight(candidate, reference_2)
+            is False
+        )
+        assert (
+            ImageOrientationImporter.is_conflicting_insight(candidate, reference_3)
+            is False
+        )
+
+    @pytest.mark.parametrize(
+        "orientation,rotation,counts,image_data,selected,expected_candidates",
+        [
+            # Upright image - should not generate candidate
+            (
+                "up",
+                0,
+                {"up": 10, "right": 0},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # Low confidence - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 5, "right": 4},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # Image is already rotated - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "270"},
+                },
+                True,
+                0,
+            ),
+            # Image is already rotated but with a negative angle - should not generate
+            # candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": -90},
+                },
+                True,
+                0,
+            ),
+            # Not selected image - should not generate candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 10},
+                # Default source image is "1"
+                {
+                    "1": {"imgid": "1"},
+                    "2": {"imgid": "2"},
+                    "front_en": {"imgid": "2", "rev": "10", "angle": "0"},
+                },
+                False,
+                0,
+            ),
+            # Valid case - should generate candidate
+            # (high confidence, selected image, needs rotation)
+            # Missing angle field, but should be interpreted as "0" and generate a
+            # candidate
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10"},
+                },
+                True,
+                1,
+            ),
+            # Valid case with mixed orientation counts but still high confidence
+            # Most words are oriented right
+            (
+                "right",
+                270,
+                {"up": 1, "right": 19},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                1,
+            ),
+            # Edge case - exactly 95% confidence
+            (
+                "right",
+                270,
+                {"up": 1, "right": 19, "left": 0},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                1,
+            ),
+            # Edge case - just below 95% confidence
+            (
+                "right",
+                270,
+                {"up": 2, "right": 18, "left": 0},
+                {
+                    "1": {"imgid": "1"},
+                    "front_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                0,
+            ),
+            # The same image is selected for multiple keys (nutrition, ingredients,
+            # front,...)
+            # We should generate as many candidates as keys
+            (
+                "right",
+                270,
+                {"up": 0, "right": 20},
+                {
+                    "1": {"imgid": "1"},
+                    "front_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "nutrition_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "ingredients_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                    "packaging_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                },
+                True,
+                4,
+            ),
+        ],
+    )
+    def test_image_orientation_generate_candidates(
+        self,
+        mocker,
+        orientation: str,
+        rotation: int,
+        counts: JSONType,
+        image_data: JSONType,
+        selected: bool,
+        expected_candidates: int,
+    ):
+        # Mock is_selected_image function
+        mocker.patch(
+            "robotoff.insights.importer.is_selected_image", return_value=selected
+        )
+
+        # Calculate confidence for verification if needed
+        total = sum(counts.values())
+        confidence = counts.get(orientation, 0) / total if total > 0 else 0
+
+        # Create prediction with given parameters
+        prediction = Prediction(
+            barcode=DEFAULT_BARCODE,
+            type=PredictionType.image_orientation,
+            data={
+                "orientation": orientation,
+                "rotation": rotation,
+                "count": counts,
+            },
+            server_type=ServerType.off,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        # Create product
+        product = Product({"code": DEFAULT_BARCODE, "images": image_data})
+
+        # Generate candidates
+        candidates = list(
+            ImageOrientationImporter.generate_candidates(
+                product,
+                [prediction],
+                DEFAULT_PRODUCT_ID,
+            )
+        )
+
+        # Verify number of candidates
+        assert len(candidates) == expected_candidates
+
+        if expected_candidates > 0:
+            candidate = candidates[0]
+            assert candidate.automatic_processing is (total >= 10)
+            assert candidate.confidence == confidence
+            assert candidate.data["rotation"] == rotation
+            assert "image_key" in candidate.data
+            assert "image_rev" in candidate.data
+
+
+class TestIngredientDetectionImporter:
+    def test_get_type(self):
+        assert (
+            IngredientDetectionImporter.get_type() == InsightType.ingredient_detection
+        )
+
+    def test_get_required_prediction_types(self):
+        assert IngredientDetectionImporter.get_required_prediction_types() == {
+            PredictionType.ingredient_detection,
+        }
+
+    def test_get_input_prediction_types(self):
+        assert IngredientDetectionImporter.get_input_prediction_types() == {
+            PredictionType.ingredient_detection,
+            PredictionType.image_orientation,
+        }
+
+    def test_is_conflicting_insight(self):
+        candidate = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            value_tag="en",
+            type=InsightType.ingredient_detection,
+            data={},
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+
+        # Conflicting insight (same value_tag)
+        reference = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            value_tag="en",
+            type=InsightType.ingredient_detection,
+            data={},
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        assert (
+            IngredientDetectionImporter.is_conflicting_insight(candidate, reference)
+            is True
+        )
+
+        # Non-conflicting insight (different value_tag)
+        reference_2 = ProductInsight(
+            barcode=DEFAULT_BARCODE,
+            value_tag="fr",
+            type=InsightType.ingredient_detection,
+            data={},
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        assert (
+            IngredientDetectionImporter.is_conflicting_insight(candidate, reference_2)
+            is False
+        )
+
+    def _get_default_prediction(self):
+        return Prediction(
+            type=PredictionType.ingredient_detection,
+            barcode=DEFAULT_BARCODE,
+            value_tag="en",
+            data={
+                "text": "water, flour, salt",
+                "lang": {"lang": "en", "confidence": 0.85},
+                "score": 0.95,
+                "start": 10,
+                "end": 28,
+                "ingredients_n": 3,
+                "known_ingredients_n": 3,
+                "unknown_ingredients_n": 0,
+                "fraction_known_ingredients": 1.0,
+                "ingredients": [
+                    {"text": "water", "id": "en:water", "in_taxonomy": True},
+                    {"text": "flour", "id": "en:flour", "in_taxonomy": True},
+                    {"text": "salt", "id": "en:salt", "in_taxonomy": True},
+                ],
+            },
+            source_image=DEFAULT_SOURCE_IMAGE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+        )
+
+    def test_keep_prediction(self):
+        prediction = self._get_default_prediction()
+
+        # If the product has no ingredient list, we keep the prediction
+        assert (
+            IngredientDetectionImporter.keep_prediction(
+                Product({"code": DEFAULT_BARCODE}), prediction
+            )
+            is True
+        )
+
+        # If the product already has an ingredient list for the same language,
+        # we discard the prediction
+        assert (
+            IngredientDetectionImporter.keep_prediction(
+                Product(
+                    {"code": DEFAULT_BARCODE, "ingredients_text_en": "water, sugar"}
+                ),
+                prediction,
+            )
+            is False
+        )
+
+        # If the product is None, we keep the prediction
+        assert IngredientDetectionImporter.keep_prediction(None, prediction) is True
+
+        prediction_with_low_confidence = self._get_default_prediction()
+        prediction_with_low_confidence.data["fraction_known_ingredients"] = 0.5
+        # If the fraction of known ingredients is below 0.6, we discard the prediction
+        assert (
+            IngredientDetectionImporter.keep_prediction(
+                Product({"code": DEFAULT_BARCODE}), prediction_with_low_confidence
+            )
+            is False
+        )
+
+    def test_get_candidate_priority(self):
+        prediction = self._get_default_prediction()
+
+        # Product is None, we return the default priority
+        assert IngredientDetectionImporter.get_candidate_priority(None, prediction) == 1
+
+        # The ingredient detection comes from the image that is selected
+        # for the prediction language, so we return the highest priority
+        assert (
+            IngredientDetectionImporter.get_candidate_priority(
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "images": {
+                            "1": {},
+                            "ingredients_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                        },
+                    }
+                ),
+                prediction,
+            )
+            == 2
+        )
+
+        # Otherwise we return the default priority
+        assert (
+            IngredientDetectionImporter.get_candidate_priority(
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "images": {
+                            "1": {},
+                            "ingredients_fr": {"imgid": "1", "rev": "10", "angle": "0"},
+                        },
+                    }
+                ),
+                prediction,
+            )
+            == 1
+        )
+
+    def test_generate_candidates(self):
+        prediction = self._get_default_prediction()
+        image_orientation_prediction = Prediction(
+            type=PredictionType.image_orientation,
+            barcode=DEFAULT_BARCODE,
+            data={
+                "orientation": "down",
+                "rotation": 180,
+                "count": {"down": 10, "right": 0},
+            },
+            source_image=DEFAULT_SOURCE_IMAGE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+        )
+
+        # We generate a candidate for the ingredient detection
+        candidates = list(
+            IngredientDetectionImporter.generate_candidates(
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "images": {
+                            "1": {},
+                            "ingredients_en": {"imgid": "1", "rev": "10", "angle": "0"},
+                        },
+                    }
+                ),
+                [prediction, image_orientation_prediction],
+                DEFAULT_PRODUCT_ID,
+            )
+        )
+        assert len(candidates) == 1
+        candidate = candidates[0]
+        assert candidate.type == InsightType.ingredient_detection.name
+        assert candidate.barcode == DEFAULT_BARCODE
+        assert candidate.value_tag == "en"
+        # Priority 2, as the image is selected as ingredient image for the prediction
+        # language
+        assert candidate.data == {"priority": 2, "rotation": 180, **prediction.data}
+        assert candidate.source_image == DEFAULT_SOURCE_IMAGE
+        assert candidate.server_type == DEFAULT_SERVER_TYPE.name
+        assert candidate.lc == ["en"]

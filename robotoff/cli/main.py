@@ -4,6 +4,7 @@ from typing import Optional
 
 import typer
 
+from robotoff.cli.triton import app as triton_app
 from robotoff.types import (
     ImportImageFlag,
     ObjectDetectionModel,
@@ -59,12 +60,19 @@ def process_updates_since(
     )
 ):
     """Process all updates since a given datetime."""
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
-    from robotoff.workers.update_listener import process_updates_since
+    from robotoff.workers.update_listener import UpdateListener, get_redis_client
 
     logger = get_logger()
     logger.info("Processing Redis updates since %s", since)
-    process_updates_since(since)
+    redis_client = get_redis_client()
+    update_listener = UpdateListener(
+        redis_client=redis_client,
+        redis_stream_name=settings.REDIS_STREAM_NAME,
+        redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
+    )
+    update_listener.process_updates_since(since)
 
 
 @app.command()
@@ -83,12 +91,13 @@ def create_redis_update(
     """Create a new product update event in Redis.
 
     This command is meant for **local development only**. It creates a new
-    product update event in Redis stream `product_updates_off`.
+    product update event in the Redis stream.
     """
     import json
 
     from openfoodfacts.types import JSONType
 
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
     from robotoff.workers.update_listener import get_redis_client
 
@@ -116,7 +125,8 @@ def create_redis_update(
         diffs = {"fields": {"change": ["generic_name", "generic_name_fr"]}}
 
     event["diffs"] = json.dumps(diffs)
-    client.xadd("product_updates_off", event)
+    client.xadd(settings.REDIS_STREAM_NAME, event)
+    typer.echo(f"Event added to Redis stream {settings.REDIS_STREAM_NAME}: {event}")
 
 
 @app.command()
@@ -662,6 +672,9 @@ def run_nutrition_extraction(
         None,
         help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
     ),
+    model_version: Optional[str] = typer.Option(
+        None, help="Version of the model to use, defaults to the latest"
+    ),
 ) -> None:
     """Run nutrition extraction on a product image.
 
@@ -685,7 +698,9 @@ def run_nutrition_extraction(
 
     image = cast(Image.Image, get_image_from_url(image_url))
     ocr_result = cast(OCRResult, OCRResult.from_url(image_url.replace(".jpg", ".json")))
-    prediction = predict(image, ocr_result, triton_uri=triton_uri)
+    prediction = predict(
+        image, ocr_result, model_version=model_version, triton_uri=triton_uri
+    )
     if prediction is not None:
         pprint(prediction)
     else:
@@ -1109,6 +1124,20 @@ def launch_spellcheck_batch_job(
 
 
 @app.command()
+def import_batch_job_predictions(batch_dir: str) -> None:
+    """Import predictions from batch job.
+
+    Currently, only ingredients spellcheck predictions are supported.
+    """
+    from robotoff.batch import BatchJobType, import_batch_predictions
+    from robotoff.utils.logger import get_logger
+
+    get_logger()
+
+    import_batch_predictions(BatchJobType.ingredients_spellcheck, batch_dir)
+
+
+@app.command()
 def launch_normalize_barcode_job(
     batch_size: int = 100_000,
     launch_prediction: bool = True,
@@ -1241,6 +1270,9 @@ def launch_normalize_barcode_job(
                     else:
                         break
                 logger.info("Updated %d images", updated)
+
+
+app.add_typer(triton_app, name="triton")
 
 
 def main() -> None:

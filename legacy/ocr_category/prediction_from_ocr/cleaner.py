@@ -12,7 +12,9 @@ def clean_ocr_text(text: str) -> str:
     - remove spelling mistakes
     - remove accents
 
-    We removed the spellchecker part here because our model don't need it to improve but you can find more details about it on this repo https://github.com/Laurel16/OpenFoodFactsCategorizer/blob/master/OpenFoodFactsCategorizer/cleaner.py)
+    We removed the spellchecker part here because our model doesn't need it
+    to improve, but you can find more details about it on this repo:
+    https://github.com/Laurel16/OpenFoodFactsCategorizer/blob/master/OpenFoodFactsCategorizer/cleaner.py
     """
 
     clean_functions = [

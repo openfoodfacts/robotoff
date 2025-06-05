@@ -100,6 +100,13 @@ class BaseURLProvider(object):
 
     @staticmethod
     def image_url(server_type: ServerType, image_path: str) -> str:
+        """Generate the URL of an Open Food Facts image.
+
+        :param server_type: The server type (e.g., ServerType.off).
+        :param image_path: The path to the image (e.g.,
+            "/002/604/035/3579/front_en.21.400.jpg").
+        :return: The full URL of the image.
+        """
         prefix = BaseURLProvider._get_url(
             prefix="images", base_domain=server_type.get_base_domain()
         )
@@ -199,7 +206,10 @@ REDIS_UPDATE_HOST = os.environ.get("REDIS_UPDATE_HOST", "localhost")
 REDIS_UPDATE_PORT = os.environ.get("REDIS_UPDATE_PORT", 6379)
 
 # Name of the Redis stream where Product Opener publishes product updates
-REDIS_STREAM_NAME = os.environ.get("REDIS_STREAM_NAME", "product_updates_off")
+REDIS_STREAM_NAME = os.environ.get("REDIS_STREAM_NAME", "product_updates")
+REDIS_LATEST_ID_KEY = os.environ.get(
+    "REDIS_LATEST_ID_KEY", "robotoff:product_updates:latest_id"
+)
 
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
@@ -296,10 +306,7 @@ BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json.gz"
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
-_triton_host = os.environ.get("TRITON_HOST", "localhost")
-_triton_grpc_port = os.environ.get("TRITON_PORT", "8001")
-TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
-
+TRITON_URI = os.environ.get("TRITON_URI", "triton:8001")
 TRITON_MODELS_DIR = PROJECT_DIR / "models/triton"
 
 _fasttext_host = os.environ.get("FASTTEXT_HOST", "fasttext")

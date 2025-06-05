@@ -3,9 +3,10 @@
 
 import abc
 import datetime
+import typing
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Type
+from typing import Type
 
 from pydantic import ValidationError
 from requests.exceptions import ConnectionError as RequestConnectionError
@@ -28,8 +29,16 @@ from robotoff.off import (
     update_expiration_date,
     update_quantity,
 )
+from robotoff.prediction.utils import get_image_rotation, get_nutrition_table_prediction
 from robotoff.products import get_image_id, get_product
-from robotoff.types import InsightAnnotation, InsightType, JSONType, NutrientData
+from robotoff.types import (
+    CategoryAnnotateBody,
+    IngredientAnnotateBody,
+    InsightAnnotation,
+    InsightType,
+    JSONType,
+    NutrientData,
+)
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -39,7 +48,7 @@ logger = get_logger(__name__)
 class AnnotationResult:
     status_code: int
     status: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class AnnotationStatus(Enum):
@@ -49,7 +58,6 @@ class AnnotationStatus(Enum):
     error_updated_product = 4
     error_already_annotated = 5
     error_unknown_insight = 6
-    error_missing_data = 7
     error_invalid_image = 8
     vote_saved = 9
     error_failed_update = 10
@@ -78,6 +86,12 @@ MISSING_PRODUCT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_missing_product.name,
     description="the product could not be found on OFF",
 )
+OUTDATED_DATA_RESULT = AnnotationResult(
+    status_code=AnnotationStatus.error_updated_product.value,
+    status=AnnotationStatus.error_updated_product.name,
+    description="Robotoff data is out of date with OFF, the update was not sent",
+)
+
 ALREADY_ANNOTATED_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_already_annotated.value,
     status=AnnotationStatus.error_already_annotated.name,
@@ -88,11 +102,6 @@ UNKNOWN_INSIGHT_RESULT = AnnotationResult(
     status=AnnotationStatus.error_unknown_insight.name,
     description="unknown insight ID",
 )
-DATA_REQUIRED_RESULT = AnnotationResult(
-    status_code=AnnotationStatus.error_missing_data.value,
-    status=AnnotationStatus.error_missing_data.name,
-    description="annotation data is required as JSON in `data` field",
-)
 SAVED_ANNOTATION_VOTE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.vote_saved.value,
     status=AnnotationStatus.vote_saved.name,
@@ -102,12 +111,6 @@ FAILED_UPDATE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.error_failed_update.value,
     status=AnnotationStatus.error_failed_update.name,
     description="Open Food Facts update failed",
-)
-
-INVALID_DATA = AnnotationResult(
-    status_code=AnnotationStatus.error_invalid_data.value,
-    status=AnnotationStatus.error_invalid_data.name,
-    description="The data schema is invalid.",
 )
 CANNOT_VOTE_RESULT = AnnotationResult(
     status_code=AnnotationStatus.cannot_vote.value,
@@ -123,8 +126,8 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         annotation: InsightAnnotation,
         update: bool = True,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         """Annotate an insight: save the annotation in DB and send the update
@@ -142,6 +145,29 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
             vote, defaults to False
         :return: the result of the annotation process
         """
+        if data is None:
+            if annotation == 2:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description="data must be provided if annotation is 2",
+                )
+        else:
+            if annotation != 2:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description="data can only be provided if annotation is 2",
+                )
+            try:
+                cls.validate_data(data)
+            except ValidationError as e:
+                return AnnotationResult(
+                    status_code=AnnotationStatus.error_invalid_data.value,
+                    status=AnnotationStatus.error_invalid_data.name,
+                    description=str(e),
+                )
+
         with db.atomic() as tx:
             try:
                 return cls._annotate(insight, annotation, update, data, auth, is_vote)
@@ -167,14 +193,11 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         annotation: InsightAnnotation,
         update: bool = True,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
-        if cls.is_data_required() and data is None:
-            return DATA_REQUIRED_RESULT
-
-        username: Optional[str] = None
+        username: str | None = None
         if auth is not None:
             username = auth.get_username()
 
@@ -209,15 +232,23 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         pass
 
     @classmethod
-    def is_data_required(cls) -> bool:
-        return False
+    @abc.abstractmethod
+    def validate_data(cls, data: JSONType) -> None:
+        """Validate the `data` field submitted by the client.
+
+        This function should raise a ValidationError if the data is invalid.
+
+        :params data: the data submitted by the client
+        :raises ValidationError: if the data is invalid
+        """
+        pass
 
 
 class PackagerCodeAnnotator(InsightAnnotator):
@@ -225,8 +256,8 @@ class PackagerCodeAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         emb_code: str = insight.value
@@ -273,8 +304,8 @@ class LabelAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -300,11 +331,15 @@ class LabelAnnotator(InsightAnnotator):
 
 class CategoryAnnotator(InsightAnnotator):
     @classmethod
+    def validate_data(cls, data: JSONType) -> None:
+        CategoryAnnotateBody.model_validate(data)
+
+    @classmethod
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -319,16 +354,9 @@ class CategoryAnnotator(InsightAnnotator):
         if data is None:
             category_tag = insight.value_tag
         else:
-            value_tag = data.get("value_tag")
-            if isinstance(value_tag, str):
-                user_input = True
-                category_tag = value_tag
-            else:
-                return AnnotationResult(
-                    status_code=AnnotationStatus.error_invalid_data.value,
-                    status=AnnotationStatus.error_invalid_data.name,
-                    description="`data` is invalid, expected a single `value_tag` string field with the category tag",
-                )
+            new_value_tag = data["value_tag"]
+            user_input = True
+            category_tag = new_value_tag
 
         if category_tag in categories_tags:
             return ALREADY_ANNOTATED_RESULT
@@ -336,7 +364,7 @@ class CategoryAnnotator(InsightAnnotator):
         if user_input:
             insight.data["original_value_tag"] = insight.value_tag
             insight.data["user_input"] = True
-            insight.value_tag = value_tag
+            insight.value_tag = new_value_tag
             insight.value = None
             insight.save()
 
@@ -359,8 +387,8 @@ class ProductWeightAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -369,7 +397,7 @@ class ProductWeightAnnotator(InsightAnnotator):
         if product is None:
             return MISSING_PRODUCT_RESULT
 
-        quantity: Optional[str] = product.get("quantity") or None
+        quantity: str | None = product.get("quantity") or None
 
         if quantity is not None:
             return ALREADY_ANNOTATED_RESULT
@@ -389,8 +417,8 @@ class ExpirationDateAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -419,8 +447,8 @@ class BrandAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -445,8 +473,8 @@ class StoreAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -482,8 +510,8 @@ class UPCImageAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -527,8 +555,8 @@ class PackagingAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -575,41 +603,62 @@ def convert_crop_bounding_box(
         x_max * width,
     )
 
+    return rotate_bounding_box(
+        crop_bounding_box,
+        width,
+        height,
+        rotate=rotate,
+    )
+
+
+def rotate_bounding_box(
+    bounding_box: tuple[float, float, float, float],
+    width: int,
+    height: int,
+    rotate: int = 0,
+) -> tuple[float, float, float, float]:
+    """Rotate a bounding box based on the rotation angle.
+
+    :param bounding_box: bounding box coordinates (y_min, x_min, y_max, x_max)
+    :param width: width of the image
+    :param height: height of the image
+    :param rotate: rotation angle (counter-clockwise), defaults to 0
+    :return: the rotated bounding box coordinates
+    """
     if rotate == 90:
         # y_min = old_x_min
         # x_min = old_height - old_y_max
         # y_max = old_x_max
         # x_max = old_height - old_y_min
-        crop_bounding_box = (
-            crop_bounding_box[1],
-            height - crop_bounding_box[2],
-            crop_bounding_box[3],
-            height - crop_bounding_box[0],
+        bounding_box = (
+            bounding_box[1],
+            height - bounding_box[2],
+            bounding_box[3],
+            height - bounding_box[0],
         )
     if rotate == 180:
         # y_min = old_height - old_y_max
         # x_min = old_width - old_x_max
         # y_max = old_height - old_y_min
         # x_max = old_width - old_x_min
-        crop_bounding_box = (
-            height - crop_bounding_box[2],
-            width - crop_bounding_box[3],
-            height - crop_bounding_box[0],
-            width - crop_bounding_box[1],
+        bounding_box = (
+            height - bounding_box[2],
+            width - bounding_box[3],
+            height - bounding_box[0],
+            width - bounding_box[1],
         )
     if rotate == 270:
         # y_min = old_width - old_x_max
         # x_min = old_y_min
         # y_max = old_width - old_x_min
         # x_max = old_y_max
-        crop_bounding_box = (
-            width - crop_bounding_box[3],
-            crop_bounding_box[0],
-            width - crop_bounding_box[1],
-            crop_bounding_box[2],
+        bounding_box = (
+            width - bounding_box[3],
+            bounding_box[0],
+            width - bounding_box[1],
+            bounding_box[2],
         )
-
-    return crop_bounding_box
+    return bounding_box
 
 
 class NutritionImageAnnotator(InsightAnnotator):
@@ -617,8 +666,8 @@ class NutritionImageAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         product_id = insight.get_product_id()
@@ -629,7 +678,7 @@ class NutritionImageAnnotator(InsightAnnotator):
 
         image_id = get_image_id(insight.source_image or "")
         images = product.get("images", {})
-        image_meta: Optional[JSONType] = images.get(image_id)
+        image_meta: JSONType | None = images.get(image_id)
 
         if not image_id or not image_meta:
             return AnnotationResult(
@@ -645,7 +694,7 @@ class NutritionImageAnnotator(InsightAnnotator):
             return ALREADY_ANNOTATED_RESULT
 
         rotation = insight.data.get("rotation", 0)
-        crop_bounding_box: Optional[tuple[float, float, float, float]] = None
+        crop_bounding_box: tuple[float, float, float, float] | None = None
         if "bounding_box" in insight.data:
             # convert crop bounding box to the format expected by Product
             # Opener
@@ -670,19 +719,24 @@ class NutritionImageAnnotator(InsightAnnotator):
 
 class IngredientSpellcheckAnnotator(InsightAnnotator):
     @classmethod
+    def validate_data(cls, data: JSONType) -> None:
+        IngredientAnnotateBody.model_validate(data)
+
+    @classmethod
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: Optional[dict] = None,
-        auth: Optional[OFFAuthentication] = None,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         # Possibility for the annotator to change the spellcheck correction if data is
         # provided
         if data is not None:
-            annotation = data.get("annotation")
-            if not annotation or len(data) > 1:
-                return INVALID_DATA
+            # TODO(raphael): use the `rotation` and `bounding_box` fields in the data
+            # to rotate the image and crop it to the bounding box
+            validated_data = IngredientAnnotateBody.model_validate(data)
+            annotation = validated_data.annotation
             # We add the new annotation to the Insight.
             json_data = insight.data
             json_data["annotation"] = annotation
@@ -697,6 +751,7 @@ class IngredientSpellcheckAnnotator(InsightAnnotator):
             insight_id=insight.id,
             auth=auth,
             is_vote=is_vote,
+            base_comment="Ingredient spellcheck correction",
         )
         return UPDATED_ANNOTATION_RESULT
 
@@ -727,44 +782,48 @@ class NutrientExtractionAnnotator(InsightAnnotator):
     def process_annotation(
         cls,
         insight: ProductInsight,
-        data: dict | None = None,
+        data: JSONType | None = None,
         auth: OFFAuthentication | None = None,
         is_vote: bool = False,
     ) -> AnnotationResult:
         if is_vote:
             return CANNOT_VOTE_RESULT
 
+        insight_updated = False
         # The annotator can change the nutrient values to fix the model errors
         if data is not None:
-            try:
-                validated_nutrients = cls.validate_data(data)
-            except ValidationError as e:
-                return AnnotationResult(
-                    status_code=AnnotationStatus.error_invalid_data.value,
-                    status=AnnotationStatus.error_invalid_data.name,
-                    description=str(e),
-                )
+            validated_nutrients = cls._validate_data(data)
             validated_nutrients = cls.add_default_unit(validated_nutrients)
             # We override the predicted nutrient values by the ones submitted by the
             # user
             insight.data["annotation"] = validated_nutrients.model_dump()
             insight.data["was_updated"] = True
-            insight.save()
+            insight_updated = True
         else:
             validated_nutrients = NutrientData.model_validate(insight.data)
             validated_nutrients = cls.add_default_unit(validated_nutrients)
 
             insight.data["annotation"] = validated_nutrients.model_dump()
             insight.data["was_updated"] = False
+            insight_updated = True
+
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["code", "images", "lang"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        if insight_updated:
             insight.save()
 
         save_nutrients(
-            product_id=insight.get_product_id(),
+            product_id=product_id,
             nutrient_data=validated_nutrients,
             insight_id=insight.id,
             auth=auth,
             is_vote=is_vote,
         )
+        cls.select_nutrition_image(insight, product, auth)
         return UPDATED_ANNOTATION_RESULT
 
     @classmethod
@@ -776,7 +835,11 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         return validated_nutrients
 
     @classmethod
-    def validate_data(cls, data: JSONType) -> NutrientData:
+    def validate_data(cls, data: JSONType) -> None:
+        cls._validate_data(data)
+
+    @classmethod
+    def _validate_data(cls, data: JSONType) -> NutrientData:
         """Validate the `data` field submitted by the client.
 
         :params data: the data submitted by the client
@@ -787,6 +850,356 @@ class NutrientExtractionAnnotator(InsightAnnotator):
         if "nutrients" not in data:
             raise ValidationError("missing 'nutrients' field")
         return NutrientData.model_validate(data)
+
+    @classmethod
+    def select_nutrition_image(
+        cls,
+        insight: ProductInsight,
+        product: JSONType,
+        auth: OFFAuthentication | None = None,
+    ) -> None:
+        """If the insight is validated, select the source image as nutrition image.
+
+        We fetch the image orientation from the `predictions` table and the prediction
+        of the nutrition table detector from the `image_predictions` table to know the
+        rotation angle and the bounding box of the nutrition table.
+        If any of these predictions are missing, we just select the image without any
+        rotation or crop bounding box.
+
+        :param insight: the original `nutrient_extraction` insight
+        :param product: the product data
+        :param auth: the user authentication data
+        """
+
+        if insight.source_image is None:
+            return None
+
+        image_id = get_image_id(insight.source_image)
+        images = product.get("images", {})
+        image_meta: JSONType | None = images.get(image_id)
+
+        if not image_id or not image_meta:
+            return None
+
+        # Use the language of the product. This field should always be available,
+        # but we provide a default value just in case.
+        lang = product.get("lang", "en")
+        image_key = f"nutrition_{lang}"
+        # We don't want to select the nutrition image if the image is already
+        # selected as nutrition image for the main language
+        if image_key in images and images[image_key]["imgid"] == image_id:
+            return None
+
+        rotation = get_image_rotation(insight.source_image)
+
+        nutrition_table_detections = get_nutrition_table_prediction(
+            insight.source_image, threshold=0.5
+        )
+        bounding_box = None
+        # Only crop according to the model predicted bounding box if there is exactly
+        # one nutrition table detected
+        if nutrition_table_detections and len(nutrition_table_detections) == 1:
+            bounding_box = nutrition_table_detections[0]["bounding_box"]
+
+        crop_bounding_box: tuple[float, float, float, float] | None = None
+        if bounding_box:
+            rotation = rotation or 0
+            # convert crop bounding box to the format expected by Product
+            # Opener
+            image_size = image_meta["sizes"]["full"]
+            width = image_size["w"]
+            height = image_size["h"]
+            crop_bounding_box = convert_crop_bounding_box(
+                bounding_box, width, height, rotation
+            )
+
+        product_id = insight.get_product_id()
+        select_rotate_image(
+            product_id=product_id,
+            image_id=image_id,
+            image_key=image_key,
+            rotate=rotation,
+            crop_bounding_box=crop_bounding_box,
+            auth=auth,
+            is_vote=False,
+            insight_id=insight.id,
+        )
+
+
+class ImageOrientationAnnotator(InsightAnnotator):
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        """Process image orientation annotation and rotate the selected images
+        if necessary.
+
+        :param insight: the image orientation insight
+        :param data: additional data sent by the client, defaults to None
+        :param auth: authentication data
+        :param is_vote: True if the annotation was triggered by an anonymous
+            vote, defaults to False
+        :return: annotation result
+        """
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["images"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        image_id = get_image_id(typing.cast(str, insight.source_image))
+
+        if image_id is None:
+            raise ValueError(
+                "Invalid image ID for image orientation insight: %s, %s",
+                image_id,
+                insight.id,
+            )
+
+        rotation = insight.data.get("rotation")
+
+        if rotation is None or rotation == 0:
+            raise ValueError(
+                "Missing or zero rotation angle in image orientation insight: %s",
+                insight.id,
+            )
+
+        product_images = product.get("images", {})
+        original_image_data = product_images.get(image_id)
+        if not original_image_data:
+            logger.warning(
+                "Original image %s not found in product images for insight: %s",
+                image_id,
+                insight.id,
+            )
+            return OUTDATED_DATA_RESULT
+
+        original_size = original_image_data.get("sizes", {}).get("full", {})
+        original_height = original_size.get("h")
+        original_width = original_size.get("w")
+
+        if not original_height or not original_width:
+            logger.warning(
+                "Could not get original image dimensions for image %s, insight: %s",
+                image_id,
+                insight.id,
+            )
+            return OUTDATED_DATA_RESULT
+
+        # This is the key of the selected image that we want to rotate
+        selected_key = typing.cast(str, insight.data["image_key"])
+
+        if selected_key not in product_images:
+            logger.warning(
+                "Selected image %s not found in product images for insight: %s",
+                selected_key,
+                insight.id,
+            )
+            return OUTDATED_DATA_RESULT
+
+        # Process all selected images that use this source image
+        image_data = product_images[selected_key]
+
+        # Extract current crop information if it exists
+        crop_bounding_box = None
+        if all(k in image_data for k in ("x1", "y1", "x2", "y2")):
+            # Check for uncropped images (coordinates = -1)
+            if not (
+                image_data["x1"] in ("-1", -1, None)
+                and image_data["y1"] in ("-1", -1, None)
+                and image_data["x2"] in ("-1", -1, None)
+                and image_data["y2"] in ("-1", -1, None)
+            ):
+                y1 = float(image_data["y1"])
+                x1 = float(image_data["x1"])
+                y2 = float(image_data["y2"])
+                x2 = float(image_data["x2"])
+
+                crop_bounding_box = rotate_bounding_box(
+                    (y1, x1, y2, x2),
+                    original_width,
+                    original_height,
+                    rotation,
+                )
+
+        # Call the Product Opener API to rotate the image
+        select_rotate_image(
+            product_id=product_id,
+            image_id=image_id,
+            image_key=selected_key,
+            rotate=rotation,
+            crop_bounding_box=crop_bounding_box,
+            auth=auth,
+            is_vote=is_vote,
+            insight_id=insight.id,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+
+class IngredientDetectionAnnotator(InsightAnnotator):
+    @classmethod
+    def validate_data(cls, data: JSONType) -> None:
+        IngredientAnnotateBody.model_validate(data)
+
+    @classmethod
+    def process_annotation(
+        cls,
+        insight: ProductInsight,
+        data: JSONType | None = None,
+        auth: OFFAuthentication | None = None,
+        is_vote: bool = False,
+    ) -> AnnotationResult:
+        if is_vote:
+            return CANNOT_VOTE_RESULT
+
+        validated_data = None
+        if data is not None:
+            # the user can provide a custom ingredient list using the `annotation`
+            # field in the `data` serialized JSON, in case she or he wants to
+            # correct the ingredient list
+            validated_data = IngredientAnnotateBody.model_validate(data)
+            # We add the new annotation to the insight
+            json_data = insight.data
+            json_data["annotation"] = validated_data.annotation
+            insight.data = json_data
+            insight.save()
+
+        # Use the user-provided ingredient list if available, otherwise use the
+        # original detected ingredient list
+        ingredient_text: str
+        if validated_data:
+            ingredient_text = validated_data.annotation
+        else:
+            ingredient_text = insight.data["text"]
+
+        product_id = insight.get_product_id()
+        product = get_product(product_id, ["code", "images"])
+
+        if product is None:
+            return MISSING_PRODUCT_RESULT
+
+        # Save the new ingredient list
+        save_ingredients(
+            product_id=product_id,
+            ingredient_text=ingredient_text,
+            lang=insight.value_tag,
+            insight_id=insight.id,
+            auth=auth,
+            is_vote=is_vote,
+        )
+
+        # Select the source image as ingredient image
+        cls.select_ingredient_image(
+            insight,
+            product,
+            validated_data=validated_data,
+            auth=auth,
+        )
+        return UPDATED_ANNOTATION_RESULT
+
+    @classmethod
+    def select_ingredient_image(
+        cls,
+        insight: ProductInsight,
+        product: JSONType,
+        validated_data: IngredientAnnotateBody | None = None,
+        auth: OFFAuthentication | None = None,
+    ) -> None:
+        """If the insight is validated, select the source image as ingredient image.
+
+        We fetch the image orientation from the `predictions` table and the prediction
+        of the ingredient detector from the insight to know the rotation angle
+        and the bounding box of the ingredient list.
+        If the orientation information is missing, we just select the image without
+        rotation.
+
+        :param insight: the original `ingredient_detection` insight
+        :param product: the product data
+        :param validated_data: the validated `data` sent by the client (optional)
+        :param auth: the user authentication data
+        """
+
+        if insight.source_image is None:
+            return None
+
+        image_id = get_image_id(insight.source_image)
+        images = product.get("images", {})
+        image_meta: JSONType | None = images.get(image_id)
+
+        # Unknown or invalid image, skip image selection
+        if not image_id or not image_meta:
+            return None
+
+        # TODO(raphael): we now have a `data["rotation"]` subfield that contains
+        # the rotation angle of the image, so we can use it (once all insights have
+        # been generated again) instead of fetching the rotation angle from the
+        # `predictions` table.
+        # See https://github.com/openfoodfacts/robotoff/pull/1609
+        rotation = get_image_rotation(insight.source_image)
+        # Use the language associated with the insight to determine the image key.
+        image_key = f"ingredients_{insight.value_tag}"
+
+        # We don't perform the cropping if the user provided a custom ingredient
+        # list without the associated `bounding_box`, as we don't know the
+        # bounding box coordinates in this case.
+        perform_crop = (
+            # We perform the crop if the user didn't submit a custom ingredient list
+            validated_data is None
+            # or if this custom ingredient list comes with a bounding box
+            or validated_data.bounding_box is not None
+        )
+
+        # This is the original bounding box that was detected by the
+        # ingredient detection model.
+        bounding_box = insight.data.get("bounding_box")
+
+        if validated_data:
+            if validated_data.bounding_box is not None:
+                # If the user provided a custom bounding box, we use it instead of the
+                # original bounding box.
+                bounding_box = validated_data.bounding_box
+            if validated_data.rotation is not None:
+                # If the user provided a custom rotation angle, we use it instead of the
+                # original rotation angle.
+                rotation = validated_data.rotation
+
+        # This is the bounding box that is sent to Product Opener for cropping.
+        crop_bounding_box: tuple[float, float, float, float] | None = None
+        if perform_crop and bool(bounding_box):
+            # If bounding box is provided, we convert it to the format expected by
+            # Product Opener and apply the rotation angle.
+            rotation = rotation or 0
+            image_size = image_meta["sizes"]["full"]
+            width = image_size["w"]
+            height = image_size["h"]
+            crop_bounding_box = convert_crop_bounding_box(
+                bounding_box, width, height, rotation
+            )
+
+        if (
+            image_key in images
+            and images[image_key]["imgid"] == image_id
+            and crop_bounding_box is None
+        ):
+            # Image is already selected as ingredient image and no cropping is needed,
+            # so we don't need to perform any action.
+            return None
+
+        product_id = insight.get_product_id()
+        select_rotate_image(
+            product_id=product_id,
+            image_id=image_id,
+            image_key=image_key,
+            rotate=rotation,
+            crop_bounding_box=crop_bounding_box,
+            auth=auth,
+            is_vote=False,
+            insight_id=insight.id,
+        )
 
 
 ANNOTATOR_MAPPING: dict[str, Type] = {
@@ -802,6 +1215,8 @@ ANNOTATOR_MAPPING: dict[str, Type] = {
     InsightType.is_upc_image.name: UPCImageAnnotator,
     InsightType.ingredient_spellcheck.name: IngredientSpellcheckAnnotator,
     InsightType.nutrient_extraction: NutrientExtractionAnnotator,
+    InsightType.image_orientation.name: ImageOrientationAnnotator,
+    InsightType.ingredient_detection.name: IngredientDetectionAnnotator,
 }
 
 
@@ -809,8 +1224,8 @@ def annotate(
     insight: ProductInsight,
     annotation: InsightAnnotation,
     update: bool = True,
-    data: Optional[dict] = None,
-    auth: Optional[OFFAuthentication] = None,
+    data: JSONType | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
 ) -> AnnotationResult:
     """Annotate an insight: save the annotation in DB and send the update
