@@ -5,7 +5,7 @@ import uuid
 from collections import Counter
 from typing import Any, Literal, Optional, Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 #: A precise expectation of what mappings looks like in json.
 #: (dict where keys are always of type `str`).
@@ -440,7 +440,8 @@ class ImportImageFlag(str, enum.Enum):
     run_nutrition_table_object_detection = "run_nutrition_table_object_detection"
 
 
-class IngredientDetectionAnnotateBody(BaseModel):
+class IngredientAnnotateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     annotation: str
     rotation: int | None = None
     bounding_box: list[float] | None = None
@@ -465,3 +466,8 @@ class IngredientDetectionAnnotateBody(BaseModel):
                 )
 
         return self
+
+
+class CategoryAnnotateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    value_tag: str

@@ -4,7 +4,6 @@ import pytest
 from openfoodfacts.types import JSONType
 
 from robotoff.insights.annotate import (
-    INVALID_DATA,
     MISSING_PRODUCT_RESULT,
     OUTDATED_DATA_RESULT,
     UPDATED_ANNOTATION_RESULT,
@@ -100,25 +99,6 @@ class TestCategoryAnnotator:
             "original_value_tag": original_value_tag,
         }
 
-    @pytest.mark.parametrize("user_data", [{}, {"invalid_key": "v"}, {"value_tag": 1}])
-    def test_process_annotation_with_invalid_user_input_data(self, user_data, mocker):
-        original_value_tag = "en:cookies"
-        insight = ProductInsightFactory(
-            type="category", value_tag=original_value_tag, data={}
-        )
-        add_category_mocked = mocker.patch("robotoff.insights.annotate.add_category")
-        get_product_mocked = mocker.patch(
-            "robotoff.insights.annotate.get_product", return_value={}
-        )
-        result = CategoryAnnotator.process_annotation(insight, user_data, is_vote=False)
-        assert not add_category_mocked.called
-        get_product_mocked.assert_called_once()
-        assert result == AnnotationResult(
-            status_code=11,
-            status="error_invalid_data",
-            description="`data` is invalid, expected a single `value_tag` string field with the category tag",
-        )
-
 
 class TestIngredientSpellcheckAnnotator:
     @pytest.fixture
@@ -148,23 +128,6 @@ class TestIngredientSpellcheckAnnotator:
         assert annotation_result == UPDATED_ANNOTATION_RESULT
         assert "annotation" in spellcheck_insight.data
         mock_save_ingredients.assert_called()
-
-    @pytest.mark.parametrize(
-        "user_data",
-        [{}, {"annotation": "List of ingredients", "wrong_key": "wrong_item"}],
-    )
-    def test_process_annotation_invalid_data(
-        self,
-        user_data: dict,
-        mock_save_ingredients: Mock,
-        spellcheck_insight: ProductInsightFactory,
-    ):
-        annotation_result = IngredientSpellcheckAnnotator.process_annotation(
-            insight=spellcheck_insight,
-            data=user_data,
-        )
-        assert annotation_result == INVALID_DATA
-        mock_save_ingredients.assert_not_called()
 
     def test_process_annotate_no_user_data(
         self,

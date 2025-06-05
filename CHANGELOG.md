@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.70.0](https://github.com/openfoodfacts/robotoff/compare/v1.69.0...v1.70.0) (2025-06-04)
+
+
+### Features
+
+* add product_insights.lc field ([#1607](https://github.com/openfoodfacts/robotoff/issues/1607)) ([a28f8c7](https://github.com/openfoodfacts/robotoff/commit/a28f8c7f2a0a94e6ee3a19103655386bb53f99c2))
+* add subfields to `ingredient_detection` and `nutrient_extraction` insights ([#1609](https://github.com/openfoodfacts/robotoff/issues/1609)) ([09a1b99](https://github.com/openfoodfacts/robotoff/commit/09a1b999491e54cb7a995e3683fd71fbde81e4d5))
+* improve extra data processing in Annotator ([#1613](https://github.com/openfoodfacts/robotoff/issues/1613)) ([fdc7f74](https://github.com/openfoodfacts/robotoff/commit/fdc7f742b86c83b8d9f931b639dfde39a310e6dc))
+
+
+### Bug Fixes
+
+* allow user to submit rotation and bounding box when annotating `ingredient_detection` insights ([#1610](https://github.com/openfoodfacts/robotoff/issues/1610)) ([4f15e6a](https://github.com/openfoodfacts/robotoff/commit/4f15e6ab47a5f3fe7604c251e291415d9ec759db))
+* fix issue when computing lc from nutrient mention ([f81eeb9](https://github.com/openfoodfacts/robotoff/commit/f81eeb95b9c22e3df606e925394ac7761e4a23c3))
+
+
+### Documentation
+
+* road to api for nutrient extraction ([#1531](https://github.com/openfoodfacts/robotoff/issues/1531)) ([08e7a00](https://github.com/openfoodfacts/robotoff/commit/08e7a0099fe89a155a62aad3f22d66c2fd6b95d4))
+
 ## [1.69.0](https://github.com/openfoodfacts/robotoff/compare/v1.68.1...v1.69.0) (2025-06-02)
 
 

@@ -1826,7 +1826,7 @@ class TestNutrientExtractionImporter:
     @pytest.mark.parametrize(
         "nutriments,nutrition_data_per,serving_size,nutrients_keys,expected_output",
         [
-            # We keep the prediction if th
+            # We keep the prediction if the product does not have any nutrients
             (None, None, None, ["energy-kj_100g"], True),
             # We bring fat which is missing, so we keep the prediction
             (
@@ -1840,6 +1840,22 @@ class TestNutrientExtractionImporter:
                     "fat_unit": "g",
                 },
                 "100g",
+                None,
+                ["energy-kj_100g", "sugars_100g"],
+                True,
+            ),
+            # Same but with 100ml
+            (
+                {
+                    "energy-kj": 100,
+                    "energy-kj_100g": 100,
+                    "energy-kj_value": 100,
+                    "energy-kj_unit": "kJ",
+                    "fat": 10,
+                    "fat_100g": 10,
+                    "fat_unit": "g",
+                },
+                "100ml",
                 None,
                 ["energy-kj_100g", "sugars_100g"],
                 True,
