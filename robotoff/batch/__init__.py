@@ -79,8 +79,8 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
 
 
 def launch_spellcheck_batch_job(
-    min_fraction_known: float = 0,
-    max_fraction_known: float = 0.4,
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
     limit: int = 10_000,
 ) -> None:
     """Launch spellcheck batch job."""
@@ -101,9 +101,9 @@ def launch_spellcheck_batch_job(
     with tempfile.TemporaryDirectory() as tmp_dir:
         file_path = os.path.join(tmp_dir, "batch_data.parquet")
         extract_from_dataset(
-            file_path,
-            min_fraction_known=min_fraction_known,
-            max_fraction_known=max_fraction_known,
+            output_file_path=file_path,
+            min_fraction_unknown=min_fraction_unknown,
+            max_fraction_unknown=max_fraction_unknown,
             limit=limit,
         )
         # Upload the extracted file to the bucket
@@ -131,38 +131,45 @@ def launch_spellcheck_batch_job(
 
 def extract_from_dataset(
     output_file_path: str,
-    dataset_path: Path = settings.JSONL_DATASET_PATH,
-    min_fraction_known: float = 0,
-    max_fraction_known: float = 0.4,
+    dataset_path: Path | None = None,
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
     limit: int = 10_000,
 ) -> None:
     """Using SQL queries, extract data from the JSONL dataset and save it as a parquet
     file.
 
     :param output_file_path: Path to save the extracted data.
-    :param dataset_path: Compressed jsonl database, defaults to
-        settings.JSONL_DATASET_PATH
-    :param min_fraction_known: Select products min fraction of known ingredients above
-        this, defaults to 0
-    :param max_fraction_known: Select products max fraction of known ingredients below
-        this, defaults to 0.4
+    :param dataset_path: Path to the Parquet file, defaults to the ServerType.off
+        dataset path defined in settings.PARQUET_DATASET_PATHS.
+    :param min_fraction_unknown: Only select products that have a fraction of unknown
+        ingredients above this threshold, defaults to 0
+    :param max_fraction_unknown: Only select products that have a fraction of unknown
+        ingredients below this threshold, defaults to 0.4
     :param limit: Maximal number of products to extract, defaults to 10_000
     """
+    if dataset_path is None:
+        dataset_path = settings.PARQUET_DATASET_PATHS[ServerType.off]
+
     if not dataset_path.exists():
         raise FileNotFoundError(f"Dataset path {str(dataset_path)} not found.")
 
-    query = f"""SELECT
+    query = f"""
+    SELECT
         code,
-        ingredients_text AS text,
-        product_name,
+        list_filter(ingredients_text, x -> x.lang = 'main')[1].text AS text,
         lang,
-        popularity_key,
-        (CAST(unknown_ingredients_n AS FLOAT) / CAST(ingredients_n AS FLOAT)) AS fraction
-        FROM read_ndjson('{dataset_path}', ignore_errors=True)
-        WHERE ingredients_text NOT LIKE ''
-        AND fraction > {min_fraction_known} AND fraction <= {max_fraction_known}
-        ORDER BY popularity_key DESC
-        LIMIT {limit};"""
+        unknown_ingredients_n / ingredients_n AS fraction,
+    FROM '{dataset_path}'
+    WHERE list_contains(
+        list_transform(ingredients_text, x -> x.lang),
+        'main'
+    )
+        AND fraction > {min_fraction_unknown} AND fraction <= {max_fraction_unknown}
+        AND text <> ''
+    ORDER BY popularity_key DESC
+    LIMIT {limit};
+    """
     logger.debug(f"Query used to extract batch from dataset: {query}")
     duckdb.sql(query).write_parquet(output_file_path)
     logger.debug(f"Batch data succesfully extracted and saved at {output_file_path}")

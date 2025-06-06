@@ -14,7 +14,7 @@ from ...pytest_utils import get_ocr_result_asset
     "ocr_asset_path, bounding_box, image_width, image_height, expected_text",
     [
         (
-            "/main/robotoff/tests/unit/ocr/5400910301160_1.json",
+            "/robotoff/tests/unit/ocr/5400910301160_1.json",
             (
                 0.2808293402194977,
                 0.37121888995170593,
@@ -26,7 +26,7 @@ from ...pytest_utils import get_ocr_result_asset
             "NUTRIDIA ",
         ),
         (
-            "/main/robotoff/tests/unit/ocr/9421023629015_5.json",
+            "/robotoff/tests/unit/ocr/9421023629015_5.json",
             (0.342327416, 0.469950765, 0.512927711, 0.659323752),
             901,
             1200,

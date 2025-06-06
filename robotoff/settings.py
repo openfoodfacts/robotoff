@@ -137,6 +137,10 @@ I18N_DIR = PROJECT_DIR / "i18n"
 LABEL_LOGOS_PATH = DATA_DIR / "label_logos.json"
 GRAMMARS_DIR = DATA_DIR / "grammars"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
+PARQUET_DATASET_PATHS = {
+    ServerType.off: DATASET_DIR / "food.parquet",
+    ServerType.obf: DATASET_DIR / "beauty.parquet",
+}
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 2_800_000

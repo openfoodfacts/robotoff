@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Iterable, Iterator, Optional, Union
 
 import requests
+from huggingface_hub import snapshot_download
 from openfoodfacts.images import convert_to_legacy_schema
 from pymongo import MongoClient
 
@@ -128,14 +129,14 @@ def save_product_dataset_etag(etag: str):
         return f.write(etag)
 
 
-def fetch_dataset(minify: bool = True) -> bool:
+def fetch_jsonl_dataset(minify: bool = True) -> bool:
     with tempfile.TemporaryDirectory() as tmp_dir:
         output_dir = Path(tmp_dir)
         output_path = output_dir / "products.jsonl.gz"
         etag = download_dataset(output_path)
 
         logger.info("Checking dataset file integrity")
-        if not is_valid_dataset(output_path):
+        if not is_valid_jsonl_dataset(output_path):
             return False
 
         if minify:
@@ -154,7 +155,7 @@ def fetch_dataset(minify: bool = True) -> bool:
         return True
 
 
-def has_dataset_changed() -> bool:
+def has_jsonl_dataset_changed() -> bool:
     etag = get_product_dataset_etag()
 
     if etag is not None:
@@ -169,20 +170,31 @@ def has_dataset_changed() -> bool:
     return True
 
 
+def fetch_parquet_datasets():
+    patterns = [path.name for path in settings.PARQUET_DATASET_PATHS.values()]
+    snapshot_download(
+        repo_id="openfoodfacts/product-database",
+        repo_type="dataset",
+        allow_patterns=patterns,
+        local_dir=settings.DATASET_DIR,
+    )
+
+
 def download_dataset(output_path: os.PathLike) -> str:
     r = http_session.get(settings.JSONL_DATASET_URL, stream=True)
     current_etag = r.headers.get("ETag", "").strip("'\"")
 
-    logger.info("Dataset has changed, downloading file")
+    logger.info("JSONL dataset has changed, downloading file")
     logger.debug("Saving temporary file in %s", output_path)
 
     with open(output_path, "wb") as f:
         shutil.copyfileobj(r.raw, f)
 
+    logger.info("Dataset downloaded")
     return current_etag
 
 
-def is_valid_dataset(dataset_path: Path) -> bool:
+def is_valid_jsonl_dataset(dataset_path: Path) -> bool:
     """Check the dataset integrity: readable end to end and with a minimum
     number of products.
 
