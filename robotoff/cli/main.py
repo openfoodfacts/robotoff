@@ -5,6 +5,7 @@ from typing import Optional
 import typer
 
 from robotoff.cli.triton import app as triton_app
+from robotoff.products import fetch_parquet_datasets
 from robotoff.types import (
     ImportImageFlag,
     ObjectDetectionModel,
@@ -205,15 +206,26 @@ def generate_ocr_predictions(
 
 
 @app.command()
-def download_dataset(minify: bool = False) -> None:
+def download_dataset(
+    download_jsonl: bool = True,
+    download_parquet: bool = True,
+    minify_jsonl: bool = False,
+) -> None:
     """Download Open Food Facts dataset and save it in `datasets` directory."""
-    from robotoff.products import fetch_dataset, has_dataset_changed
+    from robotoff.products import fetch_jsonl_dataset, has_jsonl_dataset_changed
     from robotoff.utils import get_logger
 
-    get_logger()
+    logger = get_logger()
 
-    if has_dataset_changed():
-        fetch_dataset(minify)
+    if download_jsonl:
+        if has_jsonl_dataset_changed():
+            fetch_jsonl_dataset(minify_jsonl)
+        else:
+            logger.info("JSONL dataset is up to date, skipping download.")
+
+    if download_parquet:
+        logger.info("Fetching parquet datasets...")
+        fetch_parquet_datasets()
 
 
 @app.command()

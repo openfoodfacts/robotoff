@@ -23,9 +23,10 @@ from robotoff.metrics import (
 from robotoff.models import Prediction, ProductInsight, db
 from robotoff.products import (
     Product,
-    fetch_dataset,
+    fetch_jsonl_dataset,
+    fetch_parquet_datasets,
     get_min_product_store,
-    has_dataset_changed,
+    has_jsonl_dataset_changed,
 )
 from robotoff.types import InsightType, ServerType
 from robotoff.utils import get_logger
@@ -294,10 +295,16 @@ def _update_data() -> None:
     """Download the latest version of the Product Opener product JSONL dump."""
     logger.info("Downloading new version of product dataset")
     try:
-        if has_dataset_changed():
-            fetch_dataset()
+        if has_jsonl_dataset_changed():
+            fetch_jsonl_dataset()
     except requests.exceptions.RequestException:
         logger.exception("Exception during product dataset refresh")
+        return
+
+    try:
+        fetch_parquet_datasets()
+    except requests.exceptions.RequestException:
+        logger.exception("Exception during product dataset refresh (parquet)")
         return
 
 
