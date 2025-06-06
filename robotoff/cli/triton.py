@@ -1,10 +1,12 @@
+from typing import Optional
+
 import typer
 
 app = typer.Typer()
 
 
 @app.command()
-def load_model(model_name: str, model_version: str | None = None):
+def load_model(model_name: str, model_version: Optional[str] = None):
     """Load a model in Triton Inference Server.
 
     If the model was never loaded, it will be loaded with the default
@@ -45,7 +47,7 @@ def list_models():
 
 
 @app.command()
-def get_model_config(model_name: str, model_version: str | None = None):
+def get_model_config(model_name: str, model_version: Optional[str] = None):
     """Display the configuration of a model in Triton Inference Server."""
     from robotoff import triton
 
