@@ -87,7 +87,7 @@ rich = "~13.9.2"  # Used for CLI pretty print
 backoff = "^2.2.1"
 
 [tool.poetry.dependencies.sentry-sdk]
-version = ">=1.14,<2.9"
+version = ">=2.0,<3.0"
 extras = ["falcon"]
 
 [tool.poetry.group.dev.dependencies]
