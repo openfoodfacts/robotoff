@@ -1,5 +1,3 @@
-from typing import Optional
-
 import pytest
 
 from robotoff.prediction.ocr.label import LABELS_REGEX, find_labels
@@ -17,7 +15,7 @@ ES_BIO_OCR_REGEX = LABELS_REGEX["xx-bio-xx"][1]
         ("FR-BIO-01", False, None),
     ],
 )
-def test_es_ocr_regex(input_str: str, is_match: bool, output: Optional[str]):
+def test_es_ocr_regex(input_str: str, is_match: bool, output: str | None):
     regex = ES_BIO_OCR_REGEX.regex
     match = regex.match(input_str)
     assert (match is not None) == is_match

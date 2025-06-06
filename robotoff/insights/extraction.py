@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable, Optional
+from typing import Iterable
 
 from openfoodfacts.ocr import OCRResult
 from PIL import Image
@@ -53,7 +53,7 @@ def run_object_detection_model(
     threshold: float = 0.1,
     return_null_if_exist: bool = True,
     triton_uri: str | None = None,
-) -> Optional[ImagePrediction]:
+) -> ImagePrediction | None:
     """Run a model detection model and save the results in the
     `image_prediction` table.
 

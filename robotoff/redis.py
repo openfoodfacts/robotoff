@@ -1,5 +1,3 @@
-from typing import Optional
-
 from redis import Redis
 from redis_lock import Lock as BaseLock
 from redis_lock import NotAcquired
@@ -24,7 +22,7 @@ class Lock(BaseLock):
         self,
         name: str,
         blocking: bool = False,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         expire: int = 60,
         **kwargs,
     ):

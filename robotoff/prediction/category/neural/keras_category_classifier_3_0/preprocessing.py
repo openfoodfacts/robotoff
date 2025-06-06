@@ -3,7 +3,6 @@ import itertools
 import re
 import string
 from collections import defaultdict
-from typing import Optional
 
 import numpy as np
 
@@ -50,7 +49,7 @@ def get_ingredient_processor():
 def generate_inputs_dict(
     product: JSONType,
     ocr_texts: list[str],
-    image_embeddings: Optional[np.ndarray] = None,
+    image_embeddings: np.ndarray | None = None,
 ) -> JSONType:
     """Generate inputs for v3 category predictor model.
 
@@ -138,7 +137,7 @@ def transform_ingredients_input(
     )
 
 
-def transform_nutrition_input(value: Optional[float], nutriment_name: str) -> float:
+def transform_nutrition_input(value: float | None, nutriment_name: str) -> float:
     """Transform nutritional values before model inference.
 
     This function returns:

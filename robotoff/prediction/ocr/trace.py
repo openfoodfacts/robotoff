@@ -1,6 +1,6 @@
 import re
 from functools import cache
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -24,7 +24,7 @@ PREDICTOR_VERSION = "1"
 
 @cache
 def generate_trace_keyword_processor(
-    labels: Optional[list[str]] = None,
+    labels: list[str] | None = None,
 ) -> KeywordProcessor:
     if labels is None:
         labels = list(text_file_iter(settings.OCR_TRACE_ALLERGEN_DATA_PATH))

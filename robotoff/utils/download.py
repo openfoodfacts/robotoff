@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -26,7 +25,7 @@ class AssetLoadingException(Exception):
 def get_asset_from_url(
     asset_url: str,
     error_raise: bool = True,
-    session: Optional[requests.Session] = None,
+    session: requests.Session | None = None,
 ) -> requests.Response | None:
     auth = (
         settings._off_net_auth

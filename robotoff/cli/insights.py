@@ -2,7 +2,7 @@ import contextlib
 import gzip
 import sys
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable
 
 import _io
 import dacite
@@ -22,9 +22,9 @@ logger = get_logger(__name__)
 
 def run_from_ocr_archive(
     input_path: Path,
-    prediction_types: Optional[list[PredictionType]],
+    prediction_types: list[PredictionType] | None,
     server_type: ServerType,
-    output: Optional[Path] = None,
+    output: Path | None = None,
 ):
     """Generate predictions from an OCR archive file and save these
     predictions on-disk or send them to stdout.
@@ -62,7 +62,7 @@ def run_from_ocr_archive(
 
 def generate_from_ocr_archive(
     input_path: Path,
-    prediction_types: Optional[list[PredictionType]],
+    prediction_types: list[PredictionType] | None,
     server_type: ServerType,
 ) -> Iterable[Prediction]:
     """Generate predictions from an OCR archive file.
@@ -89,7 +89,7 @@ def generate_from_ocr_archive(
             logger.warning("cannot extract barcode from source: %s", source_image)
             continue
 
-        ocr_result: Optional[OCRResult] = OCRResult.from_json(ocr_json)
+        ocr_result = OCRResult.from_json(ocr_json)
 
         if ocr_result is None:
             continue

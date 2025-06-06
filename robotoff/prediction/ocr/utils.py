@@ -1,10 +1,10 @@
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable
 
 from robotoff.utils.text import KeywordProcessor
 
 
 def generate_keyword_processor(
-    items: Iterable[str], keep_func: Optional[Callable] = None
+    items: Iterable[str], keep_func: Callable | None = None
 ) -> KeywordProcessor:
     processor = KeywordProcessor()
 

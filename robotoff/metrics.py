@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Iterable, Iterator, Optional
+from typing import Iterable, Iterator
 from urllib.parse import urlparse
 
 from influxdb_client import InfluxDBClient
@@ -68,7 +68,7 @@ COUNTRY_TAGS = [
 ]
 
 
-def get_influx_client() -> Optional[InfluxDBClient]:
+def get_influx_client() -> InfluxDBClient | None:
     if not settings.INFLUXDB_HOST:
         return None
     return InfluxDBClient(
@@ -168,8 +168,8 @@ def generate_metrics_from_path(
     country_tag: str,
     path: str,
     target_datetime: datetime.datetime,
-    count: Optional[int] = None,
-    facet: Optional[str] = None,
+    count: int | None = None,
+    facet: str | None = None,
 ) -> list[dict]:
     inserts: list[dict] = []
     url = settings.BaseURLProvider.country(server_type, country_tag + "-en") + path

@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict, Union
+from typing import TypedDict, Union
 
 from openfoodfacts.ocr import OCRResult
 
@@ -18,7 +18,7 @@ def get_image_lang(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
     if isinstance(ocr_result, str):
         return []
 
-    image_lang: Optional[dict[str, int]] = ocr_result.get_languages()
+    image_lang = ocr_result.get_languages()
 
     if image_lang is None:
         return []

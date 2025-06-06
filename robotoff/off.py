@@ -2,7 +2,7 @@
 
 import re
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
@@ -19,9 +19,9 @@ logger = get_logger(__name__)
 class OFFAuthentication:
     def __init__(
         self,
-        session_cookie: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        session_cookie: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
     ):
         if session_cookie is None and username is None and password is None:
             raise ValueError(
@@ -40,7 +40,7 @@ class OFFAuthentication:
             and self.session_cookie == other.session_cookie
         )
 
-    def get_username(self) -> Optional[str]:
+    def get_username(self) -> str | None:
         if self.username is not None:
             return self.username
 
@@ -161,9 +161,9 @@ def off_credentials() -> dict[str, str]:
 
 def get_product(
     product_id: ProductIdentifier,
-    fields: Optional[list[str]] = None,
-    timeout: Optional[int] = 10,
-) -> Optional[dict]:
+    fields: list[str] | None = None,
+    timeout: int | None = 10,
+) -> dict | None:
     fields = fields or []
 
     # V2 of API is required to have proper ingredient nesting
@@ -194,7 +194,7 @@ def generate_edit_comment(
     action: str,
     is_vote: bool,
     is_automatic: bool,
-    insight_id: Optional[str] = None,
+    insight_id: str | None = None,
 ) -> str:
     """Generate the edit comment to be sent to Product Opener.
 
@@ -221,8 +221,8 @@ def generate_edit_comment(
 def add_category(
     product_id: ProductIdentifier,
     category: str,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -243,8 +243,8 @@ def add_category(
 def update_quantity(
     product_id: ProductIdentifier,
     quantity: str,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -265,8 +265,8 @@ def update_quantity(
 def update_emb_codes(
     product_id: ProductIdentifier,
     emb_codes: list[str],
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -288,8 +288,8 @@ def update_emb_codes(
 def update_expiration_date(
     product_id: ProductIdentifier,
     expiration_date: str,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -310,8 +310,8 @@ def update_expiration_date(
 def add_label_tag(
     product_id: ProductIdentifier,
     label_tag: str,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -332,8 +332,8 @@ def add_label_tag(
 def add_brand(
     product_id: ProductIdentifier,
     brand: str,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -354,8 +354,8 @@ def add_brand(
 def add_store(
     product_id: ProductIdentifier,
     store: str,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -376,8 +376,8 @@ def add_store(
 def add_packaging(
     product_id: ProductIdentifier,
     packaging: dict,
-    insight_id: Optional[str] = None,
-    auth: Optional[OFFAuthentication] = None,
+    insight_id: str | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
     **kwargs,
 ):
@@ -485,8 +485,8 @@ def save_nutrients(
 def update_product(
     params: dict,
     server_type: ServerType,
-    auth: Optional[OFFAuthentication] = None,
-    timeout: Optional[int] = 15,
+    auth: OFFAuthentication | None = None,
+    timeout: int | None = 15,
 ):
     base_url = settings.BaseURLProvider.world(server_type)
     url = f"{base_url}/cgi/product_jqm2.pl"
@@ -534,8 +534,8 @@ def update_product_v3(
     barcode: str,
     body: dict,
     server_type: ServerType,
-    auth: Optional[OFFAuthentication] = None,
-    timeout: Optional[int] = 15,
+    auth: OFFAuthentication | None = None,
+    timeout: int | None = 15,
 ):
     base_url = settings.BaseURLProvider.world(server_type)
     url = f"{base_url}/api/v3/product/{barcode}"
@@ -579,7 +579,7 @@ def update_product_v3(
 
 
 def move_to(
-    product_id: ProductIdentifier, to: ServerType, timeout: Optional[int] = 10
+    product_id: ProductIdentifier, to: ServerType, timeout: int | None = 10
 ) -> bool:
     if (
         get_product(ProductIdentifier(barcode=product_id.barcode, server_type=to))
@@ -647,8 +647,8 @@ def delete_image_pipeline(
 def unselect_image(
     product_id: ProductIdentifier,
     image_field: str,
-    auth: Optional[OFFAuthentication],
-    timeout: Optional[int] = 15,
+    auth: OFFAuthentication | None,
+    timeout: int | None = 15,
 ) -> requests.Response:
     """Unselect an image.
 
@@ -693,7 +693,7 @@ def delete_image(
     product_id: ProductIdentifier,
     image_id: str,
     auth: OFFAuthentication,
-    timeout: Optional[int] = 15,
+    timeout: int | None = 15,
 ) -> requests.Response:
     """Delete an image on Product Opener.
 
@@ -743,13 +743,13 @@ def delete_image(
 def select_rotate_image(
     product_id: ProductIdentifier,
     image_id: str,
-    image_key: Optional[str] = None,
-    rotate: Optional[int] = None,
-    crop_bounding_box: Optional[tuple[float, float, float, float]] = None,
-    auth: Optional[OFFAuthentication] = None,
+    image_key: str | None = None,
+    rotate: int | None = None,
+    crop_bounding_box: tuple[float, float, float, float] | None = None,
+    auth: OFFAuthentication | None = None,
     is_vote: bool = False,
-    insight_id: Optional[str] = None,
-    timeout: Optional[int] = 30,
+    insight_id: str | None = None,
+    timeout: int | None = 30,
 ):
     base_url = settings.BaseURLProvider.world(product_id.server_type)
     url = f"{base_url}/cgi/product_image_crop.pl"
@@ -815,12 +815,12 @@ def send_image(
     product_id: ProductIdentifier,
     image_field: str,
     image_fp,
-    auth: Optional[OFFAuthentication] = None,
+    auth: OFFAuthentication | None = None,
 ):
     base_url = settings.BaseURLProvider.world(product_id.server_type)
     url = f"{base_url}/cgi/product_image_upload.pl"
 
-    form_data: dict[str, tuple[Optional[str], Any]] = {}
+    form_data: dict[str, tuple[str | None, Any]] = {}
 
     if auth is not None and auth.username and auth.password:
         user_id = auth.username

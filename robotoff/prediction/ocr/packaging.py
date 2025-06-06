@@ -1,5 +1,5 @@
 import functools
-from typing import Optional, Union
+from typing import Union
 
 from lark import Discard, Lark, Transformer
 from openfoodfacts.ocr import OCRResult, get_text
@@ -154,7 +154,7 @@ class PackagingFRTransformer(Transformer):
     def junk(self, items):
         return Discard
 
-    def _match_tag(self, type_: str, value: str) -> Optional[str]:
+    def _match_tag(self, type_: str, value: str) -> str | None:
         taxonomy_map = self.taxonomy_maps[type_]
         value_tags = taxonomy_map.get(value, [])
         if not value_tags:

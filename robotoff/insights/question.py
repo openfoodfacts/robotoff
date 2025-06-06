@@ -1,6 +1,5 @@
 import abc
 import pathlib
-from typing import Optional
 
 from robotoff import settings
 from robotoff.models import ProductInsight
@@ -68,8 +67,8 @@ def generate_selected_images(
 
 
 def get_source_image_url(
-    product_id: ProductIdentifier, field_types: Optional[list[str]] = None
-) -> Optional[str]:
+    product_id: ProductIdentifier, field_types: list[str] | None = None
+) -> str | None:
     """Generate the URL of a generic image to display for an insight.
 
     By default, we check in order that the product has an image in any
@@ -84,7 +83,7 @@ def get_source_image_url(
     if field_types is None:
         field_types = ["front", "ingredients", "nutrition"]
 
-    product: Optional[JSONType] = get_product(product_id, ["images"])
+    product: JSONType | None = get_product(product_id, ["images"])
 
     if product is None or "images" not in product:
         return None
@@ -133,9 +132,9 @@ class AddBinaryQuestion(Question):
         question: str,
         value: str,
         insight: ProductInsight,
-        ref_image_url: Optional[str] = None,
-        source_image_url: Optional[str] = None,
-        value_tag: Optional[str] = None,
+        ref_image_url: str | None = None,
+        source_image_url: str | None = None,
+        value_tag: str | None = None,
     ):
         self.question: str = question
         self.value: str = value
@@ -143,9 +142,9 @@ class AddBinaryQuestion(Question):
         self.insight_type: str = str(insight.type)
         self.barcode: str = insight.barcode
         self.server_type: str = insight.server_type
-        self.ref_image_url: Optional[str] = ref_image_url
-        self.source_image_url: Optional[str] = source_image_url
-        self.value_tag: Optional[str] = value_tag
+        self.ref_image_url: str | None = ref_image_url
+        self.source_image_url: str | None = source_image_url
+        self.value_tag: str | None = value_tag
 
     def get_type(self):
         return "add-binary"

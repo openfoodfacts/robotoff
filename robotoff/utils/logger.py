@@ -1,10 +1,9 @@
 import logging
 import os
 import sys
-from typing import Optional
 
 
-def get_logger(name=None, level: Optional[int] = None):
+def get_logger(name=None, level: int | None = None):
     logger = logging.getLogger(name)
 
     if level is None:

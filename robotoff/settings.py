@@ -1,7 +1,6 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 import sentry_sdk
 import toml
@@ -50,9 +49,9 @@ class BaseURLProvider(object):
     @staticmethod
     def _get_url(
         base_domain: str,
-        prefix: Optional[str] = "world",
-        tld: Optional[str] = None,
-        scheme: Optional[str] = None,
+        prefix: str | None = "world",
+        tld: str | None = None,
+        scheme: str | None = None,
     ):
         tld = _get_tld() if tld is None else tld
         data = {
@@ -232,7 +231,7 @@ ELASTICSEARCH_TYPE = "document"
 K_NEAREST_NEIGHBORS = 10
 
 # image moderation service
-IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
+IMAGE_MODERATION_SERVICE_URL: str | None = os.environ.get(
     "IMAGE_MODERATION_SERVICE_URL", None
 )
 
@@ -258,7 +257,7 @@ def slack_token() -> str:
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
 
-def init_sentry(integrations: Optional[list[Integration]] = None):
+def init_sentry(integrations: list[Integration] | None = None):
     robotoff_instance = _robotoff_instance()
     if _sentry_dsn:
         integrations = integrations or []

@@ -1,7 +1,7 @@
 import functools
 import math
 import re
-from typing import Optional, Union
+from typing import Union
 
 import pint
 from openfoodfacts.ocr import (
@@ -141,7 +141,7 @@ def process_product_weight(
     prompt: bool,
     automatic_processing: bool,
     ending_prompt: bool = False,
-) -> Optional[dict]:
+) -> dict | None:
     raw = match.group()
 
     if prompt:
@@ -198,7 +198,7 @@ def process_product_weight(
     return result
 
 
-def process_multi_packaging(match) -> Optional[dict]:
+def process_multi_packaging(match) -> dict | None:
     raw = match.group()
 
     count = match.group(1)

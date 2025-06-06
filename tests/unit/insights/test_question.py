@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 
 import pytest
 from openfoodfacts.images import split_barcode
@@ -94,8 +93,8 @@ def test_generate_selected_images():
 
 def generate_insight(
     insight_type: str,
-    value: Optional[str] = None,
-    value_tag: Optional[str] = None,
+    value: str | None = None,
+    value_tag: str | None = None,
     add_source_image: bool = False,
     server_type: ServerType = ServerType.off,
     data: JSONType | None = None,
@@ -148,7 +147,7 @@ def translation_store():
 def test_category_question_formatter(
     lang: str,
     value: str,
-    value_tag: Optional[str],
+    value_tag: str | None,
     expected_question_str: str,
     translation_store: TranslationStore,
     mocker,
@@ -208,7 +207,7 @@ def test_label_question_formatter(
     value: str,
     value_tag: str,
     expected_question_str: str,
-    ref_image_url: Optional[str],
+    ref_image_url: str | None,
     translation_store: TranslationStore,
 ):
     insight = generate_insight(

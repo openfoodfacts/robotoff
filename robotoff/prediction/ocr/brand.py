@@ -1,5 +1,5 @@
 import functools
-from typing import Iterable, Optional, Union
+from typing import Iterable, Union
 
 from openfoodfacts.ocr import OCRResult, get_match_bounding_box, get_text
 
@@ -24,7 +24,7 @@ def generate_brand_keyword_processor(
     brands: Iterable[str],
     blacklist: bool = True,
 ):
-    blacklisted_brands: Optional[set[str]] = None
+    blacklisted_brands: set[str] | None = None
     if blacklist:
         blacklisted_brands = get_brand_blacklist()
 

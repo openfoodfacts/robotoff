@@ -4,7 +4,7 @@ import json
 import re
 from functools import cache
 from pathlib import Path
-from typing import BinaryIO, Iterable, Optional, Union
+from typing import BinaryIO, Iterable, Union
 
 from openfoodfacts.ocr import OCRResult
 
@@ -28,7 +28,7 @@ class City:
     # The city's postal code. The format depends on the country
     postal_code: str
     # The GPS coordinates of the city as a tuple of two floats, or None
-    coordinates: Optional[tuple[float, float]]
+    coordinates: tuple[float, float] | None
 
 
 @cache
@@ -215,7 +215,7 @@ class AddressExtractor:
 
     def find_nearby_postal_code(
         self, text: str, city: City, city_start: int, city_end: int
-    ) -> Optional[tuple[str, int, int]]:
+    ) -> tuple[str, int, int] | None:
         """Search for a city's postal code close to its name in the text.
 
         The postal code is searched at a maximum distance of

@@ -1,5 +1,5 @@
 import time
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from openfoodfacts.ocr import OCRResult
@@ -106,7 +106,7 @@ def save_image_embeddings(
 @with_db
 def generate_image_embeddings(
     product: JSONType, product_id: ProductIdentifier, stub
-) -> Optional[np.ndarray]:
+) -> np.ndarray | None:
     """Generate image embeddings using CLIP model for the `MAX_IMAGE_EMBEDDING`
     most recent images.
 
@@ -142,7 +142,7 @@ def generate_image_embeddings(
             logger.debug(
                 "Computing embeddings for %d images", len(missing_embedding_ids)
             )
-            images_by_id: dict[str, Optional[Image.Image]] = {
+            images_by_id: dict[str, Image.Image | None] = {
                 image_id: get_image_from_url(
                     # Images are resized to 224x224, so there is no need to
                     # fetch the full-sized image, the 400px resized
@@ -234,9 +234,9 @@ def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[st
 # type (siblings, children, parents), we store scores as a dict mapping the
 # category name to either the score (float) or None if the neighbor category is
 # not part of the predicted category list.
-NeighborPredictionType = Optional[
-    dict[Literal["siblings", "children", "parents"], dict[str, Optional[float]]]
-]
+NeighborPredictionType = (
+    dict[Literal["siblings", "children", "parents"], dict[str, float | None]] | None
+)
 
 
 def predict(
@@ -244,11 +244,11 @@ def predict(
     ocr_texts: list[str],
     model_name: NeuralCategoryClassifierModel,
     stub,
-    threshold: Optional[float] = None,
-    image_embeddings: Optional[np.ndarray] = None,
-    category_taxonomy: Optional[Taxonomy] = None,
+    threshold: float | None = None,
+    image_embeddings: np.ndarray | None = None,
+    category_taxonomy: Taxonomy | None = None,
     clear_cache: bool = False,
-) -> tuple[list[tuple[str, float, Optional[NeighborPredictionType]]], JSONType]:
+) -> tuple[list[tuple[str, float, NeighborPredictionType | None]], JSONType]:
     """Predict categories using v3 model.
 
     :param product: the product for which we want to predict categories
@@ -279,7 +279,7 @@ def predict(
     logger.debug("Predicted categories in %.2f seconds", time.monotonic() - start_time)
     indices = np.argsort(-scores)
 
-    category_predictions: list[tuple[str, float, Optional[NeighborPredictionType]]] = []
+    category_predictions: list[tuple[str, float, NeighborPredictionType | None]] = []
     label_to_idx = {label: idx for idx, label in enumerate(labels)}
 
     for idx in indices:
