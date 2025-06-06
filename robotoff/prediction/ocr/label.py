@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import Iterable, Optional, Union
+from typing import Iterable, Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 PREDICTOR_VERSION = "1"
 
 
-def process_eu_bio_label_code(match) -> Optional[str]:
+def process_eu_bio_label_code(match) -> str | None:
     country = match.group(1).lower()
     bio_code = match.group(2).replace("ö", "o").replace("ø", "o").lower()
     id_ = match.group(3).lower()
@@ -184,7 +184,7 @@ def get_logo_annotation_labels() -> dict[str, str]:
 
 
 @functools.cache
-def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
+def generate_label_keyword_processor(labels: Iterable[str] | None = None):
     if labels is None:
         labels = text_file_iter(settings.OCR_LABEL_FLASHTEXT_DATA_PATH)
 

@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -29,7 +28,7 @@ def test_is_special_image(
     images: JSONType,
     image_path: str,
     image_type: str,
-    lang: Optional[str],
+    lang: str | None,
     output: bool,
 ):
     assert is_special_image(images, image_path, image_type, lang) is output

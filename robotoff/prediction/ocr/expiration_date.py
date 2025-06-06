@@ -1,7 +1,7 @@
 import datetime
 import functools
 import re
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -18,7 +18,7 @@ from robotoff.types import Prediction, PredictionType
 PREDICTOR_VERSION = "1"
 
 
-def process_full_digits_expiration_date(match, short: bool) -> Optional[datetime.date]:
+def process_full_digits_expiration_date(match, short: bool) -> datetime.date | None:
     day, month, year = match.group(1, 2, 3)
 
     if short:

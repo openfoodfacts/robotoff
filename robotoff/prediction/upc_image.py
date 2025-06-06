@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -44,7 +43,7 @@ def get_polygon_area(box: np.ndarray) -> float:
 
 def get_is_upc_image_from_image(
     image: np.ndarray,
-) -> tuple[float, UPCImageType, Optional[list[list[float]]]]:
+) -> tuple[float, UPCImageType, list[list[float]] | None]:
     """This method determines if an image is a UPC_Image or not.
 
     A UPC_Image is defined as an image that has a UPC (=barcode) with a high
@@ -88,7 +87,7 @@ def get_is_upc_image_from_image(
 
 def find_image_is_upc(
     image: np.ndarray,
-) -> tuple[float, UPCImageType, Optional[list[list[float]]]]:
+) -> tuple[float, UPCImageType, list[list[float]] | None]:
     """This function determines if an image is a UPC_Image or not.
     A UPC_Image is defined as an image that has a UPC (=barcode) with a high
     percentage area in the image and thus it is a poor selected photo.

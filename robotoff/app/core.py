@@ -1,7 +1,7 @@
 import datetime
 import functools
 from enum import Enum
-from typing import Iterable, Literal, NamedTuple, Optional, Union
+from typing import Iterable, Literal, NamedTuple, Union
 
 import falcon
 import peewee
@@ -65,27 +65,27 @@ def _add_vote_exclusion_clause(exclusion: SkipVotedOn) -> peewee.Expression:
 
 
 def get_insights(
-    barcode: Optional[str] = None,
+    barcode: str | None = None,
     server_type: ServerType = ServerType.off,
-    keep_types: Optional[list[str]] = None,
-    countries: Optional[list[Country]] = None,
-    brands: Optional[list[str]] = None,
-    annotated: Optional[bool] = False,
-    annotation: Optional[int] = None,
-    order_by: Optional[Literal["random", "popularity", "n_votes", "confidence"]] = None,
-    value_tag: Optional[str] = None,
-    reserved_barcode: Optional[bool] = None,
+    keep_types: list[str] | None = None,
+    countries: list[Country] | None = None,
+    brands: list[str] | None = None,
+    annotated: bool | None = False,
+    annotation: int | None = None,
+    order_by: Literal["random", "popularity", "n_votes", "confidence"] | None = None,
+    value_tag: str | None = None,
+    reserved_barcode: bool | None = None,
     as_dict: bool = False,
-    limit: Optional[int] = 25,
-    offset: Optional[int] = None,
+    limit: int | None = 25,
+    offset: int | None = None,
     count: bool = False,
-    max_count: Optional[int] = None,
-    avoid_voted_on: Optional[SkipVotedOn] = None,
-    group_by_value_tag: Optional[bool] = False,
-    automatically_processable: Optional[bool] = None,
-    campaigns: Optional[list[str]] = None,
-    predictor: Optional[str] = None,
-    lc: Optional[list[str]] = None,
+    max_count: int | None = None,
+    avoid_voted_on: SkipVotedOn | None = None,
+    group_by_value_tag: bool | None = False,
+    automatically_processable: bool | None = None,
+    campaigns: list[str] | None = None,
+    predictor: str | None = None,
+    lc: list[str] | None = None,
 ) -> Iterable[ProductInsight]:
     """Fetch insights that meet the criteria passed as parameters.
 
@@ -237,11 +237,11 @@ def get_insights(
 
 def get_images(
     server_type: ServerType,
-    with_predictions: Optional[bool] = False,
-    barcode: Optional[str] = None,
-    offset: Optional[int] = None,
+    with_predictions: bool | None = False,
+    barcode: str | None = None,
+    offset: int | None = None,
     count: bool = False,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ) -> Iterable[ImageModel]:
     where_clauses = [ImageModel.server_type == server_type.name]
 
@@ -273,11 +273,11 @@ def get_images(
 
 def get_predictions(
     server_type: ServerType,
-    barcode: Optional[str] = None,
-    keep_types: Optional[list[str]] = None,
-    value_tag: Optional[str] = None,
-    limit: Optional[int] = None,
-    offset: Optional[int] = None,
+    barcode: str | None = None,
+    keep_types: list[str] | None = None,
+    value_tag: str | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
     count: bool = False,
 ) -> Iterable[Prediction]:
     where_clauses = [Prediction.server_type == server_type.name]
@@ -374,8 +374,8 @@ def save_annotation(
     annotation: InsightAnnotation,
     device_id: str,
     update: bool = True,
-    data: Optional[dict] = None,
-    auth: Optional[OFFAuthentication] = None,
+    data: dict | None = None,
+    auth: OFFAuthentication | None = None,
     trusted_annotator: bool = False,
 ) -> AnnotationResult:
     """Saves annotation either by using a single response as ground truth or
@@ -493,11 +493,11 @@ def save_annotation(
 
 def get_logo_annotation(
     server_type: ServerType,
-    barcode: Optional[str] = None,
-    keep_types: Optional[list[str]] = None,
-    value_tag: Optional[str] = None,
-    limit: Optional[int] = 25,
-    offset: Optional[int] = None,
+    barcode: str | None = None,
+    keep_types: list[str] | None = None,
+    value_tag: str | None = None,
+    limit: int | None = 25,
+    offset: int | None = None,
     count: bool = False,
 ) -> Iterable[LogoAnnotation]:
     """Return logos that fit the criteria passed as parameters.
@@ -550,7 +550,7 @@ def get_logo_annotation(
 
 
 def update_logo_annotations(
-    annotation_logos: list[tuple[str, Optional[str], LogoAnnotation]],
+    annotation_logos: list[tuple[str, str | None, LogoAnnotation]],
     username: str,
     completed_at: datetime.datetime,
 ) -> list[LogoAnnotation]:
@@ -582,7 +582,7 @@ def update_logo_annotations(
     return updated_logos
 
 
-def filter_question_insight_types(keep_types: Optional[list[str]]):
+def filter_question_insight_types(keep_types: list[str] | None):
     """Utility function to validate `insight_types` parameters in /questions/*
     queries.
 

@@ -10,7 +10,7 @@ import urllib
 import uuid
 from collections import defaultdict
 from pathlib import Path
-from typing import Literal, Optional, cast
+from typing import Literal, cast
 
 import falcon
 import orjson
@@ -119,9 +119,9 @@ def get_server_type_from_req(
 COUNTRY_NAME_TO_ENUM = {COUNTRY_CODE_TO_NAME[item]: item for item in Country}
 
 
-def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
+def get_countries_from_req(req: falcon.Request) -> list[Country] | None:
     """Parse `countries` query string from request."""
-    countries_str: Optional[list[str]] = req.get_param_as_list("countries")
+    countries_str: list[str] | None = req.get_param_as_list("countries")
     if countries_str is None:
         return None
 
@@ -202,12 +202,12 @@ class InsightCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        keep_types: Optional[list[str]] = req.get_param_as_list(
+        keep_types: list[str] | None = req.get_param_as_list(
             "insight_types", required=False
         )
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
-        annotated: Optional[bool] = req.get_param_as_bool("annotated")
-        annotation: Optional[int] = req.get_param_as_int("annotation")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        annotated: bool | None = req.get_param_as_bool("annotated")
+        annotation: int | None = req.get_param_as_int("annotation")
         value_tag: str = req.get_param("value_tag")
         brands = req.get_param_as_list("brands") or None
         predictor = req.get_param("predictor")
@@ -272,8 +272,8 @@ class RandomInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
 
-        insight_type: Optional[str] = req.get_param("type")
-        value_tag: Optional[str] = req.get_param("value_tag")
+        insight_type: str | None = req.get_param("type")
+        value_tag: str | None = req.get_param("value_tag")
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
@@ -303,7 +303,7 @@ class RandomInsightResource:
         resp.media = response
 
 
-def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
+def parse_auth(req: falcon.Request) -> OFFAuthentication | None:
     session_cookie = req.get_cookie_values("session")
 
     if session_cookie:
@@ -917,13 +917,13 @@ class ImageLogoSearchResource:
         count: int = req.get_param_as_int(
             "count", min_value=1, max_value=2000, default=25
         )
-        type_: Optional[str] = req.get_param("type")
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
-        value: Optional[str] = req.get_param("value")
-        taxonomy_value: Optional[str] = req.get_param("taxonomy_value")
-        min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
+        type_: str | None = req.get_param("type")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        value: str | None = req.get_param("value")
+        taxonomy_value: str | None = req.get_param("taxonomy_value")
+        min_confidence: float | None = req.get_param_as_float("min_confidence")
         random: bool = req.get_param_as_bool("random", default=False)
-        annotated: Optional[bool] = req.get_param_as_bool("annotated")
+        annotated: bool | None = req.get_param_as_bool("annotated")
 
         if type_ is None and (value is not None or taxonomy_value is not None):
             raise falcon.HTTPBadRequest(
@@ -1031,7 +1031,7 @@ class ImageLogoDetailResource:
             )
 
         with db.atomic():
-            logo: Optional[LogoAnnotation] = LogoAnnotation.get_or_none(id=logo_id)
+            logo: LogoAnnotation | None = LogoAnnotation.get_or_none(id=logo_id)
             if logo is None:
                 resp.status = falcon.HTTP_404
                 return
@@ -1201,7 +1201,7 @@ class ImageLogoUpdateResource:
 
 class ANNResource:
     def on_get(
-        self, req: falcon.Request, resp: falcon.Response, logo_id: Optional[int] = None
+        self, req: falcon.Request, resp: falcon.Response, logo_id: int | None = None
     ):
         """Search for nearest neighbors of:
         - a random logo (if logo_id not provided)
@@ -1311,9 +1311,9 @@ class ProductQuestionsResource:
         # hash of the IPs as a backup.
         device_id = device_id_from_request(req)
 
-        auth: Optional[OFFAuthentication] = parse_auth(req)
+        auth: OFFAuthentication | None = parse_auth(req)
 
-        keep_types: Optional[list[str]] = req.get_param_as_list(
+        keep_types: list[str] | None = req.get_param_as_list(
             "insight_types", required=False
         )
         keep_types = filter_question_insight_types(keep_types)
@@ -1379,23 +1379,23 @@ def get_questions_resource_on_get(
     page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
-    keep_types: Optional[list[str]] = req.get_param_as_list(
+    keep_types: list[str] | None = req.get_param_as_list(
         "insight_types", required=False
     )
     keep_types = filter_question_insight_types(keep_types)
     value_tag: str = req.get_param("value_tag")
     brands = req.get_param_as_list("brands") or None
-    reserved_barcode: Optional[bool] = req.get_param_as_bool(
+    reserved_barcode: bool | None = req.get_param_as_bool(
         "reserved_barcode", default=False
     )
     server_type = get_server_type_from_req(req)
     countries = get_countries_from_req(req)
     # filter by annotation campaigns
-    campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
+    campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
 
     if campaigns is None:
         # `campaign` is a deprecated field, use campaigns now instead
-        campaign: Optional[str] = req.get_param("campaign")
+        campaign: str | None = req.get_param("campaign")
         campaigns = [campaign] if campaign is not None else None
 
     predictor = req.get_param("predictor")
@@ -1404,7 +1404,7 @@ def get_questions_resource_on_get(
     # hash of the IPs as a backup.
     device_id = device_id_from_request(req)
 
-    auth: Optional[OFFAuthentication] = parse_auth(req)
+    auth: OFFAuthentication | None = parse_auth(req)
 
     if reserved_barcode:
         # Include all results, including non reserved barcodes
@@ -1542,10 +1542,10 @@ class ImageCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_predictions: Optional[bool] = req.get_param_as_bool(
+        with_predictions: bool | None = req.get_param_as_bool(
             "with_predictions", default=False
         )
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         server_type = get_server_type_from_req(req)
 
         get_images_ = functools.partial(
@@ -1573,9 +1573,9 @@ class PredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         value_tag: str = req.get_param("value_tag")
-        keep_types: Optional[list[str]] = req.get_param_as_list("types", required=False)
+        keep_types: list[str] | None = req.get_param_as_list("types", required=False)
         server_type = get_server_type_from_req(req)
 
         if keep_types:
@@ -1614,15 +1614,15 @@ class UnansweredQuestionCollection:
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         insight_type: str = req.get_param("type")
         countries = get_countries_from_req(req)
-        reserved_barcode: Optional[bool] = req.get_param_as_bool(
+        reserved_barcode: bool | None = req.get_param_as_bool(
             "reserved_barcode", default=False
         )
         server_type = get_server_type_from_req(req)
         # filter by annotation campaigns
-        campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
+        campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
         if campaigns is None:
             # `campaign` is a deprecated field, use campaigns now instead
-            campaign: Optional[str] = req.get_param("campaign")
+            campaign: str | None = req.get_param("campaign")
             campaigns = [campaign] if campaign is not None else None
 
         predictor = req.get_param("predictor")
@@ -1660,9 +1660,9 @@ class ImagePredictionCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
-        type: Optional[str] = req.get_param("type")
+        with_logo: bool | None = req.get_param_as_bool("with_logo", default=False)
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        type: str | None = req.get_param("type")
         server_type = get_server_type_from_req(req)
 
         query_parameters = {
@@ -1695,9 +1695,9 @@ class ImagePredictionCollection:
 class LogoAnnotationCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
-        barcode: Optional[str] = normalize_req_barcode(req.get_param("barcode"))
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         server_type = get_server_type_from_req(req)
-        keep_types: Optional[list[str]] = req.get_param_as_list("types", required=False)
+        keep_types: list[str] | None = req.get_param_as_list("types", required=False)
         value_tag: str = req.get_param("value_tag")
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)

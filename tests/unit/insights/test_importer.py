@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator
 
 import pytest
 
@@ -211,7 +211,7 @@ def test_select_deepest_taxonomized_candidates(candidates, taxonomy_name, kept_i
 
 
 class FakeProductStore:
-    def __init__(self, data: Optional[dict] = None):
+    def __init__(self, data: dict | None = None):
         self.data = data or {}
 
     def __getitem__(self, item):
@@ -1040,7 +1040,7 @@ class TestProductWeightImporter:
 
     @staticmethod
     def generate_prediction(
-        value, data: dict[str, Any], automatic_processing: Optional[bool] = None
+        value, data: dict[str, Any], automatic_processing: bool | None = None
     ):
         return Prediction(
             barcode=DEFAULT_BARCODE,
@@ -1052,7 +1052,7 @@ class TestProductWeightImporter:
         )
 
     @staticmethod
-    def get_product(quantity: Optional[str] = None):
+    def get_product(quantity: str | None = None):
         return Product({"code": DEFAULT_BARCODE, "quantity": quantity})
 
     def test_generate_candidates_product_with_weight(self):
@@ -1566,8 +1566,8 @@ class TestNutritionImageImporter:
                 cls,
                 nutrient_mention_prediction: Prediction,
                 image_orientation_prediction: Prediction,
-                nutrient_prediction: Optional[Prediction] = None,
-                nutrition_table_predictions: Optional[list[JSONType]] = None,
+                nutrient_prediction: Prediction | None = None,
+                nutrition_table_predictions: list[JSONType] | None = None,
             ) -> Iterator[ProductInsight]:
                 assert nutrient_mention_prediction.source_image == source_image
                 assert image_orientation_prediction.source_image == source_image

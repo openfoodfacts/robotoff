@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Optional
 
 import pytest
 
@@ -32,7 +31,7 @@ class MockSlackResponse:
 
 class PartialRequestMatcher:
     def __init__(
-        self, expected_text: str, slack_channel: str, image_url: Optional[str] = None
+        self, expected_text: str, slack_channel: str, image_url: str | None = None
     ):
         self.expected_text = expected_text
         self.expected_channel = slack_channel

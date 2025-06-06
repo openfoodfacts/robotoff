@@ -2,7 +2,6 @@ import datetime
 import functools
 import itertools
 import operator
-from typing import Optional
 
 import elasticsearch
 import numpy as np
@@ -214,7 +213,7 @@ def knn_search(
     client: elasticsearch.Elasticsearch,
     embedding_bytes: bytes,
     k: int = settings.K_NEAREST_NEIGHBORS,
-    server_type: Optional[ServerType] = None,
+    server_type: ServerType | None = None,
 ) -> list[tuple[int, float]]:
     """Search for k approximate nearest neighbors of `embedding_bytes` in the
     Elasticsearch logos index.
@@ -271,7 +270,7 @@ def get_logo_annotations() -> dict[int, LogoLabelType]:
     return annotations
 
 
-def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
+def predict_label(logo: LogoAnnotation) -> LogoLabelType | None:
     probs = predict_proba(logo)
 
     if probs is None or not probs:
@@ -282,7 +281,7 @@ def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
 
 def predict_proba(
     logo: LogoAnnotation, weights: str = "distance"
-) -> Optional[dict[LogoLabelType, float]]:
+) -> dict[LogoLabelType, float] | None:
     if logo.nearest_neighbors is None:
         return None
 
@@ -493,7 +492,7 @@ def generate_insights_from_annotated_logos(
         insight_import_result.insight_created_ids
         for insight_import_result in import_result.product_insight_import_results
     ):
-        insight: Optional[ProductInsight] = ProductInsight.get_or_none(id=created_id)
+        insight: ProductInsight | None = ProductInsight.get_or_none(id=created_id)
         if insight:
             logger.info(
                 "Annotating insight %s (%s)",
@@ -548,13 +547,13 @@ def predict_logo_predictions(
 
 def generate_prediction(
     logo_type: str,
-    logo_value: Optional[str],
+    logo_value: str | None,
     data: dict,
     confidence: float,
     server_type: ServerType,
-    automatic_processing: Optional[bool] = False,
-    model_version: Optional[str] = None,
-) -> Optional[Prediction]:
+    automatic_processing: bool | None = False,
+    model_version: str | None = None,
+) -> Prediction | None:
     """Generate a Prediction from a logo.
 
     The Prediction may either be created after the annotation of the logo by

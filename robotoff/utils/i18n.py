@@ -1,5 +1,4 @@
 import gettext
-from typing import Optional
 
 from robotoff import settings
 
@@ -19,7 +18,7 @@ class TranslationStore:
             )
             self.translations[lang] = t
 
-    def get(self, lang: str) -> Optional[gettext.NullTranslations]:
+    def get(self, lang: str) -> gettext.NullTranslations | None:
         return self.translations.get(lang)
 
     def gettext(self, lang: str, message: str) -> str:

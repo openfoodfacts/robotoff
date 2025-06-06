@@ -1,6 +1,5 @@
 import json
 import operator
-from typing import Optional
 
 import requests
 from requests.exceptions import ConnectionError as RequestConnectionError
@@ -64,7 +63,7 @@ class NotifierFactory:
             notifiers.append(NoopSlackNotifier())
         else:
             notifiers.append(SlackNotifier(token))
-        moderation_service_url: Optional[str] = settings.IMAGE_MODERATION_SERVICE_URL
+        moderation_service_url: str | None = settings.IMAGE_MODERATION_SERVICE_URL
         if moderation_service_url:
             notifiers.append(ImageModerationNotifier(moderation_service_url))
         if len(notifiers) == 1:
@@ -103,7 +102,7 @@ def _sensitive_image(flag_type: str, flagged_label: str) -> bool:
 
 
 def _slack_message_block(
-    message_text: str, with_image: Optional[str] = None
+    message_text: str, with_image: str | None = None
 ) -> list[dict]:
     """Formats given parameters into a Slack message block."""
     block = {

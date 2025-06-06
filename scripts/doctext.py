@@ -4,7 +4,7 @@ import sys
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 import requests
 from openfoodfacts.ocr import BoundingPoly, OCRResult
@@ -46,7 +46,7 @@ def draw_boxes(image, bounds: List[BoundingPoly], color, draw_line: bool = False
 
 def get_document_bounds(feature: FeatureType, ocr_result: OCRResult):
     """Returns document bounds given an image."""
-    bounds: List[Optional[BoundingPoly]] = []
+    bounds: List[BoundingPoly | None] = []
 
     document = ocr_result.full_text_annotation
 
@@ -82,7 +82,7 @@ def find_words():
 def render_doc_text(
     image_path: Path,
     json_path: Path,
-    output_path: Optional[Path] = None,
+    output_path: Path | None = None,
 ):
     image = Image.open(image_path)
 

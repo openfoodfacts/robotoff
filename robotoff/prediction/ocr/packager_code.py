@@ -1,6 +1,6 @@
 import re
 from functools import cache
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -44,7 +44,7 @@ def process_fsc_match(match) -> str:
     return "FSC-{}".format(fsc_code).upper()
 
 
-def process_USDA_match_to_flashtext(match) -> Optional[str]:
+def process_USDA_match_to_flashtext(match) -> str | None:
     """Returns the USDA code matched by REGEX the same way it exists
     in the USDA database (1st column of USDA_code_flashtext.txt)
     """
@@ -65,7 +65,7 @@ def generate_USDA_code_keyword_processor() -> KeywordProcessor:
     return generate_keyword_processor(codes)
 
 
-def extract_USDA_code(processor: KeywordProcessor, text: str) -> Optional[str]:
+def extract_USDA_code(processor: KeywordProcessor, text: str) -> str | None:
     """Given a string, returns the USDA code it contains or None"""
     USDA_code = None
     matches: list[tuple[str, str]] = processor.extract_keywords(text)  # type: ignore

@@ -16,7 +16,7 @@ train/test/val datasets,
 
 import json
 import os
-from typing import Iterator, Optional
+from typing import Iterator
 
 from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from sklearn.model_selection import train_test_split
@@ -53,7 +53,7 @@ def generate_base_dataset(
     category_taxonomy: Taxonomy,
     ingredient_taxonomy: Taxonomy,
     stream: ProductStream,
-    lang: Optional[str],
+    lang: str | None,
 ) -> Iterator[JSONType]:
     for product in stream.iter():
         categories_tags: list[str] = product["categories_tags"]
@@ -94,7 +94,7 @@ def generate_train_test_val_datasets(
     category_taxonomy: Taxonomy,
     ingredient_taxonomy: Taxonomy,
     stream: ProductStream,
-    lang: Optional[str],
+    lang: str | None,
 ) -> dict[str, Iterator[JSONType]]:
     base_dataset = generate_base_dataset(
         category_taxonomy, ingredient_taxonomy, stream, lang
@@ -106,7 +106,7 @@ def generate_train_test_val_datasets(
     return {"train": train, "test": test, "val": val}
 
 
-def run(lang: Optional[str] = None):
+def run(lang: str | None = None):
     logger.info("Generating category dataset for lang %s", lang or "xx")
     dataset = ProductDataset.load()
     training_stream = dataset.stream().filter_nonempty_tag_field("categories_tags")

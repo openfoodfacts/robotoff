@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import typing
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Union
+from typing import Iterable, Iterator, Union
 
 import requests
 from huggingface_hub import snapshot_download
@@ -327,8 +327,8 @@ class ProductStream:
 
     def filter_by_modified_datetime(
         self,
-        from_t: Optional[datetime.datetime] = None,
-        to_t: Optional[datetime.datetime] = None,
+        from_t: datetime.datetime | None = None,
+        to_t: datetime.datetime | None = None,
     ):
         if from_t is None and to_t is None:
             raise ValueError("one of `from_t` or `to_t` must be provided")
@@ -363,9 +363,7 @@ class ProductStream:
     def iter(self) -> Iterable[JSONType]:
         return iter(self)
 
-    def iter_product(
-        self, projection: Optional[list[str]] = None
-    ) -> Iterable["Product"]:
+    def iter_product(self, projection: list[str] | None = None) -> Iterable["Product"]:
         for item in self:
             projected_item = item
             if projection:
@@ -516,7 +514,7 @@ class MemoryProductStore(ProductStore):
         return len(self.store)
 
     @classmethod
-    def load_from_path(cls, path: Path, projection: Optional[list[str]] = None):
+    def load_from_path(cls, path: Path, projection: list[str] | None = None):
         logger.info("Loading product store")
 
         if projection is not None and "code" not in projection:
@@ -534,14 +532,14 @@ class MemoryProductStore(ProductStore):
         return cls(store)
 
     @classmethod
-    def load_min(cls, projection: Optional[list[str]] = None) -> "MemoryProductStore":
+    def load_min(cls, projection: list[str] | None = None) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH, projection)
 
     @classmethod
     def load_full(cls) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_DATASET_PATH)
 
-    def __getitem__(self, item) -> Optional[Product]:
+    def __getitem__(self, item) -> Product | None:
         return self.store.get(item)
 
     def __iter__(self) -> Iterator[Product]:
@@ -592,7 +590,7 @@ class DBProductStore(ProductStore):
             product["images"] = convert_to_legacy_schema(product["images"])
         return product
 
-    def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
+    def __getitem__(self, product_id: ProductIdentifier) -> Product | None:
         product = self.get_product(product_id)
 
         if product:
@@ -608,7 +606,7 @@ class DBProductStore(ProductStore):
             )
 
 
-def get_min_product_store(projection: Optional[list[str]] = None) -> MemoryProductStore:
+def get_min_product_store(projection: list[str] | None = None) -> MemoryProductStore:
     logger.info("Loading product store in memory...")
     ps = MemoryProductStore.load_min(projection)
     logger.info("product store loaded (%s items)", len(ps))
@@ -620,8 +618,8 @@ def get_product_store(server_type: ServerType) -> DBProductStore:
 
 
 def get_product(
-    product_id: ProductIdentifier, projection: Optional[list[str]] = None
-) -> Optional[JSONType]:
+    product_id: ProductIdentifier, projection: list[str] | None = None
+) -> JSONType | None:
     """Get product from MongoDB.
 
     :param product_id: identifier of the product to fetch

@@ -1,7 +1,7 @@
 import datetime
 import re
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import yaml
 from google.cloud import batch_v1
@@ -26,7 +26,7 @@ class GoogleBatchJobConfig(BaseModel):
     container_image_uri: str = Field(
         description="The URI of the container image to use for the job. SHould be a valid Image URI.",
     )
-    entrypoint: Optional[str] = Field(
+    entrypoint: str | None = Field(
         default=None,
         description="The entrypoint for the container. If None, use default entrypoint.",
         examples=["python main.py"],
@@ -46,7 +46,7 @@ class GoogleBatchJobConfig(BaseModel):
         description="The amount of RAM in MiB to allocate to each CPU core.",
         le=64000,
     )
-    boot_disk_mib: Optional[int] = Field(
+    boot_disk_mib: int | None = Field(
         default=None,
         description="The size of the boot disk in MiB. It is deleted once the job finished. If None, no bootDisk is added.",
         le=200000,  # 200 GB

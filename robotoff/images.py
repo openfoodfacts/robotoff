@@ -1,6 +1,5 @@
 import datetime
 from pathlib import Path
-from typing import Optional
 
 import imagehash
 import numpy as np
@@ -27,9 +26,9 @@ def save_image(
     product_id: ProductIdentifier,
     source_image: str,
     image_url: str,
-    images: Optional[JSONType],
+    images: JSONType | None,
     use_cache: bool = False,
-) -> Optional[ImageModel]:
+) -> ImageModel | None:
     """Save imported image details in DB.
 
     :param product_id: identifier of the product

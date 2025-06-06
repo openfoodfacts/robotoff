@@ -26,7 +26,6 @@ All significant differences from the original file are marked with the comment
 """
 
 import enum
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -93,11 +92,11 @@ class TokenClassificationPipeline:
         self,
         sentence: str,
         input_ids: np.ndarray,
-        word_ids: list[Optional[int]],
+        word_ids: list[int | None],
         scores: np.ndarray,
-        offset_mapping: Optional[List[Tuple[int, int]]],
+        offset_mapping: list[tuple[int, int]] | None,
         special_tokens_mask: np.ndarray,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Fuse various numpy arrays into dicts with all the information needed for
         aggregation"""
         pre_entities = []
@@ -140,10 +139,10 @@ class TokenClassificationPipeline:
 
     def aggregate(
         self,
-        pre_entities: List[dict],
+        pre_entities: list[dict],
         aggregation_strategy: AggregationStrategy,
         sentence: str,
-    ) -> List[dict]:
+    ) -> list[dict]:
         if aggregation_strategy in {
             AggregationStrategy.NONE,
             AggregationStrategy.SIMPLE,
@@ -169,7 +168,7 @@ class TokenClassificationPipeline:
         return self.group_entities(entities, sentence)
 
     def aggregate_word(
-        self, entities: List[dict], aggregation_strategy: AggregationStrategy
+        self, entities: list[dict], aggregation_strategy: AggregationStrategy
     ) -> dict:
         word = self.tokenizer.convert_tokens_to_string(
             [entity["word"] for entity in entities]
@@ -203,8 +202,8 @@ class TokenClassificationPipeline:
         return new_entity
 
     def aggregate_words(
-        self, entities: List[dict], aggregation_strategy: AggregationStrategy
-    ) -> List[dict]:
+        self, entities: list[dict], aggregation_strategy: AggregationStrategy
+    ) -> list[dict]:
         """
         Override tokens from a given word that disagree to force agreement on word
         boundaries.
@@ -238,7 +237,7 @@ class TokenClassificationPipeline:
         return word_entities
 
     def group_sub_entities(
-        self, entities: List[dict], sentence: str  # DIFF-ORIGINAL
+        self, entities: list[dict], sentence: str  # DIFF-ORIGINAL
     ) -> dict:
         """
         Group together the adjacent tokens with the same entity predicted.
@@ -262,7 +261,7 @@ class TokenClassificationPipeline:
         }
         return entity_group
 
-    def get_tag(self, entity_name: str) -> Tuple[str, str]:
+    def get_tag(self, entity_name: str) -> tuple[str, str]:
         if entity_name.startswith("B-"):
             bi = "B"
             tag = entity_name[2:]
@@ -277,7 +276,7 @@ class TokenClassificationPipeline:
         return bi, tag
 
     def group_entities(
-        self, entities: List[dict], sentence: str  # DIFF-ORIGINAL
+        self, entities: list[dict], sentence: str  # DIFF-ORIGINAL
     ) -> list[dict]:
         """
         Find and group together the adjacent tokens with the same entity predicted.

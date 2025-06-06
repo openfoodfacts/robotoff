@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -22,7 +22,7 @@ logger = get_logger(__name__)
 PREDICTOR_VERSION = "1"
 
 
-def category_taxonomisation(lang, match) -> Optional[str]:
+def category_taxonomisation(lang, match) -> str | None:
     """Function to match categories detected via AOP REGEX with categories
     taxonomy database. If no match is possible, we return None.
     """

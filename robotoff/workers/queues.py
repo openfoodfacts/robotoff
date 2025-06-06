@@ -3,7 +3,7 @@ import random
 import struct
 import threading
 import time
-from typing import Callable, Optional
+from typing import Callable
 
 from rq import Queue
 from rq.job import Job
@@ -21,7 +21,7 @@ high_queues = [
 low_queue = Queue("robotoff-low", connection=redis_conn)
 
 
-def get_high_queue(product_id: Optional[ProductIdentifier] = None) -> Queue:
+def get_high_queue(product_id: ProductIdentifier | None = None) -> Queue:
     """Return the high-priority queue that is specific to a product.
 
     There are as many high priority queues as they are workers.
@@ -65,7 +65,7 @@ def enqueue_in_job(
     func: Callable,
     queue: Queue,
     job_delay: float,
-    job_kwargs: Optional[dict] = None,
+    job_kwargs: dict | None = None,
     **kwargs,
 ):
     """Enqueue a job in `job_delay` seconds.
@@ -86,16 +86,14 @@ def _enqueue_in_job(
     func: Callable,
     queue: Queue,
     job_delay: float,
-    job_kwargs: Optional[dict],
+    job_kwargs: dict | None,
     kwargs,
 ):
     time.sleep(job_delay)
     enqueue_job(func, queue, job_kwargs, **kwargs)
 
 
-def enqueue_job(
-    func: Callable, queue: Queue, job_kwargs: Optional[dict] = None, **kwargs
-):
+def enqueue_job(func: Callable, queue: Queue, job_kwargs: dict | None = None, **kwargs):
     """Create a new job from the function and kwargs and enqueue it in the
     queue.
 

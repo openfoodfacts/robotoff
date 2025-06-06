@@ -3,7 +3,7 @@ import datetime
 import enum
 import uuid
 from collections import Counter
-from typing import Any, Literal, Optional, Self
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -241,16 +241,16 @@ class ServerType(str, enum.Enum):
 class Prediction:
     type: PredictionType
     data: dict[str, Any] = dataclasses.field(default_factory=dict)
-    value_tag: Optional[str] = None
-    value: Optional[str] = None
-    automatic_processing: Optional[bool] = None
-    predictor: Optional[str] = None
-    predictor_version: Optional[str] = None
-    barcode: Optional[str] = None
-    timestamp: Optional[datetime.datetime] = None
-    source_image: Optional[str] = None
-    id: Optional[int] = None
-    confidence: Optional[float] = None
+    value_tag: str | None = None
+    value: str | None = None
+    automatic_processing: bool | None = None
+    predictor: str | None = None
+    predictor_version: str | None = None
+    barcode: str | None = None
+    timestamp: datetime.datetime | None = None
+    source_image: str | None = None
+    id: int | None = None
+    confidence: float | None = None
     server_type: ServerType = ServerType.off
 
     def to_dict(self) -> dict[str, Any]:
@@ -360,7 +360,7 @@ class PackagingElementProperty(enum.Enum):
     recycling = "recycling"
 
 
-LogoLabelType = tuple[str, Optional[str]]
+LogoLabelType = tuple[str, str | None]
 
 InsightAnnotation = Literal[-1, 0, 1, 2]
 

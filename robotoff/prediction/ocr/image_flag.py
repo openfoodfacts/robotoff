@@ -1,5 +1,5 @@
 import functools
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import OCRResult, SafeSearchAnnotationLikelihood, get_text
 
@@ -68,7 +68,7 @@ def generate_image_flag_keyword_processor() -> KeywordProcessor:
 
 def extract_image_flag_flashtext(
     processor: KeywordProcessor, text: str
-) -> Optional[Prediction]:
+) -> Prediction | None:
     for (_, key), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
