@@ -1104,8 +1104,8 @@ def create_migration(
 
 @app.command()
 def launch_spellcheck_batch_job(
-    min_fraction_known: float = 0,
-    max_fraction_known: float = 0.4,
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
     limit: int = 10_000,
 ) -> None:
     """Launch a spellcheck batch job."""
@@ -1117,8 +1117,8 @@ def launch_spellcheck_batch_job(
 
     get_logger()
     _launch_spellcheck_batch_job(
-        min_fraction_known=min_fraction_known,
-        max_fraction_known=max_fraction_known,
+        min_fraction_unknown=min_fraction_unknown,
+        max_fraction_unknown=max_fraction_unknown,
         limit=limit,
     )
 

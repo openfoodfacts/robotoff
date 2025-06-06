@@ -79,8 +79,8 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
 
 
 def launch_spellcheck_batch_job(
-    min_fraction_known: float = 0,
-    max_fraction_known: float = 0.4,
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
     limit: int = 10_000,
 ) -> None:
     """Launch spellcheck batch job."""
@@ -102,8 +102,8 @@ def launch_spellcheck_batch_job(
         file_path = os.path.join(tmp_dir, "batch_data.parquet")
         extract_from_dataset(
             file_path,
-            min_fraction_known=min_fraction_known,
-            max_fraction_known=max_fraction_known,
+            min_fraction_unknown=min_fraction_unknown,
+            max_fraction_unknown=max_fraction_unknown,
             limit=limit,
         )
         # Upload the extracted file to the bucket
@@ -132,8 +132,8 @@ def launch_spellcheck_batch_job(
 def extract_from_dataset(
     output_file_path: str,
     dataset_path: Path = settings.JSONL_DATASET_PATH,
-    min_fraction_known: float = 0,
-    max_fraction_known: float = 0.4,
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
     limit: int = 10_000,
 ) -> None:
     """Using SQL queries, extract data from the JSONL dataset and save it as a parquet
@@ -142,10 +142,10 @@ def extract_from_dataset(
     :param output_file_path: Path to save the extracted data.
     :param dataset_path: Compressed jsonl database, defaults to
         settings.JSONL_DATASET_PATH
-    :param min_fraction_known: Select products min fraction of known ingredients above
-        this, defaults to 0
-    :param max_fraction_known: Select products max fraction of known ingredients below
-        this, defaults to 0.4
+    :param min_fraction_unknown: Only select products that have a fraction of unknown
+        ingredients above this threshold, defaults to 0
+    :param max_fraction_unknown: Only select products that have a fraction of unknown
+        ingredients below this threshold, defaults to 0.4
     :param limit: Maximal number of products to extract, defaults to 10_000
     """
     if not dataset_path.exists():
@@ -160,7 +160,7 @@ def extract_from_dataset(
         (CAST(unknown_ingredients_n AS FLOAT) / CAST(ingredients_n AS FLOAT)) AS fraction
         FROM read_ndjson('{dataset_path}', ignore_errors=True)
         WHERE ingredients_text NOT LIKE ''
-        AND fraction > {min_fraction_known} AND fraction <= {max_fraction_known}
+        AND fraction > {min_fraction_unknown} AND fraction <= {max_fraction_unknown}
         ORDER BY popularity_key DESC
         LIMIT {limit};"""
     logger.debug(f"Query used to extract batch from dataset: {query}")
