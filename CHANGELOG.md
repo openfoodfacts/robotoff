@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.71.0](https://github.com/openfoodfacts/robotoff/compare/v1.70.0...v1.71.0) (2025-06-06)
+
+
+### Features
+
+* integrate nutriSight to public API ([#1619](https://github.com/openfoodfacts/robotoff/issues/1619)) ([78b513e](https://github.com/openfoodfacts/robotoff/commit/78b513eabf62217a639979a92ba28e46d55bb9c4))
+
+
+### Bug Fixes
+
+* Add retry logic for redis ([#1615](https://github.com/openfoodfacts/robotoff/issues/1615)) ([61798aa](https://github.com/openfoodfacts/robotoff/commit/61798aaf2a82bbda7eee2088ea6c0630b7371639))
+* fix bug in NutrientExtractionImporter.keep_prediction ([#1621](https://github.com/openfoodfacts/robotoff/issues/1621)) ([033105a](https://github.com/openfoodfacts/robotoff/commit/033105ab14f62962e048801b2e8cc04ff87e9f50)), closes [#1620](https://github.com/openfoodfacts/robotoff/issues/1620)
+
+
+### Documentation
+
+* add image flagging prediction documentation ([#1622](https://github.com/openfoodfacts/robotoff/issues/1622)) ([5024943](https://github.com/openfoodfacts/robotoff/commit/502494373ad05cad9ada819b4e545dacf6709d96))
+
 ## [1.70.0](https://github.com/openfoodfacts/robotoff/compare/v1.69.0...v1.70.0) (2025-06-04)
 
 
