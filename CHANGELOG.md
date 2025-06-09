@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.71.1](https://github.com/openfoodfacts/robotoff/compare/v1.71.0...v1.71.1) (2025-06-09)
+
+
+### Bug Fixes
+
+* use Optional syntax for typer commands ([59f0ac1](https://github.com/openfoodfacts/robotoff/commit/59f0ac14e20b3d2af372d917ec2d9acc15794aed))
+
 ## [1.71.0](https://github.com/openfoodfacts/robotoff/compare/v1.70.0...v1.71.0) (2025-06-06)
 
 
