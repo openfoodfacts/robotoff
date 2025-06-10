@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.71.3](https://github.com/openfoodfacts/robotoff/compare/v1.71.2...v1.71.3) (2025-06-10)
+
+
+### Bug Fixes
+
+* bump version of typer to 0.16.0 ([#1634](https://github.com/openfoodfacts/robotoff/issues/1634)) ([fb05a81](https://github.com/openfoodfacts/robotoff/commit/fb05a8174f7b1df85e38473958d6fba2d4c786a4))
+* fix bug during spellcheck insight import ([#1632](https://github.com/openfoodfacts/robotoff/issues/1632)) ([81cf10c](https://github.com/openfoodfacts/robotoff/commit/81cf10c9dc173c4fda8d592d7ecb7c07e4472698))
+
 ## [1.71.2](https://github.com/openfoodfacts/robotoff/compare/v1.71.1...v1.71.2) (2025-06-10)
 
 
