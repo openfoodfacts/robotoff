@@ -1747,7 +1747,7 @@ class BatchJobImportResource:
                 job_type=job_type,
                 batch_dir=batch_dir,
                 queue=low_queue,
-                job_kwargs={"timeout": "30m"},
+                job_kwargs={"timeout": "8h"},
             )
         logger.info("Batch import %s has been queued.", job_type)
 
