@@ -63,7 +63,7 @@ Pint = "0.22"
 APScheduler = "~3.10.1"
 more-itertools = "~8.9.0"
 matplotlib = "~3.9.1"
-typer = "~0.7.0"
+typer = "~0.16.0"
 py-healthcheck = "^1.10.1"
 cachetools = "~5.5.0"
 tritonclient = {extras = ["grpc"], version = "2.38.0"}
