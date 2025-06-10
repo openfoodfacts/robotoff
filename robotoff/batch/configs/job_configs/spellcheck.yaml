@@ -3,7 +3,7 @@ cpu_milli: 1000
 memory_mib: 32000
 boot_disk_mib: 100000
 max_retry_count: 1
-max_run_duration: "54000s" # 15 hours
+max_run_duration: "86400s" # 24 hours
 task_count: "1"
 parallelism: "1"
 machine_type: "g2-standard-8"
