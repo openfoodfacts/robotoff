@@ -1450,7 +1450,10 @@ class IngredientSpellcheckImporter(InsightImporter):
                 or (
                     # Only keep the prediction if the original ingredient is different
                     # from the current ingredient list
-                    prediction.data["original"] == product.ingredients_text
+                    prediction.data["original"]
+                    == product.ingredients_text.get(
+                        typing.cast(str, prediction.value_tag)
+                    )
                     # Only keep the prediction if it's for the product main language
                     and prediction.value_tag == product.lang
                 )
