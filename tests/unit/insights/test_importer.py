@@ -10,6 +10,7 @@ from robotoff.insights.importer import (
     ExpirationDateImporter,
     ImageOrientationImporter,
     IngredientDetectionImporter,
+    IngredientSpellcheckImporter,
     InsightImporter,
     LabelInsightImporter,
     NutrientExtractionImporter,
@@ -2548,3 +2549,109 @@ class TestIngredientDetectionImporter:
         assert candidate.source_image == DEFAULT_SOURCE_IMAGE
         assert candidate.server_type == DEFAULT_SERVER_TYPE.name
         assert candidate.lc == ["en"]
+
+
+class TestIngredientSpellcheckImporter:
+    def test_get_type(self):
+        assert (
+            IngredientSpellcheckImporter.get_type() == InsightType.ingredient_spellcheck
+        )
+
+    def test_get_required_prediction_types(self):
+        assert IngredientSpellcheckImporter.get_required_prediction_types() == {
+            PredictionType.ingredient_spellcheck,
+        }
+
+    @pytest.mark.parametrize(
+        "product,prediction_value_tag,prediction_data,expected",
+        [
+            # If the product is None (MongoDB access not activated), we keep the
+            # prediction
+            (
+                None,
+                "en",
+                {
+                    "original": "watr, sugr",
+                    "correction": "water, sugar",
+                    "lang": "en",
+                    "lang_confidence": 0.9,
+                },
+                True,
+            ),
+            # If the product ingredient list for the language is different than the
+            # original ingredient list used during prediction, we discard the
+            # prediction
+            (
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "ingredients_text_en": "other text",
+                        "ingredients_text": "other text",
+                        "lang": "en",
+                    }
+                ),
+                "en",
+                {
+                    "original": "watr, sugr",
+                    "correction": "water, sugar",
+                    "lang": "en",
+                    "lang_confidence": 0.9,
+                },
+                False,
+            ),
+            # We only keep the prediction if the ingredient list we correct is for the
+            # product main language
+            (
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "ingredients_text_fr": "eua, sucre",
+                        "ingredients_text": "watr, sugr",
+                        "lang": "en",
+                    }
+                ),
+                "en",
+                {
+                    "original": "eua, sucre",
+                    "correction": "eau, sucre",
+                    "lang": "fr",
+                    "lang_confidence": 0.9,
+                },
+                False,
+            ),
+            # We keep the prediction as all conditions are met
+            (
+                Product(
+                    {
+                        "code": DEFAULT_BARCODE,
+                        "ingredients_text_en": "watr, sugr",
+                        "ingredients_text": "watr, sugr",
+                        "lang": "en",
+                    }
+                ),
+                "en",
+                {
+                    "original": "watr, sugr",
+                    "correction": "water, sugar",
+                    "lang": "en",
+                    "lang_confidence": 0.9,
+                },
+                True,
+            ),
+        ],
+    )
+    def test_keep_prediction(
+        self, product, prediction_value_tag, prediction_data, expected
+    ):
+        prediction = Prediction(
+            type=PredictionType.ingredient_spellcheck,
+            barcode=DEFAULT_BARCODE,
+            value_tag=prediction_value_tag,
+            data=prediction_data,
+            source_image=DEFAULT_SOURCE_IMAGE,
+            server_type=DEFAULT_SERVER_TYPE.name,
+        )
+        assert (
+            IngredientSpellcheckImporter._keep_prediction(prediction, product)
+            is expected
+        )
