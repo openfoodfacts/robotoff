@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.71.2](https://github.com/openfoodfacts/robotoff/compare/v1.71.1...v1.71.2) (2025-06-10)
+
+
+### Bug Fixes
+
+* increase timeouts for spellcheck jobs ([#1628](https://github.com/openfoodfacts/robotoff/issues/1628)) ([69d3dc1](https://github.com/openfoodfacts/robotoff/commit/69d3dc101293a219a0c4c66b4cdbf75cd43b559f))
+
 ## [1.71.1](https://github.com/openfoodfacts/robotoff/compare/v1.71.0...v1.71.1) (2025-06-09)
 
 
