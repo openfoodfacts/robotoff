@@ -29,7 +29,7 @@ def configure_root_logger(logger, level: int = 20):
     logger.setLevel(level)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
-        "%(asctime)s :: %(processName)s :: "
+        "%(asctime)s :: pid %(process)d :: "
         "%(threadName)s :: %(levelname)s :: "
         "%(message)s"
     )
