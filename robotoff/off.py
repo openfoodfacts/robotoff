@@ -527,7 +527,11 @@ def update_product(
     status = json.get("status_verbose")
 
     if status != "fields saved":
-        logger.warning("Unexpected status during product update: %s", status)
+        logger.warning(
+            "Unexpected status during product update: %s",
+            status,
+            extra={"response_json": json, "request_headers": r.request.headers},
+        )
 
 
 def update_product_v3(
