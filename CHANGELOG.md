@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.71.4](https://github.com/openfoodfacts/robotoff/compare/v1.71.3...v1.71.4) (2025-06-11)
+
+
+### Bug Fixes
+
+* add more info in logging message when PO update failed ([#1636](https://github.com/openfoodfacts/robotoff/issues/1636)) ([a6c320a](https://github.com/openfoodfacts/robotoff/commit/a6c320a1bdab891a3f620db9a94136078ae8388e))
+* replace processName by pid in log messages ([#1638](https://github.com/openfoodfacts/robotoff/issues/1638)) ([a27804d](https://github.com/openfoodfacts/robotoff/commit/a27804d30dabdf4b2cdfc327aa0a9a9327f1a0e6))
+
 ## [1.71.3](https://github.com/openfoodfacts/robotoff/compare/v1.71.2...v1.71.3) (2025-06-10)
 
 
