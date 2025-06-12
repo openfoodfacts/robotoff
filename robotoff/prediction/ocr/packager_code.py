@@ -11,7 +11,7 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff import settings
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.text import KeywordProcessor
 
@@ -159,10 +159,9 @@ def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction
                     value = ocr_regex.processing_func(match)
 
                 if value is not None:
-                    data = {
+                    data: JSONType = {
                         "raw": match.group(0),
                         "type": regex_code,
-                        "notify": ocr_regex.notify,
                     }
                     if (
                         bounding_box := get_match_bounding_box(
@@ -200,7 +199,7 @@ def extract_fishing_code(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        data = {"type": "fishing", "raw": match_str, "notify": False}
+        data: JSONType = {"type": "fishing", "raw": match_str}
         if (
             bounding_box := get_match_bounding_box(content, span_start, span_end)
         ) is not None:

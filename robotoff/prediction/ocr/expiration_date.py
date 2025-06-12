@@ -11,7 +11,7 @@ from openfoodfacts.ocr import (
     get_text,
 )
 
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
@@ -82,7 +82,7 @@ def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
             # Format dates according to ISO 8601
             value = date.strftime("%Y-%m-%d")
 
-            data = {"raw": raw, "type": type_, "notify": ocr_regex.notify}
+            data: JSONType = {"raw": raw, "type": type_}
             if (
                 bounding_box := get_match_bounding_box(
                     content, match.start(), match.end()

@@ -14,7 +14,6 @@ from robotoff.types import ServerType
 # (`dev` by default).
 # If `prod` is used, openfoodfacts.org domain will be used by default,
 # and openfoodfacts.net if `dev` is used.
-# Messages to Slack are only enabled if `ROBOTOFF_INSTANCE=prod`.
 def _robotoff_instance():
     return os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
@@ -235,24 +234,6 @@ IMAGE_MODERATION_SERVICE_URL: str | None = os.environ.get(
     "IMAGE_MODERATION_SERVICE_URL", None
 )
 
-# Slack paramaters for notifications about detection
-_slack_token = os.environ.get("SLACK_TOKEN", "")
-
-
-# Returns the slack token to use for posting alerts if the current instance is
-# the 'prod' instance. For all other instances, the empty string is returned.
-def slack_token() -> str:
-    if _robotoff_instance() == "prod":
-        if _slack_token != "":
-            return _slack_token
-        else:
-            raise ValueError("No SLACK_TOKEN specified for prod Robotoff")
-
-    if _slack_token != "":
-        raise ValueError("SLACK_TOKEN specified for non-prod Robotoff")
-    return ""
-
-
 # Sentry for error reporting
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
@@ -287,7 +268,6 @@ OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"
 OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / "brand_from_taxonomy.gz"
 OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / "brand_logo_annotation.txt"
 OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
-OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
 OCR_USDA_CODE_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "USDA_code_flashtext.txt"
