@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.72.0](https://github.com/openfoodfacts/robotoff/compare/v1.71.6...v1.72.0) (2025-06-12)
+
+
+### Features
+
+* remove Slack notifications ([#1646](https://github.com/openfoodfacts/robotoff/issues/1646)) ([0b762ef](https://github.com/openfoodfacts/robotoff/commit/0b762eff6d448c84b52f02da9ab1547c48c5401e))
+
 ## [1.71.6](https://github.com/openfoodfacts/robotoff/compare/v1.71.5...v1.71.6) (2025-06-12)
 
 
