@@ -306,7 +306,6 @@ def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
 
             data["matcher_type"] = type_
             data["priority"] = ocr_regex.priority
-            data["notify"] = ocr_regex.notify
             value = data.pop("text")
 
             if (

@@ -23,7 +23,7 @@ class OCRField(enum.Enum):
 
 
 class OCRRegex:
-    __slots__ = ("regex", "field", "lowercase", "processing_func", "priority", "notify")
+    __slots__ = ("regex", "field", "lowercase", "processing_func", "priority")
 
     def __init__(
         self,
@@ -32,14 +32,12 @@ class OCRRegex:
         lowercase=False,
         processing_func=None,
         priority=None,
-        notify=False,
     ):
         self.regex = regex
         self.field = field
         self.lowercase = lowercase
         self.processing_func = processing_func
         self.priority = priority
-        self.notify = notify
 
 
 class ImageOrientation(enum.Enum):

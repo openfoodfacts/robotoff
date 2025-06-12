@@ -22,7 +22,6 @@ from robotoff.models import (
 )
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
-from robotoff.notifier import NotifierFactory
 from robotoff.off import OFFAuthentication
 from robotoff.types import (
     ElasticSearchIndex,
@@ -362,7 +361,6 @@ def import_logo_insights(
     thresholds: dict[LogoLabelType, float],
     server_type: ServerType,
     default_threshold: float = 0.2,
-    notify: bool = True,
 ) -> InsightImportResult:
     """Generate and import insights from logos.
 
@@ -377,8 +375,6 @@ def import_logo_insights(
     :param server_type: the server type (project) associated with the logos
     :param default_threshold: the default confidence threshold to use,
         defaults to 0.2
-    :param notify: whether to send a notification for each logo selected to
-        generate an insight, defaults to True
     :return: the result from the insight import
     """
     selected_logos = []
@@ -419,10 +415,6 @@ def import_logo_insights(
     ).execute()
     predictions = predict_logo_predictions(selected_logos, logo_probs, server_type)
     import_result = import_insights(predictions, server_type)
-
-    if notify:
-        for logo, probs in zip(selected_logos, logo_probs):
-            NotifierFactory.get_notifier().send_logo_notification(logo, probs)
 
     return import_result
 
@@ -632,7 +624,7 @@ def refresh_nearest_neighbors(
             else:
                 logos = [embedding.logo for embedding in logo_embeddings]
                 import_logo_insights(
-                    logos, thresholds=thresholds, server_type=server_type, notify=False
+                    logos, thresholds=thresholds, server_type=server_type
                 )
 
     logger.info("refresh of logo nearest neighbors finished")

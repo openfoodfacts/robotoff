@@ -11,7 +11,7 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff import settings
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import text_file_iter
 from robotoff.utils.text.flashtext import KeywordProcessor
 
@@ -60,7 +60,7 @@ def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
             captured, span_info=True
         ):
             match_str = captured[span_start:span_end]
-            data = {"text": match_str, "prompt": prompt, "notify": False}
+            data: JSONType = {"text": match_str, "prompt": prompt}
             if (
                 bounding_box := get_match_bounding_box(
                     content, match.start(), match.end()
