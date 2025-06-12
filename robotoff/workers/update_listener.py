@@ -53,11 +53,22 @@ class UpdateListener(BaseUpdateListener):
             get_low_queue() if is_scanbot_or_mass_update else get_high_queue(product_id)
         )
 
+        if redis_update.user_id == "roboto-app" or "[robotoff]" in redis_update.comment:
+            # If the update was triggered by Robotoff (automatically of through a user
+            # annotation), we skip it as the DB is already up to date with respect to
+            # Product Opener changes. Besides, it prevents unnecessary processing and
+            # race conditions during insight update/deletion.
+            logger.info(
+                "Skipping update for product %s triggered by Robotoff",
+                redis_update.code,
+            )
+            return
+
         if action == "deleted":
             logger.info("Product %s has been deleted", redis_update.code)
             enqueue_job(
-                delete_product_insights_job,
-                selected_queue,
+                func=delete_product_insights_job,
+                queue=selected_queue,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
             )
@@ -85,8 +96,8 @@ class UpdateListener(BaseUpdateListener):
                     environment=environment,
                 )
                 enqueue_job(
-                    run_import_image_job,
-                    selected_queue,
+                    func=run_import_image_job,
+                    queue=selected_queue,
                     job_kwargs={"result_ttl": 0},
                     product_id=product_id,
                     image_url=image_url,
@@ -95,9 +106,9 @@ class UpdateListener(BaseUpdateListener):
             else:
                 logger.info("Product %s has been updated", redis_update.code)
                 enqueue_in_job(
-                    update_insights_job,
-                    selected_queue,
-                    settings.UPDATED_PRODUCT_WAIT,
+                    func=update_insights_job,
+                    queue=selected_queue,
+                    job_delay=settings.UPDATED_PRODUCT_WAIT,
                     job_kwargs={"result_ttl": 0},
                     product_id=product_id,
                     diffs=redis_update.diffs,
