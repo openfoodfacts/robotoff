@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.71.5](https://github.com/openfoodfacts/robotoff/compare/v1.71.4...v1.71.5) (2025-06-12)
+
+
+### Bug Fixes
+
+* discard redis events triggered by Robotoff actions ([#1641](https://github.com/openfoodfacts/robotoff/issues/1641)) ([68daf42](https://github.com/openfoodfacts/robotoff/commit/68daf42606181353880dea3ed879f7a379fb04c9))
+
 ## [1.71.4](https://github.com/openfoodfacts/robotoff/compare/v1.71.3...v1.71.4) (2025-06-11)
 
 
