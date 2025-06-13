@@ -1,9 +1,17 @@
+from unittest.mock import patch
+
 import pytest
 from openfoodfacts.types import TaxonomyType
 
+from robotoff.prediction.ingredient_list import (
+    IngredientPredictionAggregatedEntity,
+    IngredientPredictionOutput,
+)
+from robotoff.prediction.langid import LanguagePrediction
 from robotoff.taxonomy import get_taxonomy
 from robotoff.workers.tasks.import_image import (
     add_ingredient_in_taxonomy_field,
+    generate_ingredient_prediction_data,
     get_text_from_bounding_box,
 )
 
@@ -158,3 +166,84 @@ def test_add_ingredient_in_taxonomy_field():
             ],
         },
     ]
+
+
+def test_generate_ingredient_prediction_data_invalid_language_code():
+    entities = [
+        IngredientPredictionAggregatedEntity(
+            start=0,
+            end=10,
+            raw_end=10,
+            score=0.9,
+            text="water, salt",
+            lang=LanguagePrediction(lang="en", confidence=0.9),  # Valid 2-letter code
+            bounding_box=(0, 0, 100, 100),
+        ),
+        IngredientPredictionAggregatedEntity(
+            start=15,
+            end=25,
+            raw_end=25,
+            score=0.8,
+            text="sucre, farine",
+            lang=LanguagePrediction(
+                lang="sah", confidence=0.8
+            ),  # Invalid 3-letter code
+            bounding_box=(0, 0, 100, 100),
+        ),
+        IngredientPredictionAggregatedEntity(
+            start=30,
+            end=40,
+            raw_end=40,
+            score=0.7,
+            text="agua, sal",
+            lang=LanguagePrediction(lang="es", confidence=0.7),  # Valid 2-letter code
+            bounding_box=(0, 0, 100, 100),
+        ),
+    ]
+
+    ingredient_prediction_output = IngredientPredictionOutput(
+        entities=entities, text="water, salt. sucre, farine. agua, sal."
+    )
+
+    with patch("robotoff.workers.tasks.import_image.parse_ingredients") as mock_parse:
+        mock_parse.return_value = [
+            {
+                "id": "en:water",
+                "text": "water",
+                "in_taxonomy": True,
+            }
+        ]
+
+        result = generate_ingredient_prediction_data(
+            ingredient_prediction_output, image_width=800, image_height=600
+        )
+
+    assert len(result["entities"]) == 3
+
+    # Check that the entity with valid language codes (en, es) were processed
+    # (should have ingredients_n field)
+    valid_entities = [
+        entity for entity in result["entities"] if "ingredients_n" in entity
+    ]
+    # Only entities with valid 2-letter language codes should be processed
+    assert len(valid_entities) == 2
+
+    # Check that the entity with invalid language code (sah) was not processed
+    # (should not have ingredients_n field)
+    invalid_entities = [
+        entity
+        for entity in result["entities"]
+        if "ingredients_n" not in entity and entity["lang"]["lang"] == "sah"
+    ]
+    assert len(invalid_entities) == 1
+
+    # Verify parse_ingredients was only called for valid language codes
+    assert mock_parse.call_count == 2  # Called for "en" and "es", but not "sah"
+
+    # Verify that the function was called with the correct language codes
+    call_args = [
+        call[0][1] for call in mock_parse.call_args_list
+    ]  # Extract lang_id from calls
+    assert "en" in call_args
+    assert "es" in call_args
+    assert "sah" not in call_args
