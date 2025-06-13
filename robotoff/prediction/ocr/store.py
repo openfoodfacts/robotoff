@@ -61,16 +61,10 @@ def get_store_ocr_regex() -> OCRRegex:
     )
 
 
-@functools.cache
-def get_notify_stores() -> set[str]:
-    return set(text_file_iter(settings.OCR_STORES_NOTIFY_DATA_PATH))
-
-
 def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
     results = []
     store_ocr_regex = get_store_ocr_regex()
     sorted_stores = get_sorted_stores()
-    notify_stores = get_notify_stores()
     text = get_text(content, store_ocr_regex)
 
     if not text:
@@ -82,7 +76,7 @@ def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
         for idx, match_str in enumerate(groups):
             if match_str is not None:
                 store, _ = sorted_stores[idx]
-                data = {"text": match_str, "notify": store in notify_stores}
+                data = {"text": match_str}
                 if (
                     bounding_box := get_match_bounding_box(
                         content, match.start(), match.end()
@@ -107,4 +101,3 @@ def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
 
 function_cache_register.register(get_sorted_stores)
 function_cache_register.register(get_store_ocr_regex)
-function_cache_register.register(get_notify_stores)

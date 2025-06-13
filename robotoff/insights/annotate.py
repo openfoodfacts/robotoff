@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from requests.exceptions import HTTPError, SSLError, Timeout
 
+from robotoff.insights.importer import refresh_insights
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ProductInsight, db
 from robotoff.off import (
@@ -1180,6 +1181,8 @@ class IngredientDetectionAnnotator(InsightAnnotator):
                 bounding_box, width, height, rotation
             )
 
+        # TODO(raphael): If the user provides a crop, use this crop instead of the
+        # original crop bounding box.
         if (
             image_key in images
             and images[image_key]["imgid"] == image_id
@@ -1231,6 +1234,9 @@ def annotate(
     """Annotate an insight: save the annotation in DB and send the update
     to Product Opener if `update=True`.
 
+    We also refresh the insights after the annotation is saved, to ensure
+    that the insights are up to date with the latest changes.
+
     :param insight: the insight to annotate
     :param annotation: the annotation as an integer, either -1, 0, 1 or 2
     :param update: if True, a write query is sent to Product Opener with
@@ -1243,7 +1249,7 @@ def annotate(
         vote, defaults to False
     :return: the result of the annotation process
     """
-    return ANNOTATOR_MAPPING[insight.type].annotate(
+    result = ANNOTATOR_MAPPING[insight.type].annotate(
         insight=insight,
         annotation=annotation,
         update=update,
@@ -1251,3 +1257,11 @@ def annotate(
         auth=auth,
         is_vote=is_vote,
     )
+
+    # We refresh insights after the annotation is saved, to ensure that the
+    # insights are up to date with the latest changes.
+    import_results = refresh_insights(insight.get_product_id())
+    for import_result in import_results:
+        logger.info(import_result)
+
+    return result

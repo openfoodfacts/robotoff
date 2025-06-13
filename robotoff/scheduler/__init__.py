@@ -12,8 +12,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from playhouse.postgres_ext import ServerSide
 from sentry_sdk import capture_exception
 
-from robotoff import notifier, settings
-from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
+from robotoff import settings
+from robotoff.insights.annotate import annotate
 from robotoff.insights.importer import BrandInsightImporter, is_valid_insight_image
 from robotoff.metrics import (
     ensure_influx_database,
@@ -57,15 +57,8 @@ def process_insights() -> None:
                 logger.info(
                     "Annotating insight %s (%s)", insight.id, insight.get_product_id()
                 )
-                annotation_result = annotate(insight, 1, update=True)
+                annotate(insight, 1, update=True)
                 processed += 1
-
-                if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-                    "notify", False
-                ):
-                    notifier.NotifierFactory.get_notifier().notify_automatic_processing(
-                        insight
-                    )
             except Exception as e:
                 # continue to the next one
                 # Note: annotator already rolled-back the transaction

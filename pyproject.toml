@@ -38,7 +38,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "robotoff"
-version = "1.71.4"
+version = "1.71.6"
 description = "Real-time and batch prediction service for Open Food Facts."
 authors = ["Open Food Facts Team"]
 license = "GNU Affero General Public License v3"
@@ -74,7 +74,7 @@ lark = "~1.1.4"
 h5py = "~3.13.0"
 opencv-python-headless = "~4.10.0.84"
 toml = "~0.10.2"
-openfoodfacts = "2.6.0"
+openfoodfacts = "2.6.1"
 imagehash = "~4.3.1"
 peewee-migrate = "~1.12.2"
 diskcache = "~5.6.3"

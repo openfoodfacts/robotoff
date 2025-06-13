@@ -64,8 +64,6 @@ Remember to put quotes especially if you have multiple arguments.
 
 Write test cases every time you write a new feature, to test a feature or to understand the working of an existing function. Automated testing really helps to prevent future bugs as we introduce new features or refactor the code.
 
-There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
-
 There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. To disable this
 feature (this is disabled by default on local environments), set `ENABLE_MONGODB_ACCESS=0` in your `.env`.
 

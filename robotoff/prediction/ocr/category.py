@@ -11,7 +11,7 @@ from openfoodfacts.ocr import (
 
 from robotoff.off import normalize_tag
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -112,7 +112,7 @@ def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
                 if category_value is None:
                     continue
 
-                data = {"text": match.group(), "notify": ocr_regex.notify}
+                data: JSONType = {"text": match.group()}
                 if (
                     bounding_box := get_match_bounding_box(
                         content, match.start(), match.end()

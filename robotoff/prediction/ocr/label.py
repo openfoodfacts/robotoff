@@ -11,7 +11,7 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff import settings
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
@@ -201,7 +201,7 @@ def extract_label_flashtext(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        data = {"text": match_str, "notify": False}
+        data: JSONType = {"text": match_str}
 
         if (
             bounding_box := get_match_bounding_box(content, span_start, span_end)
@@ -243,7 +243,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                 else:
                     label_value = label_tag
 
-                data = {"text": match.group(), "notify": ocr_regex.notify}
+                data: JSONType = {"text": match.group()}
                 if (
                     bounding_box := get_match_bounding_box(
                         content, match.start(), match.end()
