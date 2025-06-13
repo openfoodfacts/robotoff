@@ -926,9 +926,10 @@ def generate_ingredient_prediction_data(
         # available
         if entity["lang"]:
             lang_id = entity["lang"]["lang"]
-            # Skip if the language code is not a valid 2-letter code
+            # Skip if the language code is not a valid 2-letter ISO-639-1 code.
+            # Product Opener only supports ISO-639-1 codes, not ISO-639-3 codes.
             if not is_valid_language_code(lang_id):
-                logger.warning(
+                logger.info(
                     f"Skipping ingredient parsing for invalid language code: {lang_id}"
                 )
                 continue
