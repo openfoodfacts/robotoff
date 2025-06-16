@@ -882,6 +882,15 @@ def extract_ingredients_job(
             logger.info(imported)
 
 
+def is_valid_language_code(lang_id: str) -> bool:
+    """Check if the language code is a valid 2-letter ISO-639-1 code.
+
+    :param lang_id: The language code to validate
+    :return: True if the language code is a valid 2-letter code, False otherwise
+    """
+    return len(lang_id) == 2 and lang_id.isalpha()
+
+
 def generate_ingredient_prediction_data(
     ingredient_prediction_output: ingredient_list.IngredientPredictionOutput,
     image_width: int,
@@ -917,6 +926,13 @@ def generate_ingredient_prediction_data(
         # available
         if entity["lang"]:
             lang_id = entity["lang"]["lang"]
+            # Skip if the language code is not a valid 2-letter ISO-639-1 code.
+            # Product Opener only supports ISO-639-1 codes, not ISO-639-3 codes.
+            if not is_valid_language_code(lang_id):
+                logger.info(
+                    f"Skipping ingredient parsing for invalid language code: {lang_id}"
+                )
+                continue
             try:
                 # Parse ingredients using Product Opener ingredient parser,
                 # and add it to the entity data
