@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from openfoodfacts.types import TaxonomyType
 
@@ -168,7 +166,7 @@ def test_add_ingredient_in_taxonomy_field():
     ]
 
 
-def test_generate_ingredient_prediction_data_invalid_language_code():
+def test_generate_ingredient_prediction_data_invalid_language_code(mocker):
     entities = [
         IngredientPredictionAggregatedEntity(
             start=0,
@@ -186,8 +184,11 @@ def test_generate_ingredient_prediction_data_invalid_language_code():
             score=0.8,
             text="sucre, farine",
             lang=LanguagePrediction(
-                lang="sah", confidence=0.8
-            ),  # Invalid 3-letter code
+                # 3-letter code, we shouldn't send it to parse_ingredients
+                # as it is not a valid 2-letter language code
+                lang="sah",
+                confidence=0.8,
+            ),
             bounding_box=(0, 0, 100, 100),
         ),
         IngredientPredictionAggregatedEntity(
@@ -205,18 +206,19 @@ def test_generate_ingredient_prediction_data_invalid_language_code():
         entities=entities, text="water, salt. sucre, farine. agua, sal."
     )
 
-    with patch("robotoff.workers.tasks.import_image.parse_ingredients") as mock_parse:
-        mock_parse.return_value = [
+    mock_parse = mocker.patch(
+        "robotoff.workers.tasks.import_image.parse_ingredients",
+        return_value=[
             {
                 "id": "en:water",
                 "text": "water",
                 "in_taxonomy": True,
             }
-        ]
-
-        result = generate_ingredient_prediction_data(
-            ingredient_prediction_output, image_width=800, image_height=600
-        )
+        ],
+    )
+    result = generate_ingredient_prediction_data(
+        ingredient_prediction_output, image_width=800, image_height=600
+    )
 
     assert len(result["entities"]) == 3
 
