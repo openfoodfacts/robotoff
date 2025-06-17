@@ -16,8 +16,4 @@ These insights include a growing set of facts, including:
 - Fetch insights
 - Annotate an insight (accept or reject)
 
-### TODO
-- Regenerate category insights
-- Regenerate image insights
-
 A detailed description of [how predictions and insights work is available here](https://openfoodfacts.github.io/robotoff/explanations/predictions/).
