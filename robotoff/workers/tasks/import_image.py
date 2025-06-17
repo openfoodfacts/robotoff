@@ -1126,7 +1126,7 @@ def extract_nutrition_job(
             max_confidence=max_confidence,
         )
 
-        if max_confidence is not None:
+        if "nutrients" in data and len(data["nutrients"]) > 0:
             # Only keep 'postprocessed' entities, as they are the most
             # relevant for the user
             prediction_data = {
