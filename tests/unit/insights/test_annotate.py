@@ -114,11 +114,8 @@ class TestIngredientDetectionAnnotator:
         select_rotate_image = mocker.patch(
             "robotoff.insights.annotate.select_rotate_image"
         )
-        get_image_rotation = mocker.patch(
-            "robotoff.insights.annotate.get_image_rotation", return_value=0
-        )
         insight = self._create_product_insight(
-            data={"bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={"bounding_box": [0.1, 0.1, 0.5, 0.5], "rotation": 0}
         )
         product = {
             "code": DEFAULT_BARCODE,
@@ -127,17 +124,13 @@ class TestIngredientDetectionAnnotator:
             insight, product, validated_data=None
         )
         assert select_rotate_image.call_count == 0
-        assert get_image_rotation.call_count == 0
 
     def test_select_ingredient_image_with_cropping(self, mocker):
         select_rotate_image = mocker.patch(
             "robotoff.insights.annotate.select_rotate_image"
         )
-        get_image_rotation = mocker.patch(
-            "robotoff.insights.annotate.get_image_rotation", return_value=0
-        )
         insight = self._create_product_insight(
-            data={"bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={"bounding_box": [0.1, 0.1, 0.5, 0.5], "rotation": 0}
         )
         product = {
             "code": DEFAULT_BARCODE,
@@ -168,18 +161,12 @@ class TestIngredientDetectionAnnotator:
             "auth": None,
         }
 
-        assert get_image_rotation.call_count == 1
-        assert get_image_rotation.call_args.args == (insight.source_image,)
-
     def test_select_ingredient_image_with_cropping_and_rotation(self, mocker):
         select_rotate_image = mocker.patch(
             "robotoff.insights.annotate.select_rotate_image"
         )
-        get_image_rotation = mocker.patch(
-            "robotoff.insights.annotate.get_image_rotation", return_value=90
-        )
         insight = self._create_product_insight(
-            data={"bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={"bounding_box": [0.1, 0.1, 0.5, 0.5], "rotation": 90}
         )
         product = {
             "code": DEFAULT_BARCODE,
@@ -210,20 +197,14 @@ class TestIngredientDetectionAnnotator:
             "auth": None,
         }
 
-        assert get_image_rotation.call_count == 1
-        assert get_image_rotation.call_args.args == (insight.source_image,)
-
     def test_select_ingredient_image_image_already_selected_with_no_cropping_information(
         self, mocker
     ):
         select_rotate_image = mocker.patch(
             "robotoff.insights.annotate.select_rotate_image"
         )
-        get_image_rotation = mocker.patch(
-            "robotoff.insights.annotate.get_image_rotation", return_value=0
-        )
         insight = self._create_product_insight(
-            data={"bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={"bounding_box": [0.1, 0.1, 0.5, 0.5], "rotation": 0}
         )
         product = {
             "code": DEFAULT_BARCODE,
@@ -249,18 +230,13 @@ class TestIngredientDetectionAnnotator:
             validated_data=IngredientAnnotateBody(annotation="new ingredient list"),
         )
         assert select_rotate_image.call_count == 0
-        assert get_image_rotation.call_count == 1
-        assert get_image_rotation.call_args.args == (insight.source_image,)
 
     def test_select_ingredient_image_with_user_submitted_data(self, mocker):
         select_rotate_image = mocker.patch(
             "robotoff.insights.annotate.select_rotate_image"
         )
-        get_image_rotation = mocker.patch(
-            "robotoff.insights.annotate.get_image_rotation", return_value=180
-        )
         insight = self._create_product_insight(
-            data={"bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={"bounding_box": [0.1, 0.1, 0.5, 0.5], "rotation": 180}
         )
         product = {
             "code": DEFAULT_BARCODE,
@@ -299,9 +275,6 @@ class TestIngredientDetectionAnnotator:
             "auth": None,
         }
 
-        assert get_image_rotation.call_count == 1
-        assert get_image_rotation.call_args.args == (insight.source_image,)
-
     def test_process_annotation_no_data(self, mocker):
         save_ingredients = mocker.patch("robotoff.insights.annotate.save_ingredients")
         select_ingredient_image = mocker.patch(
@@ -314,7 +287,11 @@ class TestIngredientDetectionAnnotator:
         ingredients_text = "Water, salt"
         lang = "fr"
         insight = self._create_product_insight(
-            data={"text": ingredients_text, "bounding_box": [0.1, 0.1, 0.5, 0.5]},
+            data={
+                "text": ingredients_text,
+                "bounding_box": [0.1, 0.1, 0.5, 0.5],
+                "rotation": 0,
+            },
             value_tag=lang,
         )
         annotation_result = IngredientDetectionAnnotator.process_annotation(
@@ -358,7 +335,11 @@ class TestIngredientDetectionAnnotator:
         ingredients_text_updated = "Bread, corn, salt"
         lang = "it"
         insight = self._create_product_insight(
-            data={"text": ingredients_text, "bounding_box": [0.1, 0.1, 0.5, 0.5]},
+            data={
+                "text": ingredients_text,
+                "bounding_box": [0.1, 0.1, 0.5, 0.5],
+                "rotation": 0,
+            },
             value_tag=lang,
         )
         insight.save = mocker.MagicMock()
@@ -389,7 +370,11 @@ class TestIngredientDetectionAnnotator:
         )
         ingredients_text = "Water, salt"
         insight = self._create_product_insight(
-            data={"text": ingredients_text, "bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={
+                "text": ingredients_text,
+                "bounding_box": [0.1, 0.1, 0.5, 0.5],
+                "rotation": 0,
+            }
         )
 
         annotation_result = IngredientDetectionAnnotator.process_annotation(
@@ -402,7 +387,11 @@ class TestIngredientDetectionAnnotator:
     def test_process_annotation_is_vote(self):
         ingredients_text = "Water, salt"
         insight = self._create_product_insight(
-            data={"text": ingredients_text, "bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={
+                "text": ingredients_text,
+                "bounding_box": [0.1, 0.1, 0.5, 0.5],
+                "rotation": 0,
+            }
         )
 
         annotation_result = IngredientDetectionAnnotator.process_annotation(
@@ -413,7 +402,11 @@ class TestIngredientDetectionAnnotator:
     def test_process_annotation_invalid_data(self):
         ingredients_text = "Water, salt"
         insight = self._create_product_insight(
-            data={"text": ingredients_text, "bounding_box": [0.1, 0.1, 0.5, 0.5]}
+            data={
+                "text": ingredients_text,
+                "bounding_box": [0.1, 0.1, 0.5, 0.5],
+                "rotation": 0,
+            }
         )
 
         annotation_result = IngredientDetectionAnnotator.annotate(
