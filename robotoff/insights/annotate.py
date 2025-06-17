@@ -1135,12 +1135,9 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         if not image_id or not image_meta:
             return None
 
-        # TODO(raphael): we now have a `data["rotation"]` subfield that contains
-        # the rotation angle of the image, so we can use it (once all insights have
-        # been generated again) instead of fetching the rotation angle from the
-        # `predictions` table.
-        # See https://github.com/openfoodfacts/robotoff/pull/1609
-        rotation = get_image_rotation(insight.source_image)
+        # We fetch the rotation angle that was detected by Google Cloud Vision
+        # stored in the `data` field of the insight.
+        rotation = insight.data["rotation"]
         # Use the language associated with the insight to determine the image key.
         image_key = f"ingredients_{insight.value_tag}"
 
