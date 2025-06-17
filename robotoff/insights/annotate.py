@@ -1137,7 +1137,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
 
         # We fetch the rotation angle that was detected by Google Cloud Vision
         # stored in the `data` field of the insight.
-        rotation = insight.data["rotation"]
+        rotation = insight.data.get("rotation", 0)
         # Use the language associated with the insight to determine the image key.
         image_key = f"ingredients_{insight.value_tag}"
 
