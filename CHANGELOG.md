@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.73.0](https://github.com/openfoodfacts/robotoff/compare/v1.72.0...v1.73.0) (2025-06-19)
+
+
+### Features
+
+* add language code validation for ingredient parsing ([#1640](https://github.com/openfoodfacts/robotoff/issues/1640)) ([917f264](https://github.com/openfoodfacts/robotoff/commit/917f264ad8e820051080f151cd159b394c9b5dc8))
+
+
+### Bug Fixes
+
+* fix bug in extract_ingredients_job ([#1650](https://github.com/openfoodfacts/robotoff/issues/1650)) ([4290191](https://github.com/openfoodfacts/robotoff/commit/4290191c154ca1d437e9bcf5f9c54fc57f3a47b7)), closes [#1648](https://github.com/openfoodfacts/robotoff/issues/1648)
+* handle the case where 'rotation' field is missing ([#1653](https://github.com/openfoodfacts/robotoff/issues/1653)) ([6782bed](https://github.com/openfoodfacts/robotoff/commit/6782bed668ecd84b33063726e9770996cd6994d1))
+* use `data['rotation']` when annotating ingredient detection insight ([#1651](https://github.com/openfoodfacts/robotoff/issues/1651)) ([c12b9b7](https://github.com/openfoodfacts/robotoff/commit/c12b9b78bf2fded5279953ddf8c53affebaa3f57))
+
 ## [1.72.0](https://github.com/openfoodfacts/robotoff/compare/v1.71.6...v1.72.0) (2025-06-12)
 
 
