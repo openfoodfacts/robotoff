@@ -9,6 +9,7 @@ from robotoff.prediction.langid import LanguagePrediction
 from robotoff.taxonomy import get_taxonomy
 from robotoff.workers.tasks.import_image import (
     add_ingredient_in_taxonomy_field,
+    convert_legacy_ingredient_image_prediction_data,
     generate_ingredient_prediction_data,
     get_text_from_bounding_box,
 )
@@ -249,3 +250,92 @@ def test_generate_ingredient_prediction_data_invalid_language_code(mocker):
     assert "en" in call_args
     assert "es" in call_args
     assert "sah" not in call_args
+
+
+def test_convert_legacy_missing_ingredients_n():
+    image_prediction_data = {
+        "entities": [
+            {
+                # Entity with ingredients_n field
+                "end": 328,
+                "lang": {"lang": "it", "confidence": 0.9},
+                "text": "Riso integrale cotto",
+                "score": 0.99,
+                "start": 121,
+                "raw_end": 328,
+                "ingredients_n": 4,
+                "known_ingredients_n": 3,
+                "unknown_ingredients_n": 1,
+                "bounding_box": [76, 120, 611, 185],
+            },
+            {
+                # Entity without ingredients_n field
+                "end": 671,
+                "lang": {"lang": "ro", "confidence": 1.0},
+                "text": "pe",
+                "score": 0.5,
+                "start": 669,
+                "raw_end": 671,
+                "bounding_box": [975, 5, 996, 12],
+            },
+        ]
+    }
+
+    # This should not raise a KeyError
+    result = convert_legacy_ingredient_image_prediction_data(
+        image_prediction_data, image_width=1000, image_height=400
+    )
+
+    assert len(result["entities"]) == 2
+
+    # Entity with ingredients should have fraction_known_ingredients
+    first_entity = result["entities"][0]
+    assert first_entity["fraction_known_ingredients"] == 0.75
+
+    # Entity without ingredients should not have fraction_known_ingredients
+    second_entity = result["entities"][1]
+    assert "fraction_known_ingredients" not in second_entity
+
+
+def test_convert_legacy_all_with_ingredients():
+    image_prediction_data = {
+        "entities": [
+            {
+                "end": 50,
+                "lang": {"lang": "en", "confidence": 0.9},
+                "text": "water, salt",
+                "score": 0.8,
+                "start": 0,
+                "raw_end": 50,
+                "ingredients_n": 2,
+                "known_ingredients_n": 2,
+                "unknown_ingredients_n": 0,
+                "bounding_box": [100, 100, 200, 200],
+            },
+            {
+                "end": 100,
+                "lang": {"lang": "fr", "confidence": 0.8},
+                "text": "sucre",
+                "score": 0.7,
+                "start": 51,
+                "raw_end": 100,
+                "ingredients_n": 1,
+                "known_ingredients_n": 0,
+                "unknown_ingredients_n": 1,
+                "bounding_box": [200, 200, 300, 300],
+            },
+        ]
+    }
+
+    result = convert_legacy_ingredient_image_prediction_data(
+        image_prediction_data, image_width=400, image_height=400
+    )
+
+    # Check that both entities have fraction_known_ingredients
+    assert len(result["entities"]) == 2
+
+    first_entity = result["entities"][0]
+    assert first_entity["fraction_known_ingredients"] == 1.0  # 2/2
+
+    second_entity = result["entities"][1]
+    assert second_entity["fraction_known_ingredients"] == 0.0  # 0/1
