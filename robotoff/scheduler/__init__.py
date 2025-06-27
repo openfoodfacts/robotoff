@@ -349,7 +349,7 @@ def run():
         refresh_insights,
         "cron",
         day="*",
-        hour="16",
+        hour="19",
         max_instances=1,
     )
 
