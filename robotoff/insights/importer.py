@@ -2125,16 +2125,9 @@ def import_product_predictions(
             deleted += (
                 PredictionModel.delete()
                 .where(
-                    SQL(
-                        "prediction.barcode = %s AND "
-                        "prediction.server_type = %s AND "
-                        "prediction.type = %s",
-                        (
-                            barcode,
-                            server_type.name,
-                            prediction_type.name,
-                        ),
-                    )
+                    PredictionModel.barcode == barcode,
+                    PredictionModel.server_type == server_type.name,
+                    PredictionModel.type == prediction_type.name
                 )
                 .execute()
             )
