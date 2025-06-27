@@ -1002,11 +1002,13 @@ def convert_legacy_ingredient_image_prediction_data(
                     height=image_height,
                 )
             )
-        entity["fraction_known_ingredients"] = (
-            entity["known_ingredients_n"] / entity["ingredients_n"]
-            if entity["ingredients_n"] > 0
-            else 0
-        )
+        # only calculate fraction_known_ingredients if the entity has ingredients data
+        if "ingredients_n" in entity and "known_ingredients_n" in entity:
+            entity["fraction_known_ingredients"] = (
+                entity["known_ingredients_n"] / entity["ingredients_n"]
+                if entity["ingredients_n"] > 0
+                else 0
+            )
     return new_data
 
 
