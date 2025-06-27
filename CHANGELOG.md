@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.73.1](https://github.com/openfoodfacts/robotoff/compare/v1.73.0...v1.73.1) (2025-06-27)
+
+
+### Bug Fixes
+
+* handle missing ingredient fields in legacy prediction data conversion ([#1656](https://github.com/openfoodfacts/robotoff/issues/1656)) ([8ebd924](https://github.com/openfoodfacts/robotoff/commit/8ebd924df17d458652d273ecfc00ec258a4c21c6)), closes [#1655](https://github.com/openfoodfacts/robotoff/issues/1655)
+* launch refresh insight at 7PM instead of 4PM ([#1659](https://github.com/openfoodfacts/robotoff/issues/1659)) ([d86ffdb](https://github.com/openfoodfacts/robotoff/commit/d86ffdb0ccfc2dbc75470a4d894c6a254d4d3c9f))
+
 ## [1.73.0](https://github.com/openfoodfacts/robotoff/compare/v1.72.0...v1.73.0) (2025-06-19)
 
 
