@@ -3,9 +3,11 @@ import datetime
 import functools
 import itertools
 import operator
+import typing
 import uuid
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Optional, Type, Union
+from typing import Any, Iterable, Iterator, Type, Union
 
 from peewee import SQL
 from playhouse.shortcuts import model_to_dict
@@ -45,6 +47,8 @@ from robotoff.types import (
     ServerType,
 )
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import function_cache_register
+from robotoff.utils.image import convert_bounding_box_absolute_to_relative_from_images
 
 logger = get_logger(__name__)
 
@@ -85,14 +89,16 @@ def is_recent_image(
     :param max_timedelta: The maximum interval between the upload datetime of
     the most recent image and the provided image.
     """
-    image_datetime = datetime.datetime.utcfromtimestamp(
-        int(images[image_id]["uploaded_t"])
+    image_datetime = datetime.datetime.fromtimestamp(
+        int(images[image_id]["uploaded_t"]), datetime.timezone.utc
     )
     remaining_datetimes = []
     for key, image_meta in images.items():
         if key.isdigit() and key != image_id:
             remaining_datetimes.append(
-                datetime.datetime.utcfromtimestamp(int(image_meta["uploaded_t"]))
+                datetime.datetime.fromtimestamp(
+                    int(image_meta["uploaded_t"]), datetime.timezone.utc
+                )
             )
 
     for upload_datetime in remaining_datetimes:
@@ -103,7 +109,7 @@ def is_recent_image(
     return True
 
 
-def is_valid_insight_image(image_ids: list[str], source_image: Optional[str]):
+def is_valid_insight_image(image_ids: list[str], source_image: str | None) -> bool:
     """Return True if the source image is valid for insight generation,
     i.e. the image ID is a digit and is referenced in `images_ids`.
 
@@ -118,56 +124,6 @@ def is_valid_insight_image(image_ids: list[str], source_image: Optional[str]):
 
     image_id = Path(source_image).stem
     return image_id.isdigit() and image_id in image_ids
-
-
-def convert_bounding_box_absolute_to_relative(
-    bounding_box_absolute: tuple[int, int, int, int],
-    images: dict[str, Any],
-    source_image: Optional[str],
-) -> Optional[tuple[float, float, float, float]]:
-    """Convert absolute bounding box coordinates to relative ones.
-
-    When detecting patterns using regex or flashtext, we don't know the size of
-    the image, so we cannot compute the relative coordinates of the text
-    bounding box. We perform the conversion during insight import instead.
-
-    Relative coordinates are used as they are more convenient than absolute
-    ones (we can use them on a resized version of the original image).
-
-    :param bounding_box_absolute: absolute coordinates of the bounding box
-    :param images: The image dict as stored in MongoDB.
-    :param source_image: The insight source image, should be the path of the
-    image path or None.
-    :return: a (y_min, x_min, y_max, x_max) tuple of the relative coordinates
-        or None if a conversion error occured
-    """
-    if source_image is None:
-        logger.warning(
-            "could not convert absolute coordinate bounding box: "
-            "bounding box was provided (%s) but source image is null",
-            bounding_box_absolute,
-        )
-        return None
-
-    image_id = Path(source_image).stem
-
-    if image_id not in images:
-        logger.info(
-            "could not convert absolute coordinate bounding box: "
-            "image %s not found in product images",
-            image_id,
-        )
-        return None
-
-    size = images[image_id]["sizes"]["full"]
-    height = size["h"]
-    width = size["w"]
-    return (
-        max(0.0, bounding_box_absolute[0] / height),
-        max(0.0, bounding_box_absolute[1] / width),
-        min(1.0, bounding_box_absolute[2] / height),
-        min(1.0, bounding_box_absolute[3] / width),
-    )
 
 
 def get_existing_insight(
@@ -188,43 +144,6 @@ def is_reserved_barcode(barcode: str) -> bool:
         barcode = barcode[1:]
 
     return barcode.startswith("2")
-
-
-def sort_candidates(candidates: Iterable[ProductInsight]) -> list[ProductInsight]:
-    """Sort candidates by priority, using as keys:
-
-    - priority, specified by `data["priority"]`, candidate with lowest priority
-      values (high priority) come first
-    - source image upload datetime (most recent first): images IDs are
-      auto-incremented integers, so the most recent images have the highest
-      IDs. Images with `source_image = None` have a lower priority that images
-      with a source image.
-    - automatic processing status: candidates that are automatically
-      processable have higher priority
-
-    This function should be used to make sure most important candidates are
-    looked into first in `get_insight_update`. Note that the sorting keys are a
-    superset of those used in `InsightImporter.sort_predictions`.
-
-    :param candidates: The candidates to sort
-    :return: Sorted candidates
-    """
-    return sorted(
-        candidates,
-        key=lambda candidate: (
-            candidate.data.get("priority", 1),
-            (
-                -int(get_image_id(candidate.source_image) or 0)
-                if candidate.source_image
-                else 0
-            ),
-            # automatically processable insights come first
-            -int(candidate.automatic_processing),
-            # hack to set a higher priority to prediction with a predictor
-            # value
-            candidate.predictor or "z",
-        ),
-    )
 
 
 def select_deepest_taxonomized_candidates(
@@ -415,7 +334,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             # disabled (product=None), as we don't have image information
             if ("bounding_box_absolute" in candidate.data) and product:
                 candidate.data["bounding_box"] = (
-                    convert_bounding_box_absolute_to_relative(
+                    convert_bounding_box_absolute_to_relative_from_images(
                         candidate.data.pop("bounding_box_absolute"),
                         product.images,
                         candidate.source_image,
@@ -449,13 +368,14 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @classmethod
     def sort_predictions(cls, predictions: Iterable[Prediction]) -> list[Prediction]:
         """Sort predictions by priority, using as keys:
+
         - priority, specified by data["priority"], prediction with lowest
-          priority
-        values (high priority) come first - source image upload datetime (most
-        recent first): images IDs are auto-incremented integers, so the most
-        recent images have the highest IDs. Images with `source_image = None`
-        have a lower priority that images with a source image. - predictor,
-        predictions with predictor value have higher priority
+          priority values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+          auto-incremented integers, so the most recent images have the highest IDs.
+          Images with `source_image = None` have a lower priority that images with a
+          source image.
+        - predictor, predictions with predictor value have higher priority
 
         :param predictions: The predictions to sort
         :return: Sorted predictions
@@ -479,7 +399,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -517,7 +437,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         :param candidates: candidate predictions
         :param reference_insights: existing insights of this type and product
         """
-        to_create_or_update: list[tuple[ProductInsight, Optional[ProductInsight]]] = []
+        to_create_or_update: list[tuple[ProductInsight, ProductInsight | None]] = []
         # Keep already annotated insights in DB
         to_keep_ids = set(
             reference.id
@@ -588,22 +508,22 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def sort_candidates(
         cls, candidates: Iterable[ProductInsight]
     ) -> list[ProductInsight]:
-        """Sort candidates by priority, using as keys:
+        """Sort insight candidates by priority, using as keys:
 
         - priority, specified by `data["priority"]`, candidate with lowest
-          priority
-        values (high priority) come first - source image upload datetime (most
-        recent first): images IDs are auto-incremented integers, so the most
-        recent images have the highest IDs. Images with `source_image = None`
-        have a lower priority that images with a source image. - automatic
-        processing status: candidates that are automatically processable have
-        higher priority
+          priority values (high priority) come first
+        - source image upload datetime (most recent first): images IDs are
+          auto-incremented integers, so the most recent images have the highest IDs.
+          Images with `source_image = None` have a lower priority that images with a
+          source image.
+        - automatic processing status: candidates that are automatically processable
+          have higher priority
 
         This function should be used to make sure most important candidates are
         looked into first in `get_insight_update`. Note that the sorting keys
         are a superset of those used in `InsightImporter.sort_predictions`.
 
-        :param candidates: The candidates to sort
+        :param candidates: The insight candidates to sort
         :return: Sorted candidates
         """
         return sorted(
@@ -642,7 +562,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
     def add_fields(
         cls,
         insight: ProductInsight,
-        product: Optional[Product],
+        product: Product | None,
         timestamp: datetime.datetime,
     ):
         """Add mandatory insight fields (`id`, `timestamp`,
@@ -672,7 +592,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
     @classmethod
     def add_optional_fields(  # noqa: B027
-        cls, insight: ProductInsight, product: Optional[Product]
+        cls, insight: ProductInsight, product: Product | None
     ):
         """Overwrite this method in children classes to add optional fields.
 
@@ -701,7 +621,7 @@ class PackagerCodeInsightImporter(InsightImporter):
 
     @staticmethod
     def is_prediction_valid(
-        product: Optional[Product],
+        product: Product | None,
         emb_code: str,
     ) -> bool:
         if product is None:
@@ -716,7 +636,7 @@ class PackagerCodeInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -745,7 +665,7 @@ class LabelInsightImporter(InsightImporter):
         )
 
     @staticmethod
-    def is_prediction_valid(product: Optional[Product], tag: str) -> bool:
+    def is_prediction_valid(product: Product | None, tag: str) -> bool:
         if product is None:
             # Predictions are always valid when product check is disabled
             # (product=None)
@@ -770,7 +690,7 @@ class LabelInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -830,25 +750,41 @@ class CategoryImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        candidates = [
-            prediction
-            for prediction in predictions
-            if cls.is_prediction_valid(product, prediction.value_tag)  # type: ignore
-        ]
         taxonomy = get_taxonomy(InsightType.category.name)
+        selected_candidates = []
+        for prediction in predictions:
+            if prediction.value_tag is None:
+                logger.warning(
+                    "Unexpected None `value_tag` (prediction: %s)", prediction
+                )
+                continue
+            else:
+                original_value_tag = prediction.value_tag
+                prediction.value_tag = match_taxonomized_value(
+                    prediction.value_tag, TaxonomyType.category.name
+                )
+                if prediction.value_tag is None:
+                    logger.warning(f"Could not match {original_value_tag} (category)")
+                    continue
+                elif not cls.is_prediction_valid(product, prediction.value_tag):
+                    continue
+                else:
+                    selected_candidates.append(prediction)
 
         yield from (
             ProductInsight(**candidate.to_dict())
-            for candidate in select_deepest_taxonomized_candidates(candidates, taxonomy)
+            for candidate in select_deepest_taxonomized_candidates(
+                selected_candidates, taxonomy
+            )
         )
 
     @staticmethod
     def is_prediction_valid(
-        product: Optional[Product],
+        product: Product | None,
         category: str,
     ) -> bool:
         if product is None:
@@ -865,7 +801,7 @@ class CategoryImporter(InsightImporter):
         )
 
     @classmethod
-    def add_optional_fields(cls, insight: ProductInsight, product: Optional[Product]):
+    def add_optional_fields(cls, insight: ProductInsight, product: Product | None):
         taxonomy = get_taxonomy(InsightType.category.name)
         campaigns = []
         if (
@@ -912,7 +848,7 @@ class ProductWeightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -958,7 +894,7 @@ class ExpirationDateImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1026,7 +962,7 @@ class BrandInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1066,7 +1002,7 @@ class StoreInsightImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1099,7 +1035,7 @@ class UPCImageImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1239,7 +1175,7 @@ class NutritionImageImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1333,8 +1269,8 @@ class NutritionImageImporter(InsightImporter):
         cls,
         nutrient_mention_prediction: Prediction,
         image_orientation_prediction: Prediction,
-        nutrient_prediction: Optional[Prediction] = None,
-        nutrition_table_predictions: Optional[list[JSONType]] = None,
+        nutrient_prediction: Prediction | None = None,
+        nutrition_table_predictions: list[JSONType] | None = None,
     ) -> Iterator[ProductInsight]:
         """Generate `nutrition_image` candidates for a single image.
 
@@ -1418,7 +1354,7 @@ class NutritionImageImporter(InsightImporter):
     def compute_crop_bounding_box(
         cls,
         nutrient_mention_prediction: Prediction,
-        nutrition_table_predictions: Optional[list[JSONType]] = None,
+        nutrition_table_predictions: list[JSONType] | None = None,
     ):
         """Predict a bounding box that includes the nutritional information.
 
@@ -1487,12 +1423,12 @@ class IngredientSpellcheckImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
         yield from (
-            ProductInsight(**prediction.to_dict())
+            ProductInsight(lc=[prediction.value_tag], **prediction.to_dict())
             for prediction in predictions
             if cls._keep_prediction(prediction=prediction, product=product)
         )
@@ -1505,9 +1441,7 @@ class IngredientSpellcheckImporter(InsightImporter):
         return candidate.value_tag == reference.value_tag
 
     @classmethod
-    def _keep_prediction(
-        cls, prediction: Prediction, product: Optional[Product]
-    ) -> bool:
+    def _keep_prediction(cls, prediction: Prediction, product: Product | None) -> bool:
         return (
             # Spellcheck didn't correct
             prediction.data["original"] != prediction.data["correction"]
@@ -1516,7 +1450,10 @@ class IngredientSpellcheckImporter(InsightImporter):
                 or (
                     # Only keep the prediction if the original ingredient is different
                     # from the current ingredient list
-                    prediction.data["original"] == product.ingredients_text
+                    prediction.data["original"]
+                    == product.ingredients_text.get(
+                        typing.cast(str, prediction.value_tag)
+                    )
                     # Only keep the prediction if it's for the product main language
                     and prediction.value_tag == product.lang
                 )
@@ -1534,24 +1471,146 @@ class NutrientExtractionImporter(InsightImporter):
         return {PredictionType.nutrient_extraction}
 
     @classmethod
+    def get_input_prediction_types(cls) -> set[PredictionType]:
+        return {
+            # Contains the nutrient values extracted from the image
+            PredictionType.nutrient_extraction,
+            # To add image rotation information to `insight.data`
+            PredictionType.image_orientation,
+            # To add language to `insight.lc`
+            PredictionType.nutrient_mention,
+        }
+
+    @classmethod
     def generate_candidates(
         cls,
         product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
+        if product and product.nutrition_data_prepared:
+            # Don't generate candidates if the product has nutrition
+            # information per prepared product, as the model doesn't
+            # handle this case
+            return
+
+        image_orientation_prediction = next(
+            (p for p in predictions if p.type == PredictionType.image_orientation),
+            None,
+        )
+        nutrient_mention_prediction = next(
+            (p for p in predictions if p.type == PredictionType.nutrient_mention), None
+        )
+        predictions = [
+            p for p in predictions if p.type == PredictionType.nutrient_extraction
+        ]
+
         for prediction in predictions:
-            if product is not None and product.nutriments:
-                current_keys = set(key for key in product.nutriments.keys())
-                prediction_keys = set(prediction.data["nutrients"].keys())
+            if cls.keep_prediction(product, list(prediction.data["nutrients"].keys())):
+                insight_dict = prediction.to_dict()
 
-                # If the prediction brings a nutrient value that is missing in
-                # the product, we generate an insight, otherwise we
-                # skip it
-                if not len(prediction_keys - current_keys):
-                    continue
+                if image_orientation_prediction is not None:
+                    insight_dict["data"]["rotation"] = (
+                        image_orientation_prediction.data["rotation"]
+                    )
+                if nutrient_mention_prediction is not None:
+                    insight_dict["lc"] = cls.compute_lc_from_nutrient_mention(
+                        nutrient_mention_prediction
+                    )
 
-            yield ProductInsight(**prediction.to_dict())
+                yield ProductInsight(**insight_dict)
+
+    @staticmethod
+    def compute_lc_from_nutrient_mention(
+        nutrient_mention_prediction: Prediction,
+    ) -> list[str] | None:
+        """Find the language(s) present on the nutrition table using the
+        `nutrient_mention` prediction.
+
+        This is used to set the `lc` field insight.
+
+        :param nutrient_mention_prediction: the `Prediction` of type
+            `nutrient_mention` for the image
+        :return: a list of languages present on the nutrition table, or None
+            if no language is detected
+        """
+        languages: dict[str, int] = defaultdict(int)
+
+        for mentions in nutrient_mention_prediction.data["mentions"].values():
+            for mention in mentions:
+                # Some keys such as `nutrient_value` don't have
+                # associated languages, so we have to account for missing
+                # `languages`
+                for lang in mention.get("languages", []):
+                    languages[lang] += 1
+
+        # By default, we require at least 2 different nutrient mention in the same
+        # language to consider that this language is present
+        selected_languages = [lang for lang, count in languages.items() if count >= 2]
+
+        if selected_languages:
+            return selected_languages
+        elif languages:
+            return [next(iter(languages.keys()))]
+        else:
+            # No languages detected, return None.
+            # This should not happen, as a `nutrient_mention` prediction
+            # should always have at least one mention (and associated lang)
+            return None
+
+    @staticmethod
+    def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:
+        """Return True if the prediction should be kept, False otherwise.
+
+        The prediction should be kept if:
+        - the product has no nutrition information
+        - the prediction brings new nutrient values that are missing in the product
+
+        :param product: the product
+        :param nutrients_keys: the nutrient keys predicted by the model
+        :return: True if the prediction should be kept, False otherwise
+        """
+        if product is None or not product.nutriments:
+            # We don't have access to MongoDB or the nutriment data is missing
+            # completely, so we generate an insight
+            return True
+
+        nutrition_data_per = product.nutrition_data_per
+
+        if nutrition_data_per == "100ml":
+            # nutrition_data_per can be 100ml even if the nutrient values are
+            # stored as per 100g, see this product for example:
+            # https://world.openfoodfacts.org/api/v2/product/7802900028473?rev=12&fields=nutriments,nutrition_data_per
+            nutrition_data_per = "100g"
+
+        if nutrition_data_per not in ("100g", "serving"):
+            raise ValueError(
+                f"Invalid nutrition data per: {product.nutrition_data_per}"
+            )
+
+        # Only keep the nutrient that are either per "100g" or "per serving"
+        # depending on `product.nutrition_data_per`, so that we know which
+        # nutrient values the prediction brings
+        current_keys = set(
+            key
+            for key in product.nutriments.keys()
+            if key.endswith(f"_{nutrition_data_per}")
+        )
+
+        if nutrition_data_per == "serving" and product.serving_size:
+            current_keys.add("serving_size")
+
+        prediction_keys = set(
+            key for key in nutrients_keys if (key.endswith(f"_{nutrition_data_per}"))
+        )
+        if nutrition_data_per == "serving" and "serving_size" in nutrients_keys:
+            prediction_keys.add("serving_size")
+
+        # If the prediction brings a nutrient value that is missing in
+        # the product, we generate an insight, otherwise we
+        # skip it
+        add_information = bool(len(prediction_keys - current_keys))
+        return add_information
 
     @classmethod
     def is_conflicting_insight(
@@ -1559,6 +1618,146 @@ class NutrientExtractionImporter(InsightImporter):
     ) -> bool:
         # Only one insight per product
         return True
+
+    @classmethod
+    def add_optional_fields(cls, insight: ProductInsight, product: Product | None):
+        """Add campaigns for the `nutrient_extraction` insight.
+
+        We always add one of the following campaigns:
+        - missing-nutrition: the product has no nutrition information
+        - incomplete-nutrition: the product has some nutrition information but the
+            prediction brings new nutrient values
+        """
+        if not product:
+            # We cannot know whether the product has incomplete or missing nutrition
+            # Stop here
+            return
+
+        campaigns: list[str] = []
+        if set(product.nutriments.keys()):
+            # The product already has some nutrient values, so we add it to the
+            # `incomplete-nutrition` campaign. Robotoff clients will be able to
+            # ask for incomplete nutrition insights only if they need to by
+            # specifying this campaign in the request.
+            campaigns.append("incomplete-nutrition")
+        else:
+            campaigns.append("missing-nutrition")
+        insight.campaign = campaigns
+
+
+class IngredientDetectionImporter(InsightImporter):
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.ingredient_detection
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_detection}
+
+    @classmethod
+    def get_input_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.ingredient_detection, PredictionType.image_orientation}
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Product | None,
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        image_orientation_prediction = next(
+            (p for p in predictions if p.type == PredictionType.image_orientation),
+            None,
+        )
+        predictions = [
+            p for p in predictions if p.type == PredictionType.ingredient_detection
+        ]
+        for prediction in predictions:
+            if cls.keep_prediction(product, prediction):
+                insight_dict = prediction.to_dict()
+                # Set the priority of the insight candidate, based on the image
+                insight_dict["data"]["priority"] = cls.get_candidate_priority(
+                    product, prediction
+                )
+                if image_orientation_prediction is not None:
+                    insight_dict["data"]["rotation"] = (
+                        image_orientation_prediction.data["rotation"]
+                    )
+                # the language of the ingredient list is stored in the `value_tag` field
+                insight_dict["lc"] = [prediction.value_tag]
+                yield ProductInsight(**insight_dict)
+
+    @staticmethod
+    def get_candidate_priority(
+        product: Product | None,
+        prediction: Prediction,
+    ) -> int:
+        """Return the priority of the insight candidate, to set in data["priority"]
+        field.
+
+        This is used to sort the insights in `sort_candidates` before selection.
+        The priority is defined as follows:
+
+        - 2 (highest priority): the prediction is from a selected ingredient photo
+        - 1: default priority
+        """
+        if product is None:
+            # We don't have access to MongoDB, default priority
+            return 1
+
+        lang = typing.cast(str, prediction.value_tag)
+        nutrition_image_data = product.images.get(f"ingredients_{lang}", None)
+
+        if nutrition_image_data and nutrition_image_data["imgid"] == get_image_id(
+            typing.cast(str, prediction.source_image)
+        ):
+            return 2
+
+        # Default priority
+        return 1
+
+    @staticmethod
+    def keep_prediction(product: Product | None, prediction: Prediction) -> bool:
+        """Return True if the prediction should be kept, False otherwise.
+
+        The prediction should be kept if both of the following conditions apply:
+        - the product has no ingredient information
+        - the fraction of recognized ingredients by Product Opener parser is greater
+          than 60%
+
+        :param product: the product, or None if we don't have access to MongoDB
+        :param prediction: the prediction
+        :return: True if the prediction should be kept, False otherwise
+        """
+        if product is None:
+            # We don't have access to MongoDB, so we generate an insight
+            return True
+
+        # We're sure it's a string and not null
+        predicted_lang = typing.cast(str, prediction.value_tag)
+
+        current_ingredients = product.ingredients_text.get(predicted_lang, None)
+
+        if current_ingredients is not None:
+            # For now, don't create an insight if the product already has
+            # ingredient information for the detected language
+            return False
+
+        if prediction.data["fraction_known_ingredients"] < 0.6:
+            # Less than 60% of the ingredients are recognized, so we don't
+            # create an insight
+            return False
+
+        return True
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # The language of the ingredient detection is saved in the
+        # `value_tag` field, and we only allow one ingredient prediction
+        # per language
+        return candidate.value_tag == reference.value_tag
 
 
 class PackagingElementTaxonomyException(Exception):
@@ -1659,7 +1858,7 @@ class PackagingImporter(InsightImporter):
         return candidate_shape_is_parent_of_ref
 
     @staticmethod
-    def keep_prediction(prediction: Prediction, product: Optional[Product]) -> bool:
+    def keep_prediction(prediction: Prediction, product: Product | None) -> bool:
         """element may contain the following properties:
         - shape
         - recycling
@@ -1727,7 +1926,7 @@ class PackagingImporter(InsightImporter):
     @classmethod
     def generate_candidates(
         cls,
-        product: Optional[Product],
+        product: Product | None,
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
@@ -1740,8 +1939,99 @@ class PackagingImporter(InsightImporter):
             yield ProductInsight(**prediction.to_dict())
 
 
+class ImageOrientationImporter(InsightImporter):
+    """Importer for image orientation insights.
+
+    This insight type predicts the orientation of selected images and suggests
+    rotations to make them correctly oriented if needed.
+    """
+
+    @staticmethod
+    def get_type() -> InsightType:
+        return InsightType.image_orientation
+
+    @classmethod
+    def get_required_prediction_types(cls) -> set[PredictionType]:
+        return {PredictionType.image_orientation}
+
+    @classmethod
+    def is_conflicting_insight(
+        cls, candidate: ProductInsight, reference: ProductInsight
+    ) -> bool:
+        # Two insights conflict if they refer to the same selected image
+        return (
+            candidate.data["image_key"] == reference.data["image_key"]
+            and candidate.source_image == reference.source_image
+        )
+
+    @classmethod
+    def generate_candidates(
+        cls,
+        product: Product | None,
+        predictions: list[Prediction],
+        product_id: ProductIdentifier,
+    ) -> Iterator[ProductInsight]:
+        # Skip if product check is disabled or no predictions are available
+        if not product or not predictions:
+            return
+
+        for prediction in predictions:
+            orientation_data = prediction.data
+            orientation = orientation_data.get("orientation")
+            rotation = orientation_data.get("rotation")
+            count = orientation_data.get("count", {})
+
+            if orientation == "up" or rotation == 0:
+                continue
+
+            # Calculate confidence as fraction of words with predicted orientation
+            total_words = sum(count.values())
+            if total_words == 0:
+                continue
+
+            confidence = count.get(orientation, 0) / total_words
+
+            source_image = typing.cast(str, prediction.source_image)
+            image_id = get_image_id(source_image)
+
+            # Filter for selected images only with high confidence
+            if not (image_id and confidence >= 0.95):
+                continue
+
+            for key, image_data in product.images.items():
+                try:
+                    current_angle = int(image_data.get("angle", "0") or 0)
+                except (TypeError, ValueError):
+                    logger.warning("Invalid angle in image data: %s", image_data)
+                    continue
+
+                if current_angle < 0:
+                    # We store the angle as a positive value in the database
+                    current_angle += 360
+                if (
+                    key.startswith(("front", "ingredients", "nutrition", "packaging"))
+                    # the selected image refers to the original image that has an
+                    # incorrect orientation
+                    and image_data.get("imgid") == image_id
+                    # the selected image angle is different from the detected one
+                    and current_angle != rotation
+                ):
+                    # The `value` field represents the key of the selected image
+                    insight_dict = prediction.to_dict()
+                    insight_dict["data"]["image_key"] = key
+                    insight_dict["data"]["image_rev"] = image_data["rev"]
+                    insight_dict["value_tag"] = orientation
+                    insight = ProductInsight(**insight_dict)
+                    # We process automatically the image if we have more than 10 words
+                    # A manual inspection showed that all the false positive cases
+                    # were due to images with very few words
+                    insight.automatic_processing = total_words >= 10
+                    insight.confidence = confidence
+                    yield insight
+
+
 def is_valid_product_prediction(
-    prediction: Prediction, product: Optional[Product] = None
+    prediction: Prediction, product: Product | None = None
 ) -> bool:
     """Return True if the Prediction is valid and can be imported,
     i.e:
@@ -1778,7 +2068,7 @@ def create_prediction_model(prediction: Prediction, timestamp: datetime.datetime
 
 def _import_product_predictions_sort_fn(
     prediction: Prediction,
-) -> tuple[ServerType, PredictionType, Optional[str], Optional[str]]:
+) -> tuple[ServerType, PredictionType, str | None, str | None]:
     return (
         prediction.server_type,
         prediction.type,
@@ -1898,13 +2188,15 @@ IMPORTERS: list[Type] = [
     NutritionImageImporter,
     IngredientSpellcheckImporter,
     NutrientExtractionImporter,
+    ImageOrientationImporter,
+    IngredientDetectionImporter,
 ]
 
 
 def import_insights(
     predictions: Iterable[Prediction],
     server_type: ServerType,
-    product_store: Optional[DBProductStore] = None,
+    product_store: DBProductStore | None = None,
 ) -> InsightImportResult:
     """Import predictions and generate (and import) insights from these
     predictions.
@@ -2034,7 +2326,7 @@ def import_predictions(
 
 def refresh_insights(
     product_id: ProductIdentifier,
-    product_store: Optional[DBProductStore] = None,
+    product_store: DBProductStore | None = None,
 ) -> list[InsightImportResult]:
     """Refresh all insights for specific product.
 
@@ -2076,7 +2368,7 @@ def refresh_insights(
 def get_product_predictions(
     barcodes: list[str],
     server_type: ServerType,
-    prediction_types: Optional[list[str]] = None,
+    prediction_types: list[str] | None = None,
 ) -> Iterator[dict]:
     """Fetch from DB predictions with barcode in `barcodes`.
 
@@ -2096,3 +2388,6 @@ def get_product_predictions(
         where_clauses.append(PredictionModel.type.in_(prediction_types))
 
     yield from PredictionModel.select().where(*where_clauses).dicts().iterator()
+
+
+function_cache_register.register(get_authorized_labels)

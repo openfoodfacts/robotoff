@@ -1,6 +1,10 @@
+import pytest
+
 from robotoff.prediction.nutrition_extraction import (
     aggregate_entities,
+    match_nutrient_value,
     postprocess_aggregated_entities,
+    postprocess_aggregated_entities_single,
 )
 
 
@@ -368,3 +372,94 @@ class TestAggregateEntities:
             },
         ]
         assert aggregate_entities(pre_entities) == expected_output
+
+
+@pytest.mark.parametrize(
+    "words_str,entity_label,expected_output",
+    [
+        ("525 kcal", "energy_kcal_100g", ("525", "kcal", True)),
+        ("525 kj", "energy_kj_100g", ("525", "kj", True)),
+        ("25 g", "proteins_serving", ("25", "g", True)),
+        # Check that the prefix is correctly detected and formatted
+        ("<0.5 g", "salt_serving", ("< 0.5", "g", True)),
+        ("< 0.5 g", "salt_serving", ("< 0.5", "g", True)),
+        # Invalid value
+        ("ababa", "proteins_serving", (None, None, False)),
+        # Missing unit and value ends with '9' -> infer 'g' as unit and delete '9' digit
+        ("25.49", "proteins_serving", ("25.4", "g", True)),
+        # Missing unit and value ends with '9', but as only decimal -> keep as it
+        ("25.9", "proteins_serving", ("25.9", None, True)),
+        # Missing unit and value ends with '9' but not in target entity list
+        ("25.9", "iron_100g", ("25.9", None, True)),
+        ("O g", "salt_100g", ("0", "g", True)),
+        ("o mg", "sodium_100g", ("0", "mg", True)),
+        ("O", "salt_100g", ("0", None, True)),
+        # Missing unit and value ends with '9' or '8'
+        ("0.19", "saturated_fat_100g", ("0.1", "g", True)),
+        ("0,18", "saturated_fat_100g", ("0.1", "g", True)),
+        ("08", "saturated_fat_100g", ("0", "g", True)),
+        ("09", "salt_100g", ("0", "g", True)),
+        # Missing unit but value does not end with '8' or '9'
+        ("091", "proteins_100g", ("091", None, True)),
+        ("219", "proteins_100g", ("21", "g", True)),
+        ("318", "carbohydrates_100g", ("31", "g", True)),
+        ("105", "proteins_100g", ("105", None, True)),
+    ],
+)
+def test_match_nutrient_value(words_str: str, entity_label: str, expected_output):
+    assert match_nutrient_value(words_str, entity_label) == expected_output
+
+
+@pytest.mark.parametrize(
+    "aggregated_entity,expected_output",
+    [
+        (
+            {
+                "end": 90,
+                "score": 0.9985358715057373,
+                "start": 89,
+                "words": ["0,19\n"],
+                "entity": "SATURATED_FAT_100G",
+                "char_end": 459,
+                "char_start": 454,
+            },
+            {
+                "char_end": 459,
+                "char_start": 454,
+                "end": 90,
+                "entity": "saturated-fat_100g",
+                "score": 0.9985358715057373,
+                "start": 89,
+                "text": "0,19",
+                "unit": "g",
+                "valid": True,
+                "value": "0.1",
+            },
+        ),
+        (
+            {
+                "end": 92,
+                "score": 0.9985358715057373,
+                "start": 90,
+                "words": ["42.5 9"],
+                "entity": "SERVING_SIZE",
+                "char_end": 460,
+                "char_start": 454,
+            },
+            {
+                "char_end": 460,
+                "char_start": 454,
+                "end": 92,
+                "entity": "serving_size",
+                "score": 0.9985358715057373,
+                "start": 90,
+                "text": "42.5 9",
+                "unit": None,
+                "valid": True,
+                "value": "42.5 g",
+            },
+        ),
+    ],
+)
+def test_postprocess_aggregated_entities_single(aggregated_entity, expected_output):
+    assert postprocess_aggregated_entities_single(aggregated_entity) == expected_output

@@ -1,7 +1,6 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 import sentry_sdk
 import toml
@@ -15,7 +14,6 @@ from robotoff.types import ServerType
 # (`dev` by default).
 # If `prod` is used, openfoodfacts.org domain will be used by default,
 # and openfoodfacts.net if `dev` is used.
-# Messages to Slack are only enabled if `ROBOTOFF_INSTANCE=prod`.
 def _robotoff_instance():
     return os.environ.get("ROBOTOFF_INSTANCE", "dev")
 
@@ -50,9 +48,9 @@ class BaseURLProvider(object):
     @staticmethod
     def _get_url(
         base_domain: str,
-        prefix: Optional[str] = "world",
-        tld: Optional[str] = None,
-        scheme: Optional[str] = None,
+        prefix: str | None = "world",
+        tld: str | None = None,
+        scheme: str | None = None,
     ):
         tld = _get_tld() if tld is None else tld
         data = {
@@ -100,6 +98,13 @@ class BaseURLProvider(object):
 
     @staticmethod
     def image_url(server_type: ServerType, image_path: str) -> str:
+        """Generate the URL of an Open Food Facts image.
+
+        :param server_type: The server type (e.g., ServerType.off).
+        :param image_path: The path to the image (e.g.,
+            "/002/604/035/3579/front_en.21.400.jpg").
+        :return: The full URL of the image.
+        """
         prefix = BaseURLProvider._get_url(
             prefix="images", base_domain=server_type.get_base_domain()
         )
@@ -130,6 +135,10 @@ I18N_DIR = PROJECT_DIR / "i18n"
 LABEL_LOGOS_PATH = DATA_DIR / "label_logos.json"
 GRAMMARS_DIR = DATA_DIR / "grammars"
 JSONL_DATASET_PATH = DATASET_DIR / "products.jsonl.gz"
+PARQUET_DATASET_PATHS = {
+    ServerType.off: DATASET_DIR / "food.parquet",
+    ServerType.obf: DATASET_DIR / "beauty.parquet",
+}
 JSONL_DATASET_ETAG_PATH = DATASET_DIR / "products-etag.txt"
 JSONL_MIN_DATASET_PATH = DATASET_DIR / "products-min.jsonl.gz"
 DATASET_CHECK_MIN_PRODUCT_COUNT = 2_800_000
@@ -199,7 +208,10 @@ REDIS_UPDATE_HOST = os.environ.get("REDIS_UPDATE_HOST", "localhost")
 REDIS_UPDATE_PORT = os.environ.get("REDIS_UPDATE_PORT", 6379)
 
 # Name of the Redis stream where Product Opener publishes product updates
-REDIS_STREAM_NAME = os.environ.get("REDIS_STREAM_NAME", "product_updates_off")
+REDIS_STREAM_NAME = os.environ.get("REDIS_STREAM_NAME", "product_updates")
+REDIS_LATEST_ID_KEY = os.environ.get(
+    "REDIS_LATEST_ID_KEY", "robotoff:product_updates:latest_id"
+)
 
 # how many seconds should we wait to compute insight on product updated
 UPDATED_PRODUCT_WAIT = float(os.environ.get("ROBOTOFF_UPDATED_PRODUCT_WAIT", 10))
@@ -218,33 +230,15 @@ ELASTICSEARCH_TYPE = "document"
 K_NEAREST_NEIGHBORS = 10
 
 # image moderation service
-IMAGE_MODERATION_SERVICE_URL: Optional[str] = os.environ.get(
+IMAGE_MODERATION_SERVICE_URL: str | None = os.environ.get(
     "IMAGE_MODERATION_SERVICE_URL", None
 )
-
-# Slack paramaters for notifications about detection
-_slack_token = os.environ.get("SLACK_TOKEN", "")
-
-
-# Returns the slack token to use for posting alerts if the current instance is
-# the 'prod' instance. For all other instances, the empty string is returned.
-def slack_token() -> str:
-    if _robotoff_instance() == "prod":
-        if _slack_token != "":
-            return _slack_token
-        else:
-            raise ValueError("No SLACK_TOKEN specified for prod Robotoff")
-
-    if _slack_token != "":
-        raise ValueError("SLACK_TOKEN specified for non-prod Robotoff")
-    return ""
-
 
 # Sentry for error reporting
 _sentry_dsn = os.environ.get("SENTRY_DSN")
 
 
-def init_sentry(integrations: Optional[list[Integration]] = None):
+def init_sentry(integrations: list[Integration] | None = None):
     robotoff_instance = _robotoff_instance()
     if _sentry_dsn:
         integrations = integrations or []
@@ -274,7 +268,6 @@ OCR_BRANDS_PATH = OCR_DATA_DIR / "brand.txt"
 OCR_TAXONOMY_BRANDS_PATH = OCR_DATA_DIR / "brand_from_taxonomy.gz"
 OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH = OCR_DATA_DIR / "brand_logo_annotation.txt"
 OCR_STORES_DATA_PATH = OCR_DATA_DIR / "store_regex.txt"
-OCR_STORES_NOTIFY_DATA_PATH = OCR_DATA_DIR / "store_notify.txt"
 OCR_LOGO_ANNOTATION_LABELS_DATA_PATH = OCR_DATA_DIR / "label_logo_annotation.txt"
 OCR_LABEL_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "label_flashtext.txt"
 OCR_USDA_CODE_FLASHTEXT_DATA_PATH = OCR_DATA_DIR / "USDA_code_flashtext.txt"
@@ -296,10 +289,7 @@ BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json.gz"
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
-_triton_host = os.environ.get("TRITON_HOST", "localhost")
-_triton_grpc_port = os.environ.get("TRITON_PORT", "8001")
-TRITON_URI = f"{_triton_host}:{_triton_grpc_port}"
-
+TRITON_URI = os.environ.get("TRITON_URI", "triton:8001")
 TRITON_MODELS_DIR = PROJECT_DIR / "models/triton"
 
 _fasttext_host = os.environ.get("FASTTEXT_HOST", "fasttext")

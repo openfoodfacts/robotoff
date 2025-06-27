@@ -39,3 +39,7 @@ msgstr "¿Muestra esta imagen información nutricional en este idioma?"
 msgid "Does the product have this packaging element?"
 msgstr "¿El producto tiene este elemento en el envase?"
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image rotated with the following orientation?"
+msgstr "¿Esta imagen está rotada con la siguiente orientación?"
+

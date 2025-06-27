@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import Iterable, Optional, Union
+from typing import Iterable, Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -11,8 +11,9 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff import settings
-from robotoff.types import Prediction, PredictionType
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 from .utils import generate_keyword_processor
@@ -24,7 +25,7 @@ logger = get_logger(__name__)
 PREDICTOR_VERSION = "1"
 
 
-def process_eu_bio_label_code(match) -> Optional[str]:
+def process_eu_bio_label_code(match) -> str | None:
     country = match.group(1).lower()
     bio_code = match.group(2).replace("ö", "o").replace("ø", "o").lower()
     id_ = match.group(3).lower()
@@ -183,7 +184,7 @@ def get_logo_annotation_labels() -> dict[str, str]:
 
 
 @functools.cache
-def generate_label_keyword_processor(labels: Optional[Iterable[str]] = None):
+def generate_label_keyword_processor(labels: Iterable[str] | None = None):
     if labels is None:
         labels = text_file_iter(settings.OCR_LABEL_FLASHTEXT_DATA_PATH)
 
@@ -200,7 +201,7 @@ def extract_label_flashtext(
         text, span_info=True
     ):
         match_str = text[span_start:span_end]
-        data = {"text": match_str, "notify": False}
+        data: JSONType = {"text": match_str}
 
         if (
             bounding_box := get_match_bounding_box(content, span_start, span_end)
@@ -242,7 +243,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                 else:
                     label_value = label_tag
 
-                data = {"text": match.group(), "notify": ocr_regex.notify}
+                data: JSONType = {"text": match.group()}
                 if (
                     bounding_box := get_match_bounding_box(
                         content, match.start(), match.end()
@@ -280,3 +281,7 @@ def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
                 )
 
     return predictions
+
+
+function_cache_register.register(get_logo_annotation_labels)
+function_cache_register.register(generate_label_keyword_processor)

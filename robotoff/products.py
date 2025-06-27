@@ -7,10 +7,13 @@ import json
 import os
 import shutil
 import tempfile
+import typing
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Union
+from typing import Iterable, Iterator, Union
 
 import requests
+from huggingface_hub import snapshot_download
+from openfoodfacts.images import convert_to_legacy_schema
 from pymongo import MongoClient
 
 from robotoff import settings
@@ -29,7 +32,7 @@ def get_mongo_client() -> MongoClient:
     )
 
 
-def get_image_id(image_path: str) -> Optional[str]:
+def get_image_id(image_path: str) -> str | None:
     """Return the image ID from an image path.
 
     :param image_path: the image path (ex: /322/247/762/7888/2.jpg)
@@ -53,16 +56,16 @@ def is_valid_image(images: JSONType, image_path: str) -> bool:
 
 
 def is_nutrition_image(
-    images: JSONType, image_path: str, lang: Optional[str] = None
+    images: JSONType, image_path: str, lang: str | None = None
 ) -> bool:
     return is_special_image(images, image_path, "nutrition", lang)
 
 
-def has_nutrition_image(images: JSONType, lang: Optional[str] = None) -> bool:
+def has_nutrition_image(images: JSONType, lang: str | None = None) -> bool:
     return has_special_image(images, "nutrition", lang)
 
 
-def has_special_image(images: JSONType, key: str, lang: Optional[str] = None) -> bool:
+def has_special_image(images: JSONType, key: str, lang: str | None = None) -> bool:
     field_name = "{}_".format(key) if lang is None else "{}_{}".format(key, lang)
     for image_key in images:
         if image_key.startswith(field_name):
@@ -72,7 +75,7 @@ def has_special_image(images: JSONType, key: str, lang: Optional[str] = None) ->
 
 
 def is_special_image(
-    images: JSONType, image_path: str, image_type: str, lang: Optional[str] = None
+    images: JSONType, image_path: str, image_type: str, lang: str | None = None
 ) -> bool:
     if not is_valid_image(images, image_path):
         return False
@@ -101,7 +104,7 @@ def minify_product_dataset(dataset_path: Path, output_path: Path):
 
     with gzip.open(output_path, "wt", encoding="utf-8") as output_:
         for item in jsonl_iter_func(dataset_path):
-            available_fields = Product.get_fields()
+            available_fields = Product.get_fields(item)
 
             minified_item = dict(
                 (
@@ -113,7 +116,7 @@ def minify_product_dataset(dataset_path: Path, output_path: Path):
             output_.write(json.dumps(minified_item) + "\n")
 
 
-def get_product_dataset_etag() -> Optional[str]:
+def get_product_dataset_etag() -> str | None:
     if not settings.JSONL_DATASET_ETAG_PATH.is_file():
         return None
 
@@ -126,14 +129,14 @@ def save_product_dataset_etag(etag: str):
         return f.write(etag)
 
 
-def fetch_dataset(minify: bool = True) -> bool:
+def fetch_jsonl_dataset(minify: bool = True) -> bool:
     with tempfile.TemporaryDirectory() as tmp_dir:
         output_dir = Path(tmp_dir)
         output_path = output_dir / "products.jsonl.gz"
         etag = download_dataset(output_path)
 
         logger.info("Checking dataset file integrity")
-        if not is_valid_dataset(output_path):
+        if not is_valid_jsonl_dataset(output_path):
             return False
 
         if minify:
@@ -152,7 +155,7 @@ def fetch_dataset(minify: bool = True) -> bool:
         return True
 
 
-def has_dataset_changed() -> bool:
+def has_jsonl_dataset_changed() -> bool:
     etag = get_product_dataset_etag()
 
     if etag is not None:
@@ -167,20 +170,31 @@ def has_dataset_changed() -> bool:
     return True
 
 
+def fetch_parquet_datasets():
+    patterns = [path.name for path in settings.PARQUET_DATASET_PATHS.values()]
+    snapshot_download(
+        repo_id="openfoodfacts/product-database",
+        repo_type="dataset",
+        allow_patterns=patterns,
+        local_dir=settings.DATASET_DIR,
+    )
+
+
 def download_dataset(output_path: os.PathLike) -> str:
     r = http_session.get(settings.JSONL_DATASET_URL, stream=True)
     current_etag = r.headers.get("ETag", "").strip("'\"")
 
-    logger.info("Dataset has changed, downloading file")
+    logger.info("JSONL dataset has changed, downloading file")
     logger.debug("Saving temporary file in %s", output_path)
 
     with open(output_path, "wb") as f:
         shutil.copyfileobj(r.raw, f)
 
+    logger.info("Dataset downloaded")
     return current_etag
 
 
-def is_valid_dataset(dataset_path: Path) -> bool:
+def is_valid_jsonl_dataset(dataset_path: Path) -> bool:
     """Check the dataset integrity: readable end to end and with a minimum
     number of products.
 
@@ -313,8 +327,8 @@ class ProductStream:
 
     def filter_by_modified_datetime(
         self,
-        from_t: Optional[datetime.datetime] = None,
-        to_t: Optional[datetime.datetime] = None,
+        from_t: datetime.datetime | None = None,
+        to_t: datetime.datetime | None = None,
     ):
         if from_t is None and to_t is None:
             raise ValueError("one of `from_t` or `to_t` must be provided")
@@ -349,9 +363,7 @@ class ProductStream:
     def iter(self) -> Iterable[JSONType]:
         return iter(self)
 
-    def iter_product(
-        self, projection: Optional[list[str]] = None
-    ) -> Iterable["Product"]:
+    def iter_product(self, projection: list[str] | None = None) -> Iterable["Product"]:
         for item in self:
             projected_item = item
             if projection:
@@ -419,16 +431,19 @@ class Product:
         "lang",
         "ingredients_text",
         "nutriments",
+        "nutrition_data_per",
+        "nutrition_data_prepared",
+        "serving_size",
     )
 
     def __init__(self, product: JSONType):
-        self.barcode: Optional[str] = product.get("code")
+        self.barcode: str | None = product.get("code")
         self.countries_tags: list[str] = product.get("countries_tags") or []
         self.categories_tags: list[str] = product.get("categories_tags") or []
         self.emb_codes_tags: list[str] = product.get("emb_codes_tags") or []
         self.labels_tags: list[str] = product.get("labels_tags") or []
-        self.quantity: Optional[str] = product.get("quantity") or None
-        self.expiration_date: Optional[str] = product.get("expiration_date") or None
+        self.quantity: str | None = product.get("quantity") or None
+        self.expiration_date: str | None = product.get("expiration_date") or None
         self.brands_tags: list[str] = product.get("brands_tags") or []
         self.stores_tags: list[str] = product.get("stores_tags") or []
         self.packagings: list = product.get("packagings") or []
@@ -440,12 +455,27 @@ class Product:
             if "image_ids" in product
             else list(key for key in self.images.keys() if key.isdigit())
         )
-        self.lang: Optional[str] = product.get("lang")
-        self.ingredients_text: Optional[str] = product.get("ingredients_text")
+        self.lang: str | None = product.get("lang")
+        ingredients_text: JSONType = {}
+        for key in (k for k in product.keys() if k.startswith("ingredients_text")):
+            value = product[key]
+            if not value:
+                continue
+            if key == "ingredients_text":
+                ingredients_text["main"] = value
+            else:
+                lang = key.split("_")[-1]
+                ingredients_text[lang] = value
+        self.ingredients_text: JSONType = ingredients_text
         self.nutriments: JSONType = product.get("nutriments") or {}
+        self.nutrition_data_per: str | None = product.get("nutrition_data_per")
+        self.nutrition_data_prepared: bool = (
+            product.get("nutrition_data_prepared") == "on"
+        )
+        self.serving_size: str | None = product.get("serving_size")
 
     @staticmethod
-    def get_fields():
+    def get_fields(item: JSONType) -> set[str]:
         return {
             "code",
             "countries_tags",
@@ -459,9 +489,11 @@ class Product:
             "unique_scans_n",
             "images",
             "lang",
-            "ingredients_text",
             "nutriments",
-        }
+            "nutrition_data_per",
+            "nutrition_data_prepared",
+            "serving_size",
+        } | set(k for k in item.keys() if k.startswith("ingredients_text"))
 
 
 class ProductStore(metaclass=abc.ABCMeta):
@@ -482,7 +514,7 @@ class MemoryProductStore(ProductStore):
         return len(self.store)
 
     @classmethod
-    def load_from_path(cls, path: Path, projection: Optional[list[str]] = None):
+    def load_from_path(cls, path: Path, projection: list[str] | None = None):
         logger.info("Loading product store")
 
         if projection is not None and "code" not in projection:
@@ -500,14 +532,14 @@ class MemoryProductStore(ProductStore):
         return cls(store)
 
     @classmethod
-    def load_min(cls, projection: Optional[list[str]] = None) -> "MemoryProductStore":
+    def load_min(cls, projection: list[str] | None = None) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_MIN_DATASET_PATH, projection)
 
     @classmethod
     def load_full(cls) -> "MemoryProductStore":
         return cls.load_from_path(settings.JSONL_DATASET_PATH)
 
-    def __getitem__(self, item) -> Optional[Product]:
+    def __getitem__(self, item) -> Product | None:
         return self.store.get(item)
 
     def __iter__(self) -> Iterator[Product]:
@@ -526,8 +558,15 @@ class DBProductStore(ProductStore):
         return len(self.collection.estimated_document_count())
 
     def get_product(
-        self, product_id: ProductIdentifier, projection: Optional[list[str]] = None
-    ) -> Optional[JSONType]:
+        self, product_id: ProductIdentifier, projection: list[str] | None = None
+    ) -> JSONType | None:
+        """Fetch a product from the MongoDB.
+
+        :param product_id: identifier of the product to fetch
+        :param projection: list of fields to retrieve, if not provided all fields
+            are queried
+        :return: the product as a dict or None if it was not found
+        """
         if not settings.ENABLE_MONGODB_ACCESS:
             # if `ENABLE_MONGODB_ACCESS=False`, we don't disable MongoDB
             # access and return None
@@ -535,9 +574,23 @@ class DBProductStore(ProductStore):
         # We use `_id` instead of `code` field, as `_id` contains org ID +
         # barcode for pro platform, which is also the case for
         # `product_id.barcode`
-        return self.collection.find_one({"_id": product_id.barcode}, projection)
+        product = self.collection.find_one({"_id": product_id.barcode}, projection)
 
-    def __getitem__(self, product_id: ProductIdentifier) -> Optional[Product]:
+        # Convert the `images` field to the legacy schema, until the migration
+        # is done. Once it's done, we can upgrade all Robotoff code to use the new
+        # schema.
+        return self._convert_schema(product)
+
+    @staticmethod
+    def _convert_schema(product: JSONType | None) -> JSONType | None:
+        """Convert the product to the legacy `images` schema if the product
+        is not None and the `images` field is present, otherwise return
+        the product as is."""
+        if product is not None and "images" in product:
+            product["images"] = convert_to_legacy_schema(product["images"])
+        return product
+
+    def __getitem__(self, product_id: ProductIdentifier) -> Product | None:
         product = self.get_product(product_id)
 
         if product:
@@ -545,12 +598,15 @@ class DBProductStore(ProductStore):
 
         return None
 
-    def iter_product(self, projection: Optional[list[str]] = None):
+    def iter_product(self, projection: list[str] | None = None):
         if self.collection is not None:
-            yield from (Product(p) for p in self.collection.find(projection=projection))
+            yield from (
+                Product(typing.cast(JSONType, self._convert_schema(p)))
+                for p in self.collection.find(projection=projection)
+            )
 
 
-def get_min_product_store(projection: Optional[list[str]] = None) -> MemoryProductStore:
+def get_min_product_store(projection: list[str] | None = None) -> MemoryProductStore:
     logger.info("Loading product store in memory...")
     ps = MemoryProductStore.load_min(projection)
     logger.info("product store loaded (%s items)", len(ps))
@@ -562,8 +618,8 @@ def get_product_store(server_type: ServerType) -> DBProductStore:
 
 
 def get_product(
-    product_id: ProductIdentifier, projection: Optional[list[str]] = None
-) -> Optional[JSONType]:
+    product_id: ProductIdentifier, projection: list[str] | None = None
+) -> JSONType | None:
     """Get product from MongoDB.
 
     :param product_id: identifier of the product to fetch

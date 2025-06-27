@@ -2,17 +2,21 @@ import dataclasses
 import datetime
 import enum
 import uuid
-from typing import Any, Literal, Optional
+from collections import Counter
+from typing import Any, Literal, Self
+
+from pydantic import BaseModel, ConfigDict, model_validator
 
 #: A precise expectation of what mappings looks like in json.
 #: (dict where keys are always of type `str`).
 JSONType = dict[str, Any]
 
 
-class ObjectDetectionModel(enum.Enum):
+class ObjectDetectionModel(str, enum.Enum):
     nutriscore = "nutriscore"
-    universal_logo_detector = "universal-logo-detector"
-    nutrition_table = "nutrition-table"
+    universal_logo_detector = "universal_logo_detector"
+    nutrition_table = "nutrition_table"
+    price_tag_detection = "price_tag_detection"
 
 
 class ImageClassificationModel(str, enum.Enum):
@@ -51,6 +55,7 @@ class PredictionType(str, enum.Enum):
     nutrition_image = "nutrition_image"
     is_upc_image = "is_upc_image"
     nutrient_extraction = "nutrient_extraction"
+    ingredient_detection = "ingredient_detection"
 
 
 @enum.unique
@@ -157,6 +162,8 @@ class InsightType(str, enum.Enum):
     # Nutrient values extracted from images
     nutrient_extraction = "nutrient_extraction"
 
+    ingredient_detection = "ingredient_detection"
+
 
 class ServerType(str, enum.Enum):
     """ServerType is used to refer to a specific Open*Facts project:
@@ -234,16 +241,16 @@ class ServerType(str, enum.Enum):
 class Prediction:
     type: PredictionType
     data: dict[str, Any] = dataclasses.field(default_factory=dict)
-    value_tag: Optional[str] = None
-    value: Optional[str] = None
-    automatic_processing: Optional[bool] = None
-    predictor: Optional[str] = None
-    predictor_version: Optional[str] = None
-    barcode: Optional[str] = None
-    timestamp: Optional[datetime.datetime] = None
-    source_image: Optional[str] = None
-    id: Optional[int] = None
-    confidence: Optional[float] = None
+    value_tag: str | None = None
+    value: str | None = None
+    automatic_processing: bool | None = None
+    predictor: str | None = None
+    predictor_version: str | None = None
+    barcode: str | None = None
+    timestamp: datetime.datetime | None = None
+    source_image: str | None = None
+    id: int | None = None
+    confidence: float | None = None
     server_type: ServerType = ServerType.off
 
     def to_dict(self) -> dict[str, Any]:
@@ -278,6 +285,9 @@ class ProductIdentifier:
 
     def __hash__(self) -> int:
         return hash((self.barcode, self.server_type))
+
+    def is_valid(self) -> bool:
+        return bool(self.barcode and self.server_type)
 
 
 @enum.unique
@@ -350,7 +360,7 @@ class PackagingElementProperty(enum.Enum):
     recycling = "recycling"
 
 
-LogoLabelType = tuple[str, Optional[str]]
+LogoLabelType = tuple[str, str | None]
 
 InsightAnnotation = Literal[-1, 0, 1, 2]
 
@@ -360,3 +370,104 @@ class BatchJobType(enum.Enum):
     """Each job type correspond to a task that will be executed in the batch job."""
 
     ingredients_spellcheck = "ingredients-spellcheck"
+
+
+class NutrientSingleValue(BaseModel):
+    value: str
+    unit: str | None = None
+
+
+class NutrientData(BaseModel):
+    nutrients: dict[str, NutrientSingleValue]
+    serving_size: str | None = None
+    nutrition_data_per: Literal["100g", "serving"] | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def move_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "nutrients" in data:
+            if "serving_size" in data["nutrients"]:
+                # In the input data, `serving_size` is a key of the `nutrients`
+                # while on Product Opener, it's a different field. We move it
+                # to the root of the dict to be compliant with Product Opener
+                # API.
+                serving_size = data["nutrients"].pop("serving_size")
+                if isinstance(serving_size, dict):
+                    data["serving_size"] = serving_size["value"]
+                else:
+                    data["serving_size"] = serving_size
+        return data
+
+    @model_validator(mode="after")
+    def validate_nutrients(self) -> Self:
+        if len(self.nutrients) == 0:
+            raise ValueError("at least one nutrient is required")
+
+        # We expect all nutrient keys to be in the format `{nutrient_name}_{unit}`
+        # where `unit` is either `100g` or `serving`.
+        if not all("_" in k for k in self.nutrients):
+            raise ValueError("each nutrient key must end with '_100g' or '_serving'")
+
+        # We select the as `nutrition_data_per` the most common value between `100g`
+        # and `serving`.
+        # When the data is submitted by the client, we expect all nutrient keys to
+        # have the same unit (either `100g` or `serving`).
+        # When the annotation is performed directly from the insight (without user
+        # update or validation), we select the most common key.
+        nutrition_data_per_count = Counter(
+            key.rsplit("_", maxsplit=1)[1] for key in self.nutrients.keys()
+        )
+        if set(nutrition_data_per_count.keys()).difference({"100g", "serving"}):
+            # Some keys are not ending with '_100g' or '_serving'
+            raise ValueError("each nutrient key must end with '_100g' or '_serving'")
+
+        # Select the most common nutrition data per
+        self.nutrition_data_per = nutrition_data_per_count.most_common(1)[0][0]  # type: ignore
+        self.nutrients = {
+            k.rsplit("_", maxsplit=1)[0]: v
+            for k, v in self.nutrients.items()
+            if k.endswith(self.nutrition_data_per)  # type: ignore
+        }
+        return self
+
+
+class ImportImageFlag(str, enum.Enum):
+    add_image_fingerprint = "add_image_fingerprint"
+    import_insights_from_image = "import_insights_from_image"
+    extract_ingredients = "extract_ingredients"
+    extract_nutrition = "extract_nutrition"
+    run_logo_object_detection = "run_logo_object_detection"
+    run_nutrition_table_object_detection = "run_nutrition_table_object_detection"
+
+
+class IngredientAnnotateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    annotation: str
+    rotation: int | None = None
+    bounding_box: list[float] | None = None
+
+    @model_validator(mode="after")
+    def validate_bounding_box(self) -> Self:
+        if self.bounding_box:
+            if len(self.bounding_box) != 4:
+                raise ValueError("bounding_box must have exactly 4 elements")
+            if not all(0.0 <= coord <= 1.0 for coord in self.bounding_box):
+                raise ValueError("bounding_box coordinates must be between 0.0 and 1.0")
+
+            # Check that the format of the bounding box is correct:
+            # (y_min, x_min, y_max, x_max)
+            if not (
+                self.bounding_box[0] < self.bounding_box[2]
+                and self.bounding_box[1] < self.bounding_box[3]
+            ):
+                raise ValueError(
+                    "bounding_box coordinates must be in the format "
+                    "(y_min, x_min, y_max, x_max)"
+                )
+
+        return self
+
+
+class CategoryAnnotateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    value_tag: str

@@ -30,7 +30,7 @@ _id_count = 0
 def _create_insight(**kwargs):
     data = dict(
         {
-            "data": {"notify": False},  # we do not test notification
+            "data": {},
             "type": "category",
             "value_tag": "en:Salmons",
             "automatic_processing": True,

@@ -16,7 +16,12 @@ def run_ocr_on_image_batch(base64_images: List[str], api_key: str) -> requests.R
         json={
             "requests": [
                 {
-                    "features": [{"type": "TEXT_DETECTION"}],
+                    "features": [
+                        {"type": "TEXT_DETECTION"},
+                        {"type": "FACE_DETECTION"},
+                        {"type": "LABEL_DETECTION"},
+                        {"type": "SAFE_SEARCH_DETECTION"},
+                    ],
                     "image": {"content": base64_image},
                 }
                 for base64_image in base64_images

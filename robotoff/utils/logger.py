@@ -1,10 +1,9 @@
 import logging
 import os
 import sys
-from typing import Optional
 
 
-def get_logger(name=None, level: Optional[int] = None):
+def get_logger(name=None, level: int | None = None):
     logger = logging.getLogger(name)
 
     if level is None:
@@ -30,7 +29,7 @@ def configure_root_logger(logger, level: int = 20):
     logger.setLevel(level)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
-        "%(asctime)s :: %(processName)s :: "
+        "%(asctime)s :: pid %(process)d :: "
         "%(threadName)s :: %(levelname)s :: "
         "%(message)s"
     )

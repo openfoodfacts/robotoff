@@ -1,14 +1,17 @@
 import collections
-from typing import Optional
 
-import cachetools
-from openfoodfacts.taxonomy import Taxonomy
+from cachetools.func import ttl_cache
+from openfoodfacts.taxonomy import (
+    Taxonomy,
+    create_brand_taxonomy_mapping,
+    create_taxonomy_mapping,
+)
 from openfoodfacts.taxonomy import get_taxonomy as _get_taxonomy
 from openfoodfacts.types import TaxonomyType
 
 from robotoff import settings
 from robotoff.utils import get_logger
-from robotoff.utils.text import get_tag
+from robotoff.utils.cache import function_cache_register
 
 logger = get_logger(__name__)
 
@@ -39,7 +42,8 @@ def generate_category_hierarchy(
     return categories_hierarchy_list
 
 
-@cachetools.cached(cache=cachetools.TTLCache(maxsize=100, ttl=12 * 60 * 60))  # 12h
+# ttl: 12h
+@ttl_cache(maxsize=100, ttl=12 * 60 * 60)
 def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Taxonomy:
     """Return the taxonomy of type `taxonomy_type`.
 
@@ -63,6 +67,7 @@ def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Ta
     return _get_taxonomy(
         taxonomy_type_enum,
         force_download=False,
+        download_newer=True,
         cache_dir=settings.DATA_DIR / "taxonomies",
     )
 
@@ -73,7 +78,8 @@ def is_prefixed_value(value: str) -> bool:
     return len(value) > 3 and value[2] == ":"
 
 
-@cachetools.cached(cachetools.TTLCache(maxsize=2, ttl=43200))  # 12h TTL
+# ttl: 12h
+@ttl_cache(maxsize=2, ttl=12 * 60 * 60)
 def get_taxonomy_mapping(taxonomy_type: str) -> dict[str, str]:
     """Return for label type a mapping of prefixed taxonomy values in all
     languages (such as `fr:bio-europeen` or `es:"ecologico-ue`) to their
@@ -81,29 +87,24 @@ def get_taxonomy_mapping(taxonomy_type: str) -> dict[str, str]:
     """
     logger.debug("Loading taxonomy mapping %s...", taxonomy_type)
     taxonomy = get_taxonomy(taxonomy_type)
-    ids: dict[str, str] = {}
 
-    for key in taxonomy.keys():
-        if taxonomy_type == TaxonomyType.brand.name:
-            unprefixed_key = key
-            if is_prefixed_value(key):
-                unprefixed_key = key[3:]
-            ids[unprefixed_key] = taxonomy[key].names["en"]
-        else:
-            for lang, name in taxonomy[key].names.items():
-                tag = get_tag(name)
-                ids[f"{lang}:{tag}"] = key
-
-    return ids
+    if taxonomy_type == TaxonomyType.brand.name:
+        return create_brand_taxonomy_mapping(taxonomy)
+    else:
+        return create_taxonomy_mapping(taxonomy)
 
 
-def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> Optional[str]:
+def match_taxonomized_value(value_tag: str, taxonomy_type: str) -> str | None:
     """Return the canonical taxonomized value of a `value_tag` (if any) or
     return None if no match was found or if the type is unsupported.
 
-    Currently it only works for brand and label.
+    Currently it only works for brand, label and category taxonomies.
     """
-    if taxonomy_type not in (TaxonomyType.brand.name, TaxonomyType.label.name):
+    if taxonomy_type not in (
+        TaxonomyType.brand.name,
+        TaxonomyType.label.name,
+        TaxonomyType.category.name,
+    ):
         return None
 
     taxonomy = get_taxonomy(taxonomy_type)
@@ -121,3 +122,7 @@ def load_resources():
 
     for taxonomy_type in (TaxonomyType.brand, TaxonomyType.label):
         get_taxonomy_mapping(taxonomy_type.name)
+
+
+function_cache_register.register(get_taxonomy)
+function_cache_register.register(get_taxonomy_mapping)

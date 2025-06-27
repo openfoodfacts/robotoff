@@ -1,5 +1,5 @@
 import datetime
-from typing import Iterable, Optional
+from typing import Iterable
 
 from openfoodfacts.ocr import OCRResult
 from PIL import Image
@@ -8,7 +8,7 @@ from robotoff.models import ImageModel, ImagePrediction
 from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import (
-    OBJECT_DETECTION_MODEL_VERSION,
+    MODELS_CONFIG,
     ObjectDetectionModelRegistry,
 )
 from robotoff.types import (
@@ -53,7 +53,7 @@ def run_object_detection_model(
     threshold: float = 0.1,
     return_null_if_exist: bool = True,
     triton_uri: str | None = None,
-) -> Optional[ImagePrediction]:
+) -> ImagePrediction | None:
     """Run a model detection model and save the results in the
     `image_prediction` table.
 
@@ -88,13 +88,13 @@ def run_object_detection_model(
     results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
         image, output_image=False, triton_uri=triton_uri, threshold=threshold
     )
-    data = results.to_json()
+    data = results.to_list()
     max_confidence = max((item["score"] for item in data), default=None)
     return ImagePrediction.create(
         image=image_model,
         type="object_detection",
         model_name=model_name.name,
-        model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
+        model_version=MODELS_CONFIG[model_name].model_version,
         data={"objects": data},
         timestamp=timestamp,
         max_confidence=max_confidence,

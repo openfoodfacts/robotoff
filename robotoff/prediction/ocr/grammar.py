@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.utils import dump_json, get_logger
@@ -76,12 +75,12 @@ def generate_terminal_symbols_file(
     lang: str,
     terminal_name: str,
     taxonomy_type: TaxonomyType,
-    terminal_priority: Optional[int] = None,
+    terminal_priority: int | None = None,
     lowercase: bool = True,
     strip_accent: bool = True,
     add_synonyms: bool = True,
     add_xx: bool = True,
-    ignore_ids: Optional[set[str]] = None,
+    ignore_ids: set[str] | None = None,
     raises: bool = True,
 ):
     """Generate lark terminal symbol file from a taxonomy."""
@@ -110,12 +109,12 @@ def generate_terminal_symbols_text(
     lang: str,
     terminal_name: str,
     taxonomy_type: TaxonomyType,
-    terminal_priority: Optional[int] = None,
+    terminal_priority: int | None = None,
     lowercase: bool = True,
     strip_accent: bool = True,
     add_synonyms: bool = True,
     add_xx: bool = True,
-    ignore_ids: Optional[set[str]] = None,
+    ignore_ids: set[str] | None = None,
     raises: bool = True,
 ) -> tuple[str, dict[str, list[str]]]:
     """Generate the text of a lark terminal symbol file from a taxonomy.

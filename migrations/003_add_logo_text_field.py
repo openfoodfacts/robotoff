@@ -1,5 +1,4 @@
-"""Peewee migrations -- 003_add_logo_text_field.py.
-"""
+"""Peewee migrations -- 003_add_logo_text_field.py."""
 
 import peewee as pw
 from peewee_migrate import Migrator

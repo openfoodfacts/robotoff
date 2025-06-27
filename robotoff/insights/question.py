@@ -1,10 +1,9 @@
 import abc
 import pathlib
-from typing import Optional
 
 from robotoff import settings
 from robotoff.models import ProductInsight
-from robotoff.off import generate_image_url
+from robotoff.off import generate_image_path, generate_image_url
 from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.types import InsightType, JSONType, ProductIdentifier
@@ -68,8 +67,8 @@ def generate_selected_images(
 
 
 def get_source_image_url(
-    product_id: ProductIdentifier, field_types: Optional[list[str]] = None
-) -> Optional[str]:
+    product_id: ProductIdentifier, field_types: list[str] | None = None
+) -> str | None:
     """Generate the URL of a generic image to display for an insight.
 
     By default, we check in order that the product has an image in any
@@ -84,7 +83,7 @@ def get_source_image_url(
     if field_types is None:
         field_types = ["front", "ingredients", "nutrition"]
 
-    product: Optional[JSONType] = get_product(product_id, ["images"])
+    product: JSONType | None = get_product(product_id, ["images"])
 
     if product is None or "images" not in product:
         return None
@@ -121,11 +120,11 @@ class AddBinaryQuestion(Question):
     :param value: the suggested answer to the question
     :param insight: the insight used to generate the question
     :param ref_image_url: the URL of a reference image, used to display the
-    image of the logo for `label` insights, optional
+        image of the logo for `label` insights, optional
     :param source_image_url: the URL of the image from where the insight was
-    extracted from, optional
+        extracted from, optional
     :param value_tag: The `value_tag` that is going to be sent to Product
-    Opener if the insight is validated, optional
+        Opener if the insight is validated, optional
     """
 
     def __init__(
@@ -133,9 +132,9 @@ class AddBinaryQuestion(Question):
         question: str,
         value: str,
         insight: ProductInsight,
-        ref_image_url: Optional[str] = None,
-        source_image_url: Optional[str] = None,
-        value_tag: Optional[str] = None,
+        ref_image_url: str | None = None,
+        source_image_url: str | None = None,
+        value_tag: str | None = None,
     ):
         self.question: str = question
         self.value: str = value
@@ -143,9 +142,9 @@ class AddBinaryQuestion(Question):
         self.insight_type: str = str(insight.type)
         self.barcode: str = insight.barcode
         self.server_type: str = insight.server_type
-        self.ref_image_url: Optional[str] = ref_image_url
-        self.source_image_url: Optional[str] = source_image_url
-        self.value_tag: Optional[str] = value_tag
+        self.ref_image_url: str | None = ref_image_url
+        self.source_image_url: str | None = source_image_url
+        self.value_tag: str | None = value_tag
 
     def get_type(self):
         return "add-binary"
@@ -404,6 +403,30 @@ class UPCImageQuestionFormatter(QuestionFormatter):
         )
 
 
+class ImageOrientationQuestionFormatter(QuestionFormatter):
+    question = "Is this image rotated with the following orientation?"
+
+    def format_question(self, insight: ProductInsight, lang: str) -> Question:
+        localized_question = self.translation_store.gettext(lang, self.question)
+
+        server_type = insight.get_product_id().server_type
+
+        image_key = insight.data["image_key"]
+        image_rev = insight.data["image_rev"]
+
+        image_path = generate_image_path(
+            insight.get_product_id(), f"{image_key}.{image_rev}.400"
+        )
+        source_image_url = settings.BaseURLProvider.image_url(server_type, image_path)
+
+        return AddBinaryQuestion(
+            question=localized_question,
+            value=insight.value_tag,
+            insight=insight,
+            source_image_url=source_image_url,
+        )
+
+
 def get_display_image(source_image: str) -> str:
     image_path = pathlib.Path(source_image)
 
@@ -423,6 +446,7 @@ class QuestionFormatterFactory:
         InsightType.nutrition_image.name: NutritionImageQuestionFormatter,
         InsightType.packaging.name: PackagingQuestionFormatter,
         InsightType.is_upc_image.name: UPCImageQuestionFormatter,
+        InsightType.image_orientation.name: ImageOrientationQuestionFormatter,
     }
 
     @classmethod

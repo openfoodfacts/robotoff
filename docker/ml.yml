@@ -3,9 +3,9 @@ services:
     restart: $RESTART_POLICY
     image: nvcr.io/nvidia/tritonserver:24.08-py3
     ports:
-      - ${TRITON_EXPOSE_HTTP:-5003}:8000
-      - ${TRITON_EXPOSE_GRPC:-5004}:8001
-      - ${TRITON_EXPOSE_METRICS:-5005}:8002
+      - ${TRITON_EXPOSE_HTTP:-5503}:8000
+      - ${TRITON_EXPOSE_GRPC:-5504}:8001
+      - ${TRITON_EXPOSE_METRICS:-5505}:8002
     volumes:
       - ${TRITON_MODELS_DIR:-../models/triton}:/models
     # We use explicit model control mode to be able to load/unload model dynamically
@@ -14,7 +14,7 @@ services:
     # https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_management.md
     # for more information
     entrypoint: "tritonserver --model-repository=/models --model-control-mode=explicit --load-model=*"
-    mem_limit: 15g
+    mem_limit: 30g
 
   fasttext:
     restart: $RESTART_POLICY

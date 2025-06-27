@@ -1,6 +1,5 @@
 import datetime
 from pathlib import Path
-from typing import Optional
 
 import imagehash
 import numpy as np
@@ -27,9 +26,9 @@ def save_image(
     product_id: ProductIdentifier,
     source_image: str,
     image_url: str,
-    images: Optional[JSONType],
+    images: JSONType | None,
     use_cache: bool = False,
-) -> Optional[ImageModel]:
+) -> ImageModel | None:
     """Save imported image details in DB.
 
     :param product_id: identifier of the product
@@ -85,7 +84,9 @@ def save_image(
             uploaded_t = int(uploaded_t)
 
         if uploaded_t is not None:
-            uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
+            uploaded_at = datetime.datetime.fromtimestamp(
+                uploaded_t, datetime.timezone.utc
+            )
     else:
         uploaded_at = None
         # DB product check is disabled which means we shouldn't rely on having
@@ -146,11 +147,16 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
         save_image(product_id, source_image, image_url, images, use_cache=True)
 
 
-def add_image_fingerprint(image_model: ImageModel):
+def add_image_fingerprint(image_model: ImageModel, overwrite: bool = False) -> None:
     """Update image in DB to add the image fingerprint.
 
     :param image_model: the image model to update
+    :param overwrite: whether to overwrite the existing fingerprint
     """
+    if not overwrite and image_model.fingerprint is not None:
+        logger.debug("image %s already has a fingerprint, skipping", image_model.id)
+        return
+
     image_url = image_model.get_image_url()
     image = get_image_from_url(
         image_url, error_raise=False, session=http_session, use_cache=True
@@ -198,6 +204,11 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
     :param image_ids: a list of image IDs to delete.
       Each image ID must be a digit.
     """
+
+    if not product_id.is_valid():
+        logger.warning("Could not delete images, invalid product identifier")
+        return
+
     server_type = product_id.server_type.name
     # Perform batching as we don't know the number of images to delete
     updated_models = []

@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -10,8 +10,8 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff.off import normalize_tag
-from robotoff.taxonomy import get_taxonomy
-from robotoff.types import Prediction, PredictionType
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.types import JSONType, Prediction, PredictionType
 from robotoff.utils import get_logger
 
 logger = get_logger(__name__)
@@ -22,14 +22,16 @@ logger = get_logger(__name__)
 PREDICTOR_VERSION = "1"
 
 
-def category_taxonomisation(lang, match) -> Optional[str]:
+def category_taxonomisation(lang, match) -> str | None:
     """Function to match categories detected via AOP REGEX with categories
     taxonomy database. If no match is possible, we return None.
     """
 
     unchecked_category = lang + normalize_tag(match.group("category"))
 
-    checked_category = get_taxonomy("category").nodes.get(unchecked_category)
+    checked_category = get_taxonomy(TaxonomyType.category.name).nodes.get(
+        unchecked_category
+    )
 
     # TODO: We may want to create a utility function in Taxonomy  to match
     # also with synonyms of the category existing in the taxonomy
@@ -110,7 +112,7 @@ def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
                 if category_value is None:
                     continue
 
-                data = {"text": match.group(), "notify": ocr_regex.notify}
+                data: JSONType = {"text": match.group()}
                 if (
                     bounding_box := get_match_bounding_box(
                         content, match.start(), match.end()

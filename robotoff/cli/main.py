@@ -4,7 +4,10 @@ from typing import Optional
 
 import typer
 
+from robotoff.cli.triton import app as triton_app
+from robotoff.products import fetch_parquet_datasets
 from robotoff.types import (
+    ImportImageFlag,
     ObjectDetectionModel,
     PredictionType,
     ProductIdentifier,
@@ -58,12 +61,19 @@ def process_updates_since(
     )
 ):
     """Process all updates since a given datetime."""
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
-    from robotoff.workers.update_listener import process_updates_since
+    from robotoff.workers.update_listener import UpdateListener, get_redis_client
 
     logger = get_logger()
     logger.info("Processing Redis updates since %s", since)
-    process_updates_since(since)
+    redis_client = get_redis_client()
+    update_listener = UpdateListener(
+        redis_client=redis_client,
+        redis_stream_name=settings.REDIS_STREAM_NAME,
+        redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
+    )
+    update_listener.process_updates_since(since)
 
 
 @app.command()
@@ -82,12 +92,13 @@ def create_redis_update(
     """Create a new product update event in Redis.
 
     This command is meant for **local development only**. It creates a new
-    product update event in Redis stream `product_updates_off`.
+    product update event in the Redis stream.
     """
     import json
 
     from openfoodfacts.types import JSONType
 
+    from robotoff import settings
     from robotoff.utils.logger import get_logger
     from robotoff.workers.update_listener import get_redis_client
 
@@ -115,7 +126,8 @@ def create_redis_update(
         diffs = {"fields": {"change": ["generic_name", "generic_name_fr"]}}
 
     event["diffs"] = json.dumps(diffs)
-    client.xadd("product_updates_off", event)
+    client.xadd(settings.REDIS_STREAM_NAME, event)
+    typer.echo(f"Event added to Redis stream {settings.REDIS_STREAM_NAME}: {event}")
 
 
 @app.command()
@@ -194,15 +206,26 @@ def generate_ocr_predictions(
 
 
 @app.command()
-def download_dataset(minify: bool = False) -> None:
+def download_dataset(
+    download_jsonl: bool = True,
+    download_parquet: bool = True,
+    minify_jsonl: bool = False,
+) -> None:
     """Download Open Food Facts dataset and save it in `datasets` directory."""
-    from robotoff.products import fetch_dataset, has_dataset_changed
+    from robotoff.products import fetch_jsonl_dataset, has_jsonl_dataset_changed
     from robotoff.utils import get_logger
 
-    get_logger()
+    logger = get_logger()
 
-    if has_dataset_changed():
-        fetch_dataset(minify)
+    if download_jsonl:
+        if has_jsonl_dataset_changed():
+            fetch_jsonl_dataset(minify_jsonl)
+        else:
+            logger.info("JSONL dataset is up to date, skipping download.")
+
+    if download_parquet:
+        logger.info("Fetching parquet datasets...")
+        fetch_parquet_datasets()
 
 
 @app.command()
@@ -319,6 +342,11 @@ def refresh_insights(
         None,
         help="Refresh a specific product. If not provided, all products are updated",
     ),
+    prediction_type: Optional[PredictionType] = typer.Option(
+        None,
+        help="Type of the prediction to refresh, if any. This option is only "
+        "used when --barcode is not used.",
+    ),
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
     ),
@@ -353,12 +381,15 @@ def refresh_insights(
     else:
         logger.info("Launching insight refresh on full database")
         with db:
+            where_clauses = [PredictionModel.server_type == server_type.name]
+            if prediction_type is not None:
+                where_clauses.append(PredictionModel.type == prediction_type.name)
             product_ids = [
                 ProductIdentifier(barcode, server_type)
-                for (barcode, server_type) in PredictionModel.select(
+                for (barcode,) in PredictionModel.select(
                     fn.Distinct(PredictionModel.barcode)
                 )
-                .where(PredictionModel.server_type == server_type.name)
+                .where(*where_clauses)
                 .tuples()
             ]
 
@@ -610,6 +641,41 @@ def run_object_detection_model(
 
 
 @app.command()
+def rerun_import_all_images(
+    server_type: Optional[ServerType] = typer.Option(
+        None, help="Server type of the product"
+    ),
+    limit: Optional[int] = typer.Option(
+        None, help="the maximum number of images to process, defaults to None (all)"
+    ),
+    flags: list[ImportImageFlag] = typer.Option(
+        None, help="Flags to use for image import"
+    ),
+):
+    """Rerun full image import on all images in DB.
+
+    This includes launching all ML models and insight extraction from the image and
+    associated OCR. To control which tasks are rerun, use the --flags option.
+    """
+    from robotoff.workers.tasks.import_image import (
+        rerun_import_all_images as _rerun_import_all_images,
+    )
+
+    flags_ = flags or None
+    count = _rerun_import_all_images(
+        limit=limit, server_type=server_type, flags=flags_, return_count=True
+    )
+    message = (
+        f"rerunning full image import on {count} images, confirm?"
+        if flags_ is None
+        else f"running following tasks ({', '.join(flag.name for flag in flags_)}) on {count} images, confirm?"
+    )
+    if typer.confirm(message):
+        _rerun_import_all_images(limit=limit, server_type=server_type, flags=flags_)
+    typer.echo("The task was successfully scheduled.")
+
+
+@app.command()
 def run_nutrition_extraction(
     image_url: str = typer.Argument(
         ..., help="URL of the image to run nutrition extraction on"
@@ -617,6 +683,9 @@ def run_nutrition_extraction(
     triton_uri: Optional[str] = typer.Option(
         None,
         help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
+    model_version: Optional[str] = typer.Option(
+        None, help="Version of the model to use, defaults to the latest"
     ),
 ) -> None:
     """Run nutrition extraction on a product image.
@@ -641,7 +710,9 @@ def run_nutrition_extraction(
 
     image = cast(Image.Image, get_image_from_url(image_url))
     ocr_result = cast(OCRResult, OCRResult.from_url(image_url.replace(".jpg", ".json")))
-    prediction = predict(image, ocr_result, triton_uri=triton_uri)
+    prediction = predict(
+        image, ocr_result, model_version=model_version, triton_uri=triton_uri
+    )
     if prediction is not None:
         pprint(prediction)
     else:
@@ -881,7 +952,7 @@ def import_logos(
     """
     from robotoff.cli import logos
     from robotoff.models import db
-    from robotoff.prediction.object_detection import OBJECT_DETECTION_MODEL_VERSION
+    from robotoff.prediction.object_detection import MODELS_CONFIG
     from robotoff.utils import get_logger
 
     logger = get_logger()
@@ -891,9 +962,7 @@ def import_logos(
         imported = logos.import_logos(
             data_path,
             ObjectDetectionModel.universal_logo_detector.value,
-            OBJECT_DETECTION_MODEL_VERSION[
-                ObjectDetectionModel.universal_logo_detector
-            ],
+            MODELS_CONFIG[ObjectDetectionModel.universal_logo_detector].model_version,
             batch_size,
             server_type,
         )
@@ -1047,8 +1116,8 @@ def create_migration(
 
 @app.command()
 def launch_spellcheck_batch_job(
-    min_fraction_known: float = 0,
-    max_fraction_known: float = 0.4,
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
     limit: int = 10_000,
 ) -> None:
     """Launch a spellcheck batch job."""
@@ -1060,10 +1129,24 @@ def launch_spellcheck_batch_job(
 
     get_logger()
     _launch_spellcheck_batch_job(
-        min_fraction_known=min_fraction_known,
-        max_fraction_known=max_fraction_known,
+        min_fraction_unknown=min_fraction_unknown,
+        max_fraction_unknown=max_fraction_unknown,
         limit=limit,
     )
+
+
+@app.command()
+def import_batch_job_predictions(batch_dir: str) -> None:
+    """Import predictions from batch job.
+
+    Currently, only ingredients spellcheck predictions are supported.
+    """
+    from robotoff.batch import BatchJobType, import_batch_predictions
+    from robotoff.utils.logger import get_logger
+
+    get_logger()
+
+    import_batch_predictions(BatchJobType.ingredients_spellcheck, batch_dir)
 
 
 @app.command()
@@ -1199,6 +1282,9 @@ def launch_normalize_barcode_job(
                     else:
                         break
                 logger.info("Updated %d images", updated)
+
+
+app.add_typer(triton_app, name="triton")
 
 
 def main() -> None:

@@ -9,7 +9,7 @@ import io
 import os
 import string
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 
 class KeywordProcessor:
@@ -104,7 +104,7 @@ class KeywordProcessor:
                 break
         return self._keyword in current_dict and len_covered == len(word)
 
-    def __getitem__(self, word: str) -> Optional[str]:
+    def __getitem__(self, word: str) -> str | None:
         """If word is present in keyword_trie_dict return the clean name for
         it.
 
@@ -137,7 +137,7 @@ class KeywordProcessor:
 
         return None
 
-    def __setitem__(self, keyword: str, clean_name: Optional[Any] = None) -> bool:
+    def __setitem__(self, keyword: str, clean_name: Any | None = None) -> bool:
         """To add keyword to the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -240,7 +240,7 @@ class KeywordProcessor:
         """
         self.non_word_boundaries.add(character)
 
-    def add_keyword(self, keyword: str, clean_name: Optional[Any] = None) -> bool:
+    def add_keyword(self, keyword: str, clean_name: Any | None = None) -> bool:
         """To add one or more keywords to the dictionary
         pass the keyword and the clean name it maps to.
 
@@ -289,7 +289,7 @@ class KeywordProcessor:
         """
         return self.__delitem__(keyword)
 
-    def get_keyword(self, word: str) -> Optional[str]:
+    def get_keyword(self, word: str) -> str | None:
         """If word is present in keyword_trie_dict return the clean name for
         it.
 
@@ -441,7 +441,7 @@ class KeywordProcessor:
             self.remove_keyword(keyword)
 
     def get_all_keywords(
-        self, term_so_far: str = "", current_dict: Optional[dict] = None
+        self, term_so_far: str = "", current_dict: dict | None = None
     ) -> dict:
         """Recursively builds a dictionary of keywords present in the
         dictionary.
@@ -673,9 +673,7 @@ class KeywordProcessor:
             next_word += char
         return next_word
 
-    def levensthein(
-        self, word: str, max_cost: int = 2, start_node: Optional[dict] = None
-    ):
+    def levensthein(self, word: str, max_cost: int = 2, start_node: dict | None = None):
         """Retrieve the nodes where there is a fuzzy match,
         via levenshtein distance, and with respect to max_cost
 
@@ -734,7 +732,7 @@ class KeywordProcessor:
 
 
 def _get_span_indices(
-    start_idx: int, end_idx: int, index_mapping: Optional[list[int]] = None
+    start_idx: int, end_idx: int, index_mapping: list[int] | None = None
 ) -> tuple[int, int]:
     """Return the span indices (start index, end_index) by taking into account
     index shift due to lowercasing. See `get_index_mapping` for further
@@ -756,7 +754,7 @@ def _get_span_indices(
 LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE = "İ"
 
 
-def get_index_mapping(sentence: str, case_sensitive: bool) -> Optional[list[int]]:
+def get_index_mapping(sentence: str, case_sensitive: bool) -> list[int] | None:
     """Get character index mapping (a list of indices of the same length as
     the lowercased version of `sentence` or None).
 

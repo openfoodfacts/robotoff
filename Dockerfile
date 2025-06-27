@@ -5,7 +5,6 @@ ARG PYTHON_VERSION=3.11
 FROM python:$PYTHON_VERSION-slim AS python-base
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends -y gettext curl build-essential && \
-    apt-get install ffmpeg libsm6 libxext6  -y && \
     apt-get autoremove --purge && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

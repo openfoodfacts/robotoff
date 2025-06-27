@@ -13,6 +13,7 @@ from robotoff.prediction.ingredient_list.postprocess import detect_additional_me
 from robotoff.prediction.langid import LanguagePrediction, predict_lang_batch
 from robotoff.triton import GRPCInferenceServiceStub, get_triton_inference_stub
 from robotoff.utils import http_session
+from robotoff.utils.cache import function_cache_register
 
 from .transformers_pipeline import AggregationStrategy, TokenClassificationPipeline
 
@@ -21,7 +22,7 @@ INGREDIENT_NER_MODEL_DIR = settings.TRITON_MODELS_DIR / "ingredient-ner/1/model.
 
 INGREDIENT_ID2LABEL = {0: "O", 1: "B-ING", 2: "I-ING"}
 
-MODEL_NAME = "ingredient-detection"
+MODEL_NAME = "ingredient_detection"
 MODEL_VERSION = "ingredient-detection-1.1"
 
 
@@ -300,3 +301,6 @@ def build_triton_request(
     request.raw_input_contents.extend([attention_mask.tobytes()])
 
     return request
+
+
+function_cache_register.register(get_tokenizer)

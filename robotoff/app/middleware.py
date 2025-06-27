@@ -1,4 +1,5 @@
 from robotoff.models import db
+from robotoff.utils.cache import function_cache_register
 
 
 class DBConnectionMiddleware:
@@ -8,3 +9,8 @@ class DBConnectionMiddleware:
     def process_response(self, req, resp, resource, req_succeeded):
         if not db.is_closed():
             db.close()
+
+
+class CacheClearMiddleware:
+    def process_response(self, req, resp, resource, req_succeeded):
+        function_cache_register.clear_all()

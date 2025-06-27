@@ -1,5 +1,5 @@
 import pathlib
-from typing import Callable, Iterable, Optional, TextIO, Union
+from typing import Callable, Iterable, TextIO, Union
 
 from openfoodfacts.ocr import OCRResult
 
@@ -48,8 +48,8 @@ PREDICTION_TYPE_TO_FUNC: dict[
 def extract_predictions(
     content: Union[OCRResult, str],
     prediction_type: PredictionType,
-    product_id: Optional[ProductIdentifier] = None,
-    source_image: Optional[str] = None,
+    product_id: ProductIdentifier | None = None,
+    source_image: str | None = None,
 ) -> list[Prediction]:
     """Extract predictions from OCR using for provided prediction type.
 
@@ -74,7 +74,7 @@ def extract_predictions(
         raise ValueError(f"unknown prediction type: {prediction_type}")
 
 
-def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[Optional[str], dict]]:
+def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[str | None, dict]]:
     for item in items:
         if "content" in item:
             source = item["source"].replace("//", "/").replace(".json", ".jpg")
@@ -82,8 +82,8 @@ def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[Optional[str],
 
 
 def ocr_iter(
-    source: Union[str, TextIO, pathlib.Path]
-) -> Iterable[tuple[Optional[str], dict]]:
+    source: Union[str, TextIO, pathlib.Path],
+) -> Iterable[tuple[str | None, dict]]:
     if isinstance(source, pathlib.Path):
         items = jsonl_iter(source)
         yield from ocr_content_iter(items)

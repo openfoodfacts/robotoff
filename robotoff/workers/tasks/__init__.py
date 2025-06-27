@@ -1,6 +1,6 @@
 from robotoff.insights.importer import refresh_insights
 from robotoff.models import Prediction, ProductInsight, with_db
-from robotoff.products import fetch_dataset, has_dataset_changed
+from robotoff.products import fetch_jsonl_dataset, has_jsonl_dataset_changed
 from robotoff.types import ProductIdentifier
 from robotoff.utils import get_logger
 
@@ -14,8 +14,8 @@ logger = get_logger(__name__)
 def download_product_dataset_job():
     """This job is triggered via /api/v1/products/dataset and causes Robotoff
     to re-import the Product Opener product dump."""
-    if has_dataset_changed():
-        fetch_dataset()
+    if has_jsonl_dataset_changed():
+        fetch_jsonl_dataset()
 
 
 @with_db

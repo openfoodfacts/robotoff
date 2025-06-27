@@ -12,8 +12,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from playhouse.postgres_ext import ServerSide
 from sentry_sdk import capture_exception
 
-from robotoff import notifier, settings
-from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
+from robotoff import settings
+from robotoff.insights.annotate import annotate
 from robotoff.insights.importer import BrandInsightImporter, is_valid_insight_image
 from robotoff.metrics import (
     ensure_influx_database,
@@ -23,9 +23,10 @@ from robotoff.metrics import (
 from robotoff.models import Prediction, ProductInsight, db
 from robotoff.products import (
     Product,
-    fetch_dataset,
+    fetch_jsonl_dataset,
+    fetch_parquet_datasets,
     get_min_product_store,
-    has_dataset_changed,
+    has_jsonl_dataset_changed,
 )
 from robotoff.types import InsightType, ServerType
 from robotoff.utils import get_logger
@@ -56,15 +57,8 @@ def process_insights() -> None:
                 logger.info(
                     "Annotating insight %s (%s)", insight.id, insight.get_product_id()
                 )
-                annotation_result = annotate(insight, 1, update=True)
+                annotate(insight, 1, update=True)
                 processed += 1
-
-                if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-                    "notify", False
-                ):
-                    notifier.NotifierFactory.get_notifier().notify_automatic_processing(
-                        insight
-                    )
             except Exception as e:
                 # continue to the next one
                 # Note: annotator already rolled-back the transaction
@@ -294,10 +288,16 @@ def _update_data() -> None:
     """Download the latest version of the Product Opener product JSONL dump."""
     logger.info("Downloading new version of product dataset")
     try:
-        if has_dataset_changed():
-            fetch_dataset()
+        if has_jsonl_dataset_changed():
+            fetch_jsonl_dataset()
     except requests.exceptions.RequestException:
         logger.exception("Exception during product dataset refresh")
+        return
+
+    try:
+        fetch_parquet_datasets()
+    except requests.exceptions.RequestException:
+        logger.exception("Exception during product dataset refresh (parquet)")
         return
 
 

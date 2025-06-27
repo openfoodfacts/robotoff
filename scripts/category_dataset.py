@@ -16,14 +16,14 @@ train/test/val datasets,
 
 import json
 import os
-from typing import Iterator, Optional
+from typing import Iterator
 
 from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from sklearn.model_selection import train_test_split
 
 from robotoff import settings
 from robotoff.products import ProductDataset, ProductStream
-from robotoff.taxonomy import get_taxonomy
+from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import JSONType
 from robotoff.utils import dump_jsonl, get_logger
 
@@ -53,7 +53,7 @@ def generate_base_dataset(
     category_taxonomy: Taxonomy,
     ingredient_taxonomy: Taxonomy,
     stream: ProductStream,
-    lang: Optional[str],
+    lang: str | None,
 ) -> Iterator[JSONType]:
     for product in stream.iter():
         categories_tags: list[str] = product["categories_tags"]
@@ -94,7 +94,7 @@ def generate_train_test_val_datasets(
     category_taxonomy: Taxonomy,
     ingredient_taxonomy: Taxonomy,
     stream: ProductStream,
-    lang: Optional[str],
+    lang: str | None,
 ) -> dict[str, Iterator[JSONType]]:
     base_dataset = generate_base_dataset(
         category_taxonomy, ingredient_taxonomy, stream, lang
@@ -106,7 +106,7 @@ def generate_train_test_val_datasets(
     return {"train": train, "test": test, "val": val}
 
 
-def run(lang: Optional[str] = None):
+def run(lang: str | None = None):
     logger.info("Generating category dataset for lang %s", lang or "xx")
     dataset = ProductDataset.load()
     training_stream = dataset.stream().filter_nonempty_tag_field("categories_tags")
@@ -120,11 +120,11 @@ def run(lang: Optional[str] = None):
 
     os.makedirs(WRITE_PATH, exist_ok=True)
 
-    category_taxonomy = get_taxonomy("category")
+    category_taxonomy = get_taxonomy(TaxonomyType.category.name)
     with open(WRITE_PATH / "categories.full.json", "w") as f:
         json.dump(category_taxonomy.to_dict(), f)
 
-    ingredient_taxonomy = get_taxonomy("ingredient")
+    ingredient_taxonomy = get_taxonomy(TaxonomyType.ingredient.name)
     with open(WRITE_PATH / "ingredients.full.json", "w") as f:
         json.dump(ingredient_taxonomy.to_dict(), f)
 
