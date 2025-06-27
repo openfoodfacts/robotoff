@@ -2106,10 +2106,10 @@ def import_product_predictions(
 
     deleted = 0
     if delete_previous_versions:
-    sorted_predictions = sorted(
-        product_predictions,
-        key=_import_product_predictions_sort_fn,
-    )
+        sorted_predictions = sorted(
+            product_predictions,
+            key=_import_product_predictions_sort_fn,
+        )
 
     for (
         server_type,
@@ -2121,7 +2121,7 @@ def import_product_predictions(
         key=_import_product_predictions_sort_fn,
     ):
         if prediction_type.name == "category":
-            # Delete all previous category predictions
+            # For category predictions, delete all previous ones regardless of source_image or predictor_version
             deleted += (
                 PredictionModel.delete()
                 .where(
@@ -2132,7 +2132,12 @@ def import_product_predictions(
                 .execute()
             )
         else:
-            # Delete predictions with different predictor_version
+            # Delete all predictions with the same barcode,
+            # server_type, source_image and type but with a different
+            # predictor_version. We need a custom SQL query with 'IS
+            # DISTINCT FROM' as otherwise null values are considered
+            # specially when using standard '!=' operator. See
+            # https://www.postgresql.org/docs/current/functions-comparison.html
             deleted += (
                 PredictionModel.delete()
                 .where(
