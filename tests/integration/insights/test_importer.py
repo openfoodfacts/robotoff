@@ -370,3 +370,64 @@ def test_import_product_predictions():
     assert insights[0].id not in (prediction_1.id, prediction_2.id, prediction_3.id)
     assert imported == 1
     assert deleted == 2
+
+def test_category_predictions_cleanup():
+    barcode = "9876543210000"
+    server_type = ServerType.off
+    source_img_1 = "/path/image1.jpg"
+    source_img_2 = "/path/image2.jpg"
+
+    # Create 2 old predictions with different source_image and version
+    old_1 = PredictionFactory(
+        barcode=barcode,
+        type=PredictionType.category.name,
+        source_image=source_img_1,
+        predictor_version="old-v1",
+        server_type=server_type.name,
+        value_tag="en:snacks",
+    )
+    old_2 = PredictionFactory(
+        barcode=barcode,
+        type=PredictionType.category.name,
+        source_image=source_img_2,
+        predictor_version="old-v2",
+        server_type=server_type.name,
+        value_tag="en:biscuits",
+    )
+
+    # Confirm both exist
+    assert PredictionModel.get_or_none(id=old_1.id)
+    assert PredictionModel.get_or_none(id=old_2.id)
+
+    # New prediction to import (should trigger deletion of above two)
+    new_prediction = Prediction(
+        barcode=barcode,
+        type=PredictionType.category,
+        source_image=source_img_1,
+        predictor_version="new-v1",
+        server_type=server_type,
+        value_tag="en:crackers",
+    )
+
+    imported, deleted = import_product_predictions(
+        barcode=barcode,
+        server_type=server_type,
+        product_predictions=[new_prediction],
+        delete_previous_versions=True,
+    )
+
+    # Old predictions should be gone
+    assert PredictionModel.get_or_none(id=old_1.id) is None
+    assert PredictionModel.get_or_none(id=old_2.id) is None
+
+    # New prediction should exist
+    remaining = list(
+        PredictionModel.select().where(
+            PredictionModel.barcode == barcode,
+            PredictionModel.type == PredictionType.category.name,
+        )
+    )
+    assert len(remaining) == 1
+    assert remaining[0].value_tag == "en:crackers"
+    assert imported == 1
+    assert deleted == 2
