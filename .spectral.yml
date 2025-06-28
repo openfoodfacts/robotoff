@@ -1,0 +1,72 @@
+extends: ["spectral:oas"]
+rules:
+  # Core OpenAPI rules
+  openapi-tags: true
+  operation-description: true
+  operation-operationId: true
+  operation-operationId-unique: true
+  operation-parameters: true
+  operation-tag-defined: true
+  path-params: true
+  contact-properties: false
+  info-description: true
+  info-contact: warn
+  license-url: false
+  
+  # Custom rules for better API documentation
+  operation-summary-formatted:
+    description: "Operation summary should be properly formatted"
+    message: "{{description}}: {{error}}"
+    given: "$.paths[*][*]"
+    then:
+      field: "summary"
+      function: "truthy"
+    severity: warn
+    
+  parameter-description:
+    description: "Parameters should have descriptions"
+    message: "Parameter {{path}} should have a description"
+    given: "$.paths[*][*].parameters[*]"
+    then:
+      field: "description"
+      function: "truthy"
+    severity: warn
+    
+  response-success-status:
+    description: "Operations should have at least one success response (2xx)"
+    message: "Operation should have at least one 2xx response"
+    given: "$.paths[*][*].responses"
+    then:
+      function: "pattern"
+      functionOptions:
+        match: "^2[0-9][0-9]$"
+    severity: error
+    
+  schema-properties-descriptions:
+    description: "Schema properties should have descriptions"
+    message: "Schema property should have a description"
+    given: "$.components.schemas[*].properties[*]"
+    then:
+      field: "description"
+      function: "truthy"
+    severity: warn
+    
+  no-empty-servers:
+    description: "Server array should not be empty"
+    message: "Server array should not be empty"
+    given: "$.servers"
+    then:
+      function: "length"
+      functionOptions:
+        min: 1
+    severity: error
+    
+  server-url-format:
+    description: "Server URLs should be valid URLs"
+    message: "Server URL should be a valid URL"
+    given: "$.servers[*].url"
+    then:
+      function: "pattern"
+      functionOptions:
+        match: "^https?://"
+    severity: error

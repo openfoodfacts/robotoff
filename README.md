@@ -48,6 +48,36 @@ Robotoff works together with [Product Opener](https://github.com/openfoodfacts/o
   - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
 - If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
+## 🔧 Development
+
+### API Specification Linting
+
+Robotoff uses [Spectral](https://stoplight.io/open-source/spectral) to lint the OpenAPI specification file located at `doc/references/api.yml`. This ensures the API documentation follows best practices and remains consistent.
+
+#### Running API Linting
+
+All linting commands use Docker, so you don't need to install Spectral locally:
+
+```bash
+# Lint the API specification with pretty formatting
+make api-lint
+
+# Check the API specification and fail on errors (used in CI)
+make api-lint-check
+```
+
+#### Configuration
+
+The linting rules are configured in `.spectral.yml` at the root of the repository. The configuration extends the standard OpenAPI ruleset with custom rules specific to the Robotoff API.
+
+#### CI Integration
+
+API linting runs automatically on GitHub Actions when:
+- Changes are made to `doc/references/api.yml`
+- Changes are made to `.spectral.yml`
+
+The workflow will fail if there are any linting errors, ensuring the API specification maintains high quality.
+
 **NOTE:** This documentation tries to follow as much as possible the documentation system from [Diátaxis](https://diataxis.fr/).
 
 ## 👩‍⚖️ Licence
