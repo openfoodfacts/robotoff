@@ -1,0 +1,55 @@
+name: API Specification Linting
+
+on:
+  push:
+    paths:
+      - 'doc/references/api.yml'
+      - '.spectral.yml'
+  pull_request:
+    paths:
+      - 'doc/references/api.yml'
+      - '.spectral.yml'
+
+jobs:
+  lint-api-spec:
+    name: Lint OpenAPI Specification
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Lint OpenAPI specification with Spectral
+        uses: stoplightio/spectral-action@latest
+        with:
+          file_glob: 'doc/references/api.yml'
+          spectral_ruleset: '.spectral.yml'
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+            
+      - name: Comment on PR with linting results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lintingPassed = '${{ job.status }}' === 'success';
+            const statsInfo = `📊 **API Specification Linting Stats:**
+            - Specification file: \`doc/references/api.yml\`
+            - Ruleset: \`.spectral.yml\`
+            - Linting command used in Makefile: \`make api-lint-check\`
+            - Action used: \`stoplightio/spectral-action@latest\``;
+            
+            if (lintingPassed) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `✅ **API Specification Linting Passed**\n\n${statsInfo}\n\n🎉 Your OpenAPI specification is valid and follows all the defined rules!`
+              });
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🚨 **API Specification Linting Failed**\n\n${statsInfo}\n\nPlease check the workflow logs for details and fix the issues in your OpenAPI specification file.\n\n**Local Testing Commands:**\n\`\`\`bash\n# Check for errors (used in CI)\nmake api-lint-check\n\n# Show all linting results with pretty formatting\nmake api-lint\n\n# Direct Docker command\ndocker run --rm -v $PWD:/workspace -w /workspace stoplight/spectral:latest lint doc/references/api.yml --ruleset .spectral.yml --fail-severity=error --format=pretty\n\`\`\`\n\n📋 **Files to check:**\n- API Specification: \`doc/references/api.yml\`\n- Linting Rules: \`.spectral.yml\``
+              });
+            }
