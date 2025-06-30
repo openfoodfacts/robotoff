@@ -856,8 +856,7 @@ class ImagePredictorResource:
             else:
                 model_enum = ImageClassificationModel[model_name]
                 classifier = image_classifier.ImageClassifier(
-                    model_enum.name,
-                    label_names=image_classifier.LABEL_NAMES[model_enum],
+                    image_classifier.MODELS_CONFIG[model_enum]
                 )
                 predictions[model_name] = [
                     {"label": label, "score": score}
