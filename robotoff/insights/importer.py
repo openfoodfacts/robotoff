@@ -2121,7 +2121,8 @@ def import_product_predictions(
         key=_import_product_predictions_sort_fn,
     ):
         if prediction_type.name == "category":
-            # For category predictions, delete all previous ones regardless of source_image or predictor_version
+            # For category predictions, delete all previous ones regardless of
+            # source_image or predictor_version
             deleted += (
                 PredictionModel.delete()
                 .where(
