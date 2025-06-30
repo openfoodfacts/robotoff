@@ -174,7 +174,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                 return cls._annotate(insight, annotation, update, data, auth, is_vote)
             except HTTPError as e:
                 if e.response.status_code >= 500:
-                    logger.info(
+                    logger.warning(
                         "HTTPError occurred during OFF update: %s",
                         e.response.status_code,
                     )
@@ -183,7 +183,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                     return FAILED_UPDATE_RESULT
                 raise e
             except (RequestConnectionError, Timeout, SSLError) as e:
-                logger.info("Error occurred during OFF update", exc_info=e)
+                logger.warning("Error occurred during OFF update", exc_info=e)
                 logger.info("Rolling back SQL transaction")
                 tx.rollback()
                 return FAILED_UPDATE_RESULT
