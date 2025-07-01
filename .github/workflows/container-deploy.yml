@@ -57,7 +57,7 @@ jobs:
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
     - name: Wait for container build
-      uses: lewagon/wait-on-check-action@v1.3.4
+      uses: lewagon/wait-on-check-action@v1.4.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
