@@ -438,6 +438,7 @@ class ImportImageFlag(str, enum.Enum):
     extract_nutrition = "extract_nutrition"
     run_logo_object_detection = "run_logo_object_detection"
     run_nutrition_table_object_detection = "run_nutrition_table_object_detection"
+    predict_category = "predict_category"
 
 
 class IngredientAnnotateBody(BaseModel):

@@ -2128,7 +2128,7 @@ def import_product_predictions(
                 .where(
                     PredictionModel.barcode == barcode,
                     PredictionModel.server_type == server_type.name,
-                    PredictionModel.type == prediction_type.name
+                    PredictionModel.type == prediction_type.name,
                 )
                 .execute()
             )

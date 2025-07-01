@@ -66,6 +66,7 @@ from robotoff.utils.image import (
     convert_image_to_array,
 )
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
+from robotoff.workers.tasks.common import add_category_insight_job
 
 logger = get_logger(__name__)
 
@@ -274,6 +275,18 @@ def run_import_image(
                 product_id=product_id,
                 image_url=image_url,
                 ocr_url=ocr_url,
+            )
+
+        if ImportImageFlag.predict_category in flags:
+            # Predict category using the neural model
+            # Contrary to a product update, we always run the category
+            # prediction job when an image is uploaded, as we use the
+            # last 10 images to predict the category
+            enqueue_job(
+                add_category_insight_job,
+                high_queue,
+                job_kwargs={"result_ttl": 0, "timeout": "2m"},
+                product_id=product_id,
             )
 
     if ImportImageFlag.run_logo_object_detection in flags:
