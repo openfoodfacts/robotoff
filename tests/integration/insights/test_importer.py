@@ -371,6 +371,7 @@ def test_import_product_predictions():
     assert imported == 1
     assert deleted == 2
 
+
 def test_category_predictions_cleanup():
     barcode = "9876543210000"
     server_type = ServerType.off
