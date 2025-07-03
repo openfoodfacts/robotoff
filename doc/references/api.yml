@@ -165,7 +165,7 @@ paths:
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
-          description: ""
+          description: "Questions about popular products"
           content: {}
   /questions/unanswered:
     get:
@@ -272,7 +272,7 @@ paths:
         - $ref: "#/components/parameters/predictor"
       responses:
         "200":
-          description: ""
+          description: "Random insights matching the criteria"
           content:
             application/json:
               schema:
@@ -293,7 +293,7 @@ paths:
         - $ref: "#/components/parameters/server_type"
       responses:
         "200":
-          description: ""
+          description: "All insights for the specific product"
           content: {}
   /insights:
     get:
@@ -317,7 +317,7 @@ paths:
         - $ref: "#/components/parameters/lc"
       responses:
         "200":
-          description: ""
+          description: "List of insights matching the criteria"
           content:
             application/json:
               schema:
@@ -352,7 +352,7 @@ paths:
             type: string
       responses:
         "200":
-          description: ""
+          description: "Insight details"
           content: {}
   /insights/annotate:
     post:
@@ -376,6 +376,9 @@ paths:
         (for example in some cases of category annotation or ingredients spellcheck).
 
         We use the voting mecanism system to remember which insight to skip for a user (authenticated or not).
+      security:
+        - basicAuth: []
+        - {}
       requestBody:
         required: true
         content:
@@ -385,7 +388,9 @@ paths:
               properties:
                 insight_id:
                   type: string
-                  description: ID of the insight
+                  format: uuid
+                  description: "ID of the insight"
+                  example: "3cd5aecd-edcc-4237-87d0-6595fc4e53c9"
                 annotation:
                   type: integer
                   description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for _skip_, 2 to accept and add data"
@@ -403,15 +408,36 @@ paths:
                     - 1
                 data:
                   type: object
-                  description: "Additional data provided by the user as key-value pairs"
+                  description: "Additional data provided by the user as key-value pairs (required when annotation=2)"
+                  nullable: true
+                device_id:
+                  type: string
+                  description: "Device identifier for tracking anonymous votes"
 
               required:
                 - "insight_id"
                 - "annotation"
       responses:
         "200":
-          description: ""
-          content: {}
+          description: "Annotation successfully processed"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status_code:
+                    type: integer
+                    description: "Status code of the annotation result"
+                  status:
+                    type: string
+                    description: "Status name of the annotation result"
+                  description:
+                    type: string
+                    description: "Description of the annotation result"
+        "400":
+          description: "Bad request - invalid parameters or missing required data"
+        "404":
+          description: "Insight not found"
   /insights/dump:
     get:
       summary: Generate a CSV dump
@@ -494,7 +520,7 @@ paths:
             maximum: 1
       responses:
         "200":
-          description: ""
+          description: "Cropped image in JPEG format"
           content:
             image/jpeg:
               schema:
@@ -728,6 +754,481 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LogoANNSearchResponse"
+
+  /status:
+    get:
+      tags:
+        - System
+      summary: Get API status
+      description: Check if the API is running
+      responses:
+        "200":
+          description: API status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "running"
+                    example: "running"
+
+  /health:
+    get:
+      tags:
+        - System
+      summary: Get health check status
+      description: Check the health of all system components
+      responses:
+        "200":
+          description: Health check results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: object
+                    description: Detailed health check results
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  headers:
+                    type: object
+                    description: Response headers
+        "500":
+          description: "Health check failed"
+
+  /users/statistics/{username}:
+    get:
+      tags:
+        - Users
+      summary: Get user statistics
+      description: Get annotation statistics for a specific user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The username to get statistics for
+          schema:
+            type: string
+            example: "contributor"
+      responses:
+        "200":
+          description: User statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: object
+                    properties:
+                      annotations:
+                        type: integer
+                        description: Number of annotations made by the user
+                        example: 42
+
+  /images:
+    get:
+      tags:
+        - Images
+      summary: Get images
+      description: Retrieve images with optional filters
+      parameters:
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_optional"
+        - name: with_predictions
+          in: query
+          description: Filter images that have predictions
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Images matching the filters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_images"
+                      - "found"
+                  images:
+                    type: array
+                    items:
+                      type: object
+                      description: Image details
+                  count:
+                    type: integer
+                    description: Total number of results
+
+  /images/predict:
+    get:
+      tags:
+        - Images
+      summary: Predict on images
+      description: Run image prediction models on product images
+      parameters:
+        - $ref: "#/components/parameters/barcode"
+        - $ref: "#/components/parameters/server_type"
+        - name: models
+          in: query
+          description: Comma-separated list of model names to run
+          schema:
+            type: string
+            example: "nutrition-table,universal-logo-detector"
+        - name: output_image_id
+          in: query
+          description: Image ID to store predictions for
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Prediction results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  predictions:
+                    type: array
+                    items:
+                      type: object
+                      description: Model predictions
+
+  /images/logos/annotate:
+    post:
+      tags:
+        - Logos
+      summary: Annotate multiple logos
+      description: Bulk annotate logos with type and value
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                annotations:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      logo_id:
+                        type: integer
+                        description: ID of the logo to annotate
+                      type:
+                        type: string
+                        description: Type of the logo
+                        enum:
+                          - "brand"
+                          - "category"
+                          - "label"
+                          - "no_logo"
+                          - "nutritional_label"
+                          - "packager_code"
+                          - "packaging"
+                          - "qr_code"
+                          - "store"
+                      value:
+                        type: string
+                        nullable: true
+                        description: Value/name of the logo
+                    required:
+                      - logo_id
+                      - type
+                      - value
+                server_type:
+                  $ref: "#/components/parameters/server_type/schema"
+              required:
+                - annotations
+      responses:
+        "200":
+          description: Annotation results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  annotated:
+                    type: integer
+                    description: Number of logos successfully annotated
+
+  /images/logos/update:
+    post:
+      tags:
+        - Logos
+      summary: Bulk update logo annotations
+      description: Mass update logo annotations by changing type and value
+      parameters:
+        - name: source_type
+          in: query
+          required: true
+          description: Current logo type to update from
+          schema:
+            type: string
+        - name: source_value
+          in: query
+          required: true
+          description: Current logo value to update from
+          schema:
+            type: string
+        - name: target_type
+          in: query
+          required: true
+          description: New logo type to update to
+          schema:
+            type: string
+        - name: target_value
+          in: query
+          required: true
+          description: New logo value to update to
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Update results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: integer
+                    description: Number of logos updated
+
+  /images/logos/{logo_id}:
+    get:
+      tags:
+        - Logos
+      summary: Get logo details
+      description: Get details about a specific logo
+      parameters:
+        - name: logo_id
+          in: path
+          required: true
+          description: The ID of the logo
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Logo details
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Logo annotation details
+        "404":
+          description: Logo not found
+    put:
+      tags:
+        - Logos
+      summary: Update logo annotation
+      description: Update the type and value of a logo annotation
+      security:
+        - basicAuth: []
+      parameters:
+        - name: logo_id
+          in: path
+          required: true
+          description: The ID of the logo to update
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: The type of the logo
+                  minLength: 1
+                value:
+                  type: string
+                  nullable: true
+                  description: The value/name of the logo
+              required:
+                - type
+      responses:
+        "204":
+          description: Logo annotation updated successfully
+        "404":
+          description: Logo not found
+        "403":
+          description: Authentication required
+
+  /image_predictions/import:
+    post:
+      tags:
+        - Image Predictions
+      summary: Import image predictions
+      description: Bulk import image predictions into the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                predictions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      barcode:
+                        type: string
+                        description: Product barcode
+                      image_id:
+                        type: string
+                        description: Image identifier
+                      model_name:
+                        type: string
+                        description: Name of the prediction model
+                      model_version:
+                        type: string
+                        description: Version of the prediction model
+                      data:
+                        type: object
+                        description: Prediction data
+                      server_type:
+                        type: string
+                        description: Server type
+                    required:
+                      - barcode
+                      - image_id
+                      - model_name
+                      - model_version
+                      - data
+              required:
+                - predictions
+      responses:
+        "200":
+          description: Import successful
+
+  /annotation/collection:
+    get:
+      tags:
+        - Annotations
+      summary: Get logo annotations
+      description: Retrieve logo annotations with optional filters
+      parameters:
+        - $ref: "#/components/parameters/count"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/server_type"
+        - $ref: "#/components/parameters/barcode_optional"
+        - $ref: "#/components/parameters/value_tag"
+        - name: types
+          in: query
+          description: Comma-separated list of annotation types to filter by
+          schema:
+            type: string
+            example: "brand,label"
+      responses:
+        "200":
+          description: Logo annotations matching the filters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_annotation"
+                      - "found"
+                  annotation:
+                    type: array
+                    items:
+                      type: object
+                      description: Logo annotation details
+                  count:
+                    type: integer
+                    description: Total number of results
+
+  /predict/ingredient_list:
+    get:
+      tags:
+        - Predict
+      summary: Extract ingredient list from OCR
+      description: Extract and parse ingredient lists from OCR text
+      parameters:
+        - name: ocr_url
+          in: query
+          required: true
+          description: URL of the OCR JSON to process
+          schema:
+            type: string
+            format: uri
+            example: "https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json"
+        - name: aggregation_strategy
+          in: query
+          description: Strategy for aggregating ingredient entities
+          schema:
+            type: string
+            enum:
+              - "simple"
+              - "max"
+              - "first"
+            default: "simple"
+        - name: model_version
+          in: query
+          description: Version of the ingredient extraction model
+          schema:
+            type: string
+            default: "1"
+      responses:
+        "200":
+          description: Extracted ingredient list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ingredients:
+                    type: array
+                    description: Extracted ingredients
+                    items:
+                      type: object
+
+  /products/dataset:
+    get:
+      tags:
+        - Dataset
+      summary: Get dataset information
+      description: Get information about the product dataset
+      responses:
+        "200":
+          description: Dataset information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  etag:
+                    type: string
+                    description: Current dataset ETag
+    post:
+      tags:
+        - Dataset
+      summary: Update product dataset
+      description: Trigger an update of the product dataset
+      responses:
+        "200":
+          description: Dataset update triggered
 
   /predict/category:
     post:
@@ -1062,6 +1563,15 @@ paths:
       parameters:
         - $ref: "#/components/parameters/barcode"
         - $ref: "#/components/parameters/server_type"
+        - name: k
+          in: query
+          required: false
+          description: Number of language predictions to return
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+        - name: threshold
           in: query
           required: false
           description: |
@@ -1129,24 +1639,54 @@ paths:
     post:
       tags:
         - Batch Job
-      summary: Import batch processed data to the Robotoff database.
+      summary: Import batch job results
+      description: |
+        Import batch job data into Robotoff database. This endpoint is secured and requires bearer authentication.
+        
+        This endpoint is mainly used by the batch job once the job is finished.
       security:
         - batch_job_key: []
-      description:
-        Trigger import of the batch processed data to the Robotoff database. A `BATCH_JOB_KEY` is expected in the authorization header.
-        This endpoint is mainly used by the batch job once the job is finished.
       parameters:
         - $ref: "#/components/parameters/job_type"
+        - name: batch_dir
+          in: query
+          required: true
+          description: The directory path where batch job results are stored
+          schema:
+            type: string
+            example: "gs://bucket/path/to/batch/results"
       responses:
         "200":
           description: Data successfully imported.
           content:
             application/json:
-              status:
-                type: string
-                description: Request successful. Importing processed data.
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Request successful. Importing processed data.
         "400":
           description: "An HTTP 400 is returned if the authentification key is invalid or if the job_type is not supported."
+
+  /robots.txt:
+    get:
+      tags:
+        - System
+      summary: Get robots.txt file
+      description: |
+        Returns the robots.txt file that disallows all web crawlers to prevent excessive requests.
+        This is a standard file used by web crawlers to understand crawling permissions.
+      responses:
+        "200":
+          description: robots.txt content
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  User-agent: *
+                  Disallow: /
 
 components:
   schemas:
@@ -1420,18 +1960,14 @@ components:
     campaigns:
       name: campaigns
       in: query
-      description:
-        Filter by annotation campaigns (the insight must have all the campaigns)
-        An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria
-        defined during insight import.
+      description: Filter by annotation campaigns (the insight must have all the campaigns) An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria defined during insight import.
       schema:
         type: string
         example: agribalyse-category
     predictor:
       name: predictor
       in: query
-      description: Filter by predictor value
-        A predictor refers to the model/method that was used to generate the prediction.
+      description: Filter by predictor value A predictor refers to the model/method that was used to generate the prediction.
       schema:
         type: string
         example: universal-logo-detector
@@ -1486,11 +2022,7 @@ components:
       name: annotated
       in: query
       required: false
-      description: Filter by annotation status of the insight.
-        A true value (`1`, `true`) means we only return annotated insights,
-        a false value (`0`, `false`) only non-annotated insights.
-        If the parameter is not provided, both annotated and non-annotated
-        insights are returned.
+      description: Filter by annotation status of the insight. A true value (`1`, `true`) means we only return annotated insights, a false value (`0`, `false`) only non-annotated insights. If the parameter is not provided, both annotated and non-annotated insights are returned.
       schema:
         type: boolean
         example: true
@@ -1498,9 +2030,7 @@ components:
       name: annotation
       in: query
       required: false
-      description: Filter by annotation value of the insight.
-        If not provided, all insights are returned.
-        This works in conjunction with the `annotated` parameter.
+      description: Filter by annotation value of the insight. If not provided, all insights are returned. This works in conjunction with the `annotated` parameter.
       schema:
         type: integer
         example: 1
@@ -1515,9 +2045,14 @@ components:
           - ingredients_spellcheck
 
   securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic HTTP authentication using Open Food Facts credentials
     batch_job_key:
       type: http
       scheme: bearer
+      description: Bearer token authentication for batch job import endpoints
 
 tags:
   - name: Questions
@@ -1527,3 +2062,14 @@ tags:
       If the insight is correct, the Openfoodfacts DB can be updated accordingly.
 
       Current insight types and their description can be found in [robotoff/insights/dataclass.py](https://github.com/openfoodfacts/robotoff/blob/main/robotoff/insights/dataclass.py).
+  - name: Predictions
+  - name: Images
+  - name: Image Predictions
+  - name: Logos
+  - name: ANN
+  - name: Predict
+  - name: System
+  - name: Users
+  - name: Annotations
+  - name: Dataset
+  - name: Batch Job
