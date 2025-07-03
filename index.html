@@ -265,6 +265,53 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    🔧 Development
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Development">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-specification-linting" class="md-nav__link">
+    API Specification Linting
+  </a>
+  
+    <nav class="md-nav" aria-label="API Specification Linting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-api-linting" class="md-nav__link">
+    Running API Linting
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-integration" class="md-nav__link">
+    CI Integration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#licence" class="md-nav__link">
     👩‍⚖️ Licence
   </a>
@@ -908,6 +955,53 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    🔧 Development
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Development">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-specification-linting" class="md-nav__link">
+    API Specification Linting
+  </a>
+  
+    <nav class="md-nav" aria-label="API Specification Linting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#running-api-linting" class="md-nav__link">
+    Running API Linting
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci-integration" class="md-nav__link">
+    CI Integration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#licence" class="md-nav__link">
     👩‍⚖️ Licence
   </a>
@@ -988,6 +1082,24 @@
 </li>
 <li>If you need to deploy or maintain Robotoff, <a href="https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance">Maintenance</a> is the way to go.</li>
 </ul>
+<h2 id="development">🔧 Development</h2>
+<h3 id="api-specification-linting">API Specification Linting</h3>
+<p>Robotoff uses <a href="https://stoplight.io/open-source/spectral">Spectral</a> to lint the OpenAPI specification file located at <code>doc/references/api.yml</code>. This ensures the API documentation follows best practices and remains consistent.</p>
+<h4 id="running-api-linting">Running API Linting</h4>
+<p>All linting commands use Docker, so you don't need to install Spectral locally:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Lint the API specification with pretty formatting</span>
+make<span class="w"> </span>api-lint
+
+<span class="c1"># Check the API specification and fail on errors (used in CI)</span>
+make<span class="w"> </span>api-lint-check
+</code></pre></div>
+<h4 id="configuration">Configuration</h4>
+<p>The linting rules are configured in <code>.spectral.yml</code> at the root of the repository. The configuration extends the standard OpenAPI ruleset with custom rules specific to the Robotoff API.</p>
+<h4 id="ci-integration">CI Integration</h4>
+<p>API linting runs automatically on GitHub Actions when:
+- Changes are made to <code>doc/references/api.yml</code>
+- Changes are made to <code>.spectral.yml</code></p>
+<p>The workflow will fail if there are any linting errors, ensuring the API specification maintains high quality.</p>
 <p><strong>NOTE:</strong> This documentation tries to follow as much as possible the documentation system from <a href="https://diataxis.fr/">Diátaxis</a>.</p>
 <h2 id="licence">👩‍⚖️ Licence</h2>
 <ul>
