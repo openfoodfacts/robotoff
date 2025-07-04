@@ -17,8 +17,9 @@ paths:
   /questions/{barcode}:
     get:
       tags:
-        - Questions
+        - Question Management
       summary: Get questions for a given product
+      operationId: getQuestionsByBarcode
       description: |
         Questions are sorted by priority: we want questions with highest impact to be displayed first. The order is the following:
           - category
@@ -57,8 +58,9 @@ paths:
   /questions:
     get:
       tags:
-        - Questions
+        - Question Management
       summary: Fetch questions
+      operationId: getQuestions
       parameters:
         - $ref: "#/components/parameters/lang"
         - $ref: "#/components/parameters/count"
@@ -108,8 +110,9 @@ paths:
   /questions/random:
     get:
       tags:
-        - Questions
+        - Question Management
       summary: Get random questions
+      operationId: getRandomQuestions
       deprecated: true
       parameters:
         - $ref: "#/components/parameters/lang"
@@ -146,8 +149,9 @@ paths:
   /questions/popular:
     get:
       tags:
-        - Questions
+        - Question Management
       summary: Get questions about popular products
+      operationId: getPopularQuestions
       deprecated: true
       description: |
         Questions are ranked by the product popularity (based on scan count).
@@ -170,8 +174,9 @@ paths:
   /questions/unanswered:
     get:
       tags:
-        - Questions
+        - Question Management
       summary: Get unanswered question counts
+      operationId: getUnansweredQuestions
       description: |
         Get number of unanswered questions grouped by `value_tag`.
         The list is ordered from highest count to lowest.
@@ -223,8 +228,9 @@ paths:
   /predictions:
     get:
       tags:
-        - Predictions
+        - Prediction Management
       summary: Get predictions
+      operationId: getPredictions
       parameters:
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/page"
@@ -260,9 +266,10 @@ paths:
   /insights/random:
     get:
       tags:
-        - Insights
+        - Insight Management
       deprecated: true
       summary: Get a random insight, use GET /insights?order_by=random instead
+      operationId: getRandomInsights
       parameters:
         - $ref: "#/components/parameters/insight_type"
         - $ref: "#/components/parameters/countries"
@@ -285,9 +292,10 @@ paths:
   /insights/{barcode}:
     get:
       tags:
-        - Insights
+        - Insight Management
       deprecated: true
       summary: Get all insights for a specific product, use GET /insights?barcode={barcode} instead
+      operationId: getInsightsByBarcode
       parameters:
         - $ref: "#/components/parameters/barcode_path"
         - $ref: "#/components/parameters/server_type"
@@ -298,8 +306,9 @@ paths:
   /insights:
     get:
       tags:
-        - Insights
+        - Insight Management
       summary: List insights
+      operationId: getInsights
       parameters:
         - $ref: "#/components/parameters/insight_types"
         - $ref: "#/components/parameters/barcode_optional"
@@ -340,8 +349,9 @@ paths:
   /insights/detail/{id}:
     get:
       tags:
-        - Insights
+        - Insight Management
       summary: Get a specific insight
+      operationId: getInsightDetails
       parameters:
         - name: id
           in: path
@@ -357,8 +367,9 @@ paths:
   /insights/annotate:
     post:
       tags:
-        - Insights
+        - Insight Management
       summary: Submit an annotation
+      operationId: annotateInsight
       description: |
         The annotation can be submitted as an anonymous user or as a registered user.
         If the user is anonymous, the annotation will be accounted as a vote, and several identical
@@ -445,7 +456,8 @@ paths:
         Generate a CSV dump of insights with specific criteria.
         If more than 10,000 insights match provided criteria and `count` is not provided, a `HTTP 400` is returned
       tags:
-        - Insights
+        - Insight Management
+      operationId: dumpInsights
       parameters:
         - $ref: "#/components/parameters/server_type"
         - $ref: "#/components/parameters/value_tag"
@@ -487,7 +499,8 @@ paths:
         base image and cropping coordinates. Cropping coordinates are relative (between 0.
         and 1. inclusive), with (0, 0) being the upper left corner.
       tags:
-        - Images
+        - Image Processing
+      operationId: cropImage
       parameters:
         - $ref: "#/components/parameters/image_url"
         - name: y_min
@@ -532,6 +545,7 @@ paths:
       tags:
         - Image Predictions
       summary: Get image predictions
+      operationId: getImagePredictions
       parameters:
         - $ref: "#/components/parameters/count"
         - $ref: "#/components/parameters/page"
@@ -602,8 +616,9 @@ paths:
   /images/logos:
     get:
       tags:
-        - Logos
+        - Logo Management
       summary: Fetch logos
+      operationId: fetchLogos
       description: Return details about requested logos (maximum 500 logos can be fetched per request).
       parameters:
         - name: logo_ids
@@ -631,8 +646,9 @@ paths:
   /images/logos/search:
     get:
       tags:
-        - Logos
+        - Logo Management
       summary: Search for logos
+      operationId: searchLogos
       description: |
         Search for logos detected using the universal-logo-detector model that 
         meet some criteria (annotation status, annotated, type,...)
@@ -705,8 +721,9 @@ paths:
   /images/logos/{logo_id}/reset:
     post:
       tags:
-        - Logos
+        - Logo Management
       summary: Reset logo annotation
+      operationId: resetLogoAnnotation
       description: Reset logo annotations, and delete all annotation-associated predictions and insights
       parameters:
         - name: logo_id
@@ -725,8 +742,9 @@ paths:
   /ann/search:
     get:
       tags:
-        - ANN
+        - ANN Search
       summary: Approximate search for nearest neighbors of a random query logo
+      operationId: searchNearestNeighbors
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
         - $ref: "#/components/parameters/ann_search_count"
@@ -741,8 +759,9 @@ paths:
   /ann/search/{logo_id:int}:
     get:
       tags:
-        - ANN
+        - ANN Search
       summary: Approximate search for nearest neighbors of a specified query logo
+      operationId: searchNearestNeighborsByLogoId
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
         - $ref: "#/components/parameters/ann_search_count"
@@ -760,6 +779,7 @@ paths:
       tags:
         - System
       summary: Get API status
+      operationId: getApiStatus
       description: Check if the API is running
       responses:
         "200":
@@ -780,6 +800,7 @@ paths:
       tags:
         - System
       summary: Get health check status
+      operationId: getHealthStatus
       description: Check the health of all system components
       responses:
         "200":
@@ -804,8 +825,9 @@ paths:
   /users/statistics/{username}:
     get:
       tags:
-        - Users
+        - User Management
       summary: Get user statistics
+      operationId: getUserStatistics
       description: Get annotation statistics for a specific user
       parameters:
         - name: username
@@ -834,8 +856,9 @@ paths:
   /images:
     get:
       tags:
-        - Images
+        - Image Management
       summary: Get images
+      operationId: getImages
       description: Retrieve images with optional filters
       parameters:
         - $ref: "#/components/parameters/count"
@@ -873,8 +896,9 @@ paths:
   /images/predict:
     get:
       tags:
-        - Images
+        - Image Processing
       summary: Predict on images
+      operationId: predictOnImages
       description: Run image prediction models on product images
       parameters:
         - $ref: "#/components/parameters/barcode"
@@ -907,8 +931,9 @@ paths:
   /images/logos/annotate:
     post:
       tags:
-        - Logos
+        - Logo Management
       summary: Annotate multiple logos
+      operationId: annotateLogos
       description: Bulk annotate logos with type and value
       security:
         - basicAuth: []
@@ -967,8 +992,9 @@ paths:
   /images/logos/update:
     post:
       tags:
-        - Logos
+        - Logo Management
       summary: Bulk update logo annotations
+      operationId: updateLogoAnnotations
       description: Mass update logo annotations by changing type and value
       parameters:
         - name: source_type
@@ -1010,8 +1036,9 @@ paths:
   /images/logos/{logo_id}:
     get:
       tags:
-        - Logos
+        - Logo Management
       summary: Get logo details
+      operationId: getLogoDetails
       description: Get details about a specific logo
       parameters:
         - name: logo_id
@@ -1033,8 +1060,9 @@ paths:
           description: Logo not found
     put:
       tags:
-        - Logos
+        - Logo Management
       summary: Update logo annotation
+      operationId: updateLogoAnnotation
       description: Update the type and value of a logo annotation
       security:
         - basicAuth: []
@@ -1076,6 +1104,7 @@ paths:
       tags:
         - Image Predictions
       summary: Import image predictions
+      operationId: importImagePredictions
       description: Bulk import image predictions into the database
       requestBody:
         required: true
@@ -1122,8 +1151,9 @@ paths:
   /annotation/collection:
     get:
       tags:
-        - Annotations
+        - Annotation Management
       summary: Get logo annotations
+      operationId: getAnnotationCollection
       description: Retrieve logo annotations with optional filters
       parameters:
         - $ref: "#/components/parameters/count"
@@ -1164,6 +1194,7 @@ paths:
       tags:
         - Predict
       summary: Extract ingredient list from OCR
+      operationId: extractIngredientList
       description: Extract and parse ingredient lists from OCR text
       parameters:
         - name: ocr_url
@@ -1209,6 +1240,7 @@ paths:
       tags:
         - Dataset
       summary: Get dataset information
+      operationId: getDatasetInfo
       description: Get information about the product dataset
       responses:
         "200":
@@ -1225,6 +1257,7 @@ paths:
       tags:
         - Dataset
       summary: Update product dataset
+      operationId: updateDataset
       description: Trigger an update of the product dataset
       responses:
         "200":
@@ -1235,6 +1268,7 @@ paths:
       tags:
         - Predict
       summary: Predict categories for a product
+      operationId: predictCategory
       description: |
         Predictions are performed using a neural model.
         As input, you can either provide:
@@ -1390,6 +1424,7 @@ paths:
       tags:
         - Predict
       summary: Extract nutritional information from an image
+      operationId: extractNutrition
       description: |
         Predict nutritional information from a packaging image using the Nutri-Sight model.
 
@@ -1443,6 +1478,7 @@ paths:
       tags:
         - Predict
       summary: Generate OCR predictions an OCR JSON
+      operationId: generateOCRPredictions
       parameters:
         - name: ocr_url
           in: query
@@ -1489,6 +1525,7 @@ paths:
       tags:
         - Predict
       summary: Predict the language of a text
+      operationId: predictLanguage
       description: |
         Predict the language of a text using a neural model.
         A POST version of this endpoint is also available, it accepts a JSON body with exactly the
@@ -1553,6 +1590,7 @@ paths:
       tags:
         - Predict
       summary: Predict the languages of the product
+      operationId: predictProductLanguages
       description: |
         Return the most common languages present on the product images, based on word-level
         language detection from product images.
@@ -1640,6 +1678,7 @@ paths:
       tags:
         - Batch Job
       summary: Import batch job results
+      operationId: importBatchJobResults
       description: |
         Import batch job data into Robotoff database. This endpoint is secured and requires bearer authentication.
         
@@ -1668,25 +1707,6 @@ paths:
                     description: Request successful. Importing processed data.
         "400":
           description: "An HTTP 400 is returned if the authentification key is invalid or if the job_type is not supported."
-
-  /robots.txt:
-    get:
-      tags:
-        - System
-      summary: Get robots.txt file
-      description: |
-        Returns the robots.txt file that disallows all web crawlers to prevent excessive requests.
-        This is a standard file used by web crawlers to understand crawling permissions.
-      responses:
-        "200":
-          description: robots.txt content
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: |
-                  User-agent: *
-                  Disallow: /
 
 components:
   schemas:
@@ -1964,16 +1984,6 @@ components:
       schema:
         type: string
         example: agribalyse-category
-    campaign:
-      name: campaign
-      in: query
-      deprecated: true
-      description: |
-        Filter by annotation campaign (deprecated, use 'campaigns' instead).
-        An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria defined during insight import.
-      schema:
-        type: string
-        example: agribalyse-category
     predictor:
       name: predictor
       in: query
@@ -2065,21 +2075,38 @@ components:
       description: Bearer token authentication for batch job import endpoints
 
 tags:
-  - name: Questions
-  - name: Insights
+  - name: Question Management
+    description: |
+      Endpoints for managing and retrieving questions about products that need human validation.
+  - name: Insight Management
     description: |
       An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
       If the insight is correct, the Openfoodfacts DB can be updated accordingly.
 
       Current insight types and their description can be found in [robotoff/insights/dataclass.py](https://github.com/openfoodfacts/robotoff/blob/main/robotoff/insights/dataclass.py).
-  - name: Predictions
-  - name: Images
+  - name: Prediction Management
+    description: |
+      Endpoints for managing and retrieving prediction data from various ML models.
+  - name: Image Processing
+    description: |
+      Endpoints for processing and manipulating images, including cropping and running prediction models.
+  - name: Image Management  
+    description: |
+      Endpoints for managing and retrieving image data and metadata.
   - name: Image Predictions
-  - name: Logos
-  - name: ANN
+  - name: Logo Management
+    description: |
+      Endpoints for managing logo annotations, searching, and bulk operations on logos detected in product images.
+  - name: ANN Search
+    description: |
+      Approximate Nearest Neighbor search endpoints for finding similar logos based on visual features.
   - name: Predict
   - name: System
-  - name: Users
-  - name: Annotations
+  - name: User Management
+    description: |
+      Endpoints for managing user data and statistics.
+  - name: Annotation Management
+    description: |
+      Endpoints for managing annotation collections and metadata.
   - name: Dataset
   - name: Batch Job
