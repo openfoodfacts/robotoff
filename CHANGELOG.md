@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.74.0](https://github.com/openfoodfacts/robotoff/compare/v1.73.1...v1.74.0) (2025-07-04)
+
+
+### Features
+
+* added spectral linting tool for OpenSpec Api file ([#1663](https://github.com/openfoodfacts/robotoff/issues/1663)) ([7d50f89](https://github.com/openfoodfacts/robotoff/commit/7d50f897caee2419e4397f5eaafd0d788a00f3fd))
+* only run category prediction model when model input changes ([#1666](https://github.com/openfoodfacts/robotoff/issues/1666)) ([a2cbddf](https://github.com/openfoodfacts/robotoff/commit/a2cbddfebe14ca4105153bcb2ef5685b8df02cfe))
+
+
+### Bug Fixes
+
+* delete all previous category predictions during import ([#1251](https://github.com/openfoodfacts/robotoff/issues/1251)) ([#1660](https://github.com/openfoodfacts/robotoff/issues/1660)) ([44c61fc](https://github.com/openfoodfacts/robotoff/commit/44c61fc35f01e9830b83b390a390f31d87b95bdf))
+* track errors during OFF updates on Sentry ([#1664](https://github.com/openfoodfacts/robotoff/issues/1664)) ([1b67ced](https://github.com/openfoodfacts/robotoff/commit/1b67cedcf2dfdd72ee4ba87774dcbd858c2a83fd))
+
 ## [1.73.1](https://github.com/openfoodfacts/robotoff/compare/v1.73.0...v1.73.1) (2025-06-27)
 
 
