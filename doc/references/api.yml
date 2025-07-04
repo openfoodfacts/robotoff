@@ -170,7 +170,23 @@ paths:
       responses:
         "200":
           description: "Questions about popular products"
-          content: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - "no_questions"
+                      - "found"
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                    description: The total number of results with the provided filters
   /questions/unanswered:
     get:
       tags:
@@ -302,7 +318,23 @@ paths:
       responses:
         "200":
           description: "All insights for the specific product"
-          content: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  insights:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InsightSearchResult"
+                  status:
+                    type: string
+                    enum:
+                      - "no_insights"
+                      - "found"
+                  count:
+                    type: integer
+                    description: The total number of results
   /insights:
     get:
       tags:
@@ -346,14 +378,14 @@ paths:
                     type: integer
                     description: The total number of results with the provided filters
                     example: 10
-  /insights/detail/{id}:
+  /insights/detail/{insight_id}:
     get:
       tags:
         - Insight Management
       summary: Get a specific insight
       operationId: getInsightDetails
       parameters:
-        - name: id
+        - name: insight_id
           in: path
           description: "ID of the insight"
           required: true
@@ -363,7 +395,10 @@ paths:
       responses:
         "200":
           description: "Insight details"
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightSearchResult"
   /insights/annotate:
     post:
       tags:
@@ -1584,6 +1619,63 @@ paths:
                           example: 0.9
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
+    post:
+      tags:
+        - Predict
+      summary: Predict the language of a text
+      operationId: predictLanguagePost
+      description: |
+        Predict the language of a text using a neural model.
+        Use this POST version for long texts, as the GET version has a limit on the length
+        of the text that can be provided in the query string.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: The text to predict language of
+                  example: "hello world"
+                k:
+                  type: integer
+                  description: The number of predictions to return
+                  default: 10
+                  minimum: 1
+                threshold:
+                  type: number
+                  description: The minimum probability for a language to be returned
+                  default: 0.01
+                  minimum: 0
+                  maximum: 1
+              required:
+                - text
+      responses:
+        "200":
+          description: the predicted languages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  predictions:
+                    type: array
+                    description: a list of predicted languages, sorted by descending probability
+                    items:
+                      type: object
+                      properties:
+                        lang:
+                          type: string
+                          description: the predicted language (2-letter code)
+                          example: "en"
+                        confidence:
+                          type: number
+                          description: the probability of the predicted language
+                          example: 0.9
+        "400":
+          description: "An HTTP 400 is returned if the provided parameters are invalid"
 
   /predict/lang/product:
     get:
@@ -1707,25 +1799,6 @@ paths:
                     description: Request successful. Importing processed data.
         "400":
           description: "An HTTP 400 is returned if the authentification key is invalid or if the job_type is not supported."
-
-  /robots.txt:
-    get:
-      tags:
-        - System
-      summary: Get robots.txt file
-      description: |
-        Returns the robots.txt file that disallows all web crawlers to prevent excessive requests.
-        This is a standard file used by web crawlers to understand crawling permissions.
-      responses:
-        "200":
-          description: robots.txt content
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: |
-                  User-agent: *
-                  Disallow: /
 
 components:
   schemas:
