@@ -2106,24 +2106,42 @@ def import_product_predictions(
 
     deleted = 0
     if delete_previous_versions:
-        for (
-            server_type,
-            prediction_type,
-            source_image,
-            predictor_version,
-        ), _ in itertools.groupby(
-            sorted(product_predictions, key=_import_product_predictions_sort_fn),
-            _import_product_predictions_sort_fn,
-        ):
+        sorted_predictions = sorted(
+            product_predictions,
+            key=_import_product_predictions_sort_fn,
+        )
+
+    for (
+        server_type,
+        prediction_type,
+        source_image,
+        predictor_version,
+    ), _ in itertools.groupby(
+        sorted_predictions,
+        key=_import_product_predictions_sort_fn,
+    ):
+        if prediction_type.name == "category":
+            # For category predictions, delete all previous ones regardless of
+            # source_image or predictor_version
             deleted += (
                 PredictionModel.delete()
                 .where(
-                    # Delete all predictions with the same barcode,
-                    # server_type, source_image and type but with a different
-                    # predictor_version We need a custom SQL query with 'IS
-                    # DISTINCT FROM' as otherwise null values are considered
-                    # specially when using standard '!=' operator. See
-                    # https://www.postgresql.org/docs/current/functions-comparison.html
+                    PredictionModel.barcode == barcode,
+                    PredictionModel.server_type == server_type.name,
+                    PredictionModel.type == prediction_type.name,
+                )
+                .execute()
+            )
+        else:
+            # Delete all predictions with the same barcode,
+            # server_type, source_image and type but with a different
+            # predictor_version. We need a custom SQL query with 'IS
+            # DISTINCT FROM' as otherwise null values are considered
+            # specially when using standard '!=' operator. See
+            # https://www.postgresql.org/docs/current/functions-comparison.html
+            deleted += (
+                PredictionModel.delete()
+                .where(
                     SQL(
                         "prediction.barcode = %s AND "
                         "prediction.server_type = %s AND "
@@ -2137,7 +2155,7 @@ def import_product_predictions(
                             source_image,
                             predictor_version,
                         ),
-                    ),
+                    )
                 )
                 .execute()
             )

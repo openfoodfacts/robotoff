@@ -1,15 +1,12 @@
-import requests
-
 from robotoff.images import delete_images
 from robotoff.insights.extraction import get_predictions_from_product_name
 from robotoff.insights.importer import import_insights, refresh_insights
 from robotoff.models import with_db
-from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.products import get_product
 from robotoff.redis import Lock, LockedResourceException
-from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import JSONType, ProductIdentifier
 from robotoff.utils import get_logger
+from robotoff.workers.tasks.common import add_category_insight
 
 logger = get_logger(__name__)
 
@@ -58,7 +55,7 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
                 logger.info("Updated product does not exist: %s", product_id)
                 return
 
-            updated_product_predict_insights(product_id, product_dict)
+            updated_product_predict_insights(product_id, product_dict, diffs=diffs)
             logger.info("Refreshing insights...")
             import_results = refresh_insights(product_id)
             for import_result in import_results:
@@ -70,68 +67,41 @@ def update_insights_job(product_id: ProductIdentifier, diffs: JSONType) -> None:
         )
 
 
-@with_db
-def add_category_insight_job(
-    product_id: ProductIdentifier, triton_uri: str | None = None
-) -> None:
-    """Job to add category insight for a product.
+def should_rerun_category_predictor(diffs: JSONType | None) -> bool:
+    """Check if the category predictor should be rerun based on the update diffs.
 
-    :param product_id: identifier of the product
-    :param triton_uri: URI of the Triton Inference Server, defaults to
-        None. If not provided, the default value from settings is used.
+    :param diffs: a dict containing a diff of the update, the format is
+        defined by Product Opener. This is used to determine whether we
+        should run the category predictor again or not, depending on the
+        changes made to the product.
+    :return: True if the category predictor should be rerun, False otherwise.
     """
-    product_dict = get_product(product_id)
+    if diffs is None:
+        return True
 
-    if product_dict is None:
-        logger.info("Product does not exist: %s", product_id)
-        return
-
-    add_category_insight(product_id, product_dict, triton_uri=triton_uri)
-
-
-def add_category_insight(
-    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
-) -> None:
-    """Predict categories for product and import predicted category insight.
-
-    :param product_id: identifier of the product
-    :param product: product as retrieved from MongoDB
-    :param triton_uri: URI of the Triton Inference Server, defaults to
-        None. If not provided, the default value from settings is used.
-    """
-    if not product_id.server_type.is_food():
-        # Category prediction is only available for Food products
-        logger.info(
-            "`server_type=%s`, skipping category prediction", product_id.server_type
-        )
-        return
-
-    # predict category using neural model
-    try:
-        neural_predictions, _ = CategoryClassifier(
-            get_taxonomy(TaxonomyType.category.name)
-        ).predict(product, product_id, triton_uri=triton_uri)
-        product_predictions = neural_predictions
-    except requests.exceptions.HTTPError as e:
-        resp = e.response
-        logger.error(
-            f"Category classifier returned an error: {resp.status_code}: %s", resp.text
-        )
-        return
-
-    if len(product_predictions) < 1:
-        return
-
-    for prediction in product_predictions:
-        prediction.barcode = product_id.barcode
-        prediction.server_type = product_id.server_type
-
-    import_result = import_insights(product_predictions, product_id.server_type)
-    logger.info(import_result)
+    fields_to_check = ["product_name", "ingredients_text"]
+    fields = diffs.get("fields", {})
+    updated_fields = fields.get("change", [])
+    added_fields = fields.get("add", [])
+    has_nutriments_change = "nutriments" in diffs
+    uploaded_images = diffs.get("uploaded_images", {})
+    is_uploaded_image = "add" in uploaded_images
+    is_deleted_image = "delete" in uploaded_images
+    # Check if any of the fields that affect category prediction have changed
+    return (
+        has_nutriments_change
+        or is_uploaded_image
+        or is_deleted_image
+        or any(key in updated_fields for key in fields_to_check)
+        or any(key in added_fields for key in fields_to_check)
+    )
 
 
 def updated_product_predict_insights(
-    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
+    product_id: ProductIdentifier,
+    product: JSONType,
+    triton_uri: str | None = None,
+    diffs: JSONType | None = None,
 ) -> None:
     """Predict and import category insights and insights-derived from product
     name.
@@ -140,8 +110,14 @@ def updated_product_predict_insights(
     :param product: product as retrieved from MongoDB
     :param triton_uri: URI of the Triton Inference Server, defaults to
         None. If not provided, the default value from settings is used.
+    :param diffs: a dict containing a diff of the update, the format is
+        defined by Product Opener. This is used to determine whether we
+        should run the category predictor again or not, depending on the
+        changes made to the product.
     """
-    add_category_insight(product_id, product, triton_uri=triton_uri)
+    if should_rerun_category_predictor(diffs):
+        add_category_insight(product_id, product, triton_uri=triton_uri)
+
     product_name = product.get("product_name")
 
     if not product_name:

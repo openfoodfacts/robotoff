@@ -1708,6 +1708,25 @@ paths:
         "400":
           description: "An HTTP 400 is returned if the authentification key is invalid or if the job_type is not supported."
 
+  /robots.txt:
+    get:
+      tags:
+        - System
+      summary: Get robots.txt file
+      description: |
+        Returns the robots.txt file that disallows all web crawlers to prevent excessive requests.
+        This is a standard file used by web crawlers to understand crawling permissions.
+      responses:
+        "200":
+          description: robots.txt content
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  User-agent: *
+                  Disallow: /
+
 components:
   schemas:
     LogoANNSearchResponse:

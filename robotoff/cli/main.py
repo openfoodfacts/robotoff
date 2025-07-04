@@ -491,7 +491,7 @@ def run_category_prediction(
     from robotoff.settings import DATASET_DIR
     from robotoff.utils import get_logger
     from robotoff.workers.queues import enqueue_job, low_queue
-    from robotoff.workers.tasks.product_updated import add_category_insight_job
+    from robotoff.workers.tasks.common import add_category_insight_job
 
     logger = get_logger()
     # Download the latest dump of the dataset, cache it in DATASET_DIR

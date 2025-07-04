@@ -1,0 +1,27 @@
+name: API Specification Linting
+
+on:
+  push:
+    paths:
+      - 'doc/references/api.yml'
+      - '.spectral.yml'
+  pull_request:
+    paths:
+      - 'doc/references/api.yml'
+      - '.spectral.yml'
+
+jobs:
+  lint-api-spec:
+    name: Lint OpenAPI Specification
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Lint OpenAPI specification with Spectral
+        continue-on-error: true
+        uses: stoplightio/spectral-action@latest
+        with:
+          file_glob: 'doc/references/api.yml'
+          spectral_ruleset: '.spectral.yml'
