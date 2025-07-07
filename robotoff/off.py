@@ -10,7 +10,13 @@ from openfoodfacts.images import split_barcode
 from requests.exceptions import JSONDecodeError
 
 from robotoff import settings
-from robotoff.types import JSONType, NutrientData, ProductIdentifier, ServerType
+from robotoff.types import (
+    JSONType,
+    NutrientData,
+    ProductIdentifier,
+    ProductTypeLiteral,
+    ServerType,
+)
 from robotoff.utils import get_logger, http_session
 
 logger = get_logger(__name__)
@@ -918,6 +924,68 @@ def parse_ingredients(text: str, lang: str, timeout: int = 10) -> list[JSONType]
         raise RuntimeError(f"Unable to parse ingredients: {response_data}")
 
     return response_data["product"].get("ingredients", [])
+
+
+def get_product_type(
+    product_id: ProductIdentifier, timeout: int = 5
+) -> ProductTypeLiteral | None:
+    """Retrieve the product type for a given product identifier.
+
+    The function will return the product type if found or None if the product does not
+    exist.
+
+    We send a request to the Product Opener API on the server associated with the
+    product identifier's server type (ex: world.openfoodfacts.org for food,
+    world.openbeautyfacts.org for beauty, etc.).
+
+    If the product type matches the server type associated with the product identifier,
+    Product Opener returns the product as expected.
+    Otherwise, it returns an HTTP 404 error, with the product type in the
+    `errors` list of the response. This feature is only available on the v3 of the API.
+
+    If the product was not found (irrespective of the product type), the API returns a
+    404 status code with no `errors` field. This allows us to know if the product still
+    exists and what is the real product type of the product using the v3 API.
+
+    :param product_id: the product identifier
+    :param timeout: the request timeout in seconds, defaults to 5s
+    :raises RuntimeError: if the request fails or returns an unexpected status code
+    :return: the product type if found, otherwise None
+    """
+    base_url = settings.BaseURLProvider.world(product_id.server_type)
+    url = f"{base_url}/api/v3.4/product/{product_id.barcode}?fields=product_type"
+    try:
+        r = http_session.get(
+            url,
+            auth=settings._off_request_auth,
+            timeout=timeout,
+        )
+    except (
+        requests.exceptions.ConnectionError,
+        requests.exceptions.SSLError,
+        requests.exceptions.Timeout,
+    ) as e:
+        raise RuntimeError(
+            f"Unable to get product type: error during HTTP request: {e}"
+        )
+
+    if r.status_code not in (200, 404):
+        raise RuntimeError(
+            f"Unable to get product type (non-200/404 status code): {r.status_code}, {r.text}"
+        )
+    response_data = r.json()
+
+    if response_data.get("status") == "success":
+        return response_data["product"]["product_type"]
+
+    errors = [
+        e for e in response_data.get("errors", []) if e["field"]["id"] == "product_type"
+    ]
+    if errors:
+        error = errors[0]
+        return error["field"]["value"]
+
+    return None
 
 
 def normalize_tag(value, lowercase=True):
