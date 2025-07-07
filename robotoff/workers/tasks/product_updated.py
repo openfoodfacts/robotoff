@@ -296,7 +296,7 @@ def product_type_switched_job(product_id: ProductIdentifier) -> None:
         func=update_insights_job,
         queue=high_queue,
         product_id=new_product_id,
-        diffs=None,  # No diffs to pass, we just want to reprocess
+        diffs={},  # No diffs to pass, we just want to reprocess
         force_category_prediction=True,  # Force category prediction as the product type has changed
     )
     logger.info(
