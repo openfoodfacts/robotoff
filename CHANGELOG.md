@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.74.1](https://github.com/openfoodfacts/robotoff/compare/v1.74.0...v1.74.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* pass empty dict instead of None as `diffs` ([#1673](https://github.com/openfoodfacts/robotoff/issues/1673)) ([ad504cc](https://github.com/openfoodfacts/robotoff/commit/ad504cc61eca01072be2b941bf61fe7290542aa9))
+* take into account product type changes ([#1671](https://github.com/openfoodfacts/robotoff/issues/1671)) ([6478326](https://github.com/openfoodfacts/robotoff/commit/6478326fa7b7aa2adbae639c2d8e9a7fa4c16ede))
+
 ## [1.74.0](https://github.com/openfoodfacts/robotoff/compare/v1.73.1...v1.74.0) (2025-07-04)
 
 
