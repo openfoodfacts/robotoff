@@ -289,7 +289,7 @@ class TestProductTypeSwitchedJob:
         assert enqueue_job_first_call.kwargs["product_id"] == new_product_id
         assert isinstance(enqueue_job_first_call.kwargs["queue"], Queue)
 
-        assert enqueue_job_second_call.kwargs["diffs"] is None
+        assert enqueue_job_second_call.kwargs["diffs"] == {}
         assert enqueue_job_second_call.kwargs["force_category_prediction"] is True
         assert enqueue_job_second_call.kwargs["func"] == update_insights_job
         assert enqueue_job_second_call.kwargs["product_id"] == new_product_id
