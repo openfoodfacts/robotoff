@@ -74,7 +74,7 @@ lark = "~1.1.4"
 h5py = "~3.13.0"
 opencv-python-headless = "~4.10.0.84"
 toml = "~0.10.2"
-openfoodfacts = "2.6.1"
+openfoodfacts = "2.7.0"
 imagehash = "~4.3.1"
 peewee-migrate = "~1.12.2"
 diskcache = "~5.6.3"
@@ -120,6 +120,7 @@ pytest-httpserver = "^1.0.4"
 types-cachetools = "^5.2.1"
 types-redis = "^4.3.21"
 rq-dashboard = "~0.6.1"
+requests-mock = "^1.12.1"
 
 [tool.poetry.scripts]
 robotoff-cli = 'robotoff.cli.main:main'

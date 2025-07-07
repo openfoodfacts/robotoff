@@ -17,7 +17,10 @@ from robotoff.workers.queues import (
 )
 from robotoff.workers.tasks import delete_product_insights_job
 from robotoff.workers.tasks.import_image import run_import_image_job
-from robotoff.workers.tasks.product_updated import update_insights_job
+from robotoff.workers.tasks.product_updated import (
+    product_type_switched_job,
+    update_insights_job,
+)
 
 logger = get_logger(__name__)
 
@@ -102,6 +105,18 @@ class UpdateListener(BaseUpdateListener):
                     product_id=product_id,
                     image_url=image_url,
                     ocr_url=ocr_url,
+                )
+            elif redis_update.is_product_type_change():
+                logger.info(
+                    "Product type has been updated for product %s",
+                    redis_update.code,
+                )
+                enqueue_in_job(
+                    func=product_type_switched_job,
+                    queue=selected_queue,
+                    job_delay=settings.UPDATED_PRODUCT_WAIT,
+                    job_kwargs={"result_ttl": 0},
+                    product_id=product_id,
                 )
             else:
                 logger.info("Product %s has been updated", redis_update.code)

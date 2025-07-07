@@ -165,6 +165,9 @@ class InsightType(str, enum.Enum):
     ingredient_detection = "ingredient_detection"
 
 
+ProductTypeLiteral = Literal["food", "beauty", "petfood", "product"]
+
+
 class ServerType(str, enum.Enum):
     """ServerType is used to refer to a specific Open*Facts project:
 
