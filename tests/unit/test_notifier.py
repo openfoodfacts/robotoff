@@ -57,7 +57,10 @@ def test_notify_image_flag_public(mocker):
     assert json["comment"] == "Robotoff detection: 'bad_word' (flagged)"
     assert json["reason"] == "other"
     assert json["confidence"] is None
-    assert json["url"] == "https://images.openfoodfacts.net/images/products/source_image/2.jpg"
+    assert (
+        json["url"]
+        == "https://images.openfoodfacts.net/images/products/source_image/2.jpg"
+    )
     assert json["user_id"] == "roboto-app"
     assert json["source"] == "robotoff"
     assert json["type"] == "image"
@@ -97,7 +100,10 @@ def test_notify_image_flag_private(mocker, monkeypatch):
     assert json["comment"] == "Robotoff detection: face"
     assert json["reason"] == "human"
     assert json["confidence"] == 0.8
-    assert json["url"] == "https://images.openfoodfacts.net/images/products/source_image/2.jpg"
+    assert (
+        json["url"]
+        == "https://images.openfoodfacts.net/images/products/source_image/2.jpg"
+    )
     assert json["user_id"] == "roboto-app"
     assert json["source"] == "robotoff"
     assert json["type"] == "image"
