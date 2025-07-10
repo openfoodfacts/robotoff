@@ -14,8 +14,6 @@ DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
     [("http://test.org/", ImageModerationNotifier)],
 )
 def test_notifier_factory(monkeypatch, moderation_url, want_type):
-    monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_URL", moderation_url)
-    monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_TOKEN", "test_token_123")
     notifier = NotifierFactory.get_notifier()
     assert type(notifier) is want_type
 
@@ -34,9 +32,10 @@ def test_notify_image_flag_no_prediction(mocker):
     assert not mock.called
 
 
-def test_notify_image_flag_public(mocker, monkeypatch):
+def test_notify_image_flag_public(mocker):
     """Test notifying a potentially sensitive public image"""
     mock_http = mocker.patch("robotoff.notifier.http_session.post")
+    mocker.patch.object(settings, "IMAGE_MODERATION_SERVICE_TOKEN", "test_token_123")
     notifier = MultiNotifier([ImageModerationNotifier("https://images.org")])
 
     notifier.notify_image_flag(
@@ -51,27 +50,31 @@ def test_notify_image_flag_public(mocker, monkeypatch):
     )
 
     assert len(mock_http.mock_calls) == 1
+    json = mock_http.call_args.kwargs["json"]
+    headers = mock_http.call_args.kwargs["headers"]
+    assert json["barcode"] == "123"
+    assert json["image_id"] == "2"
+    assert json["comment"] == "Robotoff detection: 'bad_word' (flagged)"
+    assert json["reason"] == "other"
+    assert json["confidence"] is None
+    assert json["url"] == "https://images.openfoodfacts.net/images/products/source_image/2.jpg"
+    assert json["user_id"] == "roboto-app"
+    assert json["source"] == "robotoff"
+    assert json["type"] == "image"
+    assert json["flavor"] == "off"
+    assert "Authorization" in headers
+    assert headers["Authorization"] == "Bearer test_token_123"
     mock_http.assert_any_call(
         "https://images.org",
-        json={
-            "barcode": "123",
-            "type": "image",
-            "url": "https://images.openfoodfacts.net/images/products/source_image/2.jpg",
-            "user_id": "roboto-app",
-            "source": "robotoff",
-            "confidence": None,
-            "image_id": "2",
-            "flavor": "off",
-            "reason": "other",
-            "comment": "Robotoff detection: 'bad_word' (flagged)",
-        },
-        headers={"Authorization": "test_token_123"},
+        json=json,
+        headers=mocker.ANY,
     )
 
 
 def test_notify_image_flag_private(mocker, monkeypatch):
     """Test notifying a potentially sensitive private image"""
     mock_http = mocker.patch("robotoff.notifier.http_session.post")
+    mocker.patch.object(settings, "IMAGE_MODERATION_SERVICE_TOKEN", "test_token_123")
     notifier = MultiNotifier([ImageModerationNotifier("https://images.org")])
 
     notifier.notify_image_flag(
@@ -87,19 +90,22 @@ def test_notify_image_flag_private(mocker, monkeypatch):
     )
 
     assert len(mock_http.mock_calls) == 1
+    json = mock_http.call_args.kwargs["json"]
+    headers = mock_http.call_args.kwargs["headers"]
+    assert json["barcode"] == "123"
+    assert json["image_id"] == "2"
+    assert json["comment"] == "Robotoff detection: face"
+    assert json["reason"] == "human"
+    assert json["confidence"] == 0.8
+    assert json["url"] == "https://images.openfoodfacts.net/images/products/source_image/2.jpg"
+    assert json["user_id"] == "roboto-app"
+    assert json["source"] == "robotoff"
+    assert json["type"] == "image"
+    assert json["flavor"] == "off"
+    assert "Authorization" in headers
+    assert headers["Authorization"] == "Bearer test_token_123"
     mock_http.assert_any_call(
         "https://images.org",
-        json={
-            "barcode": "123",
-            "type": "image",
-            "url": "https://images.openfoodfacts.net/images/products/source_image/2.jpg",
-            "user_id": "roboto-app",
-            "source": "robotoff",
-            "image_id": "2",
-            "flavor": "off",
-            "reason": "human",
-            "comment": "Robotoff detection: face",
-            "confidence": 0.8,
-        },
-        headers={"Authorization": "test_token_123"},
+        json=json,
+        headers=mocker.ANY,
     )

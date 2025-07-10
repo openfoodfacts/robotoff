@@ -91,7 +91,6 @@ class ImageModerationNotifier(NotifierInterface):
 
     def __init__(self, service_url):
         self.service_url = service_url.rstrip("/")
-        self.token = settings.IMAGE_MODERATION_SERVICE_TOKEN
 
     def notify_image_flag(
         self,
@@ -146,7 +145,7 @@ class ImageModerationNotifier(NotifierInterface):
                 "reason": reason,
                 "comment": comment,
             }
-            headers = {"Authorization": f"Bearer {self.token}"}
+            headers = {"Authorization": f"Bearer {settings.IMAGE_MODERATION_SERVICE_TOKEN}"}
             try:
                 logger.info("Notifying image %s to moderation service", image_url)
                 http_session.post(self.service_url, json=data, headers=headers)
