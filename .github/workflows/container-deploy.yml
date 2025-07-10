@@ -18,244 +18,244 @@ jobs:
     environment: ${{ matrix.env }}
     concurrency: ${{ matrix.env }}
     steps:
-      - name: Set various variable for staging deployment
-        if: matrix.env == 'robotoff-net'
-        run: |
-          echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
-          echo "SSH_USERNAME=off" >> $GITHUB_ENV
-          echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
-          echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
-          echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
-          echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
-          echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
-          # In staging, we use the Redis of shared services to get Product Update
-          echo "REDIS_UPDATE_HOST=redis.po_webnet" >> $GITHUB_ENV
-          echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
-          echo "INFLUXDB_PORT=8087" >> $GITHUB_ENV
-          echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
-          echo "IMAGE_MODERATION_SERVICE_TOKEN =your_token_here" >> $GITHUB_ENV
-          echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
-          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
-          echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
-      - name: Set various variable for production deployment
-        if: matrix.env == 'robotoff-org'
-        run: |
-          # This is the OSM proxy server, that does have an ipv4 address
-          echo "SSH_PROXY_HOST=45.147.209.254" >> $GITHUB_ENV
-          echo "SSH_USERNAME=off" >> $GITHUB_ENV
-          echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
-          echo "SSH_HOST=10.3.0.200" >> $GITHUB_ENV
-          echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
-          echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
-          # use prod mongodb through stunnel
-          echo "MONGO_URI=mongodb://10.3.0.101:27017" >> $GITHUB_ENV
-          # In prod, we use the Redis running in VM
-          echo "REDIS_UPDATE_HOST=10.3.0.101" >> $GITHUB_ENV
-          echo "INFLUXDB_HOST=10.3.0.101" >> $GITHUB_ENV
-          echo "INFLUXDB_PORT=8086" >> $GITHUB_ENV
-          echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
-          echo "IMAGE_MODERATION_SERVICE_TOKEN =your_token_here" >> $GITHUB_ENV
-          echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
-          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
-          echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
-      - name: Wait for container build
-        uses: lewagon/wait-on-check-action@v1.4.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          check-name: build
-          wait-interval: 10
-          allowed-conclusions: success
+    - name: Set various variable for staging deployment
+      if: matrix.env == 'robotoff-net'
+      run: |
+        echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+        echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
+        echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=dev" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=net" >> $GITHUB_ENV
+        echo "MONGO_URI=mongodb://10.1.0.200:27017" >> $GITHUB_ENV
+        # In staging, we use the Redis of shared services to get Product Update
+        echo "REDIS_UPDATE_HOST=redis.po_webnet" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.1.0.200" >> $GITHUB_ENV
+        echo "INFLUXDB_PORT=8087" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_TOKEN =your_token_here" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
+    - name: Set various variable for production deployment
+      if: matrix.env == 'robotoff-org'
+      run: |
+        # This is the OSM proxy server, that does have an ipv4 address
+        echo "SSH_PROXY_HOST=45.147.209.254" >> $GITHUB_ENV
+        echo "SSH_USERNAME=off" >> $GITHUB_ENV
+        echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
+        echo "SSH_HOST=10.3.0.200" >> $GITHUB_ENV
+        echo "ROBOTOFF_INSTANCE=prod" >> $GITHUB_ENV
+        echo "ROBOTOFF_TLD=org" >> $GITHUB_ENV
+        # use prod mongodb through stunnel
+        echo "MONGO_URI=mongodb://10.3.0.101:27017" >> $GITHUB_ENV
+        # In prod, we use the Redis running in VM
+        echo "REDIS_UPDATE_HOST=10.3.0.101" >> $GITHUB_ENV
+        echo "INFLUXDB_HOST=10.3.0.101" >> $GITHUB_ENV
+        echo "INFLUXDB_PORT=8086" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
+        echo "IMAGE_MODERATION_SERVICE_TOKEN =your_token_here" >> $GITHUB_ENV
+        echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
+        echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
+    - name: Wait for container build
+      uses: lewagon/wait-on-check-action@v1.4.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        check-name: build
+        wait-interval: 10
+        allowed-conclusions: success
 
-      - name: Checkout git repository
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            # Clone Git repository if not already there
-            [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
+    - name: Checkout git repository
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+          # Clone Git repository if not already there
+          [ ! -d '${{ matrix.env}}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
 
-            # Go to repository directory
-            cd ${{ matrix.env}}
+          # Go to repository directory
+          cd ${{ matrix.env}}
 
-            # Fetch newest commits (in case it wasn't freshly cloned)
-            git fetch --depth 1
+          # Fetch newest commits (in case it wasn't freshly cloned)
+          git fetch --depth 1
 
-            # Checkout current commit SHA
-            git checkout -qf ${{ github.sha }}
+          # Checkout current commit SHA
+          git checkout -qf ${{ github.sha }}
 
-            # Setup git lfs on the repository, in case it's not setup yet
-            git lfs install
+          # Setup git lfs on the repository, in case it's not setup yet
+          git lfs install
 
-            # Fetch and checkout LFS files
-            git lfs fetch
-            git lfs checkout
+          # Fetch and checkout LFS files
+          git lfs fetch
+          git lfs checkout
 
-      - name: Set environment variables
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            # Go to repository directory
-            cd ${{ matrix.env}}
+    - name: Set environment variables
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+          # Go to repository directory
+          cd ${{ matrix.env}}
 
-            # Set Docker Compose variables
-            echo "DOCKER_CLIENT_TIMEOUT=200" > .env
-            echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
-            echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
-            echo "COMPOSE_PATH_SEPARATOR=;" >> .env
-            echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml;docker/ml.yml" >> .env
-            echo "TAG=sha-${{ github.sha }}" >> .env
-            echo "RESTART_POLICY=always" >> .env
+          # Set Docker Compose variables
+          echo "DOCKER_CLIENT_TIMEOUT=200" > .env
+          echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
+          echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
+          echo "COMPOSE_PATH_SEPARATOR=;" >> .env
+          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml;docker/ml.yml" >> .env
+          echo "TAG=sha-${{ github.sha }}" >> .env
+          echo "RESTART_POLICY=always" >> .env
 
-            # Set app variables
-            echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
-            echo "ROBOTOFF_TLD=${{ env.ROBOTOFF_TLD }}" >> .env
-            # This is the network shared with Product Opener.
-            # In staging, Product Opener is deployed on the same VM.
-            # In production Product Opener is deployed on a separate server and is not dockerized.
-            echo "COMMON_NET_NAME=po_webnet" >> .env
-            echo "REDIS_HOST=redis.robotoff_default" >> .env
-            echo "REDIS_UPDATE_HOST=${{ env.REDIS_UPDATE_HOST }}" >> .env
-            echo "REDIS_UPDATE_PORT=6379" >> .env
-            echo "REDIS_STREAM_NAME=product_updates" >> .env
-            # We use local PostgreSQL instance with `robotoff_default` network,
-            # so that there is no possibility of conflict with PO PostgreSQL instance.
-            echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
-            echo "POSTGRES_DB=robotoff" >> .env
-            echo "POSTGRES_USER=postgres" >> .env
-            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-            echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
-            echo "OFF_USER=roboto-app" >> .env
-            echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
-            echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
-            echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
-            echo "ELASTIC_USER=elastic" >> .env
-            echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
-            echo "TRITON_URI=triton:8001" >> .env
-            echo "TRITON_MODELS_DIR=./models/triton" >> .env
-            echo "FASTTEXT_HOST=fasttext" >> .env
-            echo "FASTTEXT_MODEL_DIR=./models" >> .env
-            echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
-            echo "INFLUXDB_PORT=${{ env.INFLUXDB_PORT }}" >> .env
-            echo "INFLUXDB_BUCKET=off_metrics" >> .env
-            echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
-            echo "GUNICORN_NUM_WORKERS=4" >> .env
-            echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
-            echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
-            echo "CROP_ALLOWED_DOMAINS=${{ env.CROP_ALLOWED_DOMAINS }}" >> .env
+          # Set app variables
+          echo "ROBOTOFF_INSTANCE=${{ env.ROBOTOFF_INSTANCE }}" >> .env
+          echo "ROBOTOFF_TLD=${{ env.ROBOTOFF_TLD }}" >> .env
+          # This is the network shared with Product Opener.
+          # In staging, Product Opener is deployed on the same VM.
+          # In production Product Opener is deployed on a separate server and is not dockerized.
+          echo "COMMON_NET_NAME=po_webnet" >> .env
+          echo "REDIS_HOST=redis.robotoff_default" >> .env
+          echo "REDIS_UPDATE_HOST=${{ env.REDIS_UPDATE_HOST }}" >> .env
+          echo "REDIS_UPDATE_PORT=6379" >> .env
+          echo "REDIS_STREAM_NAME=product_updates" >> .env
+          # We use local PostgreSQL instance with `robotoff_default` network,
+          # so that there is no possibility of conflict with PO PostgreSQL instance.
+          echo "POSTGRES_HOST=postgres.robotoff_default" >> .env
+          echo "POSTGRES_DB=robotoff" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
+          echo "OFF_USER=roboto-app" >> .env
+          echo "OFF_PASSWORD=${{ secrets.OFF_PASSWORD }}" >> .env
+          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
+          echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
+          echo "ELASTIC_USER=elastic" >> .env
+          echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
+          echo "TRITON_URI=triton:8001" >> .env
+          echo "TRITON_MODELS_DIR=./models/triton" >> .env
+          echo "FASTTEXT_HOST=fasttext" >> .env
+          echo "FASTTEXT_MODEL_DIR=./models" >> .env
+          echo "INFLUXDB_HOST=${{ env.INFLUXDB_HOST }}" >> .env
+          echo "INFLUXDB_PORT=${{ env.INFLUXDB_PORT }}" >> .env
+          echo "INFLUXDB_BUCKET=off_metrics" >> .env
+          echo "INFLUXDB_AUTH_TOKEN=${{ secrets.INFLUXDB_AUTH_TOKEN }}" >> .env
+          echo "GUNICORN_NUM_WORKERS=4" >> .env
+          echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
+          echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+          echo "CROP_ALLOWED_DOMAINS=${{ env.CROP_ALLOWED_DOMAINS }}" >> .env
 
-            # PostgreSQL config
-            echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=${{ env.ROBOTOFF_POSTGRES_SHARED_BUFFERS }}" >> .env
-            echo "ROBOTOFF_POSTGRES_WORK_MEM=${{ env.ROBOTOFF_POSTGRES_WORK_MEM }}" >> .env
+          # PostgreSQL config
+          echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=${{ env.ROBOTOFF_POSTGRES_SHARED_BUFFERS }}" >> .env
+          echo "ROBOTOFF_POSTGRES_WORK_MEM=${{ env.ROBOTOFF_POSTGRES_WORK_MEM }}" >> .env
 
-            # Google Cloud credentials
-            echo "GOOGLE_CREDENTIALS=${{ secrets.GOOGLE_CREDENTIALS }}" >> .env
+          # Google Cloud credentials
+          echo "GOOGLE_CREDENTIALS=${{ secrets.GOOGLE_CREDENTIALS }}" >> .env
 
-            # Secret key to secure batch job import
-            echo "BATCH_JOB_KEY=${{ secrets.BATCH_JOB_KEY }}" >> .env
+          # Secret key to secure batch job import
+          echo "BATCH_JOB_KEY=${{ secrets.BATCH_JOB_KEY }}" >> .env
 
-      - name: Create Docker volumes
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd ${{ matrix.env }}
-            make create_external_volumes
+    - name: Create Docker volumes
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+          cd ${{ matrix.env }}
+          make create_external_volumes
 
-      - name: Start services
-        uses: appleboy/ssh-action@master
-        env:
-          DOCKER_CLIENT_TIMEOUT: 120
-          COMPOSE_HTTP_TIMEOUT: 120
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-          script: |
-            set -e
-            cd ${{ matrix.env}}
-            # Get the latest version (to apply migration next)
-            make pull
-            # Apply migrations
-            make migrate-db
-            # Launch new version
-            make up
+    - name: Start services
+      uses: appleboy/ssh-action@master
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script: |
+          set -e
+          cd ${{ matrix.env}}
+          # Get the latest version (to apply migration next)
+          make pull
+          # Apply migrations
+          make migrate-db
+          # Launch new version
+          make up
 
-      - name: Check services are up
-        uses: appleboy/ssh-action@master
-        id: livecheck
-        if: ${{ always() }}
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd ${{ matrix.env}}
-            # let api 15s to be up !
-            sleep 15s
-            make livecheck
+    - name: Check services are up
+      uses: appleboy/ssh-action@master
+      id: livecheck
+      if: ${{ always() }}
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+          cd ${{ matrix.env}}
+          # let api 15s to be up !
+          sleep 15s
+          make livecheck
 
-      - name: Run health tests
-        uses: appleboy/ssh-action@master
-        id: health
-        if: ${{ always() }}
-        env:
-          DOCKER_CLIENT_TIMEOUT: 120
-          COMPOSE_HTTP_TIMEOUT: 120
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
-          script: |
-            set -e
-            cd ${{ matrix.env}}
-            make health
+    - name: Run health tests
+      uses: appleboy/ssh-action@master
+      id: health
+      if: ${{ always() }}
+      env:
+        DOCKER_CLIENT_TIMEOUT: 120
+        COMPOSE_HTTP_TIMEOUT: 120
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        envs: DOCKER_CLIENT_TIMEOUT,COMPOSE_HTTP_TIMEOUT
+        script: |
+          set -e
+          cd ${{ matrix.env}}
+          make health
 
-      - name: Cleanup obsolete Docker objects
-        uses: appleboy/ssh-action@master
-        if: ${{ always() }}
-        with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          proxy_host: ${{ env.SSH_PROXY_HOST }}
-          proxy_username: ${{ env.SSH_PROXY_USERNAME }}
-          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set +e  # Allow cleanup to continue even if some commands fail
-            cd ${{ matrix.env }}
-            make prune
+    - name: Cleanup obsolete Docker objects
+      uses: appleboy/ssh-action@master
+      if: ${{ always() }}
+      with:
+        host: ${{ env.SSH_HOST }}
+        username: ${{ env.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ env.SSH_PROXY_HOST }}
+        proxy_username: ${{ env.SSH_PROXY_USERNAME }}
+        proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          set +e  # Allow cleanup to continue even if some commands fail
+          cd ${{ matrix.env }}
+          make prune
 
     # - uses: basos9/grafana-annotation-action@v1.0.3
     #   if: ${{ always() }}
