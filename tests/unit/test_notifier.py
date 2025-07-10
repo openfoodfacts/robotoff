@@ -15,6 +15,7 @@ DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 )
 def test_notifier_factory(monkeypatch, moderation_url, want_type):
     monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_URL", moderation_url)
+    monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_TOKEN", "test_token_123")
     notifier = NotifierFactory.get_notifier()
     assert type(notifier) is want_type
 
@@ -64,6 +65,7 @@ def test_notify_image_flag_public(mocker, monkeypatch):
             "reason": "other",
             "comment": "Robotoff detection: 'bad_word' (flagged)",
         },
+        headers={"Authorization": "test_token_123"},
     )
 
 
@@ -99,4 +101,5 @@ def test_notify_image_flag_private(mocker, monkeypatch):
             "comment": "Robotoff detection: face",
             "confidence": 0.8,
         },
+        headers={"Authorization": "test_token_123"},
     )
