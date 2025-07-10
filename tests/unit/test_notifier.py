@@ -14,6 +14,7 @@ DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
     [("http://test.org/", ImageModerationNotifier)],
 )
 def test_notifier_factory(monkeypatch, moderation_url, want_type):
+    monkeypatch.setattr(settings, "IMAGE_MODERATION_SERVICE_URL", moderation_url)
     notifier = NotifierFactory.get_notifier()
     assert type(notifier) is want_type
 
