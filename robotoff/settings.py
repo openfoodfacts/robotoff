@@ -233,6 +233,9 @@ K_NEAREST_NEIGHBORS = 10
 IMAGE_MODERATION_SERVICE_URL: str | None = os.environ.get(
     "IMAGE_MODERATION_SERVICE_URL", None
 )
+IMAGE_MODERATION_SERVICE_TOKEN: str | None = os.environ.get(
+    "IMAGE_MODERATION_SERVICE_TOKEN", None
+)
 
 # Sentry for error reporting
 _sentry_dsn = os.environ.get("SENTRY_DSN")
