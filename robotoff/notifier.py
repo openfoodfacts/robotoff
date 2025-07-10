@@ -146,9 +146,7 @@ class ImageModerationNotifier(NotifierInterface):
                 "reason": reason,
                 "comment": comment,
             }
-            headers = {
-                "Authorization": f"Bearer {self.token}"
-            }
+            headers = {"Authorization": f"Bearer {self.token}"}
             try:
                 logger.info("Notifying image %s to moderation service", image_url)
                 http_session.post(self.service_url, json=data, headers=headers)
