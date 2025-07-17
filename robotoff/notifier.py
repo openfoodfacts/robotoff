@@ -145,9 +145,12 @@ class ImageModerationNotifier(NotifierInterface):
                 "reason": reason,
                 "comment": comment,
             }
+            headers = {
+                "Authorization": f"Bearer {settings.AUTH_BEARER_TOKEN_NUTRIPATROL}"
+            }
             try:
                 logger.info("Notifying image %s to moderation service", image_url)
-                http_session.post(self.service_url, json=data)
+                http_session.post(self.service_url, json=data, headers=headers)
             except Exception:
                 logger.exception(
                     "Error while notifying image to moderation service",

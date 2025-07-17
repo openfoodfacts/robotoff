@@ -51,6 +51,7 @@ x-robotoff-base-env:
   ENABLE_MONGODB_ACCESS:
   IN_DOCKER_CONTAINER:
   IMAGE_MODERATION_SERVICE_URL:
+  AUTH_BEARER_TOKEN_NUTRIPATROL:
   CROP_ALLOWED_DOMAINS:
   NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
   # Used by Google SDK to know where to find the credentials

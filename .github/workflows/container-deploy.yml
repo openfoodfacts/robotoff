@@ -153,6 +153,7 @@ jobs:
           echo "GUNICORN_NUM_WORKERS=4" >> .env
           echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
           echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+          echo "AUTH_BEARER_TOKEN_NUTRIPATROL =${{ secrets.AUTH_BEARER_TOKEN_NUTRIPATROL }}" >> .env
           echo "CROP_ALLOWED_DOMAINS=${{ env.CROP_ALLOWED_DOMAINS }}" >> .env
 
           # PostgreSQL config
