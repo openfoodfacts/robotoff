@@ -146,7 +146,7 @@ class ImageModerationNotifier(NotifierInterface):
                 "comment": comment,
             }
             headers = {
-                "Authorization": f"Bearer {settings.IMAGE_MODERATION_SERVICE_TOKEN}"
+                "Authorization": f"Bearer {settings.AUTH_BEARER_TOKEN_NUTRIPATROL}"
             }
             try:
                 logger.info("Notifying image %s to moderation service", image_url)

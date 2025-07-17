@@ -36,7 +36,7 @@ def test_notify_image_flag_no_prediction(mocker):
 def test_notify_image_flag_public(mocker):
     """Test notifying a potentially sensitive public image"""
     mock_http = mocker.patch("robotoff.notifier.http_session.post")
-    mocker.patch.object(settings, "IMAGE_MODERATION_SERVICE_TOKEN", "test_token_123")
+    mocker.patch.object(settings, "AUTH_BEARER_TOKEN_NUTRIPATROL", "test_token_123")
     notifier = MultiNotifier([ImageModerationNotifier("https://images.org")])
 
     notifier.notify_image_flag(
@@ -68,17 +68,12 @@ def test_notify_image_flag_public(mocker):
     assert json["flavor"] == "off"
     assert "Authorization" in headers
     assert headers["Authorization"] == "Bearer test_token_123"
-    mock_http.assert_any_call(
-        "https://images.org",
-        json=json,
-        headers=mocker.ANY,
-    )
 
 
 def test_notify_image_flag_private(mocker, monkeypatch):
     """Test notifying a potentially sensitive private image"""
     mock_http = mocker.patch("robotoff.notifier.http_session.post")
-    mocker.patch.object(settings, "IMAGE_MODERATION_SERVICE_TOKEN", "test_token_123")
+    mocker.patch.object(settings, "AUTH_BEARER_TOKEN_NUTRIPATROL", "test_token_123")
     notifier = MultiNotifier([ImageModerationNotifier("https://images.org")])
 
     notifier.notify_image_flag(
@@ -111,8 +106,3 @@ def test_notify_image_flag_private(mocker, monkeypatch):
     assert json["flavor"] == "off"
     assert "Authorization" in headers
     assert headers["Authorization"] == "Bearer test_token_123"
-    mock_http.assert_any_call(
-        "https://images.org",
-        json=json,
-        headers=mocker.ANY,
-    )

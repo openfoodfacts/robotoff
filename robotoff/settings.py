@@ -233,8 +233,8 @@ K_NEAREST_NEIGHBORS = 10
 IMAGE_MODERATION_SERVICE_URL: str | None = os.environ.get(
     "IMAGE_MODERATION_SERVICE_URL", None
 )
-IMAGE_MODERATION_SERVICE_TOKEN: str | None = os.environ.get(
-    "IMAGE_MODERATION_SERVICE_TOKEN", None
+AUTH_BEARER_TOKEN_NUTRIPATROL: str | None = os.environ.get(
+    "AUTH_BEARER_TOKEN_NUTRIPATROL", None
 )
 
 # Sentry for error reporting
