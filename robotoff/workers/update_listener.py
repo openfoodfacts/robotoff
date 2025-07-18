@@ -19,6 +19,7 @@ from robotoff.workers.queues import (
 from robotoff.workers.tasks import delete_product_insights_job
 from robotoff.workers.tasks.import_image import run_import_image_job
 from robotoff.workers.tasks.product_updated import (
+    deleted_image_job,
     product_type_switched_job,
     update_insights_job,
 )
@@ -118,6 +119,21 @@ class UpdateListener(BaseUpdateListener):
                     job_delay=settings.UPDATED_PRODUCT_WAIT,
                     job_kwargs={"result_ttl": 0},
                     product_id=product_id,
+                )
+            elif redis_update.is_image_deletion():
+                image_id = redis_update.diffs["uploaded_images"]["delete"][0]  # type: ignore
+                logger.info(
+                    "Image %s for product %s has been deleted",
+                    image_id,
+                    redis_update.code,
+                )
+                enqueue_in_job(
+                    func=deleted_image_job,
+                    queue=selected_queue,
+                    job_delay=settings.UPDATED_PRODUCT_WAIT,
+                    job_kwargs={"result_ttl": 0},
+                    product_id=product_id,
+                    image_id=image_id,
                 )
             else:
                 logger.info("Product %s has been updated", redis_update.code)
