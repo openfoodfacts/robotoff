@@ -142,7 +142,7 @@ jobs:
           echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
-          echo "TRITON_URI=triton:8001" >> .env
+          echo "DEFAULT_TRITON_URI=triton:8001" >> .env
           echo "TRITON_MODELS_DIR=./models/triton" >> .env
           echo "FASTTEXT_HOST=fasttext" >> .env
           echo "FASTTEXT_MODEL_DIR=./models" >> .env

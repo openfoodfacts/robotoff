@@ -234,7 +234,7 @@ class RemoteModel:
             defaults to 0.5.
         :return: the detection result
         """
-        triton_uri = triton_uri or settings.TRITON_URI
+        triton_uri = triton_uri or settings.DEFAULT_TRITON_URI
         result = ObjectDetector(
             model_name=self.config.triton_model_name,
             label_names=self.config.label_names,

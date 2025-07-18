@@ -64,7 +64,7 @@ def get_triton_inference_stub(
     :param triton_uri: URI of the Triton Inference Server, defaults to None
     :return: gRPC stub for Triton Inference Server
     """
-    triton_uri = triton_uri or settings.TRITON_URI
+    triton_uri = triton_uri or settings.DEFAULT_TRITON_URI
     channel = grpc.insecure_channel(triton_uri)
     return service_pb2_grpc.GRPCInferenceServiceStub(channel)
 

@@ -79,10 +79,12 @@ def predict(
     :param ocr_result: the OCR result
     :param model_version: the version of the model to use, defaults to None (latest)
     :param triton_uri: the URI of the Triton Inference Server, if not provided, the
-        default value from settings is used
+        default value from settings is used (settings.TRITON_URI_NUTRITION_EXTRACTOR).
     :return: a `NutritionExtractionPrediction` object
     """
-    triton_stub = get_triton_inference_stub(triton_uri)
+    triton_stub = get_triton_inference_stub(
+        triton_uri or settings.TRITON_URI_NUTRITION_EXTRACTOR
+    )
     id2label = get_id2label(MODEL_DIR)
     processor = get_processor(MODEL_DIR)
 

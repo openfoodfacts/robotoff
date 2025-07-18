@@ -11,6 +11,7 @@ from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
+    GRPCInferenceServiceStub,
     deserialize_byte_tensor,
     generate_clip_embedding_request,
     serialize_byte_tensor,
@@ -105,7 +106,9 @@ def save_image_embeddings(
 
 @with_db
 def generate_image_embeddings(
-    product: JSONType, product_id: ProductIdentifier, stub
+    product: JSONType,
+    product_id: ProductIdentifier,
+    triton_stub: GRPCInferenceServiceStub,
 ) -> np.ndarray | None:
     """Generate image embeddings using CLIP model for the `MAX_IMAGE_EMBEDDING`
     most recent images.
@@ -117,7 +120,7 @@ def generate_image_embeddings(
 
     :param product: product data
     :param product_id: identifier of the product
-    :param stub: the triton inference stub to use
+    :param triton_stub: the triton inference stub to use
     :return: None if no image was available or a numpy array of shape
         (num_images, IMAGE_EMBEDDING_DIM)
     """
@@ -171,7 +174,7 @@ def generate_image_embeddings(
             if non_null_image_by_ids:
                 start_time = time.monotonic()
                 computed_embeddings_by_id = _generate_image_embeddings(
-                    non_null_image_by_ids, stub
+                    non_null_image_by_ids, triton_stub
                 )
                 logger.debug(
                     "Computed %d embeddings in %.2f seconds",
@@ -194,7 +197,7 @@ def generate_image_embeddings(
 
 
 def _generate_image_embeddings(
-    images_by_id: dict[str, Image.Image], stub
+    images_by_id: dict[str, Image.Image], stub: GRPCInferenceServiceStub
 ) -> dict[str, np.ndarray]:
     """Generate CLIP image embeddings by sending a request to Triton.
 
