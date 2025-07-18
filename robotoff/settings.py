@@ -292,7 +292,26 @@ BRAND_PREFIX_PATH = DATA_DIR / "brand_prefix.json.gz"
 ROBOTOFF_USER_AGENT = "Robotoff Live Analysis"
 # Models and ML
 
-TRITON_URI = os.environ.get("TRITON_URI", "triton:8001")
+DEFAULT_TRITON_URI = os.environ.get("DEFAULT_TRITON_URI", "triton:8001")
+# Triton URI for specific models. This is used to override the default
+# Triton URI if needed.
+TRITON_URI_CLIP = os.environ.get("TRITON_URI_CLIP", DEFAULT_TRITON_URI)
+TRITON_URI_NUTRISCORE = os.environ.get("TRITON_URI_NUTRISCORE", DEFAULT_TRITON_URI)
+TRITON_URI_NUTRITION_TABLE = os.environ.get(
+    "TRITON_URI_NUTRITION_TABLE", DEFAULT_TRITON_URI
+)
+TRITON_URI_UNIVERSAL_LOGO_DETECTOR = os.environ.get(
+    "TRITON_URI_UNIVERSAL_LOGO_DETECTOR", DEFAULT_TRITON_URI
+)
+TRITON_URI_CATEGORY_CLASSIFIER = os.environ.get(
+    "TRITON_URI_CATEGORY_CLASSIFIER", DEFAULT_TRITON_URI
+)
+TRITON_URI_INGREDIENT_NER = os.environ.get(
+    "TRITON_URI_INGREDIENT_NER", DEFAULT_TRITON_URI
+)
+TRITON_URI_NUTRITION_EXTRACTOR = os.environ.get(
+    "TRITON_URI_NUTRITION_EXTRACTOR", DEFAULT_TRITON_URI
+)
 TRITON_MODELS_DIR = PROJECT_DIR / "models/triton"
 
 _fasttext_host = os.environ.get("FASTTEXT_HOST", "fasttext")

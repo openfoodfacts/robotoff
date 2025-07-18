@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from robotoff.settings import TRITON_URI
+from robotoff.settings import DEFAULT_TRITON_URI
 from robotoff.triton import get_triton_inference_stub
 
 ML_TEST_DIR = Path(__file__).parent
@@ -10,7 +10,7 @@ ML_TEST_DIR = Path(__file__).parent
 
 def pytest_addoption(parser):
     parser.addoption("--update-results", action="store_true", default=False)
-    parser.addoption("--triton-uri", action="store", default=TRITON_URI)
+    parser.addoption("--triton-uri", action="store", default=DEFAULT_TRITON_URI)
     parser.addoption("--output-dir", action="store", default="test_results")
 
 

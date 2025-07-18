@@ -425,7 +425,9 @@ def run_nutrition_table_object_detection(
                 ObjectDetectionModel.nutrition_table,
                 image,
                 image_model,
-                triton_uri=triton_uri,
+                # Use Triton Inference Server specific to the model if
+                # triton_uri is not provided
+                triton_uri=triton_uri or settings.TRITON_URI_NUTRITION_TABLE,
             )
         else:
             logger.info("Missing image in DB for image %s", source_image)
@@ -553,6 +555,7 @@ def run_nutriscore_object_detection(
             logger.info("Missing image in DB for image %s", source_image)
             return
 
+        triton_uri = triton_uri or settings.TRITON_URI_NUTRISCORE
         image_prediction = run_object_detection_model(
             ObjectDetectionModel.nutriscore,
             image,
@@ -609,7 +612,9 @@ def run_logo_object_detection(
     :param image_url: URL of the image to use
     :param ocr_url: URL of the OCR JSON file, used to extract text of each logo
     :param triton_uri: URI of the Triton Inference Server, defaults to None. If
-        not provided, the default value from settings is used.
+        not provided, the default value from settings is used
+        (settings.TRITON_URI_UNIVERSAL_LOGO_DETECTOR for the object detector model and
+        settings.TRITON_URI_CLIP for the CLIP embedding model).
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
@@ -638,7 +643,7 @@ def run_logo_object_detection(
             image,
             image_model,
             return_null_if_exist=False,
-            triton_uri=triton_uri,
+            triton_uri=triton_uri or settings.TRITON_URI_UNIVERSAL_LOGO_DETECTOR,
         )
         existing_logos = list(image_prediction.logos)
 
@@ -678,9 +683,11 @@ def run_logo_object_detection(
             ]
 
     if logos:
-        triton_stub = get_triton_inference_stub(triton_uri)
+        triton_stub_clip = get_triton_inference_stub(
+            triton_uri or settings.TRITON_URI_CLIP
+        )
         with db.connection_context():
-            save_logo_embeddings(logos, image, triton_stub)
+            save_logo_embeddings(logos, image, triton_stub_clip)
         enqueue_job(
             process_created_logos,
             get_high_queue(product_id),
@@ -805,7 +812,8 @@ def extract_ingredients_job(
         for.
     :param ocr_url: The URL of the image to extract ingredients from.
     :param triton_uri: URI of the Triton Inference Server, defaults to None. If
-        not provided, the default value from settings is used.
+        not provided, the default value from settings is used
+        (settings.TRITON_URI_INGREDIENT_NER).
     """
     source_image = get_source_from_url(ocr_url)
 

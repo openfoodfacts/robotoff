@@ -92,7 +92,8 @@ def predict_from_ocr(
         `aggregation_strategy` is `NONE`.
     :param model_version: version of the model model to use, defaults to "1"
     :param triton_uri: URI of the Triton Inference Server, defaults to None. If
-        not provided, the default value from settings is used.
+        not provided, the default value from settings is used
+        (settings.TRITON_URI_INGREDIENT_NER).
     :return: the `IngredientPredictionOutput`
     """
     ocr_result: OCRResult
@@ -106,7 +107,9 @@ def predict_from_ocr(
     if not text:
         return IngredientPredictionOutput(entities=[], text=text)  # type: ignore
 
-    triton_stub = get_triton_inference_stub(triton_uri)
+    triton_stub = get_triton_inference_stub(
+        triton_uri or settings.TRITON_URI_INGREDIENT_NER
+    )
     predictions = predict_batch(
         [text], triton_stub, aggregation_strategy, predict_lang, model_version
     )

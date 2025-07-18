@@ -2,6 +2,7 @@ from typing import Any
 
 import numpy as np
 
+from robotoff import settings
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import get_triton_inference_stub
 from robotoff.types import (
@@ -125,6 +126,9 @@ class CategoryClassifier:
             returning results
         :param triton_uri: URI of the Triton Inference Server, defaults to
             None. If not provided, the default value from settings is used.
+            Note that we use different default URIs for different models,
+            so you should set this parameter only if you want to use a custom
+            Triton Inference Server URI for all models.
         """
         logger.debug("predicting category with model %s", model_name)
 
@@ -144,9 +148,6 @@ class CategoryClassifier:
                 product, product_id
             )
 
-        # Only generate image embeddings if it's required by the model
-        triton_stub = get_triton_inference_stub(triton_uri)
-
         # We check whether image embeddings were provided as input
         if "image_embeddings" in product:
             if product["image_embeddings"]:
@@ -164,10 +165,16 @@ class CategoryClassifier:
                 image_embeddings = None
         else:
             # Or we generate them (or fetch them from DB cache)
+            triton_stub_clip = get_triton_inference_stub(
+                triton_uri or settings.TRITON_URI_CLIP
+            )
             image_embeddings = keras_category_classifier_3_0.generate_image_embeddings(
-                product, product_id, triton_stub
+                product, product_id, triton_stub_clip
             )
 
+        triton_stub = get_triton_inference_stub(
+            triton_uri or settings.TRITON_URI_CATEGORY_CLASSIFIER
+        )
         raw_predictions, debug = keras_category_classifier_3_0.predict(
             product,
             ocr_texts,
