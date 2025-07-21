@@ -120,7 +120,7 @@ dl-object-detection-models:
 	mkdir -p nutrition_table/1; \
 	wget -cO - https://huggingface.co/openfoodfacts/nutrition-table-yolo/resolve/8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647/weights/best.onnx > nutrition_table/1/model.onnx; \
 	mkdir -p price_tag_detection/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/price-tag-detection/resolve/e233897ac0ee32604f6c98ecbaf36644df00d292/weights/model_ir_9.onnx > price_tag_detection/1/model.onnx;
+	wget -cO - https://huggingface.co/openfoodfacts/price-tag-detection/resolve/86a8e0f02e0789d6d53226bc3fd3c919680d47c9/weights/model_ir_10_opset_19.onnx > price_tag_detection/1/model.onnx;
 
 dl-category-classifier-model:
 	@echo "⏬ Downloading category classifier model files …"
@@ -150,12 +150,8 @@ dl-image-clf-models:
 	@echo "⏬ Downloading image classification model files …"
 	mkdir -p models/triton; \
 	cd models/triton; \
-	for asset_name in 'price-proof-classification'; \
-		do \
-			dir=$${asset_name//-/_}/1; \
-			mkdir -p $${dir}; \
-			wget -cO - https://huggingface.co/openfoodfacts/$${asset_name}/resolve/main/weights/best.onnx > $${dir}/model.onnx; \
-	done;
+	mkdir -p price_proof_classification/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/price-proof-classification/resolve/03c3bad38f4135d755584c346769f3217231cb36/weights/model_ir_10_opset_19.onnx > price_proof_classification/1/model.onnx; \
 
 
 dl-nutrition-extractor-model:
