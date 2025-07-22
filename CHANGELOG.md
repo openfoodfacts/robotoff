@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.75.0](https://github.com/openfoodfacts/robotoff/compare/v1.74.1...v1.75.0) (2025-07-21)
+
+
+### Features
+
+* add bearer token to nutripatrol auth ([#1676](https://github.com/openfoodfacts/robotoff/issues/1676)) ([c4be13d](https://github.com/openfoodfacts/robotoff/commit/c4be13d54409c9b11ce272620db0838836aebc35))
+* allow to specify Triton backend at the model level ([#1682](https://github.com/openfoodfacts/robotoff/issues/1682)) ([e6fd7f8](https://github.com/openfoodfacts/robotoff/commit/e6fd7f8634041e47acd2594136bb82b4a8bb37ae))
+
+
+### Documentation
+
+* fix issues in OpenAPI file (api.yml) ([#1681](https://github.com/openfoodfacts/robotoff/issues/1681)) ([8f664c6](https://github.com/openfoodfacts/robotoff/commit/8f664c6fb619114eb3a9acdd5b8fec0498937fba)), closes [#1680](https://github.com/openfoodfacts/robotoff/issues/1680)
+
 ## [1.74.1](https://github.com/openfoodfacts/robotoff/compare/v1.74.0...v1.74.1) (2025-07-07)
 
 
