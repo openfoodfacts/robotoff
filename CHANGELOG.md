@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.75.1](https://github.com/openfoodfacts/robotoff/compare/v1.75.0...v1.75.1) (2025-07-24)
+
+
+### Bug Fixes
+
+* remove store Alteza ([#1686](https://github.com/openfoodfacts/robotoff/issues/1686)) ([a115e56](https://github.com/openfoodfacts/robotoff/commit/a115e56b4f01ce5d1815cb37047d979b18a3110b))
+
 ## [1.75.0](https://github.com/openfoodfacts/robotoff/compare/v1.74.1...v1.75.0) (2025-07-21)
 
 
