@@ -61,7 +61,7 @@ If a user answers a question, send the appropriate ping back to the Open Food Fa
           * `0`: No
           * `-1`: Skip/Don't know
 
-## 3\. Authentication
+## Authentication
 
 To give credit to contributors for their answers, you need to authenticate your requests to Robotoff.
 
@@ -85,10 +85,11 @@ If your application manages users with Open Food Facts accounts, you should send
 
 If you manage your users with a global account, send the session cookie associated with that global account. If no session cookie is provided, the edit will be made under the `roboto-app` account.
 
-## 4\. Platform-Specific Implementations
-
-  * **Android:**
+## Platform-Specific Implementations
+* Web component available at https://github.com/openfoodfacts/openfoodfacts-webcomponents
+* Flutter/Dart (available in our Dart package, and UI code is available in the official smooth-app repository
+* Android (old official app, Kotlin, some code might be usable)
       * <https://github.com/openfoodfacts/openfoodfacts-androidapp/issues/3024>
       * <https://github.com/openfoodfacts/openfoodfacts-androidapp/issues/2931>
-  * **iOS:**
-      * Refer to the Open Food Facts iOS app repository for implementation examples.
+* iOS (old official app, Swift, some code might be usable)
+      * https://github.com/openfoodfacts/openfoodfacts-ios
