@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.75.2](https://github.com/openfoodfacts/robotoff/compare/v1.75.1...v1.75.2) (2025-07-30)
+
+
+### Bug Fixes
+
+* Update labeler.yml with fix for md files ([5fa8d43](https://github.com/openfoodfacts/robotoff/commit/5fa8d433af88680766fa7854009f438ef5bbc1f0))
+
 ## [1.75.1](https://github.com/openfoodfacts/robotoff/compare/v1.75.0...v1.75.1) (2025-07-24)
 
 
