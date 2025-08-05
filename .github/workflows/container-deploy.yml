@@ -143,6 +143,9 @@ jobs:
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
           echo "DEFAULT_TRITON_URI=triton:8001" >> .env
+          echo "TRITON_URI_CLIP=10.3.0.201:5504" >> .env
+          echo "TRITON_URI_NUTRITION_TABLE=10.3.0.201:5504" >> .env
+          echo "TRITON_URI_NUTRISCORE=10.3.0.201:5504" >> .env
           echo "TRITON_MODELS_DIR=./models/triton" >> .env
           echo "FASTTEXT_HOST=fasttext" >> .env
           echo "FASTTEXT_MODEL_DIR=./models" >> .env
