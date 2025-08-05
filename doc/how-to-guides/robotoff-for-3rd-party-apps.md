@@ -77,13 +77,7 @@ Authorization: Basic (base64Credentials)
 Where `base64Credentials` is the Base64 encoding of your `username:password`.
 
 ### Cookie-based Authentication
-
-If your application manages users with Open Food Facts accounts, you should send the Open Food Facts session cookie to Robotoff. This ensures the user is properly credited.
-
-  * **Cookie Name:** `session`
-  * **Cookie Format:** `user_session&XXXXXXXX&user_id&YOUR_USERNAME` (where `XXXXXXXX` is the session identifier)
-
-If you manage your users with a global account, send the session cookie associated with that global account. If no session cookie is provided, the edit will be made under the `roboto-app` account.
+Note: we have a cookie auth for tools hosted on *.openfoodfacts.org. Please reachout to the Robotoff team if needed.
 
 ## Platform-Specific Implementations
 * Web component available at https://github.com/openfoodfacts/openfoodfacts-webcomponents
