@@ -89,6 +89,22 @@ from robotoff.utils.download import get_asset_from_url
             "https://raw.githubusercontent.com/openfoodfacts/test-data/626e9cc8e482f4d0ed227af8d7e40794acd0a347/robotoff/tests/ml/object_detection/universal_logo_detector/7640104959519_10.jpg",
             "https://raw.githubusercontent.com/openfoodfacts/test-data/626e9cc8e482f4d0ed227af8d7e40794acd0a347/robotoff/tests/ml/object_detection/universal_logo_detector/7640104959519_10.json",
         ),
+        # Price tag detection
+        (
+            ObjectDetectionModel.price_tag_detection,
+            "https://prices.openfoodfacts.org/img/0098/BrhJfXQjGl.jpg",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/6b0610962b64ef838a0666a1761dad2236fb1bc8/robotoff/tests/ml/object_detection/price_tag_detection/0098_BrhJfXQjGl.json",
+        ),
+        (
+            ObjectDetectionModel.price_tag_detection,
+            "https://prices.openfoodfacts.org/img/0098/Zk8V8WapT6.jpg",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/6b0610962b64ef838a0666a1761dad2236fb1bc8/robotoff/tests/ml/object_detection/price_tag_detection/0098_Zk8V8WapT6.json",
+        ),
+        (
+            ObjectDetectionModel.price_tag_detection,
+            "https://prices.openfoodfacts.org/img/0097/WUHi0c9Qqf.webp",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/6b0610962b64ef838a0666a1761dad2236fb1bc8/robotoff/tests/ml/object_detection/price_tag_detection/0097_WUHi0c9Qqf.json",
+        ),
     ],
 )
 def test_detect_from_image(
