@@ -4,7 +4,7 @@ This tutorial explains how to implement Robotoff questions in your 3rd party app
 
 ## Rationale
 
-Robotoff questions help increase food transparency and simplify obtaining the Nutri-Score by enabling categorization of products (and more)
+Robotoff questions help increase food transparency and simplify obtaining the Nutri-Score by enabling categorization of products (and more).
 
 ## How to Implement
 
