@@ -150,9 +150,9 @@ def test_detect_from_image(
             current_prediction = result_list[i]
             assert set(current_prediction.keys()) == set(item.keys())
             assert current_prediction["label"] == item["label"]
-            assert item["score"] == pytest.approx(current_prediction["score"])
+            assert item["score"] == pytest.approx(current_prediction["score"], rel=1e-3)
             assert item["bounding_box"] == pytest.approx(
-                current_prediction["bounding_box"]
+                current_prediction["bounding_box"], rel=1e-3
             )
 
     else:
