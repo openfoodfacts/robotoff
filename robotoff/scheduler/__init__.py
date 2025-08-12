@@ -1,6 +1,8 @@
 import datetime
 import os
+import shutil
 import uuid
+from pathlib import Path
 from typing import Iterable
 
 import pytz
@@ -301,6 +303,34 @@ def _update_data() -> None:
         return
 
 
+def clean_tmp_files() -> None:
+    """Remove temporary files that are no longer needed."""
+    logger.info("Cleaning temporary files in /tmp older than 2 days")
+    tmp_dir = Path("/tmp")
+    if not os.path.exists(tmp_dir):
+        logger.warning("Temporary directory %s does not exist", tmp_dir)
+        return
+
+    datetime_now = datetime.datetime.now(datetime.timezone.utc)
+    for dir_path in (
+        f for f in tmp_dir.iterdir() if f.is_dir() and f.name.startswith("tmp")
+    ):
+        last_modified = datetime.datetime.fromtimestamp(
+            dir_path.stat().st_mtime, datetime.timezone.utc
+        )
+        # check that the directory is older than 2 day
+        if (datetime_now - last_modified) > datetime.timedelta(days=2):
+            logger.info("Removing temporary directory %s", dir_path)
+            try:
+                shutil.rmtree(dir_path)
+            except OSError as e:
+                logger.error(
+                    "Error while removing temporary directory %s: %s",
+                    dir_path,
+                    e,
+                )
+
+
 def transform_insight_iter(insights_iter: Iterable[dict]):
     for insight in insights_iter:
         for field, value in insight.items():
@@ -333,12 +363,13 @@ def run():
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
 
+    scheduler.add_job(clean_tmp_files, "cron", day="*", hour=0, max_instances=1)
     # This job exports daily product metrics for monitoring.
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
     scheduler.add_job(save_insight_metrics, "cron", day="*", hour=1, max_instances=1)
 
     # This job refreshes data needed to generate insights.
-    scheduler.add_job(_update_data, "cron", day="*", hour="15", max_instances=1)
+    scheduler.add_job(_update_data, "cron", day="*", hour=15, max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO
     # dump by:
@@ -349,7 +380,7 @@ def run():
         refresh_insights,
         "cron",
         day="*",
-        hour="19",
+        hour=19,
         max_instances=1,
     )
 
@@ -357,7 +388,7 @@ def run():
         generate_quality_facets,
         "cron",
         day="*",
-        hour="11",
+        hour=11,
         minute=25,
         max_instances=1,
     )
