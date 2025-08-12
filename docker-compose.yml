@@ -5,6 +5,7 @@ x-robotoff-base-volumes:
   - ./datasets:/opt/robotoff/datasets
   - ./models:/opt/robotoff/models
   - robotoff_tmp:/tmp
+  - home_cache:/home/off/.cache
 
 x-robotoff-base:
   &robotoff-base
@@ -194,6 +195,8 @@ volumes:
   # large docker layer overlay
   robotoff_tmp:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_tmp
+  home_cache:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_home_cache
   elasticsearch_tmp:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_elasticsearch_tmp
 
