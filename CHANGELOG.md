@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.76.0](https://github.com/openfoodfacts/robotoff/compare/v1.75.1...v1.76.0) (2025-08-14)
+
+
+### Features
+
+* integrate front-classification image model ([#1702](https://github.com/openfoodfacts/robotoff/issues/1702)) ([7ed0e49](https://github.com/openfoodfacts/robotoff/commit/7ed0e496c887485d1d95ed6626282bb3ddc9babe))
+
+
+### Bug Fixes
+
+* clean old tmp directory in /tmp ([#1699](https://github.com/openfoodfacts/robotoff/issues/1699)) ([2cc5d9e](https://github.com/openfoodfacts/robotoff/commit/2cc5d9e570b6fcb6433d26e1c0da33c7685a3fef))
+* Update labeler.yml with fix for md files ([5fa8d43](https://github.com/openfoodfacts/robotoff/commit/5fa8d433af88680766fa7854009f438ef5bbc1f0))
+
+
+### Documentation
+
+* Create robotoff-for-3rd-party-apps.md ([#1688](https://github.com/openfoodfacts/robotoff/issues/1688)) ([15b8667](https://github.com/openfoodfacts/robotoff/commit/15b866772a10723a5ae485d01fd0cfbaf20709f8))
+
 ## [1.75.1](https://github.com/openfoodfacts/robotoff/compare/v1.75.0...v1.75.1) (2025-07-24)
 
 
