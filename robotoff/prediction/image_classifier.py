@@ -261,7 +261,7 @@ class ImageClassifier:
             (self.config.label_names[i], float(output[i])) for i in score_indices
         ]
         ml_metrics_logger.info(
-            "Post-processing time for %s: %s",
+            "Post-processing time for %s: %ss",
             self.config.model_name,
             time.monotonic() - start_time,
         )
