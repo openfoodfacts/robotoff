@@ -1,10 +1,11 @@
+import logging
+
 from elasticsearch import Elasticsearch
 
 from robotoff import settings
 from robotoff.types import ElasticSearchIndex
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def get_es_client() -> Elasticsearch:

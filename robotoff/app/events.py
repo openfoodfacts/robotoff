@@ -1,11 +1,11 @@
+import logging
 from multiprocessing import Process, SimpleQueue
 
 import requests
 
 from robotoff import settings
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class EventProcessor:

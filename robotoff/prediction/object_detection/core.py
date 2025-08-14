@@ -16,7 +16,7 @@ from robotoff.triton import get_triton_inference_stub
 from robotoff.types import ObjectDetectionModel
 from robotoff.utils.image import convert_image_to_array
 
-logger = logging.getLogger(__name__)
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 
 class ModelConfig(BaseModel):
@@ -144,11 +144,11 @@ class RemoteModel:
             defaults to 0.5.
         :return: the detection result
         """
+        start_time = time.monotonic()
         # Tensorflow object detection models expect an image with dimensions
         # up to 1024x1024
         resized_image = resize_image(image, (1024, 1024))
         image_array = convert_image_to_array(resized_image).astype(np.uint8)
-        grpc_stub = get_triton_inference_stub(triton_uri)
         request = service_pb2.ModelInferRequest()
         request.model_name = self.config.triton_model_name
 
@@ -167,16 +167,23 @@ class RemoteModel:
             output = service_pb2.ModelInferRequest().InferRequestedOutputTensor()
             output.name = output_name
             request.outputs.extend([output])
-
         request.raw_input_contents.extend([image_array.tobytes()])
-        start_time = time.monotonic()
-        response = grpc_stub.ModelInfer(request)
-        logger.debug(
-            "Inference time for %s: %s",
+        ml_metrics_logger.info(
+            "Preprocessing time for %s: %ss",
             self.config.triton_model_name,
             time.monotonic() - start_time,
         )
 
+        start_time = time.monotonic()
+        grpc_stub = get_triton_inference_stub(triton_uri)
+        response = grpc_stub.ModelInfer(request)
+        ml_metrics_logger.info(
+            "Inference time for %s: %ss",
+            self.config.triton_model_name,
+            time.monotonic() - start_time,
+        )
+
+        start_time = time.monotonic()
         if len(response.outputs) != 4:
             raise Exception(f"expected 4 output, got {len(response.outputs)}")
 
@@ -215,6 +222,11 @@ class RemoteModel:
             detection_scores=detection_scores,
             label_names=self.config.label_names,
         )
+        ml_metrics_logger.info(
+            "Post-processing time for %s: %ss",
+            self.config.triton_model_name,
+            time.monotonic() - start_time,
+        )
         return result
 
     def detect_from_image_yolo(
@@ -235,11 +247,17 @@ class RemoteModel:
         :return: the detection result
         """
         triton_uri = triton_uri or settings.DEFAULT_TRITON_URI
+        start_time = time.monotonic()
         result = ObjectDetector(
             model_name=self.config.triton_model_name,
             label_names=self.config.label_names,
             image_size=self.config.image_size,
         ).detect_from_image(image=image, triton_uri=triton_uri, threshold=threshold)
+        ml_metrics_logger.info(
+            "Total inference time for %s: %ss",
+            self.config.triton_model_name,
+            time.monotonic() - start_time,
+        )
         return ObjectDetectionResult(**dataclasses.asdict(result))
 
     def detect_from_image(

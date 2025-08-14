@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Iterable
 
 from openfoodfacts.ocr import OCRResult
@@ -17,9 +18,9 @@ from robotoff.types import (
     PredictionType,
     ProductIdentifier,
 )
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_OCR_PREDICTION_TYPES: list[PredictionType] = [

@@ -1,21 +1,24 @@
 import logging
 import os
-import sys
 
 
-def get_logger(name=None, level: int | None = None):
+class EnvvarLogFilter(logging.Filter):
+    """A filter that filters out log messages based on environment variables."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name == "robotoff.ml_metrics":
+            # only allow log records from the robotoff.ml_metrics logger if the
+            # environment variable is set LOG_ML_METRICS_ENABLED is set to 1
+            return bool(int(os.environ.get("LOG_ML_METRICS_ENABLED", 0) or 0))
+        # otherwise, allow the log record
+        return True
+
+
+def get_logger(name=None, level: str | int | None = None):
     logger = logging.getLogger(name)
 
     if level is None:
-        log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
-        level = logging.getLevelName(log_level)
-
-        if not isinstance(level, int):
-            print(
-                f"Unknown log level: {log_level}, fallback to INFO",
-                file=sys.stderr,
-            )
-            level = 20
+        level = os.getenv("LOG_LEVEL", "INFO").upper()
 
     logger.setLevel(level)
 
@@ -25,7 +28,7 @@ def get_logger(name=None, level: int | None = None):
     return logger
 
 
-def configure_root_logger(logger, level: int = 20):
+def configure_root_logger(logger, level: str | int = logging.INFO):
     logger.setLevel(level)
     handler = logging.StreamHandler()
     formatter = logging.Formatter(
@@ -35,6 +38,7 @@ def configure_root_logger(logger, level: int = 20):
     )
     handler.setFormatter(formatter)
     handler.setLevel(level)
+    handler.addFilter(EnvvarLogFilter())
     logger.addHandler(handler)
 
     for name in ("redis_lock",):

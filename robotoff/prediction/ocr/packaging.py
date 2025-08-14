@@ -1,4 +1,5 @@
 import functools
+import logging
 from typing import Union
 
 from lark import Discard, Lark, Transformer
@@ -11,11 +12,11 @@ from robotoff.prediction.ocr.grammar import (
 )
 from robotoff.taxonomy import TaxonomyType
 from robotoff.types import PackagingElementProperty, Prediction, PredictionType
-from robotoff.utils import get_logger, load_json
+from robotoff.utils import load_json
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import strip_consecutive_spaces
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

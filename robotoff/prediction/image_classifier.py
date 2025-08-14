@@ -1,3 +1,4 @@
+import logging
 import math
 import time
 import typing
@@ -11,9 +12,8 @@ from tritonclient.grpc import service_pb2
 
 from robotoff.triton import get_triton_inference_stub
 from robotoff.types import ImageClassificationModel
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 
 class ModelConfig(BaseModel):
@@ -195,6 +195,7 @@ class ImageClassifier:
             None. If not provided, the default value from settings is used.
         :return: the prediction results as a list of tuples (label, confidence)
         """
+        start_time = time.monotonic()
         if image.mode != "RGB":
             image = image.convert("RGB")
 
@@ -209,8 +210,6 @@ class ImageClassifier:
         image_array = np.transpose(image_array, (2, 0, 1))
         image_array = np.expand_dims(image_array, axis=0)
 
-        logger.info(f"Image shape after transformation: {image_array.shape}")
-        grpc_stub = get_triton_inference_stub(triton_uri)
         request = service_pb2.ModelInferRequest()
         request.model_name = self.config.triton_model_name
 
@@ -227,11 +226,20 @@ class ImageClassifier:
         request.outputs.extend([output])
 
         request.raw_input_contents.extend([image_array.tobytes()])
-        start_time = time.monotonic()
-        response = grpc_stub.ModelInfer(request)
-        latency = time.monotonic() - start_time
+        ml_metrics_logger.info(
+            "Preprocessing time for %s: %ss",
+            self.config.model_name,
+            time.monotonic() - start_time,
+        )
 
-        logger.debug("Inference time for %s: %s", self.config.model_name, latency)
+        start_time = time.monotonic()
+        grpc_stub = get_triton_inference_stub(triton_uri)
+        response = grpc_stub.ModelInfer(request)
+        ml_metrics_logger.info(
+            "Inference time for %s: %ss",
+            self.config.model_name,
+            time.monotonic() - start_time,
+        )
 
         start_time = time.monotonic()
         if len(response.outputs) != 1:
@@ -249,7 +257,12 @@ class ImageClassifier:
         ).reshape((1, len(self.config.label_names)))[0]
 
         score_indices = np.argsort(-output)
-
-        latency = time.monotonic() - start_time
-        logger.debug("Post-processing time for %s: %s", self.config.model_name, latency)
-        return [(self.config.label_names[i], float(output[i])) for i in score_indices]
+        results = [
+            (self.config.label_names[i], float(output[i])) for i in score_indices
+        ]
+        ml_metrics_logger.info(
+            "Post-processing time for %s: %s",
+            self.config.model_name,
+            time.monotonic() - start_time,
+        )
+        return results

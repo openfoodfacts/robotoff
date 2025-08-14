@@ -1,5 +1,6 @@
 """Interacting with OFF server to eg. update products or get infos"""
 
+import logging
 import re
 from pathlib import Path
 from typing import Any
@@ -17,9 +18,9 @@ from robotoff.types import (
     ProductTypeLiteral,
     ServerType,
 )
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class OFFAuthentication:

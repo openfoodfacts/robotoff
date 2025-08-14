@@ -1,8 +1,10 @@
+import logging
+
 from robotoff import settings
 from robotoff.types import Prediction, ProductIdentifier
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class NotifierInterface:

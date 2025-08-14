@@ -1,6 +1,7 @@
 import copy
 import dataclasses
 import datetime
+import logging
 from pathlib import Path
 
 import elasticsearch
@@ -60,7 +61,7 @@ from robotoff.types import (
     ProductIdentifier,
     ServerType,
 )
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils import get_image_from_url, http_session
 from robotoff.utils.image import (
     convert_bounding_box_absolute_to_relative,
     convert_image_to_array,
@@ -68,7 +69,7 @@ from robotoff.utils.image import (
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 from robotoff.workers.tasks.common import add_category_insight_job
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @with_db

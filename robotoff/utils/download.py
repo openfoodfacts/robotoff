@@ -9,9 +9,7 @@ from requests.exceptions import SSLError, Timeout
 from robotoff import settings
 from robotoff.utils.cache import cache_http_request, disk_cache
 
-from .logger import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class AssetLoadingException(Exception):

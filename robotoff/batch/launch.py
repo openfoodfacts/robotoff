@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 from pathlib import Path
 from typing import Dict, List
@@ -8,9 +9,8 @@ from google.cloud import batch_v1
 from pydantic import BaseModel, Field
 
 from robotoff import settings
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class GoogleBatchJobConfig(BaseModel):

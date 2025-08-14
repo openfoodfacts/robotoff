@@ -4,6 +4,7 @@ import enum
 import functools
 import gzip
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -18,9 +19,9 @@ from pymongo import MongoClient
 
 from robotoff import settings
 from robotoff.types import JSONType, ProductIdentifier, ServerType
-from robotoff.utils import get_logger, gzip_jsonl_iter, http_session, jsonl_iter
+from robotoff.utils import gzip_jsonl_iter, http_session, jsonl_iter
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 MONGO_SELECTION_TIMEOUT_MS = 10_0000
 

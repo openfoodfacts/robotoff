@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 import numpy as np
@@ -12,11 +13,10 @@ from robotoff.types import (
     PredictionType,
     ProductIdentifier,
 )
-from robotoff.utils import get_logger
 
 from . import keras_category_classifier_3_0
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_prediction(

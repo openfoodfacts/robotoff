@@ -20,6 +20,7 @@ x-robotoff-base:
 x-robotoff-base-env:
   &robotoff-base-env
   LOG_LEVEL:
+  LOG_ML_METRICS_ENABLED:
   ROBOTOFF_INSTANCE:
   ROBOTOFF_TLD:
   ROBOTOFF_SCHEME:
