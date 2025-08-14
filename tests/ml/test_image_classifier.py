@@ -6,7 +6,7 @@ import requests
 from PIL import Image
 
 from robotoff.images import get_image_from_url
-from robotoff.prediction.image_classifier import LABEL_NAMES, ImageClassifier
+from robotoff.prediction.image_classifier import MODELS_CONFIG, ImageClassifier
 from robotoff.types import ImageClassificationModel
 from robotoff.utils import dump_json
 from robotoff.utils.download import get_asset_from_url
@@ -34,6 +34,31 @@ from robotoff.utils.download import get_asset_from_url
             "https://prices.openfoodfacts.org/img/0100/ithb89lJBe.jpg",
             "https://raw.githubusercontent.com/openfoodfacts/test-data/2646fe4ceec8b3356ef2a9d46891e8a143959ed2/robotoff/tests/ml/image_classification/price_proof_classification/0100_ithb89lJBe.json",
         ),
+        # Front image classification
+        (
+            # Front
+            ImageClassificationModel.front_image_classification,
+            "https://images.openfoodfacts.org/images/products/00481496/4.jpg",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/d8bda3da2f2c18fdaf26f72c4430c789ffdd3a31/robotoff/tests/ml/image_classification/front_image_classification/00481496_4.json",
+        ),
+        (
+            # Front
+            ImageClassificationModel.front_image_classification,
+            "https://images.openfoodfacts.org/images/products/950/982/798/7422/1.jpg",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/d8bda3da2f2c18fdaf26f72c4430c789ffdd3a31/robotoff/tests/ml/image_classification/front_image_classification/9509827987422_1.json",
+        ),
+        (
+            # Other
+            ImageClassificationModel.front_image_classification,
+            "https://images.openfoodfacts.org/images/products/020/783/101/4507/1.jpg",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/d8bda3da2f2c18fdaf26f72c4430c789ffdd3a31/robotoff/tests/ml/image_classification/front_image_classification/0207831014507_1.json",
+        ),
+        (
+            # Other
+            ImageClassificationModel.front_image_classification,
+            "https://images.openfoodfacts.org/images/products/001/111/010/4793/2.jpg",
+            "https://raw.githubusercontent.com/openfoodfacts/test-data/d8bda3da2f2c18fdaf26f72c4430c789ffdd3a31/robotoff/tests/ml/image_classification/front_image_classification/0011110104793_2.json",
+        ),
     ],
 )
 def test_detect_from_image(
@@ -57,7 +82,7 @@ def test_detect_from_image(
     ```
     """
     image = typing.cast(Image.Image, get_image_from_url(image_url, error_raise=True))
-    results_tuples = ImageClassifier(model_enum.name, LABEL_NAMES[model_enum]).predict(
+    results_tuples = ImageClassifier(MODELS_CONFIG[model_enum]).predict(
         image, triton_uri=triton_uri
     )
     results = [list(x) for x in results_tuples]

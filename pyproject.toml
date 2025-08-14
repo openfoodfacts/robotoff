@@ -85,6 +85,7 @@ pandas = "~2.2.2"
 pyarrow = "~17.0.0"
 rich = "~13.9.2"  # Used for CLI pretty print
 backoff = "^2.2.1"
+albumentations = "^2.0.8"
 
 [tool.poetry.dependencies.sentry-sdk]
 version = ">=2.0,<3.0"

@@ -21,6 +21,7 @@ class ObjectDetectionModel(str, enum.Enum):
 
 class ImageClassificationModel(str, enum.Enum):
     price_proof_classification = enum.auto()
+    front_image_classification = enum.auto()
 
 
 @enum.unique
