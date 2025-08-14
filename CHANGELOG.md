@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.76.1](https://github.com/openfoodfacts/robotoff/compare/v1.76.0...v1.76.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* add more perf logs for object detection models ([#1704](https://github.com/openfoodfacts/robotoff/issues/1704)) ([0130724](https://github.com/openfoodfacts/robotoff/commit/01307245558c93dc02b775f18b22f4ef6b948077))
+
 ## [1.76.0](https://github.com/openfoodfacts/robotoff/compare/v1.75.1...v1.76.0) (2025-08-14)
 
 
