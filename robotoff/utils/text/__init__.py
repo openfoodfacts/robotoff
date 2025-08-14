@@ -1,12 +1,11 @@
+import logging
 import re
 import unicodedata
-
-from robotoff.utils import get_logger
 
 from .flashtext import KeywordProcessor  # noqa: F401
 from .fold_to_ascii import fold, fold_without_insertion_deletion
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
 

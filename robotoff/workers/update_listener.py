@@ -1,3 +1,5 @@
+import logging
+
 import backoff
 from openfoodfacts import Environment, Flavor
 from openfoodfacts.images import generate_image_url, generate_json_ocr_url
@@ -8,7 +10,6 @@ from redis.exceptions import ConnectionError
 
 from robotoff import settings
 from robotoff.types import ProductIdentifier, ServerType
-from robotoff.utils.logger import get_logger
 from robotoff.workers.queues import (
     enqueue_in_job,
     enqueue_job,
@@ -22,7 +23,7 @@ from robotoff.workers.tasks.product_updated import (
     update_insights_job,
 )
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def get_redis_client():

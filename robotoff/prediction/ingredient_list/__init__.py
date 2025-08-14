@@ -1,5 +1,7 @@
 import dataclasses
 import functools
+import logging
+import time
 from pathlib import Path
 from typing import Union
 
@@ -16,6 +18,8 @@ from robotoff.utils import http_session
 from robotoff.utils.cache import function_cache_register
 
 from .transformers_pipeline import AggregationStrategy, TokenClassificationPipeline
+
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 # The tokenizer assets are stored in the model directory
 INGREDIENT_NER_MODEL_DIR = settings.TRITON_MODELS_DIR / "ingredient-ner/1/model.onnx"
@@ -157,6 +161,7 @@ def predict_batch(
     :param model_version: version of the model model to use, defaults to "1"
     :return: a list of IngredientPredictionOutput (one for each input text)
     """
+    start_time = time.monotonic()
     tokenizer = get_tokenizer(INGREDIENT_NER_MODEL_DIR)
     # The postprocessing pipeline required `offsets_mapping` and
     # `special_tokens_mask``
@@ -168,6 +173,13 @@ def predict_batch(
         return_offsets_mapping=True,
         return_special_tokens_mask=True,
     )
+    ml_metrics_logger.info(
+        "Tokenization time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
     logits = send_ner_infer_request(
         batch_encoding.input_ids,
         batch_encoding.attention_mask,
@@ -175,6 +187,13 @@ def predict_batch(
         triton_stub=triton_stub,
         model_version=model_version,
     )
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
     pipeline = TokenClassificationPipeline(tokenizer, INGREDIENT_ID2LABEL)
 
     outputs = []
@@ -239,6 +258,11 @@ def predict_batch(
                 text=sentence,
             )
         )
+    ml_metrics_logger.info(
+        "Post-processing time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
     return outputs
 
 
@@ -261,8 +285,20 @@ def send_ner_infer_request(
     :param model_version: version of the model model to use, defaults to "1"
     :return: the predicted logits
     """
+    start_time = time.monotonic()
     request = build_triton_request(input_ids, attention_mask, model_name, model_version)
+    ml_metrics_logger.info(
+        "Building Triton request time for %s: %ss",
+        model_name,
+        time.monotonic() - start_time,
+    )
+    start_time = time.monotonic()
     response = triton_stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss",
+        model_name,
+        time.monotonic() - start_time,
+    )
     num_tokens = response.outputs[0].shape[1]
     num_labels = response.outputs[0].shape[2]
     return np.frombuffer(

@@ -1,4 +1,5 @@
 import functools
+import logging
 from typing import Iterable, Union
 
 from openfoodfacts.ocr import OCRResult, get_match_bounding_box, get_text
@@ -6,13 +7,13 @@ from openfoodfacts.ocr import OCRResult, get_match_bounding_box, get_text
 from robotoff import settings
 from robotoff.brands import get_brand_blacklist, keep_brand_from_taxonomy
 from robotoff.types import JSONType, Prediction, PredictionType
-from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils import text_file_iter
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor, get_tag
 
 from .utils import generate_keyword_processor
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # Increase version ID when introducing breaking change: changes for which we

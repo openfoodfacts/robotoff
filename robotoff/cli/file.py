@@ -2,14 +2,13 @@
 Helper to download weights files for different Robotoff models.
 """
 
+import logging
 import shutil
 from pathlib import Path
 
 import requests
 
-from robotoff.utils import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def download_file(url: str, destination: Path, force: bool = False) -> None:

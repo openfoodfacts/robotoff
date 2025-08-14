@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Union
 
@@ -12,9 +13,8 @@ from openfoodfacts.ocr import (
 from robotoff.off import normalize_tag
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import JSONType, Prediction, PredictionType
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # Increase version ID when introducing breaking change: changes for which we

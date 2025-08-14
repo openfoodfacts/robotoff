@@ -12,9 +12,9 @@ from requests.exceptions import JSONDecodeError, SSLError, Timeout
 from robotoff import settings
 from robotoff.models import ProductInsight, with_db
 from robotoff.types import ServerType
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 URL_PATHS: list[str] = [
     "/ingredients-analysis?json=1",

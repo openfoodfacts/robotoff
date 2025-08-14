@@ -1,4 +1,5 @@
 import datetime
+import logging
 import pathlib
 
 import tqdm
@@ -8,10 +9,9 @@ from robotoff.logos import filter_logos
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import generate_image_path
 from robotoff.types import ProductIdentifier, ServerType
-from robotoff.utils import get_logger, jsonl_iter
+from robotoff.utils import jsonl_iter
 
-logger = get_logger(__name__)
-
+logger = logging.getLogger(__name__)
 
 TYPE = "object_detection"
 

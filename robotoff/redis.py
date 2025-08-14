@@ -1,14 +1,14 @@
+import logging
+
 from redis import Redis
 from redis_lock import Lock as BaseLock
 from redis_lock import NotAcquired
 
 from robotoff import settings
-from robotoff.utils import get_logger
 
 redis_conn = Redis(host=settings.REDIS_HOST)
 
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class LockedResourceException(Exception):

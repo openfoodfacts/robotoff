@@ -1,8 +1,10 @@
 import functools
 import json
+import logging
 import shutil
 import struct
 import tempfile
+import time
 from pathlib import Path
 
 import grpc
@@ -18,9 +20,10 @@ from tritonclient.grpc import service_pb2, service_pb2_grpc
 from tritonclient.grpc.service_pb2_grpc import GRPCInferenceServiceStub
 
 from robotoff import settings
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
+
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 # Maximum batch size for CLIP model set in CLIP config.pbtxt
 CLIP_MAX_BATCH_SIZE = 32
@@ -115,8 +118,12 @@ def generate_clip_embedding(
 ) -> np.ndarray:
     embedding_batches = []
     for image_batch in chunked(images, CLIP_MAX_BATCH_SIZE):
+        start_time = time.monotonic()
         request = generate_clip_embedding_request(image_batch)
+        logger.info("Preprocessing time for CLIP: %ss", time.monotonic() - start_time)
+        start_time = time.monotonic()
         response = triton_stub.ModelInfer(request)
+        logger.info("Inference time for CLIP: %ss", time.monotonic() - start_time)
         embedding_batch = np.frombuffer(
             response.raw_output_contents[0],
             dtype=np.float32,

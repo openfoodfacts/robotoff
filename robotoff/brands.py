@@ -1,21 +1,15 @@
 import functools
+import logging
 import operator
 
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import ServerType
-from robotoff.utils import (
-    dump_json,
-    dump_text,
-    get_logger,
-    http_session,
-    load_json,
-    text_file_iter,
-)
+from robotoff.utils import dump_json, dump_text, http_session, load_json, text_file_iter
 from robotoff.utils.cache import function_cache_register
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @functools.cache

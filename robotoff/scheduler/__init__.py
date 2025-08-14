@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import shutil
 import uuid
@@ -31,13 +32,12 @@ from robotoff.products import (
     has_jsonl_dataset_changed,
 )
 from robotoff.types import InsightType, ServerType
-from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
 
 settings.init_sentry()
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # Note: we do not use with_db, for atomicity is handled in annotator

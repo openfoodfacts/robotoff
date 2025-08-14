@@ -1,4 +1,5 @@
 import collections
+import logging
 
 from cachetools.func import ttl_cache
 from openfoodfacts.taxonomy import (
@@ -10,10 +11,9 @@ from openfoodfacts.taxonomy import get_taxonomy as _get_taxonomy
 from openfoodfacts.types import TaxonomyType
 
 from robotoff import settings
-from robotoff.utils import get_logger
 from robotoff.utils.cache import function_cache_register
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def generate_category_hierarchy(

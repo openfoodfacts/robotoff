@@ -1,4 +1,5 @@
 import datetime
+import logging
 from pathlib import Path
 
 import imagehash
@@ -17,9 +18,9 @@ from robotoff.models import (
 )
 from robotoff.off import generate_image_path, generate_image_url
 from robotoff.types import JSONType, ProductIdentifier
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils import get_image_from_url, http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def save_image(

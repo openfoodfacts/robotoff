@@ -1,3 +1,5 @@
+import logging
+
 from robotoff.elasticsearch import get_es_client
 from robotoff.images import delete_images
 from robotoff.insights.extraction import get_predictions_from_product_name
@@ -15,12 +17,11 @@ from robotoff.off import generate_image_url, generate_json_ocr_url, get_product_
 from robotoff.products import get_product
 from robotoff.redis import Lock, LockedResourceException
 from robotoff.types import JSONType, ProductIdentifier, ServerType
-from robotoff.utils import get_logger
 from robotoff.workers.queues import enqueue_job, get_high_queue
 from robotoff.workers.tasks.common import add_category_insight
 from robotoff.workers.tasks.import_image import run_import_image_job
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @with_db

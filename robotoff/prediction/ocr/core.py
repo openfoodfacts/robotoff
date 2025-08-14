@@ -1,10 +1,11 @@
+import logging
 import pathlib
 from typing import Callable, Iterable, TextIO, Union
 
 from openfoodfacts.ocr import OCRResult
 
 from robotoff.types import JSONType, Prediction, PredictionType, ProductIdentifier
-from robotoff.utils import get_logger, jsonl_iter, jsonl_iter_fp
+from robotoff.utils import jsonl_iter, jsonl_iter_fp
 
 from .brand import find_brands
 from .category import find_category
@@ -21,7 +22,7 @@ from .product_weight import find_product_weight
 from .store import find_stores
 from .trace import find_traces
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 PREDICTION_TYPE_TO_FUNC: dict[

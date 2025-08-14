@@ -1,4 +1,5 @@
 import gzip
+import logging
 import pathlib
 from typing import Any, Callable, Iterable, Union
 
@@ -10,9 +11,9 @@ from robotoff import settings
 from robotoff.types import JSONType
 
 from .image import get_image_from_url  # noqa: F401
-from .logger import get_logger
+from .logger import get_logger  # noqa: F401
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[JSONType]:

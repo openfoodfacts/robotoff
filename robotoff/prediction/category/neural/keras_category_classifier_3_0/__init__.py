@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Literal
 
@@ -17,7 +18,7 @@ from robotoff.triton import (
     serialize_byte_tensor,
 )
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils import get_image_from_url, http_session
 from robotoff.utils.cache import function_cache_register
 
 from .preprocessing import (
@@ -27,8 +28,8 @@ from .preprocessing import (
     generate_inputs_dict,
 )
 
-logger = get_logger(__name__)
-
+logger = logging.getLogger(__name__)
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 # Category IDs to ignore in v3 model predictions
 CATEGORY_EXCLUDE_SET = {
@@ -206,7 +207,11 @@ def _generate_image_embeddings(
     :return: a dict mapping image ID to CLIP embedding
     """
     request = generate_clip_embedding_request(list(images_by_id.values()))
+    start_time = time.monotonic()
     response = stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Inference time for CLIP: %ss", time.monotonic() - start_time
+    )
     computed_embeddings = np.frombuffer(
         response.raw_output_contents[0],
         dtype=np.float32,
@@ -376,12 +381,30 @@ def _predict(
     inputs: JSONType, model_name: NeuralCategoryClassifierModel, stub
 ) -> tuple[np.ndarray, list[str]]:
     """Internal method to prepare and run triton request."""
+    start_time = time.monotonic()
     request = build_triton_request(inputs, model_name=triton_model_names[model_name])
+    ml_metrics_logger.info(
+        "Preprocessing time for %s: %ss",
+        model_name.value,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
     response = stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss", model_name.value, time.monotonic() - start_time
+    )
+
+    start_time = time.monotonic()
     scores = np.frombuffer(response.raw_output_contents[0], dtype=np.float32).reshape(
         (1, -1)
     )[0]
     labels = deserialize_byte_tensor(response.raw_output_contents[1])
+    ml_metrics_logger.info(
+        "Post-processing time for %s: %ss",
+        model_name.value,
+        time.monotonic() - start_time,
+    )
     return scores, labels
 
 

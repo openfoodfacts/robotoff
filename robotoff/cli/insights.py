@@ -1,5 +1,6 @@
 import contextlib
 import gzip
+import logging
 import sys
 from pathlib import Path
 from typing import Iterable
@@ -15,9 +16,9 @@ from robotoff.insights.extraction import DEFAULT_OCR_PREDICTION_TYPES
 from robotoff.prediction.ocr import extract_predictions
 from robotoff.prediction.ocr.core import ocr_content_iter
 from robotoff.types import Prediction, PredictionType, ProductIdentifier, ServerType
-from robotoff.utils import get_logger, jsonl_iter
+from robotoff.utils import jsonl_iter
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run_from_ocr_archive(

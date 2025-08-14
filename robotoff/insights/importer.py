@@ -2,6 +2,7 @@ import abc
 import datetime
 import functools
 import itertools
+import logging
 import operator
 import typing
 import uuid
@@ -46,11 +47,11 @@ from robotoff.types import (
     ProductInsightImportResult,
     ServerType,
 )
-from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils import text_file_iter
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.image import convert_bounding_box_absolute_to_relative_from_images
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @functools.cache

@@ -1,4 +1,5 @@
 import functools
+import logging
 import re
 from typing import Iterable, Union
 
@@ -12,13 +13,13 @@ from openfoodfacts.ocr import (
 
 from robotoff import settings
 from robotoff.types import JSONType, Prediction, PredictionType
-from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils import text_file_iter
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 from .utils import generate_keyword_processor
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

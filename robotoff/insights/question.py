@@ -1,4 +1,5 @@
 import abc
+import logging
 import pathlib
 
 from robotoff import settings
@@ -7,10 +8,10 @@ from robotoff.off import generate_image_path, generate_image_url
 from robotoff.products import get_product
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
 from robotoff.types import InsightType, JSONType, ProductIdentifier
-from robotoff.utils import get_logger, load_json
+from robotoff.utils import load_json
 from robotoff.utils.i18n import TranslationStore
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 DISPLAY_IMAGE_SIZE = 400
 SMALL_IMAGE_SIZE = 200

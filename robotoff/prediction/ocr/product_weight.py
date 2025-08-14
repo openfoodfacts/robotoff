@@ -1,4 +1,5 @@
 import functools
+import logging
 import math
 import re
 from typing import Union
@@ -13,9 +14,8 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff.types import Prediction, PredictionType
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones

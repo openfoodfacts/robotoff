@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from pathlib import Path
 
@@ -13,9 +14,7 @@ from robotoff.utils.download import (
     get_asset_from_url,
 )
 
-from .logger import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def convert_image_to_array(image: Image.Image) -> np.ndarray:

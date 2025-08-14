@@ -1,5 +1,6 @@
 import datetime
 import functools
+import logging
 from enum import Enum
 from typing import Iterable, Literal, NamedTuple, Union
 
@@ -30,10 +31,9 @@ from robotoff.models import (
 from robotoff.off import OFFAuthentication
 from robotoff.taxonomy import match_taxonomized_value
 from robotoff.types import InsightAnnotation, JSONType, ServerType
-from robotoff.utils import get_logger
 from robotoff.utils.text import get_tag
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SkipVotedType(Enum):
