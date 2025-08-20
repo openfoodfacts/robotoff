@@ -325,6 +325,7 @@ def product_type_switched_job(product_id: ProductIdentifier) -> None:
     )
 
 
+@with_db
 def deleted_image_job(product_id: ProductIdentifier, image_id: str) -> None:
     """Process the deletion of an image for a product.
 
