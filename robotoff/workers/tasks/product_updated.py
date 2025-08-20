@@ -13,7 +13,12 @@ from robotoff.models import (
     ProductInsight,
     with_db,
 )
-from robotoff.off import generate_image_url, generate_json_ocr_url, get_product_type
+from robotoff.off import (
+    generate_image_path,
+    generate_image_url,
+    generate_json_ocr_url,
+    get_product_type,
+)
 from robotoff.products import get_product
 from robotoff.redis import Lock, LockedResourceException
 from robotoff.types import JSONType, ProductIdentifier, ServerType
@@ -287,6 +292,7 @@ def product_type_switched_job(product_id: ProductIdentifier) -> None:
         enqueue_job(
             func=run_import_image_job,
             queue=high_queue,
+            job_kwargs={"result_ttl": 0},
             product_id=new_product_id,
             image_url=image_url,
             ocr_url=ocr_url,
@@ -296,6 +302,7 @@ def product_type_switched_job(product_id: ProductIdentifier) -> None:
     enqueue_job(
         func=update_insights_job,
         queue=high_queue,
+        job_kwargs={"result_ttl": 0},
         product_id=new_product_id,
         diffs={},  # No diffs to pass, we just want to reprocess
         force_category_prediction=True,  # Force category prediction as the product type has changed
@@ -310,6 +317,97 @@ def product_type_switched_job(product_id: ProductIdentifier) -> None:
         "%d insights",
         product_id,
         deleted_images,
+        deleted_logos,
+        deleted_logos_es,
+        deleted_image_predictions,
+        deleted_predictions,
+        deleted_insights,
+    )
+
+
+def deleted_image_job(product_id: ProductIdentifier, image_id: str) -> None:
+    """Process the deletion of an image for a product.
+
+    This job is triggered when an image is deleted from a product. We perform the
+    following actions:
+
+    1. Delete all logo annotations related to the image, both in DB and Elasticsearch.
+    2. Delete all image predictions related to the image.
+    3. Set the `deleted` flag to True for this image (in the `image` table).
+    4. Delete predictions (all) and insights (only non-annotated) related to the image.
+
+    :param product_id: identifier of the product
+    :param image_id: ID of the image to delete (ex: "3")
+    """
+    image_model = ImageModel.get_or_none(
+        ImageModel.barcode == product_id.barcode,
+        ImageModel.server_type == product_id.server_type,
+        ImageModel.image_id == image_id,
+    )
+    source_image = generate_image_path(product_id, image_id)
+    deleted_logos_es = 0
+    deleted_logos = 0
+    deleted_image_predictions = 0
+
+    if image_model is not None:
+        logo_ids = [
+            logo_id
+            for (logo_id,) in LogoAnnotation.select(LogoAnnotation.id)
+            .join(ImagePrediction)
+            .where(ImagePrediction.image == image_model)
+            .tuples()
+        ]
+        if logo_ids:
+            es_client = get_es_client()
+            deleted_logos_es = delete_ann_logos(es_client, logo_ids)
+
+        deleted_logos = (
+            LogoAnnotation.delete()
+            .where(
+                LogoAnnotation.id.in_(logo_ids),
+            )
+            .execute()
+        )
+        # Delete all prediction and insights related to the product
+        deleted_image_predictions = (
+            ImagePrediction.delete()
+            .where(ImagePrediction.image == image_model)
+            .execute()
+        )
+        image_model.deleted = True
+        image_model.save()
+
+    deleted_predictions = (
+        Prediction.delete()
+        .where(
+            Prediction.barcode == product_id.barcode,
+            Prediction.server_type == product_id.server_type,
+            Prediction.source_image == source_image,
+        )
+        .execute()
+    )
+    deleted_insights = (
+        ProductInsight.delete()
+        .where(
+            ProductInsight.barcode == product_id.barcode,
+            ProductInsight.server_type == product_id.server_type,
+            ProductInsight.source_image == source_image,
+            ProductInsight.annotation.is_null(
+                True
+            ),  # Only delete insights without annotations
+        )
+        .execute()
+    )
+
+    logger.info(
+        "Image deleted (product: %s, image ID: %s), "
+        "%d logo(s), "
+        "%d logo(s) on Elasticsearch, "
+        "%d image prediction(s), "
+        "%d prediction(s) and "
+        "%d insight(s)",
+        product_id,
+        image_id,
         deleted_logos,
         deleted_logos_es,
         deleted_image_predictions,
